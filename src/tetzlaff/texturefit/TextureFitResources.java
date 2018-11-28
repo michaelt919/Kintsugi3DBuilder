@@ -928,7 +928,7 @@ class TextureFitResources<ContextType extends Context<ContextType>> implements A
         return new DiffuseFit<>(drawable, framebuffer, viewCount, subdiv);
     }
 
-    private SpecularFit<ContextType> createSpecularFit(Framebuffer<ContextType> framebuffer, int viewCount, int subdiv)
+    public SpecularFit<ContextType> createSpecularFit(Framebuffer<ContextType> framebuffer, int viewCount, int subdiv)
     {
         Drawable<ContextType> drawable = context.createDrawable(specularFitProgram);
         setupCommonShaderInputs(drawable);

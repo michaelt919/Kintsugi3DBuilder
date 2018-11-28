@@ -173,7 +173,7 @@ uniform mat4 envMapMatrix;
 
 #endif
 
-#line 173 0
+#line 177 0
 
 uniform int objectID;
 uniform mat4 model_view;
@@ -511,7 +511,7 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
 
     sort(targetDirection, weights, indices);
 
-    float analyticWeight = 1.0 / (1.0 - clamp(dot(targetDirection, normalDir), 0.0, 0.99999));
+    float analyticWeight = 1.0 / (1.0 - clamp(dot(targetDirection, normalDir), 0.0, 0.999));
 
     float maxSampleLuminance = 0.0;
 
@@ -525,15 +525,18 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
     // Evaluate the light field
     // weights[0] should be the smallest weight
     vec4 sum = vec4(0.0);
+    float maxWeight = 0;
     for (int i = 0; i < SORTING_SAMPLE_COUNT - 1; i++)
     {
         if (samples[i].a > 0)
         {
             sum += (weights[i + 1] - weights[0])
-#if SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED && HYBRID_SPECULAR_ENABLED
-                * getLuminance(max(vec3(0.0), peakTimes4Pi - samples[i].rgb / samples[i].a))
-#endif
+//#if SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED && HYBRID_SPECULAR_ENABLED
+//                * getLuminance(max(vec3(0.0), peakTimes4Pi - samples[i].rgb / samples[i].a))
+//#endif
                 * samples[i];
+
+            maxWeight = max(maxWeight, weights[i + 1]);
         }
     }
 
@@ -547,7 +550,7 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
     }
     else
     {
-        return sum / vec4(sum.aaa, sum.a + max(0, analyticWeight - weights[0]));
+        return vec4(sum.rgb / sum.a, clamp(1.0 / max(1.0, 1.0 + analyticWeight - weights[0]) /*(maxWeight - analyticWeight) / (maxWeight - weights[0])*/, 0, 1));
     }
 }
 
@@ -642,7 +645,7 @@ vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor, vec
 #elif RELIGHTING_ENABLED
             virtualLightDir = normalize((cameraPose * vec4(lightPosVirtual[lightPass], 1.0)).xyz - fragmentPos);
 #else
-            virtualLightDir = virtualViewDir;
+            virtualLightDir = virtualViewDir + lightPositions[getLightIndex(virtualIndex)].xyz;
 #endif
 
             // Compute sample weight
@@ -746,7 +749,7 @@ void main()
     vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
     normalDir = tangentToObject * normalDirTS;
 #else
-    normalDir = normalDirTS;
+    normalDir = texture(normalMap, fTexCoord).xyz * 2 - vec3(1.0);
 #endif // TANGENT_SPACE_NORMAL_MAP
 #else
     normalDir = triangleNormal;
@@ -845,6 +848,10 @@ void main()
         lightDirUnNorm = lightPosVirtual[i] - fPosition;
         lightDir = normalize(lightDirUnNorm);
         nDotL = max(0.0, dot(normalDir, lightDir));
+#elif IMAGE_BASED_RENDERING_ENABLED
+        lightDirUnNorm = transpose(mat3(model_view)) * lightPositions[0].xyz + viewPos - fPosition;
+        lightDir = normalize(lightDirUnNorm);
+        nDotL = max(0.0, dot(normalDir, lightDir));
 #else
         lightDirUnNorm = viewPos - fPosition;
         lightDir = viewDir;
@@ -910,10 +917,10 @@ void main()
 
                 vec3 mfdFresnelIBR = max(vec3(0.0),
                     fresnel(predictedMFD.rgb, vec3(grazingIntensity), hDotV));
-                    // fresnel(predictedMFD.rgb, vec3(distTimesPi(nDotH, roughnessRGB)), hDotV));=
+                    // fresnel(predictedMFD.rgb, vec3(distTimesPi(nDotH, roughnessRGB)), hDotV));
 
 #if SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED && HYBRID_SPECULAR_ENABLED
-                mfdFresnel = mix(mfdFresnelAnalytic, mfdFresnelIBR, predictedMFD.a);
+                mfdFresnel = max(mfdFresnelIBR, mix(mfdFresnelAnalytic, mfdFresnelIBR, predictedMFD.a));
 #else
                 mfdFresnel = mfdFresnelIBR;
 #endif // SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED
@@ -929,7 +936,7 @@ void main()
 #if IMAGE_BASED_RENDERING_ENABLED
 
 #if SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED && HYBRID_SPECULAR_ENABLED
-                mfdFresnel = mix(mfdFresnelAnalytic, max(vec3(0.0), predictedMFD.rgb), predictedMFD.a);
+                mfdFresnel = max(max(vec3(0.0), predictedMFD.rgb), mix(mfdFresnelAnalytic, max(vec3(0.0), predictedMFD.rgb), predictedMFD.a));
 #else
                 mfdFresnel = max(vec3(0.0), predictedMFD.rgb);
 #endif // SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED

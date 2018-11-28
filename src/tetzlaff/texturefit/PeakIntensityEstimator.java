@@ -14,8 +14,7 @@ import javax.imageio.ImageIO;
 
 import org.lwjgl.*;
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.vecmath.IntVector3;
-import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.vecmath.*;
 import tetzlaff.ibrelight.core.ViewSet;
 
 class PeakIntensityEstimator<ContextType extends Context<ContextType>>
@@ -145,13 +144,19 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
         final Vector3 offPeakSum;
         final Vector3 position;
         final float nDotH;
+        final Vector3 threshold;
+        final float nDotV;
+        final Vector2 texCoord;
 
-        PeakCandidate(Vector3 peak, Vector3 offPeakSum, Vector3 position, float nDotH)
+        PeakCandidate(Vector3 peak, Vector3 offPeakSum, Vector3 position, float nDotH, Vector3 threshold, float nDotV, Vector2 texCoord)
         {
             this.peak = peak;
             this.offPeakSum = offPeakSum;
             this.position = position;
             this.nDotH = nDotH;
+            this.threshold = threshold;
+            this.nDotV = nDotV;
+            this.texCoord = texCoord;
         }
 
         CharacteristicBin characteristicBin(float objSpaceRadius, float colorSpaceRadius)
@@ -160,7 +165,7 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
         }
     }
 
-    Vector3[] estimate(int texWidth, int texHeight, float objSpaceRadius, float colorSpaceRadius)
+    Vector4[] estimate(int texWidth, int texHeight, float objSpaceRadius, float colorSpaceRadius)
     {
         new File("debug").mkdir(); // debug
 //        new File("debug", "peak").mkdirs(); // debug
@@ -182,6 +187,10 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
             BufferUtils.createFloatBuffer(4 * viewImages.getWidth() * viewImages.getHeight());
         FloatBuffer positionBuffer =
             BufferUtils.createFloatBuffer(4 * viewImages.getWidth() * viewImages.getHeight());
+        FloatBuffer thresholdBuffer =
+            BufferUtils.createFloatBuffer(4 * viewImages.getWidth() * viewImages.getHeight());
+        FloatBuffer texCoordBuffer =
+            BufferUtils.createFloatBuffer(4 * viewImages.getWidth() * viewImages.getHeight());
 
         System.out.println("Generating peak reflectance samples...");
 
@@ -193,7 +202,7 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
 
         try(FramebufferObject<ContextType> fbo = context.buildFramebufferObject(
             viewImages.getWidth(), viewImages.getHeight())
-            .addColorAttachments(ColorFormat.RGBA32F, 3)
+            .addColorAttachments(ColorFormat.RGBA32F, 5)
             .createFramebufferObject())
         {
 
@@ -210,11 +219,15 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
                 fbo.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
                 fbo.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
                 fbo.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
+                fbo.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
+                fbo.clearColorBuffer(4, 0.0f, 0.0f, 0.0f, 0.0f);
                 imgSpaceDrawable.draw(PrimitiveMode.TRIANGLES, fbo);
 
                 fbo.readFloatingPointColorBufferRGBA(0, peakBuffer);
                 fbo.readFloatingPointColorBufferRGBA(1, offPeakBuffer);
                 fbo.readFloatingPointColorBufferRGBA(2, positionBuffer);
+                fbo.readFloatingPointColorBufferRGBA(3, thresholdBuffer);
+                fbo.readFloatingPointColorBufferRGBA(4, texCoordBuffer);
 
 //                // debug
 //                try
@@ -250,7 +263,10 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
                                         new Vector3(peakBuffer.get(4 * k), peakBuffer.get(4 * k + 1), peakBuffer.get(4 * k + 2)),
                                         new Vector3(offPeakBuffer.get(4 * k), offPeakBuffer.get(4 * k + 1), offPeakBuffer.get(4 * k + 2)),
                                         new Vector3(positionBuffer.get(4 * k), positionBuffer.get(4 * k + 1), positionBuffer.get(4 * k + 2)),
-                                        positionBuffer.get(4 * k + 3) /* n dot h */);
+                                        positionBuffer.get(4 * k + 3), /* n dot h */
+                                        new Vector3(thresholdBuffer.get(4 * k), thresholdBuffer.get(4 * k + 1), thresholdBuffer.get(4 * k + 2)),
+                                        thresholdBuffer.get(4 * k + 3), /* n dot v */
+                                        new Vector2(texCoordBuffer.get(4 * k), texCoordBuffer.get(4 * k + 1)));
 
                                     if (maxPeak == null || maxPeak.peak.y < peakCandidate.peak.y)
                                     {
@@ -473,6 +489,279 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
             .toArray(Vector3[]::new);
 
         System.out.println();
+        System.out.println("Filling holes...");
+
+        Queue<IntVector2> holes = new ArrayDeque<>(texHeight * texWidth / 4);
+        Map<IntVector2, Vector3> changes = new HashMap<>(texHeight * texWidth / 16);
+
+        for (int y = 0; y < texHeight; y++)
+        {
+            for (int x = 0; x < texWidth; x++)
+            {
+                if (Objects.equals(estimatedPeaks[y * texWidth + x], Vector3.ZERO))
+                {
+                    holes.add(new IntVector2(x, y));
+                }
+            }
+        }
+
+        Collection<IntVector2> remainingHoles = new ArrayDeque<>(holes.size());
+
+        do
+        {
+            while (!holes.isEmpty())
+            {
+                IntVector2 hole = holes.poll();
+
+                Vector3 sum = Vector3.ZERO;
+                int count = 0;
+
+                if (hole.y > 0)
+                {
+                    Vector3 sample = estimatedPeaks[(hole.y - 1) * texWidth + hole.x];
+
+                    if (!Objects.equals(sample, Vector3.ZERO))
+                    {
+                        sum = sum.plus(sample);
+                        count++;
+                    }
+                }
+
+                if (hole.y < texHeight - 1)
+                {
+                    Vector3 sample = estimatedPeaks[(hole.y + 1) * texWidth + hole.x];
+
+                    if (!Objects.equals(sample, Vector3.ZERO))
+                    {
+                        sum = sum.plus(sample);
+                        count++;
+                    }
+                }
+
+                if (hole.x > 0)
+                {
+                    Vector3 sample = estimatedPeaks[hole.y * texWidth + hole.x - 1];
+
+                    if (!Objects.equals(sample, Vector3.ZERO))
+                    {
+                        sum = sum.plus(sample);
+                        count++;
+                    }
+                }
+
+                if (hole.x < texWidth - 1)
+                {
+                    Vector3 sample = estimatedPeaks[hole.y * texWidth + hole.x + 1];
+
+                    if (!Objects.equals(sample, Vector3.ZERO))
+                    {
+                        sum = sum.plus(sample);
+                        count++;
+                    }
+                }
+
+                if (count == 0)
+                {
+                    remainingHoles.add(hole);
+                }
+                else
+                {
+                    changes.put(hole, sum.dividedBy(count));
+                }
+            }
+
+            for (Entry<IntVector2, Vector3> change : changes.entrySet())
+            {
+                estimatedPeaks[change.getKey().y * texWidth + change.getKey().x] = change.getValue();
+            }
+
+            holes.addAll(remainingHoles);
+            remainingHoles.clear();
+            changes.clear();
+        }
+        while(!holes.isEmpty());
+
+        System.out.println("Filtering samples...");
+
+        System.out.println("Estimating preliminary roughness...");
+        System.out.println("____________________________________________________________________________________________________");
+
+        double[] estimatedRoughness = IntStream.range(0, texWidth * texHeight)
+            .parallel()
+            .mapToDouble(i ->
+            {
+                if ((100 * i) / (texWidth * texHeight) > (100 * (i-1)) / (texWidth * texHeight))
+                {
+                    System.out.print(".");
+                }
+
+                if (offPeakTexSpace[4 * i + 3] > 0)
+                {
+                    Vector3 position = new Vector3(
+                        positionsTexSpace[4 * i],
+                        positionsTexSpace[4 * i + 1],
+                        positionsTexSpace[4 * i + 2]);
+
+                    Vector3 offPeakSum = new Vector3(
+                        offPeakTexSpace[4 * i],
+                        offPeakTexSpace[4 * i + 1],
+                        offPeakTexSpace[4 * i + 2]);
+
+                    Collection<CharacteristicBin> binNeighborhood =
+                        CharacteristicBin.fromContinuous(offPeakSum, position, objSpaceRadius, colorSpaceRadius).getSurrounding();
+
+                    float distanceToExpectedPeak = (float)Math.sqrt(0.5);
+
+//                    for (PeakCandidate expectedPeak : expectedPeaks)
+//                    {
+//                        float scaledObjSpaceDistance = expectedPeak.position.distance(position) / objSpaceRadius;
+//                        float scaledColorSpaceDistance = expectedPeak.offPeakSum.distance(offPeakSum) / colorSpaceRadius;
+//
+//                        distanceToExpectedPeak = Math.min(distanceToExpectedPeak,
+//                            (float)Math.sqrt(scaledObjSpaceDistance * scaledObjSpaceDistance + scaledColorSpaceDistance * scaledColorSpaceDistance));
+//                    }
+
+                    double roughnessSum = 0.0;
+                    double weightSum = 0.0;
+
+                    for (CharacteristicBin bin : binNeighborhood)
+                    {
+                        List<PeakCandidate> peakBin = peakCandidates.get(bin);
+
+                        if (peakBin != null)
+                        {
+                            for (int k = 0; k < peakBin.size(); k++)
+                            {
+                                PeakCandidate candidate = peakBin.get(k);
+
+                                double scaledObjSpaceDistance = candidate.position.distance(position) / objSpaceRadius;
+                                double scaledColorSpaceDistance = candidate.offPeakSum.distance(offPeakSum) / colorSpaceRadius;
+
+                                int x = Math.max(0, Math.min(texWidth - 1, (int)Math.floor(candidate.texCoord.x * texWidth)));
+                                int y = Math.max(0, Math.min(texHeight - 1, (int)Math.floor(candidate.texCoord.y * texHeight)));
+                                float estimatedPeak = estimatedPeaks[y * texWidth + x].y;
+
+                                double weight = Math.max(0, Math.min(1,
+                                    (1.0 - Math.sqrt(0.5 * scaledObjSpaceDistance * scaledObjSpaceDistance
+                                                + 0.5 * scaledColorSpaceDistance * scaledColorSpaceDistance)
+                                            / distanceToExpectedPeak)
+                                        / (1.0 - Math.sqrt(0.5))))
+                                    * Math.max(0, candidate.peak.y - 1.0 * candidate.threshold.y - 0.0 * estimatedPeak);
+
+                                double nDotHSquared = candidate.nDotH * candidate.nDotH;
+
+                                double numerator = Math.sqrt(Math.max(0.0, (1 - nDotHSquared) * Math.sqrt(candidate.peak.y * candidate.nDotV)));
+                                double denominatorSq = Math.max(0.0, Math.sqrt(estimatedPeak) - nDotHSquared * Math.sqrt(candidate.peak.y * candidate.nDotV));
+                                double denominator = Math.sqrt(denominatorSq);
+
+                                roughnessSum += weight * numerator * denominator;
+                                weightSum += weight * denominatorSq;
+                            }
+                        }
+                    }
+
+                    return roughnessSum / Math.max(0.001, weightSum);
+                }
+                else
+                {
+                    return 0.0;
+                }
+            })
+            .toArray();
+
+        System.out.println();
+        System.out.println("Filling holes...");
+
+        Queue<IntVector2> roughnessHoles = new ArrayDeque<>(texHeight * texWidth / 4);
+        Map<IntVector2, Double> roughnessChanges = new HashMap<>(texHeight * texWidth / 16);
+
+        for (int y = 0; y < texHeight; y++)
+        {
+            for (int x = 0; x < texWidth; x++)
+            {
+                if (estimatedRoughness[y * texWidth + x] == 0.0)
+                {
+                    roughnessHoles.add(new IntVector2(x, y));
+                }
+            }
+        }
+
+        Collection<IntVector2> remainingRoughnessHoles = new ArrayDeque<>(roughnessHoles.size());
+
+        do
+        {
+            while (!roughnessHoles.isEmpty())
+            {
+                IntVector2 hole = roughnessHoles.poll();
+
+                double sum = 0.0;
+                int count = 0;
+
+                if (hole.y > 0)
+                {
+                    double sample = estimatedRoughness[(hole.y - 1) * texWidth + hole.x];
+
+                    if (sample > 0.0)
+                    {
+                        sum += sample;
+                        count++;
+                    }
+                }
+
+                if (hole.y < texHeight - 1)
+                {
+                    double sample = estimatedRoughness[(hole.y + 1) * texWidth + hole.x];
+
+                    if (sample > 0.0)
+                    {
+                        sum += sample;
+                        count++;
+                    }
+                }
+
+                if (hole.x > 0)
+                {
+                    double sample = estimatedRoughness[hole.y * texWidth + hole.x - 1];
+
+                    if (sample > 0.0)
+                    {
+                        sum += sample;
+                        count++;
+                    }
+                }
+
+                if (hole.x < texWidth - 1)
+                {
+                    double sample = estimatedRoughness[hole.y * texWidth + hole.x + 1];
+
+                    if (sample > 0.0)
+                    {
+                        sum += sample;
+                        count++;
+                    }
+                }
+
+                if (count == 0)
+                {
+                    remainingRoughnessHoles.add(hole);
+                }
+                else
+                {
+                    roughnessChanges.put(hole, sum / count);
+                }
+            }
+
+            for (Entry<IntVector2, Double> change : roughnessChanges.entrySet())
+            {
+                estimatedRoughness[change.getKey().y * texWidth + change.getKey().x] = change.getValue();
+            }
+
+            roughnessHoles.addAll(remainingRoughnessHoles);
+            remainingRoughnessHoles.clear();
+            roughnessChanges.clear();
+        }
+        while(!roughnessHoles.isEmpty());
+
         System.out.println("Finished.");
 
         // debug
@@ -484,15 +773,38 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
                     Math.min(1.0f, (float)Math.pow(peak.z, 1.0 / 2.2)),
                     1.0f },
                 0)).toArray(), 0, texWidth);
+
         try
         {
-            ImageIO.write(outImg, "PNG", new File("debug", "result.png"));
+            ImageIO.write(outImg, "PNG", new File("debug", "peak.png"));
         }
         catch (IOException e)
         {
             e.printStackTrace();
         }
 
-        return estimatedPeaks;
+        BufferedImage roughnessImg = new BufferedImage(texWidth, texHeight, BufferedImage.TYPE_INT_ARGB);
+        roughnessImg.setRGB(0, 0, texWidth, texHeight,
+            Arrays.stream(estimatedRoughness)
+                .mapToInt(roughness ->
+                {
+                    float sqrtRoughness = (float)Math.min(1.0f, Math.sqrt(roughness));
+                    return outImg.getColorModel().getDataElement(new float[] { sqrtRoughness, sqrtRoughness, sqrtRoughness, 1.0f },0);
+                })
+                .toArray(),
+            0, texWidth);
+
+        try
+        {
+            ImageIO.write(roughnessImg, "PNG", new File("debug", "roughness.png"));
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
+        return IntStream.range(0, texWidth * texHeight)
+            .mapToObj(i -> estimatedPeaks[i].asVector4((float)estimatedRoughness[i]))
+            .toArray(Vector4[]::new);
     }
 }

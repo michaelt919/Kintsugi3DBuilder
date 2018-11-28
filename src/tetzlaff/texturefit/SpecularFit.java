@@ -21,19 +21,22 @@ class SpecularFit<ContextType extends Context<ContextType>>
     }
 
     void fitImageSpace(Texture<ContextType> viewImages, Texture<ContextType> depthImages, Texture<ContextType> shadowImages,
-        Texture<ContextType> diffuseEstimate, Texture<ContextType> normalEstimate, SubdivisionRenderingCallback callback) throws IOException
+        Texture<ContextType> diffuseEstimate, Texture<ContextType> normalEstimate, Texture<ContextType> peakEstimate,
+        SubdivisionRenderingCallback callback) throws IOException
     {
         base.drawable.program().setTexture("diffuseEstimate", diffuseEstimate);
         base.drawable.program().setTexture("normalEstimate", normalEstimate);
+        base.drawable.program().setTexture("peakEstimate", peakEstimate);
         base.fitImageSpace(framebuffer, viewImages, depthImages, shadowImages, callback);
     }
 
     void fitTextureSpace(File preprocessDirectory, Texture<ContextType> diffuseEstimate, Texture<ContextType> normalEstimate,
-        SubdivisionRenderingCallback callback)
+        Texture<ContextType> peakEstimate, SubdivisionRenderingCallback callback)
         throws IOException
     {
         base.drawable.program().setTexture("diffuseEstimate", diffuseEstimate);
         base.drawable.program().setTexture("normalEstimate", normalEstimate);
+        base.drawable.program().setTexture("peakEstimate", peakEstimate);
         base.fitTextureSpace(framebuffer, preprocessDirectory, callback);
     }
 }

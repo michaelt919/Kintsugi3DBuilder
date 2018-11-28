@@ -27,10 +27,13 @@ float getSortingWeight(int virtualIndex, vec3 targetDirection)
     }
 #endif
 
-    vec3 sampleDirectionCameraSpace = -normalize((cameraPose * vec4(fPosition, 1)).xyz);
+    vec3 view = -normalize((cameraPose * vec4(fPosition, 1)).xyz);
+    vec3 light = normalize(lightPositions[getLightIndex(virtualIndex)].xyz - (cameraPose * vec4(fPosition, 1)).xyz);
+    vec3 halfway = normalize(view + light);
+
     return 1.0 / (1.0 - clamp(
-        dot(mat3(cameraPose) * targetDirection, -normalize((cameraPose * vec4(fPosition, 1)).xyz)),
-        0.0, 0.99999));
+        dot(normalize(mat3(cameraPose) * targetDirection), halfway),
+        0.0, 0.999));
 }
 
 void sort(vec3 targetDirection, out float[SORTING_SAMPLE_COUNT] weights, out int[SORTING_SAMPLE_COUNT] indices)
