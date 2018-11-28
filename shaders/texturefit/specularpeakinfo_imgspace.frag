@@ -9,6 +9,8 @@ in vec3 fBitangent;
 layout(location = 0) out vec4 peak;
 layout(location = 1) out vec4 offPeakSum;
 layout(location = 2) out vec4 position;
+layout(location = 3) out vec4 threshold;
+layout(location = 4) out vec2 texCoord;
 
 #ifndef SINGLE_VIEW_MASKING_ENABLED
 #define SINGLE_VIEW_MASKING_ENABLED 0
@@ -31,5 +33,7 @@ void main()
 
     peak = result.peak;
     offPeakSum = result.offPeakSum;
-    position = vec4(fPosition, result.peakNDotH);
+    position = vec4(fPosition, result.maxNDotH);
+    threshold = vec4(result.threshold, result.peakNDotV);
+    texCoord = fTexCoord;
 }

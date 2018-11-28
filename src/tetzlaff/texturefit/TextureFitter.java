@@ -9,6 +9,7 @@ import java.util.Date;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.vecmath.Vector4;
 
 class TextureFitter<ContextType extends Context<ContextType>>
 {
@@ -273,19 +274,20 @@ class TextureFitter<ContextType extends Context<ContextType>>
                         param.isDiffuseTextureEnabled() ?
                             diffuseFitFramebuffer.getColorAttachmentTexture(3) :
                             frontFramebuffer.getColorAttachmentTexture(1));
-                    Vector3[] peakIntensityEstimates = resources.getPeakIntensityEstimator().estimate(
+                    Vector4[] peakIntensityEstimates = resources.getPeakIntensityEstimator().estimate(
                         param.getTextureSize() / 2, param.getTextureSize() / 2,
                         resources.getGeometry().getBoundingRadius() * 0.25f, 0.25f);
 
                     FramebufferObject<ContextType> frontErrorFramebuffer = errorFramebuffer1;
                     FramebufferObject<ContextType> backErrorFramebuffer = errorFramebuffer2;
 
-                    float[] peakIntensityData = new float[peakIntensityEstimates.length * 3];
+                    float[] peakIntensityData = new float[peakIntensityEstimates.length * 4];
                     for (int i = 0; i < peakIntensityEstimates.length; i++)
                     {
-                        peakIntensityData[i * 3] = peakIntensityEstimates[i].x;
-                        peakIntensityData[i * 3 + 1] = peakIntensityEstimates[i].y;
-                        peakIntensityData[i * 3 + 2] = peakIntensityEstimates[i].z;
+                        peakIntensityData[i * 4] = peakIntensityEstimates[i].x;
+                        peakIntensityData[i * 4 + 1] = peakIntensityEstimates[i].y;
+                        peakIntensityData[i * 4 + 2] = peakIntensityEstimates[i].z;
+                        peakIntensityData[i * 4 + 3] = peakIntensityEstimates[i].w;
                     }
 
                     FramebufferObject<ContextType> tmp;
@@ -293,8 +295,8 @@ class TextureFitter<ContextType extends Context<ContextType>>
                     try(Texture2D<ContextType> peakSpecularTexture =
                         context.getTextureFactory().build2DColorTextureFromBuffer(param.getTextureSize() / 2, param.getTextureSize() / 2,
                             NativeVectorBufferFactory.getInstance().createFromFloatArray(
-                                3, (param.getTextureSize() / 2) * (param.getTextureSize() / 2), peakIntensityData))
-                            .setInternalFormat(ColorFormat.RGB32F)
+                                4, (param.getTextureSize() / 2) * (param.getTextureSize() / 2), peakIntensityData))
+                            .setInternalFormat(ColorFormat.RGBA32F)
                             .setLinearFilteringEnabled(true)
                             .createTexture())
                     {
@@ -334,52 +336,44 @@ class TextureFitter<ContextType extends Context<ContextType>>
                                 System.out.println("Block " + (row * param.getTextureSubdivision() + col + 1) + '/' +
                                     (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed."));
 
+//                        SpecularFit<ContextType> specularFit = resources.createSpecularFit(backFramebuffer, resources.getViewSet().getCameraPoseCount(), param.getTextureSubdivision());
+//
+//                        if (param.isImagePreprojectionUseEnabled())
+//                        {
+//                            // TODO work out how to support image preprojection
+//                            FramebufferObject<ContextType> currentFramebuffer = backFramebuffer;
+//                            specularFit.fitTextureSpace(tmpDir,
+//                                param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(0) : frontFramebuffer.getColorAttachmentTexture(0),
+//                                param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(3) : frontFramebuffer.getColorAttachmentTexture(1),
+//                                peakSpecularTexture,
+//                                (row, col) ->
+//                                {
+////                                    currentFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
+////                                            "PNG", new File(specularTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
+////
+////                                    currentFramebuffer.saveColorBufferToFile(1, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
+////                                            "PNG", new File(diffuseTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
+//
+//                                    System.out.println("Block " + (row * param.getTextureSubdivision() + col + 1) + '/' +
+//                                        (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+//                                });
+//                        }
+//                        else
+//                        {
+//                            specularFit.fitImageSpace(resources.getViewTextures(), resources.getDepthTextures(), resources.getShadowTextures(),
+//                                param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(0) : frontFramebuffer.getColorAttachmentTexture(0),
+//                                param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(3) : frontFramebuffer.getColorAttachmentTexture(1),
+//                                peakSpecularTexture,
+//                                (row, col) ->
+//                                {
+//                                    System.out.println("Block " + (row * param.getTextureSubdivision() + col + 1) + '/' +
+//                                        (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+//                                });
+//                        }
+
                         tmp = frontFramebuffer;
                         frontFramebuffer = backFramebuffer;
                         backFramebuffer = tmp;
-
-//                            backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-//                            backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-//                            backFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
-//                            backFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
-//                            backFramebuffer.clearColorBuffer(4, 0.0f, 0.0f, 0.0f, 0.0f);
-//
-//                            SpecularFit<ContextType> specularFit = createSpecularFit(backFramebuffer, resources.viewSet.getCameraPoseCount(), param.getTextureSubdivision());
-//
-//                            if (param.isImagePreprojectionUseEnabled())
-//                            {
-//                                FramebufferObject<ContextType> currentFramebuffer = backFramebuffer;
-//                                specularFit.fitTextureSpace(tmpDir,
-//                                    param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(0) : frontFramebuffer.getColorAttachmentTexture(0),
-//                                    param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(3) : frontFramebuffer.getColorAttachmentTexture(1),
-//                                    (row, col) ->
-//                                    {
-//                                        // TODO work out how to support image preprojection
-//                                        //                                        currentFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
-//                                        //                                                "PNG", new File(specularTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
-//                                        //
-//                                        //                                        currentFramebuffer.saveColorBufferToFile(1, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
-//                                        //                                                "PNG", new File(diffuseTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
-//
-//                                        System.out.println("Block " + (row * param.getTextureSubdivision() + col + 1) + '/' +
-//                                            (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
-//                                    });
-//                            }
-//                            else
-//                            {
-//                                specularFit.fitImageSpace(viewTextures, depthTextures, shadowTextures,
-//                                    param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(0) : frontFramebuffer.getColorAttachmentTexture(0),
-//                                    param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(3) : frontFramebuffer.getColorAttachmentTexture(1),
-//                                    (row, col) ->
-//                                    {
-//                                        System.out.println("Block " + (row * param.getTextureSubdivision() + col + 1) + '/' +
-//                                            (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
-//                                    });
-//                            }
-//
-//                            tmp = frontFramebuffer;
-//                            frontFramebuffer = backFramebuffer;
-//                            backFramebuffer = tmp;
 
                         int pixelCount = 0;
                         float[] specularFitData = frontFramebuffer.readFloatingPointColorBufferRGBA(2);

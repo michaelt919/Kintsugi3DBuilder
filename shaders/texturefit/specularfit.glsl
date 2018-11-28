@@ -11,19 +11,21 @@
 
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
+uniform sampler2D peakEstimate;
 
 uniform float fittingGamma;
 uniform bool standaloneMode;
 uniform bool disableNormalAdjustment;
 
 
-#define chromaticRoughness false
+#define chromaticRoughness true
 #define chromaticSpecular true
 #define aggressiveNormal false
 #define relaxedSpecularPeaks true
 
 #define USE_LIGHT_INTENSITIES 1
 #define ENABLE_DIFFUSE_ADJUSTMENT 1
+#define USE_PEAK_ESTIMATE 1
 
 vec4 getDiffuseColor()
 {
@@ -148,6 +150,13 @@ ParameterizedFit fitSpecular()
             }
         }
     }
+
+#if USE_PEAK_ESTIMATE
+    maxResidual = texture(peakEstimate, fTexCoord).rgb;
+    maxResidualLuminance[0] = getLuminance(maxResidual);
+    maxResidualLuminance[1] = 1.0;
+    maxResidualIndex = -1;
+#endif
 
     if (dot(intensityWeightedDirectionSum, intensityWeightedDirectionSum) < 1.0)
     {

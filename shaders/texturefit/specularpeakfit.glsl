@@ -7,7 +7,7 @@
 #define CHROMATIC_SPECULAR 1
 #endif
 
-#define MIN_SPECULAR_REFLECTIVITY 0.04
+#define MIN_SPECULAR_REFLECTIVITY 0.001
 
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
@@ -160,7 +160,7 @@ float computeEnergy(Residual maxResiduals[7], vec3 specularPeak, float peakLumin
         dot(diffs[4], diffs[4]) * maxResiduals[5].weight;
 }
 
-vec3 estimateNormal(vec4 diffuseColor, vec3 diffuseNormal, vec3 geometricNormal)
+vec3 estimateNormal(vec4 diffuseColor, vec3 diffuseNormal, vec3 geometricNormal, float peakLuminance)
 {
     float maxLuminance = getMaxLuminance();
     vec2 maxResidualLuminance = vec2(0);
@@ -245,7 +245,7 @@ vec3 estimateNormal(vec4 diffuseColor, vec3 diffuseNormal, vec3 geometricNormal)
                    resolvability * specularNormalFidelity)));                                                       // using the non-singularity and the correlation between the biased average and the geometric normal
                                                                                                                     // as the basis for whether to select the potentially biased normal.
 
-    return maxResidualDirection.xyz + (1 - maxResidualDirection.w) * heuristicNormal;
+    return heuristicNormal;//maxResidualDirection.xyz + (1 - maxResidualDirection.w) * heuristicNormal;
 }
 
 ParameterizedFit fitSpecular()
@@ -267,6 +267,7 @@ ParameterizedFit fitSpecular()
     float maxLuminance = getMaxLuminance();
 
     ParameterizedFit result;
+    result.diffuseColor = diffuseColor;
 
     if (specularPeak.a == 0.0)
     {
@@ -353,8 +354,26 @@ ParameterizedFit fitSpecular()
 //
 //    maxResiduals[6].weight = 0;
 
-    result.diffuseColor = diffuseColor;
+//    maxResiduals[1].weight = 0;
+//    maxResiduals[2].weight = 0;
+//    maxResiduals[3].weight = 0;
+//    maxResiduals[4].weight = 0;
+//    maxResiduals[5].weight = 0;
+//    maxResiduals[6].weight = 0;
 
+
+//    float threshold = 1.0 / (peakLuminance - maxResiduals[3].rating);
+//    maxResiduals[0].weight *= clamp(1.0 / (peakLuminance - maxResiduals[0].rating) - threshold, 1.0 / 256.0, 256.0);
+//    maxResiduals[1].weight *= clamp(1.0 / (peakLuminance - maxResiduals[1].rating) - threshold, 0.0, 256.0);
+//    maxResiduals[2].weight *= clamp(1.0 / (peakLuminance - maxResiduals[2].rating) - threshold, 0.0, 256.0);
+
+//    maxResiduals[0].weight *= clamp(maxResiduals[0].rating - maxResiduals[4].rating, 0.0, 256.0);
+//    maxResiduals[1].weight *= clamp(maxResiduals[1].rating - maxResiduals[4].rating, 0.0, 256.0);
+//    maxResiduals[2].weight *= clamp(maxResiduals[2].rating - maxResiduals[4].rating, 0.0, 256.0);
+//    maxResiduals[3].weight *= clamp(maxResiduals[3].rating - maxResiduals[4].rating, 0.0, 256.0);
+
+//    maxResiduals[1].weight *= clamp(10 * maxResiduals[0].rating / peakLuminance - 9, 0.0, 1.0);
+//    maxResiduals[2].weight *= clamp(10 * maxResiduals[0].rating / peakLuminance - 9, 0.0, 1.0);
 
 
 
@@ -397,18 +416,54 @@ ParameterizedFit fitSpecular()
 //        }
 //    }
 
-//    vec3 bestNormal = oldDiffuseNormal;
-    vec3 bestNormal = estimateNormal(diffuseColor, oldDiffuseNormal, normal);
+////    vec3 bestNormal = oldDiffuseNormal;
+//    vec3 bestNormal = estimateNormal(diffuseColor, oldDiffuseNormal, normal, peakLuminance);
+//
+//    vec3 normalObjSpace = mix(bestNormal, maxResiduals[0].direction,
+//        clamp((maxResiduals[0].rating - maxResiduals[1].rating) / ((peakLuminance - maxResiduals[1].rating)), 0, 1));
 
-    vec3 normalObjSpace = mix(bestNormal, maxResiduals[0].direction,
-        clamp((maxResiduals[0].weight * maxResiduals[0].luminance - maxResiduals[1].weight * maxResiduals[1].luminance)
-            / ((peakLuminance - maxResiduals[1].weight * maxResiduals[1].luminance)), 0, 1));
+    float normalWeight0 = max(1.0 / 256.0, maxResiduals[0].rating - maxResiduals[3].rating)
+        / max(1.0 / 256.0, peakLuminance - maxResiduals[0].rating);
+
+    float normalWeight1 = max(1.0 / 256.0, maxResiduals[1].rating - maxResiduals[3].rating)
+        / max(1.0 / 256.0, peakLuminance - maxResiduals[1].rating);
+
+    float normalWeight2 = (maxResiduals[2].rating - maxResiduals[3].rating) / max(1.0 / 256.0, peakLuminance - maxResiduals[2].rating);
+
+    vec3 top2Direction = normalize(maxResiduals[0].direction * normalWeight0 + maxResiduals[1].direction * normalWeight1);
+
+    vec3 diff10 = maxResiduals[1].direction - maxResiduals[0].direction;
+    vec3 diff20 = maxResiduals[2].direction - maxResiduals[0].direction;
+    vec3 diffsCross = cross(diff10, diff20);
+
+    vec3 equidistant = (2 * dot(diffsCross, diffsCross)) * maxResiduals[0].direction +
+        (cross(diffsCross, diff10) * dot(diff20, diff20) + cross(diff20, diffsCross) * dot(diff10, diff10));
+
+    vec3 generalNormal = estimateNormal(diffuseColor, oldDiffuseNormal, normal, peakLuminance);
+
+    vec3 normalObjSpace =
+        mix(
+            normalize(4 * (normalWeight0 + normalWeight1 - 2 * normalWeight2) * max(0.001, length(equidistant)) * top2Direction + 2 * normalWeight2 * equidistant),
+            generalNormal,
+            1//max(0, (peakLuminance - maxResiduals[0].rating) / (peakLuminance - maxResiduals[3].rating))
+                * max(0, (maxResiduals[0].rating - maxResiduals[1].rating) / (maxResiduals[0].rating - maxResiduals[3].rating)));
+        //top2Direction;
+        //normalize(equidistant);
+        //equidistant * 10;
 
     result.normal = vec4(transpose(tangentToObject) * normalObjSpace, 1.0);
 
+    RoughnessEstimation roughnessEstimate0 = getRoughnessEstimation(maxResiduals[0], peakLuminance, normalObjSpace);
+    RoughnessEstimation roughnessEstimate1 = getRoughnessEstimation(maxResiduals[1], peakLuminance, normalObjSpace);
+    RoughnessEstimation roughnessEstimate2 = getRoughnessEstimation(maxResiduals[2], peakLuminance, normalObjSpace);
 
-    result.roughness = vec4(vec3(max(sqrt(0.25 * MIN_SPECULAR_REFLECTIVITY / getLuminance(specularPeak.rgb)),
-        estimateRoughness(maxResiduals, peakLuminance, normalObjSpace))), 1.0);
+    result.roughness = vec4(vec3(max(0,//sqrt(0.25 * MIN_SPECULAR_REFLECTIVITY / getLuminance(specularPeak.rgb)),
+        //estimateRoughness(maxResiduals, peakLuminance, normalObjSpace)
+            roughnessEstimate0.weightNumTimesDen / max(sqrt(peakLuminance) * 0.5, roughnessEstimate0.weightDenSq)
+                + max(0, 1 - roughnessEstimate0.weightDenSq / (sqrt(peakLuminance) * 0.5))
+                   * specularPeak.a // preliminary roughness estimate
+                   //* roughnessEstimate1.weightNumTimesDen / roughnessEstimate1.weightDenSq
+        )), 1.0);
     result.specularColor = vec4(4 * specularPeak.rgb * result.roughness[0] * result.roughness[0], 1.0);
 
 //    result.roughness = vec4(vec3(sqrt(0.01 / specularPeak.rgb)), 1.0);
