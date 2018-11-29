@@ -199,6 +199,8 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
         Map<CharacteristicBin, List<PeakCandidate>> peakCandidates = new HashMap<>(100000);
         Queue<PeakCandidate> expectedPeaks = new PriorityQueue<>(256 * viewSet.getCameraPoseCount(),
             Comparator.comparingDouble(peakCandidate -> peakCandidate.nDotH));
+        Map<CharacteristicBin, Vector4> residualSums = new HashMap<>(100000);
+        long residualTotal = 0;
 
         try(FramebufferObject<ContextType> fbo = context.buildFramebufferObject(
             viewImages.getWidth(), viewImages.getHeight())
@@ -272,6 +274,21 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
                                     {
                                         maxPeak = peakCandidate;
                                     }
+
+                                    CharacteristicBin residualSumBin = CharacteristicBin.fromContinuous(
+                                        peakCandidate.offPeakSum, Vector3.ZERO, 1.0f, colorSpaceRadius);
+
+                                    if (residualSums.containsKey(residualSumBin))
+                                    {
+                                        residualSums.put(residualSumBin, residualSums.get(residualSumBin)
+                                            .plus(peakCandidate.peak.minus(peakCandidate.threshold).asVector4(1.0f)));
+                                    }
+                                    else
+                                    {
+                                        residualSums.put(residualSumBin, peakCandidate.peak.minus(peakCandidate.threshold).asVector4(1.0f));
+                                    }
+
+                                    residualTotal++;
                                 }
 
                                 if (Float.isFinite(offPeakBuffer.get(4 * k)) && Float.isFinite(offPeakBuffer.get(4 * k + 1))
@@ -325,9 +342,10 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
 
         float[] offPeakTexSpace;
         float[] positionsTexSpace;
+        float[] thresholdTexSpace;
 
         try(FramebufferObject<ContextType> fbo = context.buildFramebufferObject(texWidth, texHeight)
-            .addColorAttachments(ColorFormat.RGBA32F, 3)
+            .addColorAttachments(ColorFormat.RGBA32F, 4)
             .createFramebufferObject())
         {
             fbo.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -337,6 +355,7 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
 
             offPeakTexSpace = fbo.readFloatingPointColorBufferRGBA(1);
             positionsTexSpace = fbo.readFloatingPointColorBufferRGBA(2);
+            thresholdTexSpace = fbo.readFloatingPointColorBufferRGBA(3);
         }
 
         System.out.println("Sorting samples...");
@@ -363,6 +382,45 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
                 .collect(Collectors.toList()));
         }
 
+        System.out.println("Estimating residual...");
+        System.out.println("____________________________________________________________________________________________________");
+
+        Vector3[] estimatedResidual = IntStream.range(0, texWidth * texHeight)
+            .parallel()
+            .mapToObj(i ->
+            {
+                if ((100 * i) / (texWidth * texHeight) > (100 * (i-1)) / (texWidth * texHeight))
+                {
+                    System.out.print(".");
+                }
+
+                float[] totals = new float[4];
+
+                Vector3 offPeak = new Vector3(offPeakTexSpace[4 * i], offPeakTexSpace[4 * i + 1], offPeakTexSpace[4 * i + 2]);
+
+                CharacteristicBin residualSumBin = CharacteristicBin.fromContinuous(offPeak, Vector3.ZERO, 1.0f, colorSpaceRadius);
+
+                for (CharacteristicBin bin : residualSumBin.getSurrounding())
+                {
+                    Vector4 localSum = residualSums.get(bin);
+
+                    if (localSum != null)
+                    {
+                        float weight = (colorSpaceRadius - offPeak.distance(bin.offPeakSum.asFloatingPoint().times(colorSpaceRadius))) / colorSpaceRadius;
+                        totals[0] += weight * localSum.x;
+                        totals[1] += weight * localSum.y;
+                        totals[2] += weight * localSum.z;
+                        totals[3] += weight * localSum.w;
+                    }
+                }
+
+                return new Vector3(2 * totals[0] / (viewSet.getCameraPoseCount() * totals[3]),
+                    2 * totals[1] / (viewSet.getCameraPoseCount() * totals[3]),
+                    2 * totals[2] / (viewSet.getCameraPoseCount() * totals[3]));
+            })
+            .toArray(Vector3[]::new);
+
+        System.out.println();
         System.out.println("Estimating peak reflectance...");
         System.out.println("____________________________________________________________________________________________________");
 
@@ -624,6 +682,8 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
                     double roughnessSum = 0.0;
                     double weightSum = 0.0;
 
+//                    double minRoughness = 1.0;
+
                     for (CharacteristicBin bin : binNeighborhood)
                     {
                         List<PeakCandidate> peakBin = peakCandidates.get(bin);
@@ -646,7 +706,7 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
                                                 + 0.5 * scaledColorSpaceDistance * scaledColorSpaceDistance)
                                             / distanceToExpectedPeak)
                                         / (1.0 - Math.sqrt(0.5))))
-                                    * Math.max(0, candidate.peak.y - 1.0 * candidate.threshold.y - 0.0 * estimatedPeak);
+                                    * Math.max(0, Math.min(1, 2 * (candidate.peak.y - candidate.threshold.y) / (estimatedPeak - candidate.threshold.y)));
 
                                 double nDotHSquared = candidate.nDotH * candidate.nDotH;
 
@@ -654,13 +714,21 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
                                 double denominatorSq = Math.max(0.0, Math.sqrt(estimatedPeak) - nDotHSquared * Math.sqrt(candidate.peak.y * candidate.nDotV));
                                 double denominator = Math.sqrt(denominatorSq);
 
+//                                double roughnessEstimate = weight * (numerator * denominator) / Math.max(Math.sqrt(estimatedPeak) * 0.5, denominatorSq)
+//                                    + (1 - weight * Math.min(1, denominatorSq / (Math.sqrt(estimatedPeak) * 0.5)));
+//                                minRoughness = Math.min(minRoughness, roughnessEstimate);
+
                                 roughnessSum += weight * numerator * denominator;
                                 weightSum += weight * denominatorSq;
                             }
                         }
                     }
 
-                    return roughnessSum / Math.max(0.001, weightSum);
+                    return
+//                        minRoughness;
+//                        roughnessSum / Math.max(0.001, weightSum);
+
+                        Math.sqrt(0.25 * estimatedResidual[i].y / (estimatedPeaks[i].y - thresholdTexSpace[4 * i + 1]));
                 }
                 else
                 {
@@ -765,6 +833,30 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
         System.out.println("Finished.");
 
         // debug
+
+        BufferedImage residualSumImg = new BufferedImage(texWidth, texHeight, BufferedImage.TYPE_INT_ARGB);
+        residualSumImg.setRGB(0, 0, texWidth, texHeight,
+            Arrays.stream(estimatedResidual)
+                .mapToInt(residual ->
+                {
+                    return residualSumImg.getColorModel().getDataElement(new float[] {
+                            Math.min(1.0f, (float)Math.pow(residual.x, 1.0 / 2.2)),
+                            Math.min(1.0f, (float)Math.pow(residual.y, 1.0 / 2.2)),
+                            Math.min(1.0f, (float)Math.pow(residual.z, 1.0 / 2.2)),
+                        1.0f },0);
+                })
+                .toArray(),
+            0, texWidth);
+
+        try
+        {
+            ImageIO.write(residualSumImg, "PNG", new File("debug", "residualTotal.png"));
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
         BufferedImage outImg = new BufferedImage(texWidth, texHeight, BufferedImage.TYPE_INT_ARGB);
         outImg.setRGB(0, 0, texWidth, texHeight, Arrays.stream(estimatedPeaks).mapToInt(
             peak -> outImg.getColorModel().getDataElement(new float[] {
@@ -789,7 +881,7 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
                 .mapToInt(roughness ->
                 {
                     float sqrtRoughness = (float)Math.min(1.0f, Math.sqrt(roughness));
-                    return outImg.getColorModel().getDataElement(new float[] { sqrtRoughness, sqrtRoughness, sqrtRoughness, 1.0f },0);
+                    return roughnessImg.getColorModel().getDataElement(new float[] { sqrtRoughness, sqrtRoughness, sqrtRoughness, 1.0f },0);
                 })
                 .toArray(),
             0, texWidth);

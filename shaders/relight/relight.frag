@@ -920,7 +920,8 @@ void main()
                     // fresnel(predictedMFD.rgb, vec3(distTimesPi(nDotH, roughnessRGB)), hDotV));
 
 #if SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED && HYBRID_SPECULAR_ENABLED
-                mfdFresnel = max(mfdFresnelIBR, mix(mfdFresnelAnalytic, mfdFresnelIBR, predictedMFD.a));
+                mfdFresnel = //max(mfdFresnelIBR, mix(mfdFresnelAnalytic, mfdFresnelIBR, predictedMFD.a));
+                    mfdFresnelIBR + mfdFresnelAnalytic;
 #else
                 mfdFresnel = mfdFresnelIBR;
 #endif // SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED
@@ -936,7 +937,8 @@ void main()
 #if IMAGE_BASED_RENDERING_ENABLED
 
 #if SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED && HYBRID_SPECULAR_ENABLED
-                mfdFresnel = max(max(vec3(0.0), predictedMFD.rgb), mix(mfdFresnelAnalytic, max(vec3(0.0), predictedMFD.rgb), predictedMFD.a));
+                mfdFresnel = //max(max(vec3(0.0), predictedMFD.rgb), mix(mfdFresnelAnalytic, max(vec3(0.0), predictedMFD.rgb), predictedMFD.a));
+                    max(vec3(0.0), predictedMFD.rgb + mfdFresnelAnalytic);
 #else
                 mfdFresnel = max(vec3(0.0), predictedMFD.rgb);
 #endif // SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED
