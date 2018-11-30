@@ -38,6 +38,17 @@ vec3 getEnvironment(vec3 lightDirection)
     return result;
 }
 
+vec3 getEnvironmentSpecular(vec3 lightDirection)
+{
+    vec3 result;
+#if ENVIRONMENT_TEXTURE_ENABLED
+    result = ambientColor * texture(environmentMap, lightDirection).rgb;
+#else
+    result = ambientColor;
+#endif
+    return result;
+}
+
 vec3 getEnvironmentDiffuse(vec3 normalDirection)
 {    vec3 result;
 

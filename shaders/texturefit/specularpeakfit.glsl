@@ -410,8 +410,8 @@ ParameterizedFit fitSpecular()
 //        }
 //    }
 
-//    vec3 bestNormal = oldDiffuseNormal;
-    vec3 bestNormal = estimateNormal(diffuseColor, oldDiffuseNormal, normal, peakLuminance);
+    vec3 bestNormal = oldDiffuseNormal;
+//    vec3 bestNormal = estimateNormal(diffuseColor, oldDiffuseNormal, normal, peakLuminance);
 
     vec3 normalObjSpace = mix(bestNormal, maxResiduals[0].direction,
         clamp((maxResiduals[0].rating - maxResiduals[1].rating) / ((peakLuminance - maxResiduals[1].rating)), 0, 1));
@@ -447,64 +447,67 @@ ParameterizedFit fitSpecular()
 
     result.normal = vec4(transpose(tangentToObject) * normalObjSpace, 1.0);
 
-//    RoughnessEstimation roughnessEstimate0 = getRoughnessEstimation(maxResiduals[0], peakLuminance, normalObjSpace);
-//    RoughnessEstimation roughnessEstimate1 = getRoughnessEstimation(maxResiduals[1], peakLuminance, normalObjSpace);
-//    RoughnessEstimation roughnessEstimate2 = getRoughnessEstimation(maxResiduals[2], peakLuminance, normalObjSpace);
-//
-//    float roughness0 =
-//
-//        roughnessEstimate0.weightNumTimesDen / max(sqrt(peakLuminance) * 0.5, roughnessEstimate0.weightDenSq)
-//                * min(1, 2 * (maxResiduals[0].luminance - maxResiduals[1].luminance) / (peakLuminance - maxResiduals[1].luminance))
-//            + (1 - min(1, roughnessEstimate0.weightDenSq / (sqrt(peakLuminance) * 0.5))
-//                    * min(1, 2 * (maxResiduals[0].luminance - maxResiduals[1].luminance) / (peakLuminance - maxResiduals[1].luminance))
-//                ) * specularPeak.a; // preliminary roughness estimate
-//
-//
-//    float roughness1 =
-//        roughnessEstimate1.weightNumTimesDen / max(sqrt(peakLuminance) * 0.5, roughnessEstimate1.weightDenSq)
-//            + max(0, 1 - roughnessEstimate1.weightDenSq / (sqrt(peakLuminance) * 0.5)) * specularPeak.a; // preliminary roughness estimate
-//
-//    float roughness2 =
-//        roughnessEstimate2.weightNumTimesDen / max(sqrt(peakLuminance) * 0.5, roughnessEstimate2.weightDenSq)
-//            + max(0, 1 - roughnessEstimate2.weightDenSq / (sqrt(peakLuminance) * 0.5)) * specularPeak.a; // preliminary roughness estimate
-//
-//    result.roughness = vec4(vec3(max(0,//sqrt(0.25 * MIN_SPECULAR_REFLECTIVITY / getLuminance(specularPeak.rgb)),
-//
-//        //estimateRoughness(maxResiduals, peakLuminance, normalObjSpace)
-//
-////        min(
-////            roughness0,
-////            min(
-////                mix(roughness0, roughness1, (maxResiduals[1].rating - maxResiduals[3].rating) / (maxResiduals[0].rating - maxResiduals[3].rating)),
-////                mix(roughness0, roughness2, (maxResiduals[2].rating - maxResiduals[3].rating) / (maxResiduals[0].rating - maxResiduals[3].rating))))
-//
-//            roughness0
-//
-//        )), 1.0);
-
-
-
-    maxResiduals[0].luminance -= maxResiduals[1].luminance;
-    peakLuminance -= maxResiduals[1].luminance;
     RoughnessEstimation roughnessEstimate0 = getRoughnessEstimation(maxResiduals[0], peakLuminance, normalObjSpace);
-
-    float nDotH = max(0.0, dot(normalObjSpace, maxResiduals[0].direction));
-    float nDotHSquared = nDotH * nDotH;
-    float mfd = maxResiduals[0].luminance * maxResiduals[0].nDotV / (peakLuminance * specularPeak.a * specularPeak.a);
-    float w = min(nDotHSquared * (1 - nDotHSquared), 0.25 / mfd);
-
-    float numerator = max(0.0, 1 - 2 * mfd * w - sqrt(max(0.0, 1 - 4 * mfd * w)));
-    float denominator = max(0.0, 2 * nDotHSquared * nDotHSquared * mfd);
+    RoughnessEstimation roughnessEstimate1 = getRoughnessEstimation(maxResiduals[1], peakLuminance, normalObjSpace);
+    RoughnessEstimation roughnessEstimate2 = getRoughnessEstimation(maxResiduals[2], peakLuminance, normalObjSpace);
 
     float roughness0 =
-        maxResiduals[0].luminance * denominator * numerator * maxResiduals[0].luminance / peakLuminance
-            + (1 - denominator * denominator * maxResiduals[0].luminance / peakLuminance) * specularPeak.a; // preliminary roughness estimate
 
-    result.roughness = vec4(vec3(max(specularPeak.a, roughness0)), 1.0);
+        roughnessEstimate0.weightNumTimesDen / max(sqrt(peakLuminance) * 0.5, roughnessEstimate0.weightDenSq)
+                * min(1, 2 * (maxResiduals[0].luminance - maxResiduals[1].luminance) / (peakLuminance - maxResiduals[1].luminance))
+            + (1 - min(1, roughnessEstimate0.weightDenSq / (sqrt(peakLuminance) * 0.5))
+                    * min(1, 2 * (maxResiduals[0].luminance - maxResiduals[1].luminance) / (peakLuminance - maxResiduals[1].luminance))
+                ) * specularPeak.a; // preliminary roughness estimate
 
+
+    float roughness1 =
+        roughnessEstimate1.weightNumTimesDen / max(sqrt(peakLuminance) * 0.5, roughnessEstimate1.weightDenSq)
+            + max(0, 1 - roughnessEstimate1.weightDenSq / (sqrt(peakLuminance) * 0.5)) * specularPeak.a; // preliminary roughness estimate
+
+    float roughness2 =
+        roughnessEstimate2.weightNumTimesDen / max(sqrt(peakLuminance) * 0.5, roughnessEstimate2.weightDenSq)
+            + max(0, 1 - roughnessEstimate2.weightDenSq / (sqrt(peakLuminance) * 0.5)) * specularPeak.a; // preliminary roughness estimate
+
+    result.roughness = vec4(vec3(max(0,//sqrt(0.25 * MIN_SPECULAR_REFLECTIVITY / getLuminance(specularPeak.rgb)),
+
+        //estimateRoughness(maxResiduals, peakLuminance, normalObjSpace)
+
+//        min(
+//            roughness0,
+//            min(
+//                mix(roughness0, roughness1, (maxResiduals[1].rating - maxResiduals[3].rating) / (maxResiduals[0].rating - maxResiduals[3].rating)),
+//                mix(roughness0, roughness2, (maxResiduals[2].rating - maxResiduals[3].rating) / (maxResiduals[0].rating - maxResiduals[3].rating))))
+
+            roughness0
+
+        )), 1.0);
+
+
+
+//    maxResiduals[0].luminance -= maxResiduals[1].luminance;
+//    peakLuminance -= maxResiduals[1].luminance;
+//    RoughnessEstimation roughnessEstimate0 = getRoughnessEstimation(maxResiduals[0], peakLuminance, normalObjSpace);
+//
+//    float nDotH = max(0.0, dot(normalObjSpace, maxResiduals[0].direction));
+//    float nDotHSquared = nDotH * nDotH;
+//    float mfd = maxResiduals[0].luminance * maxResiduals[0].nDotV / (peakLuminance * specularPeak.a * specularPeak.a);
+//    float w = min(nDotHSquared * (1 - nDotHSquared), 0.25 / mfd);
+//
+//    float numerator = max(0.0, 1 - 2 * mfd * w - sqrt(max(0.0, 1 - 4 * mfd * w)));
+//    float denominator = max(0.0, 2 * nDotHSquared * nDotHSquared * mfd);
+//
+//    float roughness0 =
+//        maxResiduals[0].luminance * denominator * numerator * maxResiduals[0].luminance / peakLuminance
+//            + (1 - denominator * denominator * maxResiduals[0].luminance / peakLuminance) * specularPeak.a; // preliminary roughness estimate
+//
+//    result.roughness = vec4(vec3(max(specularPeak.a, roughness0)), 1.0);
 
 //    result.roughness = vec4(vec3(specularPeak.a), 1.0);
-    result.specularColor = vec4(4 * specularPeak.rgb * specularPeak.a * specularPeak.a, 1.0); //vec4(4 * specularPeak.rgb * result.roughness[0] * result.roughness[0], 1.0);
+
+
+    result.specularColor =
+        vec4(4 * specularPeak.rgb * result.roughness[0] * result.roughness[0], 1.0);
+//        vec4(4 * specularPeak.rgb * specularPeak.a * specularPeak.a, 1.0);
 
 //    result.roughness = vec4(vec3(sqrt(0.01 / specularPeak.rgb)), 1.0);
 //    result.specularColor = vec4(0.04, 0.04, 0.04, 1.0);

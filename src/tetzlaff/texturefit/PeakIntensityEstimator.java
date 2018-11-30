@@ -32,6 +32,8 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
     private Texture<ContextType> diffuseTexture;
     private Texture<ContextType> normalTexture;
 
+    private static final int SAMPLE_SPARSITY = 32;
+
     PeakIntensityEstimator(Context<ContextType> context, ViewSet viewSet)
     {
         this.context = context;
@@ -246,15 +248,15 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
 //                    e.printStackTrace();
 //                }
 
-                for (int y = 0; y < viewImages.getHeight(); y += 8)
+                for (int y = 0; y < viewImages.getHeight(); y += SAMPLE_SPARSITY)
                 {
-                    for (int x = 0; x < viewImages.getHeight(); x += 8)
+                    for (int x = 0; x < viewImages.getHeight(); x += SAMPLE_SPARSITY)
                     {
                         PeakCandidate maxPeak = null;
 
-                        for (int dy = 0; dy < 8 && y + dy < viewImages.getHeight(); dy++)
+                        for (int dy = 0; dy < SAMPLE_SPARSITY && y + dy < viewImages.getHeight(); dy++)
                         {
-                            for (int dx = 0; dx < 8 && x + dx < viewImages.getWidth(); dx++)
+                            for (int dx = 0; dx < SAMPLE_SPARSITY && x + dx < viewImages.getWidth(); dx++)
                             {
                                 int k = (y + dy) * viewImages.getWidth() + x + dx;
 
@@ -726,9 +728,8 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
 
                     return
 //                        minRoughness;
-//                        roughnessSum / Math.max(0.001, weightSum);
-
-                        Math.sqrt(0.25 * estimatedResidual[i].y / (estimatedPeaks[i].y - thresholdTexSpace[4 * i + 1]));
+                        roughnessSum / Math.max(0.001, weightSum);
+//                        Math.sqrt(0.25 * estimatedResidual[i].y / (estimatedPeaks[i].y - thresholdTexSpace[4 * i + 1]));
                 }
                 else
                 {
@@ -755,9 +756,12 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
         }
 
         Collection<IntVector2> remainingRoughnessHoles = new ArrayDeque<>(roughnessHoles.size());
+        int previousHoleCount;
 
         do
         {
+            previousHoleCount = roughnessHoles.size();
+
             while (!roughnessHoles.isEmpty())
             {
                 IntVector2 hole = roughnessHoles.poll();
@@ -828,7 +832,7 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
             remainingRoughnessHoles.clear();
             roughnessChanges.clear();
         }
-        while(!roughnessHoles.isEmpty());
+        while(!roughnessHoles.isEmpty() || roughnessHoles.size() == previousHoleCount);
 
         System.out.println("Finished.");
 
