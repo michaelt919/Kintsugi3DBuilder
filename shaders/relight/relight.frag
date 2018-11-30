@@ -423,14 +423,15 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
         getLuminance(maxSamples[3].sampleBRDF),
         getLuminance(maxSamples[4].sampleBRDF));
 
-    float weightSum = weights[0] + weights[1] + weights[2] + weights[3];
+//    float weightSum = weights[0] + weights[1] + weights[2] + weights[3];
 
-    sum -= (weights[0] * maxSamples[1].sampleResult + weights[1] * maxSamples[2].sampleResult
-        + weights[2] * maxSamples[3].sampleResult + weights[3] * maxSamples[4].sampleResult) / weightSum;
+//    sum -= (weights[0] * maxSamples[1].sampleResult + weights[1] * maxSamples[2].sampleResult
+//        + weights[2] * maxSamples[3].sampleResult + weights[3] * maxSamples[4].sampleResult) / weightSum;
     sum +=
-        (weights[0] * maxSamples[1].sampleWeight + weights[1] * maxSamples[2].sampleWeight
-               + weights[2] * maxSamples[3].sampleWeight + weights[3] * maxSamples[4].sampleWeight) / weightSum *
-        vec4(peakTimes4Pi * getEnvironment(mat3(envMapMatrix) * -reflect(normalize(viewPos.xyz - fPosition.xyz), normalDir)), 1.0 / (2.0 * PI));
+//        (weights[0] * maxSamples[1].sampleWeight + weights[1] * maxSamples[2].sampleWeight
+//               + weights[2] * maxSamples[3].sampleWeight + weights[3] * maxSamples[4].sampleWeight) / weightSum *
+        // TODO use residual specular color, not full specular
+        vec4(specularColor * VIEW_COUNT * getEnvironment(mat3(envMapMatrix) * -reflect(normalize(viewPos.xyz - fPosition.xyz), normalDir)), 0.0);
 
     if (sum.a > 0.0)
     {

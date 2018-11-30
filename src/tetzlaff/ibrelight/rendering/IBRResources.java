@@ -72,6 +72,8 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
     public final Texture3D<ContextType> eigentextures;
 
+    public final Texture2D<ContextType> residualTexture;
+
     /**
      * A 1D texture defining how encoded RGB values should be converted to linear luminance.
      */
@@ -585,7 +587,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         {
             this.texCoordBuffer = null;
         }
-        
+
         if (geometry != null && geometry.hasNormals())
         {
             this.normalBuffer = context.createVertexBuffer().setData(geometry.getNormals());
@@ -594,7 +596,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         {
             this.normalBuffer = null;
         }
-        
+
         if (geometry != null && geometry.hasTexCoords() && geometry.hasNormals())
         {
             this.tangentBuffer = context.createVertexBuffer().setData(geometry.getTangents());
@@ -780,6 +782,30 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             normalTexture = null;
             specularTexture = null;
             roughnessTexture = null;
+        }
+
+        if (viewSet.getResidualTextureFile() != null)
+        {
+            System.out.println("Residual texture found.");
+            ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> residualTextureBuilder =
+                context.getTextureFactory().build2DColorTextureFromFile(viewSet.getResidualTextureFile(), true);
+            if (loadOptions.isCompressionRequested())
+            {
+                residualTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
+            }
+            else
+            {
+                residualTextureBuilder.setInternalFormat(ColorFormat.RGB8);
+            }
+
+            residualTexture = residualTextureBuilder
+                .setMipmapsEnabled(loadOptions.areMipmapsRequested())
+                .setLinearFilteringEnabled(true)
+                .createTexture();
+        }
+        else
+        {
+            residualTexture = null;
         }
 
         if (this.depthTextures != null)
@@ -1234,6 +1260,15 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         else
         {
             program.setTexture("roughnessMap", this.roughnessTexture);
+        }
+
+        if (this.residualTexture == null)
+        {
+            program.setTexture("residualMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
+        }
+        else
+        {
+            program.setTexture("residualMap", this.residualTexture);
         }
     }
 
