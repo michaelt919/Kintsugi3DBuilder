@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
-Main-Class: tetzlaff.texturefit.TextureGenerationProgram
+Main-Class: tetzlaff.reflectancefit.ReflectanceFitProgram
 
