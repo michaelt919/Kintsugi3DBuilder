@@ -1,4 +1,4 @@
-package tetzlaff.ibrelight;//Created by alexk on 8/2/2017.
+package tetzlaff.imagedata;//Created by alexk on 8/2/2017.
 
 public enum RenderingMode 
 {

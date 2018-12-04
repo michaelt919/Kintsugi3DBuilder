@@ -1,4 +1,4 @@
-package tetzlaff.ibrelight;//Created by alexk on 7/31/2017.
+package tetzlaff.imagedata;//Created by alexk on 7/31/2017.
 
 public interface ReadonlyLoadOptionsModel 
 {

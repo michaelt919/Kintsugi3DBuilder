@@ -1,4 +1,4 @@
-package tetzlaff.ibrelight;
+package tetzlaff.imagedata;
 
 import tetzlaff.gl.vecmath.Matrix4;
 

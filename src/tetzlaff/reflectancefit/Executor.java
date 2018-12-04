@@ -2,14 +2,11 @@ package tetzlaff.reflectancefit;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
-import javax.xml.stream.XMLStreamException;
 
-import tetzlaff.gl.core.*;
+import tetzlaff.gl.core.Context;
 
 /**
  * The main entry point for the reflectance parameter fitting computation.
@@ -58,60 +55,79 @@ public class Executor<ContextType extends Context<ContextType>>
 
     /**
      * Runs the main reflectance parameter fitting computation.
-     * @throws IOException
-     * @throws XMLStreamException
+     * @throws Exception
      */
-    public void execute() throws IOException, XMLStreamException
+    @SuppressWarnings("ProhibitedExceptionDeclared")
+    public void execute() throws Exception
     {
-        try(ParameterFittingResources<ContextType> resources = new ParameterFittingResources<>(context, cameraFile, modelFile, imageDir, maskDir, rescaleDir, options))
+        ReflectanceDataAccessImpl<ContextType> reflectanceDataAccess =
+            new ReflectanceDataAccessImpl<>(context, cameraFile, modelFile, imageDir, maskDir, rescaleDir, options);
+
+        try(ParameterFittingResourcesImpl<ContextType> resources = new ParameterFittingResourcesImpl<>(context, reflectanceDataAccess, options))
         {
+            // Print out some information about the graphics system for debugging purposes.
             System.out.println("Max vertex uniform components across all blocks:" + context.getState().getMaxCombinedVertexUniformComponents());
             System.out.println("Max fragment uniform components across all blocks:" + context.getState().getMaxCombinedFragmentUniformComponents());
             System.out.println("Max size of a uniform block in bytes:" + context.getState().getMaxUniformBlockSize());
             System.out.println("Max texture array layers:" + context.getState().getMaxArrayTextureLayers());
 
-            resources.loadMeshAndViewSet();
+            // Load geometry, shaders, and camera information, and initialize basic graphics state
+            resources.initialize();
 
-            outputDir.mkdirs();
-
-            if(!resources.getViewSet().hasCustomLuminanceEncoding())
+            // Print a warning if color calibration data was not supplied either in the user interface or in the view set file.
+            if(!reflectanceDataAccess.getViewSet().hasCustomLuminanceEncoding())
             {
                 System.out.println("WARNING: no luminance mapping found.  Reflectance values are not physically grounded.");
             }
 
-            context.getState().enableDepthTest();
-            context.getState().disableBackFaceCulling();
-
-            resources.compileShaders();
-
+            // Set the primary view to the one selected in the user interface.
+            reflectanceDataAccess.getViewSet().setPrimaryView(options.getPrimaryViewName());
             System.out.println("Primary view: " + options.getPrimaryViewName());
-            resources.getViewSet().setPrimaryView(options.getPrimaryViewName());
-            System.out.println("Primary view index: " + resources.getViewSet().getPrimaryViewIndex());
+            System.out.println("Primary view index: " + reflectanceDataAccess.getViewSet().getPrimaryViewIndex());
 
-            // Load textures, generate visibility depth textures, estimate light source intensity
-            double avgDistance = resources.loadTextures();
-            resources.estimateLightIntensity(avgDistance);
+            // Rescale images if requested.
+            if (options.isImageRescalingEnabled())
+            {
+                reflectanceDataAccess.rescaleImages();
+            }
 
-            resources.getViewSet().setGeometryFileName(modelFile.getName());
-            Path relativePathToRescaledImages = outputDir.toPath().relativize(imageDir.toPath());
-            resources.getViewSet().setRelativeImagePathName(relativePathToRescaledImages.toString());
+            // Load all the images and calibrate the intensity of the light source.
+            resources.loadImagesAndCalibrateLight();
 
+            // Update the geometry file name and the relative path to the image directory in the view set.
+            reflectanceDataAccess.getViewSet().setGeometryFileName(modelFile.getName());
+
+            if (options.isImageRescalingEnabled())
+            {
+                reflectanceDataAccess.getViewSet().setRelativeImagePathName(outputDir.toPath().relativize(rescaleDir.toPath()).toString());
+            }
+            else
+            {
+                reflectanceDataAccess.getViewSet().setRelativeImagePathName(outputDir.toPath().relativize(imageDir.toPath()).toString());
+            }
+
+            // Make sure the output directory exists.
+            outputDir.mkdirs();
+
+            // Write the updated view set file to the output directory.
             try(FileOutputStream outputStream = new FileOutputStream(new File(outputDir, cameraFile.getName().split("\\.")[0] + ".vset")))
             {
-                resources.getViewSet().writeVSETFileToStream(outputStream);
+                reflectanceDataAccess.getViewSet().writeVSETFileToStream(outputStream);
                 outputStream.flush();
             }
 
             if (options.isDiffuseTextureEnabled() || options.isSpecularTextureEnabled())
             {
-                File objFileCopy = new File(outputDir, modelFile.getName());
-                Files.copy(modelFile.toPath(), objFileCopy.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                // Create a copy of the model in the output directory.
+                Files.copy(modelFile.toPath(), new File(outputDir, modelFile.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
 
+                // Fit to the parameterized model.
                 ParameterFittingResult result = new ParameterFitting<>(context, resources, options).fit();
 
                 System.out.println("Saving textures...");
                 Date timestamp = new Date();
 
+                // Save the textures containing the parameters.
                 result.writeToFiles(new File(outputDir, resources.getMaterialFileName()), resources.getMaterialName());
 
                 System.out.println("Textures saved in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");

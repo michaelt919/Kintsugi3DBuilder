@@ -1,7 +1,9 @@
-package tetzlaff.ibrelight;
+package tetzlaff.imagedata;
 
-import java.io.*;
-import java.nio.file.Path;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.*;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
@@ -20,8 +22,13 @@ import tetzlaff.gl.vecmath.Vector4;
  * A class representing a collection of photographs, or views.
  * @author Michael Tetzlaff
  */
-public final class ViewSet
+public final class ViewSetImpl extends ViewSetBase
 {
+    /**
+     * A list containing the relative name of the image file corresponding to each view.
+     */
+    private final List<String> imageFileNames;
+
     /**
      * A list of camera poses defining the transformation from object space to camera space for each view.
      * These are necessary to perform projective texture mapping.
@@ -46,62 +53,9 @@ public final class ViewSet
     private final List<Integer> cameraProjectionIndexList;
 
     /**
-     * A list of light source positions, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
-     * Assumed by convention to be in camera space.
-     * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
-     */
-    private final List<Vector3> lightPositionList;
-
-    /**
-     * A list of light source intensities, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
-     * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
-     */
-    private final List<Vector3> lightIntensityList;
-
-    /**
      * A list containing an entry for every view which designates the index of the light source position and intensity that should be used for each view.
      */
     private final List<Integer> lightIndexList;
-
-    /**
-     * The reference linear luminance values used for decoding pixel colors.
-     */
-    private double[] linearLuminanceValues;
-
-    /**
-     * The reference encoded luminance values used for decoding pixel colors.
-     */
-    private byte[] encodedLuminanceValues;
-
-    /**
-     * A list containing the relative name of the image file corresponding to each view.
-     */
-    private final List<String> imageFileNames;
-
-    /**
-     * The absolute file path to be used for loading all resources.
-     */
-    private File rootDirectory;
-
-    /**
-     * The relative file path to be used for loading images.
-     */
-    private String relativeImagePath;
-
-    /**
-     * The relative name of the mesh file.
-     */
-    private String geometryFileName;
-
-    /**
-     * Used to decode pixel colors according to a gamma curve if reference values are unavailable, otherwise, affects the absolute brightness of the decoded colors.
-     */
-    private float gamma;
-
-    /**
-     * If false, inverse-square light attenuation should be applied.
-     */
-    private boolean infiniteLightSources;
 
     /**
      * The recommended near plane to use when rendering this view set.
@@ -113,57 +67,174 @@ public final class ViewSet
      */
     private final float recommendedFarPlane;
 
-    /**
-     * The index of the view that sets the initial orientation when viewing, is used for color calibration, etc.
-     */
-    private int primaryViewIndex = 0;
-
-    private static class Parameters
+    public static class Parameters extends ParametersBase
     {
-        final List<Matrix4> cameraPoseList = new ArrayList<>(128);
-        final List<Matrix4> cameraPoseInvList = new ArrayList<>(128);
-        final List<Projection> cameraProjectionList = new ArrayList<>(128);
-        final List<Integer> cameraProjectionIndexList = new ArrayList<>(128);
-        final List<Vector3> lightPositionList = new ArrayList<>(128);
-        final List<Vector3> lightIntensityList = new ArrayList<>(128);
-        final List<Integer> lightIndexList = new ArrayList<>(128);
-        final List<String> imageFileNames = new ArrayList<>(128);
-        String relativeImagePath;
-        String geometryFileName;
-        File directory;
-        float gamma = 2.2f;
-        boolean infiniteLightSources;
-        double[] linearLuminanceValues;
-        byte[] encodedLuminanceValues;
-        float recommendedNearPlane;
-        float recommendedFarPlane;
+        public final List<Matrix4> cameraPoseList = new ArrayList<>(128);
+        public final List<Matrix4> cameraPoseInvList = new ArrayList<>(128);
+        public final List<Projection> cameraProjectionList = new ArrayList<>(128);
+        public final List<Integer> cameraProjectionIndexList = new ArrayList<>(128);
+        public final List<Integer> lightIndexList = new ArrayList<>(128);
+        public final List<String> imageFileNames = new ArrayList<>(128);
     }
 
     /**
      * Creates a new view set object.
      * @param params The parameters defining the new view set.
      */
-    private ViewSet(Parameters params)
+    public ViewSetImpl(Parameters params)
     {
+        super(params);
         this.cameraPoseList = params.cameraPoseList;
         this.cameraPoseInvList = params.cameraPoseInvList;
         this.cameraProjectionList = params.cameraProjectionList;
         this.cameraProjectionIndexList = params.cameraProjectionIndexList;
-        this.lightPositionList = params.lightPositionList;
-        this.lightIntensityList = params.lightIntensityList;
         this.lightIndexList = params.lightIndexList;
-        this.imageFileNames = params.imageFileNames;
-        this.geometryFileName = params.geometryFileName;
         this.recommendedNearPlane = params.recommendedNearPlane;
         this.recommendedFarPlane = params.recommendedFarPlane;
-        this.gamma = params.gamma;
-        this.infiniteLightSources = params.infiniteLightSources;
-        this.linearLuminanceValues = params.linearLuminanceValues;
-        this.encodedLuminanceValues = params.encodedLuminanceValues;
-        this.rootDirectory = params.directory;
-        this.relativeImagePath = params.relativeImagePath;
+        this.imageFileNames = params.imageFileNames;
     }
 
+    /**
+     * Gets the camera pose defining the transformation from object space to camera space for a particular view.
+     * @param poseIndex The index of the camera pose to retrieve.
+     * @return The camera pose as a 4x4 affine transformation matrix.
+     */
+    @Override
+    public Matrix4 getCameraPose(int poseIndex)
+    {
+        return this.cameraPoseList.get(poseIndex);
+    }
+
+    /**
+     * Gets the inverse of the camera pose, defining the transformation from camera space to object space for a particular view.
+     * @param poseIndex The index of the camera pose to retrieve.
+     * @return The inverse camera pose as a 4x4 affine transformation matrix.
+     */
+    @Override
+    public Matrix4 getCameraPoseInverse(int poseIndex)
+    {
+        return this.cameraPoseInvList.get(poseIndex);
+    }
+
+    /**
+     * Gets the relative name of the image file corresponding to a particular view.
+     * @param poseIndex The index of the image file to retrieve.
+     * @return The image file's relative name.
+     */
+    @Override
+    public String getImageFileName(int poseIndex)
+    {
+        return this.imageFileNames.get(poseIndex);
+    }
+
+    /**
+     * Gets the image file corresponding to a particular view.
+     * @param poseIndex The index of the image file to retrieve.
+     * @return The image file.
+     */
+    @Override
+    public File getImageFile(int poseIndex)
+    {
+        return new File(this.getImageFilePath(), this.imageFileNames.get(poseIndex));
+    }
+
+    @Override
+    public void setPrimaryView(String viewName)
+    {
+        int poseIndex = this.imageFileNames.indexOf(viewName);
+        if (poseIndex >= 0)
+        {
+            this.primaryViewIndex = poseIndex;
+        }
+    }
+
+    /**
+     * Gets the projection transformation defining the intrinsic properties of a particular camera.
+     * @param projectionIndex The index of the camera whose projection transformation is to be retrieved.
+     * IMPORTANT: this is NOT usually the same as the index of the view to be retrieved.
+     * @return The projection transformation.
+     */
+    @Override
+    public Projection getCameraProjection(int projectionIndex)
+    {
+        return this.cameraProjectionList.get(projectionIndex);
+    }
+
+    /**
+     * Gets the index of the projection transformation to be used for a particular view,
+     * which can subsequently be used with getCameraProjection() to obtain the corresponding projection transformation itself.
+     * @param poseIndex The index of the view.
+     * @return The index of the projection transformation.
+     */
+    @Override
+    public int getCameraProjectionIndex(int poseIndex)
+    {
+        return this.cameraProjectionIndexList.get(poseIndex);
+    }
+
+    /**
+     * Gets the index of the light source to be used for a particular view,
+     * which can subsequently be used with getLightPosition() and getLightIntensity() to obtain the actual position and intensity of the light source.
+     * @param poseIndex The index of the view.
+     * @return The index of the light source.
+     */
+    @Override
+    public int getLightIndex(int poseIndex)
+    {
+        return this.lightIndexList.get(poseIndex);
+    }
+
+    /**
+     * Gets the number of camera poses defined in this view set.
+     * @return The number of camera poses defined in this view set.
+     */
+    @Override
+    public int getCameraPoseCount()
+    {
+        return this.cameraPoseList.size();
+    }
+
+    /**
+     * Gets the number of projection transformations defined in this view set.
+     * @return The number of projection transformations defined in this view set.
+     */
+    @Override
+    public int getCameraProjectionCount()
+    {
+        return this.cameraProjectionList.size();
+    }
+
+    /**
+     * Gets the number of lights defined in this view set.
+     * @return The number of projection transformations defined in this view set.
+     */
+    @Override
+    public int getLightCount()
+    {
+        return this.lightPositionList.size();
+    }
+
+    /**
+     * Gets the recommended near plane to use when rendering this view set.
+     * @return The near plane value.
+     */
+    @Override
+    public float getRecommendedNearPlane()
+    {
+        return this.recommendedNearPlane;
+    }
+
+    /**
+     * Gets the recommended far plane to use when rendering this view set.
+     * @return The far plane value.
+     */
+    @Override
+    public float getRecommendedFarPlane()
+    {
+        return this.recommendedFarPlane;
+    }
+
+    @Override
     public NativeVectorBuffer getCameraPoseData()
     {
         // Store the poses in a uniform buffer
@@ -193,6 +264,7 @@ public final class ViewSet
         }
     }
 
+    @Override
     public NativeVectorBuffer getCameraProjectionData()
     {
         // Store the camera projections in a uniform buffer
@@ -222,6 +294,7 @@ public final class ViewSet
         }
     }
 
+    @Override
     public NativeVectorBuffer getCameraProjectionIndexData()
     {
         // Store the camera projection indices in a uniform buffer
@@ -240,6 +313,7 @@ public final class ViewSet
         }
     }
 
+    @Override
     public NativeVectorBuffer getLightPositionData()
     {
         // Store the light positions in a uniform buffer
@@ -262,6 +336,7 @@ public final class ViewSet
         }
     }
 
+    @Override
     public NativeVectorBuffer getLightIntensityData()
     {
         // Store the light positions in a uniform buffer
@@ -283,6 +358,7 @@ public final class ViewSet
         }
     }
 
+    @Override
     public NativeVectorBuffer getLightIndexData()
     {
         // Store the light indices indices in a uniform buffer
@@ -301,41 +377,46 @@ public final class ViewSet
         }
     }
 
-    public ViewSet createPermutation(Iterable<Integer> permutationIndices)
+    /**
+     * A subroutine for guessing an appropriate far plane from an Agisoft PhotoScan XML file.
+     * Assumes that the object must lie between all of the cameras in the file.
+     * @param cameraPoseInvList The list of camera poses.
+     * @return A far plane estimate.
+     */
+    private static float findFarPlane(List<Matrix4> cameraPoseInvList)
     {
-        Parameters params = new Parameters();
+        float minX = Float.POSITIVE_INFINITY;
+        float minY = Float.POSITIVE_INFINITY;
+        float minZ = Float.POSITIVE_INFINITY;
+        float maxX = Float.NEGATIVE_INFINITY;
+        float maxY = Float.NEGATIVE_INFINITY;
+        float maxZ = Float.NEGATIVE_INFINITY;
 
-        for (int i : permutationIndices)
+        for (Matrix4 aCameraPoseInvList : cameraPoseInvList)
         {
-            params.cameraPoseList.add(this.cameraPoseList.get(i));
-            params.cameraPoseInvList.add(this.cameraPoseInvList.get(i));
-            params.cameraProjectionIndexList.add(this.cameraProjectionIndexList.get(i));
-            params.lightIndexList.add(this.lightIndexList.get(i));
-            params.imageFileNames.add(this.imageFileNames.get(i));
+            Vector4 position = aCameraPoseInvList.getColumn(3);
+            minX = Math.min(minX, position.x);
+            minY = Math.min(minY, position.y);
+            minZ = Math.min(minZ, position.z);
+            maxX = Math.max(maxX, position.x);
+            maxY = Math.max(maxY, position.y);
+            maxZ = Math.max(maxZ, position.z);
         }
 
-        params.cameraProjectionList.addAll(this.cameraProjectionList);
-        params.lightIntensityList.addAll(this.lightIntensityList);
-        params.lightPositionList.addAll(this.lightPositionList);
+        // Corner-to-corner
+        float dX = maxX-minX;
+        float dY = maxY-minY;
+        float dZ = maxZ-minZ;
+        return (float)Math.sqrt(dX*dX + dY*dY + dZ*dZ);
 
-        params.relativeImagePath = this.relativeImagePath;
-        params.geometryFileName = this.geometryFileName;
-        params.directory = this.rootDirectory;
-        params.gamma = this.gamma;
-        params.infiniteLightSources = this.infiniteLightSources;
-        params.recommendedNearPlane = this.recommendedNearPlane;
-        params.recommendedFarPlane = this.recommendedFarPlane;
-
-        params.linearLuminanceValues = Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length);
-        params.encodedLuminanceValues = Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length);
-
-        return new ViewSet(params);
+        // Longest Side approach
+//        return Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
     }
 
     /**
-     * Loads a VSET file and creates a corresponding ViewSet object.
+     * Loads a VSET file and creates a corresponding ViewSetImpl object.
      * @param vsetFile The VSET file to load.
-     * @return The newly created ViewSet object.
+     * @return The newly created ViewSetImpl object.
      * @throws FileNotFoundException Thrown if the view set file is not found.
      */
     public static ViewSet loadFromVSETFile(File vsetFile) throws FileNotFoundException
@@ -536,7 +617,7 @@ public final class ViewSet
         System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
         params.directory = vsetFile.getParentFile();
-        return new ViewSet(params);
+        return new ViewSetImpl(params);
     }
 
     /**
@@ -609,7 +690,7 @@ public final class ViewSet
     /**
      * Loads a camera definition file exported in XML format from Agisoft PhotoScan.
      * @param file The Agisoft PhotoScan XML camera file to load.
-     * @return The newly created ViewSet object.
+     * @return The newly created ViewSetImpl object.
      * @throws FileNotFoundException Thrown if the XML camera file is not found.
      */
     public static ViewSet loadFromAgisoftXMLFile(File file) throws FileNotFoundException, XMLStreamException
@@ -1098,415 +1179,8 @@ public final class ViewSet
         
         params.directory = file.getParentFile();
 
-        ViewSet returnValue = new ViewSet(params);
+        ViewSetImpl returnValue = new ViewSetImpl(params);
         returnValue.primaryViewIndex = primaryViewIndex;
         return returnValue;
-    }
-
-    /**
-     * A subroutine for guessing an appropriate far plane from an Agisoft PhotoScan XML file.
-     * Assumes that the object must lie between all of the cameras in the file.
-     * @param cameraPoseInvList The list of camera poses.
-     * @return A far plane estimate.
-     */
-    private static float findFarPlane(List<Matrix4> cameraPoseInvList)
-    {
-        float minX = Float.POSITIVE_INFINITY;
-        float minY = Float.POSITIVE_INFINITY;
-        float minZ = Float.POSITIVE_INFINITY;
-        float maxX = Float.NEGATIVE_INFINITY;
-        float maxY = Float.NEGATIVE_INFINITY;
-        float maxZ = Float.NEGATIVE_INFINITY;
-
-        for (Matrix4 aCameraPoseInvList : cameraPoseInvList)
-        {
-            Vector4 position = aCameraPoseInvList.getColumn(3);
-            minX = Math.min(minX, position.x);
-            minY = Math.min(minY, position.y);
-            minZ = Math.min(minZ, position.z);
-            maxX = Math.max(maxX, position.x);
-            maxY = Math.max(maxY, position.y);
-            maxZ = Math.max(maxZ, position.z);
-        }
-
-        // Corner-to-corner
-        float dX = maxX-minX;
-        float dY = maxY-minY;
-        float dZ = maxZ-minZ;
-        return (float)Math.sqrt(dX*dX + dY*dY + dZ*dZ);
-
-        // Longest Side approach
-//        return Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
-    }
-
-    public void writeVSETFileToStream(OutputStream outputStream)
-    {
-        writeVSETFileToStream(outputStream, null);
-    }
-
-    public void writeVSETFileToStream(OutputStream outputStream, Path parentDirectory)
-    {
-        PrintStream out = new PrintStream(outputStream);
-        out.println("# Created by IBRelight");
-
-        out.println("\n# Geometry file name (mesh)");
-        out.println("m " + (parentDirectory == null ? geometryFileName : parentDirectory.relativize(getGeometryFile().toPath())));
-        out.println("\n# Image file path");
-        out.println("i " + (parentDirectory == null ? relativeImagePath : parentDirectory.relativize(getImageFilePath().toPath())));
-
-        out.println("\n# Estimated near and far planes");
-        out.printf("c\t%.8f\t%.8f\n", recommendedNearPlane, recommendedFarPlane);
-
-        out.println("\n# " + cameraProjectionList.size() + (cameraProjectionList.size()==1?" Sensor":" Sensors"));
-        for (Projection proj : cameraProjectionList)
-        {
-            out.println(proj.toVSETString());
-        }
-
-        if (linearLuminanceValues != null && encodedLuminanceValues != null)
-        {
-            out.println("\n# Luminance encoding: Munsell 2/3.5/5.6.5/8/9.5");
-            out.println("#\tCIE-Y/100\tEncoded");
-            for(int i = 0; i < linearLuminanceValues.length && i < encodedLuminanceValues.length; i++)
-            {
-                out.printf("e\t%.8f\t\t%3d\n", linearLuminanceValues[i], 0x00FF & encodedLuminanceValues[i]);
-            }
-        }
-
-        out.println("\n# " + cameraPoseList.size() + (cameraPoseList.size()==1?" Camera":" Cameras"));
-        for (Matrix4 pose : cameraPoseList)
-        {
-            // TODO validate quaternion computation
-//            Matrix3 rot = new Matrix3(pose);
-//            if (rot.determinant() == 1.0f)
-//            {
-//                // No scale - use quaternion
-//                Vector4 quat = rot.toQuaternion();
-//                Vector4 loc = pose.getColumn(3);
-//                out.printf("p\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\n",
-//                            loc.x, loc.y, loc.z, quat.x, quat.y, quat.z, quat.w);
-//            }
-//            else
-            //{
-                // Write a general 4x4 matrix
-                out.printf("P\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\n",
-                        pose.get(0, 0), pose.get(0, 1), pose.get(0, 2), pose.get(0, 3),
-                        pose.get(1, 0), pose.get(1, 1), pose.get(1, 2), pose.get(1, 3),
-                        pose.get(2, 0), pose.get(2, 1), pose.get(2, 2), pose.get(2, 3),
-                        pose.get(3, 0), pose.get(3, 1), pose.get(3, 2), pose.get(3, 3));
-            //}
-        }
-
-        if(!lightPositionList.isEmpty())
-        {
-            out.println("\n# " + lightPositionList.size() + (lightPositionList.size()==1?" Light":" Lights"));
-            for (int ID=0; ID < lightPositionList.size(); ID++)
-            {
-                Vector3 pos = lightPositionList.get(ID);
-                Vector3 intensity = lightIntensityList.get(ID);
-                out.printf("l\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\n", pos.x, pos.y, pos.z, intensity.x, intensity.y, intensity.z);
-            }
-        }
-
-        out.println("\n# " + cameraPoseList.size() + (cameraPoseList.size()==1?" View":" Views"));
-
-        // Primary view first (so that next time the view set is loaded it will be index 0)
-        out.printf("v\t%d\t%d\t%d\t%s\n", primaryViewIndex,  cameraProjectionIndexList.get(primaryViewIndex), lightIndexList.get(primaryViewIndex), imageFileNames.get(primaryViewIndex));
-        for (int ID=0; ID<cameraPoseList.size(); ID++)
-        {
-            if (ID != primaryViewIndex)
-            {
-                out.printf("v\t%d\t%d\t%d\t%s\n", ID,  cameraProjectionIndexList.get(ID), lightIndexList.get(ID), imageFileNames.get(ID));
-            }
-        }
-
-        out.close();
-    }
-    
-    
-
-    /**
-     * Gets the camera pose defining the transformation from object space to camera space for a particular view.
-     * @param poseIndex The index of the camera pose to retrieve.
-     * @return The camera pose as a 4x4 affine transformation matrix.
-     */
-    public Matrix4 getCameraPose(int poseIndex)
-    {
-        return this.cameraPoseList.get(poseIndex);
-    }
-
-    /**
-     * Gets the inverse of the camera pose, defining the transformation from camera space to object space for a particular view.
-     * @param poseIndex The index of the camera pose to retrieve.
-     * @return The inverse camera pose as a 4x4 affine transformation matrix.
-     */
-    public Matrix4 getCameraPoseInverse(int poseIndex)
-    {
-        return this.cameraPoseInvList.get(poseIndex);
-    }
-
-    /**
-     * Gets the root directory for this view set.
-     * @return The root directory.
-     */
-    public File getRootDirectory()
-    {
-        return this.rootDirectory;
-    }
-
-    /**
-     * Sets the root directory for this view set.
-     * @param rootDirectory The root directory.
-     */
-    public void setRootDirectory(File rootDirectory)
-    {
-        this.rootDirectory = rootDirectory;
-    }
-
-    /**
-     * Gets the name of the geometry file associated with this view set.
-     * @return The name of the geometry file.
-     */
-    public String getGeometryFileName()
-    {
-        return geometryFileName;
-    }
-
-    /**
-     * Sets the name of the geometry file associated with this view set.
-     * @param fileName The name of the geometry file.
-     */
-    public void setGeometryFileName(String fileName)
-    {
-        this.geometryFileName = fileName;
-    }
-
-    /**
-     * Gets the geometry file associated with this view set.
-     * @return The geometry file.
-     */
-    public File getGeometryFile()
-    {
-        return new File(this.rootDirectory, geometryFileName);
-    }
-
-    /**
-     * Gets the image file path associated with this view set.
-     * @return The image file path.
-     */
-    public File getImageFilePath()
-    {
-        return this.relativeImagePath == null ? this.rootDirectory : new File(this.rootDirectory, relativeImagePath);
-    }
-
-    /**
-     * Sets the image file path associated with this view set.
-     * @return imageFilePath The image file path.
-     */
-    public String getRelativeImagePathName()
-    {
-        return this.relativeImagePath;
-    }
-
-    /**
-     * Sets the image file path associated with this view set.
-     * @param relativeImagePath The image file path.
-     */
-    public void setRelativeImagePathName(String relativeImagePath)
-    {
-        this.relativeImagePath = relativeImagePath;
-    }
-
-    /**
-     * Gets the relative name of the image file corresponding to a particular view.
-     * @param poseIndex The index of the image file to retrieve.
-     * @return The image file's relative name.
-     */
-    public String getImageFileName(int poseIndex)
-    {
-        return this.imageFileNames.get(poseIndex);
-    }
-
-    /**
-     * Gets the image file corresponding to a particular view.
-     * @param poseIndex The index of the image file to retrieve.
-     * @return The image file.
-     */
-    public File getImageFile(int poseIndex)
-    {
-        return new File(this.getImageFilePath(), this.imageFileNames.get(poseIndex));
-    }
-    
-    public int getPrimaryViewIndex()
-    {
-        return this.primaryViewIndex;
-    }
-
-    public void setPrimaryView(int poseIndex)
-    {
-        this.primaryViewIndex = poseIndex;
-    }
-
-    public void setPrimaryView(String viewName)
-    {
-        int poseIndex = this.imageFileNames.indexOf(viewName);
-        if (poseIndex >= 0)
-        {
-            this.primaryViewIndex = poseIndex;
-        }
-    }
-
-    /**
-     * Gets the projection transformation defining the intrinsic properties of a particular camera.
-     * @param projectionIndex The index of the camera whose projection transformation is to be retrieved.
-     * IMPORTANT: this is NOT usually the same as the index of the view to be retrieved.
-     * @return The projection transformation.
-     */
-    public Projection getCameraProjection(int projectionIndex)
-    {
-        return this.cameraProjectionList.get(projectionIndex);
-    }
-
-    /**
-     * Gets the index of the projection transformation to be used for a particular view,
-     * which can subsequently be used with getCameraProjection() to obtain the corresponding projection transformation itself.
-     * @param poseIndex The index of the view.
-     * @return The index of the projection transformation.
-     */
-    public int getCameraProjectionIndex(int poseIndex)
-    {
-        return this.cameraProjectionIndexList.get(poseIndex);
-    }
-
-    /**
-     * Gets the position of a particular light source.
-     * Used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
-     * Assumed by convention to be in camera space.
-     * @param lightIndex The index of the light source.
-     * IMPORTANT: this is NOT usually the same as the index of the view to be retrieved.
-     * @return The position of the light source.
-     */
-    public Vector3 getLightPosition(int lightIndex)
-    {
-        return this.lightPositionList.get(lightIndex);
-    }
-
-    /**
-     * Gets the intensity of a particular light source.
-     * Used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
-     * Assumed by convention to be in camera space.
-     * @param lightIndex The index of the light source.
-     * IMPORTANT: this is NOT usually the same as the index of the view to be retrieved.
-     * @return The position of the light source.
-     */
-    public Vector3 getLightIntensity(int lightIndex)
-    {
-        return this.lightIntensityList.get(lightIndex);
-    }
-
-    public void setLightPosition(int lightIndex, Vector3 lightPosition)
-    {
-        this.lightPositionList.set(lightIndex, lightPosition);
-    }
-
-    public void setLightIntensity(int lightIndex, Vector3 lightIntensity)
-    {
-        this.lightIntensityList.set(lightIndex, lightIntensity);
-    }
-
-    /**
-     * Gets the index of the light source to be used for a particular view,
-     * which can subsequently be used with getLightPosition() and getLightIntensity() to obtain the actual position and intensity of the light source.
-     * @param poseIndex The index of the view.
-     * @return The index of the light source.
-     */
-    public int getLightIndex(int poseIndex)
-    {
-        return this.lightIndexList.get(poseIndex);
-    }
-
-    /**
-     * Gets the number of camera poses defined in this view set.
-     * @return The number of camera poses defined in this view set.
-     */
-    public int getCameraPoseCount()
-    {
-        return this.cameraPoseList.size();
-    }
-
-    /**
-     * Gets the number of projection transformations defined in this view set.
-     * @return The number of projection transformations defined in this view set.
-     */
-    public int getCameraProjectionCount()
-    {
-        return this.cameraProjectionList.size();
-    }
-
-    /**
-     * Gets the number of lights defined in this view set.
-     * @return The number of projection transformations defined in this view set.
-     */
-    public int getLightCount()
-    {
-        return this.lightPositionList.size();
-    }
-
-    /**
-     * Gets the recommended near plane to use when rendering this view set.
-     * @return The near plane value.
-     */
-    public float getRecommendedNearPlane()
-    {
-        return this.recommendedNearPlane;
-    }
-
-    /**
-     * Gets the recommended far plane to use when rendering this view set.
-     * @return The far plane value.
-     */
-    public float getRecommendedFarPlane()
-    {
-        return this.recommendedFarPlane;
-    }
-
-    public float getGamma()
-    {
-        return gamma;
-    }
-
-    public boolean hasCustomLuminanceEncoding()
-    {
-        return linearLuminanceValues != null && encodedLuminanceValues != null
-            && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0;
-    }
-
-    public SampledLuminanceEncoding getLuminanceEncoding()
-    {
-        if (hasCustomLuminanceEncoding())
-        {
-            return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues, gamma);
-        }
-        else
-        {
-            return new SampledLuminanceEncoding(gamma);
-        }
-    }
-
-    public void setTonemapping(float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues)
-    {
-        this.gamma = gamma;
-        this.linearLuminanceValues = linearLuminanceValues;
-        this.encodedLuminanceValues = encodedLuminanceValues;
-    }
-
-    public boolean areLightSourcesInfinite()
-    {
-        return infiniteLightSources;
-    }
-
-    public void setInfiniteLightSources(boolean infiniteLightSources)
-    {
-        this.infiniteLightSources = infiniteLightSources;
     }
 }

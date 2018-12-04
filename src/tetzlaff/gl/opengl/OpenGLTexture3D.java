@@ -2,8 +2,6 @@ package tetzlaff.gl.opengl;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -322,11 +320,11 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
         }
     }
 
-    private BufferedImage validateAndScaleImage(int layerIndex, BufferedImage img) throws IOException
+    private BufferedImage validateAndScaleImage(int layerIndex, BufferedImage img)
     {
         if(img == null)
         {
-            throw new IOException("Error: Unsupported image format.");
+            throw new IllegalArgumentException("Image does not exist.");
         }
 
         if (layerIndex < 0 || layerIndex >= this.depth)
@@ -348,13 +346,16 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
         }
     }
 
+
     @Override
-    public void loadLayer(int layerIndex, InputStream fileStream, boolean flipVertical) throws IOException
+    public void loadLayer(int layerIndex, BufferedImage image, BufferedImage mask, boolean flipVertical)
     {
         this.bind();
 
-        ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(validateAndScaleImage(layerIndex, ImageIO.read(fileStream)),
-            null, flipVertical);
+        ByteBuffer buffer = bufferedImageToNativeBuffer(
+            validateAndScaleImage(layerIndex, image),
+            mask == null ? null : validateAndScaleImage(layerIndex, mask),
+            flipVertical);
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
         OpenGLContext.errorCheck();
@@ -367,12 +368,6 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
         {
             this.staleMipmaps = true;
         }
-    }
-
-    @Override
-    public void loadLayer(int layerIndex, File file, boolean flipVertical) throws IOException
-    {
-        this.loadLayer(layerIndex, new FileInputStream(file), flipVertical);
     }
 
     @Override
@@ -412,42 +407,6 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
     }
 
     @Override
-    public <MappedType> void loadLayer(int layerIndex, File file, boolean flipVertical,
-        AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException
-    {
-        this.loadLayer(layerIndex, new FileInputStream(file), flipVertical, mappedType, mappingFunction);
-    }
-
-    @Override
-    public void loadLayer(int layerIndex, InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException
-    {
-        this.bind();
-
-        ByteBuffer buffer = bufferedImageToNativeBuffer(
-            validateAndScaleImage(layerIndex, ImageIO.read(imageStream)),
-            validateAndScaleImage(layerIndex, ImageIO.read(maskStream)),
-            flipVertical);
-
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-        OpenGLContext.errorCheck();
-
-        glTexSubImage3D(this.openGLTextureTarget, 0, 0, 0, layerIndex, this.width, this.height, 1,
-            GL_BGRA, GL_UNSIGNED_BYTE, buffer);
-        OpenGLContext.errorCheck();
-
-        if (this.useMipmaps)
-        {
-            this.staleMipmaps = true;
-        }
-    }
-
-    @Override
-    public void loadLayer(int layerIndex, File imageFile, File maskFile, boolean flipVertical) throws IOException
-    {
-        this.loadLayer(layerIndex, new FileInputStream(imageFile), new FileInputStream(maskFile), flipVertical);
-    }
-
-    @Override
     public <MappedType> void loadLayer(int layerIndex, InputStream imageStream, InputStream maskStream, boolean flipVertical,
         AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException
     {
@@ -483,13 +442,6 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
         {
             this.staleMipmaps = true;
         }
-    }
-
-    @Override
-    public <MappedType> void loadLayer(int layerIndex, File imageFile, File maskFile, boolean flipVertical,
-        AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException
-    {
-        this.loadLayer(layerIndex, new FileInputStream(imageFile), new FileInputStream(maskFile), flipVertical, mappedType, mappingFunction);
     }
 
     @Override

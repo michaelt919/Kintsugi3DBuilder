@@ -1,4 +1,4 @@
-package tetzlaff.ibrelight;
+package tetzlaff.imagedata;
 
 /**
  * A monitor that fires callbacks at key points during the loading of an unstructured light field.

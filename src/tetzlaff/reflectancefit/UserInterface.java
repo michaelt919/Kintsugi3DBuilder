@@ -17,8 +17,9 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.xml.stream.XMLStreamException;
 
-import tetzlaff.ibrelight.SampledLuminanceEncoding;
-import tetzlaff.ibrelight.ViewSet;
+import tetzlaff.imagedata.SampledLuminanceEncoding;
+import tetzlaff.imagedata.ViewSet;
+import tetzlaff.imagedata.ViewSetImpl;
 
 public class UserInterface extends JFrame
 {
@@ -267,11 +268,11 @@ public class UserInterface extends JFrame
                 {
                     if (fileString.endsWith(".vset"))
                     {
-                        currentViewSet = ViewSet.loadFromVSETFile(new File(fileString));
+                        currentViewSet = ViewSetImpl.loadFromVSETFile(new File(fileString));
                     }
                     else if (fileString.endsWith(".xml"))
                     {
-                        currentViewSet = ViewSet.loadFromAgisoftXMLFile(new File(fileString));
+                        currentViewSet = ViewSetImpl.loadFromAgisoftXMLFile(new File(fileString));
                     }
 
                     List<String> cameraPoseNames = IntStream.range(0, currentViewSet.getCameraPoseCount())

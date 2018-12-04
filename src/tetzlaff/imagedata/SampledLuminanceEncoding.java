@@ -1,4 +1,4 @@
-package tetzlaff.ibrelight;
+package tetzlaff.imagedata;
 
 import java.util.function.DoubleUnaryOperator;
 

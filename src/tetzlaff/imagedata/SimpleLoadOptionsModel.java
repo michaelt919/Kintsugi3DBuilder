@@ -1,4 +1,4 @@
-package tetzlaff.ibrelight;
+package tetzlaff.imagedata;
 
 public class SimpleLoadOptionsModel implements ReadonlyLoadOptionsModel
 {

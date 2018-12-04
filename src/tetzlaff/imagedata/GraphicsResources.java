@@ -1,4 +1,4 @@
-package tetzlaff.ibrelight;
+package tetzlaff.imagedata;
 
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -17,7 +17,9 @@ import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.types.AbstractDataTypeFactory;
+import tetzlaff.gl.util.BoundedVertexGeometry;
 import tetzlaff.gl.util.VertexGeometry;
+import tetzlaff.gl.util.VertexGeometryImpl;
 import tetzlaff.gl.vecmath.IntVector3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
@@ -140,19 +142,19 @@ public final class GraphicsResources<ContextType extends Context<ContextType>> i
 
         public Builder<ContextType> loadVSETFile(File vsetFile) throws FileNotFoundException
         {
-            this.viewSet = ViewSet.loadFromVSETFile(vsetFile);
-            this.geometry = VertexGeometry.createFromOBJFile(this.viewSet.getGeometryFile());
+            this.viewSet = ViewSetImpl.loadFromVSETFile(vsetFile);
+            this.geometry = VertexGeometryImpl.createFromOBJFile(this.viewSet.getGeometryFile());
             return this;
         }
 
         // undistorted images are defined in the load options
         public Builder<ContextType> loadAgisoftFiles(File cameraFile, File geometryFile, File undistortedImageDirectory) throws FileNotFoundException, XMLStreamException
         {
-            this.viewSet = ViewSet.loadFromAgisoftXMLFile(cameraFile);
+            this.viewSet = ViewSetImpl.loadFromAgisoftXMLFile(cameraFile);
             Path parentDirectory = cameraFile.getParentFile().toPath();
             if (geometryFile != null)
             {
-                this.geometry = VertexGeometry.createFromOBJFile(geometryFile);
+                this.geometry = VertexGeometryImpl.createFromOBJFile(geometryFile);
                 this.viewSet.setGeometryFileName(parentDirectory.relativize(geometryFile.toPath()).toString());
             }
             if (undistortedImageDirectory != null)
@@ -213,9 +215,9 @@ public final class GraphicsResources<ContextType extends Context<ContextType>> i
         this.viewSet = viewSet;
         this.geometry = geometry;
 
-        if (geometry != null)
+        if (geometry instanceof BoundedVertexGeometry)
         {
-            this.cameraWeights = computeCameraWeights(viewSet, geometry);
+            this.cameraWeights = computeCameraWeights(viewSet, (BoundedVertexGeometry)geometry);
             cameraWeightBuffer = context.createUniformBuffer().setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(1, viewSet.getCameraPoseCount(), cameraWeights));
         }
         else
@@ -803,7 +805,10 @@ public final class GraphicsResources<ContextType extends Context<ContextType>> i
 
                     Matrix4 modelView = Matrix4.lookAt(
                             this.viewSet.getCameraPoseInverse(i).times(this.viewSet.getLightPosition(0).asPosition()).getXYZ(),
-                            this.geometry.getCentroid(),
+                            this.geometry instanceof BoundedVertexGeometry ?
+                                ((BoundedVertexGeometry)this.geometry).getCentroid() :
+                                this.viewSet.getCameraPoseInverse(i).times(
+                                    this.viewSet.getLightPosition(0).plus(new Vector3(0, 0, -1)).asPosition()).getXYZ(),
                             new Vector3(0, 1, 0));
                     depthRenderingProgram.setUniform("model_view", modelView);
 
@@ -1017,7 +1022,7 @@ public final class GraphicsResources<ContextType extends Context<ContextType>> i
         }
     }
 
-    private static float[] computeCameraWeights(ViewSet viewSet, VertexGeometry geometry)
+    private static float[] computeCameraWeights(ViewSet viewSet, BoundedVertexGeometry geometry)
     {
         float[] cameraWeights = new float[viewSet.getCameraPoseCount()];
         

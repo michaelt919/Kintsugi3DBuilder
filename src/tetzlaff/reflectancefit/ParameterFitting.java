@@ -10,13 +10,13 @@ public class ParameterFitting<ContextType extends Context<ContextType>>
 {
     private final ContextType context;
     private final ParameterFittingResources<ContextType> resources;
-    private final Options param;
+    private final Options options;
 
-    ParameterFitting(ContextType context, ParameterFittingResources<ContextType> resources, Options param)
+    ParameterFitting(ContextType context, ParameterFittingResources<ContextType> resources, Options options)
     {
         this.context = context;
         this.resources = resources;
-        this.param = param;
+        this.options = options;
     }
 
     public ParameterFittingResult fit() throws IOException
@@ -24,26 +24,26 @@ public class ParameterFitting<ContextType extends Context<ContextType>>
         try
         (
             FramebufferObject<ContextType> framebuffer1 =
-                this.context.buildFramebufferObject(this.param.getTextureSize(), this.param.getTextureSize())
+                this.context.buildFramebufferObject(this.options.getTextureSize(), this.options.getTextureSize())
                     .addColorAttachments(ColorFormat.RGBA32F, 5)
                     .createFramebufferObject();
 
             FramebufferObject<ContextType> framebuffer2 =
-                this.context.buildFramebufferObject(this.param.getTextureSize(), this.param.getTextureSize())
+                this.context.buildFramebufferObject(this.options.getTextureSize(), this.options.getTextureSize())
                     .addColorAttachments(ColorFormat.RGBA32F, 5)
                     .createFramebufferObject();
 
             FramebufferObject<ContextType> frontFramebufferSpecular =
-                this.context.buildFramebufferObject(this.param.getTextureSize(), this.param.getTextureSize())
+                this.context.buildFramebufferObject(this.options.getTextureSize(), this.options.getTextureSize())
                     .addColorAttachments(ColorFormat.RGBA32F, 5)
                     .createFramebufferObject()
         )
         {
             FramebufferObject<ContextType> diffuseFitFramebuffer = framebuffer1;
 
-            if (this.param.isDiffuseTextureEnabled())
+            if (this.options.isDiffuseTextureEnabled())
             {
-                System.out.println("Beginning diffuse fit (" + (this.param.getTextureSubdivision() * this.param.getTextureSubdivision()) + " blocks)...");
+                System.out.println("Beginning diffuse fit (" + (this.options.getTextureSubdivision() * this.options.getTextureSubdivision()) + " blocks)...");
                 Date timestamp = new Date();
 
                 diffuseFitFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -51,12 +51,12 @@ public class ParameterFitting<ContextType extends Context<ContextType>>
                 diffuseFitFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
                 diffuseFitFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
 
-                DiffuseFit<ContextType> diffuseFit = resources.createDiffuseFit(diffuseFitFramebuffer, this.param.getTextureSubdivision());
+                DiffuseFit<ContextType> diffuseFit = resources.createDiffuseFit(diffuseFitFramebuffer, this.options.getTextureSubdivision());
 
                 diffuseFit.fitImageSpace(resources.getViewTextures(), resources.getDepthTextures(),
                     (row, col) ->
-                        System.out.println("Block " + (row * this.param.getTextureSubdivision() + col + 1) + '/' +
-                            (this.param.getTextureSubdivision() * this.param.getTextureSubdivision()) + " completed."));
+                        System.out.println("Block " + (row * this.options.getTextureSubdivision() + col + 1) + '/' +
+                            (this.options.getTextureSubdivision() * this.options.getTextureSubdivision()) + " completed."));
 
                 System.out.println("Diffuse fit completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
@@ -77,13 +77,13 @@ public class ParameterFitting<ContextType extends Context<ContextType>>
 
                 FramebufferObject<ContextType> backFramebuffer = framebuffer2;
 
-                if (this.param.isDiffuseTextureEnabled())
+                if (this.options.isDiffuseTextureEnabled())
                 {
                     System.out.println("Diffuse fill...");
 
                     // Diffuse
                     FramebufferObject<ContextType> frontFramebuffer = diffuseFitFramebuffer;
-                    for (int i = 0; i < this.param.getTextureSize() / 2; i++)
+                    for (int i = 0; i < this.options.getTextureSize() / 2; i++)
                     {
                         backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
                         backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -108,7 +108,7 @@ public class ParameterFitting<ContextType extends Context<ContextType>>
                     System.out.println("Empty regions filled in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
                 }
 
-                if (this.param.isSpecularTextureEnabled())
+                if (this.options.isSpecularTextureEnabled())
                 {
                     System.out.println("Fitting specular residual...");
                     System.out.println("Creating specular reflectivity texture...");
@@ -125,20 +125,20 @@ public class ParameterFitting<ContextType extends Context<ContextType>>
                     backFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
                     backFramebuffer.clearColorBuffer(4, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, 1.0f);
 
-                    SpecularFit<ContextType> specularFit = resources.createSpecularFit(backFramebuffer, this.param.getTextureSubdivision());
+                    SpecularFit<ContextType> specularFit = resources.createSpecularFit(backFramebuffer, this.options.getTextureSubdivision());
 
                     specularFit.fitImageSpace(resources.getViewTextures(), resources.getDepthTextures(),
-                        (this.param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer : frontFramebufferSpecular).getColorAttachmentTexture(0),
-                        this.param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(3) : frontFramebufferSpecular.getColorAttachmentTexture(1),
+                        (this.options.isDiffuseTextureEnabled() ? diffuseFitFramebuffer : frontFramebufferSpecular).getColorAttachmentTexture(0),
+                        this.options.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(3) : frontFramebufferSpecular.getColorAttachmentTexture(1),
                         (row, col) ->
-                            System.out.println("Block " + (row * this.param.getTextureSubdivision() + col + 1) + '/' +
-                                (this.param.getTextureSubdivision() * this.param.getTextureSubdivision()) + " completed."));
+                            System.out.println("Block " + (row * this.options.getTextureSubdivision() + col + 1) + '/' +
+                                (this.options.getTextureSubdivision() * this.options.getTextureSubdivision()) + " completed."));
 
                     FramebufferObject<ContextType> frontFramebufferHoleFill = backFramebuffer;
                     FramebufferObject<ContextType> backFramebufferHoleFill = frontFramebufferSpecular;
 
                     // Fill holes
-                    for (int i = 0; i < this.param.getTextureSize() / 2; i++)
+                    for (int i = 0; i < this.options.getTextureSize() / 2; i++)
                     {
                         backFramebufferHoleFill.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
                         backFramebufferHoleFill.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -160,11 +160,11 @@ public class ParameterFitting<ContextType extends Context<ContextType>>
                         backFramebufferHoleFill = tmp;
                     }
 
-                    return ParameterFittingResult.fromFramebuffer(frontFramebufferHoleFill, this.param);
+                    return ParameterFittingResult.fromFramebuffer(frontFramebufferHoleFill, this.options);
                 }
                 else
                 {
-                    return ParameterFittingResult.fromFramebuffer(diffuseFitFramebuffer, this.param);
+                    return ParameterFittingResult.fromFramebuffer(diffuseFitFramebuffer, this.options);
                 }
             }
         }
