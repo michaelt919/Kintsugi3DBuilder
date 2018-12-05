@@ -78,7 +78,7 @@ public class Options
      */
     public double[] getLinearLuminanceValues()
     {
-        return this.linearLuminanceValues;
+        return this.linearLuminanceValues.clone();
     }
 
     /**
@@ -90,7 +90,7 @@ public class Options
      */
     public void setLinearLuminanceValues(double... linearLuminanceValues)
     {
-        this.linearLuminanceValues = linearLuminanceValues;
+        this.linearLuminanceValues = linearLuminanceValues.clone();
     }
 
     /**
@@ -104,7 +104,7 @@ public class Options
      */
     public byte[] getEncodedLuminanceValues()
     {
-        return this.encodedLuminanceValues;
+        return this.encodedLuminanceValues.clone();
     }
 
     /**
@@ -118,7 +118,7 @@ public class Options
      */
     public void setEncodedLuminanceValues(byte... encodedLuminanceValues)
     {
-        this.encodedLuminanceValues = encodedLuminanceValues;
+        this.encodedLuminanceValues = encodedLuminanceValues.clone();
     }
 
     /**
@@ -265,7 +265,7 @@ public class Options
 
     /**
      * Sets the bias to be applied to the visibility test, a small number that eliminates errors caused by round-off.
-     * @param cameraVisibilityTestBias
+     * @param cameraVisibilityTestBias The visibility test bias.
      */
     public void setCameraVisibilityTestBias(float cameraVisibilityTestBias)
     {
@@ -358,7 +358,7 @@ public class Options
     /**
      * Gets a tolerance factor for cases where the linear regression used to compute the diffuse surface normal is ill-conditioned.
      * Important: This parameter has no effect on the normal computed as part of the specular reflectance estimation.
-     * @return
+     * @return he tolerance weight for the surface normal computed with the diffuse reflectance.
      */
     public float getDiffuseComputedNormalWeight()
     {
@@ -373,7 +373,7 @@ public class Options
      * by Photoscan exclusively; in this limiting case it will not compute a high resolution surface normal texture at all.  Setting this to a very
      * high number will ensure that the program almost always computes surface normals while relying very little on the ones provided by Photoscan.
      * Important: This parameter has no effect on the normal computed as part of the specular reflectance estimation.
-     * @param diffuseComputedNormalWeight
+     * @param diffuseComputedNormalWeight The tolerance weight for the surface normal computed with the diffuse reflectance.
      */
     public void setDiffuseComputedNormalWeight(float diffuseComputedNormalWeight)
     {

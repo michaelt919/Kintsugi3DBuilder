@@ -13,6 +13,7 @@ import tetzlaff.gl.core.FramebufferSize;
 /**
  * A container for the results of a reflectance parameter estimation attempt.
  */
+@SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
 public final class ParameterFittingResult
 {
     private final float[] diffuseColorDataRGBA;
@@ -61,6 +62,7 @@ public final class ParameterFittingResult
 
     private void writeMTLFile(File mtlFile, String materialName) throws FileNotFoundException
     {
+        //noinspection ImplicitDefaultCharsetUsage
         try(PrintStream materialStream = new PrintStream(mtlFile))
         {
             materialStream.println("newmtl " + materialName);
@@ -173,7 +175,7 @@ public final class ParameterFittingResult
      * albedo image.  In other words, for a given pixel k, the red component is stored at index 4 * k, the green is stored at index 4 * k + 1,
      * the blue is stored at index 4 * k + 2, and the alpha is stored at index 4 * k + 3.
      * Pixels are arranged in row-major order, with rows at the bottom of the texture map occurring before rows at the top of the texture map.
-     * @return
+     * @return An array containing the RGBA diffuse albedo data.
      */
     public float[] getDiffuseColorDataRGBA()
     {
@@ -190,7 +192,7 @@ public final class ParameterFittingResult
      * and the blue component represents the projection of the estimated normal onto the surface normal defined by the triangle mesh.
      * In each case, the range [-1, 1] is mapped onto the [0, 255] range of pixel values.
      * Pixels are arranged in row-major order, with rows at the bottom of the texture map occurring before rows at the top of the texture map.
-     * @return
+     * @return An array containing the surface normal data.
      */
     public float[] getNormalDataRGBA()
     {
@@ -203,7 +205,7 @@ public final class ParameterFittingResult
      * reflectivity image.  In other words, for a given pixel k, the red component is stored at index 4 * k, the green is stored at index 4 * k + 1,
      * the blue is stored at index 4 * k + 2, and the alpha is stored at index 4 * k + 3.
      * Pixels are arranged in row-major order, with rows at the bottom of the texture map occurring before rows at the top of the texture map.
-     * @return
+     * @return An array containing the RGBA specular reflectivity data.
      */
     public float[] getSpecularColorDataRGBA()
     {
@@ -216,7 +218,7 @@ public final class ParameterFittingResult
      * roughness image.  Since roughness is monochrome, this means that for a given pixel k, the red component (stored at index 4 * k), the green
      * (stored at index 4 * k + 1), and the blue (stored at index 4 * k + 2) should have the same value.
      * Pixels are arranged in row-major order, with rows at the bottom of the texture map occurring before rows at the top of the texture map.
-     * @return
+     * @return An array containing the RGBA roughness data.
      */
     public float[] getRoughnessDataRGBA()
     {
@@ -230,7 +232,7 @@ public final class ParameterFittingResult
      * index 4 * k + 1, the blue is stored at index 4 * k + 2, and the alpha is stored at index 4 * k + 3.
      * Although roughness is monochrome, each color channel may have a different error, so these three components will not necessarily all be the same.
      * Pixels are arranged in row-major order, with rows at the bottom of the texture map occurring before rows at the top of the texture map.
-     * @return
+     * @return An array containing the RGBA roughness error data.
      */
     public float[] getRoughnessErrorDataRGBA()
     {
