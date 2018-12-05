@@ -7,7 +7,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
+import tetzlaff.gl.nativebuffer.NativeDataType;
+import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.imagedata.ViewSetImpl.Parameters;
@@ -19,44 +23,44 @@ public abstract class ViewSetBase implements ViewSet
      * Assumed by convention to be in camera space.
      * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
      */
-    protected final List<Vector3> lightPositionList;
+    private final List<Vector3> lightPositionList;
     /**
      * A list of light source intensities, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
      * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
      */
-    protected final List<Vector3> lightIntensityList;
+    private final List<Vector3> lightIntensityList;
     /**
      * The reference linear luminance values used for decoding pixel colors.
      */
-    protected double[] linearLuminanceValues;
+    private double[] linearLuminanceValues;
     /**
      * The reference encoded luminance values used for decoding pixel colors.
      */
-    protected byte[] encodedLuminanceValues;
+    private byte[] encodedLuminanceValues;
     /**
      * The absolute file path to be used for loading all resources.
      */
-    protected File rootDirectory;
+    private File rootDirectory;
     /**
      * The relative file path to be used for loading images.
      */
-    protected String relativeImagePath;
+    private String relativeImagePath;
     /**
      * The relative name of the mesh file.
      */
-    protected String geometryFileName;
+    private String geometryFileName;
     /**
      * Used to decode pixel colors according to a gamma curve if reference values are unavailable, otherwise, affects the absolute brightness of the decoded colors.
      */
-    protected float gamma;
+    private float gamma;
     /**
      * If false, inverse-square light attenuation should be applied.
      */
-    protected boolean infiniteLightSources;
+    private boolean infiniteLightSources;
     /**
      * The index of the view that sets the initial orientation when viewing, is used for color calibration, etc.
      */
-    protected int primaryViewIndex = 0;
+    private int primaryViewIndex = 0;
 
     public static class ParametersBase
     {
@@ -73,7 +77,7 @@ public abstract class ViewSetBase implements ViewSet
         public float recommendedFarPlane;
     }
 
-    public ViewSetBase(ParametersBase params)
+    protected ViewSetBase(ParametersBase params)
     {
         this.lightPositionList = params.lightPositionList;
         this.lightIntensityList = params.lightIntensityList;
@@ -84,6 +88,280 @@ public abstract class ViewSetBase implements ViewSet
         this.geometryFileName = params.geometryFileName;
         this.gamma = params.gamma;
         this.infiniteLightSources = params.infiniteLightSources;
+    }
+
+    @Override
+    public File getRootDirectory()
+    {
+        return this.rootDirectory;
+    }
+
+    @Override
+    public void setRootDirectory(File rootDirectory)
+    {
+        this.rootDirectory = rootDirectory;
+    }
+
+    @Override
+    public String getGeometryFileName()
+    {
+        return geometryFileName;
+    }
+
+    @Override
+    public void setGeometryFileName(String fileName)
+    {
+        this.geometryFileName = fileName;
+    }
+
+    @Override
+    public File getGeometryFile()
+    {
+        return new File(this.rootDirectory, geometryFileName);
+    }
+
+    @Override
+    public File getImageFilePath()
+    {
+        return this.relativeImagePath == null ? this.rootDirectory : new File(this.rootDirectory, relativeImagePath);
+    }
+
+    @Override
+    public String getRelativeImagePathName()
+    {
+        return this.relativeImagePath;
+    }
+
+    @Override
+    public void setRelativeImagePathName(String relativeImagePath)
+    {
+        this.relativeImagePath = relativeImagePath;
+    }
+
+    @Override
+    public int getPrimaryViewIndex()
+    {
+        return this.primaryViewIndex;
+    }
+
+    @Override
+    public void setPrimaryView(int poseIndex)
+    {
+        this.primaryViewIndex = poseIndex;
+    }
+
+    @Override
+    public Vector3 getLightPosition(int lightIndex)
+    {
+        return this.lightPositionList.get(lightIndex);
+    }
+
+    @Override
+    public Vector3 getLightIntensity(int lightIndex)
+    {
+        return this.lightIntensityList.get(lightIndex);
+    }
+
+    @Override
+    public void setLightPosition(int lightIndex, Vector3 lightPosition)
+    {
+        this.lightPositionList.set(lightIndex, lightPosition);
+    }
+
+    @Override
+    public void setLightIntensity(int lightIndex, Vector3 lightIntensity)
+    {
+        this.lightIntensityList.set(lightIndex, lightIntensity);
+    }
+
+    @Override
+    public int getLightCount()
+    {
+        return this.lightPositionList.size();
+    }
+
+    @Override
+    public float getGamma()
+    {
+        return gamma;
+    }
+
+    @Override
+    public boolean hasCustomLuminanceEncoding()
+    {
+        return linearLuminanceValues != null && encodedLuminanceValues != null
+            && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0;
+    }
+
+    @Override
+    public SampledLuminanceEncoding getLuminanceEncoding()
+    {
+        if (hasCustomLuminanceEncoding())
+        {
+            return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues, gamma);
+        }
+        else
+        {
+            return new SampledLuminanceEncoding(gamma);
+        }
+    }
+
+    @Override
+    public void setTonemapping(float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues)
+    {
+        this.gamma = gamma;
+        this.linearLuminanceValues = linearLuminanceValues;
+        this.encodedLuminanceValues = encodedLuminanceValues;
+    }
+
+    @Override
+    public boolean areLightSourcesInfinite()
+    {
+        return infiniteLightSources;
+    }
+
+    @Override
+    public void setInfiniteLightSources(boolean infiniteLightSources)
+    {
+        this.infiniteLightSources = infiniteLightSources;
+    }
+
+    @Override
+    public NativeVectorBuffer getCameraPoseData()
+    {
+        // Store the poses in a uniform buffer
+        if (this.getCameraPoseCount() > 0)
+        {
+            // Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
+            NativeVectorBuffer cameraPoseData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 16,
+                this.getCameraPoseCount());
+
+            for (int k = 0; k < this.getCameraPoseCount(); k++)
+            {
+                int d = 0;
+                for (int col = 0; col < 4; col++) // column
+                {
+                    for (int row = 0; row < 4; row++) // row
+                    {
+                        cameraPoseData.set(k, d, this.getCameraPose(k).get(row, col));
+                        d++;
+                    }
+                }
+            }
+
+            return cameraPoseData;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    @Override
+    public NativeVectorBuffer getCameraProjectionData()
+    {
+        // Store the camera projections in a uniform buffer
+        if (this.getCameraProjectionCount() > 0)
+        {
+            // Flatten the camera projection matrices into 16-component vectors and store them in the vertex list data structure.
+            NativeVectorBuffer cameraProjectionData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 16,
+                this.getCameraProjectionCount());
+
+            for (int k = 0; k < this.getCameraProjectionCount(); k++)
+            {
+                int d = 0;
+                for (int col = 0; col < 4; col++) // column
+                {
+                    for (int row = 0; row < 4; row++) // row
+                    {
+                        Matrix4 projection =
+                            this.getCameraProjection(k).getProjectionMatrix(this.getRecommendedNearPlane(), this.getRecommendedFarPlane());
+                        cameraProjectionData.set(k, d, projection.get(row, col));
+                        d++;
+                    }
+                }
+            }
+            return cameraProjectionData;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    @Override
+    public NativeVectorBuffer getCameraProjectionIndexData()
+    {
+        // Store the camera projection indices in a uniform buffer
+        if (this.getCameraPoseCount() > 0)
+        {
+            return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, this.getCameraPoseCount(),
+                IntStream.range(0, this.getCameraPoseCount()).map(this::getCameraProjectionIndex).toArray());
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    @Override
+    public NativeVectorBuffer getLightPositionData()
+    {
+        // Store the light positions in a uniform buffer
+        if (lightPositionList != null && !lightPositionList.isEmpty())
+        {
+            NativeVectorBuffer lightPositionData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, getLightCount());
+            for (int k = 0; k < getLightCount(); k++)
+            {
+                lightPositionData.set(k, 0, lightPositionList.get(k).x);
+                lightPositionData.set(k, 1, lightPositionList.get(k).y);
+                lightPositionData.set(k, 2, lightPositionList.get(k).z);
+                lightPositionData.set(k, 3, 1.0f);
+            }
+
+            return lightPositionData;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    @Override
+    public NativeVectorBuffer getLightIntensityData()
+    {
+        // Store the light positions in a uniform buffer
+        if (lightIntensityList != null && !lightIntensityList.isEmpty())
+        {
+            NativeVectorBuffer lightIntensityData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, lightIntensityList.size());
+            for (int k = 0; k < getLightCount(); k++)
+            {
+                lightIntensityData.set(k, 0, lightIntensityList.get(k).x);
+                lightIntensityData.set(k, 1, lightIntensityList.get(k).y);
+                lightIntensityData.set(k, 2, lightIntensityList.get(k).z);
+                lightIntensityData.set(k, 3, 1.0f);
+            }
+            return lightIntensityData;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    @Override
+    public NativeVectorBuffer getLightIndexData()
+    {
+        // Store the light indices indices in a uniform buffer
+        if (this.getCameraPoseCount() > 0)
+        {
+            return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, this.getCameraPoseCount(),
+                IntStream.range(0, this.getCameraPoseCount()).map(this::getLightIndex).toArray());
+        }
+        else
+        {
+            return null;
+        }
     }
 
     @Override
@@ -210,183 +488,4 @@ public abstract class ViewSetBase implements ViewSet
 
         out.close();
     }
-
-    /**
-     * Gets the root directory for this view set.
-     * @return The root directory.
-     */
-    @Override
-    public File getRootDirectory()
-    {
-        return this.rootDirectory;
-    }
-
-    /**
-     * Sets the root directory for this view set.
-     * @param rootDirectory The root directory.
-     */
-    @Override
-    public void setRootDirectory(File rootDirectory)
-    {
-        this.rootDirectory = rootDirectory;
-    }
-
-    /**
-     * Gets the name of the geometry file associated with this view set.
-     * @return The name of the geometry file.
-     */
-    @Override
-    public String getGeometryFileName()
-    {
-        return geometryFileName;
-    }
-
-    /**
-     * Sets the name of the geometry file associated with this view set.
-     * @param fileName The name of the geometry file.
-     */
-    @Override
-    public void setGeometryFileName(String fileName)
-    {
-        this.geometryFileName = fileName;
-    }
-
-    /**
-     * Gets the geometry file associated with this view set.
-     * @return The geometry file.
-     */
-    @Override
-    public File getGeometryFile()
-    {
-        return new File(this.rootDirectory, geometryFileName);
-    }
-
-    /**
-     * Gets the image file path associated with this view set.
-     * @return The image file path.
-     */
-    @Override
-    public File getImageFilePath()
-    {
-        return this.relativeImagePath == null ? this.rootDirectory : new File(this.rootDirectory, relativeImagePath);
-    }
-
-    /**
-     * Sets the image file path associated with this view set.
-     * @return imageFilePath The image file path.
-     */
-    @Override
-    public String getRelativeImagePathName()
-    {
-        return this.relativeImagePath;
-    }
-
-    /**
-     * Sets the image file path associated with this view set.
-     * @param relativeImagePath The image file path.
-     */
-    @Override
-    public void setRelativeImagePathName(String relativeImagePath)
-    {
-        this.relativeImagePath = relativeImagePath;
-    }
-
-    @Override
-    public int getPrimaryViewIndex()
-    {
-        return this.primaryViewIndex;
-    }
-
-    @Override
-    public void setPrimaryView(int poseIndex)
-    {
-        this.primaryViewIndex = poseIndex;
-    }
-
-    /**
-     * Gets the position of a particular light source.
-     * Used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
-     * Assumed by convention to be in camera space.
-     * @param lightIndex The index of the light source.
-     * IMPORTANT: this is NOT usually the same as the index of the view to be retrieved.
-     * @return The position of the light source.
-     */
-    @Override
-    public Vector3 getLightPosition(int lightIndex)
-    {
-        return this.lightPositionList.get(lightIndex);
-    }
-
-    /**
-     * Gets the intensity of a particular light source.
-     * Used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
-     * Assumed by convention to be in camera space.
-     * @param lightIndex The index of the light source.
-     * IMPORTANT: this is NOT usually the same as the index of the view to be retrieved.
-     * @return The position of the light source.
-     */
-    @Override
-    public Vector3 getLightIntensity(int lightIndex)
-    {
-        return this.lightIntensityList.get(lightIndex);
-    }
-
-    @Override
-    public void setLightPosition(int lightIndex, Vector3 lightPosition)
-    {
-        this.lightPositionList.set(lightIndex, lightPosition);
-    }
-
-    @Override
-    public void setLightIntensity(int lightIndex, Vector3 lightIntensity)
-    {
-        this.lightIntensityList.set(lightIndex, lightIntensity);
-    }
-
-    @Override
-    public float getGamma()
-    {
-        return gamma;
-    }
-
-    @Override
-    public boolean hasCustomLuminanceEncoding()
-    {
-        return linearLuminanceValues != null && encodedLuminanceValues != null
-            && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0;
-    }
-
-    @Override
-    public SampledLuminanceEncoding getLuminanceEncoding()
-    {
-        if (hasCustomLuminanceEncoding())
-        {
-            return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues, gamma);
-        }
-        else
-        {
-            return new SampledLuminanceEncoding(gamma);
-        }
-    }
-
-    @Override
-    public void setTonemapping(float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues)
-    {
-        this.gamma = gamma;
-        this.linearLuminanceValues = linearLuminanceValues;
-        this.encodedLuminanceValues = encodedLuminanceValues;
-    }
-
-    @Override
-    public boolean areLightSourcesInfinite()
-    {
-        return infiniteLightSources;
-    }
-
-    @Override
-    public void setInfiniteLightSources(boolean infiniteLightSources)
-    {
-        this.infiniteLightSources = infiniteLightSources;
-    }
-
 }

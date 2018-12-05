@@ -30,7 +30,14 @@ public class Vector4 implements Iterable<Float>
      */
     public final float w;
 
+    /**
+     * The zero direction vector.
+     */
     public static final Vector4 ZERO = Vector3.ZERO.asDirection();
+
+    /**
+     * The origin (i.e. the zero position vector).
+     */
     public static final Vector4 ORIGIN = Vector3.ZERO.asPosition();
 
     /**
@@ -48,31 +55,56 @@ public class Vector4 implements Iterable<Float>
         this.w = w;
     }
 
+    /**
+     * Construct a vector in four dimensions with the given values.
+     * @param value Value of all dimensions.
+     */
     public Vector4 (float value)
     {
         this(value, value, value, value);
     }
 
+    /**
+     * Converts to a 2D vector by projecting onto the XY plane.
+     * @return The projected 2D vector.
+     */
     public Vector2 getXY()
     {
         return new Vector2(this.x, this.y);
     }
 
+    /**
+     * Converts to a 3D vector by projecting onto the XYZ space (i.e. dropping the w-component).
+     * @return The projected 3D vector.
+     */
     public Vector3 getXYZ()
     {
         return new Vector3(this.x, this.y, this.z);
     }
 
+    /**
+     * Rounds to the nearest integer vector.
+     * @return The rounded integer vector.
+     */
     public IntVector4 rounded()
     {
         return new IntVector4(Math.round(this.x), Math.round(this.y), Math.round(this.z), Math.round(this.w));
     }
 
+    /**
+     * Truncates to an integer vector.
+     * @return The truncated integer vector.
+     */
     public IntVector4 truncated()
     {
         return new IntVector4((int)this.x, (int)this.y, (int)this.z, (int)this.w);
     }
 
+    /**
+     * Two vectors are equal if and only if they have the same number of components and each component has exactly the same value.
+     * @param obj The other object to test for equality.
+     * @return true if the objects ar equal; false otherwise.
+     */
     @Override
     @SuppressWarnings("FloatingPointEquality")
     public boolean equals(Object obj)
@@ -218,6 +250,11 @@ public class Vector4 implements Iterable<Float>
         return this.times(1.0f / this.length());
     }
 
+    /**
+     * Applies an operator to each component of the vector, and returns the result as a new vector.
+     * @param operator The operator to apply.
+     * @return The resulting vector.
+     */
     public Vector4 applyOperator(DoubleUnaryOperator operator)
     {
         return new Vector4((float)operator.applyAsDouble(x), (float)operator.applyAsDouble(y), (float)operator.applyAsDouble(z), (float)operator.applyAsDouble(w));
@@ -235,6 +272,10 @@ public class Vector4 implements Iterable<Float>
             '}';
     }
 
+    /**
+     * Iterates over the components of the vector.
+     * @return An iterator over the components of the vector.
+     */
     @Override
     public Iterator<Float> iterator()
     {

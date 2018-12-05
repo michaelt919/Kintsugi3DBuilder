@@ -25,6 +25,9 @@ public class Vector3 implements Iterable<Float>
      */
     public final float z;
 
+    /**
+     * The zero vector.
+     */
     public static final Vector3 ZERO = new Vector3(0.0f);
 
     /**
@@ -49,36 +52,66 @@ public class Vector3 implements Iterable<Float>
         this(value, value, value);
     }
 
+    /**
+     * Converts to a 4D vector with the specified w-component.
+     * @param w THe w-component.
+     * @return The 4D vector.
+     */
     public Vector4 asVector4(float w)
     {
         return new Vector4(this.x, this.y, this.z, w);
     }
 
+    /**
+     * Converts to a 4D vector with w=0.
+     * @return The 4D vector.
+     */
     public Vector4 asDirection()
     {
         return new Vector4(this.x, this.y, this.z, 0.0f);
     }
 
+    /**
+     * Converts to a 4D vector with w=1.
+     * @return The 4D vector.
+     */
     public Vector4 asPosition()
     {
         return new Vector4(this.x, this.y, this.z, 1.0f);
     }
 
+    /**
+     * Converts to a 2D vector by projecting onto the XY plane.
+     * @return The projected 2D vector.
+     */
     public Vector2 getXY()
     {
         return new Vector2(this.x, this.y);
     }
 
+    /**
+     * Rounds to the nearest integer vector.
+     * @return The rounded integer vector.
+     */
     public IntVector3 rounded()
     {
         return new IntVector3(Math.round(this.x), Math.round(this.y), Math.round(this.z));
     }
 
+    /**
+     * Truncates to an integer vector.
+     * @return The truncated integer vector.
+     */
     public IntVector3 truncated()
     {
         return new IntVector3((int)this.x, (int)this.y, (int)this.z);
     }
 
+    /**
+     * Two vectors are equal if and only if they have the same number of components and each component has exactly the same value.
+     * @param obj The other object to test for equality.
+     * @return true if the objects ar equal; false otherwise.
+     */
     @Override
     @SuppressWarnings("FloatingPointEquality")
     public boolean equals(Object obj)
@@ -234,6 +267,11 @@ public class Vector3 implements Iterable<Float>
         return this.times(1.0f / this.length());
     }
 
+    /**
+     * Applies an operator to each component of the vector, and returns the result as a new vector.
+     * @param operator The operator to apply.
+     * @return The resulting vector.
+     */
     public Vector3 applyOperator(DoubleUnaryOperator operator)
     {
         return new Vector3((float)operator.applyAsDouble(x), (float)operator.applyAsDouble(y), (float)operator.applyAsDouble(z));
@@ -249,6 +287,10 @@ public class Vector3 implements Iterable<Float>
                 '}';
     }
 
+    /**
+     * Iterates over the components of the vector.
+     * @return An iterator over the components of the vector.
+     */
     @Override
     public Iterator<Float> iterator()
     {

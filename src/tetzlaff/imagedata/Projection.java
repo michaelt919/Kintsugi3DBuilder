@@ -17,11 +17,21 @@ public interface Projection
      */
     Matrix4 getProjectionMatrix(float nearPlane, float farPlane);
 
+    /**
+     * Gets the vertical field of view.
+     * @return The vertical field of view.
+     */
     float getVerticalFieldOfView();
+
+    /**
+     * Gets the aspect ratio of the projection.
+     * @return The aspect ratio.
+     */
     float getAspectRatio();
 
     /**
      * Convert to a string designed for use in a VSET file
+     * @return A string representing this projection.
      */
     String toVSETString();
 }

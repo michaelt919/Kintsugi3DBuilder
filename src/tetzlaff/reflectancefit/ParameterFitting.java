@@ -36,6 +36,7 @@ public class ParameterFitting<ContextType extends Context<ContextType>>
     {
         try
         (
+            // Create three framebuffers
             FramebufferObject<ContextType> framebuffer1 =
                 this.context.buildFramebufferObject(this.options.getTextureSize(), this.options.getTextureSize())
                     .addColorAttachments(ColorFormat.RGBA32F, 5)
@@ -54,6 +55,7 @@ public class ParameterFitting<ContextType extends Context<ContextType>>
         {
             FramebufferObject<ContextType> diffuseFitFramebuffer = framebuffer1;
 
+            // Fit the diffuse reflectance, if requested.
             if (this.options.isDiffuseTextureEnabled())
             {
                 System.out.println("Beginning diffuse fit (" + (this.options.getTextureSubdivision() * this.options.getTextureSubdivision()) + " blocks)...");
@@ -82,6 +84,7 @@ public class ParameterFitting<ContextType extends Context<ContextType>>
 
             Date timestamp = new Date();
 
+            // Fill holes in the diffuse fit.
             try(VertexBuffer<ContextType> rectBuffer = this.context.createRectangle())
             {
                 Drawable<ContextType> holeFillRenderable = this.context.createDrawable(resources.getHoleFillProgram());
@@ -121,6 +124,7 @@ public class ParameterFitting<ContextType extends Context<ContextType>>
                     System.out.println("Empty regions filled in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
                 }
 
+                // Fit the specular reflectance parameters.
                 if (this.options.isSpecularTextureEnabled())
                 {
                     System.out.println("Fitting specular residual...");
@@ -150,7 +154,7 @@ public class ParameterFitting<ContextType extends Context<ContextType>>
                     FramebufferObject<ContextType> frontFramebufferHoleFill = backFramebuffer;
                     FramebufferObject<ContextType> backFramebufferHoleFill = frontFramebufferSpecular;
 
-                    // Fill holes
+                    // Fill holes in the specular parameters.
                     for (int i = 0; i < this.options.getTextureSize() / 2; i++)
                     {
                         backFramebufferHoleFill.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);

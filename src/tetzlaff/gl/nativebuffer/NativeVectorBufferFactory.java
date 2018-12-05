@@ -2,15 +2,29 @@ package tetzlaff.gl.nativebuffer;
 
 import java.nio.ByteBuffer;
 
+/**
+ * A factory for instantiating implementations of a NativeVectorBuffer.
+ */
 public final class NativeVectorBufferFactory 
 {
     private static final NativeVectorBufferFactory INSTANCE = new NativeVectorBufferFactory();
 
+    /**
+     * Gets a singleton instance of the factory.
+     * @return The single instance of the factory.
+     */
     public static NativeVectorBufferFactory getInstance()
     {
         return INSTANCE;
     }
 
+    /**
+     * Creates an empty buffer with a specified size, dimensionality, and data type.
+     * @param dataType The primitive data type of each component of an element in the buffer.
+     * @param dimensions The number of components in each element in the buffer.
+     * @param count The number of elements in the buffer.
+     * @return A newly allocated native buffer.
+     */
     public NativeVectorBuffer createEmpty(NativeDataType dataType, int dimensions, int count)
     {
         switch(dataType)
@@ -27,6 +41,14 @@ public final class NativeVectorBufferFactory
         }
     }
 
+    /**
+     * Creates an new buffer with a specified size, dimensionality, and data type, and copies data from a raw, unformatted native buffer.
+     * @param dataType The primitive data type of each component of an element in the buffer.
+     * @param dimensions The number of components in each element in the buffer.
+     * @param count The number of elements in the buffer.
+     * @param buffer The unformatted buffer from which to copy data.
+     * @return A newly allocated native buffer containing the data in the provided unformatted buffer.
+     */
     public NativeVectorBuffer createFromExistingBuffer(NativeDataType dataType, int dimensions, int count, ByteBuffer buffer)
     {
         switch(dataType)
@@ -43,6 +65,14 @@ public final class NativeVectorBufferFactory
         }
     }
 
+    /**
+     * Creates an new buffer with a specified size, dimensionality, and data type, and copies data from an array of Java bytes.
+     * @param dataType The primitive data type of each component of an element in the buffer.
+     * @param dimensions The number of components in each element in the buffer.
+     * @param count The number of elements in the buffer.
+     * @param byteArray The byte array from which to copy data.
+     * @return A newly allocated native buffer containing the data in the provided byte array.
+     */
     public NativeVectorBuffer createFromByteArray(NativeDataType dataType, int dimensions, int count, byte... byteArray)
     {
         switch(dataType)
@@ -59,6 +89,14 @@ public final class NativeVectorBufferFactory
         }
     }
 
+    /**
+     * Creates an new buffer with a specified size, dimensionality, and data type, and copies data from an array of Java shorts.
+     * @param unsigned Whether or not elements in the buffer should be treated as signed or unsigned shorts.
+     * @param dimensions The number of components in each element in the buffer.
+     * @param count The number of elements in the buffer.
+     * @param shortArray The array from which to copy data.
+     * @return A newly allocated native buffer containing the data in the provided array.
+     */
     public NativeVectorBuffer createFromShortArray(boolean unsigned, int dimensions, int count, short... shortArray)
     {
         if (!unsigned)
@@ -71,6 +109,14 @@ public final class NativeVectorBufferFactory
         }
     }
 
+    /**
+     * Creates an new buffer with a specified size, dimensionality, and data type, and copies data from an array of Java ints.
+     * @param unsigned Whether or not elements in the buffer should be treated as signed or unsigned ints.
+     * @param dimensions The number of components in each element in the buffer.
+     * @param count The number of elements in the buffer.
+     * @param intArray The array from which to copy data.
+     * @return A newly allocated native buffer containing the data in the provided array.
+     */
     public NativeVectorBuffer createFromIntArray(boolean unsigned, int dimensions, int count, int... intArray)
     {
         if (!unsigned)
@@ -83,11 +129,25 @@ public final class NativeVectorBufferFactory
         }
     }
 
+    /**
+     * Creates an new buffer with a specified size, dimensionality, and data type, and copies data from an array of Java floats.
+     * @param dimensions The number of components in each element in the buffer.
+     * @param count The number of elements in the buffer.
+     * @param floatArray The array from which to copy data.
+     * @return A newly allocated native buffer containing the data in the provided array.
+     */
     public NativeVectorBuffer createFromFloatArray(int dimensions, int count, float... floatArray)
     {
         return new NativeFloatVectorBuffer(dimensions, count, floatArray);
     }
 
+    /**
+     * Creates an new buffer with a specified size, dimensionality, and data type, and copies data from an array of Java doubles.
+     * @param dimensions The number of components in each element in the buffer.
+     * @param count The number of elements in the buffer.
+     * @param doubleArray The array from which to copy data.
+     * @return A newly allocated native buffer containing the data in the provided array.
+     */
     public NativeVectorBuffer createFromDoubleArray(int dimensions, int count, double... doubleArray)
     {
         return new NativeDoubleVectorBuffer(dimensions, count, doubleArray);

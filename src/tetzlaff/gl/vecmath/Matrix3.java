@@ -3,10 +3,12 @@ package tetzlaff.gl.vecmath;
 /**
  * A 3x3 matrix backed by 32-bit floats.  This is an immutable object.
  * @author Michael Tetzlaff
- *
  */
 public final class Matrix3
 {
+    /**
+     * The 3x3 identity matrix.
+     */
     public static final Matrix3 IDENTITY = scale(1.0f);
 
     /**
@@ -43,6 +45,13 @@ public final class Matrix3
         m[2][2] = m33;
     }
 
+    /**
+     * Creates a matrix from three column vectors.
+     * @param col1 The first column of the matrix.
+     * @param col2 The second column of the matrix.
+     * @param col3 The third column of the matrix.
+     * @return The new matrix.
+     */
     public static Matrix3 fromColumns(Vector3 col1, Vector3 col2, Vector3 col3)
     {
         return new Matrix3( col1.x, col2.x, col3.x,
@@ -50,6 +59,13 @@ public final class Matrix3
                             col1.z, col2.z, col3.z );
     }
 
+    /**
+     * Creates a matrix from three row vectors.
+     * @param row1 The first row of the matrix.
+     * @param row2 The second row of the matrix.
+     * @param row3 The third row of the matrix.
+     * @return The new matrix.
+     */
     public static Matrix3 fromRows(Vector3 row1, Vector3 row2, Vector3 row3)
     {
         return new Matrix3( row1.x, row1.y, row1.z,
@@ -57,6 +73,11 @@ public final class Matrix3
                             row3.x, row3.y, row3.z );
     }
 
+    /**
+     * Converts a double-precision matrix to a single-precision matrix.
+     * @param m3 The double-precision matrix.
+     * @return The single-precision matrix.
+     */
     public static Matrix3 fromDoublePrecision(DoubleMatrix3 m3)
     {
         return new Matrix3(    (float)m3.get(0,0),    (float)m3.get(0,1),    (float)m3.get(0,2),

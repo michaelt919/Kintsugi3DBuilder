@@ -10,9 +10,6 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import tetzlaff.gl.nativebuffer.NativeDataType;
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
-import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
@@ -94,44 +91,24 @@ public final class ViewSetImpl extends ViewSetBase
         this.imageFileNames = params.imageFileNames;
     }
 
-    /**
-     * Gets the camera pose defining the transformation from object space to camera space for a particular view.
-     * @param poseIndex The index of the camera pose to retrieve.
-     * @return The camera pose as a 4x4 affine transformation matrix.
-     */
     @Override
     public Matrix4 getCameraPose(int poseIndex)
     {
         return this.cameraPoseList.get(poseIndex);
     }
 
-    /**
-     * Gets the inverse of the camera pose, defining the transformation from camera space to object space for a particular view.
-     * @param poseIndex The index of the camera pose to retrieve.
-     * @return The inverse camera pose as a 4x4 affine transformation matrix.
-     */
     @Override
     public Matrix4 getCameraPoseInverse(int poseIndex)
     {
         return this.cameraPoseInvList.get(poseIndex);
     }
 
-    /**
-     * Gets the relative name of the image file corresponding to a particular view.
-     * @param poseIndex The index of the image file to retrieve.
-     * @return The image file's relative name.
-     */
     @Override
     public String getImageFileName(int poseIndex)
     {
         return this.imageFileNames.get(poseIndex);
     }
 
-    /**
-     * Gets the image file corresponding to a particular view.
-     * @param poseIndex The index of the image file to retrieve.
-     * @return The image file.
-     */
     @Override
     public File getImageFile(int poseIndex)
     {
@@ -144,237 +121,50 @@ public final class ViewSetImpl extends ViewSetBase
         int poseIndex = this.imageFileNames.indexOf(viewName);
         if (poseIndex >= 0)
         {
-            this.primaryViewIndex = poseIndex;
+            this.setPrimaryView(poseIndex);
         }
     }
 
-    /**
-     * Gets the projection transformation defining the intrinsic properties of a particular camera.
-     * @param projectionIndex The index of the camera whose projection transformation is to be retrieved.
-     * IMPORTANT: this is NOT usually the same as the index of the view to be retrieved.
-     * @return The projection transformation.
-     */
     @Override
     public Projection getCameraProjection(int projectionIndex)
     {
         return this.cameraProjectionList.get(projectionIndex);
     }
 
-    /**
-     * Gets the index of the projection transformation to be used for a particular view,
-     * which can subsequently be used with getCameraProjection() to obtain the corresponding projection transformation itself.
-     * @param poseIndex The index of the view.
-     * @return The index of the projection transformation.
-     */
     @Override
     public int getCameraProjectionIndex(int poseIndex)
     {
         return this.cameraProjectionIndexList.get(poseIndex);
     }
 
-    /**
-     * Gets the index of the light source to be used for a particular view,
-     * which can subsequently be used with getLightPosition() and getLightIntensity() to obtain the actual position and intensity of the light source.
-     * @param poseIndex The index of the view.
-     * @return The index of the light source.
-     */
     @Override
     public int getLightIndex(int poseIndex)
     {
         return this.lightIndexList.get(poseIndex);
     }
 
-    /**
-     * Gets the number of camera poses defined in this view set.
-     * @return The number of camera poses defined in this view set.
-     */
     @Override
     public int getCameraPoseCount()
     {
         return this.cameraPoseList.size();
     }
 
-    /**
-     * Gets the number of projection transformations defined in this view set.
-     * @return The number of projection transformations defined in this view set.
-     */
     @Override
     public int getCameraProjectionCount()
     {
         return this.cameraProjectionList.size();
     }
 
-    /**
-     * Gets the number of lights defined in this view set.
-     * @return The number of projection transformations defined in this view set.
-     */
-    @Override
-    public int getLightCount()
-    {
-        return this.lightPositionList.size();
-    }
-
-    /**
-     * Gets the recommended near plane to use when rendering this view set.
-     * @return The near plane value.
-     */
     @Override
     public float getRecommendedNearPlane()
     {
         return this.recommendedNearPlane;
     }
 
-    /**
-     * Gets the recommended far plane to use when rendering this view set.
-     * @return The far plane value.
-     */
     @Override
     public float getRecommendedFarPlane()
     {
         return this.recommendedFarPlane;
-    }
-
-    @Override
-    public NativeVectorBuffer getCameraPoseData()
-    {
-        // Store the poses in a uniform buffer
-        if (cameraPoseList != null && !cameraPoseList.isEmpty())
-        {
-            // Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
-            NativeVectorBuffer cameraPoseData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 16, cameraPoseList.size());
-
-            for (int k = 0; k < cameraPoseList.size(); k++)
-            {
-                int d = 0;
-                for (int col = 0; col < 4; col++) // column
-                {
-                    for (int row = 0; row < 4; row++) // row
-                    {
-                        cameraPoseData.set(k, d, cameraPoseList.get(k).get(row, col));
-                        d++;
-                    }
-                }
-            }
-
-            return cameraPoseData;
-        }
-        else
-        {
-            return null;
-        }
-    }
-
-    @Override
-    public NativeVectorBuffer getCameraProjectionData()
-    {
-        // Store the camera projections in a uniform buffer
-        if (cameraProjectionList != null && !cameraProjectionList.isEmpty())
-        {
-            // Flatten the camera projection matrices into 16-component vectors and store them in the vertex list data structure.
-            NativeVectorBuffer cameraProjectionData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 16, cameraProjectionList.size());
-
-            for (int k = 0; k < cameraProjectionList.size(); k++)
-            {
-                int d = 0;
-                for (int col = 0; col < 4; col++) // column
-                {
-                    for (int row = 0; row < 4; row++) // row
-                    {
-                        Matrix4 projection = cameraProjectionList.get(k).getProjectionMatrix(recommendedNearPlane, recommendedFarPlane);
-                        cameraProjectionData.set(k, d, projection.get(row, col));
-                        d++;
-                    }
-                }
-            }
-            return cameraProjectionData;
-        }
-        else
-        {
-            return null;
-        }
-    }
-
-    @Override
-    public NativeVectorBuffer getCameraProjectionIndexData()
-    {
-        // Store the camera projection indices in a uniform buffer
-        if (cameraProjectionIndexList != null && !cameraProjectionIndexList.isEmpty())
-        {
-            int[] indexArray = new int[cameraProjectionIndexList.size()];
-            for (int i = 0; i < indexArray.length; i++)
-            {
-                indexArray[i] = cameraProjectionIndexList.get(i);
-            }
-            return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, cameraProjectionIndexList.size(), indexArray);
-        }
-        else
-        {
-            return null;
-        }
-    }
-
-    @Override
-    public NativeVectorBuffer getLightPositionData()
-    {
-        // Store the light positions in a uniform buffer
-        if (lightPositionList != null && !lightPositionList.isEmpty())
-        {
-            NativeVectorBuffer lightPositionData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, lightPositionList.size());
-            for (int k = 0; k < lightPositionList.size(); k++)
-            {
-                lightPositionData.set(k, 0, lightPositionList.get(k).x);
-                lightPositionData.set(k, 1, lightPositionList.get(k).y);
-                lightPositionData.set(k, 2, lightPositionList.get(k).z);
-                lightPositionData.set(k, 3, 1.0f);
-            }
-
-            return lightPositionData;
-        }
-        else
-        {
-            return null;
-        }
-    }
-
-    @Override
-    public NativeVectorBuffer getLightIntensityData()
-    {
-        // Store the light positions in a uniform buffer
-        if (lightIntensityList != null && !lightIntensityList.isEmpty())
-        {
-            NativeVectorBuffer lightIntensityData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, lightIntensityList.size());
-            for (int k = 0; k < lightPositionList.size(); k++)
-            {
-                lightIntensityData.set(k, 0, lightIntensityList.get(k).x);
-                lightIntensityData.set(k, 1, lightIntensityList.get(k).y);
-                lightIntensityData.set(k, 2, lightIntensityList.get(k).z);
-                lightIntensityData.set(k, 3, 1.0f);
-            }
-            return lightIntensityData;
-        }
-        else
-        {
-            return null;
-        }
-    }
-
-    @Override
-    public NativeVectorBuffer getLightIndexData()
-    {
-        // Store the light indices indices in a uniform buffer
-        if (lightIndexList != null && !lightIndexList.isEmpty())
-        {
-            int[] indexArray = new int[lightIndexList.size()];
-            for (int i = 0; i < indexArray.length; i++)
-            {
-                indexArray[i] = lightIndexList.get(i);
-            }
-            return NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, lightIndexList.size(), indexArray);
-        }
-        else
-        {
-            return null;
-        }
     }
 
     /**
@@ -1180,7 +970,7 @@ public final class ViewSetImpl extends ViewSetBase
         params.directory = file.getParentFile();
 
         ViewSetImpl returnValue = new ViewSetImpl(params);
-        returnValue.primaryViewIndex = primaryViewIndex;
+        returnValue.setPrimaryView(primaryViewIndex);
         return returnValue;
     }
 }

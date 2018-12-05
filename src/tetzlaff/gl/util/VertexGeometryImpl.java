@@ -14,6 +14,9 @@ import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
 
+/**
+ * An implementation of the BoundedVertexGeometry interface that supports reading from a Wavefront OBJ file.
+ */
 public final class VertexGeometryImpl implements BoundedVertexGeometry
 {
     private File filename;
@@ -34,6 +37,90 @@ public final class VertexGeometryImpl implements BoundedVertexGeometry
     private Material material; // TODO support multiple materials
 
     private VertexGeometryImpl(File filename)
+    {
+        this.filename = filename;
+    }
+
+    @Override
+    public boolean hasNormals()
+    {
+        return hasNormals;
+    }
+
+    @Override
+    public boolean hasTexCoords()
+    {
+        return hasTexCoords;
+    }
+
+    @Override
+    public NativeVectorBuffer getVertices()
+    {
+        return vertices;
+    }
+
+    @Override
+    public NativeVectorBuffer getNormals()
+    {
+        return normals;
+    }
+
+    @Override
+    public NativeVectorBuffer getTexCoords()
+    {
+        return texCoords;
+    }
+
+    @Override
+    public Vector3 getCentroid()
+    {
+        return centroid;
+    }
+
+    @Override
+    public float getBoundingRadius()
+    {
+        return boundingRadius;
+    }
+
+    @Override
+    public Vector3 getBoundingBoxCenter()
+    {
+        return boundingBoxCenter;
+    }
+
+    @Override
+    public Vector3 getBoundingBoxSize()
+    {
+        return boundingBoxSize;
+    }
+
+    @Override
+    public NativeVectorBuffer getTangents()
+    {
+        return tangents;
+    }
+
+    @Override
+    public String getMaterialFileName()
+    {
+        return this.materialFileName;
+    }
+
+    @Override
+    public Material getMaterial()
+    {
+        return this.material;
+    }
+
+    @Override
+    public File getFilename()
+    {
+        return filename;
+    }
+
+    @Override
+    public void setFilename(File filename)
     {
         this.filename = filename;
     }
@@ -74,6 +161,9 @@ public final class VertexGeometryImpl implements BoundedVertexGeometry
 
     /**
      * Initializes the mesh from a file containing the mesh in Wavefront OBJ format.
+     * @param file The name of the Wavefront OBJ file.
+     * @return A new BoundedVertexGeometry instance.
+     * @throws FileNotFoundException Thrown if the Wavefront OBJ file or any related files cannot be found.
      */
     public static BoundedVertexGeometry createFromOBJFile(File file) throws FileNotFoundException
     {
@@ -401,89 +491,5 @@ public final class VertexGeometryImpl implements BoundedVertexGeometry
         orthoBitangent = bitangent.minus(normal.times(normal.dot(bitangent)).minus(orthoTangent.times(orthoTangent.dot(bitangent)))).normalized();
 
         return orthoTangent.asVector4(orthoBitangent.dot(normal.cross(orthoTangent)));
-    }
-
-    @Override
-    public boolean hasNormals()
-    {
-        return hasNormals;
-    }
-
-    @Override
-    public boolean hasTexCoords()
-    {
-        return hasTexCoords;
-    }
-
-    @Override
-    public NativeVectorBuffer getVertices()
-    {
-        return vertices;
-    }
-
-    @Override
-    public NativeVectorBuffer getNormals()
-    {
-        return normals;
-    }
-
-    @Override
-    public NativeVectorBuffer getTexCoords()
-    {
-        return texCoords;
-    }
-
-    @Override
-    public Vector3 getCentroid()
-    {
-        return centroid;
-    }
-
-    @Override
-    public float getBoundingRadius()
-    {
-        return boundingRadius;
-    }
-
-    @Override
-    public Vector3 getBoundingBoxCenter()
-    {
-        return boundingBoxCenter;
-    }
-
-    @Override
-    public Vector3 getBoundingBoxSize()
-    {
-        return boundingBoxSize;
-    }
-
-    @Override
-    public NativeVectorBuffer getTangents()
-    {
-        return tangents;
-    }
-
-    @Override
-    public String getMaterialFileName()
-    {
-        return this.materialFileName;
-    }
-
-    @Override
-    public Material getMaterial()
-    {
-        return this.material;
-    }
-
-    @Override
-    public File getFilename()
-    {
-        return filename;
-    }
-
-    @Override
-    public void setFilename(File filename)
-    {
-        this.filename = filename;
     }
 }

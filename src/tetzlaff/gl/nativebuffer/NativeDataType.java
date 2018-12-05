@@ -1,5 +1,8 @@
 package tetzlaff.gl.nativebuffer;
 
+/**
+ * An enumeration of the possible data types that can be represented in native memory buffers.
+ */
 public enum NativeDataType 
 {
     UNSIGNED_BYTE(1),

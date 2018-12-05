@@ -6,6 +6,9 @@ import java.util.*;
 
 import tetzlaff.gl.vecmath.Vector3;
 
+/**
+ * A general purpose class for representing an object's material using reflectance parameters.
+ */
 public class Material 
 {
     private String name;

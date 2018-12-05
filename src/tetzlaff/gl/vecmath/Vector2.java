@@ -12,6 +12,9 @@ import java.util.function.DoubleUnaryOperator;
  */
 public class Vector2 implements Iterable<Float>
 {
+    /**
+     * The zero vector.
+     */
     public static final Vector2 ZERO = new Vector2(0.0f);
 
     /**
@@ -43,41 +46,77 @@ public class Vector2 implements Iterable<Float>
         this(value, value);
     }
 
+    /**
+     * Converts to a 3D vector with z=0.
+     * @return The 3D vector.
+     */
     public Vector3 asVector3()
     {
         return asVector3(0.0f);
     }
 
+    /**
+     * Converts to a 3D vector with a specified z-component
+     * @param z The z-component.
+     * @return The 3D vector.
+     */
     public Vector3 asVector3(float z)
     {
         return new Vector3(this.x, this.y, z);
     }
 
+    /**
+     * Converts to a 4D vector with z=0 and w=1.
+     * @return The 4D vector.
+     */
     public Vector4 asPosition()
     {
         return asVector4(0.0f, 1.0f);
     }
 
+    /**
+     * Converts to a 4D vector with z=0 and w=0.
+     * @return The 4D vector.
+     */
     public Vector4 asDirection()
     {
         return asVector4(0.0f, 0.0f);
     }
 
+    /**
+     * Converts to a 4D vector with the specified z- and w-components.
+     * @param z The z-component.
+     * @param w THe w-component.
+     * @return The 4D vector.
+     */
     public Vector4 asVector4(float z, float w)
     {
         return new Vector4(this.x, this.y, z, w);
     }
 
+    /**
+     * Rounds to the nearest integer vector.
+     * @return The rounded integer vector.
+     */
     public IntVector2 rounded()
     {
         return new IntVector2(Math.round(this.x), Math.round(this.y));
     }
 
+    /**
+     * Truncates to an integer vector.
+     * @return The truncated integer vector.
+     */
     public IntVector2 truncated()
     {
         return new IntVector2((int)this.x, (int)this.y);
     }
 
+    /**
+     * Two vectors are equal if and only if they have the same number of components and each component has exactly the same value.
+     * @param obj The other object to test for equality.
+     * @return true if the objects ar equal; false otherwise.
+     */
     @Override
     @SuppressWarnings("FloatingPointEquality")
     public boolean equals(Object obj)
@@ -202,6 +241,11 @@ public class Vector2 implements Iterable<Float>
         return this.times(1.0f / this.length());
     }
 
+    /**
+     * Applies an operator to each component of the vector, and returns the result as a new vector.
+     * @param operator The operator to apply.
+     * @return The resulting vector.
+     */
     public Vector2 applyOperator(DoubleUnaryOperator operator)
     {
         return new Vector2((float)operator.applyAsDouble(x), (float)operator.applyAsDouble(y));
@@ -216,6 +260,10 @@ public class Vector2 implements Iterable<Float>
                 '}';
     }
 
+    /**
+     * Iterates over the components of the vector.
+     * @return An iterator over the components of the vector.
+     */
     @Override
     public Iterator<Float> iterator()
     {
