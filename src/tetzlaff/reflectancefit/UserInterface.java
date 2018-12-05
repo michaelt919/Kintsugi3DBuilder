@@ -21,6 +21,9 @@ import tetzlaff.imagedata.SampledLuminanceEncoding;
 import tetzlaff.imagedata.ViewSet;
 import tetzlaff.imagedata.ViewSetImpl;
 
+/**
+ * The Swing user interface for the reflectance parameter estimation program.
+ */
 public class UserInterface extends JFrame
 {
     private static final long serialVersionUID = -8384432968465838469L;

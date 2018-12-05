@@ -7,9 +7,7 @@ in vec3 fTangent;
 in vec3 fBitangent;
 
 layout(location = 0) out vec4 diffuseColor;
-layout(location = 1) out vec4 normalMap;
-layout(location = 2) out vec4 ambient;
-layout(location = 3) out vec4 normalMapTS;
+layout(location = 1) out vec4 normalMapTS;
 
 #include "../colorappearance/colorappearance.glsl"
 #include "../colorappearance/imgspace.glsl"
@@ -17,11 +15,11 @@ layout(location = 3) out vec4 normalMapTS;
 
 #line 19 0
 
+// This file connects all the pieces for performing diffuse reflectance parameter estimation and storing the results in the right output channels.
+// For the meat of the algorithm, refer to diffusefit.glsl.
 void main()
 {
     DiffuseFit fit = fitDiffuse();
     diffuseColor = vec4(pow(fit.color, vec3(1 / gamma)), 1.0);
-    normalMap = vec4(fit.normal * 0.5 + vec3(0.5), 1.0);
-    ambient = vec4(pow(fit.ambient, vec3(1 / gamma)), 1.0);
     normalMapTS = vec4(fit.normalTS * 0.5 + vec3(0.5), 1.0);
 }

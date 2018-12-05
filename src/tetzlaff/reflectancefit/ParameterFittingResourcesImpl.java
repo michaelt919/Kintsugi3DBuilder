@@ -12,6 +12,10 @@ import tetzlaff.imagedata.GraphicsResources;
 import tetzlaff.imagedata.SimpleLoadOptionsModel;
 import tetzlaff.imagedata.ViewSet;
 
+/**
+ * An implementation of the ParameterFittingResources interface.
+ * @param <ContextType> The type of the graphics context that will be used in a particular instance.
+ */
 @SuppressWarnings("UseOfObsoleteDateTimeApi")
 public class ParameterFittingResourcesImpl<ContextType extends Context<ContextType>> implements AutoCloseable, ParameterFittingResources<ContextType>
 {
@@ -36,19 +40,18 @@ public class ParameterFittingResourcesImpl<ContextType extends Context<ContextTy
     private String materialFileName;
     private String materialName;
 
-    protected ParameterFittingResourcesImpl(ContextType context, ReflectanceDataAccess reflectanceDataAccess, Options options)
+    /**
+     * Creates a new instance of this implementation.
+     * @param context The graphics context to be used by this implementation.
+     * @param reflectanceDataAccess An implementation of ReflectanceDataAccess that provides access to the images, camera calibration information,
+     *                              and geometry of the reflecting surface.
+     * @param options Options provided to guide the reflectance estimation process.
+     */
+    public ParameterFittingResourcesImpl(ContextType context, ReflectanceDataAccess reflectanceDataAccess, Options options)
     {
         this.context = context;
         this.reflectanceDataAccess = reflectanceDataAccess;
         this.options = options;
-    }
-
-    @SuppressWarnings("ProhibitedExceptionDeclared")
-    public void loadImagesAndCalibrateLight() throws Exception
-    {
-        // Load textures, generate visibility depth textures, estimate light source intensity
-        double avgDistance = this.loadTextures();
-        this.estimateLightIntensity(avgDistance);
     }
 
     @Override
@@ -63,8 +66,99 @@ public class ParameterFittingResourcesImpl<ContextType extends Context<ContextTy
         return materialName;
     }
 
-    @SuppressWarnings("ProhibitedExceptionDeclared")
-    protected void loadMeshAndViewSet() throws Exception
+    /**
+     * Initializes the graphics context, loads the geometry of the reflecting surface and the camera calibration information onto the graphics card,
+     * and compiles the shader programs necessary for the reflectance parameter estimation.
+     * This must be called prior to any other method, or the results of that method may be undefined.
+     * @throws IOException Thrown if any error occurs while loading the reflecting surface geometry, the view set file, or the source code for the
+     *                     shader programs.
+     */
+    public void initialize() throws IOException
+    {
+        context.getState().enableDepthTest();
+        context.getState().disableBackFaceCulling();
+        this.loadMeshAndViewSet();
+        this.compileShaders();
+    }
+
+    /**
+     * Loads all of the images (including masks if present), and also calibrates the intensity of the light source, if this calculation has been
+     * requested (using depth images generated while loading the images).
+     * This must be called after initialize() and prior to any other method, or the results of that method may be undefined.
+     * @throws IOException Thrown if any error occurs while loading the images.
+     */
+    public void loadImagesAndCalibrateLight() throws IOException
+    {
+        // Load textures, generate visibility depth textures, estimate light source intensity
+        double avgDistance = this.loadTextures();
+        this.estimateLightIntensity(avgDistance);
+    }
+
+    @Override
+    public void close()
+    {
+        if (viewTextures != null)
+        {
+            viewTextures.close();
+        }
+
+        if (depthTextures != null)
+        {
+            depthTextures.close();
+        }
+
+        if (lightIntensityBuffer != null)
+        {
+            lightIntensityBuffer.close();
+        }
+
+        if (diffuseFitProgram != null)
+        {
+            diffuseFitProgram.close();
+        }
+
+        if (depthRenderingProgram != null)
+        {
+            depthRenderingProgram.close();
+        }
+
+        if (specularFitProgram != null)
+        {
+            specularFitProgram.close();
+        }
+
+        if (holeFillProgram != null)
+        {
+            holeFillProgram.close();
+        }
+
+        if (graphicsResources != null)
+        {
+            graphicsResources.close();
+        }
+
+        if (positionBuffer != null)
+        {
+            positionBuffer.close();
+        }
+
+        if (normalBuffer != null)
+        {
+            normalBuffer.close();
+        }
+
+        if (texCoordBuffer != null)
+        {
+            texCoordBuffer.close();
+        }
+
+        if (tangentBuffer != null)
+        {
+            tangentBuffer.close();
+        }
+    }
+
+    private void loadMeshAndViewSet() throws IOException
     {
         System.out.println("Loading mesh...");
         Date timestamp = new Date();
@@ -154,80 +248,7 @@ public class ParameterFittingResourcesImpl<ContextType extends Context<ContextTy
         return new SpecularFit<>(drawable, framebuffer, subdiv);
     }
 
-    @SuppressWarnings("ProhibitedExceptionDeclared")
-    public void initialize() throws Exception
-    {
-        context.getState().enableDepthTest();
-        context.getState().disableBackFaceCulling();
-        this.loadMeshAndViewSet();
-        this.compileShaders();
-    }
-
-    @Override
-    public void close()
-    {
-        if (viewTextures != null)
-        {
-            viewTextures.close();
-        }
-
-        if (depthTextures != null)
-        {
-            depthTextures.close();
-        }
-
-        if (lightIntensityBuffer != null)
-        {
-            lightIntensityBuffer.close();
-        }
-
-        if (diffuseFitProgram != null)
-        {
-            diffuseFitProgram.close();
-        }
-
-        if (depthRenderingProgram != null)
-        {
-            depthRenderingProgram.close();
-        }
-
-        if (specularFitProgram != null)
-        {
-            specularFitProgram.close();
-        }
-
-        if (holeFillProgram != null)
-        {
-            holeFillProgram.close();
-        }
-
-        if (graphicsResources != null)
-        {
-            graphicsResources.close();
-        }
-
-        if (positionBuffer != null)
-        {
-            positionBuffer.close();
-        }
-
-        if (normalBuffer != null)
-        {
-            normalBuffer.close();
-        }
-
-        if (texCoordBuffer != null)
-        {
-            texCoordBuffer.close();
-        }
-
-        if (tangentBuffer != null)
-        {
-            tangentBuffer.close();
-        }
-    }
-
-    protected void compileShaders() throws IOException
+    private void compileShaders() throws IOException
     {
         System.out.println("Loading and compiling shader programs...");
         Date timestamp = new Date();
@@ -262,8 +283,7 @@ public class ParameterFittingResourcesImpl<ContextType extends Context<ContextTy
         return 2 * nearPlane * farPlane / (farPlane + nearPlane - (2 * nonLinearDepth - 1) * (farPlane - nearPlane));
     }
 
-    @SuppressWarnings("ProhibitedExceptionDeclared")
-    protected double loadTextures() throws Exception
+    private double loadTextures() throws IOException
     {
         System.out.println("Loading images...");
         Date timestamp = new Date();
@@ -339,7 +359,7 @@ public class ParameterFittingResourcesImpl<ContextType extends Context<ContextTy
         }
     }
 
-    protected void estimateLightIntensity(double avgDistance)
+    private void estimateLightIntensity(double avgDistance)
     {
         if (options.isLightIntensityEstimationEnabled())
         {

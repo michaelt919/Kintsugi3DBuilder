@@ -5,12 +5,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
-
 import javax.imageio.ImageIO;
 
 import tetzlaff.gl.core.Framebuffer;
 import tetzlaff.gl.core.FramebufferSize;
 
+/**
+ * A container for the results of a reflectance parameter estimation attempt.
+ */
 public final class ParameterFittingResult
 {
     private final float[] diffuseColorDataRGBA;
@@ -26,12 +28,12 @@ public final class ParameterFittingResult
     private final int[] roughnessErrorPackedIntRGBA;
 
     private final FramebufferSize framebufferSize;
-    private final Options params;
+    private final Options options;
 
-    private ParameterFittingResult(Framebuffer<?> framebuffer, Options params)
+    private ParameterFittingResult(Framebuffer<?> framebuffer, Options options)
     {
         framebufferSize = framebuffer.getSize();
-        this.params = params;
+        this.options = options;
 
         diffuseColorDataRGBA = framebuffer.readFloatingPointColorBufferRGBA(0);
         normalDataRGBA = framebuffer.readFloatingPointColorBufferRGBA(1);
@@ -46,9 +48,15 @@ public final class ParameterFittingResult
         roughnessErrorPackedIntRGBA = framebuffer.readColorBufferARGB(4);
     }
 
-    static ParameterFittingResult fromFramebuffer(Framebuffer<?> framebuffer, Options params)
+    /**
+     * Initializes a result from a framebuffer containing the results in graphics memory.
+     * @param framebuffer The framebuffer containing the results.
+     * @param options The options that were used to generate the reflectance parameter fitting results.
+     * @return A new instance of ParameterFittingResult providing access to the results.
+     */
+    static ParameterFittingResult fromFramebuffer(Framebuffer<?> framebuffer, Options options)
     {
-        return new ParameterFittingResult(framebuffer, params);
+        return new ParameterFittingResult(framebuffer, options);
     }
 
     private void writeMTLFile(File mtlFile, String materialName) throws FileNotFoundException
@@ -57,7 +65,7 @@ public final class ParameterFittingResult
         {
             materialStream.println("newmtl " + materialName);
 
-            if (params.isDiffuseTextureEnabled())
+            if (options.isDiffuseTextureEnabled())
             {
                 materialStream.println("Kd 1.0 1.0 1.0");
                 materialStream.println("map_Kd " + materialName + "_Kd.png");
@@ -68,7 +76,7 @@ public final class ParameterFittingResult
             {
                 materialStream.println("Kd 0.0 0.0 0.0");
 
-                if (params.isSpecularTextureEnabled())
+                if (options.isSpecularTextureEnabled())
                 {
                     materialStream.println("Ka 1.0 1.0 1.0");
                     materialStream.println("map_Ka " + materialName + "_Ks.png");
@@ -79,7 +87,7 @@ public final class ParameterFittingResult
                 }
             }
 
-            if (params.isSpecularTextureEnabled())
+            if (options.isSpecularTextureEnabled())
             {
                 materialStream.println("Ks 1.0 1.0 1.0");
                 materialStream.println("map_Ks " + materialName + "_Ks.png");
@@ -92,7 +100,7 @@ public final class ParameterFittingResult
                 materialStream.println("Ks 0 0 0");
             }
 
-            if ((params.isDiffuseTextureEnabled() && params.getDiffuseComputedNormalWeight() > 0) || params.isSpecularTextureEnabled())
+            if ((options.isDiffuseTextureEnabled() && options.getDiffuseComputedNormalWeight() > 0) || options.isSpecularTextureEnabled())
             {
                 materialStream.println("norm " + materialName + "_norm.png");
             }
@@ -125,6 +133,15 @@ public final class ParameterFittingResult
         ImageIO.write(outImg, "PNG", outputFile);
     }
 
+    /**
+     * Writes the results of the reflectance parameter estimation attempt to files on the hard drive.
+     * @param materialFile The name of the material file to write.
+     *                     This file contains references to reflectance parameter texture files that will be written as siblings of the material file
+     *                     in the same parent directory.
+     * @param materialName The name of the material to use when writing the material file.  This will also be used as a prefix for each of the
+     *                     reflectance parameter texture files.
+     * @throws IOException Thrown if an error occurs while writing files.
+     */
     public void writeToFiles(File materialFile, String materialName) throws IOException
     {
         File outputDirectory = materialFile.getParentFile();
@@ -132,17 +149,17 @@ public final class ParameterFittingResult
 
         writeMTLFile(materialFile, materialName);
 
-        if (params.isDiffuseTextureEnabled())
+        if (options.isDiffuseTextureEnabled())
         {
             writeTextureDataToOutputFile(diffuseColorPackedIntRGBA, new File(outputDirectory, materialName + "_Kd.png"));
         }
 
-        if ((params.isDiffuseTextureEnabled() && params.getDiffuseComputedNormalWeight() > 0) || params.isSpecularTextureEnabled())
+        if ((options.isDiffuseTextureEnabled() && options.getDiffuseComputedNormalWeight() > 0) || options.isSpecularTextureEnabled())
         {
             writeTextureDataToOutputFile(normalPackedIntRGBA, new File(outputDirectory, materialName + "_norm.png"));
         }
 
-        if (params.isSpecularTextureEnabled())
+        if (options.isSpecularTextureEnabled())
         {
             writeTextureDataToOutputFile(specularColorPackedIntRGBA, new File(outputDirectory, materialName + "_Ks.png"));
             writeTextureDataToOutputFile(roughnessPackedIntRGBA, new File(outputDirectory, materialName + "_Pr.png"));
@@ -150,26 +167,71 @@ public final class ParameterFittingResult
         }
     }
 
+    /**
+     * Gets an array containing a flattened list of diffuse albedo estimates in a floating-point representation.
+     * Data is stored in the RGBA format, meaning that a group of four floating-point values in the array corresponds to a single pixel in the diffuse
+     * albedo image.  In other words, for a given pixel k, the red component is stored at index 4 * k, the green is stored at index 4 * k + 1,
+     * the blue is stored at index 4 * k + 2, and the alpha is stored at index 4 * k + 3.
+     * Pixels are arranged in row-major order, with rows at the bottom of the texture map occurring before rows at the top of the texture map.
+     * @return
+     */
     public float[] getDiffuseColorDataRGBA()
     {
         return diffuseColorDataRGBA;
     }
 
+    /**
+     * Gets an array containing a flattened list of surface normal estimates in a floating-point representation.
+     * Data is stored in the RGBA format, meaning that a group of four floating-point values in the array corresponds to a single pixel in the normal
+     * map image.  In other words, for a given pixel k, the red component is stored at index 4 * k, the green is stored at index 4 * k + 1,
+     * the blue is stored at index 4 * k + 2, and the alpha is stored at index 4 * k + 3.
+     * For a normal map, the normal is represented in tangent space, where the red component represents the projection of the normal onto the
+     * tangent direction defined by the triangle mesh, the green component represents the projection of the normal onto the bitangent direction,
+     * and the blue component represents the projection of the estimated normal onto the surface normal defined by the triangle mesh.
+     * In each case, the range [-1, 1] is mapped onto the [0, 255] range of pixel values.
+     * Pixels are arranged in row-major order, with rows at the bottom of the texture map occurring before rows at the top of the texture map.
+     * @return
+     */
     public float[] getNormalDataRGBA()
     {
         return normalDataRGBA;
     }
 
+    /**
+     * Gets an array containing a flattened list of specular reflectivity estimates in a floating-point representation.
+     * Data is stored in the RGBA format, meaning that a group of four floating-point values in the array corresponds to a single pixel in the specular
+     * reflectivity image.  In other words, for a given pixel k, the red component is stored at index 4 * k, the green is stored at index 4 * k + 1,
+     * the blue is stored at index 4 * k + 2, and the alpha is stored at index 4 * k + 3.
+     * Pixels are arranged in row-major order, with rows at the bottom of the texture map occurring before rows at the top of the texture map.
+     * @return
+     */
     public float[] getSpecularColorDataRGBA()
     {
         return specularColorDataRGBA;
     }
 
+    /**
+     * Gets an array containing a flattened list of roughness estimates in a floating-point representation.
+     * Data is stored in the RGBA format, meaning that a group of four floating-point values in the array corresponds to a single pixel in the
+     * roughness image.  Since roughness is monochrome, this means that for a given pixel k, the red component (stored at index 4 * k), the green
+     * (stored at index 4 * k + 1), and the blue (stored at index 4 * k + 2) should have the same value.
+     * Pixels are arranged in row-major order, with rows at the bottom of the texture map occurring before rows at the top of the texture map.
+     * @return
+     */
     public float[] getRoughnessDataRGBA()
     {
         return roughnessDataRGBA;
     }
 
+    /**
+     * Gets an array containing a flattened list of specular reflectivity estimates in a floating-point representation.
+     * Data is stored in the RGBA format, meaning that a group of four floating-point values in the array corresponds to a single pixel in the
+     * roughness error image.  In other words, for a given pixel k, the red component is stored at index 4 * k, the green is stored at
+     * index 4 * k + 1, the blue is stored at index 4 * k + 2, and the alpha is stored at index 4 * k + 3.
+     * Although roughness is monochrome, each color channel may have a different error, so these three components will not necessarily all be the same.
+     * Pixels are arranged in row-major order, with rows at the bottom of the texture map occurring before rows at the top of the texture map.
+     * @return
+     */
     public float[] getRoughnessErrorDataRGBA()
     {
         return roughnessErrorDataRGBA;

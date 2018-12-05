@@ -19,29 +19,33 @@ import tetzlaff.imagedata.GraphicsResources;
 import tetzlaff.imagedata.ViewSet;
 import tetzlaff.imagedata.ViewSetImpl;
 
+/**
+ * An implementation of ReflectanceDataAccess that reads all of the required data from files on the hard drive.
+ */
 @SuppressWarnings("UseOfObsoleteDateTimeApi")
-public class ReflectanceDataAccessImpl<ContextType extends Context<ContextType>> implements ReflectanceDataAccess
+public class ReflectanceDataAccessImpl implements ReflectanceDataAccess
 {
     private final File vsetFile;
     private final File objFile;
     private File imageDir;
     private File maskDir;
-    private File rescaleDir;
-
-    private final ContextType context;
-    private final Options options;
 
     private ViewSet viewSet;
 
-    public ReflectanceDataAccessImpl(ContextType context, File vsetFile, File objFile, File imageDir, File maskDir, File rescaleDir, Options options)
+    /**
+     * Creates a new instance of this implementation using files and directories provided by the user.
+     * @param vsetFile The view set file (in either the VSET file format or the XML format used by Agisoft Photoscan.
+     * @param objFile A Wavefront OBJ file containing the geometry of the reflecting surface.
+     * @param imageDir A directory containing all of the photographs to be used.
+     * @param maskDir An optional directory containing masks for all of the photographs.
+     *                If this parameter is null, it is assumed that masks are unavailable.
+     */
+    public ReflectanceDataAccessImpl(File vsetFile, File objFile, File imageDir, File maskDir)
     {
-        this.context = context;
-        this.options = options;
         this.vsetFile = vsetFile;
         this.objFile = objFile;
         this.imageDir = imageDir;
         this.maskDir = maskDir;
-        this.rescaleDir = rescaleDir;
     }
 
     @Override
@@ -57,7 +61,7 @@ public class ReflectanceDataAccessImpl<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public void initializeViewSet() throws FileNotFoundException, XMLStreamException
+    public void initializeViewSet() throws IOException
     {
         String[] vsetFileNameParts = vsetFile.getName().split("\\.");
         String fileExt = vsetFileNameParts[vsetFileNameParts.length-1];
@@ -70,7 +74,16 @@ public class ReflectanceDataAccessImpl<ContextType extends Context<ContextType>>
         else if ("xml".equalsIgnoreCase(fileExt))
         {
             System.out.println("Loading from Agisoft Photoscan XML file.");
-            viewSet = ViewSetImpl.loadFromAgisoftXMLFile(vsetFile);
+
+            try
+            {
+                viewSet = ViewSetImpl.loadFromAgisoftXMLFile(vsetFile);
+            }
+            catch (XMLStreamException e)
+            {
+                throw new IOException(e);
+            }
+
             viewSet.setInfiniteLightSources(false);
         }
         else
@@ -98,7 +111,17 @@ public class ReflectanceDataAccessImpl<ContextType extends Context<ContextType>>
             Optional.of(ImageIO.read(new FileInputStream(GraphicsResources.findImageFile(new File(maskDir, viewSet.getImageFileName(index))))));
     }
 
-    public void rescaleImages() throws IOException
+    /**
+     * Rescales the available images, and saves them to the hard drive in a new directory.
+     * This new directory subsequently becomes the directory from which images will be loaded from when this implementation is used.
+     * @param context A graphics context to use for the rescaling computation.
+     * @param width The desired image width.
+     * @param height The desired image height.
+     * @param rescaleDir A directory in which to store the rescaled images.
+     * @param <ContextType> The type of graphics context passed in.
+     * @throws IOException An IO exception is thrown if an error occurs either while reading in images, or while writing out the rescaled images.
+     */
+    public <ContextType extends Context<ContextType>> void rescaleImages(ContextType context, int width, int height, File rescaleDir) throws IOException
     {
         System.out.println("Rescaling images...");
         Date timestamp = new Date();
@@ -107,7 +130,7 @@ public class ReflectanceDataAccessImpl<ContextType extends Context<ContextType>>
         (
             // Create an FBO for downsampling
             FramebufferObject<ContextType> downsamplingFBO =
-                context.buildFramebufferObject(options.getImageWidth(), options.getImageHeight())
+                context.buildFramebufferObject(width, height)
                     .addColorAttachment()
                     .createFramebufferObject();
 
@@ -170,7 +193,6 @@ public class ReflectanceDataAccessImpl<ContextType extends Context<ContextType>>
 
         // Use rescale directory in the future
         imageDir = rescaleDir;
-        rescaleDir = null;
         maskDir = null;
     }
 }

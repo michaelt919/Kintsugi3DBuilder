@@ -13,6 +13,11 @@ import tetzlaff.gl.glfw.WindowImpl;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.window.Window;
 
+/**
+ * The main class for the reflectance parameter fitting program.
+ * Creates the user interface and provides a handler for the execute button that creates an OpenGL graphics context and passes it to an Executor
+ * object that uses the graphics context to run the reflectance parameter estimation algorithm.
+ */
 public final class ReflectanceFitProgram
 {
     private static final boolean DEBUG = false;
@@ -90,10 +95,6 @@ public final class ReflectanceFitProgram
                     stackTracePrintStream.flush();
                     stackTracePrintStream.close();
                     JOptionPane.showMessageDialog(gui, stackTraceStream.toString(), ex.getClass().getName(), JOptionPane.ERROR_MESSAGE);
-                }
-                catch (Exception exception)
-                {
-                    exception.printStackTrace();
                 }
                 finally
                 {

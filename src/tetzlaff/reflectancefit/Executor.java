@@ -2,6 +2,7 @@ package tetzlaff.reflectancefit;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
@@ -55,13 +56,13 @@ public class Executor<ContextType extends Context<ContextType>>
 
     /**
      * Runs the main reflectance parameter fitting computation.
-     * @throws Exception
+     * @throws IOException An IO exception may or may not be thrown, depending on the implementation.
      */
-    @SuppressWarnings("ProhibitedExceptionDeclared")
-    public void execute() throws Exception
+    public void execute() throws IOException
     {
-        ReflectanceDataAccessImpl<ContextType> reflectanceDataAccess =
-            new ReflectanceDataAccessImpl<>(context, cameraFile, modelFile, imageDir, maskDir, rescaleDir, options);
+        // Create a new instance of an implementation for access to the reflectance data on the hard drive.
+        ReflectanceDataAccessImpl reflectanceDataAccess =
+            new ReflectanceDataAccessImpl(cameraFile, modelFile, imageDir, maskDir);
 
         try(ParameterFittingResourcesImpl<ContextType> resources = new ParameterFittingResourcesImpl<>(context, reflectanceDataAccess, options))
         {
@@ -88,7 +89,7 @@ public class Executor<ContextType extends Context<ContextType>>
             // Rescale images if requested.
             if (options.isImageRescalingEnabled())
             {
-                reflectanceDataAccess.rescaleImages();
+                reflectanceDataAccess.rescaleImages(context, options.getImageWidth(), options.getImageHeight(), rescaleDir);
             }
 
             // Load all the images and calibrate the intensity of the light source.

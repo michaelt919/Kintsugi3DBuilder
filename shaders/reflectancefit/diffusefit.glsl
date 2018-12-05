@@ -15,31 +15,30 @@ uniform float fit3Weight;
 struct DiffuseFit
 {
     vec3 color;
-    vec3 normal;
     vec3 normalTS;
-    vec3 ambient;
 };
 
 bool validateFit(DiffuseFit fit)
 {
     return ! isnan(fit.color.r) && ! isnan(fit.color.g) && ! isnan(fit.color.b) &&
-            ! isinf(fit.color.r) && ! isinf(fit.color.g) && ! isinf(fit.color.b) &&
-            ! isnan(fit.normal.x) && ! isnan(fit.normal.y) && ! isnan(fit.normal.z) &&
-            ! isinf(fit.normal.x) && ! isinf(fit.normal.y) && ! isinf(fit.normal.z) &&
-            ! isnan(fit.ambient.r) && ! isnan(fit.ambient.g) && ! isnan(fit.ambient.b) &&
-            ! isinf(fit.ambient.r) && ! isinf(fit.ambient.g) && ! isinf(fit.ambient.b);
+            ! isinf(fit.color.r) && ! isinf(fit.color.g) && ! isinf(fit.color.b);
 }
 
+// Performs the diffuse estimation algorithm.
 DiffuseFit fitDiffuse()
 {
     vec3 geometricNormal = normalize(fNormal);
     
-    DiffuseFit fit = DiffuseFit(vec3(0), vec3(0), vec3(0), vec3(0));
-    
+    DiffuseFit fit = DiffuseFit(vec3(0), vec3(0));
+    vec3 fitNormal;
+
+    // Iteratively reweighted least squares.
     for (int k = 0; k < iterations; k++)
     {
-        //mat4 a = mat4(0);
-        //mat4 b = mat4(0);
+
+        // Perform a linear regression to fit the function:
+        // reflected radiance / incident radiance = (albedo * nx) * lx + (albedo * ny) * ly + (albedo * nz) * lz
+        // where (lx, ly, lz) is the normalized light direction and we are solving for the albedo and the surface normal (nx, ny, nz).
         mat3 a = mat3(0);
         mat3 b = mat3(0);
         vec4 weightedRadianceSum = vec4(0.0);
@@ -64,14 +63,13 @@ DiffuseFit fitDiffuse()
                 float weight = color.a * nDotV;
                 if (k != 0)
                 {
-                    vec3 error = color.rgb - fit.color * dot(fit.normal, light) * lightInfo.attenuatedIntensity;
+                    vec3 error = color.rgb - fit.color * dot(fitNormal, light) * lightInfo.attenuatedIntensity;
                     weight *= exp(-dot(error,error)/(2*delta*delta));
                 }
 
                 float attenuatedLuminance = getLuminance(lightInfo.attenuatedIntensity);
 
                 a += weight * outerProduct(light, light);
-                //b += weight * outerProduct(lightNormalized, vec4(color.rgb / lightInfo.attenuatedIntensity, 0.0));
                 b += weight * outerProduct(light, color.rgb / lightInfo.attenuatedIntensity);
 
                 float nDotL = max(0, dot(geometricNormal, light));
@@ -82,6 +80,7 @@ DiffuseFit fitDiffuse()
             }
         }
 
+        // Use the weights provided to regularize the solution if there isn't enough data or if the least squares problem is singular.
         if (fit3Weight > 0.0)
         {
             mat3 m = inverse(a) * b;
@@ -101,10 +100,7 @@ DiffuseFit fitDiffuse()
                 rgbScale.b = 0.0;
             }
 
-            //vec4 solution = m * vec4(rgbWeights, 0.0);
             vec3 solution = m * rgbScale;
-
-            //float ambientIntensity = solution.w;
 
             float fit3Quality = clamp(fit3Weight * determinant(a) / weightedRadianceSum.a *
                                     clamp(dot(normalize(solution.xyz), geometricNormal), 0, 1), 0.0, 1.0);
@@ -125,6 +121,8 @@ DiffuseFit fitDiffuse()
             // since all of the views are presumably on the same side of the surface normal.
             float diffuseNormalFidelity = max(0, (dot(averageDirection, geometricNormal) - SQRT2 / 2) / (1 - SQRT2 / 2));
 
+            // Compare to the average direction of all samples in case the sampling was biased.
+            // If bias is found, use a heuristic to adjust the surface normal to account for this bias.
             vec3 certaintyDirectionUnnormalized = cross(averageDirection - diffuseNormalFidelity * geometricNormal, geometricNormal);
             vec3 certaintyDirection = certaintyDirectionUnnormalized
                 / max(1, length(certaintyDirectionUnnormalized));
@@ -132,32 +130,30 @@ DiffuseFit fitDiffuse()
             float diffuseNormalCertainty =
                 min(1, directionScale) * dot(diffuseNormalEstimate, certaintyDirection);
             vec3 scaledCertaintyDirection = diffuseNormalCertainty * certaintyDirection;
-            fit.normal = normalize(
+            fitNormal = normalize(
                 scaledCertaintyDirection
                     + sqrt(1 - diffuseNormalCertainty * diffuseNormalCertainty
                                 * dot(certaintyDirection, certaintyDirection))
                         * normalize(mix(geometricNormal, normalize(diffuseNormalEstimate - scaledCertaintyDirection),
                             min(1, directionScale) * diffuseNormalFidelity)));
-
-            //debug = vec4(fit3Quality,
-            //    clamp(fit1Weight * weightedIrradianceSum, 0, 1 - fit3Quality), 0.0, 1.0);
         }
         else
         {
+            // If the weight for the refined surface normal was zero, just compute the color as a weighted average of color samples
+            // and use the triangle normal as the surface normal.
             fit.color = clamp(weightedRadianceSum.rgb / weightedIrradianceSum, 0, 1)
                                 * clamp(fit1Weight * weightedIrradianceSum, 0, 1);
-            fit.normal = fNormal;
+            fitNormal = fNormal;
         }
     }
 
     if (!validateFit(fit))
     {
         fit.color = vec3(0.0);
-        fit.normal = vec3(0.0);
-        fit.ambient = vec3(0.0);
     }
     else
     {
+        // Transform the surface normal from object space into tangent space.
         vec3 tangent = normalize(fTangent - dot(geometricNormal, fTangent));
         vec3 bitangent = normalize(fBitangent
             - dot(geometricNormal, fBitangent) * geometricNormal 
@@ -166,7 +162,7 @@ DiffuseFit fitDiffuse()
         mat3 tangentToObject = mat3(tangent, bitangent, geometricNormal);
         mat3 objectToTangent = transpose(tangentToObject);
     
-        fit.normalTS = objectToTangent * fit.normal;
+        fit.normalTS = objectToTangent * fitNormal;
     }
     
     return fit;

@@ -22,6 +22,9 @@ layout(location=5) out vec4 output5;
 layout(location=6) out vec4 output6;
 layout(location=7) out vec4 output7;
 
+// Copies the color values of adjacent pixels into the current pixel if the current pixel has an alpha value less than 1.0.
+// inputTexture is a texture sampler that contains the reference pixels.
+// The function returns the new pixel after potentially filling it in in this way.
 vec4 fill(sampler2D inputTexture)
 {
     vec4 central = texture(inputTexture, fTexCoord);

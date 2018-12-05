@@ -1,10 +1,13 @@
 package tetzlaff.reflectancefit;
 
-import java.io.IOException;
-
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.Vector2;
 
+/**
+ * A general purpose reflectance parameter estimation implementation.
+ * Handles the actual draw calls using the graphics context.
+ * @param <ContextType> The type of the graphics context to use with a particular instance.
+ */
 class ParameterizedFitBase<ContextType extends Context<ContextType>>
 {
     @SuppressWarnings("PackageVisibleField") final Drawable<ContextType> drawable;
@@ -36,7 +39,7 @@ class ParameterizedFitBase<ContextType extends Context<ContextType>>
     }
 
     void fitImageSpace(Framebuffer<ContextType> framebuffer, Texture<ContextType> viewImages, Texture<ContextType> depthImages,
-            SubdivisionRenderingCallback callback) throws IOException
+            SubdivisionRenderingCallback callback)
     {
         if (this.subdiv == 1)
         {

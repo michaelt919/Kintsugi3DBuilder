@@ -18,6 +18,8 @@ layout(location = 4) out vec4 roughnessStdDev;
 
 #line 20 0
 
+// This file connects all the pieces for performing specular reflectance parameter estimation and storing the results in the right output channels.
+// For the meat of the algorithm, refer to diffusefit.glsl.
 void main()
 {
     ParameterizedFit fit = fitSpecular();

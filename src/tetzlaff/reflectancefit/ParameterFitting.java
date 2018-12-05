@@ -1,10 +1,13 @@
 package tetzlaff.reflectancefit;
 
-import java.io.IOException;
 import java.util.Date;
 
 import tetzlaff.gl.core.*;
 
+/**
+ * An object that drives the sequence of steps for estimating reflectance parameters.
+ * @param <ContextType> The typ of the graphics context to use for reflectance estimation steps.
+ */
 @SuppressWarnings("UseOfObsoleteDateTimeApi")
 public class ParameterFitting<ContextType extends Context<ContextType>>
 {
@@ -12,14 +15,24 @@ public class ParameterFitting<ContextType extends Context<ContextType>>
     private final ParameterFittingResources<ContextType> resources;
     private final Options options;
 
-    ParameterFitting(ContextType context, ParameterFittingResources<ContextType> resources, Options options)
+    /**
+     * Creates a new object for performing reflectance parameter fitting.
+     * @param context The graphics context to use for each reflectance estimation step.
+     * @param resources The graphics resources required for reflectance estimation.
+     * @param options Options that may control the behavior of various steps of the reflectance parameter fitting process.
+     */
+    public ParameterFitting(ContextType context, ParameterFittingResources<ContextType> resources, Options options)
     {
         this.context = context;
         this.resources = resources;
         this.options = options;
     }
 
-    public ParameterFittingResult fit() throws IOException
+    /**
+     * Runs the reflectance parameter fitting algorithm.
+     * @return The results of reflectance parameter fitting.
+     */
+    public ParameterFittingResult fit()
     {
         try
         (
@@ -129,7 +142,7 @@ public class ParameterFitting<ContextType extends Context<ContextType>>
 
                     specularFit.fitImageSpace(resources.getViewTextures(), resources.getDepthTextures(),
                         (this.options.isDiffuseTextureEnabled() ? diffuseFitFramebuffer : frontFramebufferSpecular).getColorAttachmentTexture(0),
-                        this.options.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(3) : frontFramebufferSpecular.getColorAttachmentTexture(1),
+                        (this.options.isDiffuseTextureEnabled() ? diffuseFitFramebuffer : frontFramebufferSpecular).getColorAttachmentTexture(1),
                         (row, col) ->
                             System.out.println("Block " + (row * this.options.getTextureSubdivision() + col + 1) + '/' +
                                 (this.options.getTextureSubdivision() * this.options.getTextureSubdivision()) + " completed."));

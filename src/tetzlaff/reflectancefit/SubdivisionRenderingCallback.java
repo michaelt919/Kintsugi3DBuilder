@@ -1,9 +1,15 @@
 package tetzlaff.reflectancefit;
 
-import java.io.IOException;
-
+/**
+ * Provides a callback that allows for logging, etc. every time a subdivision block completes.
+ */
 @FunctionalInterface
 interface SubdivisionRenderingCallback
 {
-    void execute(int row, int col) throws IOException;
+    /**
+     * The callback to run after a particular subdivision block has been completed.
+     * @param row The row index of the subdivision block.
+     * @param col The column index of the subdivision block.
+     */
+    void execute(int row, int col);
 }

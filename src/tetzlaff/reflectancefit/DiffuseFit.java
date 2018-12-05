@@ -1,12 +1,15 @@
 package tetzlaff.reflectancefit;
 
-import java.io.IOException;
-
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Drawable;
 import tetzlaff.gl.core.Framebuffer;
 import tetzlaff.gl.core.Texture;
 
+/**
+ * The CPU side of a diffuse reflectance parameter estimation implementation.
+ * Most of the real computation is delegated to a graphics shader program.
+ * @param <ContextType> The type of the graphics context to use with a particular instance.
+ */
 class DiffuseFit<ContextType extends Context<ContextType>>
 {
     private final ParameterizedFitBase<ContextType> base;
@@ -19,7 +22,6 @@ class DiffuseFit<ContextType extends Context<ContextType>>
     }
 
     void fitImageSpace(Texture<ContextType> viewImages, Texture<ContextType> depthImages, SubdivisionRenderingCallback callback)
-        throws IOException
     {
         base.fitImageSpace(framebuffer, viewImages, depthImages, callback);
     }
