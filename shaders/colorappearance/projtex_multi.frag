@@ -1,3 +1,5 @@
+#version 330
+
 /*
  * Copyright (c) 2018
  * The Regents of the University of Minnesota
@@ -11,8 +13,6 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-#version 330
-
 in vec3 fPosition;
 in vec2 fTexCoord;
 in vec3 fNormal;
@@ -25,7 +25,7 @@ layout(location = 1) out vec4 shadingInfo;
 #include "colorappearance_multi_as_single.glsl"
 #include "imgspace.glsl"
 
-#line 16 1011
+#line 29 1011
 
 uniform bool lightIntensityCompensation;
 

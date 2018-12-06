@@ -1,3 +1,5 @@
+#version 330
+
 /*
  * Copyright (c) 2018
  * The Regents of the University of Minnesota
@@ -10,8 +12,6 @@
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
-
-#version 330
 
 uniform mat4 model_view;
 uniform mat4 projection;

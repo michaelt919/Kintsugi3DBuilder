@@ -1,3 +1,5 @@
+#version 330
+
 /*
  * Copyright (c) 2018
  * The Regents of the University of Minnesota
@@ -11,7 +13,6 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-#version 330
 
 in vec3 fPosition;
 in vec2 fTexCoord;
@@ -26,7 +27,7 @@ layout(location = 1) out vec4 normalMapTS;
 #include "../colorappearance/imgspace.glsl"
 #include "diffusefit.glsl"
 
-#line 19 0
+#line 31 0
 
 // This file connects all the pieces for performing diffuse reflectance parameter estimation and storing the results in the right output channels.
 // For the meat of the algorithm, refer to diffusefit.glsl.

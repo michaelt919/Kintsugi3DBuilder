@@ -14,7 +14,7 @@
 #ifndef EXTRACT_COMPONENT_GLSL
 #define EXTRACT_COMPONENT_GLSL
 
-#line 5 9902
+#line 18 9902
 
 float extractComponentByIndex(vec4 packedVector, int componentIndex)
 {

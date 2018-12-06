@@ -17,7 +17,7 @@
 #include "linearize.glsl"
 #include "../common/extractcomponent.glsl"
 
-#line 8 1000
+#line 21 1000
 
 #ifndef PI
 #define PI 3.1415926535897932384626433832795 // For convenience

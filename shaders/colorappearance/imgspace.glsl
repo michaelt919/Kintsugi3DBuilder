@@ -16,7 +16,7 @@
 
 #include "colorappearance.glsl"
 
-#line 7 1101
+#line 20 1101
 
 #ifndef CAMERA_PROJECTION_COUNT
 #define CAMERA_PROJECTION_COUNT 1024

@@ -16,7 +16,7 @@
 
 #include "../colorappearance/colorappearance.glsl"
 
-#line 7 2000
+#line 20 2000
 
 uniform float delta;
 uniform int iterations;

@@ -14,7 +14,7 @@
 #ifndef SPECULARFIT_GLSL
 #define SPECULARFIT_GLSL
 
-#line 5 2004
+#line 18 2004
 
 #define USE_LIGHT_INTENSITIES 1
 

@@ -16,7 +16,7 @@
 
 #include "colorappearance.glsl"
 
-#line 7 1100
+#line 20 1100
 
 uniform sampler2DArray viewImages;
 uniform vec2 minTexCoord;

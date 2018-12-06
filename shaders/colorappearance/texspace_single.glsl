@@ -16,7 +16,7 @@
 
 #include "colorappearance_single.glsl"
 
-#line 7 1110
+#line 20 1110
 
 uniform sampler2D viewImage;
 uniform vec2 minTexCoord;

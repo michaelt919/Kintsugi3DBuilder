@@ -16,7 +16,7 @@
 
 #include "colorappearance_single.glsl"
 
-#line 7 1111
+#line 20 1111
 
 #ifndef VISIBILITY_TEST_ENABLED
 #define VISIBILITY_TEST_ENABLED 0

@@ -18,7 +18,7 @@ uniform int viewIndex;
 
 #include "colorappearance.glsl"
 
-#line 9 1002
+#line 22 1002
 
 #define INFINITE_LIGHT_SOURCE INFINITE_LIGHT_SOURCES
 #define cameraPose             (cameraPoses[viewIndex])
