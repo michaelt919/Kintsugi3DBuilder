@@ -2,7 +2,7 @@
 <launch4jConfig>
   <dontWrapJar>false</dontWrapJar>
   <headerType>gui</headerType>
-  <jar>D:\IdeaProjects\imagebasedcolorappearance\classes\artifacts\DARPA_REVEAL_Reflectance_Estimation\DARPA_REVEAL_Reflectance_Estimation.jar</jar>
+  <jar>D:\IdeaProjects\imagebasedcolorappearance\classes\artifacts\DARPA_REVEAL_Reflectance_Estimation\DARPA_REVEAL_Reflectance_Estimation_Windows.jar</jar>
   <outfile>D:\IdeaProjects\imagebasedcolorappearance\classes\artifacts\DARPA_REVEAL_Reflectance_Estimation\DARPA_REVEAL_Reflectance_Estimation.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
