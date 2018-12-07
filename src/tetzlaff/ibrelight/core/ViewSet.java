@@ -546,6 +546,14 @@ public final class ViewSet
             params.encodedLuminanceValues[i] = encodedLuminanceList.get(i);
         }
 
+        int maxLightIndex = params.lightIndexList.stream().max(Comparator.naturalOrder()).orElse(-1);
+
+        for (int i = params.lightIntensityList.size(); i <= maxLightIndex; i++)
+        {
+            params.lightPositionList.add(Vector3.ZERO);
+            params.lightIntensityList.add(Vector3.ZERO);
+        }
+
         System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
         params.directory = vsetFile.getParentFile();
@@ -1090,7 +1098,7 @@ public final class ViewSet
         for (int i = 0; i < nextLightIndex; i++)
         {
             params.lightPositionList.add(Vector3.ZERO);
-            params.lightIntensityList.add(new Vector3(1.0f));
+            params.lightIntensityList.add(Vector3.ZERO);
         }
         params.infiniteLightSources = true; // TODO Could be set to false if support for automatically computing light intensities based on camera distance is added.
 

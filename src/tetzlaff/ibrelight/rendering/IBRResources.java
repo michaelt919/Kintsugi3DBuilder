@@ -530,7 +530,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                             for (short encodedDepth : depthBufferData)
                             {
                                 int nonlinearDepth = 0xFFFF & (int) encodedDepth;
-                                minDepth = Math.min(minDepth, getLinearDepth((double) nonlinearDepth / 0xFFFF,
+                                minDepth = Math.min(minDepth, getLinearDepth((2.0 * nonlinearDepth) / 0xFFFF - 1.0,
                                     viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
                             }
                         }
@@ -563,7 +563,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                         for (short encodedDepth : depthBufferData)
                         {
                             int nonlinearDepth = 0xFFFF & (int) encodedDepth;
-                            minDepth = Math.min(minDepth, getLinearDepth((double) nonlinearDepth / 0xFFFF,
+                            minDepth = Math.min(minDepth, getLinearDepth((2.0 * nonlinearDepth) / 0xFFFF - 1.0,
                                 viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
                         }
                     }

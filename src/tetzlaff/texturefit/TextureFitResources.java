@@ -1,7 +1,9 @@
 package tetzlaff.texturefit;
 
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Date;
 import javax.imageio.ImageIO;
@@ -992,7 +994,8 @@ class TextureFitResources<ContextType extends Context<ContextType>> implements A
                         for (short encodedDepth : depthBufferData)
                         {
                             int nonlinearDepth = 0xFFFF & (int) encodedDepth;
-                            minDepth = Math.min(minDepth, getLinearDepth((double) nonlinearDepth / 0xFFFF, viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
+                            minDepth = Math.min(minDepth, getLinearDepth((2.0 * nonlinearDepth) / 0xFFFF - 1.0,
+                                viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
                         }
                     }
                 }
@@ -1147,7 +1150,8 @@ class TextureFitResources<ContextType extends Context<ContextType>> implements A
                         for (short encodedDepth : depthBufferData)
                         {
                             int nonlinearDepth = 0xFFFF & (int) encodedDepth;
-                            minDepth = Math.min(minDepth, getLinearDepth((double) nonlinearDepth / 0xFFFF, viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
+                            minDepth = Math.min(minDepth, getLinearDepth((2.0 * nonlinearDepth) / 0xFFFF - 1.0,
+                                viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
                         }
                     }
 
