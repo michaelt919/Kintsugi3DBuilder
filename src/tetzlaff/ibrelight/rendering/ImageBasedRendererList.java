@@ -106,6 +106,22 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
                 {
                     renderableList.setSelectedItem(newItem);
                     effectiveSize = renderableList.size();
+
+                    double primaryViewDistance = newItem.getResources().getPrimaryViewDistance();
+                    Vector3 lightIntensity = new Vector3((float)(primaryViewDistance * primaryViewDistance));
+
+                    for (int i = 0; i < newItem.getActiveViewSet().getLightCount(); i++)
+                    {
+                        if (Objects.equals(newItem.getActiveViewSet().getLightIntensity(i), Vector3.ZERO))
+                        {
+                            newItem.getActiveViewSet().setLightIntensity(i, lightIntensity);
+                        }
+                    }
+
+                    newItem.getActiveViewSet().setInfiniteLightSources(false);
+                    newItem.getResources().updateLightData();
+                    newItem.reloadShaders();
+
                     if (loadingMonitor != null)
                     {
                         loadingMonitor.loadingComplete();

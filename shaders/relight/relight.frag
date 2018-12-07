@@ -134,7 +134,7 @@ layout(location = 1) out int fragObjectID;
 #endif
 
 #ifndef HYBRID_SPECULAR_ENABLED
-#define HYBRID_SPECULAR_ENABLED 1
+#define HYBRID_SPECULAR_ENABLED 0
 #endif
 
 #include "reflectanceequations.glsl"
@@ -417,6 +417,7 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
         }
     }
 
+#if HYBRID_SPECULAR_ENABLED
     vec4 weights = vec4(
         getLuminance(maxSamples[1].sampleBRDF),
         getLuminance(maxSamples[2].sampleBRDF),
@@ -432,6 +433,7 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
 //               + weights[2] * maxSamples[3].sampleWeight + weights[3] * maxSamples[4].sampleWeight) / weightSum *
         // TODO use residual specular color, not full specular
         vec4(specularColor * VIEW_COUNT * getEnvironment(mat3(envMapMatrix) * -reflect(normalize(viewPos.xyz - fPosition.xyz), normalDir)), 0.0);
+#endif
 
     if (sum.a > 0.0)
     {
