@@ -112,6 +112,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private Drawable<ContextType> environmentBackgroundDrawable;
     
     private UniformBuffer<ContextType> weightBuffer;
+
+    private FramebufferObject<ContextType> screenSpaceDepthFBO;
     
     private List<Matrix4> multiTransformationModel;
     private Vector3 centroid;
@@ -261,6 +263,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.rectangleVertices = context.createRectangle();
 
             this.resources = resourceBuilder.create();
+            context.flush();
+
+            if (this.loadingMonitor != null)
+            {
+                this.loadingMonitor.setMaximum(0.0); // make indeterminate
+            }
 
             if (this.program == null)
             {
@@ -302,7 +310,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 this.reprojectDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
             }
 
-
             this.simpleTexDrawable = context.createDrawable(simpleTexProgram);
             this.simpleTexDrawable.addVertexBuffer("position", this.rectangleVertices);
 
@@ -312,12 +319,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.environmentBackgroundDrawable = context.createDrawable(environmentBackgroundProgram);
             this.environmentBackgroundDrawable.addVertexBuffer("position", this.rectangleVertices);
 
-            context.flush();
-
-            if (this.loadingMonitor != null)
-            {
-                this.loadingMonitor.setMaximum(0.0); // make indeterminate
-            }
+            this.screenSpaceDepthFBO = context.buildFramebufferObject(512, 512)
+                    .addDepthAttachment()
+                    .createFramebufferObject();
 
             shadowProgram = context.getShaderProgramBuilder()
                     .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "depth.vert"))
@@ -1012,6 +1016,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             .times(projection);
 
         p.setUniform("projection", adjustedProjection);
+        p.setUniform("fullProjection", projection);
 
         return adjustedProjection;
     }
@@ -1434,8 +1439,23 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                         this.program.setUniform("holeFillColor", new Vector3(0.0f));
                     }
 
+                    shadowProgram.setUniform("projection", projection);
+                    screenSpaceDepthFBO.clearDepthBuffer();
+
+                    for (int i = 0; i < this.multiTransformationModel.size(); i++)
+                    {
+                        setupModelView(shadowProgram, i, view);
+                        shadowDrawable.draw(PrimitiveMode.TRIANGLES, screenSpaceDepthFBO);
+                    }
+
+                    context.flush();
+                    screenSpaceDepthFBO.getDepthAttachmentTexture().refreshMipmaps();
+
+                    this.program.setTexture("screenSpaceDepthBuffer", screenSpaceDepthFBO.getDepthAttachmentTexture());
+
                     if (this.resources.eigentextures != null && lightingModel != null && !Objects.equals(lightingModel.getAmbientLightColor(), Vector3.ZERO))
                     {
+                        this.environmentWeightsProgram.setTexture("screenSpaceDepthBuffer", screenSpaceDepthFBO.getDepthAttachmentTexture());
                         setupForDraw(this.environmentWeightsProgram);
                         setupModelView(this.environmentWeightsProgram, 0, view);
                         this.environmentWeightsProgram.setTexture("positionMap", this.resources.blockPositionTexture);
@@ -2036,6 +2056,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         {
             shadowProgram.close();
             shadowProgram = null;
+        }
+
+        if (screenSpaceDepthFBO != null)
+        {
+            screenSpaceDepthFBO.close();
+            screenSpaceDepthFBO = null;
         }
 
         if (lightProgram != null)

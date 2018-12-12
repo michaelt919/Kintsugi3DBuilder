@@ -507,7 +507,6 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
     {
         super.bindToTextureUnit(textureUnitIndex);
 
-        // TODO use GL_GENERATE_MIPMAP texture parameter instead
         if(this.staleMipmaps)
         {
             // Create mipmaps

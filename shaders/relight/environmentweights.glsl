@@ -68,7 +68,7 @@ EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT] computeSVDEnvironmentSamples(int vi
         vec3 sampleBase = 0.25 / PI
             * virtualMaskingShadowing
             * nDotV_sample / sampleMaskingShadowing
-            * getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPose)) * virtualLightDir);
+            * getEnvironment(position, transpose(mat3(cameraPose)) * virtualLightDir);
 
         float weight = 4 * hDotV_virtual * (getCameraWeight(virtualIndex) * 4 * PI * VIEW_COUNT);
         // dl = 4 * h dot v * dh

@@ -25,10 +25,12 @@ vec3 getPosition(vec2 texCoord)
 
 uniform vec3 viewPos;
 uniform mat4 envMapMatrix;
+uniform mat4 model_view;
+uniform mat4 fullProjection;
 
 #include "environmentweights.glsl"
 
-#line 27 0
+#line 34 0
 
 uniform int startingSVIndex;
 uniform sampler2D normalMap;
