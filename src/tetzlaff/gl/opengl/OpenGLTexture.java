@@ -133,7 +133,6 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
 
             if (generateMipmaps)
             {
-                // TODO use GL_GENERATE_MIPMAP texture parameter instead?
                 // Create mipmaps
                 glGenerateMipmap(this.getOpenGLTextureTarget());
                 OpenGLContext.errorCheck();
@@ -448,6 +447,16 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
     public void attachToReadFramebuffer(int attachment, int level)
     {
         glFramebufferTexture(GL_READ_FRAMEBUFFER, attachment, this.textureId, level);
+        OpenGLContext.errorCheck();
+    }
+
+    @Override
+    public void refreshMipmaps()
+    {
+        this.bind();
+
+        // Create mipmaps
+        glGenerateMipmap(this.getOpenGLTextureTarget());
         OpenGLContext.errorCheck();
     }
 }

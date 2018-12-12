@@ -16,4 +16,5 @@ public interface Texture<ContextType extends Context<ContextType>> extends Resou
     CompressionFormat getInternalCompressedColorFormat();
     boolean isInternalFormatCompressed();
     TextureType getTextureType();
+    void refreshMipmaps();
 }

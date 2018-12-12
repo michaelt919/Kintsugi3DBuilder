@@ -10,6 +10,9 @@ in vec3 fBitangent;
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out int fragObjectID;
 
+uniform mat4 model_view;
+uniform mat4 fullProjection;
+
 #ifndef BRDF_MODE
 #define BRDF_MODE 0
 #endif
@@ -149,7 +152,6 @@ uniform sampler2D specularMap;
 #endif
 
 uniform vec3 viewPos;
-uniform mat4 envMapMatrix;
 
 #if IMAGE_BASED_RENDERING_ENABLED
 
@@ -173,10 +175,9 @@ uniform mat4 envMapMatrix;
 
 #endif
 
-#line 177 0
+#line 179 0
 
 uniform int objectID;
-uniform mat4 model_view;
 uniform vec3 holeFillColor;
 
 #if VIRTUAL_LIGHT_COUNT > 0
@@ -367,7 +368,7 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, 
 
             vec4 unweightedSample;
             unweightedSample.rgb = cosineWeightedBRDF
-                * getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPose)) * virtualLightDir);
+                * getEnvironment(fPosition, transpose(mat3(cameraPose)) * virtualLightDir);
 
 #if SPECULAR_TEXTURE_ENABLED && ARCHIVING_2017_ENVIRONMENT_NORMALIZATION
             // Normalizes with respect to specular texture when available as described in our Archiving 2017 paper.
@@ -432,7 +433,7 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
 //        (weights[0] * maxSamples[1].sampleWeight + weights[1] * maxSamples[2].sampleWeight
 //               + weights[2] * maxSamples[3].sampleWeight + weights[3] * maxSamples[4].sampleWeight) / weightSum *
         // TODO use residual specular color, not full specular
-        vec4(specularColor * VIEW_COUNT * getEnvironment(mat3(envMapMatrix) * -reflect(normalize(viewPos.xyz - fPosition.xyz), normalDir)), 0.0);
+        vec4(specularColor * VIEW_COUNT * getEnvironment(fPosition, -reflect(normalize(viewPos.xyz - fPosition.xyz), normalDir)), 0.0);
 #endif
 
     if (sum.a > 0.0)
@@ -808,7 +809,7 @@ void main()
     vec3 radiance = vec3(0.0);
 
 #if RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
-    radiance += diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
+    radiance += diffuseColor * getEnvironmentDiffuse(normalDir);
 
 #if IMAGE_BASED_RENDERING_ENABLED
 

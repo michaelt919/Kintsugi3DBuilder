@@ -9,6 +9,9 @@ in vec3 fBitangent;
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out int fragObjectID;
 
+uniform mat4 model_view;
+uniform mat4 fullProjection;
+
 #include "reflectanceequations.glsl"
 #include "tonemap.glsl"
 #include "environment.glsl"
@@ -17,7 +20,6 @@ layout(location = 1) out int fragObjectID;
 
 uniform int objectID;
 
-uniform mat4 model_view;
 uniform vec3 viewPos;
 uniform mat4 envMapMatrix;
 
@@ -253,7 +255,7 @@ void main()
 
         if (relightingEnabled)
         {
-            reflectance += diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
+            reflectance += diffuseColor * getEnvironmentDiffuse(normalDir);
 
             vec3 reflectivity;
             if (useSpecularTexture)
