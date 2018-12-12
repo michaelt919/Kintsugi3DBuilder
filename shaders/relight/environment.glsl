@@ -31,7 +31,11 @@ uniform int diffuseEnvironmentMipMapLevel;
 #endif
 
 #ifndef RAY_DEPTH_BIAS
-#define RAY_DEPTH_BIAS 0.01
+#define RAY_DEPTH_BIAS 0.00001
+#endif
+
+#ifndef RAY_LINEAR_DEPTH_BIAS
+#define RAY_LINEAR_DEPTH_BIAS (RAY_DEPTH_GRADIENT * 0.05)
 #endif
 
 uniform sampler2D screenSpaceDepthBuffer;
@@ -61,9 +65,9 @@ float shadowTest(vec3 position, vec3 direction)
         if (abs(currentScreenSpacePos.x) < 1 && abs(currentScreenSpacePos.y) < 1 && currentScreenSpacePos.z < 1 && projDir.z > -1.0)
         {
             float surfaceDepth = textureOffset(screenSpaceDepthBuffer, currentScreenSpacePos.xy * 0.5 + 0.5, ivec2(0))[0];
-            float surfaceDepthLinear = fullProjection[3][2] / (2 * surfaceDepth - 1 + fullProjection[2][2]);
+            float surfaceDepthLinear = fullProjection[3][2] / (2 * (surfaceDepth + RAY_DEPTH_BIAS) - 1 + fullProjection[2][2]);
 
-            float scaledDiff = clamp((surfaceDepthLinear - currentProjPos.w + RAY_DEPTH_BIAS) / currentGradientScale, 0, 1);
+            float scaledDiff = clamp((surfaceDepthLinear + RAY_LINEAR_DEPTH_BIAS - currentProjPos.w) / currentGradientScale, 0, 1);
             shadowed = max(shadowed, 1.0 - scaledDiff);
         }
 

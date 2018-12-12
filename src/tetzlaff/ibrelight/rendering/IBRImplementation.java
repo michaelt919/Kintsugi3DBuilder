@@ -1449,7 +1449,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     }
 
                     context.flush();
-                    screenSpaceDepthFBO.getDepthAttachmentTexture().refreshMipmaps();
 
                     this.program.setTexture("screenSpaceDepthBuffer", screenSpaceDepthFBO.getDepthAttachmentTexture());
 
@@ -2523,6 +2522,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         defineMap.put("LUMINANCE_MAP_ENABLED", Optional.of(this.resources.viewSet.hasCustomLuminanceEncoding()));
         defineMap.put("INVERSE_LUMINANCE_MAP_ENABLED", Optional.of(false/*this.resources.viewSet.hasCustomLuminanceEncoding()*/));
+
+        defineMap.put("RAY_DEPTH_GRADIENT", Optional.of(0.1 * this.getScale()));
 
         if (this.settingsModel != null)
         {
