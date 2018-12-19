@@ -13,6 +13,8 @@ layout(location = 1) out int fragObjectID;
 uniform mat4 model_view;
 uniform mat4 fullProjection;
 
+#define MATERIAL_EXPLORATION_MODE 1
+
 #ifndef BRDF_MODE
 #define BRDF_MODE 0
 #endif
@@ -81,20 +83,8 @@ uniform mat4 fullProjection;
 #define TANGENT_SPACE_OVERRIDE_ENABLED 0
 #endif
 
-#ifndef DIFFUSE_TEXTURE_ENABLED
-#define DIFFUSE_TEXTURE_ENABLED 0
-#endif
-
 #ifndef NORMAL_TEXTURE_ENABLED
 #define NORMAL_TEXTURE_ENABLED 0
-#endif
-
-#ifndef SPECULAR_TEXTURE_ENABLED
-#define SPECULAR_TEXTURE_ENABLED 0
-#endif
-
-#ifndef ROUGHNESS_TEXTURE_ENABLED
-#define ROUGHNESS_TEXTURE_ENABLED 0
 #endif
 
 #ifndef TANGENT_SPACE_NORMAL_MAP
@@ -103,6 +93,41 @@ uniform mat4 fullProjection;
 
 #ifndef ARCHIVING_2017_ENVIRONMENT_NORMALIZATION
 #define ARCHIVING_2017_ENVIRONMENT_NORMALIZATION 0
+#endif
+
+#if MATERIAL_EXPLORATION_MODE
+
+#undef SMITH_MASKING_SHADOWING
+#define SMITH_MASKING_SHADOWING 1
+
+#include "../colorappearance/analytic.glsl"
+
+#undef DEFAULT_DIFFUSE_COLOR
+#undef DEFAULT_SPECULAR_COLOR
+#undef DEFAULT_SPECULAR_ROUGHNESS
+#undef DIFFUSE_TEXTURE_ENABLED
+#undef SPECULAR_TEXTURE_ENABLED
+#undef ROUGHNESS_TEXTURE_ENABLED
+
+#define DEFAULT_DIFFUSE_COLOR ANALYTIC_DIFFUSE_COLOR
+#define DEFAULT_SPECULAR_COLOR ANALYTIC_SPECULAR_COLOR
+#define DEFAULT_SPECULAR_ROUGHNESS vec3(ANALYTIC_ROUGHNESS)
+#define DIFFUSE_TEXTURE_ENABLED 0
+#define SPECULAR_TEXTURE_ENABLED 0
+#define ROUGHNESS_TEXTURE_ENABLED 0
+
+#else
+
+#ifndef DIFFUSE_TEXTURE_ENABLED
+#define DIFFUSE_TEXTURE_ENABLED 0
+#endif
+
+#ifndef SPECULAR_TEXTURE_ENABLED
+#define SPECULAR_TEXTURE_ENABLED 0
+#endif
+
+#ifndef ROUGHNESS_TEXTURE_ENABLED
+#define ROUGHNESS_TEXTURE_ENABLED 0
 #endif
 
 #ifndef DEFAULT_DIFFUSE_COLOR
@@ -126,6 +151,8 @@ uniform mat4 fullProjection;
 #ifndef DEFAULT_SPECULAR_ROUGHNESS
 #define DEFAULT_SPECULAR_ROUGHNESS (vec3(0.25)); // TODO pass in a default?
 #endif
+
+#endif // MATERIAL_EXPLORATION_MODE
 
 #if SVD_MODE
 #ifdef SMITH_MASKING_SHADOWING
@@ -161,7 +188,7 @@ uniform vec3 viewPos;
 
 #if SVD_MODE
 #include "../colorappearance/svd_unpack.glsl"
-#else
+#elif !MATERIAL_EXPLORATION_MODE
 #include "../colorappearance/imgspace.glsl"
 #endif
 
@@ -213,8 +240,17 @@ uniform float isotropyFactor;
 uniform sampler2D diffuseMap;
 #endif
 
-#if NORMAL_TEXTURE_ENABLED
+#if NORMAL_TEXTURE_ENABLED || MATERIAL_EXPLORATION_MODE
 uniform sampler2D normalMap;
+
+#if MATERIAL_EXPLORATION_MODE
+vec3 getNormal(vec2 texCoord)
+{
+    vec2 normalXY = texture(normalMap, texCoord).xy * 2 - 1;
+    return vec3(normalXY, 1.0 - dot(normalXY, normalXY));
+}
+#endif
+
 #endif
 
 #if ROUGHNESS_TEXTURE_ENABLED
@@ -395,7 +431,13 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, 
 
 vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness, vec3 peakTimes4Pi)
 {
+#if MATERIAL_EXPLORATION_MODE
+    float maxLuminance = max(ANALYTIC_SPECULAR_COLOR.r, max(ANALYTIC_SPECULAR_COLOR.g, ANALYTIC_SPECULAR_COLOR.b))
+            / (4 * ANALYTIC_ROUGHNESS * ANALYTIC_ROUGHNESS)
+        + max(ANALYTIC_DIFFUSE_COLOR.r, max(ANALYTIC_DIFFUSE_COLOR.g, ANALYTIC_DIFFUSE_COLOR.b));
+#else
     float maxLuminance = getMaxLuminance();
+#endif
 
     vec4 sum = vec4(0.0);
     EnvironmentSample maxSamples[5];
@@ -510,7 +552,13 @@ vec4 computeSampleSingle(int virtualIndex, vec3 diffuseColor, vec3 normalDir,  v
 
 vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness, vec3 peakTimes4Pi)
 {
+#if MATERIAL_EXPLORATION_MODE
+    float maxLuminance = max(ANALYTIC_SPECULAR_COLOR.r, max(ANALYTIC_SPECULAR_COLOR.g, ANALYTIC_SPECULAR_COLOR.b))
+            / (4 * ANALYTIC_ROUGHNESS * ANALYTIC_ROUGHNESS)
+        + max(ANALYTIC_DIFFUSE_COLOR.r, max(ANALYTIC_DIFFUSE_COLOR.g, ANALYTIC_DIFFUSE_COLOR.b));
+#else
     float maxLuminance = getMaxLuminance();
+#endif
 
     float weights[SORTING_SAMPLE_COUNT];
     int indices[SORTING_SAMPLE_COUNT];
@@ -680,7 +728,13 @@ vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor, vec
 
 vec4[VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness, vec3 peakTimes4Pi)
 {
+#if MATERIAL_EXPLORATION_MODE
+    float maxLuminance = max(ANALYTIC_SPECULAR_COLOR.r, max(ANALYTIC_SPECULAR_COLOR.g, ANALYTIC_SPECULAR_COLOR.b))
+            / (4 * ANALYTIC_ROUGHNESS * ANALYTIC_ROUGHNESS)
+        + max(ANALYTIC_DIFFUSE_COLOR.r, max(ANALYTIC_DIFFUSE_COLOR.g, ANALYTIC_DIFFUSE_COLOR.b));
+#else
     float maxLuminance = getMaxLuminance();
+#endif
 
     vec4[VIRTUAL_LIGHT_COUNT] sums;
     for (int i = 0; i < VIRTUAL_LIGHT_COUNT; i++)
@@ -750,7 +804,11 @@ void main()
 
     vec3 normalDir;
 #if NORMAL_TEXTURE_ENABLED
-#if TANGENT_SPACE_NORMAL_MAP
+#if MATERIAL_EXPLORATION_MODE
+    vec2 scaledTexCoord = ANALYTIC_UV_SCALE * fTexCoord;
+    vec3 normalDirTS = getNormal(scaledTexCoord - floor(scaledTexCoord)) * vec3(ANALYTIC_BUMP_HEIGHT, ANALYTIC_BUMP_HEIGHT, 1.0);
+    normalDir = tangentToObject * normalDirTS;
+#elif TANGENT_SPACE_NORMAL_MAP
     vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
     vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
     normalDir = tangentToObject * normalDirTS;
