@@ -12,6 +12,10 @@
 #define ACTIVE_EIGENTEXTURE_COUNT 4
 #endif
 
+#ifndef RAY_POSITION_JITTER
+#define RAY_POSITION_JITTER 0.1
+#endif
+
 struct EnvironmentResult
 {
     vec4 baseFresnel;
@@ -65,10 +69,19 @@ EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT] computeSVDEnvironmentSamples(int vi
         anticipatedFakeMaskingShadowing = nDotV_virtual * nDotV_virtual;
 #endif
 
-        vec3 sampleBase = 0.25 / PI
+        vec3 sampleBase = vec3(0.25 / PI
             * virtualMaskingShadowing
-            * nDotV_sample / sampleMaskingShadowing
-            * getEnvironment(position, transpose(mat3(cameraPose)) * virtualLightDir);
+            * nDotV_sample / sampleMaskingShadowing);
+
+#if SHADOWS_ENABLED
+            sampleBase *= (getEnvironment(position, transpose(mat3(cameraPose)) * virtualLightDir) +
+                getEnvironment(position + transpose(mat3(cameraPose)) * vec3(RAY_POSITION_JITTER,0,0), transpose(mat3(cameraPose)) * virtualLightDir) +
+                getEnvironment(position + transpose(mat3(cameraPose)) * vec3(-RAY_POSITION_JITTER,0,0), transpose(mat3(cameraPose)) * virtualLightDir) +
+                getEnvironment(position + transpose(mat3(cameraPose)) * vec3(0,RAY_POSITION_JITTER,0), transpose(mat3(cameraPose)) * virtualLightDir) +
+                getEnvironment(position + transpose(mat3(cameraPose)) * vec3(0,-RAY_POSITION_JITTER,0), transpose(mat3(cameraPose)) * virtualLightDir)) / 5;
+#else
+            sampleBase *= getEnvironment(position, transpose(mat3(cameraPose)) * virtualLightDir);
+#endif
 
         float weight = 4 * hDotV_virtual * (getCameraWeight(virtualIndex) * 4 * PI * VIEW_COUNT);
         // dl = 4 * h dot v * dh

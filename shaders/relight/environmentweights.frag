@@ -24,7 +24,6 @@ vec3 getPosition(vec2 texCoord)
 #define fPosition (getPosition(fTexCoord))
 
 uniform vec3 viewPos;
-uniform mat4 envMapMatrix;
 uniform mat4 model_view;
 uniform mat4 fullProjection;
 

@@ -40,12 +40,23 @@ uniform int diffuseEnvironmentMipMapLevel;
 
 uniform sampler2D screenSpaceDepthBuffer;
 
+float rayTest(vec2 screenSpaceCoord, float rayDepth, float gradientScale)
+{
+    float surfaceDepth = texture(screenSpaceDepthBuffer, screenSpaceCoord)[0];
+    float surfaceDepthLinear = fullProjection[3][2] / (2 * (surfaceDepth + RAY_DEPTH_BIAS) - 1 + fullProjection[2][2]);
+    return clamp((surfaceDepthLinear + RAY_LINEAR_DEPTH_BIAS - rayDepth) / gradientScale, 0, 1);
+}
+
 float shadowTest(vec3 position, vec3 direction)
 {
     mat4 proj_model_view = fullProjection * model_view;
 
     vec4 projPos = proj_model_view * vec4(position, 1);
     vec4 screenSpacePos = projPos / projPos.w;
+
+    projPos = fullProjection * vec4((model_view * vec4(position, 1)).xy,
+        -fullProjection[3][2] / (texture(screenSpaceDepthBuffer, screenSpacePos.xy * 0.5 + 0.5)[0] * 2 - 1 + fullProjection[2][2]), 1.0);
+    screenSpacePos = projPos / projPos.w;
 
     float dirScale = 1.0 / 256.0;
     float iterationFactor = pow(256, 1.0 / MAX_RAYTRACING_SAMPLE_COUNT);
@@ -64,10 +75,7 @@ float shadowTest(vec3 position, vec3 direction)
 
         if (abs(currentScreenSpacePos.x) < 1 && abs(currentScreenSpacePos.y) < 1 && currentScreenSpacePos.z < 1 && projDir.z > -1.0)
         {
-            float surfaceDepth = textureOffset(screenSpaceDepthBuffer, currentScreenSpacePos.xy * 0.5 + 0.5, ivec2(0))[0];
-            float surfaceDepthLinear = fullProjection[3][2] / (2 * (surfaceDepth + RAY_DEPTH_BIAS) - 1 + fullProjection[2][2]);
-
-            float scaledDiff = clamp((surfaceDepthLinear + RAY_LINEAR_DEPTH_BIAS - currentProjPos.w) / currentGradientScale, 0, 1);
+            float scaledDiff = rayTest((currentScreenSpacePos.xy * 0.5 + 0.5), currentProjPos.w, currentGradientScale);
             shadowed = max(shadowed, 1.0 - scaledDiff);
         }
 

@@ -1457,6 +1457,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                         this.environmentWeightsProgram.setTexture("screenSpaceDepthBuffer", screenSpaceDepthFBO.getDepthAttachmentTexture());
                         setupForDraw(this.environmentWeightsProgram);
                         setupModelView(this.environmentWeightsProgram, 0, view);
+                        this.environmentWeightsProgram.setUniform("fullProjection", projection);
                         this.environmentWeightsProgram.setTexture("positionMap", this.resources.blockPositionTexture);
                         this.environmentWeightsProgram.setTexture("normalMap", this.resources.blockNormalTexture);
 
@@ -2524,6 +2525,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         defineMap.put("INVERSE_LUMINANCE_MAP_ENABLED", Optional.of(false/*this.resources.viewSet.hasCustomLuminanceEncoding()*/));
 
         defineMap.put("RAY_DEPTH_GRADIENT", Optional.of(0.1 * this.getScale()));
+        defineMap.put("RAY_POSITION_JITTER", Optional.of(0.01 * this.getScale()));
 
         if (this.settingsModel != null)
         {
