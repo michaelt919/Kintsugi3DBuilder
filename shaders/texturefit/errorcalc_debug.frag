@@ -10,7 +10,7 @@ layout(location = 0) out vec2 errorResultOut;
 layout(location = 1) out float mask;
 
 #include "../colorappearance/colorappearance.glsl"
-#include "../colorappearance/debug.glsl"
+#include "../colorappearance/analytic.glsl"
 #include "errorcalc.glsl"
 
 #line 15 0

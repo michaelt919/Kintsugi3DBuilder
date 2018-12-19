@@ -12,7 +12,7 @@ layout(location = 2) out vec4 specularColor;
 layout(location = 3) out vec4 roughness;
 
 #include "../colorappearance/colorappearance.glsl"
-#include "../colorappearance/debug.glsl"
+#include "../colorappearance/analytic.glsl"
 #include "adjustfit_roughness.glsl"
 
 #line 17 0
