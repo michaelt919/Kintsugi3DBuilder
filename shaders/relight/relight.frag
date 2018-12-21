@@ -13,7 +13,7 @@ layout(location = 1) out int fragObjectID;
 uniform mat4 model_view;
 uniform mat4 fullProjection;
 
-#define MATERIAL_EXPLORATION_MODE 1
+#define MATERIAL_EXPLORATION_MODE 0
 
 #ifndef BRDF_MODE
 #define BRDF_MODE 0
@@ -354,7 +354,6 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, 
             float hDotV_virtual = max(0, dot(sampleHalfDir, virtualViewDir));
 
             float geomAttenVirtual = geom(roughness, nDotH, nDotV_virtual, nDotL_virtual, hDotV_virtual);
-
 
             vec3 mfdFresnel;
             float mfdMono;

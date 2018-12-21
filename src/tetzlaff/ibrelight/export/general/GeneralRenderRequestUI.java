@@ -120,7 +120,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
 
         runButton.setOnAction(event ->
         {
-            stage.close();
+//            stage.close();
 
             File fragmentShader = new File(fragmentShaderField.getText());
             File outputDirectory = new File(exportDirectoryField.getText());
