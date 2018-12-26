@@ -18,14 +18,14 @@ uniform bool standaloneMode;
 uniform bool disableNormalAdjustment;
 
 
-#define chromaticRoughness true
+#define chromaticRoughness false
 #define chromaticSpecular true
 #define aggressiveNormal false
 #define relaxedSpecularPeaks true
 
 #define USE_LIGHT_INTENSITIES 1
 #define ENABLE_DIFFUSE_ADJUSTMENT 1
-#define USE_PEAK_ESTIMATE 1
+#define USE_PEAK_ESTIMATE 0
 
 vec4 getDiffuseColor()
 {
