@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
 
+import org.ejml.data.FMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 import org.lwjgl.*;
 import tetzlaff.gl.core.*;
@@ -34,9 +35,9 @@ import tetzlaff.ibrelight.core.LoadingMonitor;
 import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.rendering.IBRResources;
 import tetzlaff.models.ReadonlySettingsModel;
-import tetzlaff.util.NonNegativeLeastSquares;
+import tetzlaff.util.NonNegativeLeastSquaresSinglePrecision;
 
-import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
+import static org.ejml.dense.row.CommonOps_FDRM.multTransA;
 
 public class NewFidelityRequest implements IBRRequest
 {
@@ -65,9 +66,9 @@ public class NewFidelityRequest implements IBRRequest
         int width = targetImage.getWidth();
         int height = targetImage.getHeight();
 
-        SimpleMatrix redTarget = new SimpleMatrix(width * height, 1);
-        SimpleMatrix greenTarget = new SimpleMatrix(width * height, 1);
-        SimpleMatrix blueTarget = new SimpleMatrix(width * height, 1);
+        SimpleMatrix redTarget = new SimpleMatrix(width * height, 1, FMatrixRMaj.class);
+        SimpleMatrix greenTarget = new SimpleMatrix(width * height, 1, FMatrixRMaj.class);
+        SimpleMatrix blueTarget = new SimpleMatrix(width * height, 1, FMatrixRMaj.class);
 
         int k = 0;
         for (int y = targetImage.getHeight() - 1; y >= 0; y--)
@@ -143,9 +144,9 @@ public class NewFidelityRequest implements IBRRequest
             float[] colorSums = new float[width * height * 3];
             int[] colorCounts = new int[width * height];
 
-            SimpleMatrix red = new SimpleMatrix(width * height, resources.viewSet.getCameraPoseCount());
-            SimpleMatrix green = new SimpleMatrix(width * height, resources.viewSet.getCameraPoseCount());
-            SimpleMatrix blue = new SimpleMatrix(width * height, resources.viewSet.getCameraPoseCount());
+            SimpleMatrix red = new SimpleMatrix(width * height, resources.viewSet.getCameraPoseCount(), FMatrixRMaj.class);
+            SimpleMatrix green = new SimpleMatrix(width * height, resources.viewSet.getCameraPoseCount(), FMatrixRMaj.class);
+            SimpleMatrix blue = new SimpleMatrix(width * height, resources.viewSet.getCameraPoseCount(), FMatrixRMaj.class);
 
             for (int i = 0; i < resources.viewSet.getCameraPoseCount(); i++)
             {
@@ -211,13 +212,13 @@ public class NewFidelityRequest implements IBRRequest
                 }
             }
 
-            SimpleMatrix redATA = new SimpleMatrix(red.numCols(), red.numCols());
-            SimpleMatrix greenATA = new SimpleMatrix(red.numCols(), red.numCols());
-            SimpleMatrix blueATA = new SimpleMatrix(red.numCols(), red.numCols());
+            SimpleMatrix redATA = new SimpleMatrix(red.numCols(), red.numCols(), FMatrixRMaj.class);
+            SimpleMatrix greenATA = new SimpleMatrix(red.numCols(), red.numCols(), FMatrixRMaj.class);
+            SimpleMatrix blueATA = new SimpleMatrix(red.numCols(), red.numCols(), FMatrixRMaj.class);
 
-            SimpleMatrix redATb = new SimpleMatrix(red.numCols(), 1);
-            SimpleMatrix greenATb = new SimpleMatrix(red.numCols(), 1);
-            SimpleMatrix blueATb = new SimpleMatrix(red.numCols(), 1);
+            SimpleMatrix redATb = new SimpleMatrix(red.numCols(), 1, FMatrixRMaj.class);
+            SimpleMatrix greenATb = new SimpleMatrix(red.numCols(), 1, FMatrixRMaj.class);
+            SimpleMatrix blueATb = new SimpleMatrix(red.numCols(), 1, FMatrixRMaj.class);
 
             // Low level operations to avoid using unnecessary memory.
             multTransA(red.getMatrix(), red.getMatrix(), redATA.getMatrix());
@@ -228,7 +229,7 @@ public class NewFidelityRequest implements IBRRequest
             multTransA(green.getMatrix(), greenTarget.getMatrix(), greenATb.getMatrix());
             multTransA(blue.getMatrix(), blueTarget.getMatrix(), blueATb.getMatrix());
 
-            NonNegativeLeastSquares solver = new NonNegativeLeastSquares();
+            NonNegativeLeastSquaresSinglePrecision solver = new NonNegativeLeastSquaresSinglePrecision();
 
             SimpleMatrix redSolution = solver.solvePremultiplied(redATA, redATb, 0.001);
             SimpleMatrix redRecon = red.mult(redSolution);
@@ -366,13 +367,21 @@ public class NewFidelityRequest implements IBRRequest
 
             BufferedImage envMapImg = new BufferedImage(envMapWidth, envMapHeight, BufferedImage.TYPE_INT_ARGB);
 
-            double maxWeight = Math.max(
-                IntStream.range(0, redSolution.getNumElements()).mapToDouble(redSolution::get).max().orElse(0.0),
-                Math.max(
-                    IntStream.range(0, greenSolution.getNumElements()).mapToDouble(greenSolution::get).max().orElse(0.0),
-                    IntStream.range(0, blueSolution.getNumElements()).mapToDouble(blueSolution::get).max().orElse(0.0)));
+//            double maxWeight = Math.max(
+//                IntStream.range(0, redSolution.getNumElements()).mapToDouble(redSolution::get).max().orElse(0.0),
+//                Math.max(
+//                    IntStream.range(0, greenSolution.getNumElements()).mapToDouble(greenSolution::get).max().orElse(0.0),
+//                    IntStream.range(0, blueSolution.getNumElements()).mapToDouble(blueSolution::get).max().orElse(0.0)));
 
-            double scale = Math.max(1.0, maxWeight);
+//            double scale = Math.max(1.0, maxWeight);
+
+            double scale = Math.max(1.0,
+                IntStream.range(0, greenSolution.getNumElements())
+                    .mapToDouble(greenSolution::get)
+                    .filter(x -> x > 0.00001)
+                    .average().orElse(0.5) * 2);
+
+//            double scale = 1.0;
 
             for (int x = 0; x < envMapWidth; x++)
             {
@@ -409,9 +418,10 @@ public class NewFidelityRequest implements IBRRequest
 
                     if (nearestView != -1)
                     {
-                        Color rgb = new Color(Math.max(0, Math.min(1, Math.round(redSolution.get(nearestView) * 255 / scale))),
-                            Math.max(0, Math.min(1, Math.round(greenSolution.get(nearestView) * 255 / scale))),
-                            Math.max(0, Math.min(1, Math.round(blueSolution.get(nearestView) * 255 / scale))));
+                        Color rgb = new Color(
+                            Math.max(0, Math.min(1, Math.round(Math.pow(redSolution.get(nearestView) / scale, 1.0 / 2.2)))),
+                            Math.max(0, Math.min(1, Math.round(Math.pow(greenSolution.get(nearestView) / scale, 1.0 / 2.2)))),
+                            Math.max(0, Math.min(1, Math.round(Math.pow(blueSolution.get(nearestView) / scale, 1.0 / 2.2)))));
 
                         envMapImg.setRGB(x, y, rgb.getRGB());
                     }
@@ -427,12 +437,12 @@ public class NewFidelityRequest implements IBRRequest
                 e.printStackTrace();
             }
 
-            double fidelity = (redError.dot(redError) + greenError.dot(greenError) + blueError.dot(blueError))
+            double sqError = (redError.dot(redError) + greenError.dot(greenError) + blueError.dot(blueError))
                 / (redTarget.dot(redTarget) + greenTarget.dot(greenTarget) + blueTarget.dot(blueTarget));
 
             try(PrintStream info = new PrintStream(new File(debugPath, "info.txt")))
             {
-                info.println("Fidelity:\t" + fidelity);
+                info.println("Fidelity:\t" + Math.sqrt(1.0 - sqError));
                 info.println();
 
                 for (int i = 0; i < resources.viewSet.getCameraPoseCount(); i++)
@@ -442,7 +452,7 @@ public class NewFidelityRequest implements IBRRequest
                 }
             }
 
-            return fidelity;
+            return sqError;
         }
     }
 
