@@ -17,6 +17,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
 import java.util.stream.IntStream;
@@ -87,7 +88,7 @@ public class NewFidelityRequest implements IBRRequest
                 .define("VISIBILITY_TEST_ENABLED", resources.depthTextures != null && settings.getBoolean("occlusionEnabled"))
                 .define("SHADOW_TEST_ENABLED", resources.shadowTextures != null && settings.getBoolean("occlusionEnabled"))
                 .define("FRESNEL_EFFECT_ENABLED", true)
-                .define("SHADOWS_ENABLED", false)
+                .define("SHADOWS_ENABLED", true)
                 .define("RAY_DEPTH_GRADIENT", 0.2 * resources.geometry.getBoundingRadius())
                 .define("RAY_POSITION_JITTER", 0.02 * resources.geometry.getBoundingRadius())
                 .define("MAX_RAYTRACING_SAMPLE_COUNT", 64)
@@ -115,7 +116,7 @@ public class NewFidelityRequest implements IBRRequest
             shadowProgram.setUniform("model_view", targetModelView);
             shadowProgram.setUniform("projection", targetProjection);
 
-            shadowFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+            shadowFramebuffer.clearDepthBuffer();
             shadowDrawable.draw(PrimitiveMode.TRIANGLES, shadowFramebuffer);
 
             Drawable<ContextType> mainDrawable = resources.context.createDrawable(mainProgram);
@@ -360,8 +361,88 @@ public class NewFidelityRequest implements IBRRequest
                 }
             }
 
-            return Math.sqrt((redError.dot(redError) + greenError.dot(greenError) + blueError.dot(blueError))
-                / (redTarget.dot(redTarget) + greenTarget.dot(greenTarget) + blueTarget.dot(blueTarget)));
+            int envMapHeight = (int)Math.ceil(4 * Math.sqrt(Math.PI * resources.viewSet.getCameraPoseCount()));
+            int envMapWidth = 2 * envMapHeight;
+
+            BufferedImage envMapImg = new BufferedImage(envMapWidth, envMapHeight, BufferedImage.TYPE_INT_ARGB);
+
+            double maxWeight = Math.max(
+                IntStream.range(0, redSolution.getNumElements()).mapToDouble(redSolution::get).max().orElse(0.0),
+                Math.max(
+                    IntStream.range(0, greenSolution.getNumElements()).mapToDouble(greenSolution::get).max().orElse(0.0),
+                    IntStream.range(0, blueSolution.getNumElements()).mapToDouble(blueSolution::get).max().orElse(0.0)));
+
+            double scale = Math.max(1.0, maxWeight);
+
+            for (int x = 0; x < envMapWidth; x++)
+            {
+                for (int y = 0; y < envMapHeight; y++)
+                {
+                    int nearestView = -1;
+                    double nearestDistance = Double.MAX_VALUE;
+
+                    for (int i = 0; i < resources.viewSet.getCameraPoseCount(); i++)
+                    {
+                        Vector3 halfDir = targetModelView
+                            .times(resources.viewSet.getCameraPoseInverse(i)
+                                .times(resources.viewSet.getLightPosition(resources.viewSet.getLightIndex(i)).times(0.5f).asPosition())
+                                .minus(resources.geometry.getCentroid().asPosition()))
+                            .getXYZ().normalized();
+
+                        Vector3 viewDir = targetModelView.times(resources.geometry.getCentroid().asPosition()).getXYZ().negated().normalized();
+                        Vector3 lightDir = halfDir.times(2 * halfDir.dot(viewDir)).minus(viewDir);
+
+                        double theta = x * 2 * Math.PI / envMapWidth;
+                        double phi = y * Math.PI / (envMapHeight - 1);
+
+                        Vector3 targetLightDir =
+                            new Vector3((float)(Math.sin(theta) * Math.sin(phi)), (float)Math.cos(phi), (float)(-Math.cos(theta) * Math.sin(phi)));
+
+                        double distance = targetLightDir.distance(lightDir);
+
+                        if (distance < nearestDistance)
+                        {
+                            nearestDistance = distance;
+                            nearestView = i;
+                        }
+                    }
+
+                    if (nearestView != -1)
+                    {
+                        Color rgb = new Color(Math.max(0, Math.min(1, Math.round(redSolution.get(nearestView) * 255 / scale))),
+                            Math.max(0, Math.min(1, Math.round(greenSolution.get(nearestView) * 255 / scale))),
+                            Math.max(0, Math.min(1, Math.round(blueSolution.get(nearestView) * 255 / scale))));
+
+                        envMapImg.setRGB(x, y, rgb.getRGB());
+                    }
+                }
+            }
+
+            try
+            {
+                ImageIO.write(envMapImg, "PNG", new File(debugPath, "environment.png"));
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+
+            double fidelity = (redError.dot(redError) + greenError.dot(greenError) + blueError.dot(blueError))
+                / (redTarget.dot(redTarget) + greenTarget.dot(greenTarget) + blueTarget.dot(blueTarget));
+
+            try(PrintStream info = new PrintStream(new File(debugPath, "info.txt")))
+            {
+                info.println("Fidelity:\t" + fidelity);
+                info.println();
+
+                for (int i = 0; i < resources.viewSet.getCameraPoseCount(); i++)
+                {
+                    info.println(resources.viewSet.getImageFileName(i)
+                        + '\t' + redSolution.get(i) + '\t' + greenSolution.get(i) + '\t' + blueSolution.get(i));
+                }
+            }
+
+            return fidelity;
         }
     }
 
@@ -376,6 +457,6 @@ public class NewFidelityRequest implements IBRRequest
                     .getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()),
                 targetViewSet.getImageFile(targetViewSet.getPrimaryViewIndex()));
 
-        System.out.println("Fidelity: " + (1.0 - error));
+        System.out.println("Fidelity: " + Math.sqrt(1.0 - error));
     }
 }

@@ -133,13 +133,13 @@ void main()
 #if SHADOWS_ENABLED
     float shadow = shadowTest(fPosition, transpose(mat3(cameraPose)) * virtualLightDir);
 
-    if (shadow == 0.0)
+    if (shadow == 1.0)
     {
         fragColor = vec4(0.0, 0.0, 0.0, 1.0);
         return;
     }
 #else
-    float shadow = 1.0;
+    float shadow = 0.0;
 #endif
 
     vec3 diffuseColor;
@@ -211,5 +211,5 @@ void main()
     newFresnelTimesDist = fresnelTimesDist;
 #endif
 
-    fragColor = vec4(shadow * newFresnelTimesDist * geomAttenVirtual / (4 * nDotV_virtual), 1.0);
+    fragColor = vec4((1.0 - shadow) * newFresnelTimesDist * geomAttenVirtual / (4 * nDotV_virtual), 1.0);
 }
