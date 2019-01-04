@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -137,6 +138,12 @@ public final class DefaultFramebufferFactory
         }
 
         @Override
+        public void readDepthBuffer(ShortBuffer destination, int x, int y, int width, int height)
+        {
+            frontFBO.readDepthBuffer(x, y, width, height);
+        }
+
+        @Override
         public void readColorBufferARGB(int attachmentIndex, ByteBuffer destination)
         {
             frontFBO.readColorBufferARGB(attachmentIndex, destination);
@@ -152,6 +159,12 @@ public final class DefaultFramebufferFactory
         public void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination)
         {
             frontFBO.readIntegerColorBufferRGBA(attachmentIndex, destination);
+        }
+
+        @Override
+        public void readDepthBuffer(ShortBuffer destination)
+        {
+            frontFBO.readDepthBuffer(destination);
         }
 
         @Override

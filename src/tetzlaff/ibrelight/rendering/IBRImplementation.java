@@ -4,6 +4,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -11,6 +13,7 @@ import java.util.Map.Entry;
 import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
 
+import org.lwjgl.*;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
@@ -129,8 +132,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     
     private final String[] sceneObjectNameList;
     private final Map<String, Integer> sceneObjectIDLookup;
-    private int[] pixelObjectIDs;
-    private short[] pixelDepths;
+    private IntBuffer pixelObjectIDBuffer;
+    private ShortBuffer pixelDepthBuffer;
     private FramebufferSize fboSize;
 
     private Program<ContextType> circleProgram;
@@ -1537,9 +1540,28 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     context.flush();
 
                     // Read buffers here if light widgets are ethereal (i.e. they cannot be clicked and should not be in the ID buffer)
-                    pixelObjectIDs = offscreenFBO.readIntegerColorBufferRGBA(1);
-                    pixelDepths = offscreenFBO.readDepthBuffer();
                     fboSize = offscreenFBO.getSize();
+
+                    if (pixelObjectIDBuffer == null || pixelObjectIDBuffer.capacity() != 4 * fboSize.width * fboSize.height)
+                    {
+                        pixelObjectIDBuffer = BufferUtils.createIntBuffer(4 * fboSize.width * fboSize.height);
+                    }
+                    else
+                    {
+                        pixelObjectIDBuffer.clear();
+                    }
+
+                    if (pixelDepthBuffer == null || pixelDepthBuffer.capacity() != fboSize.width * fboSize.height)
+                    {
+                        pixelDepthBuffer = BufferUtils.createShortBuffer(fboSize.width * fboSize.height);
+                    }
+                    else
+                    {
+                        pixelDepthBuffer.clear();
+                    }
+
+                    offscreenFBO.readIntegerColorBufferRGBA(1, pixelObjectIDBuffer);
+                    offscreenFBO.readDepthBuffer(pixelDepthBuffer);
                 }
 
                 drawLights(offscreenFBO, view, partialViewMatrix);
@@ -1559,9 +1581,28 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     && IntStream.range(0, lightingModel.getLightCount()).anyMatch(lightingModel::isLightWidgetEnabled))
                 {
                     // Read buffers here if light widgets are not ethereal (i.e. they can be clicked and should be in the ID buffer)
-                    pixelObjectIDs = offscreenFBO.readIntegerColorBufferRGBA(1);
-                    pixelDepths = offscreenFBO.readDepthBuffer();
                     fboSize = offscreenFBO.getSize();
+
+                    if (pixelObjectIDBuffer == null || pixelObjectIDBuffer.capacity() != 4 * fboSize.width * fboSize.height)
+                    {
+                        pixelObjectIDBuffer = BufferUtils.createIntBuffer(4 * fboSize.width * fboSize.height);
+                    }
+                    else
+                    {
+                        pixelObjectIDBuffer.clear();
+                    }
+
+                    if (pixelDepthBuffer == null || pixelDepthBuffer.capacity() != fboSize.width * fboSize.height)
+                    {
+                        pixelDepthBuffer = BufferUtils.createShortBuffer(fboSize.width * fboSize.height);
+                    }
+                    else
+                    {
+                        pixelDepthBuffer.clear();
+                    }
+
+                    offscreenFBO.readIntegerColorBufferRGBA(1, pixelObjectIDBuffer);
+                    offscreenFBO.readDepthBuffer(pixelDepthBuffer);
                 }
             }
         }
@@ -2691,13 +2732,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             @Override
             public Object getObjectAtCoordinates(double x, double y)
             {
-                if (pixelObjectIDs != null)
+                if (pixelObjectIDBuffer != null)
                 {
                     double xRemapped = Math.min(Math.max(x, 0), 1);
                     double yRemapped = 1.0 - Math.min(Math.max(y, 0), 1);
 
                     int index = 4 * (int)(Math.round((fboSize.height-1) * yRemapped) * fboSize.width + Math.round((fboSize.width-1) * xRemapped));
-                    return sceneObjectNameList[pixelObjectIDs[index]];
+                    return sceneObjectNameList[pixelObjectIDBuffer.get(index)];
                 }
                 else
                 {
@@ -2720,7 +2761,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             @Override
             public Vector3 get3DPositionAtCoordinates(double x, double y)
             {
-                if (pixelDepths != null)
+                if (pixelDepthBuffer != null)
                 {
                     double xRemapped = Math.min(Math.max(x, 0), 1);
                     double yRemapped = 1.0 - Math.min(Math.max(y, 0), 1);
@@ -2731,7 +2772,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                     // Transform from screen space into camera space
                     Vector4 unscaledPosition = projectionInverse
-                        .times(new Vector4((float)(2 * x - 1), (float)(1 - 2 * y), 2 * (float)(0x0000FFFF & pixelDepths[index]) / (float)0xFFFF - 1, 1.0f));
+                        .times(new Vector4((float)(2 * x - 1), (float)(1 - 2 * y), 2 * (float)(0x0000FFFF & pixelDepthBuffer.get(index)) / (float)0xFFFF - 1, 1.0f));
 
                     // Transform from camera space into world space.
                     return getPartialViewMatrix().quickInverse(0.01f)

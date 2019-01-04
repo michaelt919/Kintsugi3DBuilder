@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 
 /**
  * An interface for a framebuffer.
@@ -23,10 +24,12 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
     void readColorBufferARGB(int attachmentIndex, ByteBuffer destination, int x, int y, int width, int height);
     void readFloatingPointColorBufferRGBA(int attachmentIndex, FloatBuffer destination, int x, int y, int width, int height);
     void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination, int x, int y, int width, int height);
+    void readDepthBuffer(ShortBuffer destination, int x, int y, int width, int height);
 
     void readColorBufferARGB(int attachmentIndex, ByteBuffer destination);
     void readFloatingPointColorBufferRGBA(int attachmentIndex, FloatBuffer destination);
     void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination);
+    void readDepthBuffer(ShortBuffer destination);
 
     int[] readColorBufferARGB(int attachmentIndex);
     int[] readColorBufferARGB(int attachmentIndex, int x, int y, int width, int height);
