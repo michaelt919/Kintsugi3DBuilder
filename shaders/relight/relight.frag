@@ -142,7 +142,7 @@ uniform mat4 fullProjection;
 #if DIFFUSE_TEXTURE_ENABLED && !IMAGE_BASED_RENDERING_ENABLED
 #define DEFAULT_SPECULAR_COLOR (vec3(0.0))
 #elif DIFFUSE_TEXTURE_ENABLED
-#define DEFAULT_SPECULAR_COLOR (vec3(0.03125))
+#define DEFAULT_SPECULAR_COLOR (vec3(0.04))
 #else
 #define DEFAULT_SPECULAR_COLOR (vec3(0.5))
 #endif // DIFFUSE_TEXTURE_ENABLED && !IMAGE_BASED_RENDERING_ENABLED
@@ -827,11 +827,10 @@ void main()
 
     vec3 specularColor;
 #if SPECULAR_TEXTURE_ENABLED
-    specularColor = pow(texture(specularMap, fTexCoord).rgb, vec3(gamma));
+    specularColor = max(vec3(0.04), pow(texture(specularMap, fTexCoord).rgb, vec3(gamma)));
 #else
     specularColor = DEFAULT_SPECULAR_COLOR;
 #endif
-
 
     vec3 roughnessRGB;
 #if ROUGHNESS_TEXTURE_ENABLED

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 import javax.imageio.ImageIO;
 
 import org.lwjgl.*;
@@ -132,6 +133,23 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     }
 
     @Override
+    public void readDepthBuffer(ShortBuffer destination, int x, int y, int width, int height)
+    {
+        if (destination.remaining() < width * height)
+        {
+            throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
+        }
+
+        this.getContentsForRead().bindForRead(0);
+
+        glPixelStorei(GL_PACK_ALIGNMENT, 2);
+        OpenGLContext.errorCheck();
+
+        glReadPixels(x, y, width, height, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, destination);
+        OpenGLContext.errorCheck();
+    }
+
+    @Override
     public void readColorBufferARGB(int attachmentIndex, ByteBuffer destination)
     {
         FramebufferSize size = this.getSize();
@@ -150,6 +168,13 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     {
         FramebufferSize size = this.getSize();
         this.readIntegerColorBufferRGBA(attachmentIndex, destination, 0, 0, size.width, size.height);
+    }
+
+    @Override
+    public void readDepthBuffer(ShortBuffer destination)
+    {
+        FramebufferSize size = this.getSize();
+        this.readDepthBuffer(destination, 0, 0, size.width, size.height);
     }
 
     @Override

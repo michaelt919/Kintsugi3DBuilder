@@ -23,7 +23,7 @@ uniform int diffuseEnvironmentMipMapLevel;
 #if SCREEN_SPACE_RAY_TRACING_ENABLED
 
 #ifndef MAX_RAYTRACING_SAMPLE_COUNT
-#define MAX_RAYTRACING_SAMPLE_COUNT 32
+#define MAX_RAYTRACING_SAMPLE_COUNT 8
 #endif
 
 #ifndef RAY_DEPTH_GRADIENT
@@ -60,6 +60,13 @@ float shadowTest(vec3 position, vec3 direction)
 
     float dirScale = 1.0 / 256.0;
     float iterationFactor = pow(256, 1.0 / MAX_RAYTRACING_SAMPLE_COUNT);
+
+//    1. Initialize step size.
+//    2. Initialize ray position to the surface position + step size * w-component * normalized ray direction.
+//    For each sample:
+//        A. Depth test at ray position.
+//        B. Increment ray position by step size * w-component * normalized ray-direction.
+//        C. Multiply step size by a factor greater than 1.
 
     vec4 projDir = proj_model_view * vec4(direction, 0);
     vec4 projDirScaled = projDir * min(1.0, dirScale / length(projDir.xy));

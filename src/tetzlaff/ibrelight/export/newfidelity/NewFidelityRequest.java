@@ -284,8 +284,8 @@ public class NewFidelityRequest implements IBRRequest
             }
 
             SimpleMatrix redError = redRecon.minus(redTarget);
-            SimpleMatrix greenError = redRecon.minus(greenTarget);
-            SimpleMatrix blueError = redRecon.minus(blueTarget);
+            SimpleMatrix greenError = greenRecon.minus(greenTarget);
+            SimpleMatrix blueError = blueRecon.minus(blueTarget);
 
             if (DEBUG)
             {

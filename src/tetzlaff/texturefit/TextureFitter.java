@@ -382,7 +382,7 @@ class TextureFitter<ContextType extends Context<ContextType>>
                             }
                         }
 
-                        System.out.println("Pixel count: " + pixelCount);
+//                        System.out.println("Pixel count: " + pixelCount);
 
                         frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "diffuse-raw.png"));
                         frontFramebuffer.saveColorBufferToFile(1, "PNG", new File(auxDir, "normal-raw.png"));
@@ -464,8 +464,8 @@ class TextureFitter<ContextType extends Context<ContextType>>
 
                     lastRMSError = Math.sqrt(initSumSqError / initSumMask);
 
-                    System.out.println("Sum squared error: " + initSumSqError);
-                    System.out.println("RMS error: " + lastRMSError);
+//                    System.out.println("Sum squared error: " + initSumSqError);
+//                    System.out.println("RMS error: " + lastRMSError);
 
                     if (param.isLevenbergMarquardtOptimizationEnabled())
                     {
@@ -668,6 +668,8 @@ class TextureFitter<ContextType extends Context<ContextType>>
                         frontErrorFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "error-mask-final.png"));
                     }
 
+                    System.out.println("Filling holes...");
+
                     // Fill holes
                     for (int i = 0; i < param.getTextureSize() / 2; i++)
                     {
@@ -688,6 +690,8 @@ class TextureFitter<ContextType extends Context<ContextType>>
                         frontFramebuffer = backFramebuffer;
                         backFramebuffer = tmp;
                     }
+
+                    System.out.println("Saving textures...");
 
                     // Save a copy of all of the channels, even the ones that shouldn't be needed, in the _aux folder.
                     frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "diffuse-final.png"));
