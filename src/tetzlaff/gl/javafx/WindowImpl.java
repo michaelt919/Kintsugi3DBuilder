@@ -1,5 +1,7 @@
 package tetzlaff.gl.javafx;
 
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.OptionalInt;
@@ -17,6 +19,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.util.converter.CharacterStringConverter;
+import org.lwjgl.*;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.DoubleFramebufferObject;
 import tetzlaff.gl.core.FramebufferSize;
@@ -46,6 +49,8 @@ public class WindowImpl<ContextType extends Context<ContextType>>
     private MouseButtonState rmb = MouseButtonState.RELEASED;
 
     private CursorPosition cursorPosition = new CursorPosition(0, 0);
+
+    private ByteBuffer fboCopyBuffer;
 
     private final EventCollector eventCollector = new EventCollector();
 
@@ -121,7 +126,17 @@ public class WindowImpl<ContextType extends Context<ContextType>>
         framebuffer.addSwapListener(frontFBO ->
         {
             FramebufferSize size = frontFBO.getSize();
-            int[] data = frontFBO.readColorBufferARGB(0);
+
+            if (fboCopyBuffer == null || fboCopyBuffer.capacity() != size.width * size.height * 4)
+            {
+                fboCopyBuffer = BufferUtils.createByteBuffer(size.width * size.height * 4);
+            }
+            else
+            {
+                fboCopyBuffer.clear();
+            }
+
+            frontFBO.readColorBufferARGB(0, fboCopyBuffer);
 
             Platform.runLater(() ->
             {
@@ -131,8 +146,12 @@ public class WindowImpl<ContextType extends Context<ContextType>>
                     image = new WritableImage(size.width, size.height);
                 }
 
-                image.getPixelWriter().setPixels(0, 0, size.width, size.height,
-                    PixelFormat.getIntArgbInstance(), data, size.width * (size.height - 1), -size.width);
+                for (int y = size.height - 1; y >= 0; y--)
+                {
+                    IntBuffer fboCopyIntBuffer = fboCopyBuffer.asIntBuffer();
+                    fboCopyIntBuffer.position((size.height - y - 1) * size.width);
+                    image.getPixelWriter().setPixels(0, y, size.width, 1, PixelFormat.getIntArgbInstance(), fboCopyIntBuffer, size.width);
+                }
 
                 imageView.setImage(image);
             });

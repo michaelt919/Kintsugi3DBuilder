@@ -12,19 +12,43 @@ uniform mat4 model_view;
 uniform mat4 fullProjection;
 uniform int viewIndex;
 
+#define MATERIAL_EXPLORATION_MODE 1
+
 #include "../colorappearance/colorappearance.glsl"
+
+#if MATERIAL_EXPLORATION_MODE
+#undef SMITH_MASKING_SHADOWING
+#define SMITH_MASKING_SHADOWING 1
+#include "../colorappearance/analytic.glsl"
+#else
 #include "../colorappearance/imgspace.glsl"
+#endif
+
 #include "reflectanceequations.glsl"
 #include "environment.glsl"
 
-#line 21 0
+#line 31 0
+
+#if MATERIAL_EXPLORATION_MODE
+
+#undef DEFAULT_DIFFUSE_COLOR
+#undef DEFAULT_SPECULAR_COLOR
+#undef DEFAULT_SPECULAR_ROUGHNESS
+#undef DIFFUSE_TEXTURE_ENABLED
+#undef SPECULAR_TEXTURE_ENABLED
+#undef ROUGHNESS_TEXTURE_ENABLED
+
+#define DEFAULT_DIFFUSE_COLOR ANALYTIC_DIFFUSE_COLOR
+#define DEFAULT_SPECULAR_COLOR ANALYTIC_SPECULAR_COLOR
+#define DEFAULT_SPECULAR_ROUGHNESS vec3(ANALYTIC_ROUGHNESS)
+#define DIFFUSE_TEXTURE_ENABLED 0
+#define SPECULAR_TEXTURE_ENABLED 0
+#define ROUGHNESS_TEXTURE_ENABLED 0
+
+#else
 
 #ifndef DIFFUSE_TEXTURE_ENABLED
 #define DIFFUSE_TEXTURE_ENABLED 0
-#endif
-
-#ifndef NORMAL_TEXTURE_ENABLED
-#define NORMAL_TEXTURE_ENABLED 0
 #endif
 
 #ifndef SPECULAR_TEXTURE_ENABLED
@@ -51,20 +75,8 @@ uniform int viewIndex;
 #define DEFAULT_SPECULAR_ROUGHNESS (vec3(0.25)); // TODO pass in a default?
 #endif
 
-#ifndef FRESNEL_EFFECT_ENABLED
-#define FRESNEL_EFFECT_ENABLED 1
-#endif
-
-#ifndef SHADOWS_ENABLED
-#define SHADOWS_ENABLED 1
-#endif
-
 #if DIFFUSE_TEXTURE_ENABLED
 uniform sampler2D diffuseMap;
-#endif
-
-#if NORMAL_TEXTURE_ENABLED
-uniform sampler2D normalMap;
 #endif
 
 #if SPECULAR_TEXTURE_ENABLED
@@ -73,6 +85,30 @@ uniform sampler2D specularMap;
 
 #if ROUGHNESS_TEXTURE_ENABLED
 uniform sampler2D roughnessMap;
+#endif
+
+#endif // MATERIAL_EXPLORATION_MODE
+
+#ifndef NORMAL_TEXTURE_ENABLED
+#define NORMAL_TEXTURE_ENABLED 0
+#endif
+
+#ifndef FRESNEL_EFFECT_ENABLED
+#define FRESNEL_EFFECT_ENABLED 1
+#endif
+
+#ifndef SHADOWS_ENABLED
+#define SHADOWS_ENABLED 1
+#endif
+
+#if NORMAL_TEXTURE_ENABLED || MATERIAL_EXPLORATION_MODE
+uniform sampler2D normalMap;
+
+vec3 getNormal(vec2 texCoord)
+{
+    vec2 normalXY = texture(normalMap, texCoord).xy * 2 - 1;
+    return vec3(normalXY, 1.0 - dot(normalXY, normalXY));
+}
 #endif
 
 void main()
@@ -97,8 +133,15 @@ void main()
         - dot(triangleNormal, fBitangent) * triangleNormal
         - dot(tangent, fBitangent) * tangent);
     mat3 tangentToObject = mat3(tangent, bitangent, triangleNormal);
+
+#if MATERIAL_EXPLORATION_MODE
+    vec2 scaledTexCoord = ANALYTIC_UV_SCALE * fTexCoord;
+    vec3 normalDirTS = normalize(getNormal(scaledTexCoord - floor(scaledTexCoord)) * vec3(ANALYTIC_BUMP_HEIGHT, ANALYTIC_BUMP_HEIGHT, 1.0));
+#else
     vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
     vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
+#endif
+
     normalDir = tangentToObject * normalDirTS;
 #else
     normalDir = triangleNormal;
@@ -176,7 +219,13 @@ void main()
         return;
     }
 
+#if MATERIAL_EXPLORATION_MODE
+    float maxLuminance = max(ANALYTIC_SPECULAR_COLOR.r, max(ANALYTIC_SPECULAR_COLOR.g, ANALYTIC_SPECULAR_COLOR.b))
+            / (4 * ANALYTIC_ROUGHNESS * ANALYTIC_ROUGHNESS)
+        + max(ANALYTIC_DIFFUSE_COLOR.r, max(ANALYTIC_DIFFUSE_COLOR.g, ANALYTIC_DIFFUSE_COLOR.b));
+#else
     float maxLuminance = getMaxLuminance();
+#endif
 
     vec3 attenuatedLightIntensity = lightIntensity;
 
@@ -211,5 +260,5 @@ void main()
     newFresnelTimesDist = fresnelTimesDist;
 #endif
 
-    fragColor = vec4((1.0 - shadow) * newFresnelTimesDist * geomAttenVirtual / (4 * nDotV_virtual), 1.0);
+    fragColor = vec4((1.0 - shadow) * (newFresnelTimesDist * geomAttenVirtual / (4 * nDotV_virtual) + diffuseColor * nDotL_virtual), 1.0);
 }

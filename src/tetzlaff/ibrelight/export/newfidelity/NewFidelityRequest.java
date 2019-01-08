@@ -47,7 +47,7 @@ public class NewFidelityRequest implements IBRRequest
     private final File debugPath;
     private final ReadonlySettingsModel settings;
 
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
     
     public NewFidelityRequest(int renderWidth, int renderHeight, File targetVSETFile, File debugPath, ReadonlySettingsModel settings)
     {
@@ -244,7 +244,7 @@ public class NewFidelityRequest implements IBRRequest
             fileNameParts[fileNameParts.length - 1] = "png";
             String debugFileName = String.join(".", fileNameParts);
 
-            if (DEBUG)
+//            if (DEBUG)
             {
                 BufferedImage outImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
@@ -287,7 +287,7 @@ public class NewFidelityRequest implements IBRRequest
             SimpleMatrix greenError = greenRecon.minus(greenTarget);
             SimpleMatrix blueError = blueRecon.minus(blueTarget);
 
-            if (DEBUG)
+//            if (DEBUG)
             {
                 BufferedImage errorImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 

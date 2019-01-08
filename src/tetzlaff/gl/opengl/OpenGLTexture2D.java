@@ -421,7 +421,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                     this.context,
                     this.textureTarget,
                     this.getMultisamples(),
-                    TextureType.DEPTH,
+                    this.isFloatingPointEnabled() ? TextureType.FLOATING_POINT_DEPTH : TextureType.DEPTH,
                     this.getInternalPrecision(),
                     this.width,
                     this.height,

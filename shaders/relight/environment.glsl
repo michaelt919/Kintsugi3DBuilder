@@ -23,8 +23,12 @@ uniform int diffuseEnvironmentMipMapLevel;
 #if SCREEN_SPACE_RAY_TRACING_ENABLED
 
 #ifndef MAX_RAYTRACING_SAMPLE_COUNT
-#define MAX_RAYTRACING_SAMPLE_COUNT 8
+#define MAX_RAYTRACING_SAMPLE_COUNT 32
 #endif
+
+//#include "shadow_mcguire.glsl"
+
+#line 32 3003
 
 #ifndef RAY_DEPTH_GRADIENT
 #define RAY_DEPTH_GRADIENT 0.1
@@ -54,9 +58,9 @@ float shadowTest(vec3 position, vec3 direction)
     vec4 projPos = proj_model_view * vec4(position, 1);
     vec4 screenSpacePos = projPos / projPos.w;
 
-    projPos = fullProjection * vec4((model_view * vec4(position, 1)).xy,
-        -fullProjection[3][2] / (texture(screenSpaceDepthBuffer, screenSpacePos.xy * 0.5 + 0.5)[0] * 2 - 1 + fullProjection[2][2]), 1.0);
-    screenSpacePos = projPos / projPos.w;
+//    projPos = fullProjection * vec4((model_view * vec4(position, 1)).xy,
+//        -fullProjection[3][2] / (texture(screenSpaceDepthBuffer, screenSpacePos.xy * 0.5 + 0.5)[0] * 2 - 1 + fullProjection[2][2]), 1.0);
+//    screenSpacePos = projPos / projPos.w;
 
     float dirScale = 1.0 / 256.0;
     float iterationFactor = pow(256, 1.0 / MAX_RAYTRACING_SAMPLE_COUNT);
@@ -121,6 +125,24 @@ vec3 getEnvironment(vec3 lightPosition, vec3 lightDirection)
 
 #if SCREEN_SPACE_RAY_TRACING_ENABLED
     result *= (1 - shadowTest(lightPosition, lightDirection));
+
+
+//    vec2 hitPixel;
+//    vec3 hitPoint;
+//    if (traceScreenSpaceRay(
+//            (model_view * vec4(lightPosition, 1.0)).xyz,
+//            (model_view * vec4(lightDirection, 0.0)).xyz,
+//            fullProjection,
+//            screenSpaceDepthBuffer,
+//            0.0, // near plane z
+//            0.001, // stride
+//            0.0, // jitter
+//            100, // max steps
+//            2.0, // max distance
+//            hitPixel, hitPoint))
+//    {
+//        return vec3(0);
+//    }
 #endif
 
     return result;
