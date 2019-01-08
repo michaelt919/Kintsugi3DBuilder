@@ -135,9 +135,9 @@ vec3 getEnvironment(vec3 lightPosition, vec3 lightDirection)
 //            fullProjection,
 //            screenSpaceDepthBuffer,
 //            0.0, // near plane z
-//            0.001, // stride
+//            0.005, // stride
 //            0.0, // jitter
-//            100, // max steps
+//            32, // max steps
 //            2.0, // max distance
 //            hitPixel, hitPoint))
 //    {
