@@ -13,7 +13,7 @@ layout(location = 1) out int fragObjectID;
 uniform mat4 model_view;
 uniform mat4 fullProjection;
 
-#define MATERIAL_EXPLORATION_MODE 0
+#define MATERIAL_EXPLORATION_MODE 1
 
 #ifndef BRDF_MODE
 #define BRDF_MODE 0
@@ -805,7 +805,7 @@ void main()
 #if NORMAL_TEXTURE_ENABLED
 #if MATERIAL_EXPLORATION_MODE
     vec2 scaledTexCoord = ANALYTIC_UV_SCALE * fTexCoord;
-    vec3 normalDirTS = getNormal(scaledTexCoord - floor(scaledTexCoord)) * vec3(ANALYTIC_BUMP_HEIGHT, ANALYTIC_BUMP_HEIGHT, 1.0);
+    vec3 normalDirTS = normalize(getNormal(scaledTexCoord - floor(scaledTexCoord)) * vec3(ANALYTIC_BUMP_HEIGHT, ANALYTIC_BUMP_HEIGHT, 1.0));
     normalDir = tangentToObject * normalDirTS;
 #elif TANGENT_SPACE_NORMAL_MAP
     vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
