@@ -260,5 +260,5 @@ void main()
     newFresnelTimesDist = fresnelTimesDist;
 #endif
 
-    fragColor = vec4((1.0 - shadow) * (newFresnelTimesDist * geomAttenVirtual / (4 * nDotV_virtual) + diffuseColor * nDotL_virtual), 1.0);
+    fragColor = vec4((1.0 - shadow) * (newFresnelTimesDist * geomAttenVirtual / (4 * nDotV_virtual) + diffuseColor * nDotL_virtual / PI), 1.0);
 }

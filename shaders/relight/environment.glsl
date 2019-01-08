@@ -58,6 +58,7 @@ float shadowTest(vec3 position, vec3 direction)
     vec4 projPos = proj_model_view * vec4(position, 1);
     vec4 screenSpacePos = projPos / projPos.w;
 
+//    // This might be necessary when working with SVD:
 //    projPos = fullProjection * vec4((model_view * vec4(position, 1)).xy,
 //        -fullProjection[3][2] / (texture(screenSpaceDepthBuffer, screenSpacePos.xy * 0.5 + 0.5)[0] * 2 - 1 + fullProjection[2][2]), 1.0);
 //    screenSpacePos = projPos / projPos.w;
