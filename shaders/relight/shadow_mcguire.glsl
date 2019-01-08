@@ -1,14 +1,18 @@
 #ifndef SHADOW_MCGUIRE_GLSL
 #define SHADOW_MCGUIRE_GLSL
 
-#line 5 3008
+// Source code adapted from:
+// McGuire, M., & Mara, M. (2014).
+// Efficient GPU screen-space ray tracing.
+// Journal of Computer Graphics Techniques (JCGT), 3(4), 73-85.
+
+#line 7 3008
 
 #ifndef Z_BUFFER_IS_HYPERBOLIC
 #define Z_BUFFER_IS_HYPERBOLIC 1
 #endif
 
-bool traceScreenSpaceRay(vec3 csOrig, vec3 csDir, mat4x4 proj,
-    sampler2D csZBuffer, /*float zThickness, */ float nearPlaneZ,
+bool traceScreenSpaceRay(vec3 csOrig, vec3 csDir, mat4x4 proj, sampler2D csZBuffer, float nearPlaneZ,
     float stride, float jitter, const float maxSteps, float maxDistance,
     out vec2 hitPixel, out vec3 csHitPoint)
 {
@@ -16,7 +20,6 @@ bool traceScreenSpaceRay(vec3 csOrig, vec3 csDir, mat4x4 proj,
     float rayLength = ((csOrig.z + csDir.z * maxDistance) > nearPlaneZ) ?
         (nearPlaneZ - csOrig.z) / csDir.z : maxDistance;
     vec3 csEndPoint = csOrig + csDir * rayLength;
-    hitPixel = vec2(-2, -2);
 
     // Project into screen space
     vec4 H0 = proj * vec4(csOrig, 1.0), H1 = proj * vec4(csEndPoint, 1.0);
@@ -28,7 +31,7 @@ bool traceScreenSpaceRay(vec3 csOrig, vec3 csDir, mat4x4 proj,
 
     // [ Optionally clip here using listing 4 ]
 
-//    P1 += vec2((dot(P0 - P1, P0 - P1) < 0.0001) ? 0.01 : 0.0);
+    P1 += vec2((dot(P0 - P1, P0 - P1) < 0.0001) ? 0.01 : 0.0);
     vec2 delta = P1 - P0;
 
     bool permute = false;
@@ -51,6 +54,8 @@ bool traceScreenSpaceRay(vec3 csOrig, vec3 csDir, mat4x4 proj,
 
     // Slide P from P0 to P1, (now-homogeneous) Q from Q0 to Q1, k from k0 to k1
     vec3 Q = Q0; float k = k0, stepCount = 0.0, end = P1.x * stepDir;
+
+    bool valid = false;
 
     for (vec2 P = P0;
         ((P.x * stepDir) <= end) && (stepCount < maxSteps);
@@ -82,6 +87,7 @@ bool traceScreenSpaceRay(vec3 csOrig, vec3 csDir, mat4x4 proj,
 
         if ((/*(rayZMax >= sceneZMin) && */ (rayZMin <= sceneZMax - 0.01)) || (sceneZMax == 0))
         {
+            valid = true;
             break;
         }
     } // for each pixel on ray
@@ -89,7 +95,7 @@ bool traceScreenSpaceRay(vec3 csOrig, vec3 csDir, mat4x4 proj,
     // Advance Q based on the number of steps
     Q.xy += dQ.xy * stepCount; csHitPoint = Q * (1.0 / k);
 
-    return ((((permute ? hitPixel.y : hitPixel.x) + dP.x) * stepDir) <= end) && stepCount < maxSteps && abs(hitPixel.x) <= 1 && abs(hitPixel.y) <= 1;
+    return valid && abs(hitPixel.x) <= 1 && abs(hitPixel.y) <= 1;
 }
 
 #endif

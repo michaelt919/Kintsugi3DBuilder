@@ -323,7 +323,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.environmentBackgroundDrawable.addVertexBuffer("position", this.rectangleVertices);
 
             this.screenSpaceDepthFBO = context.buildFramebufferObject(512, 512)
-                    .addDepthAttachment(DepthAttachmentSpec.createFloatingPointWithPrecision(32).setLinearFilteringEnabled(true))
+                    .addDepthAttachment(DepthAttachmentSpec.createFixedPointWithPrecision(16).setLinearFilteringEnabled(true))
                     .createFramebufferObject();
 
             shadowProgram = context.getShaderProgramBuilder()
