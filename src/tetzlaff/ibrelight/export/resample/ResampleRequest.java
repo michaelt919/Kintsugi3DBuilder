@@ -34,39 +34,45 @@ public class ResampleRequest implements IBRRequest
     public <ContextType extends Context<ContextType>> void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
     {
         ViewSet targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile);
-        FramebufferObject<ContextType> framebuffer = renderable.getResources().context.buildFramebufferObject(resampleWidth, resampleHeight)
+
+        try
+        (
+            FramebufferObject<ContextType> framebuffer = renderable.getResources().context.buildFramebufferObject(resampleWidth, resampleHeight)
                 .addColorAttachment()
                 .addDepthAttachment()
-                .createFramebufferObject();
-
-        for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+                .createFramebufferObject()
+        )
         {
-            framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, /*1.0f*/0.0f);
-            framebuffer.clearDepthBuffer();
 
-            renderable.draw(framebuffer, targetViewSet.getCameraPose(i),
+            for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+            {
+                framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, /*1.0f*/0.0f);
+                framebuffer.clearDepthBuffer();
+
+                renderable.draw(framebuffer, targetViewSet.getCameraPose(i),
                     targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
                         .getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
 
-            String[] parts = targetViewSet.getImageFileName(i).split("\\.");
-            File exportFile = new File(resampleExportPath,
-                Stream.concat(Arrays.stream(parts, 0, parts.length-1), Stream.of("png"))
-                    .collect(Collectors.joining(".")));
+                String[] parts = targetViewSet.getImageFileName(i).split("\\.");
+                File exportFile = new File(resampleExportPath,
+                    Stream.concat(Arrays.stream(parts, 0, parts.length - 1), Stream.of("png"))
+                        .collect(Collectors.joining(".")));
 
-            exportFile.getParentFile().mkdirs();
-            framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
+                exportFile.getParentFile().mkdirs();
+                framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
 
-            if (callback != null)
-            {
-                callback.setProgress((double) i / (double) targetViewSet.getCameraPoseCount());
+                if (callback != null)
+                {
+                    callback.setProgress((double) i / (double) targetViewSet.getCameraPoseCount());
+                }
             }
-        }
 
-        Files.copy(resampleVSETFile.toPath(),
-            new File(resampleExportPath, resampleVSETFile.getName()).toPath(),
-            StandardCopyOption.REPLACE_EXISTING);
-        Files.copy(renderable.getActiveViewSet().getGeometryFile().toPath(),
-            new File(resampleExportPath, renderable.getActiveViewSet().getGeometryFile().getName()).toPath(),
-            StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(resampleVSETFile.toPath(),
+                new File(resampleExportPath, resampleVSETFile.getName()).toPath(),
+                StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(renderable.getActiveViewSet().getGeometryFile().toPath(),
+                new File(resampleExportPath, renderable.getActiveViewSet().getGeometryFile().getName()).toPath(),
+                StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 }

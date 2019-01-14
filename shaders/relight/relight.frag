@@ -13,7 +13,9 @@ layout(location = 1) out int fragObjectID;
 uniform mat4 model_view;
 uniform mat4 fullProjection;
 
+#ifndef MATERIAL_EXPLORATION_MODE
 #define MATERIAL_EXPLORATION_MODE 1
+#endif
 
 #ifndef BRDF_MODE
 #define BRDF_MODE 0

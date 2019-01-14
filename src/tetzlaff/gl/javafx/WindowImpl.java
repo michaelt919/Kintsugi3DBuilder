@@ -125,36 +125,39 @@ public class WindowImpl<ContextType extends Context<ContextType>>
 
         framebuffer.addSwapListener(frontFBO ->
         {
-            FramebufferSize size = frontFBO.getSize();
-
-            if (fboCopyBuffer == null || fboCopyBuffer.capacity() != size.width * size.height * 4)
+            if (!primaryStage.isIconified())
             {
-                fboCopyBuffer = BufferUtils.createByteBuffer(size.width * size.height * 4);
-            }
-            else
-            {
-                fboCopyBuffer.clear();
-            }
+                FramebufferSize size = frontFBO.getSize();
 
-            frontFBO.readColorBufferARGB(0, fboCopyBuffer);
-
-            Platform.runLater(() ->
-            {
-                //noinspection FloatingPointEquality
-                if (size.width != image.getWidth() || size.height != image.getHeight())
+                if (fboCopyBuffer == null || fboCopyBuffer.capacity() != size.width * size.height * 4)
                 {
-                    image = new WritableImage(size.width, size.height);
+                    fboCopyBuffer = BufferUtils.createByteBuffer(size.width * size.height * 4);
+                }
+                else
+                {
+                    fboCopyBuffer.clear();
                 }
 
-                for (int y = size.height - 1; y >= 0; y--)
-                {
-                    IntBuffer fboCopyIntBuffer = fboCopyBuffer.asIntBuffer();
-                    fboCopyIntBuffer.position((size.height - y - 1) * size.width);
-                    image.getPixelWriter().setPixels(0, y, size.width, 1, PixelFormat.getIntArgbInstance(), fboCopyIntBuffer, size.width);
-                }
+                frontFBO.readColorBufferARGB(0, fboCopyBuffer);
 
-                imageView.setImage(image);
-            });
+                Platform.runLater(() ->
+                {
+                    //noinspection FloatingPointEquality
+                    if (size.width != image.getWidth() || size.height != image.getHeight())
+                    {
+                        image = new WritableImage(size.width, size.height);
+                    }
+
+                    for (int y = size.height - 1; y >= 0; y--)
+                    {
+                        IntBuffer fboCopyIntBuffer = fboCopyBuffer.asIntBuffer();
+                        fboCopyIntBuffer.position((size.height - y - 1) * size.width);
+                        image.getPixelWriter().setPixels(0, y, size.width, 1, PixelFormat.getIntArgbInstance(), fboCopyIntBuffer, size.width);
+                    }
+
+                    imageView.setImage(image);
+                });
+            }
         });
 
         ChangeListener<? super Number> windowSizeListener = (event, oldValue, newValue) ->

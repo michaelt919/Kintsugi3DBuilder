@@ -100,26 +100,31 @@ public abstract class SimpleAnimationRequestBase implements IBRRequest
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
     {
-        FramebufferObject<ContextType> framebuffer = renderable.getResources().context.buildFramebufferObject(width, height)
+        try
+        (
+            FramebufferObject<ContextType> framebuffer = renderable.getResources().context.buildFramebufferObject(width, height)
                 .addColorAttachment()
                 .addDepthAttachment()
-                .createFramebufferObject();
-
-        for (int i = 0; i < frameCount; i++)
+                .createFramebufferObject()
+        )
         {
-            framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, /*1.0f*/0.0f);
-            framebuffer.clearDepthBuffer();
 
-            renderable.draw(framebuffer, renderable.getAbsoluteViewMatrix(getRelativeViewMatrix(i, renderable.getCameraModel().getLookMatrix())),
-                null, 320, 180);
-
-            File exportFile = new File(exportPath, String.format("%04d.png", i));
-            exportFile.getParentFile().mkdirs();
-            framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
-
-            if (callback != null)
+            for (int i = 0; i < frameCount; i++)
             {
-                callback.setProgress((double) i / (double) frameCount);
+                framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, /*1.0f*/0.0f);
+                framebuffer.clearDepthBuffer();
+
+                renderable.draw(framebuffer, renderable.getAbsoluteViewMatrix(getRelativeViewMatrix(i, renderable.getCameraModel().getLookMatrix())),
+                    null, 320, 180);
+
+                File exportFile = new File(exportPath, String.format("%04d.png", i));
+                exportFile.getParentFile().mkdirs();
+                framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
+
+                if (callback != null)
+                {
+                    callback.setProgress((double) i / (double) frameCount);
+                }
             }
         }
     }

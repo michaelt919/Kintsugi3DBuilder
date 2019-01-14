@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Drawable;
-import tetzlaff.gl.core.Framebuffer;
+import tetzlaff.gl.core.FramebufferObject;
 import tetzlaff.gl.core.Program;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRequest;
@@ -51,36 +51,41 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
         ViewSet targetViewSet = ViewSet.loadFromVSETFile(targetViewSetFile);
 
         IBRResources<ContextType> resources = renderable.getResources();
-        Program<ContextType> program = createProgram(resources);
-        Drawable<ContextType> drawable = createDrawable(program, resources);
-        Framebuffer<ContextType> framebuffer = createFramebuffer(resources.context);
 
-        for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+        try
+        (
+            Program<ContextType> program = createProgram(resources);
+            FramebufferObject<ContextType> framebuffer = createFramebuffer(resources.context)
+        )
         {
-            program.setUniform("viewIndex", i);
-            program.setUniform("model_view", targetViewSet.getCameraPose(i));
-            program.setUniform("projection",
-                targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
-                    .getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
-
-            render(drawable, framebuffer);
-
-            String fileName = targetViewSet.getImageFileName(i);
-
-            if (!fileName.endsWith(".png"))
+            Drawable<ContextType> drawable = createDrawable(program, resources);
+            for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
             {
-                String[] parts = fileName.split("\\.");
-                parts[parts.length - 1] = "png";
-                fileName = String.join(".", parts);
-            }
+                program.setUniform("viewIndex", i);
+                program.setUniform("model_view", targetViewSet.getCameraPose(i));
+                program.setUniform("projection",
+                    targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
+                        .getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
 
-            File exportFile = new File(getOutputDirectory(), fileName);
-            getOutputDirectory().mkdirs();
-            framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
+                render(drawable, framebuffer);
 
-            if (callback != null)
-            {
-                callback.setProgress((double) i / (double) resources.viewSet.getCameraPoseCount());
+                String fileName = targetViewSet.getImageFileName(i);
+
+                if (!fileName.endsWith(".png"))
+                {
+                    String[] parts = fileName.split("\\.");
+                    parts[parts.length - 1] = "png";
+                    fileName = String.join(".", parts);
+                }
+
+                File exportFile = new File(getOutputDirectory(), fileName);
+                getOutputDirectory().mkdirs();
+                framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
+
+                if (callback != null)
+                {
+                    callback.setProgress((double) i / (double) resources.viewSet.getCameraPoseCount());
+                }
             }
         }
     }

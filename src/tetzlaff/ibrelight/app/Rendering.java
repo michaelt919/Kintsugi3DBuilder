@@ -29,6 +29,7 @@ import tetzlaff.ibrelight.tools.KeyPressToolType;
 import tetzlaff.ibrelight.tools.ToolBindingModel;
 import tetzlaff.ibrelight.tools.ToolBindingModelImpl;
 import tetzlaff.ibrelight.tools.ToolBox.Builder;
+import tetzlaff.interactive.EventPollable;
 import tetzlaff.interactive.InitializationException;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
@@ -328,6 +329,45 @@ public final class Rendering
             });
 
             window.show();
+
+            // Keep the graphics thread paused while the window is minimized.
+            app.addPollable(new EventPollable()
+            {
+                @Override
+                public void pollEvents()
+                {
+                    while (stage != null && stage.isIconified() && REQUEST_QUEUE.isEmpty())
+                    {
+                        try
+                        {
+                            Thread.sleep(1000);
+                        }
+                        catch (InterruptedException e)
+                        {
+                        }
+                    }
+                }
+
+                @Override
+                public boolean shouldTerminate()
+                {
+                    return false;
+                }
+            });
+
+            // Wake the graphics thread up when the window is un-minimized.
+            if (stage != null)
+            {
+                Thread graphicsThread = Thread.currentThread();
+
+                stage.iconifiedProperty().addListener((observable, wasIconified, isIconified) ->
+                {
+                    if (wasIconified && !isIconified)
+                    {
+                        graphicsThread.interrupt();
+                    }
+                });
+            }
 
             try
             {

@@ -83,30 +83,34 @@ public class ScreenshotRequest implements IBRRequest
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
     {
-        FramebufferObject<ContextType> framebuffer = renderable.getResources().context.buildFramebufferObject(width, height)
-            .addColorAttachment()
-            .addDepthAttachment()
-            .createFramebufferObject();
-
-        framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, /*1.0f*/0.0f);
-        framebuffer.clearDepthBuffer();
-
-        renderable.draw(framebuffer, null, null, 320, 180);
-
-        exportFile.getParentFile().mkdirs();
-        String fileNameLowerCase = exportFile.getName().toLowerCase();
-        if (fileNameLowerCase.endsWith(".png"))
+        try
+        (
+            FramebufferObject<ContextType> framebuffer = renderable.getResources().context.buildFramebufferObject(width, height)
+                .addColorAttachment()
+                .addDepthAttachment()
+                .createFramebufferObject()
+        )
         {
-            framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
-        }
-        else if (fileNameLowerCase.endsWith(".jpg") || fileNameLowerCase.endsWith(".jpeg"))
-        {
-            framebuffer.saveColorBufferToFile(0, "JPEG", exportFile);
-        }
+            framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, /*1.0f*/0.0f);
+            framebuffer.clearDepthBuffer();
 
-        if (callback != null)
-        {
-            callback.setProgress(1.0);
+            renderable.draw(framebuffer, null, null, 320, 180);
+
+            exportFile.getParentFile().mkdirs();
+            String fileNameLowerCase = exportFile.getName().toLowerCase();
+            if (fileNameLowerCase.endsWith(".png"))
+            {
+                framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
+            }
+            else if (fileNameLowerCase.endsWith(".jpg") || fileNameLowerCase.endsWith(".jpeg"))
+            {
+                framebuffer.saveColorBufferToFile(0, "JPEG", exportFile);
+            }
+
+            if (callback != null)
+            {
+                callback.setProgress(1.0);
+            }
         }
     }
 }
