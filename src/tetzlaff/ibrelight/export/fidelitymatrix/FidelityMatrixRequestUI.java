@@ -11,7 +11,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.ibrelight.export.newfidelity;
+package tetzlaff.ibrelight.export.fidelitymatrix;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +35,7 @@ import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.IBRRequestUI;
 import tetzlaff.ibrelight.core.IBRelightModels;
 
-public class NewFidelityRequestUI implements IBRRequestUI
+public class FidelityMatrixRequestUI implements IBRRequestUI
 {
     @FXML private TextField widthTextField;
     @FXML private TextField heightTextField;
@@ -46,30 +46,27 @@ public class NewFidelityRequestUI implements IBRRequestUI
     private final FileChooser fileChooser = new FileChooser();
     private final DirectoryChooser directoryChooser = new DirectoryChooser();
 
-    private IBRelightModels modelAccess;
-
     private Stage stage;
 
     private File lastDirectory;
 
-    public static NewFidelityRequestUI create(Window window, IBRelightModels modelAccess) throws IOException
+    public static FidelityMatrixRequestUI create(Window window, IBRelightModels modelAccess) throws IOException
     {
-        String fxmlFileName = "fxml/export/NewFidelityRequestUI.fxml";
-        URL url = NewFidelityRequestUI.class.getClassLoader().getResource(fxmlFileName);
+        String fxmlFileName = "fxml/export/FidelityMatrixRequestUI.fxml";
+        URL url = FidelityMatrixRequestUI.class.getClassLoader().getResource(fxmlFileName);
         assert url != null : "Can't find " + fxmlFileName;
 
         FXMLLoader fxmlLoader = new FXMLLoader(url);
         Parent parent = fxmlLoader.load();
-        NewFidelityRequestUI newFidelityRequestUI = fxmlLoader.getController();
-        newFidelityRequestUI.modelAccess = modelAccess;
+        FidelityMatrixRequestUI fidelityMatrixRequestUI = fxmlLoader.getController();
 
-        newFidelityRequestUI.stage = new Stage();
-        newFidelityRequestUI.stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
-        newFidelityRequestUI.stage.setTitle("Fidelity request");
-        newFidelityRequestUI.stage.setScene(new Scene(parent));
-        newFidelityRequestUI.stage.initOwner(window);
+        fidelityMatrixRequestUI.stage = new Stage();
+        fidelityMatrixRequestUI.stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+        fidelityMatrixRequestUI.stage.setTitle("Fidelity matrix request");
+        fidelityMatrixRequestUI.stage.setScene(new Scene(parent));
+        fidelityMatrixRequestUI.stage.initOwner(window);
 
-        return newFidelityRequestUI;
+        return fidelityMatrixRequestUI;
     }
 
     @FXML
@@ -139,13 +136,11 @@ public class NewFidelityRequestUI implements IBRRequestUI
             //stage.close();
 
             requestHandler.accept(
-                new NewFidelityRequest(
+                new FidelityMatrixRequest(
                     Integer.parseInt(widthTextField.getText()),
                     Integer.parseInt(heightTextField.getText()),
                     new File(targetVSetFileField.getText()),
-                    new File(exportDirectoryField.getText()),
-                    modelAccess.getSettingsModel()
-                    ));
+                    new File(exportDirectoryField.getText())));
         });
     }
 }

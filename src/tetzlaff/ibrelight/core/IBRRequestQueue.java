@@ -16,6 +16,11 @@ public class IBRRequestQueue<ContextType extends Context<ContextType>>
         this.requestList = new LinkedList<>();
     }
 
+    public boolean isEmpty()
+    {
+        return requestList.isEmpty();
+    }
+
     public void setModel(IBRRenderableListModel<ContextType> model)
     {
         this.model = model;

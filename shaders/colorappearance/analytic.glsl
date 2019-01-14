@@ -6,11 +6,55 @@
 
 #line 7 1109
 
-#define ANALYTIC_DIFFUSE_COLOR vec3(.45,.27,.065) //vec3(0)
-#define ANALYTIC_SPECULAR_COLOR vec3(0.04) //vec3(1.0, 0.6, 0.133)
+#ifndef ANALYTIC_METAL
+#define ANALYTIC_METAL 1
+#endif
+
+
+#ifndef ANALYTIC_COLOR
+
+#if ANALYTIC_METAL
+#define ANALYTIC_COLOR vec3(1.0, 0.6, 0.133)
+#else
+#define ANALYTIC_COLOR vec3(.45,.27,.065)
+#endif
+
+#endif // ANALYTIC_COLOR
+
+
+#ifndef ANALYTIC_DIFFUSE_COLOR
+
+#if ANALYTIC_METAL
+#define ANALYTIC_DIFFUSE_COLOR vec3(0)
+#else
+#define ANALYTIC_DIFFUSE_COLOR ANALYTIC_COLOR
+#endif
+
+#endif // ANALYTIC_DIFFUSE_COLOR
+
+
+#ifndef ANALYTIC_SPECULAR_COLOR
+
+#if ANALYTIC_METAL
+#define ANALYTIC_SPECULAR_COLOR ANALYTIC_COLOR
+#else
+#define ANALYTIC_SPECULAR_COLOR vec3(0.04)
+#endif
+
+#endif // ANALYTIC_SPECULAR_COLOR
+
+
+#ifndef ANALYTIC_BUMP_HEIGHT
 #define ANALYTIC_BUMP_HEIGHT 4.0
+#endif
+
+#ifndef ANALYTIC_ROUGHNESS
 #define ANALYTIC_ROUGHNESS 0.2
+#endif
+
+#ifndef ANALYTIC_UV_SCALE
 #define ANALYTIC_UV_SCALE 5.0
+#endif
 
 vec3 getNormal(vec2 texCoord);
 

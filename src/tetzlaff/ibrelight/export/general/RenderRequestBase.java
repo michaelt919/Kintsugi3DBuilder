@@ -138,7 +138,7 @@ abstract class RenderRequestBase implements IBRRequest
         return program;
     }
 
-    protected <ContextType extends Context<ContextType>> Framebuffer<ContextType> createFramebuffer(ContextType context)
+    protected <ContextType extends Context<ContextType>> FramebufferObject<ContextType> createFramebuffer(ContextType context)
     {
         return context.buildFramebufferObject(width, height)
             .addColorAttachment()

@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Drawable;
-import tetzlaff.gl.core.Framebuffer;
+import tetzlaff.gl.core.FramebufferObject;
 import tetzlaff.gl.core.Program;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRequest;
@@ -48,21 +48,27 @@ class SingleFrameRenderRequest extends RenderRequestBase
             throws IOException
     {
         IBRResources<ContextType> resources = renderable.getResources();
-        Program<ContextType> program = createProgram(resources);
-        Drawable<ContextType> drawable = createDrawable(program, resources);
-        Framebuffer<ContextType> framebuffer = createFramebuffer(resources.context);
 
-        program.setUniform("model_view", renderable.getActiveViewSet().getCameraPose(0));
-        program.setUniform("projection",
-            renderable.getActiveViewSet().getCameraProjection(
+        try
+        (
+            Program<ContextType> program = createProgram(resources);
+            FramebufferObject<ContextType> framebuffer = createFramebuffer(resources.context)
+        )
+        {
+            Drawable<ContextType> drawable = createDrawable(program, resources);
+
+            program.setUniform("model_view", renderable.getActiveViewSet().getCameraPose(0));
+            program.setUniform("projection",
+                renderable.getActiveViewSet().getCameraProjection(
                     renderable.getActiveViewSet().getCameraProjectionIndex(0))
-                .getProjectionMatrix(renderable.getActiveViewSet().getRecommendedNearPlane(),
-                    renderable.getActiveViewSet().getRecommendedFarPlane()));
+                    .getProjectionMatrix(renderable.getActiveViewSet().getRecommendedNearPlane(),
+                        renderable.getActiveViewSet().getRecommendedFarPlane()));
 
-        render(drawable, framebuffer);
+            render(drawable, framebuffer);
 
-        File exportFile = new File(getOutputDirectory(), outputImageName);
-        getOutputDirectory().mkdirs();
-        framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
+            File exportFile = new File(getOutputDirectory(), outputImageName);
+            getOutputDirectory().mkdirs();
+            framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
+        }
     }
 }

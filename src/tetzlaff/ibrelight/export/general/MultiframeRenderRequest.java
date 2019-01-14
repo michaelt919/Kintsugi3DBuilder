@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Drawable;
-import tetzlaff.gl.core.Framebuffer;
+import tetzlaff.gl.core.FramebufferObject;
 import tetzlaff.gl.core.Program;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRequest;
@@ -48,30 +48,36 @@ class MultiframeRenderRequest extends RenderRequestBase
             throws IOException
     {
         IBRResources<ContextType> resources = renderable.getResources();
-        Program<ContextType> program = createProgram(resources);
-        Drawable<ContextType> drawable = createDrawable(program, resources);
-        Framebuffer<ContextType> framebuffer = createFramebuffer(resources.context);
 
-        for (int i = 0; i < frameCount; i++)
+        try
+        (
+            Program<ContextType> program = createProgram(resources);
+            FramebufferObject<ContextType> framebuffer = createFramebuffer(resources.context)
+        )
         {
-            program.setUniform("frame", i);
-            program.setUniform("frameCount", frameCount);
-            program.setUniform("model_view", renderable.getActiveViewSet().getCameraPose(0));
-            program.setUniform("projection",
-                renderable.getActiveViewSet().getCameraProjection(
-                        renderable.getActiveViewSet().getCameraProjectionIndex(0))
-                    .getProjectionMatrix(renderable.getActiveViewSet().getRecommendedNearPlane(),
-                        renderable.getActiveViewSet().getRecommendedFarPlane()));
+            Drawable<ContextType> drawable = createDrawable(program, resources);
 
-            render(drawable, framebuffer);
-
-            File exportFile = new File(getOutputDirectory(), String.format("%04d.png", i));
-            getOutputDirectory().mkdirs();
-            framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
-
-            if (callback != null)
+            for (int i = 0; i < frameCount; i++)
             {
-                callback.setProgress((double) i / (double) frameCount);
+                program.setUniform("frame", i);
+                program.setUniform("frameCount", frameCount);
+                program.setUniform("model_view", renderable.getActiveViewSet().getCameraPose(0));
+                program.setUniform("projection",
+                    renderable.getActiveViewSet().getCameraProjection(
+                        renderable.getActiveViewSet().getCameraProjectionIndex(0))
+                        .getProjectionMatrix(renderable.getActiveViewSet().getRecommendedNearPlane(),
+                            renderable.getActiveViewSet().getRecommendedFarPlane()));
+
+                render(drawable, framebuffer);
+
+                File exportFile = new File(getOutputDirectory(), String.format("%04d.png", i));
+                getOutputDirectory().mkdirs();
+                framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
+
+                if (callback != null)
+                {
+                    callback.setProgress((double) i / (double) frameCount);
+                }
             }
         }
     }
