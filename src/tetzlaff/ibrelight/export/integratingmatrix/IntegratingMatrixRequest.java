@@ -11,7 +11,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.ibrelight.export.fidelitymatrix;
+package tetzlaff.ibrelight.export.integratingmatrix;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,14 +22,14 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.rendering.IBRResources;
 
-public class FidelityMatrixRequest implements IBRRequest
+public class IntegratingMatrixRequest implements IBRRequest
 {
     private final int resampleWidth;
     private final int resampleHeight;
     private final File resampleVSETFile;
     private final File resampleExportPath;
     
-    public FidelityMatrixRequest(int width, int height, File targetVSETFile, File exportPath)
+    public IntegratingMatrixRequest(int width, int height, File targetVSETFile, File exportPath)
     {
         this.resampleWidth = width;
         this.resampleHeight = height;
@@ -82,10 +82,48 @@ public class FidelityMatrixRequest implements IBRRequest
 
             int progress = 0;
 
-            callback.setMaximum(120);
+            callback.setMaximum(130);
 
             for (int roughness = 5; roughness <= 50; roughness += 5)
             {
+                framebuffer.clearColorBuffer(0, 1.0f, 1.0f, 1.0f, 1.0f);
+                framebuffer.clearDepthBuffer();
+
+                try (Program<ContextType> program = resources.getIBRShaderProgramBuilder(RenderingMode.IMAGE_BASED_WITH_MATERIALS)
+                    .define("MATERIAL_EXPLORATION_MODE", 1)
+                    .define("RAY_DEPTH_GRADIENT", 0.2 * renderable.getActiveGeometry().getBoundingRadius())
+                    .define("RAY_POSITION_JITTER", 0.02 * renderable.getActiveGeometry().getBoundingRadius())
+                    .define("PHYSICALLY_BASED_MASKING_SHADOWING", true)
+                    .define("FRESNEL_EFFECT_ENABLED", true)
+                    .define("SHADOWS_ENABLED", true)
+                    .define("BUEHLER_ALGORITHM", true)
+                    .define("SORTING_SAMPLE_COUNT", 5)
+                    .define("RELIGHTING_ENABLED", true)
+                    .define("VISIBILITY_TEST_ENABLED", true)
+                    .define("VIRTUAL_LIGHT_COUNT", 0)
+                    .define("ENVIRONMENT_ILLUMINATION_ENABLED", true)
+                    .define("ENVIRONMENT_TEXTURE_ENABLED", false)
+                    .define("ANALYTIC_ROUGHNESS", roughness * 0.01)
+                    .define("ANALYTIC_BUMP_HEIGHT", 0.0)
+                    .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
+                    .createProgram())
+                {
+                    drawInstance(resources, modelView, projection, framebuffer, depthFBO, program);
+                }
+
+                framebuffer.saveColorBufferToFile(0, "PNG",
+                    new File(resampleExportPath,
+                        String.format("r%02d-uv00_%s.png", roughness,
+                            renderable.getActiveViewSet().getGeometryFile().getName().split("\\.")[0])));
+
+                progress++;
+
+                if (callback != null)
+                {
+                    callback.setProgress(progress);
+                }
+
                 for (int uvScale = 1; uvScale <= 12; uvScale++)
                 {
                     framebuffer.clearColorBuffer(0, 1.0f, 1.0f, 1.0f, 1.0f);
@@ -111,42 +149,7 @@ public class FidelityMatrixRequest implements IBRRequest
                         .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
                         .createProgram())
                     {
-                        resources.setupShaderProgram(program);
-
-                        Drawable<ContextType> drawable = resources.context.createDrawable(program);
-
-                        drawable.addVertexBuffer("position", resources.positionBuffer);
-
-                        if (resources.normalBuffer != null)
-                        {
-                            drawable.addVertexBuffer("normal", resources.normalBuffer);
-                        }
-
-                        if (resources.texCoordBuffer != null)
-                        {
-                            drawable.addVertexBuffer("texCoord", resources.texCoordBuffer);
-                        }
-
-                        if (resources.tangentBuffer != null)
-                        {
-                            drawable.addVertexBuffer("tangent", resources.tangentBuffer);
-                        }
-
-                        program.setUniform("ambientColor", new Vector3(1.0f));
-                        program.setUniform("renderGamma", 2.2f);
-                        program.setUniform("occlusionBias", 0.0025f);
-                        program.setTexture("screenSpaceDepthBuffer", depthFBO.getDepthAttachmentTexture());
-
-                        program.setUniform("projection", projection);
-                        program.setUniform("fullProjection", projection);
-                        program.setUniform("model_view", modelView);
-                        program.setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());
-
-                        // Render to off-screen buffer
-                        drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
-
-                        // Flush to prevent timeout
-                        resources.context.flush();
+                        drawInstance(resources, modelView, projection, framebuffer, depthFBO, program);
                     }
 
                     framebuffer.saveColorBufferToFile(0, "PNG",
@@ -154,14 +157,56 @@ public class FidelityMatrixRequest implements IBRRequest
                             String.format("r%02d-uv%02d_%s.png", roughness, uvScale,
                                 renderable.getActiveViewSet().getGeometryFile().getName().split("\\.")[0])));
 
+                    progress++;
+
                     if (callback != null)
                     {
                         callback.setProgress(progress);
                     }
-
-                    progress++;
                 }
             }
         }
+    }
+
+    private static <ContextType extends Context<ContextType>> void drawInstance(
+        IBRResources<ContextType> resources, Matrix4 modelView, Matrix4 projection,
+        FramebufferObject<ContextType> framebuffer, FramebufferObject<ContextType> depthFBO, Program<ContextType> program)
+    {
+        resources.setupShaderProgram(program);
+
+        Drawable<ContextType> drawable = resources.context.createDrawable(program);
+
+        drawable.addVertexBuffer("position", resources.positionBuffer);
+
+        if (resources.normalBuffer != null)
+        {
+            drawable.addVertexBuffer("normal", resources.normalBuffer);
+        }
+
+        if (resources.texCoordBuffer != null)
+        {
+            drawable.addVertexBuffer("texCoord", resources.texCoordBuffer);
+        }
+
+        if (resources.tangentBuffer != null)
+        {
+            drawable.addVertexBuffer("tangent", resources.tangentBuffer);
+        }
+
+        program.setUniform("ambientColor", new Vector3(1.0f));
+        program.setUniform("renderGamma", 2.2f);
+        program.setUniform("occlusionBias", 0.0025f);
+        program.setTexture("screenSpaceDepthBuffer", depthFBO.getDepthAttachmentTexture());
+
+        program.setUniform("projection", projection);
+        program.setUniform("fullProjection", projection);
+        program.setUniform("model_view", modelView);
+        program.setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());
+
+        // Render to off-screen buffer
+        drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+
+        // Flush to prevent timeout
+        resources.context.flush();
     }
 }
