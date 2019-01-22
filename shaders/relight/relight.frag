@@ -210,7 +210,7 @@ uniform vec3 viewPos;
 
 #endif
 
-#line 208 0
+#line 214 0
 
 uniform int objectID;
 uniform vec3 holeFillColor;
@@ -312,7 +312,7 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float m
 struct EnvironmentSample
 {
     vec4 sampleResult;
-    vec3 sampleBRDF;
+    float sampleBRDF;
     float sampleWeight;
 };
 
@@ -427,7 +427,7 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, 
 #endif
     float weight = 4 * hDotV_virtual * (getCameraWeight(virtualIndex) * 4 * PI * VIEW_COUNT);
 
-    return EnvironmentSample(unweightedSample * weight, cosineWeightedBRDF, weight);
+    return EnvironmentSample(unweightedSample * weight, mfdMono, weight);
     // dl = 4 * h dot v * dh
     // weight * VIEW_COUNT -> brings weights back to being on the order of 1
     // This is helpful for consistency with numerical limits (i.e. clamping)
@@ -446,43 +446,72 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
 
     vec4 sum = vec4(0.0);
     EnvironmentSample maxSamples[5];
+    int maxSampleIndices[5];
+
+    vec2 brdfSum = vec2(0.0);
 
     for (int i = 0; i < VIEW_COUNT; i++)
     {
         EnvironmentSample envSample = computeEnvironmentSample(i, diffuseColor, normalDir, specularColor, roughness, peakTimes4Pi, maxLuminance);
         sum += envSample.sampleResult;
 
-        if (getLuminance(envSample.sampleBRDF) > getLuminance(maxSamples[0].sampleBRDF))
+        brdfSum += vec2(envSample.sampleBRDF, 1.0) * getCameraWeight(i) * sign(envSample.sampleBRDF);
+
+        if (envSample.sampleBRDF > maxSamples[0].sampleBRDF)
         {
             maxSamples[0] = envSample;
+            maxSampleIndices[0] = i;
         }
 
         for (int j = 1; j < 5; j++)
         {
-            if (getLuminance(envSample.sampleBRDF) > getLuminance(maxSamples[j].sampleBRDF))
+            if (envSample.sampleBRDF > maxSamples[j].sampleBRDF)
             {
                 maxSamples[j - 1] = maxSamples[j];
+                maxSampleIndices[j - 1] = maxSampleIndices[j];
+
                 maxSamples[j] = envSample;
+                maxSampleIndices[j] = i;
             }
         }
     }
 
 #if HYBRID_SPECULAR_ENABLED
     vec4 weights = vec4(
-        getLuminance(maxSamples[1].sampleBRDF),
-        getLuminance(maxSamples[2].sampleBRDF),
-        getLuminance(maxSamples[3].sampleBRDF),
-        getLuminance(maxSamples[4].sampleBRDF));
+        maxSamples[1].sampleBRDF - maxSamples[0].sampleBRDF,
+        maxSamples[2].sampleBRDF - maxSamples[0].sampleBRDF,
+        maxSamples[3].sampleBRDF - maxSamples[0].sampleBRDF,
+        maxSamples[4].sampleBRDF - maxSamples[0].sampleBRDF);
 
-//    float weightSum = weights[0] + weights[1] + weights[2] + weights[3];
+    float weightSum = weights[0] + weights[1] + weights[2] + weights[3];
 
-//    sum -= (weights[0] * maxSamples[1].sampleResult + weights[1] * maxSamples[2].sampleResult
-//        + weights[2] * maxSamples[3].sampleResult + weights[3] * maxSamples[4].sampleResult) / weightSum;
+    sum.rgb -= (weights[0] * maxSamples[1].sampleResult * (1 - maxSamples[0].sampleBRDF / maxSamples[1].sampleBRDF)
+            + weights[1] * maxSamples[2].sampleResult * (1 - maxSamples[0].sampleBRDF / maxSamples[2].sampleBRDF)
+            + weights[2] * maxSamples[3].sampleResult * (1 - maxSamples[0].sampleBRDF / maxSamples[3].sampleBRDF)
+            + weights[3] * maxSamples[4].sampleResult * (1 - maxSamples[0].sampleBRDF / maxSamples[4].sampleBRDF)).rgb / weightSum;
+
+    brdfSum[0] -= (weights[0] * getCameraWeight(maxSampleIndices[1]) * maxSamples[1].sampleBRDF * (1 - maxSamples[0].sampleBRDF / maxSamples[1].sampleBRDF)
+                + weights[1] * getCameraWeight(maxSampleIndices[2]) * maxSamples[2].sampleBRDF * (1 - maxSamples[0].sampleBRDF / maxSamples[2].sampleBRDF)
+                + weights[2] * getCameraWeight(maxSampleIndices[3]) * maxSamples[3].sampleBRDF * (1 - maxSamples[0].sampleBRDF / maxSamples[3].sampleBRDF)
+                + weights[3] * getCameraWeight(maxSampleIndices[4]) * maxSamples[4].sampleBRDF * (1 - maxSamples[0].sampleBRDF / maxSamples[4].sampleBRDF)) / weightSum;
+
+    vec3 viewDir = normalize(viewPos.xyz - fPosition.xyz);
+    vec3 lightDir = -reflect(viewDir, normalDir);
+    vec3 halfDir = normalize(viewDir + lightDir);
+
+    float nDotV = max(0, dot(viewDir, normalDir));
+    float nDotH = max(0, dot(halfDir, normalDir));
+    float nDotL = max(0, dot(lightDir, normalDir));
+    float hDotV = max(0, dot(viewDir, halfDir));
+
     sum +=
-//        (weights[0] * maxSamples[1].sampleWeight + weights[1] * maxSamples[2].sampleWeight
-//               + weights[2] * maxSamples[3].sampleWeight + weights[3] * maxSamples[4].sampleWeight) / weightSum *
-        // TODO use residual specular color, not full specular
-        vec4(specularColor * VIEW_COUNT * getEnvironment(fPosition, -reflect(normalize(viewPos.xyz - fPosition.xyz), normalDir)), 0.0);
+////        (weights[0] * maxSamples[1].sampleWeight + weights[1] * maxSamples[2].sampleWeight
+////               + weights[2] * maxSamples[3].sampleWeight + weights[3] * maxSamples[4].sampleWeight) / weightSum *
+//        // TODO use residual specular color, not full specular
+        vec4(fresnel(specularColor, vec3(1), hDotV) *
+                sum.a * (1 - 2 * PI * brdfSum[0] / brdfSum[1])
+            * geom(roughness, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV)
+            * getEnvironment(fPosition, lightDir), 0.0);
 #endif
 
     if (sum.a > 0.0)
