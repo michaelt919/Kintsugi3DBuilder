@@ -3,7 +3,8 @@
 
 #include "../colorappearance/svd_unpack.glsl"
 
-#define ACTIVE_EIGENTEXTURE_COUNT (EIGENTEXTURE_COUNT + 1)
+#define EIGENTEXTURE_RETURN_COUNT (EIGENTEXTURE_COUNT + 1)
+#define SECONDARY_EIGENTEXTURE_COUNT (EIGENTEXTURE_COUNT - 1)
 
 #include "environmentweights.glsl"
 
@@ -40,7 +41,7 @@ vec3 getScaledEnvironmentShadingFromSVD(vec3 normalDir, vec3 specularColorRGB, v
     vec2 interpolantsCeilLevel = texCoordsCeilLevel - coords001;
 
     float roughness = 1.0 / sqrt(getLuminance(specularColorRGB / roughnessRGB * roughnessRGB));
-    EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT] shading = computeSVDEnvironmentShading(-1, fPosition, normalDir, roughness);
+    EnvironmentResult[EIGENTEXTURE_RETURN_COUNT] shading = computeSVDEnvironmentShading(1, fPosition, normalDir, roughness);
 
     vec3 mfdGeomRoughnessSq = shading[0].baseFresnel.rgb;
     vec3 mfdGeomRoughnessSqFresnelFactor = shading[0].fresnelAdjustment.rgb;

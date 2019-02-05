@@ -339,6 +339,33 @@ public final class ViewSet
         return new ViewSet(params);
     }
 
+    public static ViewSet createFromLookAt(List<Vector3> viewDir, Vector3 center, Vector3 up, float distance,
+        float nearPlane, float aspect, float sensorWidth, float focalLength)
+    {
+        Parameters params = new Parameters();
+        params.cameraProjectionList.add(new DistortionProjection(sensorWidth, sensorWidth / aspect, focalLength));
+
+        params.recommendedNearPlane = nearPlane;
+        params.recommendedFarPlane = 2 * distance - nearPlane;
+
+        params.lightIntensityList.add(new Vector3(distance * distance));
+        params.lightPositionList.add(Vector3.ZERO);
+
+        for (int i = 0; i < viewDir.size(); i++)
+        {
+            params.cameraProjectionIndexList.add(0);
+            params.lightIndexList.add(0);
+            params.imageFileNames.add(String.format("%04d.png", i + 1));
+
+            Matrix4 cameraPose = Matrix4.lookAt(viewDir.get(i).times(-distance).plus(center), center, up);
+
+            params.cameraPoseList.add(cameraPose);
+            params.cameraPoseInvList.add(cameraPose.quickInverse(0.001f));
+        }
+
+        return new ViewSet(params);
+    }
+
     /**
      * Loads a VSET file and creates a corresponding ViewSet object.
      * @param vsetFile The VSET file to load.
