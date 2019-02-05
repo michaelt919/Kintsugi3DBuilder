@@ -362,7 +362,7 @@ public final class Rendering
 
                 stage.iconifiedProperty().addListener((observable, wasIconified, isIconified) ->
                 {
-                    if (wasIconified && !isIconified)
+                    if (wasIconified && !isIconified && REQUEST_QUEUE.isEmpty())
                     {
                         graphicsThread.interrupt();
                     }

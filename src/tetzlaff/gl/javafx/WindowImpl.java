@@ -148,6 +148,7 @@ public class WindowImpl<ContextType extends Context<ContextType>>
                         image = new WritableImage(size.width, size.height);
                     }
 
+                    //noinspection FloatingPointEquality
                     for (int y = size.height - 1; y >= 0; y--)
                     {
                         IntBuffer fboCopyIntBuffer = fboCopyBuffer.asIntBuffer();

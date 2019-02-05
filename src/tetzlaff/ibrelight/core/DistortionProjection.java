@@ -132,6 +132,19 @@ public class DistortionProjection implements Projection
     {
         this(width, height, fx, fy, cx, cy, 0.0f, 0.0f, 0.0f);
     }
+
+    /**
+     * Creates a new distortion projection.  cx cy, k1, k2, k3, k4, p1, and p2 are assumed to be zero.
+     * @param width The sensor width in some arbitrary units.
+     * @param height The sensor height in some arbitrary units.
+     * @param focalLength The focal distance in the same units as the sensor dimensions, which determines the field-of-view of the projection matrix.
+     */
+    public DistortionProjection(
+        float width, float height,
+        float focalLength)
+    {
+        this(width, height, focalLength, focalLength, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+    }
     
     @Override
     public float getAspectRatio()

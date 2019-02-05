@@ -155,6 +155,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     ShadedFrame<ContextType> frameInProgress;
 
+    private long frameIndex = 0;
+
     private int shadingX = 0;
     private int shadingY = 0;
     private double shadingWidth = 256;
@@ -1455,7 +1457,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                     this.program.setTexture("screenSpaceDepthBuffer", screenSpaceDepthFBO.getDepthAttachmentTexture());
 
-                    if (this.resources.eigentextures != null && lightingModel != null && !Objects.equals(lightingModel.getAmbientLightColor(), Vector3.ZERO))
+                    if (this.resources.eigentextures != null && lightingModel != null && !Objects.equals(lightingModel.getAmbientLightColor(), Vector3.ZERO)
+                        && this.settingsModel.get("renderingMode", RenderingMode.class).isImageBased())
                     {
                         this.environmentWeightsProgram.setTexture("screenSpaceDepthBuffer", screenSpaceDepthFBO.getDepthAttachmentTexture());
                         setupForDraw(this.environmentWeightsProgram);
@@ -1466,51 +1469,29 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                         FramebufferSize environmentWeightsSize = environmentWeightsFBO.getSize();
 
-                        for (int k = 0; k < 4; k++)
+                        int k = (int)((frameIndex / 4) % 7);
+                        int corner = (int)(frameIndex % 4);
+
+//                        for (int k = 0; k < 7; k++)
                         {
-                            environmentWeightsProgram.setUniform("startingSVIndex", k * 4 - 1);
+                            environmentWeightsProgram.setUniform("startingSVIndex", k * 2 + 1);
 
-                            for (int i = 0; i < 8; i++)
+                            for (int i = 0; i < 4; i++)
                             {
                                 environmentWeightsFBO.setColorAttachment(i,
-                                    environmentWeightsTexture.getLayerAsFramebufferAttachment(i + 8 * k));
-                                environmentWeightsFBO.clearColorBuffer(i, 0.0f, 0.0f, 0.0f, 0.0f);
+                                    environmentWeightsTexture.getLayerAsFramebufferAttachment(i + corner * 32));
+                                environmentWeightsFBO.clearColorBuffer(i, 0.5f, 0.5f, 0.5f, 1.0f);
                             }
 
-                            environmentWeightsProgram.setUniform("blockOffset", new IntVector2(0, 0));
-                            environmentWeightsDrawable.draw(PrimitiveMode.TRIANGLE_FAN, environmentWeightsFBO, 0, 0,
-                                environmentWeightsSize.width, environmentWeightsSize.height);
-
-                            for (int i = 0; i < 8; i++)
+                            for (int i = 0; i < 4; i++)
                             {
-                                environmentWeightsFBO.setColorAttachment(i,
-                                    environmentWeightsTexture.getLayerAsFramebufferAttachment(i + 8 * k + 32));
-                                environmentWeightsFBO.clearColorBuffer(i, 0.0f, 0.0f, 0.0f, 0.0f);
+                                environmentWeightsFBO.setColorAttachment(4 + i,
+                                    environmentWeightsTexture.getLayerAsFramebufferAttachment(4 + i + 4 * k+ corner * 32));
+                                environmentWeightsFBO.clearColorBuffer(4 + i, 0.5f, 0.5f, 0.5f, 1.0f);
                             }
 
-                            environmentWeightsProgram.setUniform("blockOffset", new IntVector2(0, 1));
-                            environmentWeightsDrawable.draw(PrimitiveMode.TRIANGLE_FAN, environmentWeightsFBO, 0, 0,
-                                environmentWeightsSize.width, environmentWeightsSize.height);
+                            environmentWeightsProgram.setUniform("blockOffset", new IntVector2(corner / 2, corner % 2));
 
-                            for (int i = 0; i < 8; i++)
-                            {
-                                environmentWeightsFBO.setColorAttachment(i,
-                                    environmentWeightsTexture.getLayerAsFramebufferAttachment(i + 8 * k + 64));
-                                environmentWeightsFBO.clearColorBuffer(i, 0.0f, 0.0f, 0.0f, 0.0f);
-                            }
-
-                            environmentWeightsProgram.setUniform("blockOffset", new IntVector2(1, 0));
-                            environmentWeightsDrawable.draw(PrimitiveMode.TRIANGLE_FAN, environmentWeightsFBO, 0, 0,
-                                environmentWeightsSize.width, environmentWeightsSize.height);
-
-                            for (int i = 0; i < 8; i++)
-                            {
-                                environmentWeightsFBO.setColorAttachment(i,
-                                    environmentWeightsTexture.getLayerAsFramebufferAttachment(i + 8 * k + 96));
-                                environmentWeightsFBO.clearColorBuffer(i, 0.0f, 0.0f, 0.0f, 0.0f);
-                            }
-
-                            environmentWeightsProgram.setUniform("blockOffset", new IntVector2(1, 1));
                             environmentWeightsDrawable.draw(PrimitiveMode.TRIANGLE_FAN, environmentWeightsFBO, 0, 0,
                                 environmentWeightsSize.width, environmentWeightsSize.height);
                         }
@@ -1622,6 +1603,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             }
 
             lastFrameStart = frameStart;
+
+            frameIndex++;
         }
     }
 

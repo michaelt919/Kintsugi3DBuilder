@@ -8,8 +8,12 @@
 
 #line 10 3006
 
-#ifndef ACTIVE_EIGENTEXTURE_COUNT
-#define ACTIVE_EIGENTEXTURE_COUNT 4
+#ifndef EIGENTEXTURE_RETURN_COUNT
+#define EIGENTEXTURE_RETURN_COUNT 4
+#endif
+
+#ifndef SECONDARY_EIGENTEXTURE_COUNT
+#define SECONDARY_EIGENTEXTURE_COUNT 2
 #endif
 
 #ifndef RAY_POSITION_JITTER
@@ -22,9 +26,30 @@ struct EnvironmentResult
     vec4 fresnelAdjustment;
 };
 
-EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT] computeSVDEnvironmentSamples(int virtualIndex, int startingSVIndex, vec3 position, vec3 normal, float roughness)
+EnvironmentResult getWeights(vec3 base, float fresnelFactor, float weight, int virtualIndex, int svIndex)
 {
-    EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT] results;
+    // Light intensities in view set files are assumed to be pre-divided by pi.
+    // Or alternatively, the result of getLinearColor gives a result
+    // where a diffuse reflectivity of 1 is represented by a value of pi.
+    // See diffusefit.glsl
+    vec4 weights = computeSVDViewWeights(ivec3(computeBlockStart(fTexCoord, textureSize(eigentextures, 0).xy), virtualIndex), svIndex);
+
+    vec4 mfdTimesRoughnessSq = vec4(weights.rgb, weights.w);
+
+    if (mfdTimesRoughnessSq.w > 0.0)
+    {
+        vec3 unweightedSample = mfdTimesRoughnessSq.rgb * base;
+        return EnvironmentResult(vec4(unweightedSample, 1.0 / (2.0 * PI)) * weight, vec4(fresnelFactor * unweightedSample, 1.0 / (2.0 * PI)) * weight);
+    }
+    else
+    {
+        return EnvironmentResult(vec4(0), vec4(0));
+    }
+}
+
+EnvironmentResult[EIGENTEXTURE_RETURN_COUNT] computeSVDEnvironmentSamples(int virtualIndex, int startingSVIndex, vec3 position, vec3 normal, float roughness)
+{
+    EnvironmentResult[EIGENTEXTURE_RETURN_COUNT] results;
 
     mat4 cameraPose = getCameraPose(virtualIndex);
     vec3 fragmentPos = (cameraPose * vec4(position, 1.0)).xyz;
@@ -89,44 +114,24 @@ EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT] computeSVDEnvironmentSamples(int vi
         // This is helpful for consistency with numerical limits (i.e. clamping)
         // Everything gets normalized at the end again anyways.
 
-        for (int i = 0; i < ACTIVE_EIGENTEXTURE_COUNT; i++)
+        results[0].baseFresnel = vec4(0.5 * sampleBase, 1.0 / (2.0 * PI)) * weight;
+        results[0].fresnelAdjustment = vec4(fresnelFactor * 0.5 * sampleBase, 1.0 / (2.0 * PI)) * weight;
+
+#if EIGENTEXTURE_RETURN_COUNT > 1
+        results[1] = getWeights(sampleBase, fresnelFactor, weight, virtualIndex, 0);
+
+#if EIGENTEXTURE_RETURN_COUNT > 2
+        for (int i = 0; i < SECONDARY_EIGENTEXTURE_COUNT; i++)
         {
-            int svIndex = startingSVIndex + i;
-
-            if (svIndex == -1)
-            {
-                results[i].baseFresnel = vec4(0.5 * sampleBase, 1.0 / (2.0 * PI)) * weight;
-                results[i].fresnelAdjustment = vec4(fresnelFactor * 0.5 * sampleBase, 1.0 / (2.0 * PI)) * weight;
-            }
-            else
-            {
-                // Light intensities in view set files are assumed to be pre-divided by pi.
-                // Or alternatively, the result of getLinearColor gives a result
-                // where a diffuse reflectivity of 1 is represented by a value of pi.
-                // See diffusefit.glsl
-                vec4 weights = computeSVDViewWeights(ivec3(computeBlockStart(fTexCoord, textureSize(eigentextures, 0).xy), virtualIndex), svIndex);
-
-                vec4 mfdTimesRoughnessSq =
-                    //vec4(yuvToRGB(vec3(0.5, 0.436, 0.615) * weights.rgb), weights.w);
-                    vec4(weights.rgb, weights.w);
-
-                if (mfdTimesRoughnessSq.w > 0.0)
-                {
-                    vec3 unweightedSample = mfdTimesRoughnessSq.rgb * sampleBase;
-                    results[i].baseFresnel = vec4(unweightedSample, 1.0 / (2.0 * PI)) * weight;
-                    results[i].fresnelAdjustment = vec4(fresnelFactor * unweightedSample, 1.0 / (2.0 * PI)) * weight;
-                }
-                else
-                {
-                    results[i].baseFresnel = vec4(0.0);
-                    results[i].fresnelAdjustment = vec4(0.0);
-                }
-            }
+            results[i + 2] = getWeights(sampleBase, fresnelFactor, weight, virtualIndex, startingSVIndex + i);
         }
+#endif
+
+#endif
     }
     else
     {
-        for (int i = 0; i < ACTIVE_EIGENTEXTURE_COUNT; i++)
+        for (int i = 0; i < EIGENTEXTURE_RETURN_COUNT; i++)
         {
             results[i].baseFresnel = vec4(0.0);
             results[i].fresnelAdjustment = vec4(0.0);
@@ -136,11 +141,11 @@ EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT] computeSVDEnvironmentSamples(int vi
     return results;
 }
 
-EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT] computeSVDEnvironmentShading(int startingSVIndex, vec3 position, vec3 normal, float roughness)
+EnvironmentResult[EIGENTEXTURE_RETURN_COUNT] computeSVDEnvironmentShading(int startingSVIndex, vec3 position, vec3 normal, float roughness)
 {
-    EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT] sums;
+    EnvironmentResult[EIGENTEXTURE_RETURN_COUNT] sums;
 
-    for (int j = 0; j < ACTIVE_EIGENTEXTURE_COUNT; j++)
+    for (int j = 0; j < EIGENTEXTURE_RETURN_COUNT; j++)
     {
         sums[j].baseFresnel = vec4(0.0);
         sums[j].fresnelAdjustment = vec4(0.0);
@@ -148,17 +153,17 @@ EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT] computeSVDEnvironmentShading(int st
 
     for (int i = 0; i < VIEW_COUNT; i++)
     {
-        EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT] samples = computeSVDEnvironmentSamples(i, startingSVIndex, position, normal, roughness);
-        for (int j = 0; j < ACTIVE_EIGENTEXTURE_COUNT; j++)
+        EnvironmentResult[EIGENTEXTURE_RETURN_COUNT] samples = computeSVDEnvironmentSamples(i, startingSVIndex, position, normal, roughness);
+        for (int j = 0; j < EIGENTEXTURE_RETURN_COUNT; j++)
         {
             sums[j].baseFresnel += samples[j].baseFresnel;
             sums[j].fresnelAdjustment += samples[j].fresnelAdjustment;
         }
     }
 
-    EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT] results;
+    EnvironmentResult[EIGENTEXTURE_RETURN_COUNT] results;
 
-    for (int j = 0; j < ACTIVE_EIGENTEXTURE_COUNT; j++)
+    for (int j = 0; j < EIGENTEXTURE_RETURN_COUNT; j++)
     {
         if (sums[j].baseFresnel.w > 0.0)
         {

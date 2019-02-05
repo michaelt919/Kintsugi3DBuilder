@@ -64,7 +64,8 @@ public class IBRRequestQueue<ContextType extends Context<ContextType>>
                     loadingMonitor.startLoading();
                 }
 
-                requestList.poll().run();
+                requestList.peek().run(); // Peek first to ensure that isEmpty() returns false when called from other threads.
+                requestList.poll();       // Once the task is done, remove the request from the queue.
 
                 if (loadingMonitor != null)
                 {

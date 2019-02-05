@@ -3,7 +3,12 @@
 
 #include "../colorappearance/svd_unpack.glsl"
 
-#line 7 3005
+#define EIGENTEXTURE_RETURN_COUNT 2
+#define SECONDARY_EIGENTEXTURE_COUNT 0
+
+#include "environmentweights.glsl"
+
+#line 12 3005
 
 uniform sampler2DArray environmentWeightsTexture;
 
@@ -31,7 +36,7 @@ vec3[4] getWeights(vec2 weightTexCoords[4], int layer)
     return returnValues;
 }
 
-vec3 getScaledEnvironmentShadingFromSVD(vec3 specularColorRGB, vec3 roughness)
+vec3 getScaledEnvironmentShadingFromSVD(vec3 normalDir, vec3 specularColorRGB, vec3 roughness)
 {
     float mipmapLevel;
 #ifdef GL_ARB_texture_query_lod
@@ -86,6 +91,38 @@ vec3 getScaledEnvironmentShadingFromSVD(vec3 specularColorRGB, vec3 roughness)
         mix(mix(weights[0], weights[2], interpolantsFloorLevel.x),
             mix(weights[1], weights[3], interpolantsFloorLevel.x),
             interpolantsFloorLevel.y);
+
+//    float roughnessMono = sqrt(1.0 / (getLuminance(1.0 / roughness * roughness)));
+//    EnvironmentResult[EIGENTEXTURE_RETURN_COUNT] shading = computeSVDEnvironmentShading(1, fPosition, normalDir, roughnessMono);
+//
+//    vec3 mfdGeomRoughnessSq = shading[0].baseFresnel.rgb;
+//    vec3 mfdGeomRoughnessSqFresnelFactor = shading[0].fresnelAdjustment.rgb;
+//
+//    vec4 tex000 = getSignedTexel(ivec3(coords000, 0), mipmapLevelFloor);
+//    vec4 tex001 = getSignedTexel(ivec3(coords001, 0), mipmapLevelCeil);
+//    vec4 tex010 = getSignedTexel(ivec3(coords010, 0), mipmapLevelFloor);
+//    vec4 tex011 = getSignedTexel(ivec3(coords011, 0), mipmapLevelCeil);
+//    vec4 tex100 = getSignedTexel(ivec3(coords100, 0), mipmapLevelFloor);
+//    vec4 tex101 = getSignedTexel(ivec3(coords101, 0), mipmapLevelCeil);
+//    vec4 tex110 = getSignedTexel(ivec3(coords110, 0), mipmapLevelFloor);
+//    vec4 tex111 = getSignedTexel(ivec3(coords111, 0), mipmapLevelCeil);
+//
+//    vec4 tex = mix(mix(mix(tex000, tex100, interpolantsFloorLevel.x),
+//                       mix(tex010, tex110, interpolantsFloorLevel.x),
+//                       interpolantsFloorLevel.y),
+//                   mix(mix(tex001, tex101, interpolantsCeilLevel.x),
+//                       mix(tex011, tex111, interpolantsCeilLevel.x),
+//                       interpolantsCeilLevel.y),
+//                   mipmapLevelInterpolant);
+//
+//    vec4 blendedTerm = shading[1].baseFresnel * tex;
+//    vec3 blendedTermFresnel = shading[1].fresnelAdjustment.rgb * tex.rgb;
+//
+//    if (blendedTerm.a > 0)
+//    {
+//        mfdGeomRoughnessSq += blendedTerm.rgb / blendedTerm.a;
+//        mfdGeomRoughnessSqFresnelFactor += blendedTermFresnel.rgb / blendedTerm.a;
+//    }
 
     for (int k = 0; k < 15; k++)
     {

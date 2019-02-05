@@ -1,11 +1,7 @@
 package tetzlaff.gl.opengl;
 
-import java.util.*;
 import java.io.FileNotFoundException;
-import java.util.AbstractCollection;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import tetzlaff.gl.builders.base.ProgramBuilderBase;
 import tetzlaff.gl.core.Program;
@@ -44,7 +40,7 @@ final class OpenGLProgram implements Program<OpenGLContext>
         {
             OpenGLProgram program = new OpenGLProgram(this.context, this.getDefines());
             Iterable<Shader<OpenGLContext>> compiledShaders = this.compileShaders();
-            for(Shader<OpenGLContext> shader : compiledShaders)
+            for (Shader<OpenGLContext> shader : compiledShaders)
             {
                 program.attachShader(shader);
             }

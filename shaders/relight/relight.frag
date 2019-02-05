@@ -14,7 +14,7 @@ uniform mat4 model_view;
 uniform mat4 fullProjection;
 
 #ifndef MATERIAL_EXPLORATION_MODE
-#define MATERIAL_EXPLORATION_MODE 1
+#define MATERIAL_EXPLORATION_MODE 0
 #endif
 
 #ifndef BRDF_MODE
@@ -907,7 +907,7 @@ void main()
 
 #if SVD_MODE
     radiance += diffuseColor * getEnvironmentDiffuse(normalDir);
-    radiance += getScaledEnvironmentShadingFromSVD(specularColor, roughnessRGB)
+    radiance += getScaledEnvironmentShadingFromSVD(triangleNormal, specularColor, roughnessRGB)
         / (max(0.125, nDotV) * roughnessRGBSq);
 #else
 #if !DISCRETE_DIFFUSE_ENVIRONMENT

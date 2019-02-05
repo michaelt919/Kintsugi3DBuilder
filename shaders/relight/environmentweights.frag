@@ -56,29 +56,15 @@ void main()
     vec3 roughnessRGB = texture(roughnessMap, fTexCoord).rgb;
     float roughness = sqrt(1.0 / (getLuminance(1.0 / roughnessRGB * roughnessRGB)));
 
-    EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT] results = computeSVDEnvironmentShading(startingSVIndex, fPosition, getNormal(fTexCoord), roughness);
+    EnvironmentResult[EIGENTEXTURE_RETURN_COUNT] results = computeSVDEnvironmentShading(startingSVIndex, fPosition, getNormal(fTexCoord), roughness);
 
-    if (startingSVIndex == -1)
-    {
-        baseFresnel0 = results[0].baseFresnel;
-    }
-    else
-    {
-        baseFresnel0 = results[0].baseFresnel * vec4(0.5, 0.5, 0.5, 1.0) + vec4(0.5, 0.5, 0.5, 0.0);
-    }
+    baseFresnel0 = results[0].baseFresnel;
 
     baseFresnel1 = results[1].baseFresnel * vec4(0.5, 0.5, 0.5, 1.0) + vec4(0.5, 0.5, 0.5, 0.0);
     baseFresnel2 = results[2].baseFresnel * vec4(0.5, 0.5, 0.5, 1.0) + vec4(0.5, 0.5, 0.5, 0.0);
     baseFresnel3 = results[3].baseFresnel * vec4(0.5, 0.5, 0.5, 1.0) + vec4(0.5, 0.5, 0.5, 0.0);
 
-    if (startingSVIndex == -1)
-    {
-        fresnelAdj0 = results[0].fresnelAdjustment;
-    }
-    else
-    {
-        fresnelAdj0 = results[0].fresnelAdjustment * vec4(0.5, 0.5, 0.5, 1.0) + vec4(0.5, 0.5, 0.5, 0.0);
-    }
+    fresnelAdj0 = results[0].fresnelAdjustment;
 
     fresnelAdj1 = results[1].fresnelAdjustment * vec4(0.5, 0.5, 0.5, 1.0) + vec4(0.5, 0.5, 0.5, 0.0);
     fresnelAdj2 = results[2].fresnelAdjustment * vec4(0.5, 0.5, 0.5, 1.0) + vec4(0.5, 0.5, 0.5, 0.0);
