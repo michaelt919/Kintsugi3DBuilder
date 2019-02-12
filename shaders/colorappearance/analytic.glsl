@@ -15,6 +15,8 @@
 
 #if ANALYTIC_METAL
 #define ANALYTIC_COLOR vec3(1.0, 0.6, 0.133)
+//#define ANALYTIC_COLOR vec3(1.0, 0.5, 0.1)
+//#define ANALYTIC_COLOR vec3(1.0, 0.25, 0.0)
 #else
 #define ANALYTIC_COLOR vec3(.45,.27,.065)
 #endif

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Cubemap;
 import tetzlaff.gl.core.Framebuffer;
 import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.util.VertexGeometry;
@@ -44,6 +45,9 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
     void setReferenceScene(VertexGeometry scene);
 
     IBRResources<ContextType> getResources();
+
+    Optional<Cubemap<ContextType>> getEnvironmentMap();
+    Matrix4 getEnvironmentMapMatrix();
 
     Matrix4 getAbsoluteViewMatrix(Matrix4 relativeViewMatrix);
 

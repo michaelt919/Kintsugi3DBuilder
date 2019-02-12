@@ -86,7 +86,8 @@ public class IntegratingMatrixRequest implements IBRRequest
 
             for (int roughness = 5; roughness <= 50; roughness += 5)
             {
-                framebuffer.clearColorBuffer(0, 1.0f, 1.0f, 1.0f, 1.0f);
+                framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+//                framebuffer.clearColorBuffer(0, 1.0f, 1.0f, 1.0f, 1.0f);
                 framebuffer.clearDepthBuffer();
 
                 try (Program<ContextType> program = resources.getIBRShaderProgramBuilder(RenderingMode.IMAGE_BASED_WITH_MATERIALS)
@@ -102,14 +103,15 @@ public class IntegratingMatrixRequest implements IBRRequest
                     .define("VISIBILITY_TEST_ENABLED", true)
                     .define("VIRTUAL_LIGHT_COUNT", 0)
                     .define("ENVIRONMENT_ILLUMINATION_ENABLED", true)
-                    .define("ENVIRONMENT_TEXTURE_ENABLED", false)
+                    .define("ENVIRONMENT_TEXTURE_ENABLED", true)
                     .define("ANALYTIC_ROUGHNESS", roughness * 0.01)
                     .define("ANALYTIC_BUMP_HEIGHT", 0.0)
                     .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
                     .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
                     .createProgram())
                 {
-                    drawInstance(resources, modelView, projection, framebuffer, depthFBO, program);
+                    drawInstance(resources, renderable.getEnvironmentMap().orElse(null), modelView, renderable.getEnvironmentMapMatrix(),
+                        projection, renderable.getLightingModel().getAmbientLightColor(), framebuffer, depthFBO, program);
                 }
 
                 framebuffer.saveColorBufferToFile(0, "PNG",
@@ -126,7 +128,8 @@ public class IntegratingMatrixRequest implements IBRRequest
 
                 for (int uvScale = 1; uvScale <= 12; uvScale++)
                 {
-                    framebuffer.clearColorBuffer(0, 1.0f, 1.0f, 1.0f, 1.0f);
+                    framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+//                    framebuffer.clearColorBuffer(0, 1.0f, 1.0f, 1.0f, 1.0f);
                     framebuffer.clearDepthBuffer();
 
                     try (Program<ContextType> program = resources.getIBRShaderProgramBuilder(RenderingMode.IMAGE_BASED_WITH_MATERIALS)
@@ -142,14 +145,15 @@ public class IntegratingMatrixRequest implements IBRRequest
                         .define("VISIBILITY_TEST_ENABLED", true)
                         .define("VIRTUAL_LIGHT_COUNT", 0)
                         .define("ENVIRONMENT_ILLUMINATION_ENABLED", true)
-                        .define("ENVIRONMENT_TEXTURE_ENABLED", false)
+                        .define("ENVIRONMENT_TEXTURE_ENABLED", true)
                         .define("ANALYTIC_ROUGHNESS", roughness * 0.01)
                         .define("ANALYTIC_UV_SCALE", uvScale * 1.0)
                         .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
                         .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
                         .createProgram())
                     {
-                        drawInstance(resources, modelView, projection, framebuffer, depthFBO, program);
+                        drawInstance(resources, renderable.getEnvironmentMap().orElse(null), modelView, renderable.getEnvironmentMapMatrix(),
+                            projection, renderable.getLightingModel().getAmbientLightColor(), framebuffer, depthFBO, program);
                     }
 
                     framebuffer.saveColorBufferToFile(0, "PNG",
@@ -169,8 +173,8 @@ public class IntegratingMatrixRequest implements IBRRequest
     }
 
     private static <ContextType extends Context<ContextType>> void drawInstance(
-        IBRResources<ContextType> resources, Matrix4 modelView, Matrix4 projection,
-        FramebufferObject<ContextType> framebuffer, FramebufferObject<ContextType> depthFBO, Program<ContextType> program)
+        IBRResources<ContextType> resources, Cubemap<ContextType> environmentMap, Matrix4 modelView, Matrix4 environmentMatrix, Matrix4 projection,
+        Vector3 ambientColor, FramebufferObject<ContextType> framebuffer, FramebufferObject<ContextType> depthFBO, Program<ContextType> program)
     {
         resources.setupShaderProgram(program);
 
@@ -193,7 +197,6 @@ public class IntegratingMatrixRequest implements IBRRequest
             drawable.addVertexBuffer("tangent", resources.tangentBuffer);
         }
 
-        program.setUniform("ambientColor", new Vector3(1.0f));
         program.setUniform("renderGamma", 2.2f);
         program.setUniform("occlusionBias", 0.0025f);
         program.setTexture("screenSpaceDepthBuffer", depthFBO.getDepthAttachmentTexture());
@@ -202,6 +205,28 @@ public class IntegratingMatrixRequest implements IBRRequest
         program.setUniform("fullProjection", projection);
         program.setUniform("model_view", modelView);
         program.setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());
+
+        if (environmentMap == null)
+        {
+            program.setTexture("environmentMap", resources.context.getTextureFactory().getNullTexture(SamplerType.FLOAT_CUBE_MAP));
+        }
+        else
+        {
+            program.setUniform("useEnvironmentMap", true);
+            program.setTexture("environmentMap", environmentMap);
+            program.setUniform("environmentMipMapLevel",
+                Math.max(0, Math.min(environmentMap.getMipmapLevelCount() - 1,
+//                    lightingModel.getEnvironmentMapFilteringBias()
+                        + (int)Math.ceil(0.5 *
+                        Math.log(6 * (double)environmentMap.getFaceSize() * (double)environmentMap.getFaceSize()
+                            / (double)resources.viewSet.getCameraPoseCount() )
+                        / Math.log(2.0)))));
+            program.setUniform("diffuseEnvironmentMipMapLevel", environmentMap.getMipmapLevelCount() - 1);
+
+            program.setUniform("envMapMatrix", environmentMatrix);
+        }
+
+        program.setUniform("ambientColor", ambientColor);
 
         // Render to off-screen buffer
         drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);

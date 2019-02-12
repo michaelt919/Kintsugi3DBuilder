@@ -378,8 +378,8 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, 
 
         if (sampleColor.a == 0.0)
         {
-    //                return vec4(0.0);
             mfdFresnel = distTimesPi(nDotH, sqrt(specularColor / peakTimes4Pi)) * specularColor / PI;
+//            mfdFresnel = vec3(0);
         }
         else
         {
