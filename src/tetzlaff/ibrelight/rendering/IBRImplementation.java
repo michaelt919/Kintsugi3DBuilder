@@ -689,6 +689,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         }
     }
 
+    @Override
+    public Optional<Cubemap<ContextType>> getEnvironmentMap()
+    {
+        return lightingModel.isEnvironmentMappingEnabled() ? Optional.ofNullable(environmentMap) : Optional.empty();
+    }
+
     private void setupForDraw(Program<ContextType> program)
     {
         this.resources.setupShaderProgram(program);
@@ -783,7 +789,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             .times(Matrix4.translate(this.centroid.negated()));
     }
 
-    private Matrix4 getEnvironmentMapMatrix()
+    @Override
+    public Matrix4 getEnvironmentMapMatrix()
     {
         float scale = getScale();
         return Matrix4.scale(scale)

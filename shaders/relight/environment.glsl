@@ -85,7 +85,7 @@ float shadowTest(vec3 position, vec3 direction)
     {
         vec3 currentScreenSpacePos = currentProjPos.xyz / currentProjPos.w;
 
-        if (abs(currentScreenSpacePos.x) < 1 && abs(currentScreenSpacePos.y) < 1 && currentScreenSpacePos.z < 1 && projDir.z > -1.0)
+        if (abs(currentScreenSpacePos.x) < 1 && abs(currentScreenSpacePos.y) < 1 && currentScreenSpacePos.z < 1 && projDir.z > -0.99)
         {
             float scaledDiff = rayTest((currentScreenSpacePos.xy * 0.5 + 0.5), currentProjPos.w, currentGradientScale);
             shadowed = max(shadowed, 1.0 - scaledDiff);
