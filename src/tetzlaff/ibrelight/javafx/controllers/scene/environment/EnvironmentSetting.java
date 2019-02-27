@@ -23,7 +23,7 @@ public class EnvironmentSetting implements DOMConvertable
     private final DoubleProperty envColorIntensity = StaticUtilities.clamp(0, Double.MAX_VALUE, new SimpleDoubleProperty(1.0));
     private final DoubleProperty backgroundIntensity = StaticUtilities.clamp(0, Double.MAX_VALUE, new SimpleDoubleProperty(1.0));
     private final DoubleProperty envRotation = StaticUtilities.wrapAround(-180, 180, new SimpleDoubleProperty());
-    private final IntegerProperty envFilteringBias = new SimpleIntegerProperty(0);
+    private final DoubleProperty envFilteringBias = new SimpleDoubleProperty(0);
     private final Property<Color> envColor = new SimpleObjectProperty<>(Color.WHITE);
     private final Property<Color> bpColor = new SimpleObjectProperty<>(Color.WHITE);
     private final StringProperty name = new SimpleStringProperty("New Environment Map");
@@ -87,7 +87,7 @@ public class EnvironmentSetting implements DOMConvertable
         newEnvironment.envRotation.setValue(Double.valueOf(element.getAttribute("envRotation")));
         newEnvironment.envColor.setValue(Color.valueOf(element.getAttribute("envColor")));
         newEnvironment.envFilteringBias.setValue(element.hasAttribute("envFilteringBias") ?
-            Integer.valueOf(element.getAttribute("envFilteringBias")) : 0);
+            Double.valueOf(element.getAttribute("envFilteringBias")) : 0);
         newEnvironment.bpColor.setValue(Color.valueOf(element.getAttribute("bpColor")));
         newEnvironment.name.setValue(String.valueOf(element.getAttribute("name")));
         newEnvironment.locked.setValue(Boolean.valueOf(element.getAttribute("locked")));
@@ -282,17 +282,17 @@ public class EnvironmentSetting implements DOMConvertable
         this.envRotation.set(envRotation);
     }
 
-    public IntegerProperty envFilteringBiasProperty()
+    public DoubleProperty envFilteringBiasProperty()
     {
         return envFilteringBias;
     }
 
-    public int getEnvFilteringBias()
+    public double getEnvFilteringBias()
     {
         return envFilteringBias.get();
     }
 
-    public void setEnvFilteringBias(int envFilteringBias)
+    public void setEnvFilteringBias(double envFilteringBias)
     {
         this.envFilteringBias.set(envFilteringBias);
     }

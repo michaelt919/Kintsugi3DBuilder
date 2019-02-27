@@ -217,7 +217,7 @@ public class IntegratingMatrixRequest implements IBRRequest
             program.setUniform("environmentMipMapLevel",
                 Math.max(0, Math.min(environmentMap.getMipmapLevelCount() - 1,
 //                    lightingModel.getEnvironmentMapFilteringBias()
-                        + (int)Math.ceil(0.5 *
+                        + (float)(0.5 *
                         Math.log(6 * (double)environmentMap.getFaceSize() * (double)environmentMap.getFaceSize()
                             / (double)resources.viewSet.getCameraPoseCount() )
                         / Math.log(2.0)))));

@@ -175,6 +175,12 @@ uniform mat4 fullProjection;
 #define DISCRETE_DIFFUSE_ENVIRONMENT 1
 #endif
 
+#ifndef SMITH_MASKING_SHADOWING
+#if ROUGHNESS_TEXTURE_ENABLED
+#define SMITH_MASKING_SHADOWING 1
+#endif
+#endif
+
 #include "reflectanceequations.glsl"
 #include "tonemap.glsl"
 
@@ -415,8 +421,12 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, 
     cosineWeightedBRDF += diffuseColor * nDotL_virtual / PI;
 #endif
 
+    float weight = 4 * hDotV_virtual * (getCameraWeight(virtualIndex) * 4 * PI * VIEW_COUNT);
+
     vec4 unweightedSample;
     unweightedSample.rgb = cosineWeightedBRDF
+//        * getEnvironment(fPosition, transpose(mat3(cameraPose)) * virtualLightDir,
+//            4 * hDotV_virtual * getCameraWeight(virtualIndex));
         * getEnvironment(fPosition, transpose(mat3(cameraPose)) * virtualLightDir);
 
 #if SPECULAR_TEXTURE_ENABLED && ARCHIVING_2017_ENVIRONMENT_NORMALIZATION
@@ -425,7 +435,6 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, 
 #else
     unweightedSample.a = sign(validSpecular) * nDotL_virtual / PI;
 #endif
-    float weight = 4 * hDotV_virtual * (getCameraWeight(virtualIndex) * 4 * PI * VIEW_COUNT);
 
     return EnvironmentSample(unweightedSample * weight, mfdMono, weight);
     // dl = 4 * h dot v * dh

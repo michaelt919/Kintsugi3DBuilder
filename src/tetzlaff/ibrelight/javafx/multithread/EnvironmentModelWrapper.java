@@ -40,7 +40,7 @@ public class EnvironmentModelWrapper implements EnvironmentModel
     }
 
     @Override
-    public int getEnvironmentMapFilteringBias()
+    public float getEnvironmentMapFilteringBias()
     {
         return baseModel.getEnvironmentMapFilteringBias();
     }

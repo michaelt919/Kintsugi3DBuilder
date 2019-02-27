@@ -248,9 +248,9 @@ public class EnvironmentModelImpl implements EnvironmentModel
     }
 
     @Override
-    public int getEnvironmentMapFilteringBias()
+    public float getEnvironmentMapFilteringBias()
     {
-        return doesSelectedExist() ? selected.getValue().getEnvFilteringBias() : 0;
+        return doesSelectedExist() ? (float)selected.getValue().getEnvFilteringBias() : 0;
     }
 
     @Override
