@@ -16,7 +16,7 @@ uniform vec3 ambientColor;
 #if ENVIRONMENT_TEXTURE_ENABLED
 uniform samplerCube environmentMap;
 uniform mat4 envMapMatrix;
-uniform int environmentMipMapLevel;
+uniform float environmentMipMapLevel;
 uniform int diffuseEnvironmentMipMapLevel;
 #endif
 
@@ -115,11 +115,11 @@ vec3 getEnvironmentFresnel(vec3 lightDirection, float fresnelFactor)
     return result;
 }
 
-vec3 getEnvironment(vec3 lightPosition, vec3 lightDirection)
+vec3 getEnvironmentLod(vec3 lightPosition, vec3 lightDirection, float lod)
 {
     vec3 result;
 #if ENVIRONMENT_TEXTURE_ENABLED
-    result = ambientColor * textureLod(environmentMap, mat3(envMapMatrix) * lightDirection, environmentMipMapLevel).rgb;
+    result = ambientColor * textureLod(environmentMap, mat3(envMapMatrix) * lightDirection, lod).rgb;
 #else
     result = ambientColor;
 #endif
@@ -147,6 +147,25 @@ vec3 getEnvironment(vec3 lightPosition, vec3 lightDirection)
 #endif
 
     return result;
+}
+
+vec3 getEnvironment(vec3 lightPosition, vec3 lightDirection)
+{
+#if ENVIRONMENT_TEXTURE_ENABLED
+    return getEnvironmentLod(lightPosition, lightDirection, environmentMipMapLevel);
+#else
+    return getEnvironmentLod(lightPosition, lightDirection, 0);
+#endif
+}
+
+vec3 getEnvironment(vec3 lightPosition, vec3 lightDirection, float dOmega)
+{
+#if ENVIRONMENT_TEXTURE_ENABLED
+    ivec2 envDims = textureSize(environmentMap, 0);
+    return getEnvironmentLod(lightPosition, lightDirection, 0.5 * log2(6 * envDims.x * envDims.y * dOmega));
+#else
+    return getEnvironmentLod(lightPosition, lightDirection, 0);
+#endif
 }
 
 vec3 getEnvironmentSpecular(vec3 lightDirection)

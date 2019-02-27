@@ -11,7 +11,7 @@ public interface ReadonlyEnvironmentModel
     boolean isEnvironmentMappingEnabled();
     Vector3 getEnvironmentColor();
     Matrix4 getEnvironmentMapMatrix();
-    int getEnvironmentMapFilteringBias();
+    float getEnvironmentMapFilteringBias();
 
     BackgroundMode getBackgroundMode();
     float getBackgroundIntensity();

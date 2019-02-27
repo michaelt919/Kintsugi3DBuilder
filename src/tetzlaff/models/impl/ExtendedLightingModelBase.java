@@ -197,7 +197,7 @@ public abstract class ExtendedLightingModelBase<LightInstanceType extends LightI
     }
 
     @Override
-    public int getEnvironmentMapFilteringBias()
+    public float getEnvironmentMapFilteringBias()
     {
         return environmentModel.getEnvironmentMapFilteringBias();
     }

@@ -719,7 +719,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             program.setUniform("environmentMipMapLevel",
                 Math.max(0, Math.min(this.environmentMap.getMipmapLevelCount() - 1,
                     this.lightingModel.getEnvironmentMapFilteringBias()
-                        + (int)Math.ceil(0.5 *
+                        + (float)(0.5 *
                             Math.log(6 * (double)this.environmentMap.getFaceSize() * (double)this.environmentMap.getFaceSize()
                                 / (double)resources.viewSet.getCameraPoseCount() )
                             / Math.log(2.0)))));
@@ -896,7 +896,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     {
         return absoluteViewMatrix
                 .times(Matrix4.translate(this.centroid))
-                .times(getDefaultCameraPose().getUpperLeft3x3().transpose().asMatrix4());
+                .times(getDefaultCameraPose().getUpperLeft3x3().asMatrix4().quickInverse(0.01f));
     }
 
     private Matrix4 getAbsoluteViewMatrix()
@@ -936,6 +936,19 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 .times(getDefaultCameraPose().getUpperLeft3x3().asMatrix4())
                 .times(Matrix4.translate(this.centroid.negated()))
                 .times(multiTransformationModel.get(modelInstance));
+    }
+
+    private Matrix4 getPartialViewFromModelViewMatrix(Matrix4 modelViewMatrix, int modelInstance)
+    {
+        float scale = getScale();
+
+        return modelViewMatrix
+            .times(multiTransformationModel.get(modelInstance).quickInverse(0.01f))
+            .times(Matrix4.translate(this.centroid))
+            .times(getDefaultCameraPose().getUpperLeft3x3().asMatrix4().quickInverse(0.01f))
+            .times(Matrix4.scale(scale))
+            .times(this.objectModel.getTransformationMatrix().quickInverse(0.01f))
+            .times(Matrix4.scale(1.0f / scale));
     }
 
     private float getVerticalFieldOfView(FramebufferSize size)
@@ -1125,7 +1138,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             if (overriddenViewMatrix)
             {
-                view = viewOverride;
+                view = getFullViewMatrix(getPartialViewFromModelViewMatrix(viewOverride, 0));
             }
             else if (settingsModel.getBoolean("lightCalibrationMode"))
             {
@@ -1173,7 +1186,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                         Matrix4.scale(1.0f / scale)
                             .times(view)
                             .times(Matrix4.translate(resources.geometry.getCentroid()))
-                            .times(getDefaultCameraPose().transpose().getUpperLeft3x3().asMatrix4())
+                            .times(getDefaultCameraPose().getUpperLeft3x3().asMatrix4().quickInverse(0.01f))
                             .times(Matrix4.scale(scale)));
                 }
             }
@@ -1681,7 +1694,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 float scale = getScale();
                 Matrix4 widgetTransformation = viewMatrix
                     .times(Matrix4.translate(this.centroid))
-                    .times(getDefaultCameraPose().getUpperLeft3x3().transpose().asMatrix4())
+                    .times(getDefaultCameraPose().getUpperLeft3x3().asMatrix4().quickInverse(0.01f))
                     .times(Matrix4.scale(scale))
                     .times(lightingModel.getLightMatrix(i).quickInverse(0.01f))
                     .times(Matrix4.scale(1.0f / scale));
