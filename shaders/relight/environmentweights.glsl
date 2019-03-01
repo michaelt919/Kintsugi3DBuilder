@@ -26,31 +26,17 @@ struct EnvironmentResult
     vec4 fresnelAdjustment;
 };
 
-EnvironmentResult getWeights(vec3 base, float fresnelFactor, float weight, int virtualIndex, int svIndex)
+vec4 getSVDViewWeight(int virtualIndex, int svIndex)
 {
     // Light intensities in view set files are assumed to be pre-divided by pi.
     // Or alternatively, the result of getLinearColor gives a result
     // where a diffuse reflectivity of 1 is represented by a value of pi.
     // See diffusefit.glsl
-    vec4 weights = computeSVDViewWeights(ivec3(computeBlockStart(fTexCoord, textureSize(eigentextures, 0).xy), virtualIndex), svIndex);
-
-    vec4 mfdTimesRoughnessSq = vec4(weights.rgb, weights.w);
-
-    if (mfdTimesRoughnessSq.w > 0.0)
-    {
-        vec3 unweightedSample = mfdTimesRoughnessSq.rgb * base;
-        return EnvironmentResult(vec4(unweightedSample, 1.0 / (2.0 * PI)) * weight, vec4(fresnelFactor * unweightedSample, 1.0 / (2.0 * PI)) * weight);
-    }
-    else
-    {
-        return EnvironmentResult(vec4(0), vec4(0));
-    }
+    return computeSVDViewWeights(ivec3(computeBlockStart(fTexCoord, textureSize(eigentextures, 0).xy), virtualIndex), svIndex);
 }
 
-EnvironmentResult[EIGENTEXTURE_RETURN_COUNT] computeSVDEnvironmentSamples(int virtualIndex, int startingSVIndex, vec3 position, vec3 normal, float roughness)
+EnvironmentResult computeEnvironmentSample(int virtualIndex, vec3 position, vec3 normal, float roughness)
 {
-    EnvironmentResult[EIGENTEXTURE_RETURN_COUNT] results;
-
     mat4 cameraPose = getCameraPose(virtualIndex);
     vec3 fragmentPos = (cameraPose * vec4(position, 1.0)).xyz;
     vec3 normalDirCameraSpace = mat3(cameraPose) * normal;
@@ -98,15 +84,15 @@ EnvironmentResult[EIGENTEXTURE_RETURN_COUNT] computeSVDEnvironmentSamples(int vi
             * virtualMaskingShadowing
             * nDotV_sample / sampleMaskingShadowing);
 
-#if SHADOWS_ENABLED
-            sampleBase *= (getEnvironment(position, transpose(mat3(cameraPose)) * virtualLightDir) +
-                getEnvironment(position + transpose(mat3(cameraPose)) * vec3(RAY_POSITION_JITTER,0,0), transpose(mat3(cameraPose)) * virtualLightDir) +
-                getEnvironment(position + transpose(mat3(cameraPose)) * vec3(-RAY_POSITION_JITTER,0,0), transpose(mat3(cameraPose)) * virtualLightDir) +
-                getEnvironment(position + transpose(mat3(cameraPose)) * vec3(0,RAY_POSITION_JITTER,0), transpose(mat3(cameraPose)) * virtualLightDir) +
-                getEnvironment(position + transpose(mat3(cameraPose)) * vec3(0,-RAY_POSITION_JITTER,0), transpose(mat3(cameraPose)) * virtualLightDir)) / 5;
-#else
-            sampleBase *= getEnvironment(position, transpose(mat3(cameraPose)) * virtualLightDir);
-#endif
+//#if SHADOWS_ENABLED
+//        sampleBase *= (getEnvironment(position, transpose(mat3(cameraPose)) * virtualLightDir) +
+//            getEnvironment(position + transpose(mat3(cameraPose)) * vec3(RAY_POSITION_JITTER,0,0), transpose(mat3(cameraPose)) * virtualLightDir) +
+//            getEnvironment(position + transpose(mat3(cameraPose)) * vec3(-RAY_POSITION_JITTER,0,0), transpose(mat3(cameraPose)) * virtualLightDir) +
+//            getEnvironment(position + transpose(mat3(cameraPose)) * vec3(0,RAY_POSITION_JITTER,0), transpose(mat3(cameraPose)) * virtualLightDir) +
+//            getEnvironment(position + transpose(mat3(cameraPose)) * vec3(0,-RAY_POSITION_JITTER,0), transpose(mat3(cameraPose)) * virtualLightDir)) / 5;
+//#else
+        sampleBase *= getEnvironment(position, transpose(mat3(cameraPose)) * virtualLightDir);
+//#endif
 
         float weight = 4 * hDotV_virtual * (getCameraWeight(virtualIndex) * 4 * PI * VIEW_COUNT);
         // dl = 4 * h dot v * dh
@@ -114,29 +100,34 @@ EnvironmentResult[EIGENTEXTURE_RETURN_COUNT] computeSVDEnvironmentSamples(int vi
         // This is helpful for consistency with numerical limits (i.e. clamping)
         // Everything gets normalized at the end again anyways.
 
-        results[0].baseFresnel = vec4(0.5 * sampleBase, 1.0 / (2.0 * PI)) * weight;
-        results[0].fresnelAdjustment = vec4(fresnelFactor * 0.5 * sampleBase, 1.0 / (2.0 * PI)) * weight;
-
-#if EIGENTEXTURE_RETURN_COUNT > 1
-        results[1] = getWeights(sampleBase, fresnelFactor, weight, virtualIndex, 0);
-
-#if EIGENTEXTURE_RETURN_COUNT > 2
-        for (int i = 0; i < SECONDARY_EIGENTEXTURE_COUNT; i++)
-        {
-            results[i + 2] = getWeights(sampleBase, fresnelFactor, weight, virtualIndex, startingSVIndex + i);
-        }
-#endif
-
-#endif
+        return EnvironmentResult(vec4(sampleBase, 1.0 / (2.0 * PI)) * weight, vec4(fresnelFactor * sampleBase, 1.0 / (2.0 * PI)) * weight);
     }
     else
     {
-        for (int i = 0; i < EIGENTEXTURE_RETURN_COUNT; i++)
-        {
-            results[i].baseFresnel = vec4(0.0);
-            results[i].fresnelAdjustment = vec4(0.0);
-        }
+        return EnvironmentResult(vec4(0.0), vec4(0.0));
     }
+}
+
+vec4[EIGENTEXTURE_RETURN_COUNT] computeAllSVDWeights(int virtualIndex, int startingSVIndex)
+{
+    vec4[EIGENTEXTURE_RETURN_COUNT] results;
+
+    results[0] = vec4(0.5, 0.5, 0.5, 1.0);
+
+#if EIGENTEXTURE_RETURN_COUNT > 1
+
+    vec4 svdViewWeight = getSVDViewWeight(virtualIndex, 0);
+    results[1] = vec4(svdViewWeight.rgb, sign(svdViewWeight.a));
+
+#if EIGENTEXTURE_RETURN_COUNT > 2
+    for (int i = 0; i < SECONDARY_EIGENTEXTURE_COUNT; i++)
+    {
+        svdViewWeight = getSVDViewWeight(virtualIndex, startingSVIndex + i);
+        results[i + 2] = vec4(svdViewWeight.rgb, sign(svdViewWeight.a));
+    }
+#endif
+
+#endif
 
     return results;
 }
@@ -153,11 +144,14 @@ EnvironmentResult[EIGENTEXTURE_RETURN_COUNT] computeSVDEnvironmentShading(int st
 
     for (int i = 0; i < VIEW_COUNT; i++)
     {
-        EnvironmentResult[EIGENTEXTURE_RETURN_COUNT] samples = computeSVDEnvironmentSamples(i, startingSVIndex, position, normal, roughness);
+        vec4[EIGENTEXTURE_RETURN_COUNT] svdWeights = computeAllSVDWeights(i, startingSVIndex);
+
+        EnvironmentResult environmentSample = computeEnvironmentSample(i, position, normal, roughness);
+
         for (int j = 0; j < EIGENTEXTURE_RETURN_COUNT; j++)
         {
-            sums[j].baseFresnel += samples[j].baseFresnel;
-            sums[j].fresnelAdjustment += samples[j].fresnelAdjustment;
+            sums[j].baseFresnel += environmentSample.baseFresnel * svdWeights[j];
+            sums[j].fresnelAdjustment += environmentSample.fresnelAdjustment * svdWeights[j];
         }
     }
 
@@ -165,20 +159,12 @@ EnvironmentResult[EIGENTEXTURE_RETURN_COUNT] computeSVDEnvironmentShading(int st
 
     for (int j = 0; j < EIGENTEXTURE_RETURN_COUNT; j++)
     {
-        if (sums[j].baseFresnel.w > 0.0)
-        {
-            float normalizationFactor =
-                VIEW_COUNT;                                 // better spatial consistency, worse directional consistency?
-//                clamp(sums[j].baseFresnel.w, 0, 1000000.0); // Better directional consistency, worse spatial consistency?
+        float normalizationFactor =
+            VIEW_COUNT;                                 // better spatial consistency, worse directional consistency?
+//            clamp(sums[j].baseFresnel.w, 0, 1000000.0); // Better directional consistency, worse spatial consistency?
 
-            results[j].baseFresnel = sums[j].baseFresnel / normalizationFactor;
-            results[j].fresnelAdjustment = sums[j].fresnelAdjustment / normalizationFactor;
-        }
-        else
-        {
-            results[j].baseFresnel = vec4(0.0);
-            results[j].fresnelAdjustment = vec4(0.0);
-        }
+        results[j].baseFresnel = /*sign(sums[j].baseFresnel.w) * */sums[j].baseFresnel / normalizationFactor;
+        results[j].fresnelAdjustment = /*sign(sums[j].baseFresnel.w) * */sums[j].fresnelAdjustment / normalizationFactor;
     }
 
     return results;
