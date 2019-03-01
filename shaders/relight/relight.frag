@@ -916,7 +916,7 @@ void main()
 
 #if SVD_MODE
     radiance += diffuseColor * getEnvironmentDiffuse(normalDir);
-    radiance += getScaledEnvironmentShadingFromSVD(triangleNormal, specularColor, roughnessRGB)
+    radiance += getScaledEnvironmentShadingFromSVD(normalDir, specularColor, roughnessRGB)
         / (max(0.125, nDotV) * roughnessRGBSq);
 #else
 #if !DISCRETE_DIFFUSE_ENVIRONMENT

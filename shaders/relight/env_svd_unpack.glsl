@@ -3,12 +3,21 @@
 
 #include "../colorappearance/svd_unpack.glsl"
 
-#define EIGENTEXTURE_RETURN_COUNT 2
+#define HIGH_QUALITY_EIGENTEXTURE_COUNT 8
+
+#define EIGENTEXTURE_RETURN_COUNT HIGH_QUALITY_EIGENTEXTURE_COUNT
+
+#if HIGH_QUALITY_EIGENTEXTURE_COUNT > 2
+#define SECONDARY_EIGENTEXTURE_COUNT (HIGH_QUALITY_EIGENTEXTURE_COUNT - 2)
+#else
 #define SECONDARY_EIGENTEXTURE_COUNT 0
+#endif
 
+#if HIGH_QUALITY_EIGENTEXTURE_COUNT > 0
 #include "environmentweights.glsl"
+#endif
 
-#line 12 3005
+#line 20 3005
 
 uniform sampler2DArray environmentWeightsTexture;
 
@@ -80,6 +89,7 @@ vec3 getScaledEnvironmentShadingFromSVD(vec3 normalDir, vec3 specularColorRGB, v
 
     vec3 roughnessSq = roughness * roughness;
 
+#if HIGH_QUALITY_EIGENTEXTURE_COUNT == 0
     vec3 mfdGeomRoughnessSq =
         mix(mix(weights[0], weights[2], interpolantsFloorLevel.x),
             mix(weights[1], weights[3], interpolantsFloorLevel.x),
@@ -91,40 +101,48 @@ vec3 getScaledEnvironmentShadingFromSVD(vec3 normalDir, vec3 specularColorRGB, v
         mix(mix(weights[0], weights[2], interpolantsFloorLevel.x),
             mix(weights[1], weights[3], interpolantsFloorLevel.x),
             interpolantsFloorLevel.y);
+#else
+    float roughnessMono = sqrt(1.0 / (getLuminance(1.0 / roughness * roughness)));
+    EnvironmentResult[HIGH_QUALITY_EIGENTEXTURE_COUNT] shading = computeSVDEnvironmentShading(1, fPosition, normalDir, roughnessMono);
 
-//    float roughnessMono = sqrt(1.0 / (getLuminance(1.0 / roughness * roughness)));
-//    EnvironmentResult[EIGENTEXTURE_RETURN_COUNT] shading = computeSVDEnvironmentShading(1, fPosition, normalDir, roughnessMono);
-//
-//    vec3 mfdGeomRoughnessSq = shading[0].baseFresnel.rgb;
-//    vec3 mfdGeomRoughnessSqFresnelFactor = shading[0].fresnelAdjustment.rgb;
-//
-//    vec4 tex000 = getSignedTexel(ivec3(coords000, 0), mipmapLevelFloor);
-//    vec4 tex001 = getSignedTexel(ivec3(coords001, 0), mipmapLevelCeil);
-//    vec4 tex010 = getSignedTexel(ivec3(coords010, 0), mipmapLevelFloor);
-//    vec4 tex011 = getSignedTexel(ivec3(coords011, 0), mipmapLevelCeil);
-//    vec4 tex100 = getSignedTexel(ivec3(coords100, 0), mipmapLevelFloor);
-//    vec4 tex101 = getSignedTexel(ivec3(coords101, 0), mipmapLevelCeil);
-//    vec4 tex110 = getSignedTexel(ivec3(coords110, 0), mipmapLevelFloor);
-//    vec4 tex111 = getSignedTexel(ivec3(coords111, 0), mipmapLevelCeil);
-//
-//    vec4 tex = mix(mix(mix(tex000, tex100, interpolantsFloorLevel.x),
-//                       mix(tex010, tex110, interpolantsFloorLevel.x),
-//                       interpolantsFloorLevel.y),
-//                   mix(mix(tex001, tex101, interpolantsCeilLevel.x),
-//                       mix(tex011, tex111, interpolantsCeilLevel.x),
-//                       interpolantsCeilLevel.y),
-//                   mipmapLevelInterpolant);
-//
-//    vec4 blendedTerm = shading[1].baseFresnel * tex;
-//    vec3 blendedTermFresnel = shading[1].fresnelAdjustment.rgb * tex.rgb;
-//
-//    if (blendedTerm.a > 0)
-//    {
-//        mfdGeomRoughnessSq += blendedTerm.rgb / blendedTerm.a;
-//        mfdGeomRoughnessSqFresnelFactor += blendedTermFresnel.rgb / blendedTerm.a;
-//    }
+    vec3 mfdGeomRoughnessSq = shading[0].baseFresnel.rgb;
+    vec3 mfdGeomRoughnessSqFresnelFactor = shading[0].fresnelAdjustment.rgb;
 
+    for (int k = 0; k < HIGH_QUALITY_EIGENTEXTURE_COUNT - 1; k++)
+    {
+        vec4 tex000 = getSignedTexel(ivec3(coords000, k), mipmapLevelFloor);
+        vec4 tex001 = getSignedTexel(ivec3(coords001, k), mipmapLevelCeil);
+        vec4 tex010 = getSignedTexel(ivec3(coords010, k), mipmapLevelFloor);
+        vec4 tex011 = getSignedTexel(ivec3(coords011, k), mipmapLevelCeil);
+        vec4 tex100 = getSignedTexel(ivec3(coords100, k), mipmapLevelFloor);
+        vec4 tex101 = getSignedTexel(ivec3(coords101, k), mipmapLevelCeil);
+        vec4 tex110 = getSignedTexel(ivec3(coords110, k), mipmapLevelFloor);
+        vec4 tex111 = getSignedTexel(ivec3(coords111, k), mipmapLevelCeil);
+
+        vec4 tex = mix(mix(mix(tex000, tex100, interpolantsFloorLevel.x),
+                           mix(tex010, tex110, interpolantsFloorLevel.x),
+                           interpolantsFloorLevel.y),
+                       mix(mix(tex001, tex101, interpolantsCeilLevel.x),
+                           mix(tex011, tex111, interpolantsCeilLevel.x),
+                           interpolantsCeilLevel.y),
+                       mipmapLevelInterpolant);
+
+        vec4 blendedTerm = vec4(shading[k + 1].baseFresnel.rgb, 1.0) * tex;
+        vec3 blendedTermFresnel = shading[k + 1].fresnelAdjustment.rgb * tex.rgb;
+
+        if (blendedTerm.a > 0)
+        {
+            mfdGeomRoughnessSq += blendedTerm.rgb / blendedTerm.a;
+            mfdGeomRoughnessSqFresnelFactor += blendedTermFresnel.rgb / blendedTerm.a;
+        }
+    }
+#endif
+
+#if HIGH_QUALITY_EIGENTEXTURE_COUNT == 0
     for (int k = 0; k < 15; k++)
+#else
+    for (int k = HIGH_QUALITY_EIGENTEXTURE_COUNT - 1; k < 15; k++)
+#endif
     {
         vec4 tex000 = getSignedTexel(ivec3(coords000, k), mipmapLevelFloor);
         vec4 tex001 = getSignedTexel(ivec3(coords001, k), mipmapLevelCeil);
