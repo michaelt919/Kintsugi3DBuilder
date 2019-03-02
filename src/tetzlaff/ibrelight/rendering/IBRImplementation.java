@@ -1506,7 +1506,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             for (int i = 0; i < 4; i++)
                             {
                                 environmentWeightsFBO.setColorAttachment(4 + i,
-                                    environmentWeightsTexture.getLayerAsFramebufferAttachment(4 + i + 4 * k+ corner * 32));
+                                    environmentWeightsTexture.getLayerAsFramebufferAttachment(4 + i + 4 * k + corner * 32));
                                 environmentWeightsFBO.clearColorBuffer(4 + i, 0.5f, 0.5f, 0.5f, 1.0f);
                             }
 

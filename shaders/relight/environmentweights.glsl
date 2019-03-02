@@ -20,6 +20,10 @@
 #define RAY_POSITION_JITTER 0.1
 #endif
 
+#ifndef SHADOW_JITTER_ENABLED
+#define SHADOW_JITTER_ENABLED 1
+#endif
+
 struct EnvironmentResult
 {
     vec4 baseFresnel;
@@ -84,15 +88,15 @@ EnvironmentResult computeEnvironmentSample(int virtualIndex, vec3 position, vec3
             * virtualMaskingShadowing
             * nDotV_sample / sampleMaskingShadowing);
 
-//#if SHADOWS_ENABLED
-//        sampleBase *= (getEnvironment(position, transpose(mat3(cameraPose)) * virtualLightDir) +
-//            getEnvironment(position + transpose(mat3(cameraPose)) * vec3(RAY_POSITION_JITTER,0,0), transpose(mat3(cameraPose)) * virtualLightDir) +
-//            getEnvironment(position + transpose(mat3(cameraPose)) * vec3(-RAY_POSITION_JITTER,0,0), transpose(mat3(cameraPose)) * virtualLightDir) +
-//            getEnvironment(position + transpose(mat3(cameraPose)) * vec3(0,RAY_POSITION_JITTER,0), transpose(mat3(cameraPose)) * virtualLightDir) +
-//            getEnvironment(position + transpose(mat3(cameraPose)) * vec3(0,-RAY_POSITION_JITTER,0), transpose(mat3(cameraPose)) * virtualLightDir)) / 5;
-//#else
+#if SHADOWS_ENABLED && SHADOW_JITTER_ENABLED
+        sampleBase *= (getEnvironment(position, transpose(mat3(cameraPose)) * virtualLightDir) +
+            getEnvironment(position + transpose(mat3(cameraPose)) * vec3(RAY_POSITION_JITTER,0,0), transpose(mat3(cameraPose)) * virtualLightDir) +
+            getEnvironment(position + transpose(mat3(cameraPose)) * vec3(-RAY_POSITION_JITTER,0,0), transpose(mat3(cameraPose)) * virtualLightDir) +
+            getEnvironment(position + transpose(mat3(cameraPose)) * vec3(0,RAY_POSITION_JITTER,0), transpose(mat3(cameraPose)) * virtualLightDir) +
+            getEnvironment(position + transpose(mat3(cameraPose)) * vec3(0,-RAY_POSITION_JITTER,0), transpose(mat3(cameraPose)) * virtualLightDir)) / 5;
+#else
         sampleBase *= getEnvironment(position, transpose(mat3(cameraPose)) * virtualLightDir);
-//#endif
+#endif
 
         float weight = 4 * hDotV_virtual * (getCameraWeight(virtualIndex) * 4 * PI * VIEW_COUNT);
         // dl = 4 * h dot v * dh
