@@ -13,11 +13,13 @@
 #define SECONDARY_EIGENTEXTURE_COUNT 0
 #endif
 
+#define SHADOW_JITTER_ENABLED 0
+
 #if HIGH_QUALITY_EIGENTEXTURE_COUNT > 0
 #include "environmentweights.glsl"
 #endif
 
-#line 21 3005
+#line 23 3005
 
 uniform sampler2DArray environmentWeightsTexture;
 
@@ -110,7 +112,7 @@ vec3 getScaledEnvironmentShadingFromSVD(vec3 normalDir, vec3 specularColorRGB, v
     weightCoords[2] = linearFiltering.coords100 / floorToEnv;
     weightCoords[3] = linearFiltering.coords110 / floorToEnv;
 
-    vec3[] weights;
+    vec3[4] weights;
 
 #if HIGH_QUALITY_EIGENTEXTURE_COUNT == 0
     weights = getWeights(weightCoords, 0);
@@ -195,7 +197,7 @@ vec3 getScaledEnvironmentShadingFromSVD(vec3 normalDir, vec3 specularColorRGB, v
 #if HIGH_QUALITY_EIGENTEXTURE_COUNT == 0
     for (int k = 0; k < 15; k++)
 #else
-    for (int k = HIGH_QUALITY_EIGENTEXTURE_COUNT - 1; k < 0*15; k++)
+    for (int k = HIGH_QUALITY_EIGENTEXTURE_COUNT - 1; k < 15; k++)
 #endif
     {
         vec4 tex000 = getSignedTexel(ivec3(linearFiltering.coords000, k), mipmapLevelFloor);
