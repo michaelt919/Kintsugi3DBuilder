@@ -17,9 +17,44 @@
 #include "environmentweights.glsl"
 #endif
 
-#line 20 3005
+#line 21 3005
 
 uniform sampler2DArray environmentWeightsTexture;
+
+struct LinearFilteringInfo
+{
+    ivec2 coords000;
+    ivec2 coords001;
+    ivec2 coords010;
+    ivec2 coords011;
+    ivec2 coords100;
+    ivec2 coords101;
+    ivec2 coords110;
+    ivec2 coords111;
+    vec2 interpolantsFloorLevel;
+    vec2 interpolantsCeilLevel;
+};
+
+LinearFilteringInfo getFilteringInfo(vec2 texCoord, ivec3 floorLevelSize, ivec3 ceilLevelSize)
+{
+    LinearFilteringInfo result;
+
+    vec2 texCoordsFloorLevel = texCoord * floorLevelSize.xy - 0.5;
+    result.coords000 = clamp(ivec2(floor(texCoordsFloorLevel)), ivec2(0), floorLevelSize.xy - ivec2(1));
+    result.coords110 = result.coords000 + 1;
+    result.coords010 = ivec2(result.coords000.x, result.coords110.y);
+    result.coords100 = ivec2(result.coords110.x, result.coords000.y);
+    result.interpolantsFloorLevel = texCoordsFloorLevel - result.coords000;
+
+    vec2 texCoordsCeilLevel = texCoord * ceilLevelSize.xy - 0.5;
+    result.coords001 = clamp(ivec2(floor(texCoordsCeilLevel)), ivec2(0), ceilLevelSize.xy - ivec2(1));
+    result.coords111 = result.coords001 + 1;
+    result.coords011 = ivec2(result.coords001.x, result.coords111.y);
+    result.coords101 = ivec2(result.coords111.x, result.coords001.y);
+    result.interpolantsCeilLevel = texCoordsCeilLevel - result.coords001;
+
+    return result;
+}
 
 vec3[4] getWeights(vec2 weightTexCoords[4], int layer)
 {
@@ -65,42 +100,32 @@ vec3 getScaledEnvironmentShadingFromSVD(vec3 normalDir, vec3 specularColorRGB, v
     vec2 floorToEnv = vec2(eigentexturesFloorLevelSize.xy) / vec2(environmentWeightsSize.xy);
     vec2 ceilToEnv = vec2(eigentexturesCeilLevelSize.xy) / vec2(environmentWeightsSize.xy);
 
-    vec2 texCoordsFloorLevel = fTexCoord * eigentexturesFloorLevelSize.xy;
-    ivec2 coords000 = min(ivec2(floor(texCoordsFloorLevel)), eigentexturesFloorLevelSize.xy - ivec2(1));
-    ivec2 coords110 = coords000 + 1;
-    ivec2 coords010 = ivec2(coords000.x, coords110.y);
-    ivec2 coords100 = ivec2(coords110.x, coords000.y);
-    vec2 interpolantsFloorLevel = texCoordsFloorLevel - coords000;
-
-    vec2 texCoordsCeilLevel = fTexCoord * eigentexturesCeilLevelSize.xy;
-    ivec2 coords001 = min(ivec2(floor(texCoordsCeilLevel)), eigentexturesCeilLevelSize.xy - ivec2(1));
-    ivec2 coords111 = coords001 + 1;
-    ivec2 coords011 = ivec2(coords001.x, coords111.y);
-    ivec2 coords101 = ivec2(coords111.x, coords001.y);
-    vec2 interpolantsCeilLevel = texCoordsCeilLevel - coords001;
-
-    vec2 weightCoords[4];
-    weightCoords[0] = coords000 / floorToEnv;
-    weightCoords[1] = coords010 / floorToEnv;
-    weightCoords[2] = coords100 / floorToEnv;
-    weightCoords[3] = coords110 / floorToEnv;
-
-    vec3[] weights = getWeights(weightCoords, 0);
-
     vec3 roughnessSq = roughness * roughness;
 
+    LinearFilteringInfo linearFiltering = getFilteringInfo(fTexCoord, eigentexturesFloorLevelSize, eigentexturesCeilLevelSize);
+
+    vec2 weightCoords[4];
+    weightCoords[0] = linearFiltering.coords000 / floorToEnv;
+    weightCoords[1] = linearFiltering.coords010 / floorToEnv;
+    weightCoords[2] = linearFiltering.coords100 / floorToEnv;
+    weightCoords[3] = linearFiltering.coords110 / floorToEnv;
+
+    vec3[] weights;
+
 #if HIGH_QUALITY_EIGENTEXTURE_COUNT == 0
+    weights = getWeights(weightCoords, 0);
+
     vec3 mfdGeomRoughnessSq =
-        mix(mix(weights[0], weights[2], interpolantsFloorLevel.x),
-            mix(weights[1], weights[3], interpolantsFloorLevel.x),
-            interpolantsFloorLevel.y);
+        mix(mix(weights[0], weights[2], linearFiltering.interpolantsFloorLevel.x),
+            mix(weights[1], weights[3], linearFiltering.interpolantsFloorLevel.x),
+            linearFiltering.interpolantsFloorLevel.y);
 
     weights = getWeights(weightCoords, 1);
 
     vec3 mfdGeomRoughnessSqFresnelFactor =
-        mix(mix(weights[0], weights[2], interpolantsFloorLevel.x),
-            mix(weights[1], weights[3], interpolantsFloorLevel.x),
-            interpolantsFloorLevel.y);
+        mix(mix(weights[0], weights[2], linearFiltering.interpolantsFloorLevel.x),
+            mix(weights[1], weights[3], linearFiltering.interpolantsFloorLevel.x),
+            linearFiltering.interpolantsFloorLevel.y);
 #else
     float roughnessMono = sqrt(1.0 / (getLuminance(1.0 / roughness * roughness)));
     EnvironmentResult[HIGH_QUALITY_EIGENTEXTURE_COUNT] shading = computeSVDEnvironmentShading(1, fPosition, normalDir, roughnessMono);
@@ -108,23 +133,52 @@ vec3 getScaledEnvironmentShadingFromSVD(vec3 normalDir, vec3 specularColorRGB, v
     vec3 mfdGeomRoughnessSq = shading[0].baseFresnel.rgb;
     vec3 mfdGeomRoughnessSqFresnelFactor = shading[0].fresnelAdjustment.rgb;
 
+    ivec3 viewWeightSize = textureSize(viewWeightTextures, 0) / ivec3(VIEW_WEIGHT_PACKING_X, VIEW_WEIGHT_PACKING_Y, 1);
+    ivec2 block = min(ivec2(floor(fTexCoord * viewWeightSize.xy)), viewWeightSize.xy - 1);
+
+    vec2 floorPixPerBlock = vec2(eigentexturesFloorLevelSize.xy) / vec2(viewWeightSize.xy);
+    vec2 ceilPixPerBlock = vec2(eigentexturesCeilLevelSize.xy) / vec2(viewWeightSize.xy);
+
     for (int k = 0; k < HIGH_QUALITY_EIGENTEXTURE_COUNT - 1; k++)
     {
-        vec4 tex000 = getSignedTexel(ivec3(coords000, k), mipmapLevelFloor);
-        vec4 tex001 = getSignedTexel(ivec3(coords001, k), mipmapLevelCeil);
-        vec4 tex010 = getSignedTexel(ivec3(coords010, k), mipmapLevelFloor);
-        vec4 tex011 = getSignedTexel(ivec3(coords011, k), mipmapLevelCeil);
-        vec4 tex100 = getSignedTexel(ivec3(coords100, k), mipmapLevelFloor);
-        vec4 tex101 = getSignedTexel(ivec3(coords101, k), mipmapLevelCeil);
-        vec4 tex110 = getSignedTexel(ivec3(coords110, k), mipmapLevelFloor);
-        vec4 tex111 = getSignedTexel(ivec3(coords111, k), mipmapLevelCeil);
+        vec4 tex000 = getSignedTexel(
+            ivec3(clamp(linearFiltering.coords000, ivec2(block * floorPixPerBlock), ivec2((block + 1) * floorPixPerBlock - 1)), k),
+            mipmapLevelFloor);
 
-        vec4 tex = mix(mix(mix(tex000, tex100, interpolantsFloorLevel.x),
-                           mix(tex010, tex110, interpolantsFloorLevel.x),
-                           interpolantsFloorLevel.y),
-                       mix(mix(tex001, tex101, interpolantsCeilLevel.x),
-                           mix(tex011, tex111, interpolantsCeilLevel.x),
-                           interpolantsCeilLevel.y),
+        vec4 tex001 = getSignedTexel(
+            ivec3(clamp(linearFiltering.coords001, ivec2(block * ceilPixPerBlock),  ivec2((block + 1) * ceilPixPerBlock  - 1)), k),
+            mipmapLevelCeil);
+
+        vec4 tex010 = getSignedTexel(
+            ivec3(clamp(linearFiltering.coords010, ivec2(block * floorPixPerBlock), ivec2((block + 1) * floorPixPerBlock - 1)), k),
+            mipmapLevelFloor);
+
+        vec4 tex011 = getSignedTexel(
+            ivec3(clamp(linearFiltering.coords011, ivec2(block * ceilPixPerBlock),  ivec2((block + 1) * ceilPixPerBlock  - 1)), k),
+            mipmapLevelCeil);
+
+        vec4 tex100 = getSignedTexel(
+            ivec3(clamp(linearFiltering.coords100, ivec2(block * floorPixPerBlock), ivec2((block + 1) * floorPixPerBlock - 1)), k),
+            mipmapLevelFloor);
+
+        vec4 tex101 = getSignedTexel(
+            ivec3(clamp(linearFiltering.coords101, ivec2(block * ceilPixPerBlock),  ivec2((block + 1) * ceilPixPerBlock  - 1)), k),
+            mipmapLevelCeil);
+
+        vec4 tex110 = getSignedTexel(
+            ivec3(clamp(linearFiltering.coords110, ivec2(block * floorPixPerBlock), ivec2((block + 1) * floorPixPerBlock - 1)), k),
+            mipmapLevelFloor);
+
+        vec4 tex111 = getSignedTexel(
+            ivec3(clamp(linearFiltering.coords111, ivec2(block * ceilPixPerBlock),  ivec2((block + 1) * ceilPixPerBlock  - 1)), k),
+            mipmapLevelCeil);
+
+        vec4 tex = mix(mix(mix(tex000, tex100, linearFiltering.interpolantsFloorLevel.x),
+                           mix(tex010, tex110, linearFiltering.interpolantsFloorLevel.x),
+                           linearFiltering.interpolantsFloorLevel.y),
+                       mix(mix(tex001, tex101, linearFiltering.interpolantsCeilLevel.x),
+                           mix(tex011, tex111, linearFiltering.interpolantsCeilLevel.x),
+                           linearFiltering.interpolantsCeilLevel.y),
                        mipmapLevelInterpolant);
 
         vec4 blendedTerm = vec4(shading[k + 1].baseFresnel.rgb, 1.0) * tex;
@@ -141,35 +195,35 @@ vec3 getScaledEnvironmentShadingFromSVD(vec3 normalDir, vec3 specularColorRGB, v
 #if HIGH_QUALITY_EIGENTEXTURE_COUNT == 0
     for (int k = 0; k < 15; k++)
 #else
-    for (int k = HIGH_QUALITY_EIGENTEXTURE_COUNT - 1; k < 15; k++)
+    for (int k = HIGH_QUALITY_EIGENTEXTURE_COUNT - 1; k < 0*15; k++)
 #endif
     {
-        vec4 tex000 = getSignedTexel(ivec3(coords000, k), mipmapLevelFloor);
-        vec4 tex001 = getSignedTexel(ivec3(coords001, k), mipmapLevelCeil);
-        vec4 tex010 = getSignedTexel(ivec3(coords010, k), mipmapLevelFloor);
-        vec4 tex011 = getSignedTexel(ivec3(coords011, k), mipmapLevelCeil);
-        vec4 tex100 = getSignedTexel(ivec3(coords100, k), mipmapLevelFloor);
-        vec4 tex101 = getSignedTexel(ivec3(coords101, k), mipmapLevelCeil);
-        vec4 tex110 = getSignedTexel(ivec3(coords110, k), mipmapLevelFloor);
-        vec4 tex111 = getSignedTexel(ivec3(coords111, k), mipmapLevelCeil);
+        vec4 tex000 = getSignedTexel(ivec3(linearFiltering.coords000, k), mipmapLevelFloor);
+        vec4 tex001 = getSignedTexel(ivec3(linearFiltering.coords001, k), mipmapLevelCeil);
+        vec4 tex010 = getSignedTexel(ivec3(linearFiltering.coords010, k), mipmapLevelFloor);
+        vec4 tex011 = getSignedTexel(ivec3(linearFiltering.coords011, k), mipmapLevelCeil);
+        vec4 tex100 = getSignedTexel(ivec3(linearFiltering.coords100, k), mipmapLevelFloor);
+        vec4 tex101 = getSignedTexel(ivec3(linearFiltering.coords101, k), mipmapLevelCeil);
+        vec4 tex110 = getSignedTexel(ivec3(linearFiltering.coords110, k), mipmapLevelFloor);
+        vec4 tex111 = getSignedTexel(ivec3(linearFiltering.coords111, k), mipmapLevelCeil);
 
         weights = getWeights(weightCoords, 2 * k + 2);
 
         vec4 blendedTerm =
             mix(mix(mix(vec4(weights[0] * 2.0 - 1.0, 1.0) * tex000,
                         vec4(weights[2] * 2.0 - 1.0, 1.0) * tex100,
-                        interpolantsFloorLevel.x),
+                        linearFiltering.interpolantsFloorLevel.x),
                     mix(vec4(weights[1] * 2.0 - 1.0, 1.0) * tex010,
                         vec4(weights[3] * 2.0 - 1.0, 1.0) * tex110,
-                        interpolantsFloorLevel.x),
-                    interpolantsFloorLevel.y)  ,
+                        linearFiltering.interpolantsFloorLevel.x),
+                    linearFiltering.interpolantsFloorLevel.y)  ,
                 mix(mix(vec4(weights[0] * 2.0 - 1.0, 1.0) * tex001,
                         vec4(weights[2] * 2.0 - 1.0, 1.0) * tex101,
-                        interpolantsCeilLevel.x),
+                        linearFiltering.interpolantsCeilLevel.x),
                     mix(vec4(weights[1] * 2.0 - 1.0, 1.0) * tex011,
                         vec4(weights[3] * 2.0 - 1.0, 1.0) * tex111,
-                        interpolantsCeilLevel.x),
-                    interpolantsCeilLevel.y),
+                        linearFiltering.interpolantsCeilLevel.x),
+                    linearFiltering.interpolantsCeilLevel.y),
                 mipmapLevelInterpolant);
 
         weights = getWeights(weightCoords, 2 * k + 3);
@@ -177,18 +231,18 @@ vec3 getScaledEnvironmentShadingFromSVD(vec3 normalDir, vec3 specularColorRGB, v
         vec3 blendedTermFresnel =
             mix(mix(mix((weights[0] * 2.0 - 1.0) * tex000.rgb,
                         (weights[2] * 2.0 - 1.0) * tex100.rgb,
-                        interpolantsFloorLevel.x),
+                        linearFiltering.interpolantsFloorLevel.x),
                     mix((weights[1] * 2.0 - 1.0) * tex010.rgb,
                         (weights[3] * 2.0 - 1.0) * tex110.rgb,
-                        interpolantsFloorLevel.x),
-                    interpolantsFloorLevel.y),
+                        linearFiltering.interpolantsFloorLevel.x),
+                    linearFiltering.interpolantsFloorLevel.y),
                 mix(mix((weights[0] * 2.0 - 1.0) * tex001.rgb,
                         (weights[2] * 2.0 - 1.0) * tex101.rgb,
-                        interpolantsCeilLevel.x),
+                        linearFiltering.interpolantsCeilLevel.x),
                     mix((weights[1] * 2.0 - 1.0) * tex011.rgb,
                         (weights[3] * 2.0 - 1.0) * tex111.rgb,
-                        interpolantsCeilLevel.x),
-                    interpolantsCeilLevel.y),
+                        linearFiltering.interpolantsCeilLevel.x),
+                    linearFiltering.interpolantsCeilLevel.y),
                 mipmapLevelInterpolant);
 
         if (blendedTerm.w > 0)
