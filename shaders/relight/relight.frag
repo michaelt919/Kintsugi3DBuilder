@@ -454,16 +454,19 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
 #endif
 
     vec4 sum = vec4(0.0);
+
+#if HYBRID_SPECULAR_ENABLED
     EnvironmentSample maxSamples[5];
     int maxSampleIndices[5];
-
     vec2 brdfSum = vec2(0.0);
+#endif
 
     for (int i = 0; i < VIEW_COUNT; i++)
     {
         EnvironmentSample envSample = computeEnvironmentSample(i, diffuseColor, normalDir, specularColor, roughness, peakTimes4Pi, maxLuminance);
         sum += envSample.sampleResult;
 
+#if HYBRID_SPECULAR_ENABLED
         brdfSum += vec2(envSample.sampleBRDF, 1.0) * getCameraWeight(i) * sign(envSample.sampleBRDF);
 
         if (envSample.sampleBRDF > maxSamples[0].sampleBRDF)
@@ -483,6 +486,7 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
                 maxSampleIndices[j] = i;
             }
         }
+#endif
     }
 
 #if HYBRID_SPECULAR_ENABLED

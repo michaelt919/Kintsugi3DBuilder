@@ -10,6 +10,8 @@ public class InteractiveApplication
     private final List<EventPollable> pollables;
     private final List<Refreshable> refreshables;
 
+    private static final boolean FPS_COUNTER = true;
+
     public InteractiveApplication(EventPollable pollable, Refreshable refreshable)
     {
         this.pollables = new ArrayList<>(16);
@@ -40,6 +42,10 @@ public class InteractiveApplication
         boolean shouldTerminate = false;
         int refreshTime = 0;
         int pollingTime = 0;
+
+        long lastSecond = startTimestamp.getTime();
+        int frames = 0;
+
         while (!shouldTerminate)
         {
             for (Refreshable refreshable : this.refreshables)
@@ -70,6 +76,19 @@ public class InteractiveApplication
             timestampA = new Date();
             pollingTime += timestampA.getTime() - timestampB.getTime();
 
+            if (FPS_COUNTER)
+            {
+                if (timestampA.getTime() - lastSecond > 1000)
+                {
+                    System.out.println("FPS: " + frames);
+                    lastSecond = timestampA.getTime();
+                    frames = 0;
+                }
+                else
+                {
+                    frames++;
+                }
+            }
         }
         System.out.println("Main loop terminated.");
         System.out.println("Total time elapsed: " + (timestampA.getTime() - startTimestamp.getTime()) + " milliseconds");
