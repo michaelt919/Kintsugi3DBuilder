@@ -42,6 +42,14 @@ uniform int diffuseEnvironmentMipMapLevel;
 #define RAY_LINEAR_DEPTH_BIAS (RAY_DEPTH_GRADIENT * 0.05)
 #endif
 
+#ifndef RAY_START_RESOLUTION
+#define RAY_START_RESOLUTION 256.0
+#endif
+
+#ifndef RAY_DISTANCE_FRACTION
+#define RAY_DISTANCE_FRACTION 1.0
+#endif
+
 uniform sampler2D screenSpaceDepthBuffer;
 
 float rayTest(vec2 screenSpaceCoord, float rayDepth, float gradientScale)
@@ -63,8 +71,8 @@ float shadowTest(vec3 position, vec3 direction)
 //        -fullProjection[3][2] / (texture(screenSpaceDepthBuffer, screenSpacePos.xy * 0.5 + 0.5)[0] * 2 - 1 + fullProjection[2][2]), 1.0);
 //    screenSpacePos = projPos / projPos.w;
 
-    float dirScale = 1.0 / 256.0;
-    float iterationFactor = pow(256, 1.0 / MAX_RAYTRACING_SAMPLE_COUNT);
+    float dirScale = 1.0 / RAY_START_RESOLUTION;
+    float iterationFactor = pow(RAY_START_RESOLUTION * RAY_DISTANCE_FRACTION, 1.0 / MAX_RAYTRACING_SAMPLE_COUNT);
 
 //    1. Initialize step size.
 //    2. Initialize ray position to the surface position + step size * w-component * normalized ray direction.
