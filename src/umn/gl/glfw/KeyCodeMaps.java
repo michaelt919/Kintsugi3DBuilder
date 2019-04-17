@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 2018
+ * Copyright (c) 2019
  * The Regents of the University of Minnesota
- * All rights reserved.
  *
  * Licensed under GPLv3
  * ( http://www.gnu.org/licenses/gpl-3.0.html )
