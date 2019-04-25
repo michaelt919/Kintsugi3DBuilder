@@ -21,9 +21,8 @@ uniform sampler2D peakEstimate;
 
 uniform float fittingGamma;
 uniform bool standaloneMode;
-//uniform bool disableNormalAdjustment;
-#define disableNormalAdjustment true
 
+#define disableNormalAdjustment true
 #define chromaticRoughness true
 #define chromaticSpecular true
 #define aggressiveNormal false
@@ -85,8 +84,13 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light,
     }
 }
 
+
+// Performs the specular parameter estimation algorithm.
+// Because this is a fragment shader, it is assumed throughout that we are dealing with a single position on the reflecting surface.
+// This is facilitated by the use of projective texture mapping to determine what pixels map onto the current surface position.
 ParameterizedFit fitSpecular()
 {
+    // Normalize the surface normal vector and build an orthonormal basis for the tangent space.
     vec3 normal = normalize(fNormal);
 
     vec3 tangent = normalize(fTangent - dot(normal, fTangent) * normal);
@@ -94,13 +98,18 @@ ParameterizedFit fitSpecular()
         - dot(normal, fBitangent) * normal
         - dot(tangent, fBitangent) * tangent);
 
+    // Transform the old diffuse normal from tangent space into object space to allow us to remove the diffuse component.
     mat3 tangentToObject = mat3(tangent, bitangent, normal);
     vec3 diffuseNormalTS = getDiffuseNormalVector();
     vec3 oldDiffuseNormal = tangentToObject * diffuseNormalTS;
 
+    // Get the diffuse color.
     vec4 diffuseColor = getDiffuseColor();
+    // Get the brightest representable luminance value given the current tonemapping assumptions.
 
     float maxLuminance = getMaxLuminance();
+
+    // Search for the brightest direction
     vec3 maxResidual = vec3(0);
     vec2 maxResidualLuminance = vec2(0);
     vec4 maxResidualDirection = vec4(0);
@@ -109,17 +118,23 @@ ParameterizedFit fitSpecular()
     vec3 directionSum = vec3(0);
     vec3 intensityWeightedDirectionSum = vec3(0);
 
+    // Iterate over all the views of the reflecting surface.
     for (int i = 0; i < VIEW_COUNT; i++)
     {
+        // Look up the measured luminance in the current view at this surface position.
         vec4 color = getLinearColor(i);
+
+        // Determine the cosine of the angle between the view direction and the surface normal.
         vec3 view = normalize(getViewVector(i));
         float nDotV = dot(view, normal);
 
         if (color.a * nDotV > 0)
         {
+            // Look up the light direction and intensity (with inverse-square law attenuation accounted for).
             LightInfo lightInfo = getLightInfo(i);
             vec3 light = lightInfo.normalizedDirection;
 
+            // Remove the diffuse contribution from the reflectance measurement.
             vec3 colorRemainder;
 
 #if USE_LIGHT_INTENSITIES
@@ -131,9 +146,12 @@ ParameterizedFit fitSpecular()
 
             float luminance = getLuminance(colorRemainder);
 
+            // Find the halfway direction where ideal specular reflection would occur between the current incoming (light) and outgoing (view) directions.
             vec3 halfway = normalize(view + light);
 
-            float weight = clamp(/*sqrt(2)*/2 * nDotV, 0, 1);
+            // Decrease the importance of directions where the reflecting surface is being viewed at a strong angle
+            // (where both camera alignment errors and grazing reflectance effects are both more likely.
+            float weight = clamp(2 * nDotV, 0, 1);
 
             directionSum += weight * halfway;
             intensityWeightedDirectionSum += weight * halfway * luminance;
@@ -145,6 +163,7 @@ ParameterizedFit fitSpecular()
                 maxResidualDirection = normalWeight * vec4(halfway, 1);
             }
 
+            // If the luminance is greater than the previous max luminance, update the maximum luminance and the associated information with this sample.
             if (luminance * weight > maxResidualLuminance[0] * maxResidualLuminance[1])
             {
                 maxResidualLuminance = vec2(luminance, weight);
@@ -218,17 +237,23 @@ ParameterizedFit fitSpecular()
     vec3 roughnessStdDev;
     vec3 specularColorRGBEstimate;
 
-    vec3 specularSumA = vec3(0.0);
-    vec3 specularSumB = vec3(0.0);
+    // Compute several summations over all the available views simultaneously
+    vec3 specularSumA = vec3(0.0); // Weighted sum of sqrt((1 - (n.h)^2) * sqrt(observed luminance at view k * (n.v)))
+    vec3 specularSumB = vec3(0.0); // Weighted sum of sqrt(sqrt(maximum luminance) - (n.h)^2 * sqrt(observed luminance at view k * (n.v)))
 
     vec3 weightedSquareSum = vec3(0.0);
-    vec3 squaredWeightSum = vec3(0.0);
+    vec3 squaredWeightSum = vec3(0.0); // Sum of the squares of the weights (will be used for computing mean squared error later).
 
-    vec4 sumResidualRGBGamma = vec4(0.0);
+    vec4 sumResidualRGBGamma = vec4(0.0); // Keep track of how much total specular reflectance was observed - if this is low, the problem may be underdetermined.
 
     for (int i = 0; i < VIEW_COUNT; i++)
     {
         vec3 view = normalize(getViewVector(i));
+
+
+        // Compute cosine of the angle between the triangle surface normal (more robust than the refined surface normal estimate for certain purposes)
+        // and the view direction.
+        // This is mainly just used to reduce the influence of samples that are being viewed at grazing angles.
         float nDotVTriangle = max(0, dot(view, normal));
 
         // Values of 1.0 for this color would correspond to the expected reflectance
@@ -241,9 +266,12 @@ ParameterizedFit fitSpecular()
 
         if (color.a * nDotVTriangle > 0 && i != maxResidualIndex)
         {
+            // Look up the light direction and intensity (with inverse-square law attenuation accounted for).
             LightInfo lightInfo = getLightInfo(i);
             vec3 light = lightInfo.normalizedDirection;
 
+
+            // Remove the diffuse contribution from the reflectance measurement.
             vec3 colorRemainderRGB;
 
 #if USE_LIGHT_INTENSITIES
@@ -253,6 +281,7 @@ ParameterizedFit fitSpecular()
             colorRemainderRGB = removeDiffuse(color, diffuseColor.rgb, light, vec3(1.0), specularNormal, maxLuminance).rgb;
 #endif
 
+            // Compute various cosine factors.
             float nDotL = max(0, dot(light, specularNormal));
             float nDotV = max(0, dot(specularNormal, view));
 
@@ -262,12 +291,16 @@ ParameterizedFit fitSpecular()
 
             if (nDotV > 0 && nDotL > 0 && getLuminance(colorRemainderRGB) <= 1.0)
             {
+                // Compute the numerator and denominator (the two quantities we are computing summations over).
                 vec3 numerator = pow(max(vec3(0.0), (1 - nDotHSquared) * sqrt(colorRemainderRGB * nDotV)),  vec3(1.0 / fittingGamma));
                 vec3 denominator =
                     pow(max(vec3(0.0), sqrt(maxResidual) - nDotHSquared * sqrt(colorRemainderRGB * nDotV)), vec3(1.0 / fittingGamma));
                 vec3 denominatorSq = denominator * denominator;
+
+                // Weight near-normal samples and brighter samples higher than grazing-angle samples or samples that are darker.
                 vec3 weight = nDotVTriangle * pow(colorRemainderRGB, vec3(1.0 / fittingGamma));
 
+                // Weight each sum by the denominator squared.  This avoids a singularity for peak specular observations.
                 specularSumA += weight * denominator * numerator;
                 specularSumB += weight * denominatorSq;
 
@@ -279,6 +312,7 @@ ParameterizedFit fitSpecular()
         }
     }
 
+    // If no specular samples were available, return.
     if (sumResidualRGBGamma.w == 0.0 || (specularSumB.r == 0.0 && specularSumB.g == 0.0 && specularSumB.b == 0.0))
     {
         return ParameterizedFit(diffuseColor, vec4(diffuseNormalTS, 1), vec4(0), vec4(0), vec4(0));
@@ -290,12 +324,16 @@ ParameterizedFit fitSpecular()
     float maxResidualHiComp = max(maxResidual.r, max(maxResidual.g, maxResidual.b));
     float maxResidualLoComp = min(maxResidual.r, min(maxResidual.g, maxResidual.b));
 
+    // Compute the surface roughness as the ratio between the two summations.
+    // Restrict the range of roughness values to ensure that the reflectivity is always at least 0.04 and that the roughness is always less than 1.
+    // (These values are configurable at the top of this shader program.)
     if (chromaticRoughness)
     {
         roughnessSquared = clamp(pow(specularSumA / specularSumB, vec3(fittingGamma)),
             max(MIN_ROUGHNESS * MIN_ROUGHNESS, MIN_SPECULAR_REFLECTIVITY / (4 * maxResidualHiComp)),
             min(MAX_ROUGHNESS * MAX_ROUGHNESS, MAX_SPECULAR_REFLECTIVITY / (4 * maxResidualHiComp)));
 
+        // Estimate the specular reflectivity using the constraint that the specular peak must match the maximum observed luminance.
         specularColorRGBEstimate = clamp(4 * maxResidual * roughnessSquared, MIN_SPECULAR_REFLECTIVITY, MAX_SPECULAR_REFLECTIVITY);
 
 #if !ENABLE_DIFFUSE_ADJUSTMENT
@@ -324,12 +362,8 @@ ParameterizedFit fitSpecular()
                 / (specularSumB * specularSumB - squaredWeightSum));                     // unbiased normalization
     }
 
-
-
-
-
-
-    // DEBUG: explicitly compute sum-squared error
+    // Compute weighted mean squared error of roughness estimates.
+    // To do this we first need to calculate the weighted sum of squared error.
     vec3 sumSquaredError = vec3(0.0);
     for (int i = 0; i < VIEW_COUNT; i++)
     {
@@ -367,19 +401,23 @@ ParameterizedFit fitSpecular()
 
             if (nDotV > 0 && nDotL > 0 && getLuminance(colorRemainderRGB) <= 1.0)
             {
-
+                // Calculate the same numerator and denominator as before.
                 vec3 numerator = pow(max(vec3(0.0), (1 - nDotHSquared) * sqrt(colorRemainderRGB * nDotV)),  vec3(1.0 / fittingGamma));
                 vec3 denominator =
                     pow(max(vec3(0.0), sqrt(maxResidual) - nDotHSquared * sqrt(colorRemainderRGB * nDotV)), vec3(1.0 / fittingGamma));
                 vec3 denominatorSq = denominator * denominator;
                 vec3 weight = nDotVTriangle * pow(colorRemainderRGB, vec3(1.0 / fittingGamma));
 
+                // Evaluate the difference between the current roughness estimate (numerator / denominator) and the weighted average of roughness estimates.
                 vec3 diff = (numerator - roughness.y * denominator);
+
+                // Weight this difference using the same weight as before.
                 sumSquaredError += weight * diff * diff;//(numerator * numerator - 2 * numerator * denominator * roughness.y + roughnessSquared.y * denominatorSq);
             }
         }
     }
 
+    // Convert sum of squared error to mean squared error.
     roughnessStdDev = sqrt(specularSumB * sumSquaredError / (specularSumB * specularSumB - squaredWeightSum));
 
 
@@ -480,6 +518,7 @@ ParameterizedFit fitSpecular()
 
                 if (nDotV > 0 && nDotL > 0 /*&& nDotHSquared > 0.5*/)
                 {
+                    // Evaluate the specular BRDF.
                     vec3 q1 = roughnessSquared + (1.0 - nDotHSquared) / nDotHSquared;
                     vec3 mfdEval = roughnessSquared / (nDotHSquared * nDotHSquared * q1 * q1);
 
@@ -491,6 +530,7 @@ ParameterizedFit fitSpecular()
 
                     vec3 specularTerm = min(vec3(1), specularColor) * mfdEval * geomRatio;
 
+                    // Add the residual after subtracting the specular term to the weighted sum.
 #if USE_LIGHT_INTENSITIES
                     sumDiffuse += vec4(max(vec3(0.0), nDotL * (color.rgb / lightInfo.attenuatedIntensity - specularTerm)), nDotL * nDotL);
 #else
@@ -500,6 +540,7 @@ ParameterizedFit fitSpecular()
             }
         }
 
+        // Compute the average residual to get the adjusted diffuse color.
         if (sumDiffuse.a > 0.0)
         {
             adjustedDiffuseColor = vec4(min(diffuseColor.rgb, sumDiffuse.rgb / sumDiffuse.a), 1);
@@ -518,9 +559,7 @@ ParameterizedFit fitSpecular()
     adjustedDiffuseColor = diffuseColor;
 #endif
 
-    // Dividing by the sum of weights to get the weighted average.
-    // We'll put a lower cap of 1/m^2 on the alpha we divide by so that noise doesn't get amplified
-    // for texels where there isn't enough information at the specular peak.
+    // Return the final results.
     return ParameterizedFit(adjustedDiffuseColor, vec4(normalize(transpose(tangentToObject) * specularNormal), 1),
         vec4(specularColor, 1), vec4(roughness, roughnessConfidence), vec4(roughnessStdDev, roughnessConfidence));
 }
