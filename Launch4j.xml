@@ -2,8 +2,8 @@
 <launch4jConfig>
   <dontWrapJar>false</dontWrapJar>
   <headerType>gui</headerType>
-  <jar>C:\Users\micha\IdeaProjects\imagebasedcolorappearance\classes\artifacts\IBRelight\IBRelight.jar</jar>
-  <outfile>C:\Users\micha\IdeaProjects\imagebasedcolorappearance\classes\artifacts\IBRelight\IBRelight.exe</outfile>
+  <jar>D:\IdeaProjects\imagebasedcolorappearance\classes\artifacts\IBRelight\IBRelight.jar</jar>
+  <outfile>D:\IdeaProjects\imagebasedcolorappearance\classes\artifacts\IBRelight\IBRelight.exe</outfile>
   <errTitle>You need an up-to-date version of Java 8 for Windows x64.</errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
@@ -13,7 +13,7 @@
   <stayAlive>false</stayAlive>
   <restartOnCrash>false</restartOnCrash>
   <manifest></manifest>
-  <icon>C:\Users\micha\IdeaProjects\imagebasedcolorappearance\classes\artifacts\IBRelight\ibr.ico</icon>
+  <icon>D:\IdeaProjects\imagebasedcolorappearance\classes\artifacts\IBRelight\ibr.ico</icon>
   <jre>
     <path></path>
     <bundledJre64Bit>false</bundledJre64Bit>
