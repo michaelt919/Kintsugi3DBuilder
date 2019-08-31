@@ -1,9 +1,21 @@
+/*
+ * Copyright (c) Michael Tetzlaff 2019
+ * Copyright (c) The Regents of the University of Minnesota 2019
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
 #ifndef ERRORCALC_GLSL
 #define ERRORCALC_GLSL
 
 #include "../colorappearance/colorappearance.glsl"
 
-#line 7 2006
+#line 19 2006
 
 #define MAX_ERROR 1.0 //3.402822E38 // Max 32-bit floating-point is 3.4028235E38
 #define MIN_DAMPING_FACTOR 0.0078125 // 1/256
