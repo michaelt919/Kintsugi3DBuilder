@@ -506,14 +506,14 @@ class TextureFitter<ContextType extends Context<ContextType>>
                                     frontErrorFramebuffer.getColorAttachmentTexture(0),
                                     (row, col) ->
                                     {
-                                        //                                    currentFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
-                                        //                                            "PNG", new File(diffuseTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
-                                        //
-                                        //                                    currentFramebuffer.saveColorBufferToFile(2, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
-                                        //                                            "PNG", new File(specularTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
-
-                                        //                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
-                                        //                                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+//                                        currentFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
+//                                                "PNG", new File(diffuseTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
+//
+//                                        currentFramebuffer.saveColorBufferToFile(2, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
+//                                                "PNG", new File(specularTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
+//
+//                                            System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
+//                                                    (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
                                     });
                             }
                             else
@@ -529,8 +529,8 @@ class TextureFitter<ContextType extends Context<ContextType>>
                                     frontErrorFramebuffer.getColorAttachmentTexture(0),
                                     (row, col) ->
                                     {
-                                        //                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
-                                        //                                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+//                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
+//                                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
                                     });
                             }
 
@@ -559,8 +559,8 @@ class TextureFitter<ContextType extends Context<ContextType>>
                                     frontErrorFramebuffer.getColorAttachmentTexture(0),
                                     (row, col) ->
                                     {
-                                        //                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
-                                        //                                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+//                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
+//                                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
                                     });
                             }
                             else
@@ -575,8 +575,8 @@ class TextureFitter<ContextType extends Context<ContextType>>
                                     frontErrorFramebuffer.getColorAttachmentTexture(0),
                                     (row, col) ->
                                     {
-                                        //                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
-                                        //                                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+//                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
+//                                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
                                     });
                             }
 
