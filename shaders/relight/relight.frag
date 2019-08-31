@@ -194,9 +194,9 @@ uniform sampler2D specularMap;
 
 uniform vec3 viewPos;
 
-#if IMAGE_BASED_RENDERING_ENABLED
-
 #include "../colorappearance/colorappearance.glsl"
+
+#if IMAGE_BASED_RENDERING_ENABLED
 
 #if SVD_MODE
 #include "../colorappearance/svd_unpack.glsl"
@@ -1041,7 +1041,7 @@ void main()
 #           if RELIGHTING_ENABLED
                 lightDirUnNorm = lightPosVirtual[i] - fPosition;
 #           else
-                lightDirUnNorm = transpose(mat3(model_view)) * lightPositions[0].xyz + viewPos - fPosition;
+                lightDirUnNorm = transpose(mat3(model_view)) * lightPositions[getLightIndex(0)].xyz + viewPos - fPosition;
 #           endif
             vec3 lightDir = normalize(lightDirUnNorm);
             float nDotL = max(0.0, dot(normalDir, lightDir));
@@ -1152,12 +1152,12 @@ void main()
         lightDir = normalize(lightDirUnNorm);
         nDotL = max(0.0, dot(normalDir, lightDir));
 #elif IMAGE_BASED_RENDERING_ENABLED
-        lightDirUnNorm = transpose(mat3(model_view)) * lightPositions[0].xyz + viewPos - fPosition;
+        lightDirUnNorm = transpose(mat3(model_view)) * lightPositions[getLightIndex(0)].xyz + viewPos - fPosition;
         lightDir = normalize(lightDirUnNorm);
         nDotL = max(0.0, dot(normalDir, lightDir));
 #else
-        lightDirUnNorm = viewPos - fPosition;
-        lightDir = viewDir;
+        lightDirUnNorm = transpose(mat3(model_view)) * lightPositions[getLightIndex(0)].xyz + viewPos - fPosition;
+        lightDir = normalize(lightDirUnNorm);
         nDotL = max(0.0, dot(normalDir, viewDir));
 #endif
 
