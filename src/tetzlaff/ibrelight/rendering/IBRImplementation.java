@@ -1,3 +1,15 @@
+/*
+ * Copyright (c) Michael Tetzlaff 2019
+ * Copyright (c) The Regents of the University of Minnesota 2019
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
 package tetzlaff.ibrelight.rendering;
 
 import java.awt.image.BufferedImage;
@@ -137,9 +149,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private Program<ContextType> circleProgram;
     private Drawable<ContextType> circleDrawable;
 
-    private Program<ContextType> reprojectProgram;
-    private Drawable<ContextType> reprojectDrawable;
-
     private Program<ContextType> environmentWeightsProgram;
     private Drawable<ContextType> environmentWeightsDrawable;
 
@@ -214,11 +223,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     {
         try
         {
-            this.reprojectProgram = context.getShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "reproject.frag"))
-                    .createProgram();
-
             this.simpleTexProgram = context.getShaderProgramBuilder()
                     .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
                     .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "texture.frag"))
@@ -263,25 +267,20 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 this.environmentWeightsDrawable.addVertexBuffer("position", this.rectangleVertices);
             }
 
-            this.reprojectDrawable = context.createDrawable(reprojectProgram);
-            this.reprojectDrawable.addVertexBuffer("position", this.resources.positionBuffer);
 
             if (this.resources.normalBuffer != null)
             {
                 this.mainDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
-                this.reprojectDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
             }
 
             if (this.resources.texCoordBuffer != null)
             {
                 this.mainDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
-                this.reprojectDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
             }
 
             if (this.resources.tangentBuffer != null)
             {
                 this.mainDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
-                this.reprojectDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
             }
 
             this.simpleTexDrawable = context.createDrawable(simpleTexProgram);
@@ -1974,12 +1973,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             tintedTexProgram = null;
         }
 
-        if (reprojectProgram != null)
-        {
-            reprojectProgram.close();
-            reprojectProgram = null;
-        }
-
         if (environmentWeightsTexture != null)
         {
             environmentWeightsTexture.close();
@@ -2179,36 +2172,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             }
 
             this.referenceSceneProgram = newReferenceSceneProgram;
-
-            Program<ContextType> newReprojectProgram = resources.getIBRShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "reproject.frag"))
-                .createProgram();
-
-            if (this.reprojectProgram != null)
-            {
-                this.reprojectProgram.close();
-                this.reprojectProgram = null;
-            }
-
-            this.reprojectProgram = newReprojectProgram;
-            this.reprojectDrawable = context.createDrawable(reprojectProgram);
-            this.reprojectDrawable.addVertexBuffer("position", this.resources.positionBuffer);
-
-            if (this.resources.normalBuffer != null)
-            {
-                this.reprojectDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
-            }
-
-            if (this.resources.texCoordBuffer != null)
-            {
-                this.reprojectDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
-            }
-
-            if (this.resources.tangentBuffer != null)
-            {
-                this.reprojectDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
-            }
 
             Program<ContextType> newEnvironmentBackgroundProgram = resources.getIBRShaderProgramBuilder()
                     .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
