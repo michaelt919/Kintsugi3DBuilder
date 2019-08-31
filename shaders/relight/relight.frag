@@ -17,10 +17,6 @@ uniform mat4 fullProjection;
 #define MATERIAL_EXPLORATION_MODE 0
 #endif
 
-#ifndef BRDF_MODE
-#define BRDF_MODE 0
-#endif
-
 #ifndef SVD_MODE
 #define SVD_MODE 0
 #endif
@@ -93,10 +89,6 @@ uniform mat4 fullProjection;
 #define ARCHIVING_2017_ENVIRONMENT_NORMALIZATION 0
 #endif
 
-#ifndef SIMPLE_IMPLEMENTATION
-#define SIMPLE_IMPLEMENTATION 0 && IMAGE_BASED_RENDERING_ENABLED
-#endif
-
 #if MATERIAL_EXPLORATION_MODE
 
 #undef SMITH_MASKING_SHADOWING
@@ -165,10 +157,6 @@ uniform mat4 fullProjection;
 
 #ifndef MIPMAPS_ENABLED
 #define MIPMAPS_ENABLED !BUEHLER_ALGORITHM
-#endif
-
-#ifndef HYBRID_SPECULAR_ENABLED
-#define HYBRID_SPECULAR_ENABLED 0
 #endif
 
 #ifndef DISCRETE_DIFFUSE_ENVIRONMENT
@@ -320,121 +308,6 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float m
 
 #if RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
 
-#if SIMPLE_IMPLEMENTATION
-
-vec3 getLightPosition(int virtualIndex)
-{
-    return lightPositions[getLightIndex(virtualIndex)].xyz;
-}
-
-vec4 computeEnvironmentSample(int virtualIndex, vec3 normalDir, Material m, float maxLuminance)
-{
-    // All in camera space
-    mat4 cameraPose = getCameraPose(virtualIndex);
-    vec3 fragmentPos = (cameraPose * vec4(fPosition, 1.0)).xyz;
-    vec3 normalDirCameraSpace = normalize((cameraPose * vec4(normalDir, 0.0)).xyz);
-    vec3 sampleViewDir = normalize(-fragmentPos);
-
-    vec3 sampleLightDirUnnorm = getLightPosition(virtualIndex) - fragmentPos;
-    float lightDistSquared = dot(sampleLightDirUnnorm, sampleLightDirUnnorm);
-    vec3 sampleLightDir = sampleLightDirUnnorm * inversesqrt(lightDistSquared);
-    vec3 sampleLightIntensity = getLightIntensity(virtualIndex);
-    sampleLightIntensity /= lightDistSquared;
-
-    vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
-
-    float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
-    float nDotV_sample = max(0, dot(normalDirCameraSpace, sampleViewDir));
-    float nDotL_sample = max(0, dot(normalDirCameraSpace, sampleLightDir));
-    float hDotV_sample = max(0, dot(sampleHalfDir, sampleViewDir));
-    float geomSample = geom(m.roughness, nDotH, nDotV_sample, nDotL_sample, hDotV_sample);
-
-    vec3 virtualViewDir = normalize((cameraPose * vec4(viewPos, 1.0)).xyz - fragmentPos);
-    vec3 virtualLightDir = -reflect(virtualViewDir, sampleHalfDir);
-    float nDotL_virtual = max(0, dot(normalDirCameraSpace, virtualLightDir));
-    float nDotV_virtual = max(0.125, dot(normalDirCameraSpace, virtualViewDir));
-    float hDotV_virtual = max(0, dot(sampleHalfDir, virtualViewDir));
-    float geomVirtual = geom(m.roughness, nDotH, nDotV_virtual, nDotL_virtual, hDotV_virtual);
-
-    vec3 distTimesF0;
-    float dist;
-    vec3 distTimesFresnel;
-    float validSpecular = 1.0;
-
-    if (nDotV_sample <= 0.0 || nDotL_sample <= 0.0 || geomSample <= 0.0)
-    {
-        distTimesF0 = vec3(0.0);
-        dist = 0.0;
-        distTimesFresnel = vec3(0.0);
-        validSpecular = 0.0;
-    }
-    else
-    {
-        vec4 sampleColor = getLinearColor(virtualIndex);
-
-        if (sampleColor.a == 0.0)
-        {
-            distTimesF0 = distTimesPi(nDotH, m.roughnessRGB) * m.specularColor / PI;
-        }
-        else
-        {
-            vec3 diffuseComp = m.diffuseColor * nDotL_sample * sampleLightIntensity;
-            vec4 specularComp = removeDiffuse(sampleColor, diffuseComp, nDotL_sample, maxLuminance);
-
-            // Light intensities in view set files are assumed to be pre-divided by pi.
-            // Or alternatively, the result of getLinearColor gives a result
-            // where a diffuse reflectivity of 1 is represented by a value of pi.
-            // See diffusefit.glsl
-            distTimesF0 = specularComp.rgb * 4 * nDotV_sample / (geomSample * sampleLightIntensity * PI);
-        }
-
-#       if FRESNEL_EFFECT_ENABLED
-            dist = getLuminance(distTimesF0 / m.specularColor);
-            distTimesFresnel = fresnel(distTimesF0, vec3(dist), hDotV_virtual);
-#       else
-            distTimesFresnel = distTimesF0;
-#       endif
-    }
-
-    vec3 cosineWeightedBRDF = distTimesFresnel * geomVirtual / (4 * nDotV_virtual);
-    cosineWeightedBRDF += m.diffuseColor * nDotL_virtual / PI;
-
-    float weight = 4 * hDotV_virtual * (getCameraWeight(virtualIndex) * 4 * PI * VIEW_COUNT);
-    // dl = 4 * h dot v * dh
-    // weight * VIEW_COUNT -> brings weights back to being on the order of 1
-    // This is helpful for consistency with numerical limits (i.e. clamping)
-    // Everything gets normalized at the end again anyways.
-
-    vec4 unweightedSample;
-    unweightedSample.rgb = cosineWeightedBRDF
-        * getEnvironment(fPosition, transpose(mat3(cameraPose)) * virtualLightDir);
-    unweightedSample.a = sign(validSpecular) * nDotL_virtual / PI;
-
-    return unweightedSample * weight;
-}
-
-vec3 getEnvironmentShading(vec3 normalDir, Material m)
-{
-    float maxLuminance = getMaxLuminance();
-
-    vec4 sum = vec4(0.0);
-    for (int i = 0; i < VIEW_COUNT; i++)
-    {
-        sum += computeEnvironmentSample(i, normalDir, m, maxLuminance);
-    }
-
-    if (sum.a > 0.0)
-    {
-        return sum.rgb / sum.a;
-    }
-    else
-    {
-        return vec3(0.0);
-    }
-}
-
-#else
-
 struct EnvironmentSample
 {
     vec4 sampleResult;
@@ -574,77 +447,11 @@ vec3 getEnvironmentShading(vec3 normalDir, Material m)
 
     vec4 sum = vec4(0.0);
 
-#if HYBRID_SPECULAR_ENABLED
-    EnvironmentSample maxSamples[5];
-    int maxSampleIndices[5];
-    vec2 brdfSum = vec2(0.0);
-#endif
-
     for (int i = 0; i < VIEW_COUNT; i++)
     {
         EnvironmentSample envSample = computeEnvironmentSample(i, normalDir, m, maxLuminance);
         sum += envSample.sampleResult;
-
-#if HYBRID_SPECULAR_ENABLED
-        brdfSum += vec2(envSample.sampleBRDF, 1.0) * getCameraWeight(i) * sign(envSample.sampleBRDF);
-
-        if (envSample.sampleBRDF > maxSamples[0].sampleBRDF)
-        {
-            maxSamples[0] = envSample;
-            maxSampleIndices[0] = i;
-        }
-
-        for (int j = 1; j < 5; j++)
-        {
-            if (envSample.sampleBRDF > maxSamples[j].sampleBRDF)
-            {
-                maxSamples[j - 1] = maxSamples[j];
-                maxSampleIndices[j - 1] = maxSampleIndices[j];
-
-                maxSamples[j] = envSample;
-                maxSampleIndices[j] = i;
-            }
-        }
-#endif
     }
-
-#if HYBRID_SPECULAR_ENABLED
-    vec4 weights = vec4(
-        maxSamples[1].sampleBRDF - maxSamples[0].sampleBRDF,
-        maxSamples[2].sampleBRDF - maxSamples[0].sampleBRDF,
-        maxSamples[3].sampleBRDF - maxSamples[0].sampleBRDF,
-        maxSamples[4].sampleBRDF - maxSamples[0].sampleBRDF);
-
-    float weightSum = weights[0] + weights[1] + weights[2] + weights[3];
-
-    sum.rgb -= (weights[0] * maxSamples[1].sampleResult * (1 - maxSamples[0].sampleBRDF / maxSamples[1].sampleBRDF)
-            + weights[1] * maxSamples[2].sampleResult * (1 - maxSamples[0].sampleBRDF / maxSamples[2].sampleBRDF)
-            + weights[2] * maxSamples[3].sampleResult * (1 - maxSamples[0].sampleBRDF / maxSamples[3].sampleBRDF)
-            + weights[3] * maxSamples[4].sampleResult * (1 - maxSamples[0].sampleBRDF / maxSamples[4].sampleBRDF)).rgb / weightSum;
-
-    brdfSum[0] -= (weights[0] * getCameraWeight(maxSampleIndices[1]) * maxSamples[1].sampleBRDF * (1 - maxSamples[0].sampleBRDF / maxSamples[1].sampleBRDF)
-                + weights[1] * getCameraWeight(maxSampleIndices[2]) * maxSamples[2].sampleBRDF * (1 - maxSamples[0].sampleBRDF / maxSamples[2].sampleBRDF)
-                + weights[2] * getCameraWeight(maxSampleIndices[3]) * maxSamples[3].sampleBRDF * (1 - maxSamples[0].sampleBRDF / maxSamples[3].sampleBRDF)
-                + weights[3] * getCameraWeight(maxSampleIndices[4]) * maxSamples[4].sampleBRDF * (1 - maxSamples[0].sampleBRDF / maxSamples[4].sampleBRDF)) / weightSum;
-
-    vec3 viewDir = normalize(viewPos.xyz - fPosition.xyz);
-    vec3 lightDir = -reflect(viewDir, normalDir);
-    vec3 halfDir = normalize(viewDir + lightDir);
-
-    float nDotV = max(0, dot(viewDir, normalDir));
-    float nDotH = max(0, dot(halfDir, normalDir));
-    float nDotL = max(0, dot(lightDir, normalDir));
-    float hDotV = max(0, dot(viewDir, halfDir));
-
-    sum +=
-////        (weights[0] * maxSamples[1].sampleWeight + weights[1] * maxSamples[2].sampleWeight
-////               + weights[2] * maxSamples[3].sampleWeight + weights[3] * maxSamples[4].sampleWeight) / weightSum *
-//        // TODO use residual specular color, not full specular
-        vec4(fresnel(m.specularColor, vec3(1), hDotV) *
-                sum.a * (1 - 2 * PI * brdfSum[0] / brdfSum[1])
-            * geom(m.roughness, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV)
-            * getEnvironment(fPosition, lightDir), 0.0);
-#endif
 
     if (sum.a > 0.0)
     {
@@ -657,8 +464,6 @@ vec3 getEnvironmentShading(vec3 normalDir, Material m)
         return vec3(0.0);
     }
 }
-
-#endif // SIMPLE_IMPLEMENTATION
 
 #endif // RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
 
@@ -752,11 +557,7 @@ vec4 computeBuehler(vec3 targetDirection, vec3 normalDir, Material m)
     {
         if (samples[i].a > 0)
         {
-            sum += (weights[i + 1] - weights[0])
-//#if SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED && HYBRID_SPECULAR_ENABLED
-//                * getLuminance(max(vec3(0.0), m.specularColor / m.roughnessRGBSq - samples[i].rgb / samples[i].a))
-//#endif
-                * samples[i];
+            sum += (weights[i + 1] - weights[0]) * samples[i];
 
             maxWeight = max(maxWeight, weights[i + 1]);
         }
@@ -764,11 +565,7 @@ vec4 computeBuehler(vec3 targetDirection, vec3 normalDir, Material m)
 
     if (sum.a == 0.0)
     {
-#if HYBRID_SPECULAR_ENABLED
-        return vec4(0.0);
-#else
         return vec4(holeFillColor, 1.0);
-#endif // HYBRID_SPECULAR_ENABLED
     }
     else
     {
@@ -1008,92 +805,6 @@ bool shadowTest(int lightIndex)
 }
 #endif
 
-#if SIMPLE_IMPLEMENTATION
-
-void main()
-{
-    vec3 triangleNormal = normalize(fNormal);
-    vec3 viewDir = normalize(viewPos - fPosition);
-    float nDotV_triangle = max(0.0, dot(triangleNormal, viewDir));
-
-    if (nDotV_triangle == 0.0)
-    {
-        fragColor = vec4(0, 0, 0, 1);
-        return;
-    }
-
-    vec3 normalDir = getRefinedNormalDir(triangleNormal);
-    float nDotV = max(0.0, dot(normalDir, viewDir));
-
-    Material m = getMaterial();
-
-    vec3 radiance = vec3(0.0);
-
-#   if RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
-        radiance += getEnvironmentShading(normalDir, m);
-#   endif
-
-#   if VIRTUAL_LIGHT_COUNT > 0
-
-        for (int i = 0; i < VIRTUAL_LIGHT_COUNT; i++)
-        {
-            vec3 lightDirUnNorm;
-#           if RELIGHTING_ENABLED
-                lightDirUnNorm = lightPosVirtual[i] - fPosition;
-#           else
-                lightDirUnNorm = transpose(mat3(model_view)) * lightPositions[getLightIndex(0)].xyz + viewPos - fPosition;
-#           endif
-            vec3 lightDir = normalize(lightDirUnNorm);
-            float nDotL = max(0.0, dot(normalDir, lightDir));
-
-            if (nDotL > 0.0 && dot(triangleNormal, lightDir) > 0.0)
-            {
-#               if RELIGHTING_ENABLED && SHADOWS_ENABLED
-                if (shadowTest(i))
-#               endif
-                {
-                    vec3 halfDir = normalize(viewDir + lightDir);
-                    float hDotV = dot(halfDir, viewDir);
-                    float nDotH = dot(normalDir, halfDir);
-                    float nDotHSq = max(0, nDotH) * max(0, nDotH);
-
-                    vec4 distTimesF0 = computeBuehler(halfDir, normalDir, m);
-
-                    vec3 distTimesFresnel;
-
-#                   if RELIGHTING_ENABLED && FRESNEL_EFFECT_ENABLED
-                        float dist = getLuminance(max(vec3(0.0), distTimesF0.rgb) / m.specularColor);
-                        distTimesFresnel = max(vec3(0.0), fresnel(distTimesF0.rgb, vec3(dist), hDotV));
-#                   else
-                        distTimesFresnel = max(vec3(0.0), distTimesF0.rgb);
-#                   endif
-
-                    vec3 reflectance = nDotL * m.diffuseColor;
-                    reflectance += distTimesFresnel * geom(m.roughness, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV);
-
-                    vec3 lightVectorTransformed = (model_view * vec4(lightDirUnNorm, 0.0)).xyz;
-
-                    vec3 reflectedRadiance;
-#                   if RELIGHTING_ENABLED
-                        vec3 incidentRadiance = lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed);
-                        reflectedRadiance = reflectance * incidentRadiance;
-#                   else
-                        reflectedRadiance = reflectance;
-#                   endif
-                    radiance += reflectedRadiance;
-                }
-            }
-        }
-
-#   endif
-
-    fragColor = tonemap(radiance, 1.0);
-
-    fragObjectID = objectID;
-}
-
-#else
-
 void main()
 {
     vec3 triangleNormal = normalize(fNormal);
@@ -1200,15 +911,7 @@ void main()
 #if IMAGE_BASED_RENDERING_ENABLED
                 float grazingIntensity = getLuminance(max(vec3(0.0), predictedMFD.rgb) / m.specularColor);
 
-                vec3 mfdFresnelIBR = max(vec3(0.0),
-                    fresnel(predictedMFD.rgb, vec3(grazingIntensity), hDotV));
-
-#if SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED && HYBRID_SPECULAR_ENABLED
-                mfdFresnel = //max(mfdFresnelIBR, mix(mfdFresnelAnalytic, mfdFresnelIBR, predictedMFD.a));
-                    mfdFresnelIBR + mfdFresnelAnalytic;
-#else
-                mfdFresnel = mfdFresnelIBR;
-#endif // SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED
+                mfdFresnel = max(vec3(0.0), fresnel(predictedMFD.rgb, vec3(grazingIntensity), hDotV));
 
 #else
                 mfdFresnel = mfdFresnelAnalytic;
@@ -1219,14 +922,7 @@ void main()
                 vec3 mfdFresnelAnalytic = m.specularColor * distTimesPi(nDotH, m.roughnessRGB);
 
 #if IMAGE_BASED_RENDERING_ENABLED
-
-#if SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED && HYBRID_SPECULAR_ENABLED
-                mfdFresnel = //max(max(vec3(0.0), predictedMFD.rgb), mix(mfdFresnelAnalytic, max(vec3(0.0), predictedMFD.rgb), predictedMFD.a));
-                    max(vec3(0.0), predictedMFD.rgb + mfdFresnelAnalytic);
-#else
                 mfdFresnel = max(vec3(0.0), predictedMFD.rgb);
-#endif // SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED
-
 #else
                 mfdFresnel = mfdFresnelAnalytic;
 #endif // IMAGE_BASED_RENDERING_ENABLED
@@ -1260,12 +956,7 @@ void main()
 #else
                 pointRadiance = reflectance;
 #endif
-
-#if BRDF_MODE
-                radiance += pointRadiance / nDotL;
-#else
                 radiance += pointRadiance;
-#endif
             }
         }
     }
@@ -1276,5 +967,3 @@ void main()
 
     fragObjectID = objectID;
 }
-
-#endif
