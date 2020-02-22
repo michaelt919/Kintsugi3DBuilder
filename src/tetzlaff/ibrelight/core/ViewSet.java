@@ -664,7 +664,8 @@ public final class ViewSet
                             else
                             {
                                 if (Objects.equals(reader.getAttributeValue(null, "enabled"), "true") ||
-                                    Objects.equals(reader.getAttributeValue(null, "enabled"), "1"))
+                                    Objects.equals(reader.getAttributeValue(null, "enabled"), "1") ||
+                                    Objects.equals(reader.getAttributeValue(null, "enabled"), null))
                                 {
                                     if (lightIndex < 0)
                                     {
