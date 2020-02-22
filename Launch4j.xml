@@ -1,21 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~ Copyright (c) Michael Tetzlaff 2019
-  ~ Copyright (c) The Regents of the University of Minnesota 2019
-  ~
-  ~ Licensed under GPLv3
-  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
-  ~
-  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-  ~
-  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-  -->
-
 <launch4jConfig>
   <dontWrapJar>false</dontWrapJar>
   <headerType>gui</headerType>
-  <jar>C:\Users\micha\IdeaProjects\imagebasedcolorappearance\classes\artifacts\IBRelight\IBRelight.jar</jar>
-  <outfile>C:\Users\micha\IdeaProjects\imagebasedcolorappearance\classes\artifacts\IBRelight\IBRelight.exe</outfile>
+  <jar>D:\Documents\GitHub\IBRelight\classes\artifacts\IBRelight\IBRelight.jar</jar>
+  <outfile>D:\Documents\GitHub\IBRelight\classes\artifacts\IBRelight\IBRelight.exe</outfile>
   <errTitle>You need an up-to-date version of Java 8 for Windows x64.</errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
@@ -25,7 +13,7 @@
   <stayAlive>false</stayAlive>
   <restartOnCrash>false</restartOnCrash>
   <manifest></manifest>
-  <icon>C:\Users\micha\IdeaProjects\imagebasedcolorappearance\classes\artifacts\IBRelight\ibr.ico</icon>
+  <icon>D:\Documents\GitHub\IBRelight\classes\artifacts\IBRelight\ibr.ico</icon>
   <jre>
     <path></path>
     <bundledJre64Bit>false</bundledJre64Bit>
