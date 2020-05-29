@@ -17,13 +17,18 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Random;
+import java.util.stream.IntStream;
 
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.dense.row.CommonOps_DDRM;
 import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.core.*;
+import tetzlaff.gl.vecmath.DoubleVector3;
+import tetzlaff.gl.vecmath.DoubleVector4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
@@ -167,6 +172,8 @@ public class Nam2018Request implements IBRRequest
 
     private <ContextType extends Context<ContextType>> void initializeClusters(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
     {
+        double K_MEANS_TOLERANCE = 0.000001;
+
         // Clear framebuffer
         framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -199,8 +206,8 @@ public class Nam2018Request implements IBRRequest
         }
         while(averages[4 * firstCenterIndex + 3] < 1.0); // Make sure the center chosen is valid.
 
-        Vector3[] centers = new Vector3[BASIS_COUNT];
-        centers[0] = new Vector3(averages[4 * firstCenterIndex], averages[4 * firstCenterIndex + 1], averages[4 * firstCenterIndex + 2]);
+        DoubleVector3[] centers = new DoubleVector3[BASIS_COUNT];
+        centers[0] = new DoubleVector3(averages[4 * firstCenterIndex], averages[4 * firstCenterIndex + 1], averages[4 * firstCenterIndex + 2]);
 
         // Populate a CDF for the purpose of randomly selecting from a weighted probability distribution.
         double[] cdf = new double[width * height + 1];
@@ -215,7 +222,7 @@ public class Nam2018Request implements IBRRequest
 
                 for (int b2 = 0; b2 < b; b2++)
                 {
-                    minDistance = Math.min(minDistance, centers[b2].distance(new Vector3(averages[4 * p], averages[4 * p + 1], averages[4 * p + 2])));
+                    minDistance = Math.min(minDistance, centers[b2].distance(new DoubleVector3(averages[4 * p], averages[4 * p + 1], averages[4 * p + 2])));
                 }
 
                 cdf[p + 1] = cdf[p] + minDistance * minDistance;
@@ -254,8 +261,47 @@ public class Nam2018Request implements IBRRequest
             }
 
             // We've found a new center.
-            centers[b] = new Vector3(averages[4 * index], averages[4 * index + 1], averages[4 * index + 2]);
+            centers[b] = new DoubleVector3(averages[4 * index], averages[4 * index + 1], averages[4 * index + 2]);
         }
+
+        // Initialization is done; now it's time to iterate.
+        boolean changed;
+        do
+        {
+            // Initialize sums to zero.
+            DoubleVector4[] sums = IntStream.range(0, BASIS_COUNT).mapToObj(i -> DoubleVector4.ZERO_DIRECTION).toArray(DoubleVector4[]::new);
+
+            for (int p = 0; p < width * height; p++)
+            {
+                if (averages[4 * p + 3] >= 1.0)
+                {
+                    int bMin = -1;
+
+                    double minDistance = Double.MAX_VALUE;
+
+                    for (int b = 0; b < BASIS_COUNT; b++)
+                    {
+                        double distance = centers[b].distance(new DoubleVector3(averages[4 * p], averages[4 * p + 1], averages[4 * p + 2]));
+                        if (distance < minDistance)
+                        {
+                            minDistance = distance;
+                            bMin = b;
+                        }
+                    }
+
+                    sums[bMin] = sums[bMin].plus(new DoubleVector4(averages[4 * p], averages[4 * p + 1], averages[4 * p + 2], 1.0f));
+                }
+            }
+
+            changed = false;
+            for (int b = 0; b < BASIS_COUNT; b++)
+            {
+                DoubleVector3 newCenter = sums[b].getXYZ().dividedBy(sums[b].w);
+                changed = changed || newCenter.distance(centers[b]) < K_MEANS_TOLERANCE;
+                centers[b] = newCenter;
+            }
+        }
+        while (changed);
 
         weightSolution = new SimpleMatrix(BASIS_COUNT, width * height, DMatrixRMaj.class);
         for (int p = 0; p < width * height; p++)
@@ -268,7 +314,7 @@ public class Nam2018Request implements IBRRequest
 
                 for (int b = 0; b < BASIS_COUNT; b++)
                 {
-                    double distance = centers[b].distance(new Vector3(averages[4 * p], averages[4 * p + 1], averages[4 * p + 2]));
+                    double distance = centers[b].distance(new DoubleVector3(averages[4 * p], averages[4 * p + 1], averages[4 * p + 2]));
                     if (distance < minDistance)
                     {
                         minDistance = distance;
