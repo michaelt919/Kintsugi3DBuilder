@@ -21,7 +21,7 @@ import org.ejml.simple.SimpleMatrix;
 import static org.ejml.dense.row.CommonOps_DDRM.elementMin;
 import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
 
-public class NonNegativeLeastSquares 
+public final class NonNegativeLeastSquares
 {
     private static SimpleMatrix solvePartial(SimpleMatrix mATA, SimpleMatrix vATb, boolean[] p, int sizeP, List<Integer> mapping, SimpleMatrix sOut)
     {
@@ -67,7 +67,7 @@ public class NonNegativeLeastSquares
         return s_P;
     }
 
-    public SimpleMatrix solve(SimpleMatrix mA, SimpleMatrix b, double epsilon)
+    public static SimpleMatrix solve(SimpleMatrix mA, SimpleMatrix b, double epsilon)
     {
         if (b.numCols() != 1 || b.numRows() != mA.numRows())
         {
@@ -85,7 +85,7 @@ public class NonNegativeLeastSquares
         return solvePremultiplied(mATA, vATb, epsilon);
     }
 
-    public SimpleMatrix solvePremultiplied(SimpleMatrix mATA, SimpleMatrix vATb, double epsilon)
+    public static SimpleMatrix solvePremultiplied(SimpleMatrix mATA, SimpleMatrix vATb, double epsilon)
     {
         if (mATA.numCols() != mATA.numRows())
         {
@@ -139,7 +139,7 @@ public class NonNegativeLeastSquares
                 // Mapping from the set of free variables to the set of all variables.
                 List<Integer> mapping = new ArrayList<>(sizeP + 1);
 
-                // Populates the mapping, sovles the system and copies it into s,
+                // Populates the mapping, solves the system and copies it into s,
                 // and returns a vector containing only the free variables.
                 SimpleMatrix s_P = solvePartial(mATA, vATb, p, sizeP + 1, mapping, s);
 
@@ -246,8 +246,7 @@ public class NonNegativeLeastSquares
         //   0.5265
         //        0
 
-        NonNegativeLeastSquares solver = new NonNegativeLeastSquares();
-        SimpleMatrix x = solver.solve(mA, b, 0.001);
+        SimpleMatrix x = solve(mA, b, 0.001);
         x.print();
     }
 }

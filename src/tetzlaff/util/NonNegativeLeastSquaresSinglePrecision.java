@@ -22,7 +22,7 @@ import org.ejml.simple.SimpleMatrix;
 import static org.ejml.dense.row.CommonOps_FDRM.elementMin;
 import static org.ejml.dense.row.CommonOps_FDRM.multTransA;
 
-public class NonNegativeLeastSquaresSinglePrecision
+public final class NonNegativeLeastSquaresSinglePrecision
 {
     private static SimpleMatrix solvePartial(SimpleMatrix mATA, SimpleMatrix vATb, boolean[] p, int sizeP, List<Integer> mapping, SimpleMatrix sOut)
     {
@@ -68,7 +68,7 @@ public class NonNegativeLeastSquaresSinglePrecision
         return s_P;
     }
 
-    public SimpleMatrix solve(SimpleMatrix mA, SimpleMatrix b, double epsilon)
+    public static SimpleMatrix solve(SimpleMatrix mA, SimpleMatrix b, double epsilon)
     {
         if (b.numCols() != 1 || b.numRows() != mA.numRows())
         {
@@ -86,7 +86,7 @@ public class NonNegativeLeastSquaresSinglePrecision
         return solvePremultiplied(mATA, vATb, epsilon);
     }
 
-    public SimpleMatrix solvePremultiplied(SimpleMatrix mATA, SimpleMatrix vATb, double epsilon)
+    public static SimpleMatrix solvePremultiplied(SimpleMatrix mATA, SimpleMatrix vATb, double epsilon)
     {
         if (mATA.numCols() != mATA.numRows())
         {
@@ -247,8 +247,7 @@ public class NonNegativeLeastSquaresSinglePrecision
         //   0.5265
         //        0
 
-        NonNegativeLeastSquaresSinglePrecision solver = new NonNegativeLeastSquaresSinglePrecision();
-        SimpleMatrix x = solver.solve(mA, b, 0.001);
+        SimpleMatrix x = solve(mA, b, 0.001);
         x.print();
     }
 }
