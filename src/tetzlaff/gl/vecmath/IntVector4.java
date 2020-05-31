@@ -135,6 +135,17 @@ public class IntVector4 implements Iterable<Integer>
     }
 
     @Override
+    public String toString()
+    {
+        return "IntVector4{" +
+            "x=" + x +
+            ", y=" + y +
+            ", z=" + z +
+            ", w=" + w +
+            '}';
+    }
+
+    @Override
     public Iterator<Integer> iterator()
     {
         return Arrays.asList(x, y, z, w).iterator();

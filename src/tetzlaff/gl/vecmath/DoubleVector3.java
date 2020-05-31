@@ -171,6 +171,16 @@ public class DoubleVector3 implements Iterable<Double>
     }
 
     @Override
+    public String toString()
+    {
+        return "DoubleVector3{" +
+            "x=" + x +
+            ", y=" + y +
+            ", z=" + z +
+            '}';
+    }
+
+    @Override
     public Iterator<Double> iterator()
     {
         return Arrays.asList(x, y, z).iterator();

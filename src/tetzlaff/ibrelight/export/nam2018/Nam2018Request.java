@@ -12,6 +12,8 @@
 
 package tetzlaff.ibrelight.export.nam2018;
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -20,6 +22,8 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Random;
 import java.util.stream.IntStream;
+
+import javax.imageio.ImageIO;
 
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.dense.row.CommonOps_DDRM;
@@ -47,11 +51,13 @@ public class Nam2018Request implements IBRRequest
     private static final double PI_SQUARED = Math.PI * Math.PI;
 
     private static final boolean DEBUG = true;
-    private static final int MAX_RUNNING_THREADS = 12;
+    private static final int MAX_RUNNING_THREADS = 6;
 
     private static final int BASIS_COUNT = 8;
     private static final int MICROFACET_DISTRIBUTION_RESOLUTION = 90;
     private static final int BRDF_MATRIX_SIZE = BASIS_COUNT * (MICROFACET_DISTRIBUTION_RESOLUTION + 1);
+    private static final double K_MEANS_TOLERANCE = 0.000001;
+
 
     private float error = Float.POSITIVE_INFINITY;
 
@@ -109,7 +115,7 @@ public class Nam2018Request implements IBRRequest
             {
                 previousError = error;
 
-                reconstructBRDFs(reflectanceDrawable, framebuffer, resources.viewSet.getCameraPoseCount());
+                //reconstructBRDFs(reflectanceDrawable, framebuffer, resources.viewSet.getCameraPoseCount());
                 reconstructWeights();
                 reconstructNormals();
             }
@@ -172,7 +178,7 @@ public class Nam2018Request implements IBRRequest
 
     private <ContextType extends Context<ContextType>> void initializeClusters(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
     {
-        double K_MEANS_TOLERANCE = 0.000001;
+        System.out.println("Clustering to initialize weights...");
 
         // Clear framebuffer
         framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -264,6 +270,12 @@ public class Nam2018Request implements IBRRequest
             centers[b] = new DoubleVector3(averages[4 * index], averages[4 * index + 1], averages[4 * index + 2]);
         }
 
+        System.out.println("Initial centers:");
+        for (int b = 0; b < BASIS_COUNT; b++)
+        {
+            System.out.println(centers[b]);
+        }
+
         // Initialization is done; now it's time to iterate.
         boolean changed;
         do
@@ -325,11 +337,70 @@ public class Nam2018Request implements IBRRequest
                 weightSolution.set(bMin, p, 1.0);
             }
         }
+
+        System.out.println("Refined centers:");
+        for (int b = 0; b < BASIS_COUNT; b++)
+        {
+            System.out.println(centers[b]);
+        }
+
+        if (DEBUG)
+        {
+            BufferedImage weightImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            int[] weightDataPacked = new int[width * height];
+            for (int p = 0; p < width * height; p++)
+            {
+                if (averages[4 * p + 3] >= 1.0)
+                {
+                    int bMin = -1;
+
+                    double minDistance = Double.MAX_VALUE;
+
+                    for (int b = 0; b < BASIS_COUNT; b++)
+                    {
+                        double distance = centers[b].distance(new DoubleVector3(averages[4 * p], averages[4 * p + 1], averages[4 * p + 2]));
+                        if (distance < minDistance)
+                        {
+                            minDistance = distance;
+                            bMin = b;
+                        }
+                    }
+
+                    // Flip vertically
+                    int weightDataIndex = p % width + width * (height - p / width - 1);
+
+                    switch(bMin)
+                    {
+                        case 0: weightDataPacked[weightDataIndex] = Color.RED.getRGB(); break;
+                        case 1: weightDataPacked[weightDataIndex] = Color.GREEN.getRGB(); break;
+                        case 2: weightDataPacked[weightDataIndex] = Color.BLUE.getRGB(); break;
+                        case 3: weightDataPacked[weightDataIndex] = Color.YELLOW.getRGB(); break;
+                        case 4: weightDataPacked[weightDataIndex] = Color.CYAN.getRGB(); break;
+                        case 5: weightDataPacked[weightDataIndex] = Color.MAGENTA.getRGB(); break;
+                        case 6: weightDataPacked[weightDataIndex] = Color.WHITE.getRGB(); break;
+                        case 7: weightDataPacked[weightDataIndex] = Color.GRAY.getRGB(); break;
+                        default: weightDataPacked[weightDataIndex] = Color.BLACK.getRGB(); break;
+                    }
+                }
+            }
+
+            weightImg.setRGB(0, 0, weightImg.getWidth(), weightImg.getHeight(), weightDataPacked, 0, weightImg.getWidth());
+
+            try
+            {
+                ImageIO.write(weightImg, "PNG", new File(outputDirectory, "k-means.png"));
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
     }
 
     private <ContextType extends Context<ContextType>> void reconstructBRDFs(
         Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int viewCount)
     {
+        System.out.println("Building reflectance fitting matrix...");
         buildReflectanceMatrix(drawable, framebuffer, viewCount);
         System.out.println("Finished building matrix; solving now...");
         brdfSolutionRed = NonNegativeLeastSquares.solvePremultiplied(brdfATA, brdfATyRed, 0.001);

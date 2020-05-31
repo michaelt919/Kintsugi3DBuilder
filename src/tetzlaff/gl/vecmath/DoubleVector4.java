@@ -164,6 +164,16 @@ public class DoubleVector4 implements Iterable<Double>
     {
         return new DoubleVector4(operator.applyAsDouble(x), operator.applyAsDouble(y), operator.applyAsDouble(z), operator.applyAsDouble(w));
     }
+    @Override
+    public String toString()
+    {
+        return "DoubleVector4{" +
+            "x=" + x +
+            ", y=" + y +
+            ", z=" + z +
+            ", w=" + w +
+            '}';
+    }
 
     @Override
     public Iterator<Double> iterator()

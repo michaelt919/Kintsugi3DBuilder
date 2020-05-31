@@ -235,7 +235,6 @@ public class Vector4 implements Iterable<Float>
         return new Vector4((float)operator.applyAsDouble(x), (float)operator.applyAsDouble(y), (float)operator.applyAsDouble(z), (float)operator.applyAsDouble(w));
     }
 
-
     @Override
     public String toString()
     {

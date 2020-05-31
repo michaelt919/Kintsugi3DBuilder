@@ -149,6 +149,15 @@ public class DoubleVector2 implements Iterable<Double>
     }
 
     @Override
+    public String toString()
+    {
+        return "DoubleVector2{" +
+            "x=" + x +
+            ", y=" + y +
+            '}';
+    }
+
+    @Override
     public Iterator<Double> iterator()
     {
         return Arrays.asList(x, y).iterator();

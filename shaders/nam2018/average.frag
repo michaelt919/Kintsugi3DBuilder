@@ -106,6 +106,11 @@ void main()
         }
     }
 
+    if (sum.a == 0)
+    {
+        discard;
+    }
+
     // Only a simple RGB to L*a*b* is necessary, since this is just for the purposes of initial clustering.
     averageLab = sum / sum.a;
 }

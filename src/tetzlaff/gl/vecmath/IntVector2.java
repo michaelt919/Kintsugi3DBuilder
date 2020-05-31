@@ -131,6 +131,15 @@ public class IntVector2 implements Iterable<Integer>
     }
 
     @Override
+    public String toString()
+    {
+        return "IntVector2{" +
+            "x=" + x +
+            ", y=" + y +
+            '}';
+    }
+
+    @Override
     public Iterator<Integer> iterator()
     {
         return Arrays.asList(x, y).iterator();
