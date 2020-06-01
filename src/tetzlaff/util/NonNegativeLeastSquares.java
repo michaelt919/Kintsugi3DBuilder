@@ -193,7 +193,7 @@ public final class NonNegativeLeastSquares
                     mapping.clear();
                     s.set(0.0); // Set all elements to zero.
 
-                    // Populates the mapping, sovles the system and copies it into s,
+                    // Populates the mapping, solves the system and copies it into s,
                     // and returns a vector containing only the free variables.
                     s_P = solvePartial(mATA, vATb, p, sizeP, mapping, s);
 

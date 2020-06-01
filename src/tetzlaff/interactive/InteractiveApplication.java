@@ -22,7 +22,7 @@ public class InteractiveApplication
     private final List<EventPollable> pollables;
     private final List<Refreshable> refreshables;
 
-    private static final boolean FPS_COUNTER = true;
+    private static final boolean FPS_COUNTER = false;
 
     public InteractiveApplication(EventPollable pollable, Refreshable refreshable)
     {

@@ -66,8 +66,10 @@ void main()
 
     if (nDotH > N_DOT_H_CUTOFF)
     {
-        reflectance_visibility = vec4(pow(imgColor.rgb / irradiance, vec3(1.0 / gamma)), imgColor.a);
-        halfway_geom = vec4(sqrt(acos(nDotH)), maskingShadowing / (4 * nDotL * nDotV), 0, 1);
+        reflectance_visibility = vec4(imgColor.rgb / irradiance, imgColor.a);
+
+        // Halfway component should be 1.0 when the angle is 60 degrees, or pi/3.
+        halfway_geom = vec4(sqrt(acos(nDotH) * 3.0 / PI), maskingShadowing / (4 * nDotL * nDotV), 0, 1);
     }
     else
     {

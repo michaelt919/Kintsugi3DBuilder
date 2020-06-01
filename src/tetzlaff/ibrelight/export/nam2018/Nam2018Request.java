@@ -19,7 +19,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.Random;
 import java.util.stream.IntStream;
 
@@ -31,8 +30,6 @@ import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.gl.vecmath.DoubleVector4;
-import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
@@ -47,16 +44,16 @@ public class Nam2018Request implements IBRRequest
     private final File outputDirectory;
     private final ReadonlySettingsModel settingsModel;
 
-    private static final double SQRT_PI_OVER_3 = Math.sqrt(Math.PI / 3);
     private static final double PI_SQUARED = Math.PI * Math.PI;
 
     private static final boolean DEBUG = true;
-    private static final int MAX_RUNNING_THREADS = 6;
+    private static final int MAX_RUNNING_THREADS = 5;
 
     private static final int BASIS_COUNT = 8;
     private static final int MICROFACET_DISTRIBUTION_RESOLUTION = 90;
     private static final int BRDF_MATRIX_SIZE = BASIS_COUNT * (MICROFACET_DISTRIBUTION_RESOLUTION + 1);
     private static final double K_MEANS_TOLERANCE = 0.000001;
+    private static final double GAMMA = 2.2;
 
 
     private float error = Float.POSITIVE_INFINITY;
@@ -115,7 +112,7 @@ public class Nam2018Request implements IBRRequest
             {
                 previousError = error;
 
-                //reconstructBRDFs(reflectanceDrawable, framebuffer, resources.viewSet.getCameraPoseCount());
+                reconstructBRDFs(reflectanceDrawable, framebuffer, resources.viewSet.getCameraPoseCount());
                 reconstructWeights();
                 reconstructNormals();
             }
@@ -407,6 +404,90 @@ public class Nam2018Request implements IBRRequest
         brdfSolutionGreen = NonNegativeLeastSquares.solvePremultiplied(brdfATA, brdfATyGreen, 0.001);
         brdfSolutionBlue = NonNegativeLeastSquares.solvePremultiplied(brdfATA, brdfATyBlue, 0.001);
         System.out.println("DONE!");
+
+        if (DEBUG)
+        {
+            // write out diffuse texture for debugging
+            BufferedImage diffuseImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            int[] diffuseDataPacked = new int[width * height];
+            for (int p = 0; p < width * height; p++)
+            {
+                DoubleVector4 diffuseSum = DoubleVector4.ZERO_DIRECTION;
+
+                for (int b = 0; b < BASIS_COUNT; b++)
+                {
+                    diffuseSum = diffuseSum.plus(new DoubleVector4(
+                            brdfSolutionRed.get(b),
+                            brdfSolutionGreen.get(b),
+                            brdfSolutionBlue.get(b), 1.0)
+                        .times(weightSolution.get(b, p)));
+                }
+
+                if (diffuseSum.w > 0)
+                {
+                    DoubleVector3 diffuseAvgGamma = diffuseSum.getXYZ().dividedBy(diffuseSum.w).applyOperator(x -> Math.min(1.0, Math.pow(x, 1.0 / GAMMA)));
+
+                    // Flip vertically
+                    int dataBufferIndex = p % width + width * (height - p / width - 1);
+                    diffuseDataPacked[dataBufferIndex] = new Color((float)diffuseAvgGamma.x, (float)diffuseAvgGamma.y, (float)diffuseAvgGamma.z).getRGB();
+                }
+            }
+
+            diffuseImg.setRGB(0, 0, diffuseImg.getWidth(), diffuseImg.getHeight(), diffuseDataPacked, 0, diffuseImg.getWidth());
+
+            try
+            {
+                ImageIO.write(diffuseImg, "PNG", new File(outputDirectory, "diffuse.png"));
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+
+            for (int b = 0; b < BASIS_COUNT; b++)
+            {
+                System.out.println("Basis BRDF #" + b + ':');
+
+                DoubleVector3 diffuseColor = new DoubleVector3(
+                    brdfSolutionRed.get(b),
+                    brdfSolutionGreen.get(b),
+                    brdfSolutionBlue.get(b));
+                System.out.println("Diffuse: " + diffuseColor);
+
+                System.out.print("Specular (red): ");
+                double redTotal = 0.0;
+                for (int m = MICROFACET_DISTRIBUTION_RESOLUTION - 1; m >= 0; m--)
+                {
+                    redTotal += brdfSolutionRed.get((m + 1) * BASIS_COUNT + b);
+                    System.out.print(redTotal);
+                    System.out.print(' ');
+                }
+
+                System.out.println();
+
+                System.out.print("Specular (green): ");
+                double greenTotal = 0.0;
+                for (int m = MICROFACET_DISTRIBUTION_RESOLUTION - 1; m >= 0; m--)
+                {
+                    greenTotal += brdfSolutionGreen.get((m + 1) * BASIS_COUNT + b);
+                    System.out.print(greenTotal);
+                    System.out.print(' ');
+                }
+                System.out.println();
+
+                System.out.print("Specular (blue): ");
+                double blueTotal = 0.0;
+                for (int m = MICROFACET_DISTRIBUTION_RESOLUTION - 1; m >= 0; m--)
+                {
+                    blueTotal += brdfSolutionBlue.get((m + 1) * BASIS_COUNT + b);
+                    System.out.print(blueTotal);
+                    System.out.print(' ');
+                }
+                System.out.println();
+
+                System.out.println();
+            }
+        }
     }
 
     private <ContextType extends Context<ContextType>> void buildReflectanceMatrix(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int viewCount)
@@ -444,18 +525,18 @@ public class Nam2018Request implements IBRRequest
             drawable.program().setUniform("viewIndex", k);
             drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
 
-            if (DEBUG)
-            {
-                try
-                {
-                    framebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, String.format("%02d.png", k)));
-                    framebuffer.saveColorBufferToFile(1, "PNG", new File(outputDirectory, String.format("%02d_geom.png", k)));
-                }
-                catch (IOException e)
-                {
-                    e.printStackTrace();
-                }
-            }
+//            if (DEBUG)
+//            {
+//                try
+//                {
+//                    framebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, String.format("%02d.png", k)));
+//                    framebuffer.saveColorBufferToFile(1, "PNG", new File(outputDirectory, String.format("%02d_geom.png", k)));
+//                }
+//                catch (IOException e)
+//                {
+//                    e.printStackTrace();
+//                }
+//            }
 
             // Copy framebuffer from GPU to main memory.
             float[] colorAndVisibility = framebuffer.readFloatingPointColorBufferRGBA(0);
@@ -479,8 +560,8 @@ public class Nam2018Request implements IBRRequest
                     SimpleMatrix contributionATyBlue = new SimpleMatrix(BRDF_MATRIX_SIZE, 1, DMatrixRMaj.class);
 
                     // Get the contributions from the current view.
-                    getReflectanceMatrixContribution(colorAndVisibility, halfwayAndGeom,
-                        contributionATA, contributionATyRed, contributionATyGreen, contributionATyBlue);
+                    new ReflectanceMatrixBuilder(colorAndVisibility, halfwayAndGeom, weightSolution, contributionATA,
+                        contributionATyRed, contributionATyGreen, contributionATyBlue).execute();
 
                     // Add the contribution into the main matrix and vectors.
                     synchronized (brdfATA)
@@ -533,120 +614,459 @@ public class Nam2018Request implements IBRRequest
                 }
             }
         }
+
+        for (int b = 0; b < BASIS_COUNT; b++)
+        {
+            System.out.print("RHS, red for BRDF #" + b + ": ");
+
+            System.out.print(brdfATyRed.get(b));
+            for (int m = 0; m < MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+            {
+                System.out.print(", ");
+                System.out.print(brdfATyRed.get((m + 1) * BASIS_COUNT + b));
+            }
+            System.out.println();
+
+            System.out.print("RHS, green for BRDF #" + b + ": ");
+
+            System.out.print(brdfATyGreen.get(b));
+            for (int m = 0; m < MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+            {
+                System.out.print(", ");
+                System.out.print(brdfATyGreen.get((m + 1) * BASIS_COUNT + b));
+            }
+            System.out.println();
+
+            System.out.print("RHS, blue for BRDF #" + b + ": ");
+
+            System.out.print(brdfATyBlue.get(b));
+            for (int m = 0; m < MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+            {
+                System.out.print(", ");
+                System.out.print(brdfATyBlue.get((m + 1) * BASIS_COUNT + b));
+            }
+            System.out.println();
+
+            System.out.println();
+        }
     }
 
-    private void getReflectanceMatrixContribution(float[] colorAndVisibility, float[] halfwayAndGeom,
-        SimpleMatrix contributionATA, SimpleMatrix contributionATyRed, SimpleMatrix contributionATyGreen, SimpleMatrix contributionATyBlue)
+    /**
+     * A helper class to maintain state necessary to efficiently build the matrix that can solve for reflectance.
+     */
+    private static final class ReflectanceMatrixBuilder
     {
-        // Iterate over each sampled texture coordinate.
-        for (int p = 0; p < width * height; p++)
+        private int mPrevious = MICROFACET_DISTRIBUTION_RESOLUTION;
+
+        /**
+         * Stores a running total (for each pair of basis functions) of the weighted sum of geometric factors.
+         */
+        private final SimpleMatrix weightedGeomSum = new SimpleMatrix(BASIS_COUNT, BASIS_COUNT, DMatrixRMaj.class);
+
+        /**
+         * Stores a running total (for each pair of basis functions) of the weighted sum of squared geometric factors.
+         */
+        private final SimpleMatrix weightedGeomSquaredSum = new SimpleMatrix(BASIS_COUNT, BASIS_COUNT, DMatrixRMaj.class);
+
+        /**
+         *  Stores a running total (for each pair of basis functions) of the weighted sum of squared geometric factors with additional linear interpolation weights.
+         */
+        private final SimpleMatrix weightedGeomSquaredBlendedSum = new SimpleMatrix(BASIS_COUNT, BASIS_COUNT, DMatrixRMaj.class);
+
+        /**
+         * Stores a running total (for each basis function of the weighted sum of reflectance measurements by color channel (red).
+         */
+        private final SimpleMatrix weightedGeomRedSum = new SimpleMatrix(BASIS_COUNT, 1, DMatrixRMaj.class);
+
+        /**
+         * Stores a running total (for each basis function of the weighted sum of reflectance measurements by color channel (green).
+         */
+        private final SimpleMatrix weightedGeomGreenSum = new SimpleMatrix(BASIS_COUNT, 1, DMatrixRMaj.class);
+
+        /**
+         * Stores a running total (for each basis function of the weighted sum of reflectance measurements by color channel (blue).
+         */
+        private final SimpleMatrix weightedGeomBlueSum = new SimpleMatrix(BASIS_COUNT, 1, DMatrixRMaj.class);
+
+        /**
+         * LHS
+         */
+        private final SimpleMatrix contributionATA;
+
+        /**
+         * RHS for red
+         */
+        private final SimpleMatrix contributionATyRed;
+
+        /**
+         * RHS for green
+         */
+        private final SimpleMatrix contributionATyGreen;
+
+        /**
+         * RHS for blue
+         */
+        private final SimpleMatrix contributionATyBlue;
+
+        /**
+         * Color and visibility components of the samples
+         */
+        private final float[] colorAndVisibility;
+
+        /**
+         * Halfway angles and geometric factors for the samples.
+         */
+        private final float[] halfwayAndGeom;
+
+        /**
+         * Weight solution from the previous iteration.
+         */
+        private final SimpleMatrix weightSolution;
+
+        /**
+         * Construct by accepting matrices where the final results will be stored.
+         * @param contributionATA LHS
+         * @param contributionATyRed RHS for red
+         * @param contributionATyGreen RHS for green
+         * @param contributionATyBlue RHS for blue
+         */
+        ReflectanceMatrixBuilder(float[] colorAndVisibility, float[] halfwayAndGeom, SimpleMatrix weightSolution, SimpleMatrix contributionATA,
+            SimpleMatrix contributionATyRed, SimpleMatrix contributionATyGreen, SimpleMatrix contributionATyBlue)
         {
-            // Skip any coordinates that weren't visible from the current view.
-            if (colorAndVisibility[4 * p + 3] > 0)
+            this.contributionATA = contributionATA;
+            this.contributionATyRed = contributionATyRed;
+            this.contributionATyGreen = contributionATyGreen;
+            this.contributionATyBlue = contributionATyBlue;
+
+            this.weightSolution = weightSolution;
+            this.colorAndVisibility = colorAndVisibility;
+            this.halfwayAndGeom = halfwayAndGeom;
+        }
+
+        public void execute()
+        {
+            // Sort pixel samples within a view by the halfway direction so that we avoid repeating the same additions over and over again
+            IntStream.range(0, halfwayAndGeom.length / 4)
+                .filter(p -> colorAndVisibility[4 * p + 3] > 0) // Eliminate pixels without valid samples
+                .boxed() // Box integers to use custom sorting function
+                .sorted((p1, p2) -> -Float.compare(halfwayAndGeom[4 * p1], halfwayAndGeom[4 * p2])) // Should sort descending to visit high m values first
+                .forEachOrdered(this::processSample);
+
+            // Flush out final running totals into the contribution matrix and vectors.
+            updateContributionFromRunningTotals(0);
+        }
+
+        private void processSample(int p)
+        {
+            // Calculate which discretized MDF element the current sample belongs to.
+            double mExact = halfwayAndGeom[4 * p] * MICROFACET_DISTRIBUTION_RESOLUTION;
+            int mFloor = Math.min(MICROFACET_DISTRIBUTION_RESOLUTION - 1, (int) Math.floor(mExact));
+
+            // If mFloor changed, it's time to update the ATA matrix and ATy vector
+            assert this.mPrevious >= mFloor; // mFloor should be decreasing over time due to sorting order.
+            if (mFloor < this.mPrevious)
             {
-                double mExact = halfwayAndGeom[4 * p] * MICROFACET_DISTRIBUTION_RESOLUTION / SQRT_PI_OVER_3;
-                int mFloor = Math.min(MICROFACET_DISTRIBUTION_RESOLUTION - 1,
-                    (int) Math.floor(halfwayAndGeom[4 * p] * MICROFACET_DISTRIBUTION_RESOLUTION / SQRT_PI_OVER_3));
+                this.updateContributionFromRunningTotals(mFloor);
 
-                // When floor and exact are the same, t = 1.0.  When exact is almost a whole increment greater than floor, t approaches 0.0.
-                // If mFloor is clamped to MICROFACET_DISTRIBUTION_RESOLUTION -1, then mExact will be much larger, so t = 0.0.
-                double t = Math.max(0.0, 1.0 + mFloor - mExact);
+                // Zero out the blended sum after every time that mFloor changes,
+                // since it should only apply to a single m-value (as opposed to the other sums which continue to accumulate).
+                this.weightedGeomSquaredBlendedSum.zero();
+            }
 
-                for (int b1 = 0; b1 < BASIS_COUNT; b1++)
+            // When floor and exact are the same, t = 1.0.  When exact is almost a whole increment greater than floor, t approaches 0.0.
+            // If mFloor is clamped to MICROFACET_DISTRIBUTION_RESOLUTION -1, then mExact will be much larger, so t = 0.0.
+            double t = Math.max(0.0, 1.0 + mFloor - mExact);
+
+            // Regardless of whether mFloor changed: Update running total for each pair of basis functions,
+            // and add blended samples to elements where no work is saved by deferring the update to the matrix or vector.
+            for (int b1 = 0; b1 < BASIS_COUNT; b1++)
+            {
+                // Updates to ATy
+
+                double weightedReflectanceRed   = weightSolution.get(b1, p) * colorAndVisibility[4 * p];
+                double weightedReflectanceGreen = weightSolution.get(b1, p) * colorAndVisibility[4 * p + 1];
+                double weightedReflectanceBlue  = weightSolution.get(b1, p) * colorAndVisibility[4 * p + 2];
+
+                // For each basis function: update the vector.
+                // Top partition of the vector corresponds to diffuse coefficients
+                contributionATyRed.set(b1, 0, contributionATyRed.get(b1, 0) + weightedReflectanceRed / Math.PI);
+                contributionATyGreen.set(b1, 0, contributionATyGreen.get(b1, 0) + weightedReflectanceGreen / Math.PI);
+                contributionATyBlue.set(b1, 0, contributionATyBlue.get(b1, 0) + weightedReflectanceBlue / Math.PI);
+
+                double weightedGeomReflectanceRed   = halfwayAndGeom[4 * p + 1] * weightedReflectanceRed;
+                double weightedGeomReflectanceGreen = halfwayAndGeom[4 * p + 1] * weightedReflectanceGreen;
+                double weightedGeomReflectanceBlue  = halfwayAndGeom[4 * p + 1] * weightedReflectanceBlue;
+
+                // Bottom partition of the vector corresponds to specular coefficients.
+                // Scale contribution due to current m-value by blending weight t to account for linear interpolation.
+                // Accumulation due to greater m-values should already have been added to the vector the last time an m-value changed
+                int i = BASIS_COUNT * (mFloor + 1) + b1;
+                contributionATyRed.set(i, 0, contributionATyRed.get(i, 0) + t * weightedGeomReflectanceRed);
+                contributionATyGreen.set(i, 0, contributionATyGreen.get(i, 0) + t * weightedGeomReflectanceGreen);
+                contributionATyBlue.set(i, 0, contributionATyBlue.get(i, 0) + t * weightedGeomReflectanceBlue);
+
+                // Update running totals.
+                weightedGeomRedSum.set(b1, 0, weightedGeomRedSum.get(b1, 0) + weightedGeomReflectanceRed);
+                weightedGeomGreenSum.set(b1, 0, weightedGeomGreenSum.get(b1, 0) + weightedGeomReflectanceGreen);
+                weightedGeomBlueSum.set(b1, 0, weightedGeomBlueSum.get(b1, 0) + weightedGeomReflectanceBlue);
+
+                for (int b2 = 0; b2 < BASIS_COUNT; b2++)
                 {
-                    int iStart = BASIS_COUNT * (mFloor + 1) + b1;
+                    // Updates to ATA
 
-                    double weightedReflectanceRed   = weightSolution.get(b1, p) * colorAndVisibility[4 * p];
-                    double weightedReflectanceGreen = weightSolution.get(b1, p) * colorAndVisibility[4 * p + 1];
-                    double weightedReflectanceBlue  = weightSolution.get(b1, p) * colorAndVisibility[4 * p + 2];
+                    // Update non-squared total without blending weight.
+                    double weightProduct = weightSolution.get(b1, p) * weightSolution.get(b2, p);
+                    double weightedGeom = weightProduct * halfwayAndGeom[4 * p + 1];
+                    weightedGeomSum.set(b1, b2, weightedGeomSum.get(b1, b2) + weightedGeom);
 
-                    // For each basis function: update the vector.
-                    // Top partition of the vector corresponds to diffuse coefficients
-                    contributionATyRed.set(b1, 0, contributionATyRed.get(b1, 0) - weightedReflectanceRed);
-                    contributionATyGreen.set(b1, 0, contributionATyGreen.get(b1, 0) - weightedReflectanceGreen);
-                    contributionATyBlue.set(b1, 0, contributionATyBlue.get(b1, 0) - weightedReflectanceBlue);
+                    // Update squared total without blending weight.
+                    double weightedGeomSquared = weightedGeom * halfwayAndGeom[4 * p + 1];
+                    weightedGeomSquaredSum.set(b1, b2, weightedGeomSquaredSum.get(b1, b2) + weightedGeomSquared);
 
-                    double weightedGeomReflectanceRed   = halfwayAndGeom[4 * p + 1] * weightedReflectanceRed;
-                    double weightedGeomReflectanceGreen = halfwayAndGeom[4 * p + 1] * weightedReflectanceGreen;
-                    double weightedGeomReflectanceBlue  = halfwayAndGeom[4 * p + 1] * weightedReflectanceBlue;
+                    // Update squared total with blending weight.
+                    double weightedGeomSquaredBlended = t * weightedGeomSquared;
+                    weightedGeomSquaredBlendedSum.set(b1, b2, weightedGeomSquaredSum.get(b1, b2) + weightedGeomSquaredBlended);
 
-                    // Bottom partition of the vector corresponds to specular coefficients.
-                    // For the first non-zero element of the specular function, scale by t to account for linear interpolation.
-                    contributionATyRed.set(iStart, 0, contributionATyRed.get(iStart, 0) - t * weightedGeomReflectanceRed);
-                    contributionATyGreen.set(iStart, 0, contributionATyGreen.get(iStart, 0) - t * weightedGeomReflectanceGreen);
-                    contributionATyBlue.set(iStart, 0, contributionATyBlue.get(iStart, 0) - t * weightedGeomReflectanceBlue);
+                    // Top left partition of the matrix: row and column both correspond to diffuse coefficients
+                    contributionATA.set(b1, b2, contributionATA.get(b1, b2) + weightProduct / PI_SQUARED);
 
-                    // Iterate over all elements in the specular (microfacet distribution) functions whose angle is greater than or equal to the current angle.
-                    // We are actually calculating the differential of the specular function, to be integrated at the end.
-                    for (int m = mFloor + 1; m < MICROFACET_DISTRIBUTION_RESOLUTION; m++)
-                    {
-                        int i = BASIS_COUNT * (m + 1) + b1;
+                    // Top right and bottom left partitions of the matrix:
+                    // row corresponds to diffuse coefficients and column corresponds to specular, or vice-versa.
+                    contributionATA.set(i, b2, contributionATA.get(i, b2) + t * weightedGeom / Math.PI);
+                    contributionATA.set(b2, i, contributionATA.get(b2, i) + t * weightedGeom / Math.PI);
 
-                        contributionATyRed.set(i, 0, contributionATyRed.get(i, 0) - weightedGeomReflectanceRed);
-                        contributionATyGreen.set(i, 0, contributionATyGreen.get(i, 0) - weightedGeomReflectanceGreen);
-                        contributionATyBlue.set(i, 0, contributionATyBlue.get(i, 0) - weightedGeomReflectanceBlue);
-                    }
+                    // Bottom right partition of the matrix: row and column both correspond to specular.
+                    // Update "corner" element with squared blending weight.
+                    int j = BASIS_COUNT * (mFloor + 1) + b2;
+                    contributionATA.set(i, j, contributionATA.get(i, j) + t * weightedGeomSquaredBlended);
+                }
+            }
 
-                    // Reset i back to the beginning:
-                    int i = iStart;
+            // Update holder of previous mFloor value.
+            this.mPrevious = mFloor;
+        }
 
-                    // For each pair of basis functions: update the matrix.
+        /**
+         * Updates the contribution matrix and vectors for a particular range of m-values, given certain running totals.
+         * Usually called when building the reflectance matrix, after the m-value changes.
+         * Also called at the end of that process to flush out the final set of running totals.
+         * @param currentM The current "m" value of the sample that is being processed. Samples are to be visited in order of decreasing "m".
+         */
+        private void updateContributionFromRunningTotals(int currentM)
+        {
+            // Add the running total to elements of the ATA matrix and the ATy vector corresponding to the newly visited mFloor
+            // as well as any m-values skipped over.
+            // These elements also need to get some more contributions that have blending weights that are yet to be visited,
+            // but that will be handled later, when a sample is visited for some matrix elements, or the next time mFloor changes for others.
+            for (int b1 = 0; b1 < BASIS_COUNT; b1++)
+            {
+                // This loop usually would only one once, but could run multiple times if we skipped a few m values.
+                for (int m1 = mPrevious - 1; m1 >= currentM; m1--)
+                {
+                    int i = BASIS_COUNT * (m1 + 1) + b1;
+
+                    // Update ATy vector
+                    contributionATyRed.set(i, 0, contributionATyRed.get(i, 0)
+                        + weightedGeomRedSum.get(b1, 0) / PI_SQUARED);
+                    contributionATyGreen.set(i, 0, contributionATyGreen.get(i, 0)
+                        + weightedGeomGreenSum.get(b1, 0) / PI_SQUARED);
+                    contributionATyBlue.set(i, 0, contributionATyBlue.get(i, 0)
+                        + weightedGeomBlueSum.get(b1, 0) / PI_SQUARED);
+
+                    // Update ATA matrix
                     for (int b2 = 0; b2 < BASIS_COUNT; b2++)
                     {
-                        // Top left partition of the matrix: row and column both correspond to diffuse coefficients
-                        contributionATA.set(b1, b2, contributionATA.get(b1, b2) + weightSolution.get(b1, p) * weightSolution.get(b2, p) / PI_SQUARED);
-
-                        double weightedGeom = weightSolution.get(b1, p) * weightSolution.get(b2, p) * halfwayAndGeom[4 * p + 1];
-                        double weightedGeomOverPi = weightedGeom / Math.PI;
-
                         // Top right and bottom left partitions of the matrix:
                         // row corresponds to diffuse coefficients and column corresponds to specular, or vice-versa.
-                        // For the first non-zero element of the specular function, scale by t to account for linear interpolation.
-                        contributionATA.set(i, b2, contributionATA.get(i, b2) + t * weightedGeomOverPi);
-                        contributionATA.set(b2, i, contributionATA.get(b2, i) + t * weightedGeomOverPi);
+                        // The matrix is symmetric so we also need to swap row and column and update that way.
+                        contributionATA.set(i, b2, contributionATA.get(i, b2) + weightedGeomSum.get(b1, b2) / Math.PI);
+                        contributionATA.set(b2, i, contributionATA.get(b2, i) + weightedGeomSum.get(b1, b2) / Math.PI);
 
-                        int j = BASIS_COUNT * (mFloor + 1) + b2;
-                        double weightedGeomSq = weightedGeom * weightedGeom;
-                        double tTimesWeightedGeomSq = t * weightedGeomSq;
 
                         // Bottom right partition of the matrix: row and column both correspond to specular.
-                        // The first non-zero specular element in BOTH row AND column is handled here.
-                        // Scale by t squared to account for linear interpolation for both row and column.
-                        contributionATA.set(i, j, contributionATA.get(i, j) + t * tTimesWeightedGeomSq);
 
-                        // Iterate over all elements in the specular (microfacet distribution) functions whose angle is greater than or equal to the current angle.
-                        // We are actually calculating the differential of the specular function, to be integrated at the end.
-                        for (int m = mFloor + 1; m < MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+                        // Handle "corner" case where m1 = m2 (don't want to repeat with row and column swapped as elements would then be duplicated).
+                        int j = BASIS_COUNT * (m1 + 1) + b2;
+                        contributionATA.set(i, j, contributionATA.get(i, j) + weightedGeomSquaredSum.get(b1, b2));
+
+                        // Visit every element of the microfacet distribution that is beyond m1.
+                        // This is because the form of ATA is such that the values in the matrix are determined by the lower of the two m-values.
+                        for (int m2 = m1 + 1; m2 < MICROFACET_DISTRIBUTION_RESOLUTION; m2++)
                         {
-                            i = BASIS_COUNT * (m + 1) + b1;
+                            j = BASIS_COUNT * (m2 + 1) + b2;
 
-                            // Top right and bottom left partitions of the matrix:
-                            // row corresponds to diffuse coefficients and column corresponds to specular, or vice-versa.
-                            contributionATA.set(i, b2, contributionATA.get(i, b2) + weightedGeomOverPi);
-                            contributionATA.set(b2, i, contributionATA.get(b2, i) + weightedGeomOverPi);
-
-                            // Bottom right partition of the matrix: row and column both correspond to specular.
-                            // The first non-zero specular element in a row or column (but not both) is handled here.
-                            // Scale by t to account for linear interpolation.
-                            contributionATA.set(i, j, contributionATA.get(i, j) + tTimesWeightedGeomSq);
-
-                            // The remaining elements are handled here.
-                            for (int m2 = mFloor + 1; m2 < MICROFACET_DISTRIBUTION_RESOLUTION; m2++)
-                            {
-                                j = BASIS_COUNT * (m2 + 1) + b2;
-                                contributionATA.set(i, j, contributionATA.get(i, j) + weightedGeomSq);
-                            }
+                            // Add the current value of the running total to the appropriate location in the matrix.
+                            // The matrix is symmetric so we also need to swap row and column and update that way.
+                            contributionATA.set(i, j, contributionATA.get(i, j) + weightedGeomSquaredSum.get(b1, b2));
+                            contributionATA.set(j, i, contributionATA.get(j, i) + weightedGeomSquaredSum.get(b1, b2));
                         }
+                    }
+                }
+            }
+
+            // Add the total of recently visited samples with blending weights to elements of the ATA matrix corresponding to the old mFloor.
+            // Bottom right partition of the matrix: row and column both correspond to specular.
+            for (int b1 = 0; b1 < BASIS_COUNT; b1++)
+            {
+                int i = BASIS_COUNT * (mPrevious + 1) + b1;
+
+                for (int b2 = 0; b2 < BASIS_COUNT; b2++)
+                {
+                    // The "corner case" will be handled immediately when a sample is visited as it only affects a single element of the
+                    // matrix and thus no work is saved by waiting for mFloor to change.
+
+                    // Visit every element of the microfacet distribution that is beyond m1.
+                    // This is because the form of ATA is such that the values in the matrix are determined by the lower of the two m-values.
+                    for (int m2 = mPrevious + 1; m2 < MICROFACET_DISTRIBUTION_RESOLUTION; m2++)
+                    {
+                        int j = BASIS_COUNT * (m2 + 1) + b2;
+
+                        // Add the current value of the running total to the appropriate location in the matrix.
+                        // The matrix is symmetric so we also need to swap row and column and update that way.
+                        contributionATA.set(i, j, contributionATA.get(i, j) + weightedGeomSquaredSum.get(b1, b2));
+                        contributionATA.set(j, i, contributionATA.get(j, i) + weightedGeomSquaredSum.get(b1, b2));
                     }
                 }
             }
         }
     }
 
+//    private void getReflectanceMatrixContribution(float[] colorAndVisibility, float[] halfwayAndGeom,
+//        SimpleMatrix contributionATA, SimpleMatrix contributionATyRed, SimpleMatrix contributionATyGreen, SimpleMatrix contributionATyBlue)
+//    {
+//        // Iterate over each sampled texture coordinate.
+//        for (int p = 0; p < width * height; p++)
+//        {
+//            // Skip any coordinates that weren't visible from the current view.
+//            if (colorAndVisibility[4 * p + 3] > 0)
+//            {
+//                double mExact = halfwayAndGeom[4 * p] * MICROFACET_DISTRIBUTION_RESOLUTION / SQRT_PI_OVER_3;
+//                int mFloor = Math.min(MICROFACET_DISTRIBUTION_RESOLUTION - 1,
+//                    (int) Math.floor(halfwayAndGeom[4 * p] * MICROFACET_DISTRIBUTION_RESOLUTION / SQRT_PI_OVER_3));
+//
+//                // When floor and exact are the same, t = 1.0.  When exact is almost a whole increment greater than floor, t approaches 0.0.
+//                // If mFloor is clamped to MICROFACET_DISTRIBUTION_RESOLUTION -1, then mExact will be much larger, so t = 0.0.
+//                double t = Math.max(0.0, 1.0 + mFloor - mExact);
+
+//                for (int b1 = 0; b1 < BASIS_COUNT; b1++)
+//                {
+//                    int iStart = BASIS_COUNT * (mFloor + 1) + b1;
+//
+//                    double weightedReflectanceRed   = weightSolution.get(b1, p) * colorAndVisibility[4 * p];
+//                    double weightedReflectanceGreen = weightSolution.get(b1, p) * colorAndVisibility[4 * p + 1];
+//                    double weightedReflectanceBlue  = weightSolution.get(b1, p) * colorAndVisibility[4 * p + 2];
+
+//                    // For each basis function: update the vector.
+//                    // Top partition of the vector corresponds to diffuse coefficients
+//                    contributionATyRed.set(b1, 0, contributionATyRed.get(b1, 0) + weightedReflectanceRed);
+//                    contributionATyGreen.set(b1, 0, contributionATyGreen.get(b1, 0) + weightedReflectanceGreen);
+//                    contributionATyBlue.set(b1, 0, contributionATyBlue.get(b1, 0) + weightedReflectanceBlue);
+
+//                    double weightedGeomReflectanceRed   = halfwayAndGeom[4 * p + 1] * weightedReflectanceRed;
+//                    double weightedGeomReflectanceGreen = halfwayAndGeom[4 * p + 1] * weightedReflectanceGreen;
+//                    double weightedGeomReflectanceBlue  = halfwayAndGeom[4 * p + 1] * weightedReflectanceBlue;
+
+//                    // Bottom partition of the vector corresponds to specular coefficients.
+//                    // For the first non-zero element of the specular function, scale by t to account for linear interpolation.
+//                    contributionATyRed.set(iStart, 0, contributionATyRed.get(iStart, 0) + t * weightedGeomReflectanceRed);
+//                    contributionATyGreen.set(iStart, 0, contributionATyGreen.get(iStart, 0) + t * weightedGeomReflectanceGreen);
+//                    contributionATyBlue.set(iStart, 0, contributionATyBlue.get(iStart, 0) + t * weightedGeomReflectanceBlue);
+
+//                    // Iterate over all elements in the specular (microfacet distribution) functions whose angle is greater than or equal to the current angle.
+//                    // We are actually calculating the differential of the specular function, to be integrated at the end.
+//                    for (int m = mFloor + 1; m < MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+//                    {
+//                        int i = BASIS_COUNT * (m + 1) + b1;
+//
+//                        contributionATyRed.set(i, 0, contributionATyRed.get(i, 0) + weightedGeomReflectanceRed);
+//                        contributionATyGreen.set(i, 0, contributionATyGreen.get(i, 0) + weightedGeomReflectanceGreen);
+//                        contributionATyBlue.set(i, 0, contributionATyBlue.get(i, 0) + weightedGeomReflectanceBlue);
+//                    }
+
+//                    // Reset i back to the beginning:
+//                    int i = iStart;
+
+//                    // For each pair of basis functions: update the matrix.
+//                    for (int b2 = 0; b2 < BASIS_COUNT; b2++)
+//                    {
+//                        // Top left partition of the matrix: row and column both correspond to diffuse coefficients
+//                        contributionATA.set(b1, b2, contributionATA.get(b1, b2) + weightSolution.get(b1, p) * weightSolution.get(b2, p) / PI_SQUARED);
+
+//                        double weightedGeom = weightSolution.get(b1, p) * weightSolution.get(b2, p) * halfwayAndGeom[4 * p + 1];
+//                        double weightedGeomOverPi = weightedGeom / Math.PI;
+
+//                        // Top right and bottom left partitions of the matrix:
+//                        // row corresponds to diffuse coefficients and column corresponds to specular, or vice-versa.
+//                        // For the first non-zero element of the specular function, scale by t to account for linear interpolation.
+//                        contributionATA.set(i, b2, contributionATA.get(i, b2) + t * weightedGeomOverPi);
+//                        contributionATA.set(b2, i, contributionATA.get(b2, i) + t * weightedGeomOverPi);
+
+//                        int j = BASIS_COUNT * (mFloor + 1) + b2;
+//                        double weightedGeomSq = weightedGeom * halfwayAndGeom[4 * p + 1];
+//                        double tTimesWeightedGeomSq = t * weightedGeomSq;
+
+//                        // Bottom right partition of the matrix: row and column both correspond to specular.
+//                        // The first non-zero specular element in BOTH row AND column is handled here.
+//                        // Scale by t squared to account for linear interpolation for both row and column.
+//                        contributionATA.set(i, j, contributionATA.get(i, j) + t * tTimesWeightedGeomSq);
+
+//                        // Iterate over all elements in the specular (microfacet distribution) functions whose angle is greater than or equal to the current angle.
+//                        // We are actually calculating the differential of the specular function, to be integrated at the end.
+//                        for (int m = mFloor + 1; m < MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+//                        {
+//                            i = BASIS_COUNT * (m + 1) + b1;
+//
+//                            // Top right and bottom left partitions of the matrix:
+//                            // row corresponds to diffuse coefficients and column corresponds to specular, or vice-versa.
+//                            contributionATA.set(i, b2, contributionATA.get(i, b2) + weightedGeomOverPi);
+//                            contributionATA.set(b2, i, contributionATA.get(b2, i) + weightedGeomOverPi);
+
+//                            // Bottom right partition of the matrix: row and column both correspond to specular.
+//                            // The first non-zero specular element in a row or column (but not both) is handled here.
+//                            // Scale by t to account for linear interpolation.
+//                            contributionATA.set(i, j, contributionATA.get(i, j) + tTimesWeightedGeomSq);
+//
+//                            // The remaining elements are handled here.
+//                            for (int m2 = mFloor + 1; m2 < MICROFACET_DISTRIBUTION_RESOLUTION; m2++)
+//                            {
+//                                j = BASIS_COUNT * (m2 + 1) + b2;
+//                                contributionATA.set(i, j, contributionATA.get(i, j) + weightedGeomSq);
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     private void reconstructWeights()
     {
+        // write out weight textures for debugging
+        for (int b = 0; b < BASIS_COUNT; b++)
+        {
+            BufferedImage weightImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            int[] weightDataPacked = new int[width * height];
 
+            for (int p = 0; p < width * height; p++)
+            {
+                float weight = (float)weightSolution.get(b, p);
+
+                // Flip vertically
+                int dataBufferIndex = p % width + width * (height - p / width - 1);
+                weightDataPacked[dataBufferIndex] = new Color(weight, weight, weight).getRGB();
+            }
+
+            weightImg.setRGB(0, 0, weightImg.getWidth(), weightImg.getHeight(), weightDataPacked, 0, weightImg.getWidth());
+
+            try
+            {
+                ImageIO.write(weightImg, "PNG", new File(outputDirectory, String.format("weights%02d.png", b)));
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void reconstructNormals()
