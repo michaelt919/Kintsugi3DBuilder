@@ -197,7 +197,7 @@ final class ReflectanceMatrixBuilder
 
                 // Update squared total with blending weight.
                 double weightedGeomSquaredBlended = t * weightedGeomSquared;
-                weightedGeomSquaredBlendedSum.set(b1, b2, weightedGeomSquaredSum.get(b1, b2) + weightedGeomSquaredBlended);
+                weightedGeomSquaredBlendedSum.set(b1, b2, weightedGeomSquaredBlendedSum.get(b1, b2) + weightedGeomSquaredBlended);
 
                 // Top left partition of the matrix: row and column both correspond to diffuse coefficients
                 contributionATA.set(b1, b2, contributionATA.get(b1, b2) + weightProduct / PI_SQUARED);
@@ -222,18 +222,18 @@ final class ReflectanceMatrixBuilder
      * Updates the contribution matrix and vectors for a particular range of m-values, given certain running totals.
      * Usually called when building the reflectance matrix, after the m-value changes.
      * Also called at the end of that process to flush out the final set of running totals.
-     * @param currentM The current "m" value of the sample that is being processed. Samples are to be visited in order of decreasing "m".
+     * @param mCurrent The current "m" value of the sample that is being processed. Samples are to be visited in order of decreasing "m".
      */
-    private void updateContributionFromRunningTotals(int currentM)
+    private void updateContributionFromRunningTotals(int mCurrent)
     {
-        // Add the running total to elements of the ATA matrix and the ATy vector corresponding to the newly visited mFloor
+        // Add the running total to elements of the ATA matrix and the ATy vector corresponding to the newly visited m
         // as well as any m-values skipped over.
         // These elements also need to get some more contributions that have blending weights that are yet to be visited,
-        // but that will be handled later, when a sample is visited for some matrix elements, or the next time mFloor changes for others.
+        // but that will be handled later, when a sample is visited for some matrix elements, or the next time m changes for others.
         for (int b1 = 0; b1 < Nam2018Request.BASIS_COUNT; b1++)
         {
             // This loop usually would only one once, but could run multiple times if we skipped a few m values.
-            for (int m1 = mPrevious - 1; m1 >= currentM; m1--)
+            for (int m1 = mPrevious - 1; m1 >= mCurrent; m1--)
             {
                 int i = Nam2018Request.BASIS_COUNT * (m1 + 1) + b1;
 
@@ -276,7 +276,7 @@ final class ReflectanceMatrixBuilder
             }
         }
 
-        // Add the total of recently visited samples with blending weights to elements of the ATA matrix corresponding to the old mFloor.
+        // Add the total of recently visited samples with blending weights to elements of the ATA matrix corresponding to the old m.
         // Bottom right partition of the matrix: row and column both correspond to specular.
         for (int b1 = 0; b1 < Nam2018Request.BASIS_COUNT; b1++)
         {
@@ -284,8 +284,8 @@ final class ReflectanceMatrixBuilder
 
             for (int b2 = 0; b2 < Nam2018Request.BASIS_COUNT; b2++)
             {
-                // The "corner case" will be handled immediately when a sample is visited as it only affects a single element of the
-                // matrix and thus no work is saved by waiting for mFloor to change.
+                // The "corner case" was handled immediately when a sample was visited as it only affects a single element of the
+                // matrix and thus no work is saved by waiting for m to change.
 
                 // Visit every element of the microfacet distribution that is beyond m1.
                 // This is because the form of ATA is such that the values in the matrix are determined by the lower of the two m-values.
