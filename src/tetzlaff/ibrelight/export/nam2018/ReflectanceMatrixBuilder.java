@@ -24,7 +24,7 @@ final class ReflectanceMatrixBuilder
 {
     private static final double PI_SQUARED = Math.PI * Math.PI;
 
-    private int mPrevious = Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION;
+    private int mPrevious = 0;
 
     /**
      * Stores a running total (for each pair of basis functions) of the weighted sum of geometric factors.
@@ -121,7 +121,7 @@ final class ReflectanceMatrixBuilder
         IntStream.range(0, halfwayAndGeom.length / 4)
             .filter(p -> colorAndVisibility[4 * p + 3] > 0) // Eliminate pixels without valid samples
             .boxed() // Box integers to use custom sorting function
-            .sorted((p1, p2) -> -Float.compare(halfwayAndGeom[4 * p1], halfwayAndGeom[4 * p2])) // Should sort descending to visit high m values first
+            .sorted((p1, p2) -> Float.compare(halfwayAndGeom[4 * p1], halfwayAndGeom[4 * p2])) // Should sort ascending to visit low m values first
             .forEachOrdered(this::processSample);
 
         // Flush out final running totals into the contribution matrix and vectors.
@@ -135,14 +135,14 @@ final class ReflectanceMatrixBuilder
         int mFloor = Math.min(Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION - 1, (int) Math.floor(mExact));
 
         // If mFloor changed, it's time to update the ATA matrix and ATy vector
-        assert this.mPrevious >= mFloor; // mFloor should be decreasing over time due to sorting order.
-        if (mFloor < this.mPrevious)
+        assert mPrevious <= mFloor; // mFloor should be increasing over time due to sorting order.
+        if (mFloor > mPrevious)
         {
-            this.updateContributionFromRunningTotals(mFloor);
+            updateContributionFromRunningTotals(mFloor);
 
             // Zero out the blended sum after every time that mFloor changes,
             // since it should only apply to a single m-value (as opposed to the other sums which continue to accumulate).
-            this.weightedGeomSquaredBlendedSum.zero();
+            weightedGeomSquaredBlendedSum.zero();
         }
 
         // When floor and exact are the same, t = 1.0.  When exact is almost a whole increment greater than floor, t approaches 0.0.
@@ -165,57 +165,64 @@ final class ReflectanceMatrixBuilder
             contributionATyGreen.set(b1, 0, contributionATyGreen.get(b1, 0) + weightedReflectanceGreen / Math.PI);
             contributionATyBlue.set(b1, 0, contributionATyBlue.get(b1, 0) + weightedReflectanceBlue / Math.PI);
 
-            double weightedGeomReflectanceRed   = halfwayAndGeom[4 * p + 1] * weightedReflectanceRed;
-            double weightedGeomReflectanceGreen = halfwayAndGeom[4 * p + 1] * weightedReflectanceGreen;
-            double weightedGeomReflectanceBlue  = halfwayAndGeom[4 * p + 1] * weightedReflectanceBlue;
-
-            // Bottom partition of the vector corresponds to specular coefficients.
-            // Scale contribution due to current m-value by blending weight t to account for linear interpolation.
-            // Accumulation due to greater m-values should already have been added to the vector the last time an m-value changed
             int i = Nam2018Request.BASIS_COUNT * (mFloor + 1) + b1;
-            contributionATyRed.set(i, 0, contributionATyRed.get(i, 0) + t * weightedGeomReflectanceRed);
-            contributionATyGreen.set(i, 0, contributionATyGreen.get(i, 0) + t * weightedGeomReflectanceGreen);
-            contributionATyBlue.set(i, 0, contributionATyBlue.get(i, 0) + t * weightedGeomReflectanceBlue);
 
-            // Update running totals.
-            weightedGeomRedSum.set(b1, 0, weightedGeomRedSum.get(b1, 0) + weightedGeomReflectanceRed);
-            weightedGeomGreenSum.set(b1, 0, weightedGeomGreenSum.get(b1, 0) + weightedGeomReflectanceGreen);
-            weightedGeomBlueSum.set(b1, 0, weightedGeomBlueSum.get(b1, 0) + weightedGeomReflectanceBlue);
+            if (mExact < Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION)
+            {
+                double weightedGeomReflectanceRed = halfwayAndGeom[4 * p + 1] * weightedReflectanceRed;
+                double weightedGeomReflectanceGreen = halfwayAndGeom[4 * p + 1] * weightedReflectanceGreen;
+                double weightedGeomReflectanceBlue = halfwayAndGeom[4 * p + 1] * weightedReflectanceBlue;
+
+                // Bottom partition of the vector corresponds to specular coefficients.
+                // Scale contribution due to current m-value by blending weight t to account for linear interpolation.
+                // Accumulation due to greater m-values should already have been added to the vector the last time an m-value changed
+                contributionATyRed.set(i, 0, contributionATyRed.get(i, 0) + t * weightedGeomReflectanceRed);
+                contributionATyGreen.set(i, 0, contributionATyGreen.get(i, 0) + t * weightedGeomReflectanceGreen);
+                contributionATyBlue.set(i, 0, contributionATyBlue.get(i, 0) + t * weightedGeomReflectanceBlue);
+
+                // Update running totals.
+                weightedGeomRedSum.set(b1, 0, weightedGeomRedSum.get(b1, 0) + weightedGeomReflectanceRed);
+                weightedGeomGreenSum.set(b1, 0, weightedGeomGreenSum.get(b1, 0) + weightedGeomReflectanceGreen);
+                weightedGeomBlueSum.set(b1, 0, weightedGeomBlueSum.get(b1, 0) + weightedGeomReflectanceBlue);
+            }
 
             for (int b2 = 0; b2 < Nam2018Request.BASIS_COUNT; b2++)
             {
                 // Updates to ATA
 
-                // Update non-squared total without blending weight.
-                double weightProduct = weightSolution.get(b1, p) * weightSolution.get(b2, p);
-                double weightedGeom = weightProduct * halfwayAndGeom[4 * p + 1];
-                weightedGeomSum.set(b1, b2, weightedGeomSum.get(b1, b2) + weightedGeom);
-
-                // Update squared total without blending weight.
-                double weightedGeomSquared = weightedGeom * halfwayAndGeom[4 * p + 1];
-                weightedGeomSquaredSum.set(b1, b2, weightedGeomSquaredSum.get(b1, b2) + weightedGeomSquared);
-
-                // Update squared total with blending weight.
-                double weightedGeomSquaredBlended = t * weightedGeomSquared;
-                weightedGeomSquaredBlendedSum.set(b1, b2, weightedGeomSquaredBlendedSum.get(b1, b2) + weightedGeomSquaredBlended);
-
                 // Top left partition of the matrix: row and column both correspond to diffuse coefficients
+                double weightProduct = weightSolution.get(b1, p) * weightSolution.get(b2, p);
                 contributionATA.set(b1, b2, contributionATA.get(b1, b2) + weightProduct / PI_SQUARED);
 
-                // Top right and bottom left partitions of the matrix:
-                // row corresponds to diffuse coefficients and column corresponds to specular, or vice-versa.
-                contributionATA.set(i, b2, contributionATA.get(i, b2) + t * weightedGeom / Math.PI);
-                contributionATA.set(b2, i, contributionATA.get(b2, i) + t * weightedGeom / Math.PI);
+                if (mExact < Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION)
+                {
+                    // Update non-squared total without blending weight.
+                    double weightedGeom = weightProduct * halfwayAndGeom[4 * p + 1];
+                    weightedGeomSum.set(b1, b2, weightedGeomSum.get(b1, b2) + weightedGeom);
 
-                // Bottom right partition of the matrix: row and column both correspond to specular.
-                // Update "corner" element with squared blending weight.
-                int j = Nam2018Request.BASIS_COUNT * (mFloor + 1) + b2;
-                contributionATA.set(i, j, contributionATA.get(i, j) + t * weightedGeomSquaredBlended);
+                    // Update squared total without blending weight.
+                    double weightedGeomSquared = weightedGeom * halfwayAndGeom[4 * p + 1];
+                    weightedGeomSquaredSum.set(b1, b2, weightedGeomSquaredSum.get(b1, b2) + weightedGeomSquared);
+
+                    // Update squared total with blending weight.
+                    double weightedGeomSquaredBlended = t * weightedGeomSquared;
+                    weightedGeomSquaredBlendedSum.set(b1, b2, weightedGeomSquaredBlendedSum.get(b1, b2) + weightedGeomSquaredBlended);
+
+                    // Top right and bottom left partitions of the matrix:
+                    // row corresponds to diffuse coefficients and column corresponds to specular, or vice-versa.
+                    contributionATA.set(i, b2, contributionATA.get(i, b2) + t * weightedGeom / Math.PI);
+                    contributionATA.set(b2, i, contributionATA.get(b2, i) + t * weightedGeom / Math.PI);
+
+                    // Bottom right partition of the matrix: row and column both correspond to specular.
+                    // Update "corner" element with squared blending weight.
+                    int j = Nam2018Request.BASIS_COUNT * (mFloor + 1) + b2;
+                    contributionATA.set(i, j, contributionATA.get(i, j) + t * weightedGeomSquaredBlended);
+                }
             }
         }
 
         // Update holder of previous mFloor value.
-        this.mPrevious = mFloor;
+        mPrevious = mFloor;
     }
 
     /**
@@ -233,17 +240,14 @@ final class ReflectanceMatrixBuilder
         for (int b1 = 0; b1 < Nam2018Request.BASIS_COUNT; b1++)
         {
             // This loop usually would only one once, but could run multiple times if we skipped a few m values.
-            for (int m1 = mPrevious - 1; m1 >= mCurrent; m1--)
+            for (int m1 = mPrevious + 1; m1 <= mCurrent; m1++)
             {
                 int i = Nam2018Request.BASIS_COUNT * (m1 + 1) + b1;
 
                 // Update ATy vector
-                contributionATyRed.set(i, 0, contributionATyRed.get(i, 0)
-                    + weightedGeomRedSum.get(b1, 0) / PI_SQUARED);
-                contributionATyGreen.set(i, 0, contributionATyGreen.get(i, 0)
-                    + weightedGeomGreenSum.get(b1, 0) / PI_SQUARED);
-                contributionATyBlue.set(i, 0, contributionATyBlue.get(i, 0)
-                    + weightedGeomBlueSum.get(b1, 0) / PI_SQUARED);
+                contributionATyRed.set(i, 0, contributionATyRed.get(i, 0) + weightedGeomRedSum.get(b1, 0) / PI_SQUARED);
+                contributionATyGreen.set(i, 0, contributionATyGreen.get(i, 0) + weightedGeomGreenSum.get(b1, 0) / PI_SQUARED);
+                contributionATyBlue.set(i, 0, contributionATyBlue.get(i, 0) + weightedGeomBlueSum.get(b1, 0) / PI_SQUARED);
 
                 // Update ATA matrix
                 for (int b2 = 0; b2 < Nam2018Request.BASIS_COUNT; b2++)
@@ -261,9 +265,9 @@ final class ReflectanceMatrixBuilder
                     int j = Nam2018Request.BASIS_COUNT * (m1 + 1) + b2;
                     contributionATA.set(i, j, contributionATA.get(i, j) + weightedGeomSquaredSum.get(b1, b2));
 
-                    // Visit every element of the microfacet distribution that is beyond m1.
+                    // Visit every element of the microfacet distribution that comes before m1.
                     // This is because the form of ATA is such that the values in the matrix are determined by the lower of the two m-values.
-                    for (int m2 = m1 + 1; m2 < Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION; m2++)
+                    for (int m2 = 0; m2 < m1; m2++)
                     {
                         j = Nam2018Request.BASIS_COUNT * (m2 + 1) + b2;
 
@@ -287,9 +291,9 @@ final class ReflectanceMatrixBuilder
                 // The "corner case" was handled immediately when a sample was visited as it only affects a single element of the
                 // matrix and thus no work is saved by waiting for m to change.
 
-                // Visit every element of the microfacet distribution that is beyond m1.
+                // Visit every element of the microfacet distribution that comes before mPrevious.
                 // This is because the form of ATA is such that the values in the matrix are determined by the lower of the two m-values.
-                for (int m2 = mPrevious + 1; m2 < Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION; m2++)
+                for (int m2 = 0; m2 < mPrevious; m2++)
                 {
                     int j = Nam2018Request.BASIS_COUNT * (m2 + 1) + b2;
 
