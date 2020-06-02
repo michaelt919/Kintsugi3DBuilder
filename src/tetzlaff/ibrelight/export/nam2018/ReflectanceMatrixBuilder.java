@@ -17,11 +17,16 @@ import java.util.stream.IntStream;
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 
+import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
+
 /**
  * A helper class to maintain state necessary to efficiently build the matrix that can solve for reflectance.
  */
 final class ReflectanceMatrixBuilder
 {
+    // Set to true to validate the implementation (should generally be turned off for much better efficiency).
+    private static final boolean VALIDATE = false;
+
     private static final double PI_SQUARED = Math.PI * Math.PI;
 
     private int mPrevious = 0;
@@ -124,8 +129,10 @@ final class ReflectanceMatrixBuilder
             .sorted((p1, p2) -> Float.compare(halfwayAndGeom[4 * p1], halfwayAndGeom[4 * p2])) // Should sort ascending to visit low m values first
             .forEachOrdered(this::processSample);
 
-        // Flush out final running totals into the contribution matrix and vectors.
-        updateContributionFromRunningTotals(0);
+        if (VALIDATE)
+        {
+            validate();
+        }
     }
 
     private void processSample(int p)
@@ -245,9 +252,9 @@ final class ReflectanceMatrixBuilder
                 int i = Nam2018Request.BASIS_COUNT * (m1 + 1) + b1;
 
                 // Update ATy vector
-                contributionATyRed.set(i, 0, contributionATyRed.get(i, 0) + weightedGeomRedSum.get(b1, 0) / PI_SQUARED);
-                contributionATyGreen.set(i, 0, contributionATyGreen.get(i, 0) + weightedGeomGreenSum.get(b1, 0) / PI_SQUARED);
-                contributionATyBlue.set(i, 0, contributionATyBlue.get(i, 0) + weightedGeomBlueSum.get(b1, 0) / PI_SQUARED);
+                contributionATyRed.set(i, 0, contributionATyRed.get(i, 0) + weightedGeomRedSum.get(b1, 0));
+                contributionATyGreen.set(i, 0, contributionATyGreen.get(i, 0) + weightedGeomGreenSum.get(b1, 0));
+                contributionATyBlue.set(i, 0, contributionATyBlue.get(i, 0) + weightedGeomBlueSum.get(b1, 0));
 
                 // Update ATA matrix
                 for (int b2 = 0; b2 < Nam2018Request.BASIS_COUNT; b2++)
@@ -256,7 +263,7 @@ final class ReflectanceMatrixBuilder
                     // row corresponds to diffuse coefficients and column corresponds to specular, or vice-versa.
                     // The matrix is symmetric so we also need to swap row and column and update that way.
                     contributionATA.set(i, b2, contributionATA.get(i, b2) + weightedGeomSum.get(b1, b2) / Math.PI);
-                    contributionATA.set(b2, i, contributionATA.get(b2, i) + weightedGeomSum.get(b1, b2) / Math.PI);
+                    contributionATA.set(b2, i, contributionATA.get(b2, i) + weightedGeomSum.get(b2, b1) / Math.PI);
 
 
                     // Bottom right partition of the matrix: row and column both correspond to specular.
@@ -265,16 +272,16 @@ final class ReflectanceMatrixBuilder
                     int j = Nam2018Request.BASIS_COUNT * (m1 + 1) + b2;
                     contributionATA.set(i, j, contributionATA.get(i, j) + weightedGeomSquaredSum.get(b1, b2));
 
-                    // Visit every element of the microfacet distribution that comes before m1.
+                    // Visit every element of the microfacet distribution that comes after m1.
                     // This is because the form of ATA is such that the values in the matrix are determined by the lower of the two m-values.
-                    for (int m2 = 0; m2 < m1; m2++)
+                    for (int m2 = m1 + 1; m2 < Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION; m2++)
                     {
                         j = Nam2018Request.BASIS_COUNT * (m2 + 1) + b2;
 
                         // Add the current value of the running total to the appropriate location in the matrix.
                         // The matrix is symmetric so we also need to swap row and column and update that way.
                         contributionATA.set(i, j, contributionATA.get(i, j) + weightedGeomSquaredSum.get(b1, b2));
-                        contributionATA.set(j, i, contributionATA.get(j, i) + weightedGeomSquaredSum.get(b1, b2));
+                        contributionATA.set(j, i, contributionATA.get(j, i) + weightedGeomSquaredSum.get(b2, b1));
                     }
                 }
             }
@@ -291,17 +298,88 @@ final class ReflectanceMatrixBuilder
                 // The "corner case" was handled immediately when a sample was visited as it only affects a single element of the
                 // matrix and thus no work is saved by waiting for m to change.
 
-                // Visit every element of the microfacet distribution that comes before mPrevious.
+                // Visit every element of the microfacet distribution that comes after mPrevious.
                 // This is because the form of ATA is such that the values in the matrix are determined by the lower of the two m-values.
-                for (int m2 = 0; m2 < mPrevious; m2++)
+                for (int m2 = mPrevious + 1; m2 < Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION; m2++)
                 {
                     int j = Nam2018Request.BASIS_COUNT * (m2 + 1) + b2;
 
-                    // Add the current value of the running total to the appropriate location in the matrix.
+                    // Add the current value of the running total with blending (linear interpolation) weights to the appropriate location in the matrix.
                     // The matrix is symmetric so we also need to swap row and column and update that way.
-                    contributionATA.set(i, j, contributionATA.get(i, j) + weightedGeomSquaredSum.get(b1, b2));
-                    contributionATA.set(j, i, contributionATA.get(j, i) + weightedGeomSquaredSum.get(b1, b2));
+                    contributionATA.set(i, j, contributionATA.get(i, j) + weightedGeomSquaredBlendedSum.get(b1, b2));
+                    contributionATA.set(j, i, contributionATA.get(j, i) + weightedGeomSquaredBlendedSum.get(b2, b1));
                 }
+            }
+        }
+    }
+
+    private void validate()
+    {
+        // Calculate the matrix products the slow way to make sure that the implementation is correct.
+        SimpleMatrix mA = new SimpleMatrix(colorAndVisibility.length / 4, Nam2018Request.BASIS_COUNT * (Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION + 1), DMatrixRMaj.class);
+        SimpleMatrix yRed = new SimpleMatrix(colorAndVisibility.length / 4, 1);
+        SimpleMatrix yGreen = new SimpleMatrix(colorAndVisibility.length / 4, 1);
+        SimpleMatrix yBlue = new SimpleMatrix(colorAndVisibility.length / 4, 1);
+
+        for (int p = 0; p < colorAndVisibility.length / 4; p++)
+        {
+            if (colorAndVisibility[4 * p + 3] > 0)
+            {
+                yRed.set(p, colorAndVisibility[4 * p]);
+                yGreen.set(p, colorAndVisibility[4 * p + 1]);
+                yBlue.set(p, colorAndVisibility[4 * p + 2]);
+
+                // Calculate which discretized MDF element the current sample belongs to.
+                double mExact = halfwayAndGeom[4 * p] * Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION;
+                int mFloor = Math.min(Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION - 1, (int) Math.floor(mExact));
+
+                // When floor and exact are the same, t = 1.0.  When exact is almost a whole increment greater than floor, t approaches 0.0.
+                // If mFloor is clamped to MICROFACET_DISTRIBUTION_RESOLUTION -1, then mExact will be much larger, so t = 0.0.
+                double t = Math.max(0.0, 1.0 + mFloor - mExact);
+
+                for (int b = 0; b < Nam2018Request.BASIS_COUNT; b++)
+                {
+                    // diffuse
+                    mA.set(p, b, weightSolution.get(b, p) / Math.PI);
+
+                    if (mExact < Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION)
+                    {
+                        int j = Nam2018Request.BASIS_COUNT * (mFloor + 1) + b;
+
+                        // specular with blending for first non-zero element
+                        mA.set(p, j, t * halfwayAndGeom[4 * p + 1] * weightSolution.get(b, p));
+
+                        for (int m = mFloor + 1; m < Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+                        {
+                            j = Nam2018Request.BASIS_COUNT * (m + 1) + b;
+                            // specular (no blending)
+                            mA.set(p, j, halfwayAndGeom[4 * p + 1] * weightSolution.get(b, p));
+                        }
+                    }
+                }
+            }
+        }
+
+        SimpleMatrix mATA = new SimpleMatrix(mA.numCols(), mA.numCols());
+        SimpleMatrix vATyRed = new SimpleMatrix(mA.numCols(), 1);
+        SimpleMatrix vATyGreen = new SimpleMatrix(mA.numCols(), 1);
+        SimpleMatrix vATyBlue = new SimpleMatrix(mA.numCols(), 1);
+
+        // Low level operations to avoid using unnecessary memory.
+        multTransA(mA.getMatrix(), mA.getMatrix(), mATA.getMatrix());
+        multTransA(mA.getMatrix(), yRed.getMatrix(), vATyRed.getMatrix());
+        multTransA(mA.getMatrix(), yGreen.getMatrix(), vATyGreen.getMatrix());
+        multTransA(mA.getMatrix(), yBlue.getMatrix(), vATyBlue.getMatrix());
+
+        for (int i = 0; i < mATA.numRows(); i++)
+        {
+            assert Math.abs(vATyRed.get(i, 0) - contributionATyRed.get(i, 0)) <= vATyRed.get(i, 0) * 0.001;
+            assert Math.abs(vATyGreen.get(i, 0) - contributionATyGreen.get(i, 0)) <= vATyGreen.get(i, 0) * 0.001;
+            assert Math.abs(vATyBlue.get(i, 0) - contributionATyBlue.get(i, 0)) <= vATyBlue.get(i, 0) * 0.001;
+
+            for (int j = 0; j < mATA.numCols(); j++)
+            {
+                assert Math.abs(mATA.get(i, j) - contributionATA.get(i, j)) <= mATA.get(i, j) * 0.001;
             }
         }
     }

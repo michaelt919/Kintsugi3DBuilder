@@ -250,15 +250,18 @@ public class Nam2018Request implements IBRRequest
                 index = -index - 2;
             }
 
+            assert index < cdf.length;
+
             // If the index was actually positive to begin with, that's probably fine; just make sure that it's a valid location.
             // It's also possible in theory for the index to be zero if the random number generator produced 0.0.
-            while (index < 0 || averages[4 * index + 3] < 1.0)
+            while (index < 0 || averages[4 * index + 3] == 0.0)
             {
                 // Search forward until a valid index is found.
                 index++;
 
                 // We shouldn't ever fail to find an index since x should have been less than the final (un-normalized) CDF total.
                 // This means that there has to be some place where the CDF went up, corresponding to a valid index.
+                assert index < cdf.length;
             }
 
             // We've found a new center.
@@ -280,7 +283,7 @@ public class Nam2018Request implements IBRRequest
 
             for (int p = 0; p < width * height; p++)
             {
-                if (averages[4 * p + 3] >= 1.0)
+                if (averages[4 * p + 3] > 0.0)
                 {
                     int bMin = -1;
 
@@ -313,7 +316,7 @@ public class Nam2018Request implements IBRRequest
         weightSolution = new SimpleMatrix(BASIS_COUNT, width * height, DMatrixRMaj.class);
         for (int p = 0; p < width * height; p++)
         {
-            if (averages[4 * p + 3] >= 1.0)
+            if (averages[4 * p + 3] > 0.0)
             {
                 int bMin = -1;
 
@@ -345,7 +348,7 @@ public class Nam2018Request implements IBRRequest
             int[] weightDataPacked = new int[width * height];
             for (int p = 0; p < width * height; p++)
             {
-                if (averages[4 * p + 3] >= 1.0)
+                if (averages[4 * p + 3] > 0.0)
                 {
                     int bMin = -1;
 
@@ -444,45 +447,46 @@ public class Nam2018Request implements IBRRequest
 
             for (int b = 0; b < BASIS_COUNT; b++)
             {
-                System.out.println("Basis BRDF #" + b + ':');
-
                 DoubleVector3 diffuseColor = new DoubleVector3(
                     brdfSolutionRed.get(b),
                     brdfSolutionGreen.get(b),
                     brdfSolutionBlue.get(b));
-                System.out.println("Diffuse: " + diffuseColor);
+                System.out.println("Diffuse #" + b + ": " + diffuseColor);
+            }
 
-                System.out.print("Specular (red): ");
+            System.out.println("Basis BRDFs:");
+
+            for (int b = 0; b < BASIS_COUNT; b++)
+            {
+                System.out.print("Red#" + b);
                 double redTotal = 0.0;
                 for (int m = MICROFACET_DISTRIBUTION_RESOLUTION - 1; m >= 0; m--)
                 {
+                    System.out.print(", ");
                     redTotal += brdfSolutionRed.get((m + 1) * BASIS_COUNT + b);
                     System.out.print(redTotal);
-                    System.out.print(' ');
                 }
 
                 System.out.println();
 
-                System.out.print("Specular (green): ");
+                System.out.print("Green#" + b);
                 double greenTotal = 0.0;
                 for (int m = MICROFACET_DISTRIBUTION_RESOLUTION - 1; m >= 0; m--)
                 {
+                    System.out.print(", ");
                     greenTotal += brdfSolutionGreen.get((m + 1) * BASIS_COUNT + b);
                     System.out.print(greenTotal);
-                    System.out.print(' ');
                 }
                 System.out.println();
 
-                System.out.print("Specular (blue): ");
+                System.out.print("Blue#" + b);
                 double blueTotal = 0.0;
                 for (int m = MICROFACET_DISTRIBUTION_RESOLUTION - 1; m >= 0; m--)
                 {
+                    System.out.print(", ");
                     blueTotal += brdfSolutionBlue.get((m + 1) * BASIS_COUNT + b);
                     System.out.print(blueTotal);
-                    System.out.print(' ');
                 }
-                System.out.println();
-
                 System.out.println();
             }
         }

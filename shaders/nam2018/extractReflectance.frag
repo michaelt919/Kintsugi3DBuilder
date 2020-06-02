@@ -60,7 +60,10 @@ void main()
     float nDotV = max(0.0, dot(normal, view));
     float nDotH = max(0.0, dot(normal, halfway));
     float hDotV = max(0.0, dot(halfway, view));
-    vec3 irradiance = nDotL * lightIntensity / dot(lightDisplacement, lightDisplacement);
+
+    // "Light intensity" is defined in such a way that we need to multiply by pi to be properly normalized.
+    vec3 irradiance = nDotL * PI * lightIntensity / dot(lightDisplacement, lightDisplacement);
+
     float roughness = texture(roughnessMap, fTexCoord)[0];
     float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
 
