@@ -44,6 +44,7 @@ public class Nam2018Request implements IBRRequest
 
     private static final int BRDF_MATRIX_SIZE = BASIS_COUNT * (MICROFACET_DISTRIBUTION_RESOLUTION + 1);
     private static final double K_MEANS_TOLERANCE = 0.000001;
+    private static final double NNLS_TOLERANCE = 0.001;
     private static final double GAMMA = 2.2;
 
     private static final boolean DEBUG = true;
@@ -54,16 +55,21 @@ public class Nam2018Request implements IBRRequest
     private final File outputDirectory;
     private final ReadonlySettingsModel settingsModel;
 
-    private float error = Float.POSITIVE_INFINITY;
+    private double error = Double.POSITIVE_INFINITY;
 
     private final SimpleMatrix brdfATA = new SimpleMatrix(BRDF_MATRIX_SIZE, BRDF_MATRIX_SIZE, DMatrixRMaj.class);
     private final SimpleMatrix brdfATyRed = new SimpleMatrix(BRDF_MATRIX_SIZE, 1, DMatrixRMaj.class);
     private final SimpleMatrix brdfATyGreen = new SimpleMatrix(BRDF_MATRIX_SIZE, 1, DMatrixRMaj.class);
     private final SimpleMatrix brdfATyBlue = new SimpleMatrix(BRDF_MATRIX_SIZE, 1, DMatrixRMaj.class);
-    private SimpleMatrix brdfSolutionRed;
-    private SimpleMatrix brdfSolutionGreen;
-    private SimpleMatrix brdfSolutionBlue;
-    private SimpleMatrix weightSolution;
+    private final DoubleVector3[] diffuseAlbedos = new DoubleVector3[BASIS_COUNT];
+    private final SimpleMatrix specularRed = new SimpleMatrix(MICROFACET_DISTRIBUTION_RESOLUTION + 1, BASIS_COUNT, DMatrixRMaj.class);
+    private final SimpleMatrix specularGreen = new SimpleMatrix(MICROFACET_DISTRIBUTION_RESOLUTION + 1, BASIS_COUNT, DMatrixRMaj.class);
+    private final SimpleMatrix specularBlue = new SimpleMatrix(MICROFACET_DISTRIBUTION_RESOLUTION + 1, BASIS_COUNT, DMatrixRMaj.class);
+
+    private final SimpleMatrix[] weightsQTQAugmented;
+    private final SimpleMatrix[] weightsQTrAugmented;
+    private final boolean[] weightsValidity;
+    private final SimpleMatrix[] weightSolutions;
 
     private final Object threadsRunningLock = new Object();
     private int threadsRunning = 0;
@@ -75,7 +81,36 @@ public class Nam2018Request implements IBRRequest
         this.outputDirectory = outputDirectory;
         this.settingsModel = settingsModel;
 
-        weightSolution = new SimpleMatrix(BASIS_COUNT, width * height, DMatrixRMaj.class);
+        weightSolutions = IntStream.range(0, width * height)
+            .mapToObj(p -> new SimpleMatrix(BASIS_COUNT + 1, 1, DMatrixRMaj.class))
+            .toArray(SimpleMatrix[]::new);
+
+        weightsQTQAugmented = IntStream.range(0, width * height)
+            .mapToObj(p ->
+            {
+                SimpleMatrix mQTQAugmented = new SimpleMatrix(BASIS_COUNT + 1, BASIS_COUNT + 1, DMatrixRMaj.class);
+
+                // Set up equality constraint.
+                for (int b = 0; b < BASIS_COUNT; b++)
+                {
+                    mQTQAugmented.set(b, BASIS_COUNT, 1.0);
+                    mQTQAugmented.set(BASIS_COUNT, b, 1.0);
+                }
+
+                return mQTQAugmented;
+            })
+            .toArray(SimpleMatrix[]::new);
+
+        weightsQTrAugmented = IntStream.range(0, width * height)
+            .mapToObj(p ->
+            {
+                SimpleMatrix mQTrAugmented = new SimpleMatrix(BASIS_COUNT + 1, 1, DMatrixRMaj.class);
+                mQTrAugmented.set(BASIS_COUNT, 1.0); // Set up equality constraint
+                return mQTrAugmented;
+            })
+            .toArray(SimpleMatrix[]::new);
+
+        weightsValidity = new boolean[width * height];
     }
 
     @Override
@@ -104,14 +139,14 @@ public class Nam2018Request implements IBRRequest
             normalFramebuffer.clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
             reflectanceDrawable.program().setTexture("normalMap", normalFramebuffer.getColorAttachmentTexture(0));
 
-            float previousError;
+            double previousError;
 
             do
             {
                 previousError = error;
 
                 reconstructBRDFs(reflectanceDrawable, framebuffer, resources.viewSet.getCameraPoseCount());
-                reconstructWeights();
+                reconstructWeights(reflectanceDrawable, framebuffer, resources.viewSet.getCameraPoseCount());
                 reconstructNormals();
             }
             while (error < previousError);
@@ -313,9 +348,11 @@ public class Nam2018Request implements IBRRequest
         }
         while (changed);
 
-        weightSolution = new SimpleMatrix(BASIS_COUNT, width * height, DMatrixRMaj.class);
         for (int p = 0; p < width * height; p++)
         {
+            // Initialize weights to zero.
+            weightSolutions[p].zero();
+
             if (averages[4 * p + 3] > 0.0)
             {
                 int bMin = -1;
@@ -332,7 +369,8 @@ public class Nam2018Request implements IBRRequest
                     }
                 }
 
-                weightSolution.set(bMin, p, 1.0);
+                // Set weight to one for the cluster that each pixel belongs to.
+                weightSolutions[p].set(bMin, 1.0);
             }
         }
 
@@ -401,10 +439,27 @@ public class Nam2018Request implements IBRRequest
         System.out.println("Building reflectance fitting matrix...");
         buildReflectanceMatrix(drawable, framebuffer, viewCount);
         System.out.println("Finished building matrix; solving now...");
-        brdfSolutionRed = NonNegativeLeastSquares.solvePremultiplied(brdfATA, brdfATyRed, 0.001);
-        brdfSolutionGreen = NonNegativeLeastSquares.solvePremultiplied(brdfATA, brdfATyGreen, 0.001);
-        brdfSolutionBlue = NonNegativeLeastSquares.solvePremultiplied(brdfATA, brdfATyBlue, 0.001);
+        SimpleMatrix brdfSolutionRed = NonNegativeLeastSquares.solvePremultiplied(brdfATA, brdfATyRed, NNLS_TOLERANCE);
+        SimpleMatrix brdfSolutionGreen = NonNegativeLeastSquares.solvePremultiplied(brdfATA, brdfATyGreen, NNLS_TOLERANCE);
+        SimpleMatrix brdfSolutionBlue = NonNegativeLeastSquares.solvePremultiplied(brdfATA, brdfATyBlue, NNLS_TOLERANCE);
         System.out.println("DONE!");
+
+        for (int b = 0; b < BASIS_COUNT; b++)
+        {
+            diffuseAlbedos[b] = new DoubleVector3(brdfSolutionRed.get(b), brdfSolutionGreen.get(b), brdfSolutionBlue.get(b));
+
+            specularRed.set(MICROFACET_DISTRIBUTION_RESOLUTION, b, 0);
+            specularGreen.set(MICROFACET_DISTRIBUTION_RESOLUTION, b, 0);
+            specularBlue.set(MICROFACET_DISTRIBUTION_RESOLUTION, b, 0);
+
+            for (int m = MICROFACET_DISTRIBUTION_RESOLUTION - 1; m >= 0; m--)
+            {
+                // f[m] = f[m+1] + estimated difference (located at index m + 1 due to diffuse component at index 0).
+                specularRed.set(m, b, specularRed.get(m + 1, b) + brdfSolutionRed.get((m + 1) * BASIS_COUNT + b));
+                specularGreen.set(m, b, specularGreen.get(m + 1, b) + brdfSolutionGreen.get((m + 1) * BASIS_COUNT + b));
+                specularBlue.set(m, b, specularBlue.get(m + 1, b) + brdfSolutionBlue.get((m + 1) * BASIS_COUNT + b));
+            }
+        }
 
         if (DEBUG)
         {
@@ -421,7 +476,7 @@ public class Nam2018Request implements IBRRequest
                             brdfSolutionRed.get(b),
                             brdfSolutionGreen.get(b),
                             brdfSolutionBlue.get(b), 1.0)
-                        .times(weightSolution.get(b, p)));
+                        .times(weightSolutions[p].get(b)));
                 }
 
                 if (diffuseSum.w > 0)
@@ -562,7 +617,7 @@ public class Nam2018Request implements IBRRequest
                     SimpleMatrix contributionATyBlue = new SimpleMatrix(BRDF_MATRIX_SIZE, 1, DMatrixRMaj.class);
 
                     // Get the contributions from the current view.
-                    new ReflectanceMatrixBuilder(colorAndVisibility, halfwayAndGeom, weightSolution, contributionATA,
+                    new ReflectanceMatrixBuilder(colorAndVisibility, halfwayAndGeom, weightSolutions, contributionATA,
                         contributionATyRed, contributionATyGreen, contributionATyBlue).execute();
 
                     // Add the contribution into the main matrix and vectors.
@@ -653,8 +708,20 @@ public class Nam2018Request implements IBRRequest
         }
     }
 
-    private void reconstructWeights()
+    private <ContextType extends Context<ContextType>> void reconstructWeights(
+        Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int viewCount)
     {
+        // Setup all the matrices for fitting weights (one per texel)
+        buildWeightMatrix(drawable, framebuffer, viewCount);
+
+        for (int p = 0; p < width * height; p++)
+        {
+            if (weightsValidity[p])
+            {
+                weightSolutions[p] = NonNegativeLeastSquares.solvePremultiplied(weightsQTQAugmented[p], weightsQTrAugmented[p], NNLS_TOLERANCE);
+            }
+        }
+
         // write out weight textures for debugging
         for (int b = 0; b < BASIS_COUNT; b++)
         {
@@ -663,7 +730,7 @@ public class Nam2018Request implements IBRRequest
 
             for (int p = 0; p < width * height; p++)
             {
-                float weight = (float)weightSolution.get(b, p);
+                float weight = (float)weightSolutions[p].get(b);
 
                 // Flip vertically
                 int dataBufferIndex = p % width + width * (height - p / width - 1);
@@ -679,6 +746,83 @@ public class Nam2018Request implements IBRRequest
             catch (IOException e)
             {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    private <ContextType extends Context<ContextType>> void buildWeightMatrix(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int viewCount)
+    {
+        // Initially assume that all texels are invalid.
+        Arrays.fill(weightsValidity, false);
+
+        for (int k = 0; k < viewCount; k++)
+        {
+            // Clear framebuffer
+            framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+            framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+
+            // Run shader program to fill framebuffer with per-pixel information.
+            drawable.program().setUniform("viewIndex", k);
+            drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+
+            // Copy framebuffer from GPU to main memory.
+            float[] colorAndVisibility = framebuffer.readFloatingPointColorBufferRGBA(0);
+            float[] halfwayAndGeomAndWeights = framebuffer.readFloatingPointColorBufferRGBA(1);
+
+            // Update matrix for each pixel.
+            for (int p = 0; p < width * height; p++)
+            {
+                // Skip samples that aren't visible or are otherwise invalid.
+                if (colorAndVisibility[4 * p + 3] > 0)
+                {
+                    // Any time we have a visible, valid sample, mark that the corresponding texel is valid.
+                    weightsValidity[p] = true;
+
+                    // Precalculate frequently used values.
+                    double weightSquared = halfwayAndGeomAndWeights[4 * p + 2] * halfwayAndGeomAndWeights[4 * p + 2];
+                    double geomFactor = halfwayAndGeomAndWeights[4 * p + 1];
+                    double mExact = halfwayAndGeomAndWeights[4 * p] * MICROFACET_DISTRIBUTION_RESOLUTION;
+                    int m1 = (int)Math.floor(mExact);
+                    int m2 = m1 + 1;
+                    double t = mExact - m1;
+                    DoubleVector3 fActual = new DoubleVector3(colorAndVisibility[4 * p], colorAndVisibility[4 * p + 1], colorAndVisibility[4 * p + 2]);
+
+                    for (int b1 = 0; b1 < BASIS_COUNT; b1++)
+                    {
+                        // Evaluate the first basis BRDF.
+                        DoubleVector3 f1 = diffuseAlbedos[b1].dividedBy(Math.PI);
+
+                        if (m1 < MICROFACET_DISTRIBUTION_RESOLUTION)
+                        {
+                            f1 = f1.plus(new DoubleVector3(specularRed.get(m1, b1), specularGreen.get(m1, b1), specularBlue.get(m1, b1))
+                                    .times(1.0 - t)
+                                    .plus(new DoubleVector3(specularRed.get(m2, b1), specularGreen.get(m2, b1), specularBlue.get(m2, b1))
+                                        .times(t))
+                                    .times(geomFactor));
+                        }
+
+                        // Store the weighted product of the basis BRDF and the actual BRDF in the vector.
+                        weightsQTrAugmented[p].set(b1, weightSquared * f1.dot(fActual));
+
+                        for (int b2 = 0; b2 < BASIS_COUNT; b2++)
+                        {
+                            // Evaluate the second basis BRDF.
+                            DoubleVector3 f2 = diffuseAlbedos[b2].dividedBy(Math.PI);
+
+                            if (m1 < MICROFACET_DISTRIBUTION_RESOLUTION)
+                            {
+                                f2 = f2.plus(new DoubleVector3(specularRed.get(m1, b2), specularGreen.get(m1, b2), specularBlue.get(m1, b2))
+                                    .times(1.0 - t)
+                                    .plus(new DoubleVector3(specularRed.get(m2, b2), specularGreen.get(m2, b2), specularBlue.get(m2, b2))
+                                        .times(t))
+                                    .times(geomFactor));
+                            }
+
+                            // Store the weighted product of the two BRDFs in the matrix.
+                            weightsQTQAugmented[p].set(b1, b2, weightSquared * f1.dot(f2));
+                        }
+                    }
+                }
             }
         }
     }

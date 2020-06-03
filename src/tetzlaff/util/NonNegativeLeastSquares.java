@@ -14,6 +14,7 @@ package tetzlaff.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import org.ejml.dense.row.CommonOps_DDRM;
 import org.ejml.simple.SimpleMatrix;
@@ -23,7 +24,8 @@ import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
 
 public final class NonNegativeLeastSquares
 {
-    private static SimpleMatrix solvePartial(SimpleMatrix mATA, SimpleMatrix vATb, boolean[] p, int sizeP, List<Integer> mapping, SimpleMatrix sOut)
+    private static SimpleMatrix solvePartial(
+        SimpleMatrix mATA, SimpleMatrix vATb, boolean[] p, List<Integer> mapping, SimpleMatrix sOut, int constraintCount)
     {
         for (int index = 0; index < p.length; index++)
         {
@@ -31,6 +33,12 @@ public final class NonNegativeLeastSquares
             {
                 mapping.add(index);
             }
+        }
+
+        // Add equality constraints if there are any.
+        for (int i = mATA.numRows() - constraintCount; i < mATA.numRows(); i++)
+        {
+            mapping.add(i);
         }
 
         // Create versions of A'A and A'b containing only the rows and columns
@@ -67,6 +75,21 @@ public final class NonNegativeLeastSquares
         return s_P;
     }
 
+    private static double minNonConstraint(SimpleMatrix s, int constraintCount)
+    {
+        return IntStream.range(0, s.numRows() - constraintCount)
+            .mapToDouble(s::get)
+            .min()
+            .orElse(Double.NEGATIVE_INFINITY);
+    }
+
+    /**
+     * Solves a non-negative least squares problem that minimizes ||Ax - b||^2
+     * @param mA The matrix A
+     * @param b The vector b
+     * @param epsilon The allowed tolerance at which the algorithm will terminate.
+     * @return The non-negative least squares solution.
+     */
     public static SimpleMatrix solve(SimpleMatrix mA, SimpleMatrix b, double epsilon)
     {
         if (b.numCols() != 1 || b.numRows() != mA.numRows())
@@ -85,14 +108,46 @@ public final class NonNegativeLeastSquares
         return solvePremultiplied(mATA, vATb, epsilon);
     }
 
+    /**
+     * Solves a non-negative least squares problem that minimizes ||Ax - b||^2, using the premultiplied form A'Ax - A'b.
+     * @param mATA The matrix product A' (A transpose) times A.
+     * @param vATb The product A' (A transpose) times b.
+     * @param epsilon The allowed tolerance at which the algorithm will terminate.
+     * @return The non-negative least squares solution.
+     */
     public static SimpleMatrix solvePremultiplied(SimpleMatrix mATA, SimpleMatrix vATb, double epsilon)
     {
-        if (mATA.numCols() != mATA.numRows())
+        return solvePremultipliedWithEqualityConstraints(mATA, vATb, epsilon, 0);
+    }
+
+    /**
+     * Solves a non-negative least squares problem that minimizes ||Ax - b||^2, using the premultiplied form A'Ax - A'b.
+     * This overload also supports additional equality constraints that must be satisfied in addition to non-negativity.
+     * This constraints should be appended to the premultiplied form A'Ax - A'b to form an augmented linear system.
+     * https://en.wikipedia.org/wiki/Quadratic_programming#Equality_constraints
+     * @param augmentedATA The upper left partition of this matrix is the matrix product A' (A transpose) times A.
+     *                     The bottom left partition of this matrix stores the LHS of the equality constraints.
+     *                     The top right partition should have be the same as the bottom left, but transposed.
+     *                     The bottom right partition should store all zeros.
+     * @param augmentedATb The upper partition of this vector is the product A' (A transpose) times b.
+     *                     The bottom partition of this vector is the RHS of the equality constraints.
+     * @param epsilon The allowed tolerance at which the algorithm will terminate.
+     * @param constraintCount The number of rows and columns of the provided linear system that are assumed to be constraints.
+     *                        These are taken to be at the bottom and right of the matrix.
+     *                        If the matrix (which should be square) has a total of n rows and n columns, and there are k constraints,
+     *                        then it is assumed that the first n-k rows and columns are the premultiplied matrix A'A,
+     *                        and the final k rows and columns are where the constraints are provided.
+     * @return The non-negative least squares solution, augmented with the Lagrange multipliers for the equality constraints.
+     */
+    public static SimpleMatrix solvePremultipliedWithEqualityConstraints(
+        SimpleMatrix augmentedATA, SimpleMatrix augmentedATb, double epsilon, int constraintCount)
+    {
+        if (augmentedATA.numCols() != augmentedATA.numRows())
         {
             throw new IllegalArgumentException("A'A must be a square matrix.");
         }
 
-        if (vATb.numCols() != 1 || vATb.numRows() != mATA.numRows())
+        if (augmentedATb.numCols() != 1 || augmentedATb.numRows() != augmentedATA.numRows())
         {
             throw new IllegalArgumentException("A'b must be a column vector with the same number of rows as matrix A'A.");
         }
@@ -104,22 +159,25 @@ public final class NonNegativeLeastSquares
 
         // Keep track of the set of free variables (where p[i] is true)
         // All other variables are fixed at zero.
-        boolean[] p = new boolean[mATA.numCols()];
+        boolean[] p = new boolean[augmentedATA.numCols() - constraintCount];
 
         // Keep track of the number of free variables.
         int sizeP = 0;
 
-        SimpleMatrix x = new SimpleMatrix(mATA.numCols(), 1);
-        SimpleMatrix w = vATb.copy();
+        SimpleMatrix x = new SimpleMatrix(augmentedATA.numCols(), 1);
+        SimpleMatrix w = augmentedATb.copy();
 
         int k = -1;
         double maxW;
+
+        // Mapping from the set of free variables to the set of all variables.
+        List<Integer> mapping = new ArrayList<>(augmentedATA.numRows());
 
         do
         {
             maxW = 0.0;
 
-            for (int i = 0; i < w.numRows(); i++)
+            for (int i = 0; i < w.numRows() - constraintCount; i++)
             {
                 double value = w.get(i);
                 if (!p[i] && value > maxW)
@@ -134,20 +192,20 @@ public final class NonNegativeLeastSquares
             {
                 p[k] = true;
 
-                SimpleMatrix s = new SimpleMatrix(mATA.numCols(), 1);
+                SimpleMatrix s = new SimpleMatrix(augmentedATA.numCols(), 1);
 
-                // Mapping from the set of free variables to the set of all variables.
-                List<Integer> mapping = new ArrayList<>(sizeP + 1);
+                // Clear the mapping so that it can be repopulated by solvePartial().
+                mapping.clear();
 
                 // Populates the mapping, solves the system and copies it into s,
                 // and returns a vector containing only the free variables.
-                SimpleMatrix s_P = solvePartial(mATA, vATb, p, sizeP + 1, mapping, s);
+                SimpleMatrix s_P = solvePartial(augmentedATA, augmentedATb, p, mapping, s, constraintCount);
 
-                // Update size of P based on the number of mappings.
-                sizeP = mapping.size();
+                // Update size of P based on the number of mappings, accounting for the space used for equality constraints at the end of the mappings.
+                sizeP = mapping.size() - constraintCount;
 
                 // Make sure that none of the free variables went negative.
-                while(elementMin(s_P.getMatrix()) <= 0.0)
+                while(minNonConstraint(s_P, constraintCount) <= 0.0)
                 {
                     double alpha = 1.0;
                     int j = -1;
@@ -167,12 +225,6 @@ public final class NonNegativeLeastSquares
                         }
                     }
 
-                    // Several sources seem to indicate that alpha should be negated at this point:
-                    //         alpha = -min(x_i / (x_i - s_i)) where s_i <= 0.
-                    // (i.e. set alpha = -alpha in this implementation).
-                    // However, this is not the way it was originally published by Lawson and Hanson,
-                    // and it doesn't make sense to negate it, since alpha should vary between 0 and 1.
-
                     // x = x + alpha * (s - x)
                     CommonOps_DDRM.addEquals(x.getMatrix(), alpha, s.minus(x).getMatrix());
 
@@ -181,7 +233,7 @@ public final class NonNegativeLeastSquares
                     p[j] = false;
                     x.set(j, 0.0);
 
-                    for (int i = 0; i < x.numRows(); i++)
+                    for (int i = 0; i < x.numRows() - constraintCount; i++)
                     {
                         if (p[i] && x.get(i) <= 0.0)
                         {
@@ -195,14 +247,14 @@ public final class NonNegativeLeastSquares
 
                     // Populates the mapping, solves the system and copies it into s,
                     // and returns a vector containing only the free variables.
-                    s_P = solvePartial(mATA, vATb, p, sizeP, mapping, s);
+                    s_P = solvePartial(augmentedATA, augmentedATb, p, mapping, s, constraintCount);
 
                     // Update size of P based on the number of mappings.
                     sizeP = mapping.size();
                 }
 
                 x = s;
-                w = vATb.minus(mATA.mult(x));
+                w = augmentedATb.minus(augmentedATA.mult(x));
             }
         }
         while(sizeP < p.length && maxW > epsilon);

@@ -94,7 +94,7 @@ final class ReflectanceMatrixBuilder
     /**
      * Weight solution from the previous iteration.
      */
-    private final SimpleMatrix weightSolution;
+    private final SimpleMatrix[] weightSolutions;
 
     /**
      * Construct by accepting matrices where the final results will be stored.
@@ -103,7 +103,7 @@ final class ReflectanceMatrixBuilder
      * @param contributionATyGreen RHS for green
      * @param contributionATyBlue RHS for blue
      */
-    ReflectanceMatrixBuilder(float[] colorAndVisibility, float[] halfwayAndGeom, SimpleMatrix weightSolution, SimpleMatrix contributionATA,
+    ReflectanceMatrixBuilder(float[] colorAndVisibility, float[] halfwayAndGeom, SimpleMatrix[] weightSolutions, SimpleMatrix contributionATA,
         SimpleMatrix contributionATyRed, SimpleMatrix contributionATyGreen, SimpleMatrix contributionATyBlue)
     {
         this.contributionATA = contributionATA;
@@ -111,7 +111,7 @@ final class ReflectanceMatrixBuilder
         this.contributionATyGreen = contributionATyGreen;
         this.contributionATyBlue = contributionATyBlue;
 
-        this.weightSolution = weightSolution;
+        this.weightSolutions = weightSolutions;
 
         //noinspection AssignmentOrReturnOfFieldWithMutableType
         this.colorAndVisibility = colorAndVisibility;
@@ -162,9 +162,9 @@ final class ReflectanceMatrixBuilder
         {
             // Updates to ATy
 
-            double weightedReflectanceRed   = weightSolution.get(b1, p) * colorAndVisibility[4 * p];
-            double weightedReflectanceGreen = weightSolution.get(b1, p) * colorAndVisibility[4 * p + 1];
-            double weightedReflectanceBlue  = weightSolution.get(b1, p) * colorAndVisibility[4 * p + 2];
+            double weightedReflectanceRed   = weightSolutions[p].get(b1) * colorAndVisibility[4 * p];
+            double weightedReflectanceGreen = weightSolutions[p].get(b1) * colorAndVisibility[4 * p + 1];
+            double weightedReflectanceBlue  = weightSolutions[p].get(b1) * colorAndVisibility[4 * p + 2];
 
             // For each basis function: update the vector.
             // Top partition of the vector corresponds to diffuse coefficients
@@ -198,7 +198,7 @@ final class ReflectanceMatrixBuilder
                 // Updates to ATA
 
                 // Top left partition of the matrix: row and column both correspond to diffuse coefficients
-                double weightProduct = weightSolution.get(b1, p) * weightSolution.get(b2, p);
+                double weightProduct = weightSolutions[p].get(b1) * weightSolutions[p].get(b2);
                 contributionATA.set(b1, b2, contributionATA.get(b1, b2) + weightProduct / PI_SQUARED);
 
                 if (mExact < Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION)
@@ -340,20 +340,20 @@ final class ReflectanceMatrixBuilder
                 for (int b = 0; b < Nam2018Request.BASIS_COUNT; b++)
                 {
                     // diffuse
-                    mA.set(p, b, weightSolution.get(b, p) / Math.PI);
+                    mA.set(p, b, weightSolutions[p].get(b) / Math.PI);
 
                     if (mExact < Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION)
                     {
                         int j = Nam2018Request.BASIS_COUNT * (mFloor + 1) + b;
 
                         // specular with blending for first non-zero element
-                        mA.set(p, j, t * halfwayAndGeom[4 * p + 1] * weightSolution.get(b, p));
+                        mA.set(p, j, t * halfwayAndGeom[4 * p + 1] * weightSolutions[p].get(b));
 
                         for (int m = mFloor + 1; m < Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION; m++)
                         {
                             j = Nam2018Request.BASIS_COUNT * (m + 1) + b;
                             // specular (no blending)
-                            mA.set(p, j, halfwayAndGeom[4 * p + 1] * weightSolution.get(b, p));
+                            mA.set(p, j, halfwayAndGeom[4 * p + 1] * weightSolutions[p].get(b));
                         }
                     }
                 }

@@ -19,7 +19,7 @@ in vec3 fTangent;
 in vec3 fBitangent;
 
 layout(location = 0) out vec4 reflectance_visibility;
-layout(location = 1) out vec4 halfway_geom;
+layout(location = 1) out vec4 halfway_geom_weight;
 
 #include <shaders/colorappearance/imgspace.glsl>
 #include <shaders/colorappearance/colorappearance_multi_as_single.glsl>
@@ -72,7 +72,7 @@ void main()
         reflectance_visibility = vec4(imgColor.rgb / irradiance, imgColor.a);
 
         // Halfway component should be 1.0 when the angle is 60 degrees, or pi/3.
-        halfway_geom = vec4(sqrt(acos(nDotH) * 3.0 / PI), maskingShadowing / (4 * nDotL * nDotV), 0, 1);
+        halfway_geom_weight = vec4(sqrt(acos(nDotH) * 3.0 / PI), maskingShadowing / (4 * nDotL * nDotV), nDotL * sqrt(1 - nDotH * nDotH), 1);
     }
     else
     {
