@@ -40,7 +40,7 @@ import static org.lwjgl.opengl.GL30.*;
 class OpenGLTextureFactory implements TextureFactory<OpenGLContext>
 {
     private final OpenGLContext context;
-    private Map<SamplerType, OpenGLNullTexture> nullTextures = new EnumMap<>(SamplerType.class);
+    private final Map<SamplerType, OpenGLNullTexture> nullTextures = new EnumMap<>(SamplerType.class);
 
     OpenGLTextureFactory(OpenGLContext context)
     {
@@ -102,6 +102,12 @@ class OpenGLTextureFactory implements TextureFactory<OpenGLContext>
     public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> build2DColorTexture(int width, int height)
     {
         return new OpenGLTexture2DColorBuilder(context, GL_TEXTURE_2D, width, height);
+    }
+
+    @Override
+    public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> build1DColorTextureArray(int width, int height)
+    {
+        return new OpenGLTexture2DColorBuilder(context, GL_TEXTURE_1D_ARRAY, width, height);
     }
 
     @Override

@@ -44,7 +44,7 @@ public class Nam2018Request implements IBRRequest
 
     private static final int BRDF_MATRIX_SIZE = BASIS_COUNT * (MICROFACET_DISTRIBUTION_RESOLUTION + 1);
     private static final double K_MEANS_TOLERANCE = 0.000001;
-    private static final double NNLS_TOLERANCE = 0.001;
+    private static final double NNLS_TOLERANCE = 0.000000001;
     private static final double GAMMA = 2.2;
 
     private static final boolean DEBUG = true;
@@ -122,22 +122,45 @@ public class Nam2018Request implements IBRRequest
         (
             Program<ContextType> averageProgram = createAverageProgram(resources);
             Program<ContextType> reflectanceProgram = createReflectanceProgram(resources);
+            Program<ContextType> normalEstimationProgram = createNormalEstimationProgram(resources);
             FramebufferObject<ContextType> framebuffer = resources.context.buildFramebufferObject(width, height)
                 .addColorAttachment(ColorFormat.RGBA32F)
                 .addColorAttachment(ColorFormat.RGBA32F)
                 .createFramebufferObject();
-            FramebufferObject<ContextType> normalFramebuffer = resources.context.buildFramebufferObject(width, height)
+            FramebufferObject<ContextType> normalFramebuffer1 = resources.context.buildFramebufferObject(width, height)
                 .addColorAttachment(ColorFormat.RGB8)
-                .createFramebufferObject()
+                .createFramebufferObject();
+            FramebufferObject<ContextType> normalFramebuffer2 = resources.context.buildFramebufferObject(width, height)
+                .addColorAttachment(ColorFormat.RGB8)
+                .createFramebufferObject();
+            Texture3D<ContextType> weightMaps = resources.context.getTextureFactory().build2DColorTextureArray(width, height, BASIS_COUNT)
+                .setInternalFormat(ColorFormat.R8)
+                .setLinearFilteringEnabled(true)
+                .setMipmapsEnabled(false)
+                .createTexture();
+            Texture2D<ContextType> basisMaps = resources.context.getTextureFactory().build1DColorTextureArray(MICROFACET_DISTRIBUTION_RESOLUTION, BASIS_COUNT)
+                .setInternalFormat(ColorFormat.R8)
+                .setLinearFilteringEnabled(true)
+                .setMipmapsEnabled(false)
+                .createTexture();
+            UniformBuffer<ContextType> diffuseBuffer = resources.context.createUniformBuffer()
         )
         {
             Drawable<ContextType> averageDrawable = createDrawable(averageProgram, resources);
 
             initializeClusters(averageDrawable, framebuffer);
 
+            normalFramebuffer1.clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
+            normalFramebuffer2.clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
+
+            // Double buffering since we need the previous normal estimate to generate the next normal estimate.
+            FramebufferObject<ContextType> frontNormalFramebuffer = normalFramebuffer1;
+            FramebufferObject<ContextType> backNormalFramebuffer = normalFramebuffer2;
+
             Drawable<ContextType> reflectanceDrawable = createDrawable(reflectanceProgram, resources);
-            normalFramebuffer.clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
-            reflectanceDrawable.program().setTexture("normalMap", normalFramebuffer.getColorAttachmentTexture(0));
+            Drawable<ContextType> normalEstimationDrawable = createDrawable(normalEstimationProgram, resources);
+
+            int viewCount = resources.viewSet.getCameraPoseCount();
 
             double previousError;
 
@@ -145,9 +168,24 @@ public class Nam2018Request implements IBRRequest
             {
                 previousError = error;
 
-                reconstructBRDFs(reflectanceDrawable, framebuffer, resources.viewSet.getCameraPoseCount());
-                reconstructWeights(reflectanceDrawable, framebuffer, resources.viewSet.getCameraPoseCount());
-                reconstructNormals();
+                reflectanceDrawable.program().setTexture("normalMap", frontNormalFramebuffer.getColorAttachmentTexture(0));
+                normalEstimationDrawable.program().setTexture("normalMap", frontNormalFramebuffer.getColorAttachmentTexture(0));
+
+                reconstructBRDFs(reflectanceDrawable, framebuffer, viewCount);
+                reconstructWeights(reflectanceDrawable, framebuffer, viewCount);
+                reconstructNormals(normalEstimationDrawable, backNormalFramebuffer, viewCount);
+
+                updateError(reflectanceDrawable, framebuffer, viewCount);
+
+                System.out.println("--------------------------------------------------");
+                System.out.println("Error: " + error);
+                System.out.println("(Previous error: " + previousError + ')');
+                System.out.println("--------------------------------------------------");
+
+                // Swap framebuffers for normal map.
+                FramebufferObject<ContextType> tmp = frontNormalFramebuffer;
+                frontNormalFramebuffer = backNormalFramebuffer;
+                backNormalFramebuffer = tmp;
             }
             while (error < previousError);
 
@@ -185,6 +223,25 @@ public class Nam2018Request implements IBRRequest
             .addShader(ShaderType.FRAGMENT, new File("shaders/nam2018/extractReflectance.frag"))
             .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
             .define("SMITH_MASKING_SHADOWING", 0)
+            .createProgram();
+
+        program.setUniform("occlusionEnabled", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"));
+        program.setUniform("occlusionBias", this.settingsModel.getFloat("occlusionBias"));
+
+        resources.setupShaderProgram(program);
+
+        return program;
+    }
+
+    private <ContextType extends Context<ContextType>>
+    Program<ContextType> createNormalEstimationProgram(IBRResources<ContextType> resources) throws FileNotFoundException
+    {
+        Program<ContextType> program = resources.getIBRShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/nam2018/estimateNormals.frag"))
+            .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
+            .define("SMITH_MASKING_SHADOWING", 0)
+            .define("BASIS_COUNT", BASIS_COUNT)
             .createProgram();
 
         program.setUniform("occlusionEnabled", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"));
@@ -446,60 +503,32 @@ public class Nam2018Request implements IBRRequest
 
         for (int b = 0; b < BASIS_COUNT; b++)
         {
-            diffuseAlbedos[b] = new DoubleVector3(brdfSolutionRed.get(b), brdfSolutionGreen.get(b), brdfSolutionBlue.get(b));
+            int bCopy = b;
 
-            specularRed.set(MICROFACET_DISTRIBUTION_RESOLUTION, b, 0);
-            specularGreen.set(MICROFACET_DISTRIBUTION_RESOLUTION, b, 0);
-            specularBlue.set(MICROFACET_DISTRIBUTION_RESOLUTION, b, 0);
-
-            for (int m = MICROFACET_DISTRIBUTION_RESOLUTION - 1; m >= 0; m--)
+            // Only update if the BRDF has non-zero elements.
+            if (IntStream.range(0, MICROFACET_DISTRIBUTION_RESOLUTION + 1).anyMatch(
+                i -> brdfSolutionRed.get(bCopy + BASIS_COUNT * i) > 0
+                    || brdfSolutionGreen.get(bCopy + BASIS_COUNT * i) > 0
+                    || brdfSolutionBlue.get(bCopy + BASIS_COUNT * i) > 0))
             {
-                // f[m] = f[m+1] + estimated difference (located at index m + 1 due to diffuse component at index 0).
-                specularRed.set(m, b, specularRed.get(m + 1, b) + brdfSolutionRed.get((m + 1) * BASIS_COUNT + b));
-                specularGreen.set(m, b, specularGreen.get(m + 1, b) + brdfSolutionGreen.get((m + 1) * BASIS_COUNT + b));
-                specularBlue.set(m, b, specularBlue.get(m + 1, b) + brdfSolutionBlue.get((m + 1) * BASIS_COUNT + b));
+                diffuseAlbedos[b] = new DoubleVector3(brdfSolutionRed.get(b), brdfSolutionGreen.get(b), brdfSolutionBlue.get(b));
+
+                specularRed.set(MICROFACET_DISTRIBUTION_RESOLUTION, b, 0);
+                specularGreen.set(MICROFACET_DISTRIBUTION_RESOLUTION, b, 0);
+                specularBlue.set(MICROFACET_DISTRIBUTION_RESOLUTION, b, 0);
+
+                for (int m = MICROFACET_DISTRIBUTION_RESOLUTION - 1; m >= 0; m--)
+                {
+                    // f[m] = f[m+1] + estimated difference (located at index m + 1 due to diffuse component at index 0).
+                    specularRed.set(m, b, specularRed.get(m + 1, b) + brdfSolutionRed.get((m + 1) * BASIS_COUNT + b));
+                    specularGreen.set(m, b, specularGreen.get(m + 1, b) + brdfSolutionGreen.get((m + 1) * BASIS_COUNT + b));
+                    specularBlue.set(m, b, specularBlue.get(m + 1, b) + brdfSolutionBlue.get((m + 1) * BASIS_COUNT + b));
+                }
             }
         }
 
         if (DEBUG)
         {
-            // write out diffuse texture for debugging
-            BufferedImage diffuseImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-            int[] diffuseDataPacked = new int[width * height];
-            for (int p = 0; p < width * height; p++)
-            {
-                DoubleVector4 diffuseSum = DoubleVector4.ZERO_DIRECTION;
-
-                for (int b = 0; b < BASIS_COUNT; b++)
-                {
-                    diffuseSum = diffuseSum.plus(new DoubleVector4(
-                            brdfSolutionRed.get(b),
-                            brdfSolutionGreen.get(b),
-                            brdfSolutionBlue.get(b), 1.0)
-                        .times(weightSolutions[p].get(b)));
-                }
-
-                if (diffuseSum.w > 0)
-                {
-                    DoubleVector3 diffuseAvgGamma = diffuseSum.getXYZ().dividedBy(diffuseSum.w).applyOperator(x -> Math.min(1.0, Math.pow(x, 1.0 / GAMMA)));
-
-                    // Flip vertically
-                    int dataBufferIndex = p % width + width * (height - p / width - 1);
-                    diffuseDataPacked[dataBufferIndex] = new Color((float)diffuseAvgGamma.x, (float)diffuseAvgGamma.y, (float)diffuseAvgGamma.z).getRGB();
-                }
-            }
-
-            diffuseImg.setRGB(0, 0, diffuseImg.getWidth(), diffuseImg.getHeight(), diffuseDataPacked, 0, diffuseImg.getWidth());
-
-            try
-            {
-                ImageIO.write(diffuseImg, "PNG", new File(outputDirectory, "diffuse.png"));
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
-
             for (int b = 0; b < BASIS_COUNT; b++)
             {
                 DoubleVector3 diffuseColor = new DoubleVector3(
@@ -711,37 +740,80 @@ public class Nam2018Request implements IBRRequest
     private <ContextType extends Context<ContextType>> void reconstructWeights(
         Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int viewCount)
     {
+        System.out.println("Building weight fitting matrices...");
         // Setup all the matrices for fitting weights (one per texel)
         buildWeightMatrix(drawable, framebuffer, viewCount);
+
+        System.out.println("Finished building matrices; solving now...");
 
         for (int p = 0; p < width * height; p++)
         {
             if (weightsValidity[p])
             {
-                weightSolutions[p] = NonNegativeLeastSquares.solvePremultiplied(weightsQTQAugmented[p], weightsQTrAugmented[p], NNLS_TOLERANCE);
+                weightSolutions[p] = NonNegativeLeastSquares.solvePremultipliedWithEqualityConstraints(
+                    weightsQTQAugmented[p], weightsQTrAugmented[p], NNLS_TOLERANCE, 1);
             }
         }
 
-        // write out weight textures for debugging
-        for (int b = 0; b < BASIS_COUNT; b++)
+        System.out.println("DONE!");
+
+        if (DEBUG)
         {
-            BufferedImage weightImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-            int[] weightDataPacked = new int[width * height];
-
-            for (int p = 0; p < width * height; p++)
+            // write out weight textures for debugging
+            for (int b = 0; b < BASIS_COUNT; b++)
             {
-                float weight = (float)weightSolutions[p].get(b);
+                BufferedImage weightImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+                int[] weightDataPacked = new int[width * height];
 
-                // Flip vertically
-                int dataBufferIndex = p % width + width * (height - p / width - 1);
-                weightDataPacked[dataBufferIndex] = new Color(weight, weight, weight).getRGB();
+                for (int p = 0; p < width * height; p++)
+                {
+                    float weight = (float)weightSolutions[p].get(b);
+
+                    // Flip vertically
+                    int dataBufferIndex = p % width + width * (height - p / width - 1);
+                    weightDataPacked[dataBufferIndex] = new Color(weight, weight, weight).getRGB();
+                }
+
+                weightImg.setRGB(0, 0, weightImg.getWidth(), weightImg.getHeight(), weightDataPacked, 0, weightImg.getWidth());
+
+                try
+                {
+                    ImageIO.write(weightImg, "PNG", new File(outputDirectory, String.format("weights%02d.png", b)));
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
             }
 
-            weightImg.setRGB(0, 0, weightImg.getWidth(), weightImg.getHeight(), weightDataPacked, 0, weightImg.getWidth());
+            // write out diffuse texture for debugging
+            BufferedImage diffuseImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            int[] diffuseDataPacked = new int[width * height];
+            for (int p = 0; p < width * height; p++)
+            {
+                DoubleVector4 diffuseSum = DoubleVector4.ZERO_DIRECTION;
+
+                for (int b = 0; b < BASIS_COUNT; b++)
+                {
+                    diffuseSum = diffuseSum.plus(diffuseAlbedos[b].asVector4(1.0)
+                        .times(weightSolutions[p].get(b)));
+                }
+
+                if (diffuseSum.w > 0)
+                {
+                    DoubleVector3 diffuseAvgGamma = diffuseSum.getXYZ().dividedBy(diffuseSum.w).applyOperator(x -> Math.min(1.0, Math.pow(x, 1.0 / GAMMA)));
+
+                    // Flip vertically
+                    int dataBufferIndex = p % width + width * (height - p / width - 1);
+                    diffuseDataPacked[dataBufferIndex] = new Color((float) diffuseAvgGamma.x, (float) diffuseAvgGamma.y, (float) diffuseAvgGamma.z).getRGB();
+                }
+            }
+
+            diffuseImg.setRGB(0, 0, diffuseImg.getWidth(), diffuseImg.getHeight(), diffuseDataPacked, 0, diffuseImg.getWidth());
 
             try
             {
-                ImageIO.write(weightImg, "PNG", new File(outputDirectory, String.format("weights%02d.png", b)));
+                ImageIO.write(diffuseImg, "PNG", new File(outputDirectory, "diffuse.png"));
             }
             catch (IOException e)
             {
@@ -824,12 +896,93 @@ public class Nam2018Request implements IBRRequest
                     }
                 }
             }
+
+            System.out.println("Finished view " + k + '.');
         }
     }
 
-    private void reconstructNormals()
+    private <ContextType extends Context<ContextType>> void reconstructNormals(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int viewCount)
     {
 
+    }
+
+    private DoubleVector3 evaluateBRDF(int p, double encodedHalfAngle, double geomFactor)
+    {
+        DoubleVector3 reflectance = DoubleVector3.ZERO;
+
+        // Calculate which discretized MDF element the current sample belongs to.
+        double mExact = encodedHalfAngle * MICROFACET_DISTRIBUTION_RESOLUTION;
+        int mFloor = Math.min(MICROFACET_DISTRIBUTION_RESOLUTION - 1, (int) Math.floor(mExact));
+
+        // When floor and exact are the same, t = 1.0.  When exact is almost a whole increment greater than floor, t approaches 0.0.
+        // If mFloor is clamped to MICROFACET_DISTRIBUTION_RESOLUTION -1, then mExact will be much larger, so t = 0.0.
+        double t = Math.max(0.0, 1.0 + mFloor - mExact);
+
+        for (int b = 0; b < BASIS_COUNT; b++)
+        {
+            double weight = weightSolutions[p].get(b);
+
+            reflectance = reflectance.plus(diffuseAlbedos[b].times(weight / Math.PI));
+
+            if (mExact < MICROFACET_DISTRIBUTION_RESOLUTION)
+            {
+                double weightedGeomFactor = weight * geomFactor;
+
+                reflectance = reflectance
+                    .plus(new DoubleVector3(
+                        t * weightedGeomFactor * specularRed.get(mFloor),
+                        t * weightedGeomFactor * specularGreen.get(mFloor),
+                        t * weightedGeomFactor * specularBlue.get(mFloor)))
+                    .plus(new DoubleVector3(
+                        (1 - t) * weightedGeomFactor * specularRed.get(mFloor + 1),
+                        (1 - t) * weightedGeomFactor * specularGreen.get(mFloor + 1),
+                        (1 - t) * weightedGeomFactor * specularBlue.get(mFloor + 1)));
+            }
+        }
+
+        return reflectance;
+    }
+
+    private <ContextType extends Context<ContextType>> void updateError(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int viewCount)
+    {
+        if (DEBUG)
+        {
+            System.out.println("Calculating error...");
+        }
+
+        double errorTotal = 0.0;
+        int validCount = 0;
+
+        for (int k = 0; k < viewCount; k++)
+        {
+            // Clear framebuffer
+            framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+            framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+
+            // Run shader program to fill framebuffer with per-pixel information.
+            drawable.program().setUniform("viewIndex", k);
+            drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+
+            // Copy framebuffer from GPU to main memory.
+            float[] colorAndVisibility = framebuffer.readFloatingPointColorBufferRGBA(0);
+            float[] halfwayAndGeomAndWeights = framebuffer.readFloatingPointColorBufferRGBA(1);
+
+            // Update matrix for each pixel.
+            for (int p = 0; p < width * height; p++)
+            {
+                if (colorAndVisibility[4 * p + 3] > 0)
+                {
+                    DoubleVector3 fEstimate = evaluateBRDF(p, halfwayAndGeomAndWeights[4 * p], halfwayAndGeomAndWeights[4 * p + 1]);
+                    DoubleVector3 fActual = new DoubleVector3(colorAndVisibility[4 * p], colorAndVisibility[4 * p + 1], colorAndVisibility[4 * p + 2]);
+                    DoubleVector3 diff = fEstimate.minus(fActual);
+
+                    errorTotal += diff.dot(diff);
+                    validCount++;
+                }
+            }
+        }
+
+        error = Math.sqrt(errorTotal / (3 * validCount));
     }
 
     private void saveBasisFunctions()

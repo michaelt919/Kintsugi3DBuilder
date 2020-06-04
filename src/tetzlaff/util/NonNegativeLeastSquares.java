@@ -48,17 +48,11 @@ public final class NonNegativeLeastSquares
 
         for (int i = 0; i < mATA_P.numRows(); i++)
         {
-            if (p[mapping.get(i)])
-            {
-                vATb_P.set(i, vATb.get(mapping.get(i)));
+            vATb_P.set(i, vATb.get(mapping.get(i)));
 
-                for (int j = 0; j < mATA_P.numCols(); j++)
-                {
-                    if (p[mapping.get(j)])
-                    {
-                        mATA_P.set(i, j, mATA.get(mapping.get(i), mapping.get(j)));
-                    }
-                }
+            for (int j = 0; j < mATA_P.numCols(); j++)
+            {
+                mATA_P.set(i, j, mATA.get(mapping.get(i), mapping.get(j)));
             }
         }
 
@@ -250,7 +244,7 @@ public final class NonNegativeLeastSquares
                     s_P = solvePartial(augmentedATA, augmentedATb, p, mapping, s, constraintCount);
 
                     // Update size of P based on the number of mappings.
-                    sizeP = mapping.size();
+                    sizeP = mapping.size() - constraintCount;
                 }
 
                 x = s;
