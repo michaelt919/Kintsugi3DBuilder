@@ -32,8 +32,7 @@ import static org.lwjgl.opengl.GL44.*;
 
 final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLContext>
 {
-    private int textureTarget;
-    private int width;
+    private final int width;
     private int levelCount;
 
     static class OpenGLTexture1DFromBufferBuilder extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture1D>
@@ -97,28 +96,26 @@ final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLCon
             boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
     {
         // Create an empty texture to be used as a render target for a framebuffer.
-        super(context, colorFormat);
+        super(context, textureTarget, colorFormat, useMipmaps);
+        this.width = width;
 
-        init(context, textureTarget, OpenGLContext.getOpenGLInternalColorFormat(colorFormat), width, format, type, buffer,
-            useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy);
+        init(textureTarget, OpenGLContext.getOpenGLInternalColorFormat(colorFormat), format, type, buffer, useLinearFiltering, maxMipmapLevel, maxAnisotropy);
     }
 
     private OpenGLTexture1D(OpenGLContext context, int textureTarget, CompressionFormat compressionFormat, int width, int format, int type, ByteBuffer buffer,
             boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
     {
         // Create an empty texture to be used as a render target for a framebuffer.
-        super(context, compressionFormat);
+        super(context, textureTarget, compressionFormat, useMipmaps);
+        this.width = width;
 
-        init(context, textureTarget, OpenGLContext.getOpenGLCompressionFormat(compressionFormat), width, format, type, buffer,
-            useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy);
+        init(textureTarget, OpenGLContext.getOpenGLCompressionFormat(compressionFormat), format, type, buffer, useLinearFiltering, maxMipmapLevel, maxAnisotropy);
     }
 
-    private void init(OpenGLContext context, int textureTarget, int internalFormat, int width, int format, int type, ByteBuffer buffer,
-            boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
+    private void init(int textureTarget, int internalFormat, int format, int type, ByteBuffer buffer,
+            boolean useLinearFiltering, int maxMipmapLevel, float maxAnisotropy)
     {
-        this.textureTarget = textureTarget;
         this.bind();
-        this.width = width;
 
         if (type == GL_UNSIGNED_SHORT_5_6_5 || type == GL_UNSIGNED_SHORT_5_6_5_REV || type == GL_UNSIGNED_SHORT_4_4_4_4 ||
                  type == GL_UNSIGNED_SHORT_4_4_4_4_REV || type == GL_UNSIGNED_SHORT_5_5_5_1 || type == GL_UNSIGNED_SHORT_1_5_5_5_REV)
@@ -126,7 +123,7 @@ final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLCon
             glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
             OpenGLContext.errorCheck();
         }
-        else if (format == GL_RGBA || format == GL_BGRA || format == GL_RGBA_INTEGER || format == GL_RGBA_INTEGER || type == GL_UNSIGNED_INT || type == GL_INT || type == GL_FLOAT ||
+        else if (format == GL_RGBA || format == GL_BGRA || format == GL_RGBA_INTEGER || format == GL_BGRA_INTEGER || type == GL_UNSIGNED_INT || type == GL_INT || type == GL_FLOAT ||
                 type == GL_UNSIGNED_INT_8_8_8_8 || type == GL_UNSIGNED_INT_8_8_8_8_REV || type == GL_UNSIGNED_INT_10_10_10_2 || type == GL_UNSIGNED_INT_2_10_10_10_REV)
         {
             glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
@@ -163,7 +160,7 @@ final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLCon
             this.levelCount = 1;
         }
 
-        this.initFilteringAndMipmaps(useLinearFiltering, useMipmaps, maxMipmapLevel);
+        this.initFilteringAndMipmaps(useLinearFiltering, maxMipmapLevel);
 
         glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         OpenGLContext.errorCheck();
@@ -182,12 +179,6 @@ final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLCon
     }
 
     @Override
-    protected int getOpenGLTextureTarget()
-    {
-        return this.textureTarget;
-    }
-
-    @Override
     public int getMipmapLevelCount()
     {
         return this.levelCount;
@@ -200,19 +191,19 @@ final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLCon
         switch(wrap)
         {
         case None:
-            glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(getOpenGLTextureTarget(), GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             OpenGLContext.errorCheck();
             break;
         case MirrorOnce:
-            glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_MIRROR_CLAMP_TO_EDGE);
+            glTexParameteri(getOpenGLTextureTarget(), GL_TEXTURE_WRAP_S, GL_MIRROR_CLAMP_TO_EDGE);
             OpenGLContext.errorCheck();
             break;
         case Repeat:
-            glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(getOpenGLTextureTarget(), GL_TEXTURE_WRAP_S, GL_REPEAT);
             OpenGLContext.errorCheck();
             break;
         case MirroredRepeat:
-            glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+            glTexParameteri(getOpenGLTextureTarget(), GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
             OpenGLContext.errorCheck();
             break;
         }

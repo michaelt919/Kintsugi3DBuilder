@@ -39,14 +39,23 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
 
     private final int textureId;
 
-    private ColorFormat colorFormat;
-    private CompressionFormat compressionFormat;
+    protected final int openGLTextureTarget;
+    protected final boolean useMipmaps;
+    protected boolean staleMipmaps = false;
+
+    private final ColorFormat colorFormat;
+    private final CompressionFormat compressionFormat;
     private final TextureType textureType;
 
-    OpenGLTexture(OpenGLContext context, TextureType textureType)
+    private OpenGLTexture(OpenGLContext context, int openGLTextureTarget, ColorFormat colorFormat, CompressionFormat compressionFormat,
+        TextureType textureType, boolean useMipmaps)
     {
         this.context = context;
+        this.openGLTextureTarget = openGLTextureTarget;
         this.textureType = textureType;
+        this.colorFormat = colorFormat;
+        this.compressionFormat = compressionFormat;
+        this.useMipmaps = useMipmaps;
 
         if (textureType == TextureType.NULL)
         {
@@ -59,16 +68,19 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
         }
     }
 
-    OpenGLTexture(OpenGLContext context, ColorFormat colorFormat)
+    OpenGLTexture(OpenGLContext context, int openGLTextureTarget, TextureType textureType, boolean useMipmaps)
     {
-        this(context, TextureType.COLOR);
-        this.colorFormat = colorFormat;
+        this(context, openGLTextureTarget, null, null, textureType, useMipmaps);
     }
 
-    OpenGLTexture(OpenGLContext context, CompressionFormat compressionFormat)
+    OpenGLTexture(OpenGLContext context, int openGLTextureTarget, ColorFormat colorFormat, boolean useMipmaps)
     {
-        this(context, TextureType.COLOR);
-        this.compressionFormat = compressionFormat;
+        this(context, openGLTextureTarget, colorFormat, null, TextureType.COLOR, useMipmaps);
+    }
+
+    OpenGLTexture(OpenGLContext context, int openGLTextureTarget, CompressionFormat compressionFormat, boolean useMipmaps)
+    {
+        this(context, openGLTextureTarget, null, compressionFormat, TextureType.COLOR, useMipmaps);
     }
 
     @Override
@@ -101,7 +113,10 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
         return textureType;
     }
 
-    abstract int getOpenGLTextureTarget();
+    protected int getOpenGLTextureTarget()
+    {
+        return this.openGLTextureTarget;
+    }
 
     void bind()
     {
@@ -126,14 +141,23 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
         }
 
         context.bindTextureToUnit(textureUnitIndex, this);
+
+        if(this.staleMipmaps)
+        {
+            // Create mipmaps
+            glGenerateMipmap(this.openGLTextureTarget);
+            OpenGLContext.errorCheck();
+
+            this.staleMipmaps = false;
+        }
     }
 
-    void initFilteringAndMipmaps(boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel)
+    void initFilteringAndMipmaps(boolean useLinearFiltering, int maxMipmapLevel)
     {
-        initFilteringAndMipmaps(useLinearFiltering, useMipmaps, maxMipmapLevel, true);
+        initFilteringAndMipmaps(useLinearFiltering, maxMipmapLevel, true);
     }
 
-    void initFilteringAndMipmaps(boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, boolean generateMipmaps)
+    void initFilteringAndMipmaps(boolean useLinearFiltering, int maxMipmapLevel, boolean generateMipmaps)
     {
         if (useMipmaps)
         {
@@ -461,16 +485,6 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
     public void attachToReadFramebuffer(int attachment, int level)
     {
         glFramebufferTexture(GL_READ_FRAMEBUFFER, attachment, this.textureId, level);
-        OpenGLContext.errorCheck();
-    }
-
-    @Override
-    public void refreshMipmaps()
-    {
-        this.bind();
-
-        // Create mipmaps
-        glGenerateMipmap(this.getOpenGLTextureTarget());
         OpenGLContext.errorCheck();
     }
 }

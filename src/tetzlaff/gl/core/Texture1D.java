@@ -26,5 +26,9 @@ public interface Texture1D<ContextType extends Context<ContextType>> extends Tex
      */
     int getWidth();
 
+    /**
+     * Sets the texture wrap modes.
+     * @param wrap The wrap mode.
+     */
     void setTextureWrap(TextureWrapMode wrap);
 }

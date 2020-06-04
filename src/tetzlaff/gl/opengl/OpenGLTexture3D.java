@@ -29,7 +29,9 @@ import tetzlaff.gl.builders.base.DepthTextureBuilderBase;
 import tetzlaff.gl.builders.base.StencilTextureBuilderBase;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.core.ColorFormat.DataType;
+import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.types.AbstractDataType;
+import tetzlaff.gl.types.AbstractDataTypeFactory;
 
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -41,13 +43,10 @@ import static org.lwjgl.opengl.GL44.*;
 
 final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 {
-    private int openGLTextureTarget;
     private int mipmapLevelCount;
     private final int width;
     private final int height;
-    private int depth;
-    private boolean useMipmaps;
-    private boolean staleMipmaps;
+    private final int depth;
 
     static class ColorBuilder extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture3D>
     {
@@ -221,36 +220,40 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
             boolean fixedSampleLocations, boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
     {
         // Create and allocate a 3D texture or 2D texture array
-        super(context, colorFormat);
+        super(context, openGLTextureTarget, colorFormat, useMipmaps);
 
         this.width = width;
         this.height = height;
+        this.depth = layerCount;
 
-        init(openGLTextureTarget, multisamples, OpenGLContext.getOpenGLInternalColorFormat(colorFormat), width, height, layerCount, format,
-                fixedSampleLocations, useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy);
+
+        init(openGLTextureTarget, multisamples, OpenGLContext.getOpenGLInternalColorFormat(colorFormat), layerCount, format,
+                fixedSampleLocations, useLinearFiltering, maxMipmapLevel, maxAnisotropy);
     }
 
     private OpenGLTexture3D(OpenGLContext context, int openGLTextureTarget, int multisamples, CompressionFormat compressionFormat, int width, int height, int layerCount, int format,
             boolean fixedSampleLocations, boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
     {
         // Create and allocate a 3D texture or 2D texture array
-        super(context, compressionFormat);
+        super(context, openGLTextureTarget, compressionFormat, useMipmaps);
 
         this.width = width;
         this.height = height;
+        this.depth = layerCount;
 
-        init(openGLTextureTarget, multisamples, OpenGLContext.getOpenGLCompressionFormat(compressionFormat), width, height, layerCount, format,
-                fixedSampleLocations, useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy);
+        init(openGLTextureTarget, multisamples, OpenGLContext.getOpenGLCompressionFormat(compressionFormat), layerCount, format,
+                fixedSampleLocations, useLinearFiltering, maxMipmapLevel, maxAnisotropy);
     }
 
     private OpenGLTexture3D(OpenGLContext context, int openGLTextureTarget, int multisamples, TextureType textureType, int precision, int width, int height, int layerCount, int format,
             boolean fixedSampleLocations, boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
     {
         // Create and allocate a 3D texture or 2D texture array
-        super(context, textureType);
+        super(context, openGLTextureTarget, textureType, useMipmaps);
 
         this.width = width;
         this.height = height;
+        this.depth = layerCount;
 
         int internalFormat;
         switch(textureType)
@@ -274,17 +277,13 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
             break;
         }
 
-        init(openGLTextureTarget, multisamples, internalFormat, width, height, layerCount, format,
-                fixedSampleLocations, useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy);
+        init(openGLTextureTarget, multisamples, internalFormat, layerCount, format,
+                fixedSampleLocations, useLinearFiltering, maxMipmapLevel, maxAnisotropy);
     }
 
-    private void init(int textureTarget, int multisamples, int internalFormat, int width, int height, int layerCount, int format,
-            boolean fixedSampleLocations, boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
+    private void init(int textureTarget, int multisamples, int internalFormat, int layerCount, int format,
+        boolean fixedSampleLocations, boolean useLinearFiltering, int maxMipmapLevel, float maxAnisotropy)
     {
-        this.openGLTextureTarget = textureTarget;
-        this.depth = layerCount;
-        this.useMipmaps = useMipmaps;
-
         this.bind();
 
         if (textureTarget == GL_TEXTURE_2D && multisamples > 1)
@@ -316,7 +315,7 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
             this.mipmapLevelCount = 1;
         }
 
-        this.initFilteringAndMipmaps(useLinearFiltering, useMipmaps, maxMipmapLevel, false);
+        this.initFilteringAndMipmaps(useLinearFiltering, maxMipmapLevel, false);
 
         glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         OpenGLContext.errorCheck();
@@ -361,6 +360,12 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
     }
 
     @Override
+    public void loadLayer(int layerIndex, File file, boolean flipVertical) throws IOException
+    {
+        this.loadLayer(layerIndex, new FileInputStream(file), flipVertical);
+    }
+
+    @Override
     public void loadLayer(int layerIndex, InputStream fileStream, boolean flipVertical) throws IOException
     {
         this.bind();
@@ -382,52 +387,9 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
     }
 
     @Override
-    public void loadLayer(int layerIndex, File file, boolean flipVertical) throws IOException
+    public void loadLayer(int layerIndex, File imageFile, File maskFile, boolean flipVertical) throws IOException
     {
-        this.loadLayer(layerIndex, new FileInputStream(file), flipVertical);
-    }
-
-    @Override
-    public <MappedType> void loadLayer(int layerIndex, InputStream fileStream, boolean flipVertical,
-        AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException
-    {
-        this.bind();
-
-        int format = OpenGLContext.getPixelDataFormatFromDimensions(
-            mappedType.getComponentCount(),
-            !this.isInternalFormatCompressed() &&
-                (this.getInternalUncompressedColorFormat().dataType == DataType.SIGNED_INTEGER
-                    || this.getInternalUncompressedColorFormat().dataType == DataType.UNSIGNED_INTEGER));
-        int type = OpenGLContext.getDataTypeConstant(mappedType);
-
-        Function<ByteBuffer, Consumer<? super MappedType>> bufferWrapperFunctionPartial = mappedType::wrapByteBuffer;
-        ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(
-            validateAndScaleImage(layerIndex, ImageIO.read(fileStream)), null, flipVertical,
-            byteBuffer ->
-            {
-                Consumer<? super MappedType> partiallyWrappedBuffer = bufferWrapperFunctionPartial.apply(byteBuffer);
-                return color -> partiallyWrappedBuffer.accept(mappingFunction.apply(color));
-            },
-            mappedType.getSizeInBytes());
-
-        glPixelStorei(GL_UNPACK_ALIGNMENT, OpenGLTexture.getUnpackAlignment(format, type));
-        OpenGLContext.errorCheck();
-
-        glTexSubImage3D(this.openGLTextureTarget, 0, 0, 0, layerIndex, this.width, this.height, 1,
-            format, type, buffer);
-        OpenGLContext.errorCheck();
-
-        if (this.useMipmaps)
-        {
-            this.staleMipmaps = true;
-        }
-    }
-
-    @Override
-    public <MappedType> void loadLayer(int layerIndex, File file, boolean flipVertical,
-        AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException
-    {
-        this.loadLayer(layerIndex, new FileInputStream(file), flipVertical, mappedType, mappingFunction);
+        this.loadLayer(layerIndex, new FileInputStream(imageFile), new FileInputStream(maskFile), flipVertical);
     }
 
     @Override
@@ -454,24 +416,16 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
     }
 
     @Override
-    public void loadLayer(int layerIndex, File imageFile, File maskFile, boolean flipVertical) throws IOException
+    public <MappedType> void loadLayer(int layerIndex, File imageFile, File maskFile, boolean flipVertical,
+        AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException
     {
-        this.loadLayer(layerIndex, new FileInputStream(imageFile), new FileInputStream(maskFile), flipVertical);
+        this.loadLayer(layerIndex, new FileInputStream(imageFile), new FileInputStream(maskFile), flipVertical, mappedType, mappingFunction);
     }
 
     @Override
     public <MappedType> void loadLayer(int layerIndex, InputStream imageStream, InputStream maskStream, boolean flipVertical,
         AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException
     {
-        this.bind();
-
-        int format = OpenGLContext.getPixelDataFormatFromDimensions(
-            mappedType.getComponentCount(),
-            !this.isInternalFormatCompressed() &&
-                (this.getInternalUncompressedColorFormat().dataType == DataType.SIGNED_INTEGER
-                    || this.getInternalUncompressedColorFormat().dataType == DataType.UNSIGNED_INTEGER));
-        int type = OpenGLContext.getDataTypeConstant(mappedType);
-
         Function<ByteBuffer, Consumer<? super MappedType>> bufferWrapperFunctionPartial = mappedType::wrapByteBuffer;
         ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(
             validateAndScaleImage(layerIndex, ImageIO.read(imageStream)),
@@ -484,48 +438,65 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
             },
             mappedType.getSizeInBytes());
 
+        loadLayer(layerIndex, mappedType, buffer);
+    }
+
+    @Override
+    public <MappedType> void loadLayer(int layerIndex, File file, boolean flipVertical,
+        AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException
+    {
+        this.loadLayer(layerIndex, new FileInputStream(file), flipVertical, mappedType, mappingFunction);
+    }
+
+    @Override
+    public <MappedType> void loadLayer(int layerIndex, InputStream fileStream, boolean flipVertical,
+        AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException
+    {
+        Function<ByteBuffer, Consumer<? super MappedType>> bufferWrapperFunctionPartial = mappedType::wrapByteBuffer;
+        ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(
+            validateAndScaleImage(layerIndex, ImageIO.read(fileStream)), null, flipVertical,
+            byteBuffer ->
+            {
+                Consumer<? super MappedType> partiallyWrappedBuffer = bufferWrapperFunctionPartial.apply(byteBuffer);
+                return color -> partiallyWrappedBuffer.accept(mappingFunction.apply(color));
+            },
+            mappedType.getSizeInBytes());
+
+        loadLayer(layerIndex, mappedType, buffer);
+    }
+
+    @Override
+    public void loadLayer(int layerIndex, NativeVectorBuffer data)
+    {
+        AbstractDataTypeFactory adtFactory = AbstractDataTypeFactory.getInstance();
+
+        loadLayer(layerIndex,
+            data.getDimensions() > 1 ?
+                adtFactory.getMultiComponentDataType(data.getDataType(), data.getDimensions())
+                : adtFactory.getSingleComponentDataType(data.getDataType()),
+            data.getBuffer());
+    }
+
+    private <MappedType> void loadLayer(int layerIndex, AbstractDataType<? super MappedType> mappedType, ByteBuffer buffer)
+    {
+        this.bind();
+
+        int format = OpenGLContext.getPixelDataFormatFromDimensions(
+            mappedType.getComponentCount(),
+            !this.isInternalFormatCompressed() &&
+                (this.getInternalUncompressedColorFormat().dataType == DataType.SIGNED_INTEGER
+                    || this.getInternalUncompressedColorFormat().dataType == DataType.UNSIGNED_INTEGER));
+        int type = OpenGLContext.getDataTypeConstant(mappedType);
+
         glPixelStorei(GL_UNPACK_ALIGNMENT, OpenGLTexture.getUnpackAlignment(format, type));
         OpenGLContext.errorCheck();
 
-        glTexSubImage3D(this.openGLTextureTarget, 0, 0, 0, layerIndex, this.width, this.height, 1,
-            format, type, buffer);
+        glTexSubImage3D(this.openGLTextureTarget, 0, 0, 0, layerIndex, this.width, this.height, 1, format, type, buffer);
         OpenGLContext.errorCheck();
 
         if (this.useMipmaps)
         {
             this.staleMipmaps = true;
-        }
-    }
-
-    @Override
-    public <MappedType> void loadLayer(int layerIndex, File imageFile, File maskFile, boolean flipVertical,
-        AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException
-    {
-        this.loadLayer(layerIndex, new FileInputStream(imageFile), new FileInputStream(maskFile), flipVertical, mappedType, mappingFunction);
-    }
-
-    @Override
-    public void generateMipmaps()
-    {
-        // Create mipmaps
-        glGenerateMipmap(this.openGLTextureTarget);
-        OpenGLContext.errorCheck();
-        
-        this.staleMipmaps = false;
-    }
-
-    @Override
-    void bindToTextureUnit(int textureUnitIndex)
-    {
-        super.bindToTextureUnit(textureUnitIndex);
-
-        if(this.staleMipmaps)
-        {
-            // Create mipmaps
-            glGenerateMipmap(this.openGLTextureTarget);
-            OpenGLContext.errorCheck();
-
-            this.staleMipmaps = false;
         }
     }
 

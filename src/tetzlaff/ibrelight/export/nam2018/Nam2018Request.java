@@ -28,6 +28,9 @@ import org.ejml.data.DMatrixRMaj;
 import org.ejml.dense.row.CommonOps_DDRM;
 import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.core.*;
+import tetzlaff.gl.nativebuffer.NativeDataType;
+import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.gl.vecmath.DoubleVector4;
 import tetzlaff.ibrelight.core.IBRRenderable;
@@ -138,12 +141,13 @@ public class Nam2018Request implements IBRRequest
                 .setLinearFilteringEnabled(true)
                 .setMipmapsEnabled(false)
                 .createTexture();
-            Texture2D<ContextType> basisMaps = resources.context.getTextureFactory().build1DColorTextureArray(MICROFACET_DISTRIBUTION_RESOLUTION, BASIS_COUNT)
-                .setInternalFormat(ColorFormat.R8)
+            Texture2D<ContextType> basisMaps = resources.context.getTextureFactory().build1DColorTextureArray(
+                    MICROFACET_DISTRIBUTION_RESOLUTION + 1, BASIS_COUNT)
+                .setInternalFormat(ColorFormat.RGB32F)
                 .setLinearFilteringEnabled(true)
                 .setMipmapsEnabled(false)
                 .createTexture();
-            UniformBuffer<ContextType> diffuseBuffer = resources.context.createUniformBuffer()
+            UniformBuffer<ContextType> diffuseUniformBuffer = resources.context.createUniformBuffer()
         )
         {
             Drawable<ContextType> averageDrawable = createDrawable(averageProgram, resources);
@@ -158,7 +162,12 @@ public class Nam2018Request implements IBRRequest
             FramebufferObject<ContextType> backNormalFramebuffer = normalFramebuffer2;
 
             Drawable<ContextType> reflectanceDrawable = createDrawable(reflectanceProgram, resources);
+            reflectanceDrawable.program().setTexture("normalMap", frontNormalFramebuffer.getColorAttachmentTexture(0));
+
             Drawable<ContextType> normalEstimationDrawable = createDrawable(normalEstimationProgram, resources);
+            normalEstimationProgram.setTexture("basisFunctions", basisMaps);
+            normalEstimationProgram.setTexture("weightMaps", weightMaps);
+            normalEstimationProgram.setUniformBuffer("DiffuseColors", diffuseUniformBuffer);
 
             int viewCount = resources.viewSet.getCameraPoseCount();
 
@@ -168,30 +177,37 @@ public class Nam2018Request implements IBRRequest
             {
                 previousError = error;
 
-                reflectanceDrawable.program().setTexture("normalMap", frontNormalFramebuffer.getColorAttachmentTexture(0));
-                normalEstimationDrawable.program().setTexture("normalMap", frontNormalFramebuffer.getColorAttachmentTexture(0));
-
                 reconstructBRDFs(reflectanceDrawable, framebuffer, viewCount);
                 reconstructWeights(reflectanceDrawable, framebuffer, viewCount);
-                reconstructNormals(normalEstimationDrawable, backNormalFramebuffer, viewCount);
 
+                updateGraphicsResources(weightMaps, basisMaps, diffuseUniformBuffer);
+
+                // Update normal estimation program to use the new front buffer.
+                normalEstimationDrawable.program().setTexture("normalMap", frontNormalFramebuffer.getColorAttachmentTexture(0));
+                reconstructNormals(normalEstimationDrawable, backNormalFramebuffer);
+
+                // Swap framebuffers for normal map.
+                FramebufferObject<ContextType> tmp = frontNormalFramebuffer;
+                frontNormalFramebuffer = backNormalFramebuffer;
+                backNormalFramebuffer = tmp;
+
+                // Update reflectance program to use the new front buffer.
+                reflectanceDrawable.program().setTexture("normalMap", frontNormalFramebuffer.getColorAttachmentTexture(0));
+
+                // Calculate the error to determine if we should stop.
                 updateError(reflectanceDrawable, framebuffer, viewCount);
 
                 System.out.println("--------------------------------------------------");
                 System.out.println("Error: " + error);
                 System.out.println("(Previous error: " + previousError + ')');
                 System.out.println("--------------------------------------------------");
-
-                // Swap framebuffers for normal map.
-                FramebufferObject<ContextType> tmp = frontNormalFramebuffer;
-                frontNormalFramebuffer = backNormalFramebuffer;
-                backNormalFramebuffer = tmp;
             }
             while (error < previousError);
 
             saveBasisFunctions();
             saveWeightMaps();
-            saveNormalMaps();
+            saveDiffuseMap();
+            saveNormalMap(frontNormalFramebuffer);
         }
         catch(FileNotFoundException e) // thrown by createReflectanceProgram
         {
@@ -760,65 +776,10 @@ public class Nam2018Request implements IBRRequest
         if (DEBUG)
         {
             // write out weight textures for debugging
-            for (int b = 0; b < BASIS_COUNT; b++)
-            {
-                BufferedImage weightImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-                int[] weightDataPacked = new int[width * height];
-
-                for (int p = 0; p < width * height; p++)
-                {
-                    float weight = (float)weightSolutions[p].get(b);
-
-                    // Flip vertically
-                    int dataBufferIndex = p % width + width * (height - p / width - 1);
-                    weightDataPacked[dataBufferIndex] = new Color(weight, weight, weight).getRGB();
-                }
-
-                weightImg.setRGB(0, 0, weightImg.getWidth(), weightImg.getHeight(), weightDataPacked, 0, weightImg.getWidth());
-
-                try
-                {
-                    ImageIO.write(weightImg, "PNG", new File(outputDirectory, String.format("weights%02d.png", b)));
-                }
-                catch (IOException e)
-                {
-                    e.printStackTrace();
-                }
-            }
+            saveWeightMaps();
 
             // write out diffuse texture for debugging
-            BufferedImage diffuseImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-            int[] diffuseDataPacked = new int[width * height];
-            for (int p = 0; p < width * height; p++)
-            {
-                DoubleVector4 diffuseSum = DoubleVector4.ZERO_DIRECTION;
-
-                for (int b = 0; b < BASIS_COUNT; b++)
-                {
-                    diffuseSum = diffuseSum.plus(diffuseAlbedos[b].asVector4(1.0)
-                        .times(weightSolutions[p].get(b)));
-                }
-
-                if (diffuseSum.w > 0)
-                {
-                    DoubleVector3 diffuseAvgGamma = diffuseSum.getXYZ().dividedBy(diffuseSum.w).applyOperator(x -> Math.min(1.0, Math.pow(x, 1.0 / GAMMA)));
-
-                    // Flip vertically
-                    int dataBufferIndex = p % width + width * (height - p / width - 1);
-                    diffuseDataPacked[dataBufferIndex] = new Color((float) diffuseAvgGamma.x, (float) diffuseAvgGamma.y, (float) diffuseAvgGamma.z).getRGB();
-                }
-            }
-
-            diffuseImg.setRGB(0, 0, diffuseImg.getWidth(), diffuseImg.getHeight(), diffuseDataPacked, 0, diffuseImg.getWidth());
-
-            try
-            {
-                ImageIO.write(diffuseImg, "PNG", new File(outputDirectory, "diffuse.png"));
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
+            saveDiffuseMap();
         }
     }
 
@@ -901,9 +862,60 @@ public class Nam2018Request implements IBRRequest
         }
     }
 
-    private <ContextType extends Context<ContextType>> void reconstructNormals(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int viewCount)
+    private <ContextType extends Context<ContextType>> void updateGraphicsResources(
+        Texture3D<ContextType> weightMaps, Texture2D<ContextType> basisMaps, UniformBuffer<ContextType> diffuseUniformBuffer)
     {
+        NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
+        NativeVectorBuffer weightMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 1, width * height);
+        NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3, BASIS_COUNT * (MICROFACET_DISTRIBUTION_RESOLUTION + 1));
+        NativeVectorBuffer diffuseNativeBuffer = factory.createEmpty(NativeDataType.FLOAT, 4, BASIS_COUNT);
 
+        for (int b = 0; b < BASIS_COUNT; b++)
+        {
+            // Copy weights from the individual solutions into the weight buffer laid out in texture space to be sent to the GPU.
+            for (int p = 0; p < width * height; p++)
+            {
+                weightMapBuffer.set(p, 0, weightSolutions[p].get(b));
+            }
+
+            // Immediately load the weight map so that we can reuse the local memory buffer.
+            weightMaps.loadLayer(b, weightMapBuffer);
+
+            // Copy basis functions by color channel into the basis map buffer that will eventually be sent to the GPU..
+            for (int m = 0; m <= MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+            {
+                // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
+                basisMapBuffer.set(m + MICROFACET_DISTRIBUTION_RESOLUTION * b, 0, specularRed.get(b + BASIS_COUNT * m));
+                basisMapBuffer.set(m + MICROFACET_DISTRIBUTION_RESOLUTION * b, 1, specularGreen.get(b + BASIS_COUNT * m));
+                basisMapBuffer.set(m + MICROFACET_DISTRIBUTION_RESOLUTION * b, 2, specularBlue.get(b + BASIS_COUNT * m));
+            }
+
+            // Store each channel of the diffuse albedo in the local buffer.
+            diffuseNativeBuffer.set(b, 0, diffuseAlbedos[b].x);
+            diffuseNativeBuffer.set(b, 1, diffuseAlbedos[b].y);
+            diffuseNativeBuffer.set(b, 2, diffuseAlbedos[b].z);
+        }
+
+        // Send the basis functions to the GPU.
+        basisMaps.load(basisMapBuffer);
+
+        // Send the diffuse albedos to the GPU.
+        diffuseUniformBuffer.setData(diffuseNativeBuffer);
+    }
+
+    private <ContextType extends Context<ContextType>> void reconstructNormals(
+        Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
+    {
+        // Clear framebuffer
+        framebuffer.clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
+
+        // Run shader program to fill framebuffer with per-pixel information.
+        drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+
+        if (DEBUG)
+        {
+            saveNormalMap(framebuffer);
+        }
     }
 
     private DoubleVector3 evaluateBRDF(int p, double encodedHalfAngle, double geomFactor)
@@ -992,11 +1004,78 @@ public class Nam2018Request implements IBRRequest
 
     private void saveWeightMaps()
     {
+        for (int b = 0; b < BASIS_COUNT; b++)
+        {
+            BufferedImage weightImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            int[] weightDataPacked = new int[width * height];
 
+            for (int p = 0; p < width * height; p++)
+            {
+                float weight = (float)weightSolutions[p].get(b);
+
+                // Flip vertically
+                int dataBufferIndex = p % width + width * (height - p / width - 1);
+                weightDataPacked[dataBufferIndex] = new Color(weight, weight, weight).getRGB();
+            }
+
+            weightImg.setRGB(0, 0, weightImg.getWidth(), weightImg.getHeight(), weightDataPacked, 0, weightImg.getWidth());
+
+            try
+            {
+                ImageIO.write(weightImg, "PNG", new File(outputDirectory, String.format("weights%02d.png", b)));
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
     }
 
-    private void saveNormalMaps()
+    private void saveDiffuseMap()
     {
+        BufferedImage diffuseImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        int[] diffuseDataPacked = new int[width * height];
+        for (int p = 0; p < width * height; p++)
+        {
+            DoubleVector4 diffuseSum = DoubleVector4.ZERO_DIRECTION;
 
+            for (int b = 0; b < BASIS_COUNT; b++)
+            {
+                diffuseSum = diffuseSum.plus(diffuseAlbedos[b].asVector4(1.0)
+                    .times(weightSolutions[p].get(b)));
+            }
+
+            if (diffuseSum.w > 0)
+            {
+                DoubleVector3 diffuseAvgGamma = diffuseSum.getXYZ().dividedBy(diffuseSum.w).applyOperator(x -> Math.min(1.0, Math.pow(x, 1.0 / GAMMA)));
+
+                // Flip vertically
+                int dataBufferIndex = p % width + width * (height - p / width - 1);
+                diffuseDataPacked[dataBufferIndex] = new Color((float) diffuseAvgGamma.x, (float) diffuseAvgGamma.y, (float) diffuseAvgGamma.z).getRGB();
+            }
+        }
+
+        diffuseImg.setRGB(0, 0, diffuseImg.getWidth(), diffuseImg.getHeight(), diffuseDataPacked, 0, diffuseImg.getWidth());
+
+        try
+        {
+            ImageIO.write(diffuseImg, "PNG", new File(outputDirectory, "diffuse.png"));
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private <ContextType extends Context<ContextType>> void saveNormalMap(Framebuffer<ContextType> framebuffer)
+    {
+        try
+        {
+            framebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, "normal.png"));
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 }

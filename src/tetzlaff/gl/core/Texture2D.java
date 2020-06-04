@@ -12,6 +12,8 @@
 
 package tetzlaff.gl.core;
 
+import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+
 /**
  * An interface for a two-dimensional texture.
  * @author Michael Tetzlaff
@@ -32,5 +34,16 @@ public interface Texture2D<ContextType extends Context<ContextType>> extends Tex
      */
     int getHeight();
 
+    /**
+     * Sets the texture wrap modes.
+     * @param wrapS The horizontal wrap mode.
+     * @param wrapT The vertical wrap mode.
+     */
     void setTextureWrap(TextureWrapMode wrapS, TextureWrapMode wrapT);
+
+    /**
+     * Loads pixel data from a buffer and sends it to the GPU, replacing whatever pixel data was there before.
+     * @param data The new pixel data to put in the texture.
+     */
+    void load(NativeVectorBuffer data);
 }
