@@ -24,7 +24,7 @@ layout(location = 0) out vec4 normalTS;
 #include <shaders/colorappearance/colorappearance_multi_as_single.glsl>
 #include <shaders/relight/reflectanceequations.glsl>
 
-#line 29 0
+#line 28 0
 
 uniform sampler2D normalMap;
 uniform sampler2D roughnessMap;
@@ -95,8 +95,10 @@ void main()
             vec3 reflectance = imgColor.rgb / irradiance;
             vec3 reflectanceEstimate = getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV));
 
-            mATA += dot(reflectanceEstimate, reflectanceEstimate) * outerProduct(light, light);
-            mATb += dot(reflectanceEstimate, reflectance) * light;
+            float weight = nDotL * sqrt(max(0, 1 - nDotH * nDotH));
+
+            mATA += weight * dot(reflectanceEstimate, reflectanceEstimate) * outerProduct(light, light);
+            vATb += weight * dot(reflectanceEstimate, reflectance) * light;
         }
     }
 

@@ -14,9 +14,7 @@ package tetzlaff.ibrelight.export.nam2018;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Random;
@@ -48,6 +46,7 @@ public class Nam2018Request implements IBRRequest
     private static final int BRDF_MATRIX_SIZE = BASIS_COUNT * (MICROFACET_DISTRIBUTION_RESOLUTION + 1);
     private static final double K_MEANS_TOLERANCE = 0.000001;
     private static final double NNLS_TOLERANCE = 0.000000001;
+    private static final double CONVERGENCE_TOLERANCE = 0.001;
     private static final double GAMMA = 2.2;
 
     private static final boolean DEBUG = true;
@@ -59,6 +58,7 @@ public class Nam2018Request implements IBRRequest
     private final ReadonlySettingsModel settingsModel;
 
     private double error = Double.POSITIVE_INFINITY;
+    private double weightedError = Double.POSITIVE_INFINITY;
 
     private final SimpleMatrix brdfATA = new SimpleMatrix(BRDF_MATRIX_SIZE, BRDF_MATRIX_SIZE, DMatrixRMaj.class);
     private final SimpleMatrix brdfATyRed = new SimpleMatrix(BRDF_MATRIX_SIZE, 1, DMatrixRMaj.class);
@@ -131,13 +131,13 @@ public class Nam2018Request implements IBRRequest
                 .addColorAttachment(ColorFormat.RGBA32F)
                 .createFramebufferObject();
             FramebufferObject<ContextType> normalFramebuffer1 = resources.context.buildFramebufferObject(width, height)
-                .addColorAttachment(ColorFormat.RGB8)
+                .addColorAttachment(ColorFormat.RGB32F)
                 .createFramebufferObject();
             FramebufferObject<ContextType> normalFramebuffer2 = resources.context.buildFramebufferObject(width, height)
-                .addColorAttachment(ColorFormat.RGB8)
+                .addColorAttachment(ColorFormat.RGB32F)
                 .createFramebufferObject();
             Texture3D<ContextType> weightMaps = resources.context.getTextureFactory().build2DColorTextureArray(width, height, BASIS_COUNT)
-                .setInternalFormat(ColorFormat.R8)
+                .setInternalFormat(ColorFormat.R32F)
                 .setLinearFilteringEnabled(true)
                 .setMipmapsEnabled(false)
                 .createTexture();
@@ -150,6 +150,9 @@ public class Nam2018Request implements IBRRequest
             UniformBuffer<ContextType> diffuseUniformBuffer = resources.context.createUniformBuffer()
         )
         {
+            weightMaps.setTextureWrap(TextureWrapMode.None, TextureWrapMode.None, TextureWrapMode.None);
+            basisMaps.setTextureWrap(TextureWrapMode.None, TextureWrapMode.None);
+
             Drawable<ContextType> averageDrawable = createDrawable(averageProgram, resources);
 
             initializeClusters(averageDrawable, framebuffer);
@@ -172,14 +175,50 @@ public class Nam2018Request implements IBRRequest
             int viewCount = resources.viewSet.getCameraPoseCount();
 
             double previousError;
+            double previousWeightedError;
 
             do
             {
                 previousError = error;
+                previousWeightedError = weightedError;
 
                 reconstructBRDFs(reflectanceDrawable, framebuffer, viewCount);
+
+                // Calculate the error for debugging.
+                if (DEBUG)
+                {
+                    double previousErrorLocal = error;
+                    double previousWeightedErrorLocal = weightedError;
+                    updateError(reflectanceDrawable, framebuffer, viewCount);
+
+                    System.out.println("--------------------------------------------------");
+                    System.out.println("Error: " + error);
+                    System.out.println("(Previous error: " + previousErrorLocal + ')');
+                    System.out.println("Weighted error: " + weightedError);
+                    System.out.println("(Previous weighted error: " + previousWeightedErrorLocal + ')');
+                    System.out.println("--------------------------------------------------");
+                    System.out.println();
+                }
+
                 reconstructWeights(reflectanceDrawable, framebuffer, viewCount);
 
+                // Calculate the error for debugging.
+                if (DEBUG)
+                {
+                    double previousErrorLocal = error;
+                    double previousWeightedErrorLocal = weightedError;
+                    updateError(reflectanceDrawable, framebuffer, viewCount);
+
+                    System.out.println("--------------------------------------------------");
+                    System.out.println("Error: " + error);
+                    System.out.println("(Previous error: " + previousErrorLocal + ')');
+                    System.out.println("Weighted error: " + weightedError);
+                    System.out.println("(Previous weighted error: " + previousWeightedErrorLocal + ')');
+                    System.out.println("--------------------------------------------------");
+                    System.out.println();
+                }
+
+                // Prepare for normal estimation on the GPU.
                 updateGraphicsResources(weightMaps, basisMaps, diffuseUniformBuffer);
 
                 // Update normal estimation program to use the new front buffer.
@@ -194,15 +233,32 @@ public class Nam2018Request implements IBRRequest
                 // Update reflectance program to use the new front buffer.
                 reflectanceDrawable.program().setTexture("normalMap", frontNormalFramebuffer.getColorAttachmentTexture(0));
 
+                // For debugging.
+                double previousErrorLocal = error;
+                double previousWeightedErrorLocal = weightedError;
+
                 // Calculate the error to determine if we should stop.
                 updateError(reflectanceDrawable, framebuffer, viewCount);
 
+
                 System.out.println("--------------------------------------------------");
                 System.out.println("Error: " + error);
-                System.out.println("(Previous error: " + previousError + ')');
+
+                if (DEBUG)
+                {
+                    System.out.println("(Previous error: " + previousErrorLocal + ')');
+                    System.out.println("Weighted error: " + weightedError);
+                    System.out.println("(Previous weighted error: " + previousWeightedErrorLocal + ')');
+                }
+                else
+                {
+                    System.out.println("(Previous error: " + previousError + ')');
+                }
+
                 System.out.println("--------------------------------------------------");
+                System.out.println();
             }
-            while (error < previousError);
+            while (Math.abs(weightedError - previousWeightedError) > CONVERGENCE_TOLERANCE /*error < previousError*/);
 
             saveBasisFunctions();
             saveWeightMaps();
@@ -545,6 +601,8 @@ public class Nam2018Request implements IBRRequest
 
         if (DEBUG)
         {
+            System.out.println();
+
             for (int b = 0; b < BASIS_COUNT; b++)
             {
                 DoubleVector3 diffuseColor = new DoubleVector3(
@@ -589,6 +647,8 @@ public class Nam2018Request implements IBRRequest
                 }
                 System.out.println();
             }
+
+            System.out.println();
         }
     }
 
@@ -717,39 +777,44 @@ public class Nam2018Request implements IBRRequest
             }
         }
 
-        for (int b = 0; b < BASIS_COUNT; b++)
+        if (DEBUG)
         {
-            System.out.print("RHS, red for BRDF #" + b + ": ");
+            System.out.println();
 
-            System.out.print(brdfATyRed.get(b));
-            for (int m = 0; m < MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+            for (int b = 0; b < BASIS_COUNT; b++)
             {
-                System.out.print(", ");
-                System.out.print(brdfATyRed.get((m + 1) * BASIS_COUNT + b));
+                System.out.print("RHS, red for BRDF #" + b + ": ");
+
+                System.out.print(brdfATyRed.get(b));
+                for (int m = 0; m < MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+                {
+                    System.out.print(", ");
+                    System.out.print(brdfATyRed.get((m + 1) * BASIS_COUNT + b));
+                }
+                System.out.println();
+
+                System.out.print("RHS, green for BRDF #" + b + ": ");
+
+                System.out.print(brdfATyGreen.get(b));
+                for (int m = 0; m < MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+                {
+                    System.out.print(", ");
+                    System.out.print(brdfATyGreen.get((m + 1) * BASIS_COUNT + b));
+                }
+                System.out.println();
+
+                System.out.print("RHS, blue for BRDF #" + b + ": ");
+
+                System.out.print(brdfATyBlue.get(b));
+                for (int m = 0; m < MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+                {
+                    System.out.print(", ");
+                    System.out.print(brdfATyBlue.get((m + 1) * BASIS_COUNT + b));
+                }
+                System.out.println();
+
+                System.out.println();
             }
-            System.out.println();
-
-            System.out.print("RHS, green for BRDF #" + b + ": ");
-
-            System.out.print(brdfATyGreen.get(b));
-            for (int m = 0; m < MICROFACET_DISTRIBUTION_RESOLUTION; m++)
-            {
-                System.out.print(", ");
-                System.out.print(brdfATyGreen.get((m + 1) * BASIS_COUNT + b));
-            }
-            System.out.println();
-
-            System.out.print("RHS, blue for BRDF #" + b + ": ");
-
-            System.out.print(brdfATyBlue.get(b));
-            for (int m = 0; m < MICROFACET_DISTRIBUTION_RESOLUTION; m++)
-            {
-                System.out.print(", ");
-                System.out.print(brdfATyBlue.get((m + 1) * BASIS_COUNT + b));
-            }
-            System.out.println();
-
-            System.out.println();
         }
     }
 
@@ -894,6 +959,7 @@ public class Nam2018Request implements IBRRequest
             diffuseNativeBuffer.set(b, 0, diffuseAlbedos[b].x);
             diffuseNativeBuffer.set(b, 1, diffuseAlbedos[b].y);
             diffuseNativeBuffer.set(b, 2, diffuseAlbedos[b].z);
+            diffuseNativeBuffer.set(b, 3, 1.0f);
         }
 
         // Send the basis functions to the GPU.
@@ -906,6 +972,11 @@ public class Nam2018Request implements IBRRequest
     private <ContextType extends Context<ContextType>> void reconstructNormals(
         Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
     {
+        if (DEBUG)
+        {
+            System.out.println("Estimating normals...");
+        }
+
         // Clear framebuffer
         framebuffer.clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
 
@@ -915,6 +986,7 @@ public class Nam2018Request implements IBRRequest
         if (DEBUG)
         {
             saveNormalMap(framebuffer);
+            System.out.println("DONE!");
         }
     }
 
@@ -942,13 +1014,13 @@ public class Nam2018Request implements IBRRequest
 
                 reflectance = reflectance
                     .plus(new DoubleVector3(
-                        t * weightedGeomFactor * specularRed.get(mFloor),
-                        t * weightedGeomFactor * specularGreen.get(mFloor),
-                        t * weightedGeomFactor * specularBlue.get(mFloor)))
+                        t * weightedGeomFactor * specularRed.get(mFloor, b),
+                        t * weightedGeomFactor * specularGreen.get(mFloor, b),
+                        t * weightedGeomFactor * specularBlue.get(mFloor, b)))
                     .plus(new DoubleVector3(
-                        (1 - t) * weightedGeomFactor * specularRed.get(mFloor + 1),
-                        (1 - t) * weightedGeomFactor * specularGreen.get(mFloor + 1),
-                        (1 - t) * weightedGeomFactor * specularBlue.get(mFloor + 1)));
+                        (1 - t) * weightedGeomFactor * specularRed.get(mFloor + 1, b),
+                        (1 - t) * weightedGeomFactor * specularGreen.get(mFloor + 1, b),
+                        (1 - t) * weightedGeomFactor * specularBlue.get(mFloor + 1, b)));
             }
         }
 
@@ -964,6 +1036,8 @@ public class Nam2018Request implements IBRRequest
 
         double errorTotal = 0.0;
         int validCount = 0;
+        double weightedErrorTotal = 0.0;
+        double weightTotal = 0.0;
 
         for (int k = 0; k < viewCount; k++)
         {
@@ -988,18 +1062,56 @@ public class Nam2018Request implements IBRRequest
                     DoubleVector3 fActual = new DoubleVector3(colorAndVisibility[4 * p], colorAndVisibility[4 * p + 1], colorAndVisibility[4 * p + 2]);
                     DoubleVector3 diff = fEstimate.minus(fActual);
 
-                    errorTotal += diff.dot(diff);
+                    double sqError = diff.dot(diff);
+                    errorTotal += sqError;
                     validCount++;
+                    weightedErrorTotal += halfwayAndGeomAndWeights[4 * p + 2] * sqError;
+                    weightTotal += halfwayAndGeomAndWeights[4 * p + 2];
                 }
             }
         }
 
         error = Math.sqrt(errorTotal / (3 * validCount));
+        weightedError = Math.sqrt(weightedErrorTotal / (3 * weightTotal));
     }
 
     private void saveBasisFunctions()
     {
+        try (PrintStream out = new PrintStream(new File(outputDirectory, "basisFunctions.csv")))
+        {
+            for (int b = 0; b < BASIS_COUNT; b++)
+            {
+                out.print("Red#" + b);
+                for (int m = 0; m <= MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+                {
+                    out.print(", ");
+                    out.print(specularRed.get(m, b));
+                }
+                out.println();
 
+                out.print("Green#" + b);
+                for (int m = 0; m <= MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+                {
+                    out.print(", ");
+                    out.print(specularGreen.get(m, b));
+                }
+                out.println();
+
+                out.print("Blue#" + b);
+                for (int m = 0; m <= MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+                {
+                    out.print(", ");
+                    out.print(specularBlue.get(m, b));
+                }
+                out.println();
+            }
+
+            out.println();
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     private void saveWeightMaps()
