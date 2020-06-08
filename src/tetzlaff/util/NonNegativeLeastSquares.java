@@ -191,8 +191,7 @@ public final class NonNegativeLeastSquares
                 // Clear the mapping so that it can be repopulated by solvePartial().
                 mapping.clear();
 
-                // Populates the mapping, solves the system and copies it into s,
-                // and returns a vector containing only the free variables.
+                // Populates the mapping, solves the system and copies it into s, and returns a vector containing only the free variables.
                 SimpleMatrix s_P = solvePartial(augmentedATA, augmentedATb, p, mapping, s, constraintCount);
 
                 // Update size of P based on the number of mappings, accounting for the space used for equality constraints at the end of the mappings.
@@ -211,7 +210,7 @@ public final class NonNegativeLeastSquares
                         {
                             double xVal = x.get(mapping.get(i));
                             double alphaCandidate = xVal / (xVal - sVal);
-                            if (alphaCandidate < alpha)
+                            if (alphaCandidate <= alpha)
                             {
                                 alpha = alphaCandidate;
                                 j = mapping.get(i);
@@ -239,8 +238,7 @@ public final class NonNegativeLeastSquares
                     mapping.clear();
                     s.set(0.0); // Set all elements to zero.
 
-                    // Populates the mapping, solves the system and copies it into s,
-                    // and returns a vector containing only the free variables.
+                    // Populates the mapping, solves the system and copies it into s, and returns a vector containing only the free variables.
                     s_P = solvePartial(augmentedATA, augmentedATb, p, mapping, s, constraintCount);
 
                     // Update size of P based on the number of mappings.

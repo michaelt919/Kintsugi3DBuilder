@@ -156,15 +156,17 @@ final class ReflectanceMatrixBuilder
         // If mFloor is clamped to MICROFACET_DISTRIBUTION_RESOLUTION -1, then mExact will be much larger, so t = 0.0.
         double t = Math.max(0.0, 1.0 + mFloor - mExact);
 
+        double addlWeightSquared = halfwayAndGeom[4 * p + 2] * halfwayAndGeom[4 * p + 2];
+
         // Regardless of whether mFloor changed: Update running total for each pair of basis functions,
         // and add blended samples to elements where no work is saved by deferring the update to the matrix or vector.
         for (int b1 = 0; b1 < Nam2018Request.BASIS_COUNT; b1++)
         {
             // Updates to ATy
 
-            double weightedReflectanceRed   = weightSolutions[p].get(b1) * colorAndVisibility[4 * p];
-            double weightedReflectanceGreen = weightSolutions[p].get(b1) * colorAndVisibility[4 * p + 1];
-            double weightedReflectanceBlue  = weightSolutions[p].get(b1) * colorAndVisibility[4 * p + 2];
+            double weightedReflectanceRed   = weightSolutions[p].get(b1) * addlWeightSquared * colorAndVisibility[4 * p];
+            double weightedReflectanceGreen = weightSolutions[p].get(b1) * addlWeightSquared * colorAndVisibility[4 * p + 1];
+            double weightedReflectanceBlue  = weightSolutions[p].get(b1) * addlWeightSquared * colorAndVisibility[4 * p + 2];
 
             // For each basis function: update the vector.
             // Top partition of the vector corresponds to diffuse coefficients
@@ -198,7 +200,7 @@ final class ReflectanceMatrixBuilder
                 // Updates to ATA
 
                 // Top left partition of the matrix: row and column both correspond to diffuse coefficients
-                double weightProduct = weightSolutions[p].get(b1) * weightSolutions[p].get(b2);
+                double weightProduct = weightSolutions[p].get(b1) * weightSolutions[p].get(b2) * addlWeightSquared;
                 contributionATA.set(b1, b2, contributionATA.get(b1, b2) + weightProduct / PI_SQUARED);
 
                 if (mExact < Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION)
@@ -325,9 +327,9 @@ final class ReflectanceMatrixBuilder
         {
             if (colorAndVisibility[4 * p + 3] > 0)
             {
-                yRed.set(p, colorAndVisibility[4 * p]);
-                yGreen.set(p, colorAndVisibility[4 * p + 1]);
-                yBlue.set(p, colorAndVisibility[4 * p + 2]);
+                yRed.set(p, halfwayAndGeom[4 * p + 2] * colorAndVisibility[4 * p]);
+                yGreen.set(p, halfwayAndGeom[4 * p + 2] * colorAndVisibility[4 * p + 1]);
+                yBlue.set(p, halfwayAndGeom[4 * p + 2] * colorAndVisibility[4 * p + 2]);
 
                 // Calculate which discretized MDF element the current sample belongs to.
                 double mExact = halfwayAndGeom[4 * p] * Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION;
@@ -340,20 +342,20 @@ final class ReflectanceMatrixBuilder
                 for (int b = 0; b < Nam2018Request.BASIS_COUNT; b++)
                 {
                     // diffuse
-                    mA.set(p, b, weightSolutions[p].get(b) / Math.PI);
+                    mA.set(p, b, halfwayAndGeom[4 * p + 2] * weightSolutions[p].get(b) / Math.PI);
 
                     if (mExact < Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION)
                     {
                         int j = Nam2018Request.BASIS_COUNT * (mFloor + 1) + b;
 
                         // specular with blending for first non-zero element
-                        mA.set(p, j, t * halfwayAndGeom[4 * p + 1] * weightSolutions[p].get(b));
+                        mA.set(p, j, t * halfwayAndGeom[4 * p + 2] * halfwayAndGeom[4 * p + 1] * weightSolutions[p].get(b));
 
                         for (int m = mFloor + 1; m < Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION; m++)
                         {
                             j = Nam2018Request.BASIS_COUNT * (m + 1) + b;
                             // specular (no blending)
-                            mA.set(p, j, halfwayAndGeom[4 * p + 1] * weightSolutions[p].get(b));
+                            mA.set(p, j, halfwayAndGeom[4 * p + 2] * halfwayAndGeom[4 * p + 1] * weightSolutions[p].get(b));
                         }
                     }
                 }

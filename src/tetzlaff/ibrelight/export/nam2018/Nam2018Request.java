@@ -34,6 +34,7 @@ import tetzlaff.gl.vecmath.DoubleVector4;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
+import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.rendering.IBRResources;
 import tetzlaff.models.ReadonlySettingsModel;
 import tetzlaff.util.NonNegativeLeastSquares;
@@ -45,7 +46,7 @@ public class Nam2018Request implements IBRRequest
 
     private static final int BRDF_MATRIX_SIZE = BASIS_COUNT * (MICROFACET_DISTRIBUTION_RESOLUTION + 1);
     private static final double K_MEANS_TOLERANCE = 0.000001;
-    private static final double NNLS_TOLERANCE = 0.000000001;
+    private static final double NNLS_TOLERANCE_SCALE = 0.000000000001;
     private static final double CONVERGENCE_TOLERANCE = 0.001;
     private static final double GAMMA = 2.2;
 
@@ -121,11 +122,24 @@ public class Nam2018Request implements IBRRequest
     {
         IBRResources<ContextType> resources = renderable.getResources();
 
+        BufferedImage defaultImage;
+
+        try
+        {
+            defaultImage = ImageIO.read(resources.findImageFile(resources.viewSet.getPrimaryViewIndex()));
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+            return;
+        }
+
         try
         (
             Program<ContextType> averageProgram = createAverageProgram(resources);
             Program<ContextType> reflectanceProgram = createReflectanceProgram(resources);
             Program<ContextType> normalEstimationProgram = createNormalEstimationProgram(resources);
+            Program<ContextType> imageReconstructionProgram = createImageReconstructionProgram(resources);
             FramebufferObject<ContextType> framebuffer = resources.context.buildFramebufferObject(width, height)
                 .addColorAttachment(ColorFormat.RGBA32F)
                 .addColorAttachment(ColorFormat.RGBA32F)
@@ -136,6 +150,11 @@ public class Nam2018Request implements IBRRequest
             FramebufferObject<ContextType> normalFramebuffer2 = resources.context.buildFramebufferObject(width, height)
                 .addColorAttachment(ColorFormat.RGB32F)
                 .createFramebufferObject();
+            FramebufferObject<ContextType> imageReconstructionFramebuffer =
+                resources.context.buildFramebufferObject(defaultImage.getWidth(), defaultImage.getHeight())
+                    .addColorAttachment(ColorFormat.RGBA8)
+                    .addDepthAttachment()
+                    .createFramebufferObject();
             Texture3D<ContextType> weightMaps = resources.context.getTextureFactory().build2DColorTextureArray(width, height, BASIS_COUNT)
                 .setInternalFormat(ColorFormat.R32F)
                 .setLinearFilteringEnabled(true)
@@ -233,13 +252,12 @@ public class Nam2018Request implements IBRRequest
                 // Update reflectance program to use the new front buffer.
                 reflectanceDrawable.program().setTexture("normalMap", frontNormalFramebuffer.getColorAttachmentTexture(0));
 
-                // For debugging.
+                // Check if the normal update actually was an improvement.
                 double previousErrorLocal = error;
                 double previousWeightedErrorLocal = weightedError;
 
                 // Calculate the error to determine if we should stop.
                 updateError(reflectanceDrawable, framebuffer, viewCount);
-
 
                 System.out.println("--------------------------------------------------");
                 System.out.println("Error: " + error);
@@ -257,13 +275,39 @@ public class Nam2018Request implements IBRRequest
 
                 System.out.println("--------------------------------------------------");
                 System.out.println();
+
+                /*if (weightedError > previousWeightedErrorLocal)
+                {
+                    // Swap normal map framebuffers back to use the old normal map, if the new one isn't better.
+                    backNormalFramebuffer = frontNormalFramebuffer;
+                    frontNormalFramebuffer = tmp;
+
+                    // Update reflectance program to use the old front buffer.
+                    reflectanceDrawable.program().setTexture("normalMap", frontNormalFramebuffer.getColorAttachmentTexture(0));
+
+                    // Revert error calculations to what they were before attempting to optimize normals.
+                    error = previousErrorLocal;
+                    weightedError = previousWeightedErrorLocal;
+                }
+                else */ if (DEBUG)
+                {
+                    saveNormalMap(frontNormalFramebuffer);
+                }
             }
-            while (Math.abs(weightedError - previousWeightedError) > CONVERGENCE_TOLERANCE /*error < previousError*/);
+            while (previousWeightedError - weightedError > CONVERGENCE_TOLERANCE /*error < previousError*/);
 
             saveBasisFunctions();
             saveWeightMaps();
             saveDiffuseMap();
             saveNormalMap(frontNormalFramebuffer);
+
+            Drawable<ContextType> imageReconstructionDrawable = createDrawable(imageReconstructionProgram, resources);
+            imageReconstructionProgram.setTexture("basisFunctions", basisMaps);
+            imageReconstructionProgram.setTexture("weightMaps", weightMaps);
+            imageReconstructionProgram.setTexture("normalMap", frontNormalFramebuffer.getColorAttachmentTexture(0));
+            imageReconstructionProgram.setUniformBuffer("DiffuseColors", diffuseUniformBuffer);
+
+            reconstructImages(imageReconstructionDrawable, imageReconstructionFramebuffer, resources.viewSet);
         }
         catch(FileNotFoundException e) // thrown by createReflectanceProgram
         {
@@ -306,7 +350,7 @@ public class Nam2018Request implements IBRRequest
     }
 
     private <ContextType extends Context<ContextType>>
-    Program<ContextType> createNormalEstimationProgram(IBRResources<ContextType> resources) throws FileNotFoundException
+        Program<ContextType> createNormalEstimationProgram(IBRResources<ContextType> resources) throws FileNotFoundException
     {
         Program<ContextType> program = resources.getIBRShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
@@ -318,6 +362,22 @@ public class Nam2018Request implements IBRRequest
 
         program.setUniform("occlusionEnabled", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"));
         program.setUniform("occlusionBias", this.settingsModel.getFloat("occlusionBias"));
+
+        resources.setupShaderProgram(program);
+
+        return program;
+    }
+
+    private static <ContextType extends Context<ContextType>>
+        Program<ContextType> createImageReconstructionProgram(IBRResources<ContextType> resources) throws FileNotFoundException
+    {
+        Program<ContextType> program = resources.getIBRShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/nam2018/reconstructImage.frag"))
+            .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
+            .define("SMITH_MASKING_SHADOWING", 0)
+            .define("BASIS_COUNT", BASIS_COUNT)
+            .createProgram();
 
         resources.setupShaderProgram(program);
 
@@ -568,9 +628,15 @@ public class Nam2018Request implements IBRRequest
         System.out.println("Building reflectance fitting matrix...");
         buildReflectanceMatrix(drawable, framebuffer, viewCount);
         System.out.println("Finished building matrix; solving now...");
-        SimpleMatrix brdfSolutionRed = NonNegativeLeastSquares.solvePremultiplied(brdfATA, brdfATyRed, NNLS_TOLERANCE);
-        SimpleMatrix brdfSolutionGreen = NonNegativeLeastSquares.solvePremultiplied(brdfATA, brdfATyGreen, NNLS_TOLERANCE);
-        SimpleMatrix brdfSolutionBlue = NonNegativeLeastSquares.solvePremultiplied(brdfATA, brdfATyBlue, NNLS_TOLERANCE);
+        double medianATyRed = IntStream.range(0, brdfATyRed.getNumElements()).mapToDouble(brdfATyRed::get)
+            .sorted().skip(brdfATyRed.getNumElements() / 2).filter(x -> x > 0).findFirst().orElse(1.0);
+        double medianATyGreen = IntStream.range(0, brdfATyGreen.getNumElements()).mapToDouble(brdfATyGreen::get)
+            .sorted().skip(brdfATyGreen.getNumElements() / 2).filter(x -> x > 0).findFirst().orElse(1.0);
+        double medianATyBlue = IntStream.range(0, brdfATyBlue.getNumElements()).mapToDouble(brdfATyBlue::get)
+            .sorted().skip(brdfATyBlue.getNumElements() / 2).filter(x -> x > 0).findFirst().orElse(1.0);
+        SimpleMatrix brdfSolutionRed = NonNegativeLeastSquares.solvePremultiplied(brdfATA, brdfATyRed, NNLS_TOLERANCE_SCALE * medianATyRed);
+        SimpleMatrix brdfSolutionGreen = NonNegativeLeastSquares.solvePremultiplied(brdfATA, brdfATyGreen, NNLS_TOLERANCE_SCALE * medianATyGreen);
+        SimpleMatrix brdfSolutionBlue = NonNegativeLeastSquares.solvePremultiplied(brdfATA, brdfATyBlue, NNLS_TOLERANCE_SCALE * medianATyBlue);
         System.out.println("DONE!");
 
         for (int b = 0; b < BASIS_COUNT; b++)
@@ -822,8 +888,9 @@ public class Nam2018Request implements IBRRequest
         Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int viewCount)
     {
         System.out.println("Building weight fitting matrices...");
+
         // Setup all the matrices for fitting weights (one per texel)
-        buildWeightMatrix(drawable, framebuffer, viewCount);
+        buildWeightMatrices(drawable, framebuffer, viewCount);
 
         System.out.println("Finished building matrices; solving now...");
 
@@ -831,8 +898,10 @@ public class Nam2018Request implements IBRRequest
         {
             if (weightsValidity[p])
             {
+                double median = IntStream.range(0, weightsQTrAugmented[p].getNumElements()).mapToDouble(weightsQTrAugmented[p]::get)
+                    .sorted().skip(weightsQTrAugmented[p].getNumElements() / 2).filter(x -> x > 0).findFirst().orElse(1.0);
                 weightSolutions[p] = NonNegativeLeastSquares.solvePremultipliedWithEqualityConstraints(
-                    weightsQTQAugmented[p], weightsQTrAugmented[p], NNLS_TOLERANCE, 1);
+                    weightsQTQAugmented[p], weightsQTrAugmented[p], median * NNLS_TOLERANCE_SCALE, 1);
             }
         }
 
@@ -848,7 +917,7 @@ public class Nam2018Request implements IBRRequest
         }
     }
 
-    private <ContextType extends Context<ContextType>> void buildWeightMatrix(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int viewCount)
+    private <ContextType extends Context<ContextType>> void buildWeightMatrices(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int viewCount)
     {
         // Initially assume that all texels are invalid.
         Arrays.fill(weightsValidity, false);
@@ -950,9 +1019,9 @@ public class Nam2018Request implements IBRRequest
             for (int m = 0; m <= MICROFACET_DISTRIBUTION_RESOLUTION; m++)
             {
                 // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
-                basisMapBuffer.set(m + MICROFACET_DISTRIBUTION_RESOLUTION * b, 0, specularRed.get(b + BASIS_COUNT * m));
-                basisMapBuffer.set(m + MICROFACET_DISTRIBUTION_RESOLUTION * b, 1, specularGreen.get(b + BASIS_COUNT * m));
-                basisMapBuffer.set(m + MICROFACET_DISTRIBUTION_RESOLUTION * b, 2, specularBlue.get(b + BASIS_COUNT * m));
+                basisMapBuffer.set(m + (MICROFACET_DISTRIBUTION_RESOLUTION + 1) * b, 0, specularRed.get(m, b));
+                basisMapBuffer.set(m + (MICROFACET_DISTRIBUTION_RESOLUTION + 1) * b, 1, specularGreen.get(m, b));
+                basisMapBuffer.set(m + (MICROFACET_DISTRIBUTION_RESOLUTION + 1) * b, 2, specularBlue.get(m, b));
             }
 
             // Store each channel of the diffuse albedo in the local buffer.
@@ -985,7 +1054,6 @@ public class Nam2018Request implements IBRRequest
 
         if (DEBUG)
         {
-            saveNormalMap(framebuffer);
             System.out.println("DONE!");
         }
     }
@@ -1065,8 +1133,8 @@ public class Nam2018Request implements IBRRequest
                     double sqError = diff.dot(diff);
                     errorTotal += sqError;
                     validCount++;
-                    weightedErrorTotal += halfwayAndGeomAndWeights[4 * p + 2] * sqError;
-                    weightTotal += halfwayAndGeomAndWeights[4 * p + 2];
+                    weightedErrorTotal += halfwayAndGeomAndWeights[4 * p + 2] * halfwayAndGeomAndWeights[4 * p + 2] * sqError;
+                    weightTotal += halfwayAndGeomAndWeights[4 * p + 2] * halfwayAndGeomAndWeights[4 * p + 2];
                 }
             }
         }
@@ -1188,6 +1256,43 @@ public class Nam2018Request implements IBRRequest
         catch (IOException e)
         {
             e.printStackTrace();
+        }
+    }
+
+    private <ContextType extends Context<ContextType>> void reconstructImages(
+        Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, ViewSet viewSet)
+    {
+        new File(outputDirectory, "reconstructions").mkdir();
+
+        for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
+        {
+            drawable.program().setUniform("model_view", viewSet.getCameraPose(k));
+            drawable.program().setUniform("projection",
+                viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(k)).getProjectionMatrix(
+                    viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
+            drawable.program().setUniform("viewIndex", k);
+
+            framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+            framebuffer.clearDepthBuffer();
+            drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+
+            String filename = viewSet.getImageFileName(k);
+            if(!filename.endsWith(".png"))
+            {
+                String[] parts = filename.split("\\.");
+                parts[parts.length-1] = "png";
+                filename = String.join(".", parts);
+            }
+
+            try
+            {
+                framebuffer.saveColorBufferToFile(0, "PNG",
+                    new File(new File(outputDirectory, "reconstructions"), filename));
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
         }
     }
 }

@@ -18,21 +18,42 @@ in vec3 fNormal;
 in vec3 fTangent;
 in vec3 fBitangent;
 
-layout(location = 0) out vec4 reflectance_visibility;
-layout(location = 1) out vec4 halfway_geom_weight;
+layout(location = 0) out vec4 fragColor;
 
 #include <shaders/colorappearance/imgspace.glsl>
 #include <shaders/colorappearance/colorappearance_multi_as_single.glsl>
 #include <shaders/relight/reflectanceequations.glsl>
 
-#line 29 0
+#line 28 0
 
 uniform sampler2D normalMap;
 uniform sampler2D roughnessMap;
+uniform sampler2DArray weightMaps;
+uniform sampler1DArray basisFunctions;
 
-#define COSINE_CUTOFF 0.0
+layout(std140) uniform DiffuseColors
+{
+    vec4 diffuseColors[BASIS_COUNT];
+};
 
-vec3 getNormalVector()
+#ifndef BASIS_COUNT
+#define BASIS_COUNT 8
+#endif
+
+vec3 getBRDFEstimate(float nDotH, float geomFactor)
+{
+    vec3 estimate = vec3(0);
+    float w = sqrt(max(0.0, acos(nDotH) * 3.0 / PI));
+
+    for (int b = 0; b < BASIS_COUNT; b++)
+    {
+        estimate += texture(weightMaps, vec3(fTexCoord, b))[0] * (diffuseColors[b].rgb / PI + texture(basisFunctions, vec2(w, b)).rgb * geomFactor);
+    }
+
+    return estimate;
+}
+
+void main()
 {
     vec3 triangleNormal = normalize(fNormal);
     vec3 tangent = normalize(fTangent - dot(triangleNormal, fTangent) * triangleNormal);
@@ -43,41 +64,20 @@ vec3 getNormalVector()
 
     vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
     vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
-    vec3 normalDir = tangentToObject * normalDirTS;
+    vec3 normal = tangentToObject * normalDirTS;
 
-    return normalDir;
-}
-
-void main()
-{
-    vec4 imgColor = getLinearColor();
     vec3 lightDisplacement = getLightVector();
     vec3 light = normalize(lightDisplacement);
     vec3 view = normalize(getViewVector());
     vec3 halfway = normalize(light + view);
-    vec3 normal = getNormalVector();
+    float nDotH = max(0.0, dot(normal, halfway));
     float nDotL = max(0.0, dot(normal, light));
     float nDotV = max(0.0, dot(normal, view));
-    float nDotH = max(0.0, dot(normal, halfway));
-    float triangleNDotV = max(0.0, dot(normalize(fNormal), view));
+    float hDotV = max(0.0, dot(halfway, view));
+    float roughness = texture(roughnessMap, fTexCoord)[0];
+    float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
+    vec3 incidentRadiance = PI * lightIntensity / dot(lightDisplacement, lightDisplacement);
 
-    if (nDotH > COSINE_CUTOFF && nDotL > COSINE_CUTOFF && nDotV > COSINE_CUTOFF && triangleNDotV > COSINE_CUTOFF)
-    {
-        float hDotV = max(0.0, dot(halfway, view));
-
-        // "Light intensity" is defined in such a way that we need to multiply by pi to be properly normalized.
-        vec3 irradiance = nDotL * PI * lightIntensity / dot(lightDisplacement, lightDisplacement);
-
-        float roughness = texture(roughnessMap, fTexCoord)[0];
-        float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-
-        reflectance_visibility = vec4(imgColor.rgb / irradiance, imgColor.a);
-
-        // Halfway component should be 1.0 when the angle is 60 degrees, or pi/3.
-        halfway_geom_weight = vec4(sqrt(acos(nDotH) * 3.0 / PI), maskingShadowing / (4 * nDotL * nDotV), nDotL * sqrt(max(0, 1 - nDotH * nDotH)), 1);
-    }
-    else
-    {
-        discard;
-    }
+    // Reflectance is implicitly multiplied by n dot l.
+    fragColor = vec4(pow(incidentRadiance * nDotL * getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV)), vec3(1.0 / gamma)), 1.0);
 }

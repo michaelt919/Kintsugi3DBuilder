@@ -21,7 +21,7 @@ in vec3 fBitangent;
 layout(location = 0) out vec4 normalTS;
 
 #include <shaders/colorappearance/imgspace.glsl>
-#include <shaders/colorappearance/colorappearance_multi_as_single.glsl>
+#include <shaders/colorappearance/colorappearance.glsl>
 #include <shaders/relight/reflectanceequations.glsl>
 
 #line 28 0
@@ -40,12 +40,12 @@ layout(std140) uniform DiffuseColors
 #define BASIS_COUNT 8
 #endif
 
-#define N_DOT_H_CUTOFF 0.0
+#define COSINE_CUTOFF 0.0
 
 vec3 getBRDFEstimate(float nDotH, float geomFactor)
 {
     vec3 estimate = vec3(0);
-    float w = sqrt(acos(nDotH) * 3.0 / PI);
+    float w = sqrt(max(0.0, acos(nDotH) * 3.0 / PI));
 
     for (int b = 0; b < BASIS_COUNT; b++)
     {
@@ -79,15 +79,16 @@ void main()
         vec3 view = normalize(getViewVector(k));
         vec3 halfway = normalize(light + view);
         float nDotH = max(0.0, dot(prevNormal, halfway));
+        float nDotL = max(0.0, dot(prevNormal, light));
+        float nDotV = max(0.0, dot(prevNormal, view));
+        float triangleNDotV = max(0.0, dot(triangleNormal, view));
 
-        if (nDotH > N_DOT_H_CUTOFF)
+        if (nDotH > COSINE_CUTOFF && nDotL > COSINE_CUTOFF && nDotV > COSINE_CUTOFF && triangleNDotV > COSINE_CUTOFF)
         {
-            float nDotL = max(0.0, dot(prevNormal, light));
-            float nDotV = max(0.0, dot(prevNormal, view));
             float hDotV = max(0.0, dot(halfway, view));
 
             // "Light intensity" is defined in such a way that we need to multiply by pi to be properly normalized.
-            vec3 irradiance = nDotL * PI * lightIntensity / dot(lightDisplacement, lightDisplacement);
+            vec3 irradiance = nDotL * PI * getLightIntensity(k) / dot(lightDisplacement, lightDisplacement);
 
             float roughness = texture(roughnessMap, fTexCoord)[0];
             float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
@@ -97,8 +98,8 @@ void main()
 
             float weight = nDotL * sqrt(max(0, 1 - nDotH * nDotH));
 
-            mATA += weight * dot(reflectanceEstimate, reflectanceEstimate) * outerProduct(light, light);
-            vATb += weight * dot(reflectanceEstimate, reflectance) * light;
+            mATA += weight * weight * dot(reflectanceEstimate, reflectanceEstimate) * outerProduct(light, light);
+            vATb += weight * weight * dot(reflectanceEstimate, reflectance) * light;
         }
     }
 
