@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import org.ejml.data.SingularMatrixException;
 import org.ejml.dense.row.CommonOps_DDRM;
 import org.ejml.simple.SimpleMatrix;
 
@@ -191,58 +192,87 @@ public final class NonNegativeLeastSquares
                 // Clear the mapping so that it can be repopulated by solvePartial().
                 mapping.clear();
 
-                // Populates the mapping, solves the system and copies it into s, and returns a vector containing only the free variables.
-                SimpleMatrix s_P = solvePartial(augmentedATA, augmentedATb, p, mapping, s, constraintCount);
-
-                // Update size of P based on the number of mappings, accounting for the space used for equality constraints at the end of the mappings.
-                sizeP = mapping.size() - constraintCount;
-
-                // Make sure that none of the free variables went negative.
-                while(minNonConstraint(s_P, constraintCount) <= 0.0)
+                try
                 {
-                    double alpha = 1.0;
-                    int j = -1;
-                    for (int i = 0; i < sizeP; i++)
-                    {
-                        double sVal = s_P.get(i);
+                    // Populates the mapping, solves the system and copies it into s, and returns a vector containing only the free variables.
+                    SimpleMatrix s_P = solvePartial(augmentedATA, augmentedATb, p, mapping, s, constraintCount);
 
-                        if (sVal <= 0.0)
+                    // Update size of P based on the number of mappings, accounting for the space used for equality constraints at the end of the mappings.
+                    sizeP = mapping.size() - constraintCount;
+
+                    // Make sure that none of the free variables went negative.
+                    while (minNonConstraint(s_P, constraintCount) <= 0.0)
+                    {
+                        double alpha = 1.0;
+                        int j = -1;
+                        for (int i = 0; i < sizeP; i++)
                         {
-                            double xVal = x.get(mapping.get(i));
-                            double alphaCandidate = xVal / (xVal - sVal);
-                            if (alphaCandidate <= alpha)
+                            double sVal = s_P.get(i);
+
+                            if (sVal <= 0.0)
                             {
-                                alpha = alphaCandidate;
-                                j = mapping.get(i);
+                                double xVal = x.get(mapping.get(i));
+                                double alphaCandidate = xVal / (xVal - sVal);
+                                if (alphaCandidate <= alpha)
+                                {
+                                    alpha = alphaCandidate;
+                                    j = mapping.get(i);
+                                }
                             }
                         }
-                    }
 
-                    // x = x + alpha * (s - x)
-                    CommonOps_DDRM.addEquals(x.getMatrix(), alpha, s.minus(x).getMatrix());
+                        // x = x + alpha * (s - x)
+                        CommonOps_DDRM.addEquals(x.getMatrix(), alpha, s.minus(x).getMatrix());
 
-                    // Make sure that at least one previously positive value is set to zero.
-                    // Because of round-off error, this is not necessarily guaranteed.
-                    p[j] = false;
-                    x.set(j, 0.0);
+                        // Make sure that at least one previously positive value is set to zero.
+                        // Because of round-off error, this is not necessarily guaranteed.
+                        p[j] = false;
+                        x.set(j, 0.0);
 
-                    for (int i = 0; i < x.numRows() - constraintCount; i++)
-                    {
-                        if (p[i] && x.get(i) <= 0.0)
+                        if (j == k)
                         {
-                            p[i] = false;
-                            x.set(i, 0.0); // Just in case it went slightly negative due to round-off error.
+                            // Avoid an infinite loop; treat all remaining values in w as insignificant.
+                            maxW = 0.0;
                         }
+                        else
+                        {
+                            for (int i = 0; i < x.numRows() - constraintCount; i++)
+                            {
+                                if (p[i] && x.get(i) <= 0.0)
+                                {
+                                    p[i] = false;
+                                    x.set(i, 0.0); // Just in case it went slightly negative due to round-off error.
+                                }
+                            }
+                        }
+
+                        mapping.clear();
+                        s.set(0.0); // Set all elements to zero.
+
+                        // Populates the mapping, solves the system and copies it into s, and returns a vector containing only the free variables.
+                        s_P = solvePartial(augmentedATA, augmentedATb, p, mapping, s, constraintCount);
+
+                        // Update size of P based on the number of mappings.
+                        sizeP = mapping.size() - constraintCount;
                     }
+                }
+                catch(SingularMatrixException e)
+                {
+                    // Roll back and finish.
+                    p[k] = false;
+                    x.set(k, 0.0);
 
                     mapping.clear();
                     s.set(0.0); // Set all elements to zero.
 
                     // Populates the mapping, solves the system and copies it into s, and returns a vector containing only the free variables.
-                    s_P = solvePartial(augmentedATA, augmentedATb, p, mapping, s, constraintCount);
+                    solvePartial(augmentedATA, augmentedATb, p, mapping, s, constraintCount);
 
                     // Update size of P based on the number of mappings.
                     sizeP = mapping.size() - constraintCount;
+
+                    // Avoid an infinite loop; treat all remaining values in w as insignificant.
+                    maxW = 0.0;
                 }
 
                 x = s;

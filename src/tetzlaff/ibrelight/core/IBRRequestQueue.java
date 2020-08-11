@@ -52,11 +52,14 @@ public class IBRRequestQueue<ContextType extends Context<ContextType>>
     {
         this.requestList.add(() ->
         {
+            // Suppress warning about catching and not rethrowing AssertionError.
+            // The request should effectively be regarded a "sandbox" where a critical logic error should not result in the application terminating.
+            //noinspection ErrorNotRethrown
             try
             {
                 request.executeRequest(model.getSelectedItem(), loadingMonitor);
             }
-            catch(Exception e)
+            catch(Exception | AssertionError e)
             {
                 e.printStackTrace();
             }

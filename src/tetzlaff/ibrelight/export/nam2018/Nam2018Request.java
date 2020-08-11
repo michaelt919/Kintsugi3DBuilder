@@ -31,6 +31,7 @@ import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.gl.vecmath.DoubleVector4;
+import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
@@ -121,6 +122,7 @@ public class Nam2018Request implements IBRRequest
     public <ContextType extends Context<ContextType>> void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback)
     {
         IBRResources<ContextType> resources = renderable.getResources();
+        resources.context.getState().disableBackFaceCulling();
 
         BufferedImage defaultImage;
 
@@ -151,7 +153,7 @@ public class Nam2018Request implements IBRRequest
                 .addColorAttachment(ColorFormat.RGB32F)
                 .createFramebufferObject();
             FramebufferObject<ContextType> imageReconstructionFramebuffer =
-                resources.context.buildFramebufferObject(defaultImage.getWidth(), defaultImage.getHeight())
+                resources.context.buildFramebufferObject(width, height)//defaultImage.getWidth(), defaultImage.getHeight())
                     .addColorAttachment(ColorFormat.RGBA8)
                     .addDepthAttachment()
                     .createFramebufferObject();
@@ -190,6 +192,8 @@ public class Nam2018Request implements IBRRequest
             normalEstimationProgram.setTexture("basisFunctions", basisMaps);
             normalEstimationProgram.setTexture("weightMaps", weightMaps);
             normalEstimationProgram.setUniformBuffer("DiffuseColors", diffuseUniformBuffer);
+
+            Arrays.fill(diffuseAlbedos, DoubleVector3.ZERO);
 
             int viewCount = resources.viewSet.getCameraPoseCount();
 
@@ -443,14 +447,17 @@ public class Nam2018Request implements IBRRequest
 
             for (int p = 0; p < width * height; p++)
             {
-                double minDistance = Double.MAX_VALUE;
-
-                for (int b2 = 0; b2 < b; b2++)
+                if (averages[4 * p + 3] > 0.0)
                 {
-                    minDistance = Math.min(minDistance, centers[b2].distance(new DoubleVector3(averages[4 * p], averages[4 * p + 1], averages[4 * p + 2])));
-                }
+                    double minDistance = Double.MAX_VALUE;
 
-                cdf[p + 1] = cdf[p] + minDistance * minDistance;
+                    for (int b2 = 0; b2 < b; b2++)
+                    {
+                        minDistance = Math.min(minDistance, centers[b2].distance(new DoubleVector3(averages[4 * p], averages[4 * p + 1], averages[4 * p + 2])));
+                    }
+
+                    cdf[p + 1] = cdf[p] + minDistance * minDistance;
+                }
             }
 
             double x = random.nextDouble() * cdf[width * height - 1];
@@ -474,7 +481,7 @@ public class Nam2018Request implements IBRRequest
                 index = -index - 2;
             }
 
-            assert index < cdf.length;
+            assert index < cdf.length - 1;
 
             // If the index was actually positive to begin with, that's probably fine; just make sure that it's a valid location.
             // It's also possible in theory for the index to be zero if the random number generator produced 0.0.
@@ -485,7 +492,7 @@ public class Nam2018Request implements IBRRequest
 
                 // We shouldn't ever fail to find an index since x should have been less than the final (un-normalized) CDF total.
                 // This means that there has to be some place where the CDF went up, corresponding to a valid index.
-                assert index < cdf.length;
+                assert index < cdf.length - 1;
             }
 
             // We've found a new center.
@@ -530,9 +537,12 @@ public class Nam2018Request implements IBRRequest
             changed = false;
             for (int b = 0; b < BASIS_COUNT; b++)
             {
-                DoubleVector3 newCenter = sums[b].getXYZ().dividedBy(sums[b].w);
-                changed = changed || newCenter.distance(centers[b]) < K_MEANS_TOLERANCE;
-                centers[b] = newCenter;
+                if (sums[b].w > 0.0)
+                {
+                    DoubleVector3 newCenter = sums[b].getXYZ().dividedBy(sums[b].w);
+                    changed = changed || newCenter.distance(centers[b]) > K_MEANS_TOLERANCE;
+                    centers[b] = newCenter;
+                }
             }
         }
         while (changed);
@@ -969,7 +979,7 @@ public class Nam2018Request implements IBRRequest
                         }
 
                         // Store the weighted product of the basis BRDF and the actual BRDF in the vector.
-                        weightsQTrAugmented[p].set(b1, weightSquared * f1.dot(fActual));
+                        weightsQTrAugmented[p].set(b1, weightsQTrAugmented[p].get(b1) + weightSquared * f1.dot(fActual));
 
                         for (int b2 = 0; b2 < BASIS_COUNT; b2++)
                         {
@@ -986,7 +996,7 @@ public class Nam2018Request implements IBRRequest
                             }
 
                             // Store the weighted product of the two BRDFs in the matrix.
-                            weightsQTQAugmented[p].set(b1, b2, weightSquared * f1.dot(f2));
+                            weightsQTQAugmented[p].set(b1, b2, weightsQTQAugmented[p].get(b1, b2) + weightSquared * f1.dot(f2));
                         }
                     }
                 }

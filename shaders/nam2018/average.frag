@@ -12,18 +12,10 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-in vec3 fPosition;
-//in vec2 fTexCoord;
-in vec3 fNormal;
-//in vec3 fTangent;
-//in vec3 fBitangent;
+#include "nam2018.glsl"
+#line 17 0
 
 layout(location = 0) out vec4 averageLab;
-
-#include <shaders/colorappearance/imgspace.glsl>
-#include <shaders/colorappearance/colorappearance.glsl>
-
-#line 27 0
 
 //struct IndexedValue
 //{

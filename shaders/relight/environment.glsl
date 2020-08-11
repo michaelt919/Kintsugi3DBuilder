@@ -203,7 +203,9 @@ vec3 getEnvironmentDiffuse(vec3 normalDirection)
 {    vec3 result;
 
 #if ENVIRONMENT_TEXTURE_ENABLED
-    result = ambientColor * textureLod(environmentMap, mat3(envMapMatrix) * normalDirection, diffuseEnvironmentMipMapLevel).rgb / 2;
+    result = ambientColor * textureLod(environmentMap, mat3(envMapMatrix) * normalDirection, 
+    diffuseEnvironmentMipMapLevel).rgb / 2; // Why divide by 2?  This doesn't seem right.
+    // https://www.wolframalpha.com/input/?i=2+*+pi+*+%28integrate+sine+theta+*+cosine+theta+%2F+pi%3B+theta+from+0+to+pi%2F2%29
 #else
     result = ambientColor;
 #endif

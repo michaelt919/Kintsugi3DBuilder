@@ -12,27 +12,15 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-in vec3 fPosition;
-in vec2 fTexCoord;
-in vec3 fNormal;
-in vec3 fTangent;
-in vec3 fBitangent;
+#include "nam2018.glsl"
+#line 17 0
 
 layout(location = 0) out vec4 reflectance_visibility;
 layout(location = 1) out vec4 halfway_geom_weight;
 
-#include <shaders/colorappearance/imgspace.glsl>
-#include <shaders/colorappearance/colorappearance_multi_as_single.glsl>
-#include <shaders/relight/reflectanceequations.glsl>
-
-#line 29 0
-
-uniform sampler2D normalMap;
-uniform sampler2D roughnessMap;
-
 #define COSINE_CUTOFF 0.0
 
-vec3 getNormalVector()
+vec3 getNormalEstimate()
 {
     vec3 triangleNormal = normalize(fNormal);
     vec3 tangent = normalize(fTangent - dot(triangleNormal, fTangent) * triangleNormal);
@@ -55,7 +43,7 @@ void main()
     vec3 light = normalize(lightDisplacement);
     vec3 view = normalize(getViewVector());
     vec3 halfway = normalize(light + view);
-    vec3 normal = getNormalVector();
+    vec3 normal = getNormalEstimate();
     float nDotL = max(0.0, dot(normal, light));
     float nDotV = max(0.0, dot(normal, view));
     float nDotH = max(0.0, dot(normal, halfway));

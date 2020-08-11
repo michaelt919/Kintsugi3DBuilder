@@ -22,7 +22,6 @@
 #define ANALYTIC_METAL 1
 #endif
 
-
 #ifndef ANALYTIC_COLOR
 
 #if ANALYTIC_METAL
@@ -35,7 +34,6 @@
 
 #endif // ANALYTIC_COLOR
 
-
 #ifndef ANALYTIC_DIFFUSE_COLOR
 
 #if ANALYTIC_METAL
@@ -46,7 +44,6 @@
 
 #endif // ANALYTIC_DIFFUSE_COLOR
 
-
 #ifndef ANALYTIC_SPECULAR_COLOR
 
 #if ANALYTIC_METAL
@@ -56,7 +53,6 @@
 #endif
 
 #endif // ANALYTIC_SPECULAR_COLOR
-
 
 #ifndef ANALYTIC_BUMP_HEIGHT
 #define ANALYTIC_BUMP_HEIGHT 4.0
@@ -78,19 +74,18 @@ vec4 getColor(int index)
     vec3 view = normalize(getViewVector(index));
     float nDotV = max(0, dot(normal, view));
 
-    vec3 tangent = normalize(fTangent - dot(normal, fTangent) * normal);
-    vec3 bitangent = normalize(fBitangent
-        - dot(normal, fBitangent) * normal
-        - dot(tangent, fBitangent) * tangent);
-    mat3 tangentToObject = mat3(tangent, bitangent, normal);
-
-    vec2 scaledTexCoord = ANALYTIC_UV_SCALE * fTexCoord;
-
-    vec3 shadingNormal =
-        normalize(tangentToObject * (getNormal(scaledTexCoord - floor(scaledTexCoord)) * vec3(ANALYTIC_BUMP_HEIGHT, ANALYTIC_BUMP_HEIGHT, 1.0)));
-
     if (nDotV > 0)
     {
+        vec3 tangent = normalize(fTangent - dot(normal, fTangent) * normal);
+        vec3 bitangent = normalize(fBitangent
+            - dot(normal, fBitangent) * normal
+            - dot(tangent, fBitangent) * tangent);
+        mat3 tangentToObject = mat3(tangent, bitangent, normal);
+
+        vec2 scaledTexCoord = ANALYTIC_UV_SCALE * fTexCoord;
+
+        vec3 shadingNormal = normalize(tangentToObject * (getNormal(scaledTexCoord - floor(scaledTexCoord)) * vec3(ANALYTIC_BUMP_HEIGHT, ANALYTIC_BUMP_HEIGHT, 1.0)));
+
         LightInfo lightInfo = getLightInfo(index);
         vec3 light = lightInfo.normalizedDirection;
         float nDotL = max(0, dot(light, shadingNormal));
