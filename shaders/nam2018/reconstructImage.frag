@@ -18,6 +18,7 @@
 layout(location = 0) out vec4 fragColor;
 
 uniform sampler2DArray weightMaps;
+uniform sampler2D weightMask;
 uniform sampler1DArray basisFunctions;
 
 layout(std140) uniform DiffuseColors
@@ -39,7 +40,16 @@ vec3 getBRDFEstimate(float nDotH, float geomFactor)
         estimate += texture(weightMaps, vec3(fTexCoord, b))[0] * (diffuseColors[b].rgb / PI + texture(basisFunctions, vec2(w, b)).rgb * geomFactor);
     }
 
-    return estimate;
+    float filteredMask = texture(weightMask, fTexCoord)[0];
+
+    if (filteredMask > 0)
+    {
+        return estimate / filteredMask;
+    }
+    else
+    {
+        return vec3(0);
+    }
 }
 
 void main()

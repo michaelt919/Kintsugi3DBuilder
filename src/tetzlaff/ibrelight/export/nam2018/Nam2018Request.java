@@ -31,7 +31,6 @@ import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.gl.vecmath.DoubleVector4;
-import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
@@ -153,12 +152,17 @@ public class Nam2018Request implements IBRRequest
                 .addColorAttachment(ColorFormat.RGB32F)
                 .createFramebufferObject();
             FramebufferObject<ContextType> imageReconstructionFramebuffer =
-                resources.context.buildFramebufferObject(width, height)//defaultImage.getWidth(), defaultImage.getHeight())
+                resources.context.buildFramebufferObject(defaultImage.getWidth(), defaultImage.getHeight())
                     .addColorAttachment(ColorFormat.RGBA8)
                     .addDepthAttachment()
                     .createFramebufferObject();
             Texture3D<ContextType> weightMaps = resources.context.getTextureFactory().build2DColorTextureArray(width, height, BASIS_COUNT)
                 .setInternalFormat(ColorFormat.R32F)
+                .setLinearFilteringEnabled(true)
+                .setMipmapsEnabled(false)
+                .createTexture();
+            Texture2D<ContextType> weightMask = resources.context.getTextureFactory().build2DColorTexture(width, height)
+                .setInternalFormat(ColorFormat.R8)
                 .setLinearFilteringEnabled(true)
                 .setMipmapsEnabled(false)
                 .createTexture();
@@ -242,7 +246,7 @@ public class Nam2018Request implements IBRRequest
                 }
 
                 // Prepare for normal estimation on the GPU.
-                updateGraphicsResources(weightMaps, basisMaps, diffuseUniformBuffer);
+                updateGraphicsResources(weightMaps, weightMask, basisMaps, diffuseUniformBuffer);
 
                 // Update normal estimation program to use the new front buffer.
                 normalEstimationDrawable.program().setTexture("normalMap", frontNormalFramebuffer.getColorAttachmentTexture(0));
@@ -280,7 +284,7 @@ public class Nam2018Request implements IBRRequest
                 System.out.println("--------------------------------------------------");
                 System.out.println();
 
-                /*if (weightedError > previousWeightedErrorLocal)
+                if (/*weightedError > previousWeightedErrorLocal*/ error > previousErrorLocal)
                 {
                     // Swap normal map framebuffers back to use the old normal map, if the new one isn't better.
                     backNormalFramebuffer = frontNormalFramebuffer;
@@ -293,12 +297,12 @@ public class Nam2018Request implements IBRRequest
                     error = previousErrorLocal;
                     weightedError = previousWeightedErrorLocal;
                 }
-                else */ if (DEBUG)
+                else if (DEBUG)
                 {
                     saveNormalMap(frontNormalFramebuffer);
                 }
             }
-            while (previousWeightedError - weightedError > CONVERGENCE_TOLERANCE /*error < previousError*/);
+            while (/*previousWeightedError - weightedError > CONVERGENCE_TOLERANCE*/ previousError - error > CONVERGENCE_TOLERANCE);
 
             saveBasisFunctions();
             saveWeightMaps();
@@ -308,6 +312,7 @@ public class Nam2018Request implements IBRRequest
             Drawable<ContextType> imageReconstructionDrawable = createDrawable(imageReconstructionProgram, resources);
             imageReconstructionProgram.setTexture("basisFunctions", basisMaps);
             imageReconstructionProgram.setTexture("weightMaps", weightMaps);
+            imageReconstructionProgram.setTexture("weightMask", weightMask);
             imageReconstructionProgram.setTexture("normalMap", frontNormalFramebuffer.getColorAttachmentTexture(0));
             imageReconstructionProgram.setUniformBuffer("DiffuseColors", diffuseUniformBuffer);
 
@@ -1007,12 +1012,20 @@ public class Nam2018Request implements IBRRequest
     }
 
     private <ContextType extends Context<ContextType>> void updateGraphicsResources(
-        Texture3D<ContextType> weightMaps, Texture2D<ContextType> basisMaps, UniformBuffer<ContextType> diffuseUniformBuffer)
+        Texture3D<ContextType> weightMaps, Texture2D<ContextType> weightMask, Texture2D<ContextType> basisMaps, UniformBuffer<ContextType> diffuseUniformBuffer)
     {
         NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
         NativeVectorBuffer weightMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 1, width * height);
         NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3, BASIS_COUNT * (MICROFACET_DISTRIBUTION_RESOLUTION + 1));
         NativeVectorBuffer diffuseNativeBuffer = factory.createEmpty(NativeDataType.FLOAT, 4, BASIS_COUNT);
+
+        // Load weight mask first.
+        for (int p = 0; p < width * height; p++)
+        {
+            weightMapBuffer.set(p, 0, weightsValidity[p] ? 1.0 : 0.0);
+        }
+
+        weightMask.load(weightMapBuffer);
 
         for (int b = 0; b < BASIS_COUNT; b++)
         {
