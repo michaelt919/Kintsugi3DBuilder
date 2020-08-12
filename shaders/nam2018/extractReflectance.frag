@@ -29,7 +29,7 @@ vec3 getNormalEstimate()
         - dot(tangent, fBitangent) * tangent);
     mat3 tangentToObject = mat3(tangent, bitangent, triangleNormal);
 
-    vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
+    vec2 normalDirXY = texture(normalEstimate, fTexCoord).xy * 2 - vec2(1.0);
     vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
     vec3 normalDir = tangentToObject * normalDirTS;
 
@@ -38,6 +38,7 @@ vec3 getNormalEstimate()
 
 void main()
 {
+
     vec4 imgColor = getLinearColor();
     vec3 lightDisplacement = getLightVector();
     vec3 light = normalize(lightDisplacement);
@@ -56,13 +57,13 @@ void main()
         // "Light intensity" is defined in such a way that we need to multiply by pi to be properly normalized.
         vec3 irradiance = nDotL * PI * lightIntensity / dot(lightDisplacement, lightDisplacement);
 
-        float roughness = texture(roughnessMap, fTexCoord)[0];
+        float roughness = texture(roughnessEstimate, fTexCoord)[0];
         float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
 
         reflectance_visibility = vec4(imgColor.rgb / irradiance, imgColor.a);
 
         // Halfway component should be 1.0 when the angle is 60 degrees, or pi/3.
-        halfway_geom_weight = vec4(sqrt(acos(nDotH) * 3.0 / PI), maskingShadowing / (4 * nDotL * nDotV), nDotL * sqrt(max(0, 1 - nDotH * nDotH)), 1);
+        halfway_geom_weight = vec4(sqrt(max(0.0, acos(min(1.0, nDotH)) * 3.0 / PI)), maskingShadowing / (4 * nDotL * nDotV), nDotL * sqrt(max(0, 1 - nDotH * nDotH)), 1);
     }
     else
     {

@@ -26,7 +26,7 @@ uniform mat4 model_view;
 uniform mat4 fullProjection;
 
 #ifndef MATERIAL_EXPLORATION_MODE
-#define MATERIAL_EXPLORATION_MODE 0
+#define MATERIAL_EXPLORATION_MODE 1
 #endif
 
 #ifndef SVD_MODE
@@ -89,24 +89,16 @@ uniform mat4 fullProjection;
 #define RESIDUAL_IMAGES SVD_MODE
 #endif
 
-#ifndef NORMAL_TEXTURE_ENABLED
-#define NORMAL_TEXTURE_ENABLED 0
-#endif
-
-#ifndef TANGENT_SPACE_NORMAL_MAP
-#define TANGENT_SPACE_NORMAL_MAP 1
-#endif
-
 #ifndef ARCHIVING_2017_ENVIRONMENT_NORMALIZATION
 #define ARCHIVING_2017_ENVIRONMENT_NORMALIZATION 0
 #endif
 
 #if MATERIAL_EXPLORATION_MODE
 
+#include "../colorappearance/analytic.glsl"
+
 #undef SMITH_MASKING_SHADOWING
 #define SMITH_MASKING_SHADOWING 1
-
-#include "../colorappearance/analytic.glsl"
 
 #undef DEFAULT_DIFFUSE_COLOR
 #undef DEFAULT_SPECULAR_COLOR
@@ -114,6 +106,7 @@ uniform mat4 fullProjection;
 #undef DIFFUSE_TEXTURE_ENABLED
 #undef SPECULAR_TEXTURE_ENABLED
 #undef ROUGHNESS_TEXTURE_ENABLED
+#undef NORMAL_TEXTURE_ENABLED
 
 #define DEFAULT_DIFFUSE_COLOR ANALYTIC_DIFFUSE_COLOR
 #define DEFAULT_SPECULAR_COLOR ANALYTIC_SPECULAR_COLOR
@@ -121,20 +114,13 @@ uniform mat4 fullProjection;
 #define DIFFUSE_TEXTURE_ENABLED 0
 #define SPECULAR_TEXTURE_ENABLED 0
 #define ROUGHNESS_TEXTURE_ENABLED 0
+#define NORMAL_TEXTURE_ENABLED 1
 
-#else
-
-#ifndef DIFFUSE_TEXTURE_ENABLED
-#define DIFFUSE_TEXTURE_ENABLED 0
 #endif
 
-#ifndef SPECULAR_TEXTURE_ENABLED
-#define SPECULAR_TEXTURE_ENABLED 0
-#endif
+#include "../colorappearance/textures.glsl"
 
-#ifndef ROUGHNESS_TEXTURE_ENABLED
-#define ROUGHNESS_TEXTURE_ENABLED 0
-#endif
+#if !MATERIAL_EXPLORATION_MODE
 
 #ifndef DEFAULT_DIFFUSE_COLOR
 #if !SPECULAR_TEXTURE_ENABLED && !IMAGE_BASED_RENDERING_ENABLED
@@ -158,7 +144,7 @@ uniform mat4 fullProjection;
 #define DEFAULT_SPECULAR_ROUGHNESS (vec3(0.25)); // TODO pass in a default?
 #endif
 
-#endif // MATERIAL_EXPLORATION_MODE
+#endif // !MATERIAL_EXPLORATION_MODE
 
 #if SVD_MODE
 #ifdef SMITH_MASKING_SHADOWING
@@ -188,10 +174,6 @@ uniform mat4 fullProjection;
 #include "environment.glsl"
 #endif
 
-#if SPECULAR_TEXTURE_ENABLED
-uniform sampler2D specularMap;
-#endif
-
 uniform vec3 viewPos;
 
 #include "../colorappearance/colorappearance.glsl"
@@ -216,7 +198,7 @@ uniform vec3 viewPos;
 
 #endif
 
-#line 220 0
+#line 176 0
 
 uniform int objectID;
 uniform vec3 holeFillColor;
@@ -246,27 +228,6 @@ uniform mat4 lightMatrixVirtual[VIRTUAL_LIGHT_COUNT];
 #if !BUEHLER_ALGORITHM
 uniform float weightExponent;
 uniform float isotropyFactor;
-#endif
-
-#if DIFFUSE_TEXTURE_ENABLED
-uniform sampler2D diffuseMap;
-#endif
-
-#if NORMAL_TEXTURE_ENABLED || MATERIAL_EXPLORATION_MODE
-uniform sampler2D normalMap;
-
-#if MATERIAL_EXPLORATION_MODE
-vec3 getNormal(vec2 texCoord)
-{
-    vec2 normalXY = texture(normalMap, texCoord).xy * 2 - 1;
-    return vec3(normalXY, 1.0 - dot(normalXY, normalXY));
-}
-#endif
-
-#endif
-
-#if ROUGHNESS_TEXTURE_ENABLED
-uniform sampler2D roughnessMap;
 #endif
 
 #if PRECOMPUTED_VIEW_WEIGHTS_ENABLED

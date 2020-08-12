@@ -29,6 +29,10 @@ layout(std140) uniform DiffuseColors
 #define BASIS_COUNT 8
 #endif
 
+#ifndef MICROFACET_DISTRIBUTION_RESOLUTION
+#define MICROFACET_DISTRIBUTION_RESOLUTION 90
+#endif
+
 #define COSINE_CUTOFF 0.0
 
 vec3 getBRDFEstimate(float nDotH, float geomFactor)
@@ -53,12 +57,16 @@ void main()
         - dot(tangent, fBitangent) * tangent);
     mat3 tangentToObject = mat3(tangent, bitangent, triangleNormal);
 
-    vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
+    vec2 normalDirXY = texture(normalEstimate, fTexCoord).xy * 2 - vec2(1.0);
     vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
     vec3 prevNormal = tangentToObject * normalDirTS;
 
     mat3 mATA = mat3(0);
     vec3 vATb = vec3(0);
+
+    float estimatedPeak = getLuminance(getBRDFEstimate(1.0, 0.25));
+//    float actualPeak = 0.0;
+//    vec3 actualPeakHalfway = vec3(0.0);
 
     for (int k = 0; k < CAMERA_POSE_COUNT; k++)
     {
@@ -77,33 +85,44 @@ void main()
             float hDotV = max(0.0, dot(halfway, view));
 
             // "Light intensity" is defined in such a way that we need to multiply by pi to be properly normalized.
-            vec3 irradiance = nDotL * PI * getLightIntensity(k) / dot(lightDisplacement, lightDisplacement);
+            vec3 incidentRadiance = PI * getLightIntensity(k) / dot(lightDisplacement, lightDisplacement);
 
-            float roughness = texture(roughnessMap, fTexCoord)[0];
+            float roughness = texture(roughnessEstimate, fTexCoord)[0];
             float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-
-            vec3 reflectance = imgColor.rgb / irradiance;
             vec3 reflectanceEstimate = getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV));
 
             float weight = nDotL * sqrt(max(0, 1 - nDotH * nDotH));
 
+            vec3 actualReflectanceTimesNDotL = imgColor.rgb / incidentRadiance;
             mATA += weight * weight * dot(reflectanceEstimate, reflectanceEstimate) * outerProduct(light, light);
-            vATb += weight * weight * dot(reflectanceEstimate, reflectance) * light;
+            vATb += weight * weight * dot(reflectanceEstimate, actualReflectanceTimesNDotL) * light;
+//
+//            float grayscaleReflectanceTimesNDotL = getLuminance(actualReflectanceTimesNDotL);
+//            actualPeakHalfway = mix(actualPeakHalfway, halfway, max(0, sign(grayscaleReflectanceTimesNDotL - actualPeak)));
+//            actualPeak = max(actualPeak, grayscaleReflectanceTimesNDotL);
         }
     }
 
+    vec3 normalObjSpace;
+
+//    if (actualPeak > estimatedPeak && length(actualPeakHalfway) > 0)
+//    {
+//        normalObjSpace = actualPeakHalfway;
+//    }
+//    else
     if (determinant(mATA) > 0)
     {
-        vec3 normalObjSpace = inverse(mATA) * vATb;
-        float normalLength = length(normalObjSpace);
-        if (normalLength > 0)
-        {
-            normalTS = vec4(transpose(tangentToObject) * normalObjSpace / normalLength * 0.5 + 0.5, 1.0);
-        }
-        else
-        {
-            discard;
-        }
+        normalObjSpace = inverse(mATA) * vATb;
+    }
+    else
+    {
+        discard;
+    }
+
+    float normalLength = length(normalObjSpace);
+    if (normalLength > 0)
+    {
+        normalTS = vec4(transpose(tangentToObject) * normalObjSpace / normalLength * 0.5 + 0.5, 1.0);
     }
     else
     {

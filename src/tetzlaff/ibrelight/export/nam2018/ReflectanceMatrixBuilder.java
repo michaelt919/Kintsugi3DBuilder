@@ -142,7 +142,7 @@ final class ReflectanceMatrixBuilder
         int mFloor = Math.min(Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION - 1, (int) Math.floor(mExact));
 
         // If mFloor changed, it's time to update the ATA matrix and ATy vector
-        assert mPrevious <= mFloor; // mFloor should be increasing over time due to sorting order.
+        assert mPrevious <= mFloor : "mPrevious: " + mPrevious + " mFloor: " + mFloor + " mExact: " + mExact; // mFloor should be increasing over time due to sorting order.
         if (mFloor > mPrevious)
         {
             updateContributionFromRunningTotals(mFloor);

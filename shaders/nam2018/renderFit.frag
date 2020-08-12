@@ -17,43 +17,46 @@
 
 layout(location = 0) out vec4 fragColor;
 
+uniform sampler2D specularEstimate;
 uniform sampler2DArray weightMaps;
-uniform sampler2D weightMask;
-uniform sampler1DArray basisFunctions;
+
+#ifndef BASIS_COUNT
+#define BASIS_COUNT 8
+#endif
 
 layout(std140) uniform DiffuseColors
 {
     vec4 diffuseColors[BASIS_COUNT];
 };
 
-#ifndef BASIS_COUNT
-#define BASIS_COUNT 8
-#endif
-
-vec3 getBRDFEstimate(float nDotH, float geomFactor)
+vec3 getDiffuseEstimate()
 {
     vec3 estimate = vec3(0);
-    float w = sqrt(max(0.0, acos(nDotH) * 3.0 / PI));
 
     for (int b = 0; b < BASIS_COUNT; b++)
     {
-        estimate += texture(weightMaps, vec3(fTexCoord, b))[0] * (diffuseColors[b].rgb / PI + texture(basisFunctions, vec2(w, b)).rgb * geomFactor);
+        estimate += texture(weightMaps, vec3(fTexCoord, b))[0] * diffuseColors[b].rgb;
     }
 
-    float filteredMask = texture(weightMask, fTexCoord)[0];
-
-    if (filteredMask > 0)
-    {
-        return estimate / filteredMask;
-    }
-    else
-    {
-        return vec3(0);
-    }
+    return estimate;
 }
 
 void main()
 {
+    vec2 sqrtRoughness_Mask = texture(roughnessEstimate, fTexCoord).ra;
+    float filteredMask = sqrtRoughness_Mask[1];
+
+    if (filteredMask == 0.0)
+    {
+        fragColor = vec4(0, 0, 0, 1);
+        return;
+    }
+
+    float roughness = sqrtRoughness_Mask[0] * sqrtRoughness_Mask[0] / (filteredMask * filteredMask);
+
+    vec3 diffuseColor = getDiffuseEstimate() / filteredMask;
+    vec3 specularColor = pow(texture(specularEstimate, fTexCoord).rgb / filteredMask, vec3(gamma));
+
     vec3 triangleNormal = normalize(fNormal);
     vec3 tangent = normalize(fTangent - dot(triangleNormal, fTangent) * triangleNormal);
     vec3 bitangent = normalize(fBitangent
@@ -73,10 +76,12 @@ void main()
     float nDotL = max(0.0, dot(normal, light));
     float nDotV = max(0.0, dot(normal, view));
     float hDotV = max(0.0, dot(halfway, view));
-    float roughness = texture(roughnessEstimate, fTexCoord)[0];
-    float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-    vec3 incidentRadiance = PI * lightIntensity / dot(lightDisplacement, lightDisplacement);
+    vec3 incidentRadianceOverPi = lightIntensity / dot(lightDisplacement, lightDisplacement);
+
+    vec3 specular = incidentRadianceOverPi * distTimesPi(nDotH, vec3(roughness))
+        * geom(roughness, nDotH, nDotV, nDotL, hDotV)
+        * fresnel(specularColor.rgb, vec3(1), hDotV) / (4 * nDotV);
 
     // Reflectance is implicitly multiplied by n dot l.
-    fragColor = vec4(pow(incidentRadiance * nDotL * getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV)), vec3(1.0 / gamma)), 1.0);
+    fragColor = vec4(pow(diffuseColor * nDotL * incidentRadianceOverPi + specular, vec3(1.0 / gamma)), 1.0);
 }

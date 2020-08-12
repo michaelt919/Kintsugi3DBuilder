@@ -1,3 +1,5 @@
+#version 330
+
 /*
  *  Copyright (c) Michael Tetzlaff 2020
  *  Copyright (c) The Regents of the University of Minnesota 2019
@@ -10,28 +12,12 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-in vec3 fPosition;
 in vec2 fTexCoord;
-in vec3 fNormal;
-in vec3 fTangent;
-in vec3 fBitangent;
+layout(location = 0) out vec4 fragColor;
+uniform sampler1DArray basisFunctions;
+uniform int basisIndex;
 
-uniform sampler2D normalEstimate;
-uniform sampler2D roughnessEstimate;
-
-#ifndef MATERIAL_EXPLORATION_MODE
-#define MATERIAL_EXPLORATION_MODE 1
-#endif
-
-#if MATERIAL_EXPLORATION_MODE
-// For debugging or generating comparisons and figures.
-#undef NORMAL_TEXTURE_ENABLED
-#define NORMAL_TEXTURE_ENABLED 1
-#include <shaders/colorappearance/textures.glsl>
-#include <shaders/colorappearance/analytic.glsl>
-#else
-#include <shaders/colorappearance/imgspace.glsl>
-#endif
-
-#include <shaders/colorappearance/colorappearance_multi_as_single.glsl>
-#include <shaders/relight/reflectanceequations.glsl>
+void main()
+{
+    fragColor = vec4(vec3(texture(basisFunctions, vec2(length(fTexCoord - vec2(0.5)) * 2.0, basisIndex))), 1.0);
+}
