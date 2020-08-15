@@ -245,13 +245,13 @@ public class Nam2018Request implements IBRRequest
 
             int viewCount = resources.viewSet.getCameraPoseCount();
 
-//            // Calculate initial normals
-//            reconstructNormals(initialNormalEstimationDrawable, frontNormalFramebuffer);
-//
-//            if (DEBUG)
-//            {
-//                saveNormalMap(frontNormalFramebuffer, "normal_initial.png");
-//            }
+            // Calculate initial normals
+            reconstructNormals(initialNormalEstimationDrawable, frontNormalFramebuffer);
+
+            if (DEBUG)
+            {
+                saveNormalMap(frontNormalFramebuffer, "normal_initial.png");
+            }
 
             double previousError;
             double previousWeightedError;
@@ -359,7 +359,7 @@ public class Nam2018Request implements IBRRequest
                         System.out.println("--------------------------------------------------");
                         System.out.println();
 
-                        if (error > previousErrorLocal)
+                        if (error >= previousErrorLocal)
                         {
                             // Error is worse; reject new normal estimate.
                             if (DEBUG)
