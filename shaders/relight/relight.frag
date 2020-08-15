@@ -26,7 +26,7 @@ uniform mat4 model_view;
 uniform mat4 fullProjection;
 
 #ifndef MATERIAL_EXPLORATION_MODE
-#define MATERIAL_EXPLORATION_MODE 1
+#define MATERIAL_EXPLORATION_MODE 0
 #endif
 
 #ifndef SVD_MODE

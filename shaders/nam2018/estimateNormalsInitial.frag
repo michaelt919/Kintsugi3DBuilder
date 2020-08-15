@@ -1,3 +1,5 @@
+#version 330
+
 /*
  *  Copyright (c) Michael Tetzlaff 2020
  *  Copyright (c) The Regents of the University of Minnesota 2019
@@ -10,28 +12,19 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-in vec3 fPosition;
-in vec2 fTexCoord;
-in vec3 fNormal;
-in vec3 fTangent;
-in vec3 fBitangent;
+#include "nam2018.glsl"
+#include "../texturefit/diffusefit.glsl"
+#line 17 0
 
-uniform sampler2D normalEstimate;
-uniform sampler2D roughnessEstimate;
+layout(location = 0) out vec4 normalTS;
 
-#ifndef MATERIAL_EXPLORATION_MODE
-#define MATERIAL_EXPLORATION_MODE 0
-#endif
+void main()
+{
+    DiffuseFit fit = fitDiffuse();
 
-#if MATERIAL_EXPLORATION_MODE
-// For debugging or generating comparisons and figures.
-#undef NORMAL_TEXTURE_ENABLED
-#define NORMAL_TEXTURE_ENABLED 1
-#include <shaders/colorappearance/textures.glsl>
-#include <shaders/colorappearance/analytic.glsl>
-#else
-#include <shaders/colorappearance/imgspace.glsl>
-#endif
+//    // for debugging
+//    vec2 scaledTexCoord = ANALYTIC_UV_SCALE * fTexCoord;
+//    normalTS = vec4(normalize((getNormal(scaledTexCoord - floor(scaledTexCoord)) + vec3(fTexCoord * 2 - 1, 0)) * vec3(ANALYTIC_BUMP_HEIGHT, ANALYTIC_BUMP_HEIGHT, 1.0)) * 0.5 + 0.5, 1.0);
 
-#include <shaders/colorappearance/colorappearance_multi_as_single.glsl>
-#include <shaders/relight/reflectanceequations.glsl>
+     normalTS = vec4(fit.normalTS * 0.5 + vec3(0.5), 1.0);
+}

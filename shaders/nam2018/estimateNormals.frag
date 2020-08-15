@@ -13,39 +13,36 @@
  */
 
 #include "nam2018.glsl"
-#line 17 0
+#include "evaluateBRDF.glsl"
+#line 18 0
 
 layout(location = 0) out vec4 normalTS;
 
-uniform sampler2DArray weightMaps;
-uniform sampler1DArray basisFunctions;
+uniform float dampingFactor;
 
-layout(std140) uniform DiffuseColors
-{
-    vec4 diffuseColors[BASIS_COUNT];
-};
-
-#ifndef BASIS_COUNT
-#define BASIS_COUNT 8
-#endif
+#define COSINE_CUTOFF 0.0
 
 #ifndef MICROFACET_DISTRIBUTION_RESOLUTION
 #define MICROFACET_DISTRIBUTION_RESOLUTION 90
 #endif
 
-#define COSINE_CUTOFF 0.0
-
-vec3 getBRDFEstimate(float nDotH, float geomFactor)
+vec3 getMFDGradient(float nDotH)
 {
     vec3 estimate = vec3(0);
-    float w = sqrt(max(0.0, acos(nDotH) * 3.0 / PI));
+    float wMid = sqrt(max(0.0, acos(nDotH) * 3.0 / PI));
+    float wLow = wMid - 1.0 / MICROFACET_DISTRIBUTION_RESOLUTION;
+    float wHigh = wMid + 1.0 / MICROFACET_DISTRIBUTION_RESOLUTION;
 
     for (int b = 0; b < BASIS_COUNT; b++)
     {
-        estimate += texture(weightMaps, vec3(fTexCoord, b))[0] * (diffuseColors[b].rgb / PI + texture(basisFunctions, vec2(w, b)).rgb * geomFactor);
+        estimate += texture(weightMaps, vec3(fTexCoord, b))[0]
+            * (texture(basisFunctions, vec2(wHigh, b)).rgb - texture(basisFunctions, vec2(wLow, b)).rgb);
     }
 
-    return estimate;
+    float nDotH_Low = cos(wLow * wLow * PI / 3.0);
+    float nDotH_High = cos(wHigh * wHigh * PI / 3.0);
+
+    return estimate / (nDotH_High - nDotH_Low);
 }
 
 void main()
@@ -61,8 +58,14 @@ void main()
     vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
     vec3 prevNormal = tangentToObject * normalDirTS;
 
-    mat3 mATA = mat3(0);
-    vec3 vATb = vec3(0);
+    vec3 fittingTangent = normalize(vec3(1, 0, 0) - normalDirTS.x * normalDirTS);
+    vec3 fittingBitangent = normalize(vec3(0, 1, 0) - normalDirTS.y * normalDirTS - fittingTangent.y * fittingTangent);
+    mat3 fittingToTangent = mat3(fittingTangent, fittingBitangent, normalDirTS);
+
+    mat3 objectToFitting = transpose(fittingToTangent) * transpose(tangentToObject);
+
+    mat2 mATA = mat2(0);
+    vec2 vATb = vec2(0);
 
     float estimatedPeak = getLuminance(getBRDFEstimate(1.0, 0.25));
 //    float actualPeak = 0.0;
@@ -71,9 +74,9 @@ void main()
     for (int k = 0; k < CAMERA_POSE_COUNT; k++)
     {
         vec4 imgColor = getLinearColor(k);
-        vec3 lightDisplacement = getLightVector(k);
+        vec3 lightDisplacement = objectToFitting * getLightVector(k);
         vec3 light = normalize(lightDisplacement);
-        vec3 view = normalize(getViewVector(k));
+        vec3 view = objectToFitting * normalize(getViewVector(k));
         vec3 halfway = normalize(light + view);
         float nDotH = max(0.0, dot(prevNormal, halfway));
         float nDotL = max(0.0, dot(prevNormal, light));
@@ -88,14 +91,47 @@ void main()
             vec3 incidentRadiance = PI * getLightIntensity(k) / dot(lightDisplacement, lightDisplacement);
 
             float roughness = texture(roughnessEstimate, fTexCoord)[0];
-            float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-            vec3 reflectanceEstimate = getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV));
+            float maskingShadowing = computeGeometricAttenuationVCavity(nDotH, nDotV, nDotL, hDotV);
+//            vec3 reflectanceEstimate = getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV));
 
             float weight = nDotL * sqrt(max(0, 1 - nDotH * nDotH));
 
+            mat3x2 mfdGradient = outerProduct(halfway.xy, getMFDGradient(nDotH)); // (d NdotH / dN) * (dD / d NdotH)
+
+            mat3x2 specularGradient;
+
+            if (nDotV * nDotH > 0.5 * hDotV && nDotL * nDotH > 0.5 * hDotV)
+            {
+                // G = 1.0
+                // f * nDotL = DF / (4 * nDotV)
+                specularGradient = 0.25 * (nDotV * mfdGradient - outerProduct(view.xy, getMFDEstimate(nDotH))) / (nDotV * nDotV); // quotient rule
+            }
+            else if (nDotV < nDotL)
+            {
+                // G = 2 * nDotH * nDotV / hDotV
+                // f * nDotL = DF * nDotH / (2 * hDotV)
+                specularGradient = 0.5 * (nDotH * mfdGradient + outerProduct(halfway.xy, getMFDEstimate(nDotH))) / hDotV; // product rule
+            }
+            else
+            {
+                // G = 2 * nDotH * nDotL / hDotV
+                // f * nDotL = DF * nDotH * nDotL / (2 * hDotV * nDotV)
+                vec3 mfdEstimate = getMFDEstimate(nDotH);
+                mat3x2 mfdNdotLGradient = nDotL * mfdGradient + outerProduct(light.xy, mfdEstimate);
+                mat3x2 mfdGeomGradient = 0.5 * (nDotH * mfdNdotLGradient + outerProduct(halfway.xy, nDotL * mfdEstimate)) / hDotV; // product rule
+                specularGradient = (nDotV * mfdGeomGradient - outerProduct(view.xy, mfdEstimate * maskingShadowing)) / (nDotV * nDotV); // quotient rule
+            }
+
+            mat3x2 diffuseGradient = outerProduct(light.xy, getDiffuseEstimate() / PI);
+
+            // fullGradient is essentially a portion of A-transpose
+            // The columns of fullGradient are R/G/B.
+            // The rows correspond to the components of N.
+            mat3x2 fullGradient = diffuseGradient + specularGradient;
+
             vec3 actualReflectanceTimesNDotL = imgColor.rgb / incidentRadiance;
-            mATA += weight * weight * dot(reflectanceEstimate, reflectanceEstimate) * outerProduct(light, light);
-            vATb += weight * weight * dot(reflectanceEstimate, actualReflectanceTimesNDotL) * light;
+            mATA += weight * weight * fullGradient * transpose(fullGradient);//dot(reflectanceEstimate, reflectanceEstimate) * outerProduct(light, light);
+            vATb += weight * weight * fullGradient * actualReflectanceTimesNDotL;//dot(reflectanceEstimate, actualReflectanceTimesNDotL) * light;
 //
 //            float grayscaleReflectanceTimesNDotL = getLuminance(actualReflectanceTimesNDotL);
 //            actualPeakHalfway = mix(actualPeakHalfway, halfway, max(0, sign(grayscaleReflectanceTimesNDotL - actualPeak)));
@@ -103,7 +139,7 @@ void main()
         }
     }
 
-    vec3 normalObjSpace;
+    vec2 normalFittingSpace;
 
 //    if (actualPeak > estimatedPeak && length(actualPeakHalfway) > 0)
 //    {
@@ -112,20 +148,17 @@ void main()
 //    else
     if (determinant(mATA) > 0)
     {
-        normalObjSpace = inverse(mATA) * vATb;
+        normalFittingSpace = inverse(mATA) * vATb;
     }
     else
     {
         discard;
     }
 
-    float normalLength = length(normalObjSpace);
-    if (normalLength > 0)
-    {
-        normalTS = vec4(transpose(tangentToObject) * normalObjSpace / normalLength * 0.5 + 0.5, 1.0);
-    }
-    else
-    {
-        discard;
-    }
+    float tangentLengthSq = dot(normalFittingSpace, normalFittingSpace);
+    float tangentScale = min(dampingFactor, 1.0 / sqrt(tangentLengthSq));
+    normalFittingSpace = normalFittingSpace * tangentScale;
+
+    // To avoid oscillating divergence, dampen the new estimate by averaging it with the previous estimate.
+    normalTS = vec4(fittingToTangent * vec3(normalFittingSpace, sqrt(1 - tangentLengthSq * tangentScale)) * 0.5 + vec3(0.5), 1.0);
 }

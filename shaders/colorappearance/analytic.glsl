@@ -59,11 +59,11 @@
 #endif
 
 #ifndef ANALYTIC_ROUGHNESS
-#define ANALYTIC_ROUGHNESS 0.2
+#define ANALYTIC_ROUGHNESS 0.15
 #endif
 
 #ifndef ANALYTIC_UV_SCALE
-#define ANALYTIC_UV_SCALE 5.0
+#define ANALYTIC_UV_SCALE 2.0
 #endif
 
 vec3 getNormal(vec2 texCoord);

@@ -13,44 +13,10 @@
  */
 
 #include "nam2018.glsl"
-#line 17 0
+#include "evaluateBRDF.glsl"
+#line 18 0
 
 layout(location = 0) out vec4 fragColor;
-
-uniform sampler2DArray weightMaps;
-uniform sampler2D weightMask;
-uniform sampler1DArray basisFunctions;
-
-layout(std140) uniform DiffuseColors
-{
-    vec4 diffuseColors[BASIS_COUNT];
-};
-
-#ifndef BASIS_COUNT
-#define BASIS_COUNT 8
-#endif
-
-vec3 getBRDFEstimate(float nDotH, float geomFactor)
-{
-    vec3 estimate = vec3(0);
-    float w = sqrt(max(0.0, acos(nDotH) * 3.0 / PI));
-
-    for (int b = 0; b < BASIS_COUNT; b++)
-    {
-        estimate += texture(weightMaps, vec3(fTexCoord, b))[0] * (diffuseColors[b].rgb / PI + texture(basisFunctions, vec2(w, b)).rgb * geomFactor);
-    }
-
-    float filteredMask = texture(weightMask, fTexCoord)[0];
-
-    if (filteredMask > 0)
-    {
-        return estimate / filteredMask;
-    }
-    else
-    {
-        return vec3(0);
-    }
-}
 
 void main()
 {
@@ -77,6 +43,16 @@ void main()
     float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
     vec3 incidentRadiance = PI * lightIntensity / dot(lightDisplacement, lightDisplacement);
 
-    // Reflectance is implicitly multiplied by n dot l.
-    fragColor = vec4(pow(incidentRadiance * nDotL * getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV)), vec3(1.0 / gamma)), 1.0);
+    float filteredMask = texture(weightMask, fTexCoord)[0];
+
+    if (filteredMask > 0)
+    {
+        vec3 brdf = getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV));
+        fragColor = vec4(pow(incidentRadiance * nDotL * brdf / filteredMask, vec3(1.0 / gamma)), 1.0);
+    }
+    else
+    {
+        fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    }
+
 }

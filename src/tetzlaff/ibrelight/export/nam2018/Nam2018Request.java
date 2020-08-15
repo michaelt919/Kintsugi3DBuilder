@@ -45,8 +45,10 @@ public class Nam2018Request implements IBRRequest
     private static final int BRDF_MATRIX_SIZE = BASIS_COUNT * (MICROFACET_DISTRIBUTION_RESOLUTION + 1);
     private static final double K_MEANS_TOLERANCE = 0.0001;
     private static final double NNLS_TOLERANCE_SCALE = 0.000000000001;
-    private static final double CONVERGENCE_TOLERANCE = 0.000001;
+    private static final double CONVERGENCE_TOLERANCE = 0.001;
     private static final double GAMMA = 2.2;
+
+    private static final boolean NORMAL_REFINEMENT = true;
 
     private static final boolean DEBUG = true;
     private static final int MAX_RUNNING_THREADS = 5;
@@ -154,6 +156,7 @@ public class Nam2018Request implements IBRRequest
         (
             Program<ContextType> averageProgram = createAverageProgram(resources);
             Program<ContextType> reflectanceProgram = createReflectanceProgram(resources);
+            Program<ContextType> initialNormalEstimationProgram = createInitialNormalEstimationProgram(resources);
             Program<ContextType> normalEstimationProgram = createNormalEstimationProgram(resources);
             Program<ContextType> imageReconstructionProgram = createImageReconstructionProgram(resources);
             Program<ContextType> fittedImageReconstructionProgram = createFittedImageReconstructionProgram(resources);
@@ -227,6 +230,8 @@ public class Nam2018Request implements IBRRequest
             Drawable<ContextType> reflectanceDrawable = createDrawable(reflectanceProgram, resources);
             reflectanceDrawable.program().setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
 
+            Drawable<ContextType> initialNormalEstimationDrawable = createDrawable(initialNormalEstimationProgram, resources);
+
             Drawable<ContextType> normalEstimationDrawable = createDrawable(normalEstimationProgram, resources);
             normalEstimationProgram.setTexture("basisFunctions", basisMaps);
             normalEstimationProgram.setTexture("weightMaps", weightMaps);
@@ -240,8 +245,18 @@ public class Nam2018Request implements IBRRequest
 
             int viewCount = resources.viewSet.getCameraPoseCount();
 
+//            // Calculate initial normals
+//            reconstructNormals(initialNormalEstimationDrawable, frontNormalFramebuffer);
+//
+//            if (DEBUG)
+//            {
+//                saveNormalMap(frontNormalFramebuffer, "normal_initial.png");
+//            }
+
             double previousError;
             double previousWeightedError;
+
+            float dampingFactor = 0.5f;
 
             do
             {
@@ -287,58 +302,110 @@ public class Nam2018Request implements IBRRequest
                 // Prepare for normal estimation on the GPU.
                 updateGraphicsResources(weightMaps, weightMask, basisMaps, diffuseUniformBuffer);
 
-                // Update normal estimation program to use the new front buffer.
-                normalEstimationDrawable.program().setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
-                reconstructNormals(normalEstimationDrawable, backNormalFramebuffer);
-
-                // Swap framebuffers for normal map.
-                FramebufferObject<ContextType> tmp = frontNormalFramebuffer;
-                frontNormalFramebuffer = backNormalFramebuffer;
-                backNormalFramebuffer = tmp;
-
-                // Update reflectance program to use the new front buffer.
-                reflectanceDrawable.program().setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
-
-                // Check if the normal update actually was an improvement.
-                double previousErrorLocal = error;
-                double previousWeightedErrorLocal = weightedError;
-
-                // Calculate the error to determine if we should stop.
-                updateError(reflectanceDrawable, framebuffer, viewCount);
-
-                System.out.println("--------------------------------------------------");
-                System.out.println("Error: " + error);
-
-                if (DEBUG)
+                if (NORMAL_REFINEMENT)
                 {
-                    System.out.println("(Previous error: " + previousErrorLocal + ')');
-                    System.out.println("Weighted error: " + weightedError);
-                    System.out.println("(Previous weighted error: " + previousWeightedErrorLocal + ')');
-                }
-                else
-                {
-                    System.out.println("(Previous error: " + previousError + ')');
-                }
+                    // Keep track of whether each normal update is actually an improvement.
+                    double previousErrorLocal = error;
+                    double previousWeightedErrorLocal = weightedError;
 
-                System.out.println("--------------------------------------------------");
-                System.out.println();
+                    float lastSuccessfulDampingFactor = 0.0f;
 
-                if (/*weightedError > previousWeightedErrorLocal*/ error > previousErrorLocal)
-                {
-                    // Swap normal map framebuffers back to use the old normal map, if the new one isn't better.
-                    backNormalFramebuffer = frontNormalFramebuffer;
-                    frontNormalFramebuffer = tmp;
+                    do
+                    {
+                        if (error > previousErrorLocal)
+                        {
+                            // Revert error calculations to what they were before attempting to optimize normals.
+                            error = previousErrorLocal;
+                            weightedError = previousWeightedErrorLocal;
+                        }
 
-                    // Update reflectance program to use the old front buffer.
-                    reflectanceDrawable.program().setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
+                        // Update normal estimation program to use the new front buffer.
+                        normalEstimationDrawable.program().setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
 
-                    // Revert error calculations to what they were before attempting to optimize normals.
-                    error = previousErrorLocal;
-                    weightedError = previousWeightedErrorLocal;
-                }
-                else if (DEBUG)
-                {
-                    saveNormalMap(frontNormalFramebuffer);
+                        // Estimate new normals.
+                        System.out.println("Using damping factor: " + dampingFactor);
+                        normalEstimationProgram.setUniform("dampingFactor", dampingFactor);
+                        reconstructNormals(normalEstimationDrawable, backNormalFramebuffer);
+
+                        // Swap framebuffers for normal map.
+                        FramebufferObject<ContextType> tmp = frontNormalFramebuffer;
+                        frontNormalFramebuffer = backNormalFramebuffer;
+                        backNormalFramebuffer = tmp;
+
+                        // Update reflectance program to use the new front buffer.
+                        reflectanceDrawable.program().setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
+
+                        // Check if the normal update actually was an improvement.
+                        previousErrorLocal = error;
+                        previousWeightedErrorLocal = weightedError;
+
+                        // Calculate the error to determine if we should stop.
+                        updateError(reflectanceDrawable, framebuffer, viewCount);
+
+                        System.out.println("--------------------------------------------------");
+                        System.out.println("Error: " + error);
+
+                        if (DEBUG)
+                        {
+                            System.out.println("(Previous error: " + previousErrorLocal + ')');
+                            System.out.println("Weighted error: " + weightedError);
+                            System.out.println("(Previous weighted error: " + previousWeightedErrorLocal + ')');
+                        }
+                        else
+                        {
+                            System.out.println("(Previous error: " + previousError + ')');
+                        }
+
+                        System.out.println("--------------------------------------------------");
+                        System.out.println();
+
+                        if (error > previousErrorLocal)
+                        {
+                            // Error is worse; reject new normal estimate.
+                            if (DEBUG)
+                            {
+                                saveNormalMap(frontNormalFramebuffer, "normal_reject.png");
+                            }
+
+                            // Swap normal map framebuffers back to use the old normal map, if the new one isn't better.
+                            backNormalFramebuffer = frontNormalFramebuffer;
+                            frontNormalFramebuffer = tmp;
+
+                            // Update reflectance program to use the old front buffer.
+                            reflectanceDrawable.program().setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
+
+                            // Adjust damping factor.
+                            dampingFactor /= 2.0f;
+                        }
+                        else
+                        {
+                            if (DEBUG)
+                            {
+                                saveNormalMap(frontNormalFramebuffer);
+                            }
+
+                            lastSuccessfulDampingFactor = dampingFactor;
+                        }
+                    }
+                    while (dampingFactor >= 1.0f / 256.0f);
+
+                    if (error > previousErrorLocal)
+                    {
+                        // Revert error calculations to what they were before attempting to optimize normals.
+                        error = previousErrorLocal;
+                        weightedError = previousWeightedErrorLocal;
+                    }
+
+//                    if (lastSuccessfulDampingFactor > 0.0f)
+//                    {
+//                        dampingFactor = 2 * lastSuccessfulDampingFactor;
+//                    }
+//                    else
+//                    {
+//                        dampingFactor = 1.0f / 256.0f;
+//                    }
+
+                    dampingFactor = 0.5f;
                 }
             }
             while (/*previousWeightedError - weightedError > CONVERGENCE_TOLERANCE*/ previousError - error > CONVERGENCE_TOLERANCE);
@@ -421,6 +488,26 @@ public class Nam2018Request implements IBRRequest
 
         program.setUniform("occlusionEnabled", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"));
         program.setUniform("occlusionBias", this.settingsModel.getFloat("occlusionBias"));
+
+        resources.setupShaderProgram(program);
+
+        return program;
+    }
+
+    private <ContextType extends Context<ContextType>>
+    Program<ContextType> createInitialNormalEstimationProgram(IBRResources<ContextType> resources) throws FileNotFoundException
+    {
+        Program<ContextType> program = resources.getIBRShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/nam2018/estimateNormalsInitial.frag"))
+            .createProgram();
+
+        program.setUniform("occlusionEnabled", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"));
+        program.setUniform("occlusionBias", this.settingsModel.getFloat("occlusionBias"));
+        program.setUniform("delta", 1.0f);
+        program.setUniform("iterations", 64);
+        program.setUniform("fit1Weight", Float.MAX_VALUE);
+        program.setUniform("fit3Weight", 1.0f);
 
         resources.setupShaderProgram(program);
 
@@ -1373,9 +1460,14 @@ public class Nam2018Request implements IBRRequest
 
     private <ContextType extends Context<ContextType>> void saveNormalMap(Framebuffer<ContextType> framebuffer)
     {
+        saveNormalMap(framebuffer, "normal.png");
+    }
+
+    private <ContextType extends Context<ContextType>> void saveNormalMap(Framebuffer<ContextType> framebuffer, String filename)
+    {
         try
         {
-            framebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, "normal.png"));
+            framebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, filename));
         }
         catch (IOException e)
         {
