@@ -150,78 +150,13 @@ void main()
     }
 
     float tangentLengthSq = dot(normalFittingSpace, normalFittingSpace);
-    float maxTangentLength = 0.25;
+    float maxTangentLength = 0.0625;
     float tangentScale = min(dampingFactor, maxTangentLength / sqrt(tangentLengthSq));
     normalFittingSpace = normalFittingSpace * tangentScale;
 
     // To avoid oscillating divergence, dampen the new estimate by averaging it with the previous estimate.
     vec3 newNormalTS = fittingToTangent * vec3(normalFittingSpace, sqrt(max(0, 1 - tangentLengthSq * tangentScale)));
 
-//    float totalErrorBefore;
-//    float totalErrorAfter;
-//
-//    for (int k = 0; k < CAMERA_POSE_COUNT; k++)
-//    {
-//        vec4 imgColor = getLinearColor(k);
-//        vec3 lightDisplacement = transpose(tangentToObject) * getLightVector(k);
-//        vec3 light = normalize(lightDisplacement);
-//        vec3 view = transpose(tangentToObject) * normalize(getViewVector(k));
-//        vec3 halfway = normalize(light + view);
-//        float nDotHPrev = max(0.0, dot(prevNormalTS, halfway));
-//        float nDotLPrev = max(0.0, dot(prevNormalTS, light));
-//        float nDotVPrev = max(0.0, dot(prevNormalTS, view));
-//        float nDotHNew = max(0.0, dot(newNormalTS, halfway));
-//        float nDotLNew = max(0.0, dot(newNormalTS, light));
-//        float nDotVNew = max(0.0, dot(newNormalTS, view));
-//        float triangleNDotV = max(0.0, dot(transpose(tangentToObject) * triangleNormal, view));
-//        float triangleNDotL = max(0.0, dot(transpose(tangentToObject) * triangleNormal, light));
-//
-//        if (imgColor.a > 0.0 && triangleNDotV > COSINE_CUTOFF)
-//        {
-//            float hDotV = max(0.0, dot(halfway, view));
-//            float roughness = texture(roughnessEstimate, fTexCoord)[0];
-//            float weight = triangleNDotL;
-//
-//            // "Light intensity" is defined in such a way that we need to multiply by pi to be properly normalized.
-//            vec3 incidentRadiance = PI * getLightIntensity(k) / dot(lightDisplacement, lightDisplacement);
-//
-//            if (nDotHPrev > COSINE_CUTOFF && nDotLPrev > COSINE_CUTOFF && nDotVPrev > COSINE_CUTOFF)
-//            {
-//                float maskingShadowingPrev = computeGeometricAttenuationVCavity(nDotHPrev, nDotVPrev, nDotLPrev, hDotV);
-//                vec3 reflectanceEstimatePrev = getBRDFEstimate(nDotHPrev, maskingShadowingPrev / (4 * nDotLPrev * nDotVPrev));
-//                vec3 diffPrev = reflectanceEstimatePrev - imgColor.rgb / (incidentRadiance * nDotLPrev);
-//                totalErrorBefore += weight * dot(diffPrev, diffPrev);
-//            }
-//            else
-//            {
-//                vec3 diffPrev = imgColor.rgb / (incidentRadiance * nDotLPrev);
-//                totalErrorBefore += weight * dot(diffPrev, diffPrev);
-//            }
-//
-//
-//            if (nDotHNew > COSINE_CUTOFF && nDotLNew > COSINE_CUTOFF && nDotVNew > COSINE_CUTOFF)
-//            {
-//                float maskingShadowingNew = computeGeometricAttenuationVCavity(nDotHNew, nDotVNew, nDotLNew, hDotV);
-//                vec3 reflectanceEstimateNew = getBRDFEstimate(nDotHNew, maskingShadowingNew / (4 * nDotLNew * nDotVNew));
-//                vec3 diffNew = reflectanceEstimateNew - imgColor.rgb / (incidentRadiance * nDotLNew);
-//                totalErrorAfter += weight * dot(diffNew, diffNew);
-//            }
-//            else
-//            {
-//                vec3 diffNew = imgColor.rgb / (incidentRadiance * nDotLNew);
-//                totalErrorAfter += weight * dot(diffNew, diffNew);
-//            }
-//        }
-//    }
-//
-//    if (totalErrorAfter <= totalErrorBefore)
-    {
-        // Accept new normal vector
-        normalTS = vec4(newNormalTS * 0.5 + vec3(0.5), 1.0);
-    }
-//    else
-//    {
-//        // Reject new normal vector
-//        normalTS = vec4(prevNormalTS * 0.5 + vec3(0.5), 1.0);
-//    }
+    // Map to the correct range for a texture.
+    normalTS = vec4(newNormalTS * 0.5 + vec3(0.5), 1.0);
 }

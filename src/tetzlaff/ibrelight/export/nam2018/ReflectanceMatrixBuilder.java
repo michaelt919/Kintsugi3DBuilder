@@ -27,8 +27,6 @@ final class ReflectanceMatrixBuilder
     // Set to true to validate the implementation (should generally be turned off for much better efficiency).
     private static final boolean VALIDATE = false;
 
-    private static final double PI_SQUARED = Math.PI * Math.PI;
-
     private int mPrevious = 0;
 
     /**
@@ -97,6 +95,11 @@ final class ReflectanceMatrixBuilder
     private final SimpleMatrix[] weightSolutions;
 
     /**
+     * Assumed metallicity of the material (affects handling of diffuse reflectance).
+     */
+    private final double metallicity;
+
+    /**
      * Construct by accepting matrices where the final results will be stored.
      * @param contributionATA LHS
      * @param contributionATyRed RHS for red
@@ -104,7 +107,7 @@ final class ReflectanceMatrixBuilder
      * @param contributionATyBlue RHS for blue
      */
     ReflectanceMatrixBuilder(float[] colorAndVisibility, float[] halfwayAndGeom, SimpleMatrix[] weightSolutions, SimpleMatrix contributionATA,
-        SimpleMatrix contributionATyRed, SimpleMatrix contributionATyGreen, SimpleMatrix contributionATyBlue)
+        SimpleMatrix contributionATyRed, SimpleMatrix contributionATyGreen, SimpleMatrix contributionATyBlue, double metallicity)
     {
         this.contributionATA = contributionATA;
         this.contributionATyRed = contributionATyRed;
@@ -118,6 +121,8 @@ final class ReflectanceMatrixBuilder
 
         //noinspection AssignmentOrReturnOfFieldWithMutableType
         this.halfwayAndGeom = halfwayAndGeom;
+
+        this.metallicity = metallicity;
     }
 
     public void execute()
@@ -133,6 +138,11 @@ final class ReflectanceMatrixBuilder
         {
             validate();
         }
+    }
+
+    private double getDiffuseFactor(double geomRatio)
+    {
+        return metallicity * geomRatio + (1 - metallicity) / Math.PI;
     }
 
     private void processSample(int p)
@@ -158,6 +168,9 @@ final class ReflectanceMatrixBuilder
 
         double addlWeightSquared = halfwayAndGeom[4 * p + 2] * halfwayAndGeom[4 * p + 2];
 
+        double diffuseFactor = getDiffuseFactor(halfwayAndGeom[4 * p + 1]);
+        double diffuseFactorSquared = diffuseFactor * diffuseFactor;
+
         // Regardless of whether mFloor changed: Update running total for each pair of basis functions,
         // and add blended samples to elements where no work is saved by deferring the update to the matrix or vector.
         for (int b1 = 0; b1 < Nam2018Request.BASIS_COUNT; b1++)
@@ -170,9 +183,9 @@ final class ReflectanceMatrixBuilder
 
             // For each basis function: update the vector.
             // Top partition of the vector corresponds to diffuse coefficients
-            contributionATyRed.set(b1, 0, contributionATyRed.get(b1, 0) + weightedReflectanceRed / Math.PI);
-            contributionATyGreen.set(b1, 0, contributionATyGreen.get(b1, 0) + weightedReflectanceGreen / Math.PI);
-            contributionATyBlue.set(b1, 0, contributionATyBlue.get(b1, 0) + weightedReflectanceBlue / Math.PI);
+            contributionATyRed.set(b1, 0, contributionATyRed.get(b1, 0) + weightedReflectanceRed * diffuseFactor);
+            contributionATyGreen.set(b1, 0, contributionATyGreen.get(b1, 0) + weightedReflectanceGreen * diffuseFactor);
+            contributionATyBlue.set(b1, 0, contributionATyBlue.get(b1, 0) + weightedReflectanceBlue * diffuseFactor);
 
             int i = Nam2018Request.BASIS_COUNT * (mFloor + 1) + b1;
 
@@ -201,7 +214,7 @@ final class ReflectanceMatrixBuilder
 
                 // Top left partition of the matrix: row and column both correspond to diffuse coefficients
                 double weightProduct = weightSolutions[p].get(b1) * weightSolutions[p].get(b2) * addlWeightSquared;
-                contributionATA.set(b1, b2, contributionATA.get(b1, b2) + weightProduct / PI_SQUARED);
+                contributionATA.set(b1, b2, contributionATA.get(b1, b2) + weightProduct * diffuseFactorSquared);
 
                 if (mExact < Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION)
                 {
@@ -219,8 +232,8 @@ final class ReflectanceMatrixBuilder
 
                     // Top right and bottom left partitions of the matrix:
                     // row corresponds to diffuse coefficients and column corresponds to specular, or vice-versa.
-                    contributionATA.set(i, b2, contributionATA.get(i, b2) + t * weightedGeom / Math.PI);
-                    contributionATA.set(b2, i, contributionATA.get(b2, i) + t * weightedGeom / Math.PI);
+                    contributionATA.set(i, b2, contributionATA.get(i, b2) + t * weightedGeom * diffuseFactor);
+                    contributionATA.set(b2, i, contributionATA.get(b2, i) + t * weightedGeom  * diffuseFactor);
 
                     // Bottom right partition of the matrix: row and column both correspond to specular.
                     // Update "corner" element with squared blending weight.
@@ -264,9 +277,10 @@ final class ReflectanceMatrixBuilder
                     // Top right and bottom left partitions of the matrix:
                     // row corresponds to diffuse coefficients and column corresponds to specular, or vice-versa.
                     // The matrix is symmetric so we also need to swap row and column and update that way.
-                    contributionATA.set(i, b2, contributionATA.get(i, b2) + weightedGeomSum.get(b1, b2) / Math.PI);
-                    contributionATA.set(b2, i, contributionATA.get(b2, i) + weightedGeomSum.get(b2, b1) / Math.PI);
-
+                    contributionATA.set(i, b2, contributionATA.get(i, b2) +
+                        metallicity * weightedGeomSquaredSum.get(b1, b2) + (1 - metallicity) * weightedGeomSum.get(b1, b2) / Math.PI);
+                    contributionATA.set(b2, i, contributionATA.get(b2, i) +
+                        metallicity * weightedGeomSquaredSum.get(b2, b1) + (1 - metallicity) * weightedGeomSum.get(b2, b1) / Math.PI);
 
                     // Bottom right partition of the matrix: row and column both correspond to specular.
 
@@ -339,10 +353,12 @@ final class ReflectanceMatrixBuilder
                 // If mFloor is clamped to MICROFACET_DISTRIBUTION_RESOLUTION -1, then mExact will be much larger, so t = 0.0.
                 double t = Math.max(0.0, 1.0 + mFloor - mExact);
 
+                double diffuseFactor = getDiffuseFactor(halfwayAndGeom[4 * p + 1]);
+
                 for (int b = 0; b < Nam2018Request.BASIS_COUNT; b++)
                 {
                     // diffuse
-                    mA.set(p, b, halfwayAndGeom[4 * p + 2] * weightSolutions[p].get(b) / Math.PI);
+                    mA.set(p, b, halfwayAndGeom[4 * p + 2] * weightSolutions[p].get(b) * diffuseFactor);
 
                     if (mExact < Nam2018Request.MICROFACET_DISTRIBUTION_RESOLUTION)
                     {

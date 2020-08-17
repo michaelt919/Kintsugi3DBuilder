@@ -170,7 +170,7 @@ public final class NonNegativeLeastSquares
 
         do
         {
-            maxW = 0.0;
+            maxW = -1.0;
 
             for (int i = 0; i < w.numRows() - constraintCount; i++)
             {
@@ -183,7 +183,7 @@ public final class NonNegativeLeastSquares
             }
 
             // Iterate until effectively no values of w are positive.
-            if (maxW > epsilon)
+            if (maxW > epsilon || sizeP == 0)
             {
                 p[k] = true;
 
@@ -258,6 +258,8 @@ public final class NonNegativeLeastSquares
                 }
                 catch(SingularMatrixException e)
                 {
+                    e.printStackTrace();
+
                     // Roll back and finish.
                     p[k] = false;
                     x.set(k, 0.0);

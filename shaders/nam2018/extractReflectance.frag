@@ -63,7 +63,7 @@ void main()
         reflectance_visibility = vec4(imgColor.rgb / irradiance, imgColor.a);
 
         // Halfway component should be 1.0 when the angle is 60 degrees, or pi/3.
-        halfway_geom_weight = vec4(sqrt(max(0.0, acos(min(1.0, nDotH)) * 3.0 / PI)), maskingShadowing / (4 * nDotL * nDotV), nDotL * sqrt(max(0, 1 - nDotH * nDotH)), 1);
+        halfway_geom_weight = vec4(sqrt(max(0.0, acos(min(1.0, nDotH)) * 3.0 / PI)), maskingShadowing / (4 * nDotL * nDotV), triangleNDotV * sqrt(max(0, 1 - nDotH * nDotH)), 1);
     }
     else
     {
