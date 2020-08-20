@@ -17,13 +17,19 @@
 #line 18 0
 
 layout(location = 0) out vec4 normalTS;
+layout(location = 1) out vec4 dampingOut;
 
-uniform float dampingFactor;
+//uniform float dampingFactor;
+uniform sampler2D dampingTex;
 
 #define COSINE_CUTOFF 0.0
 
 #ifndef MICROFACET_DISTRIBUTION_RESOLUTION
 #define MICROFACET_DISTRIBUTION_RESOLUTION 90
+#endif
+
+#ifndef USE_LEVENBERG_MARQUARDT
+#define USE_LEVENBERG_MARQUARDT 1
 #endif
 
 vec3 getMFDGradient(float nDotH)
@@ -45,6 +51,70 @@ vec3 getMFDGradient(float nDotH)
     return estimate / (nDotH_High - nDotH_Low);
 }
 
+vec2 getLambdaGradient(float roughness, vec3 direction)
+{
+    // Derivatives of:
+    // -0.5 + 0.5 * sqrt(1 + roughness * roughness * (1 / (cosine * cosine) - 1.0))
+
+    float roughnessSq = roughness * roughness;
+    float cosineSq = direction.z * direction.z;
+
+    return -0.5 * roughnessSq * direction.xy / (cosineSq * direction.z * sqrt(1 + roughnessSq * (1 / (cosineSq) - 1.0)));
+}
+
+vec2 getHeightCorrelatedSmithGradient(float roughness, vec3 light, vec3 view)
+{
+    // Derivatives of:
+    // 1 / (1 + lambda(roughness, nDotV) + lambda(roughness, nDotL))
+
+    float denominator = (1 + lambda(roughness, view.z) + lambda(roughness, light.z));
+    return -(getLambdaGradient(roughness, view) + getLambdaGradient(roughness, light)) / (denominator * denominator);
+}
+
+float calculateError(vec3 triangleNormal, vec3 estimatedNormal)
+{
+    float error = 0.0;
+
+    for (int k = 0; k < CAMERA_POSE_COUNT; k++)
+    {
+        vec4 imgColor = getLinearColor(k);
+        vec3 view = normalize(getViewVector(k));
+        float triangleNDotV = max(0.0, dot(triangleNormal, view));
+
+        vec3 lightDisplacement = getLightVector(k);
+        vec3 light = normalize(lightDisplacement);
+        vec3 halfway = normalize(light + view);
+        float nDotH = max(0.0, dot(estimatedNormal, halfway));
+        float nDotL = max(0.0, dot(estimatedNormal, light));
+        float nDotV = max(0.0, dot(estimatedNormal, view));
+
+        // "Light intensity" is defined in such a way that we need to multiply by pi to be properly normalized.
+        vec3 incidentRadiance = PI * getLightIntensity(k) / dot(lightDisplacement, lightDisplacement);
+
+        vec3 actualReflectanceTimesNDotL = imgColor.rgb / incidentRadiance;
+        float weight = triangleNDotV;
+
+        if (nDotH > COSINE_CUTOFF && nDotL > COSINE_CUTOFF && nDotV > COSINE_CUTOFF)
+        {
+            float hDotV = max(0.0, dot(halfway, view));
+
+            float roughness = texture(roughnessEstimate, fTexCoord)[0];
+            float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
+
+            vec3 reflectanceEstimate = getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV));
+
+            vec3 diff = reflectanceEstimate * nDotL - actualReflectanceTimesNDotL;
+            error += weight * dot(diff, diff);
+        }
+        else
+        {
+            error += sign(imgColor.a * triangleNDotV) * weight * dot(actualReflectanceTimesNDotL, actualReflectanceTimesNDotL);
+        }
+    }
+
+    return error;
+}
+
 void main()
 {
     vec3 triangleNormal = normalize(fNormal);
@@ -56,7 +126,6 @@ void main()
 
     vec2 prevNormalXY = texture(normalEstimate, fTexCoord).xy * 2 - vec2(1.0);
     vec3 prevNormalTS = vec3(prevNormalXY, sqrt(1 - dot(prevNormalXY, prevNormalXY)));
-    vec3 prevNormal = tangentToObject * prevNormalTS;
 
     vec3 fittingTangent = normalize(vec3(1, 0, 0) - prevNormalTS.x * prevNormalTS);
     vec3 fittingBitangent = normalize(vec3(0, 1, 0) - prevNormalTS.y * prevNormalTS - fittingTangent.y * fittingTangent);
@@ -64,10 +133,16 @@ void main()
 
     mat3 objectToFitting = transpose(fittingToTangent) * transpose(tangentToObject);
 
-    mat2 mATA = mat2(0);
-    vec2 vATb = vec2(0);
+#if USE_LEVENBERG_MARQUARDT
+    mat2 mJTJ = mat2(0);
+    vec2 vJTb = vec2(0);
+#else
+    mat3 mATA = mat3(0);
+    vec3 vATb = vec3(0);
+#endif
 
     float estimatedPeak = getLuminance(getBRDFEstimate(1.0, 0.25));
+    float dampingFactor = texture(dampingTex, fTexCoord)[0];
 
     for (int k = 0; k < CAMERA_POSE_COUNT; k++)
     {
@@ -80,7 +155,6 @@ void main()
         float nDotL = max(0.0, light.z);
         float nDotV = max(0.0, view.z);
         float triangleNDotV = max(0.0, dot(objectToFitting * triangleNormal, view));
-        float triangleNDotL = max(0.0, dot(objectToFitting * triangleNormal, light));
 
         if (imgColor.a > 0.0 && nDotH > COSINE_CUTOFF && nDotL > COSINE_CUTOFF && nDotV > COSINE_CUTOFF && triangleNDotV > COSINE_CUTOFF)
         {
@@ -90,15 +164,23 @@ void main()
             vec3 incidentRadiance = PI * getLightIntensity(k) / dot(lightDisplacement, lightDisplacement);
 
             float roughness = texture(roughnessEstimate, fTexCoord)[0];
-            float maskingShadowing = computeGeometricAttenuationVCavity(nDotH, nDotV, nDotL, hDotV);
-//            vec3 reflectanceEstimate = getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV));
+            float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
 
-            float weight = triangleNDotL;
+            vec3 actualReflectanceTimesNDotL = imgColor.rgb / incidentRadiance;
+            vec3 reflectanceEstimate = getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV));
 
+#if USE_LEVENBERG_MARQUARDT
             mat3x2 mfdGradient = outerProduct(halfway.xy, getMFDGradient(nDotH)); // (d NdotH / dN) * (dD / d NdotH)
-
             mat3x2 specularGradient;
 
+            float weight = triangleNDotV;
+
+#if SMITH_MASKING_SHADOWING
+            vec3 mfdEstimate = getMFDEstimate(nDotH); // Also includes Fresnel
+            vec2 geomGradient = getHeightCorrelatedSmithGradient(roughness, light, view);
+            mat3x2 mfdGeomGradient = maskingShadowing * mfdGradient + outerProduct(geomGradient, mfdEstimate); // product rule
+            specularGradient = 0.25 * (nDotV * mfdGeomGradient - outerProduct(view.xy, mfdEstimate * maskingShadowing)) / (nDotV * nDotV); // quotient rule
+#else
             if (nDotV * nDotH > 0.5 * hDotV && nDotL * nDotH > 0.5 * hDotV)
             {
                 // G = 1.0
@@ -120,6 +202,7 @@ void main()
                 mat3x2 mfdGeomGradient = 0.5 * (nDotH * mfdNdotLGradient + outerProduct(halfway.xy, nDotL * mfdEstimate)) / hDotV; // product rule
                 specularGradient = (nDotV * mfdGeomGradient - outerProduct(view.xy, mfdEstimate * maskingShadowing)) / (nDotV * nDotV); // quotient rule
             }
+#endif
 
             mat3x2 diffuseGradient = outerProduct(light.xy, getDiffuseEstimate() / PI);
 
@@ -128,35 +211,72 @@ void main()
             // The rows correspond to the components of N.
             mat3x2 fullGradient = diffuseGradient + specularGradient;
 
-            vec3 actualReflectanceTimesNDotL = imgColor.rgb / incidentRadiance;
-            mATA += weight * weight * fullGradient * transpose(fullGradient);
-                    //dot(reflectanceEstimate, reflectanceEstimate) * outerProduct(light, light);
-            vATb += weight * weight * fullGradient * actualReflectanceTimesNDotL;
-                    //dot(reflectanceEstimate, actualReflectanceTimesNDotL) * light;
+            mJTJ += weight * weight * (fullGradient * transpose(fullGradient) + mat2(dampingFactor));
+            vJTb += weight * weight * fullGradient * (actualReflectanceTimesNDotL - reflectanceEstimate * nDotL);
+#else
+            float weight = triangleNDotV * sqrt(max(0, 1 - nDotH * nDotH));
 
+            mATA += weight * weight * dot(reflectanceEstimate, reflectanceEstimate) * outerProduct(light, light);
+            vATb += weight * weight * dot(reflectanceEstimate, actualReflectanceTimesNDotL) * light;
+#endif
         }
     }
 
-    vec2 normalFittingSpace;
+#if USE_LEVENBERG_MARQUARDT
 
-    if (determinant(mATA) > 0)
+    vec2 normalFittingSpace;
+    float prevError = calculateError(triangleNormal, tangentToObject * prevNormalTS);
+
+    if (determinant(mJTJ) > 0)
     {
-        normalFittingSpace = inverse(mATA) * vATb;
+        normalFittingSpace = inverse(mJTJ) * vJTb;
+
+        float tangentLengthSq = dot(normalFittingSpace, normalFittingSpace);
+        float maxTangentLength = 0.5;
+        float tangentScale = min(1.0, maxTangentLength / sqrt(tangentLengthSq));
+        normalFittingSpace = normalFittingSpace * tangentScale;
+
+        vec3 newNormalTS = fittingToTangent * vec3(normalFittingSpace, sqrt(max(0, 1 - tangentLengthSq * tangentScale)));
+
+        float newError = calculateError(triangleNormal, tangentToObject * newNormalTS);
+
+        if (newError < prevError)
+        {
+            // Map to the correct range for a texture.
+            normalTS = vec4(newNormalTS * 0.5 + vec3(0.5), 1.0);
+            dampingOut = vec4(vec3(dampingFactor / 2.0), 1.0);
+        }
+        else
+        {
+            normalTS = vec4(prevNormalTS * 0.5 + vec3(0.5), 1.0);
+            dampingOut = vec4(vec3(dampingFactor * 2.0), 1.0);
+        }
     }
     else
     {
         normalTS = vec4(prevNormalTS * 0.5 + vec3(0.5), 1.0);
-        return;
+        dampingOut = vec4(vec3(dampingFactor * 2.0), 1.0);
     }
 
-    float tangentLengthSq = dot(normalFittingSpace, normalFittingSpace);
-    float maxTangentLength = 0.0625;
-    float tangentScale = min(dampingFactor, maxTangentLength / sqrt(tangentLengthSq));
-    normalFittingSpace = normalFittingSpace * tangentScale;
+#else
+    vec3 normalFittingSpace;
 
-    // To avoid oscillating divergence, dampen the new estimate by averaging it with the previous estimate.
-    vec3 newNormalTS = fittingToTangent * vec3(normalFittingSpace, sqrt(max(0, 1 - tangentLengthSq * tangentScale)));
+    if (determinant(mATA) > 0)
+    {
+        normalFittingSpace = inverse(mATA) * vATb;
 
-    // Map to the correct range for a texture.
-    normalTS = vec4(newNormalTS * 0.5 + vec3(0.5), 1.0);
+        if (length(normalFittingSpace) > 0)
+        {
+            normalTS = vec4(fittingToTangent * normalize(normalFittingSpace) * 0.5 + vec3(0.5), 1.0);
+        }
+        else
+        {
+            normalTS = vec4(prevNormalTS * 0.5 + vec3(0.5), 1.0);
+        }
+    }
+    else
+    {
+        normalTS = vec4(prevNormalTS * 0.5 + vec3(0.5), 1.0);
+    }
+#endif
 }

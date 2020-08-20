@@ -17,6 +17,7 @@
 
 layout(location = 0) out vec4 fragColor;
 
+uniform sampler2D diffuseEstimate;
 uniform sampler2D specularEstimate;
 uniform sampler2DArray weightMaps;
 
@@ -54,7 +55,7 @@ void main()
 
     float roughness = sqrtRoughness_Mask[0] * sqrtRoughness_Mask[0] / (filteredMask * filteredMask);
 
-    vec3 diffuseColor = getDiffuseEstimate() / filteredMask;
+    vec3 diffuseColor = pow(texture(diffuseEstimate, fTexCoord).rgb / filteredMask, vec3(gamma));
     vec3 specularColor = pow(texture(specularEstimate, fTexCoord).rgb / filteredMask, vec3(gamma));
 
     vec3 triangleNormal = normalize(fNormal);

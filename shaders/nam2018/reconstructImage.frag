@@ -16,6 +16,8 @@
 #include "evaluateBRDF.glsl"
 #line 18 0
 
+uniform sampler2D diffuseEstimate;
+
 layout(location = 0) out vec4 fragColor;
 
 void main()
@@ -40,15 +42,35 @@ void main()
     float nDotV = max(0.0, dot(normal, view));
     float hDotV = max(0.0, dot(halfway, view));
     float roughness = texture(roughnessEstimate, fTexCoord)[0];
-    float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
+    float geomRatio;
+
+    if (nDotL > 0.0 && nDotV > 0.0)
+    {
+        float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
+        geomRatio = maskingShadowing / (4 * nDotL * nDotV);
+    }
+    else if (nDotL > 0.0)
+    {
+        geomRatio = 0.5 / (roughness * nDotL); // Limit as n dot v goes to zero.
+    }
+
     vec3 incidentRadiance = PI * lightIntensity / dot(lightDisplacement, lightDisplacement);
 
     float filteredMask = texture(weightMask, fTexCoord)[0];
 
     if (filteredMask > 0)
     {
-        vec3 brdf = getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV));
-        fragColor = vec4(pow(incidentRadiance * nDotL * brdf / filteredMask, vec3(1.0 / gamma)), 1.0);
+        if (nDotL > 0.0)
+        {
+            vec3 brdf = pow(texture(diffuseEstimate, fTexCoord).rgb / filteredMask, vec3(gamma)) / PI + geomRatio * getMFDEstimate(nDotH) / filteredMask;
+            fragColor = vec4(pow(incidentRadiance * nDotL * brdf, vec3(1.0 / gamma)), 1.0);
+        }
+        else
+        {
+            // Limit as n dot l and n dot v both go to zero.
+            vec3 mfd = 0 * getMFDEstimate(nDotH) / filteredMask;
+            fragColor = vec4(pow(incidentRadiance * mfd * 0.5 / roughness, vec3(1.0 / gamma)), 1.0);
+        }
     }
     else
     {

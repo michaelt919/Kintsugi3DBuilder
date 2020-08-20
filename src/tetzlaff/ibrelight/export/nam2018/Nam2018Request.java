@@ -40,13 +40,15 @@ import static java.lang.Math.PI;
 
 public class Nam2018Request implements IBRRequest
 {
+    static final boolean ORIGINAL_NAM_METHOD = false;
+
     static final int BASIS_COUNT = 8;
     static final int MICROFACET_DISTRIBUTION_RESOLUTION = 90;
 
     private static final int BRDF_MATRIX_SIZE = BASIS_COUNT * (MICROFACET_DISTRIBUTION_RESOLUTION + 1);
     private static final double K_MEANS_TOLERANCE = 0.0001;
     private static final double NNLS_TOLERANCE_SCALE = 0.000000000001;
-    private static final double CONVERGENCE_TOLERANCE = 0.000001;
+    private static final double CONVERGENCE_TOLERANCE = 0.0001;
     private static final double GAMMA = 2.2;
 
     private static final boolean NORMAL_REFINEMENT = true;
@@ -61,7 +63,7 @@ public class Nam2018Request implements IBRRequest
     private final double metallicity = 0.0f; // Implemented and minimally tested but doesn't seem to make much difference.
 
     private double error = Double.POSITIVE_INFINITY;
-    private double weightedError = Double.POSITIVE_INFINITY;
+//    private double weightedError = Double.POSITIVE_INFINITY;
 
     private final SimpleMatrix brdfATA = new SimpleMatrix(BRDF_MATRIX_SIZE, BRDF_MATRIX_SIZE, DMatrixRMaj.class);
     private final SimpleMatrix brdfATyRed = new SimpleMatrix(BRDF_MATRIX_SIZE, 1, DMatrixRMaj.class);
@@ -158,9 +160,10 @@ public class Nam2018Request implements IBRRequest
         (
             Program<ContextType> averageProgram = createAverageProgram(resources);
             Program<ContextType> reflectanceProgram = createReflectanceProgram(resources);
-            Program<ContextType> reflectanceImageSpaceProgram = createReflectanceImageSpaceProgram(resources);
             Program<ContextType> initialNormalEstimationProgram = createInitialNormalEstimationProgram(resources);
             Program<ContextType> normalEstimationProgram = createNormalEstimationProgram(resources);
+            Program<ContextType> diffuseEstimationProgram = createDiffuseEstimationProgram(resources);
+            Program<ContextType> errorCalcProgram = createErrorCalcProgram(resources);
             Program<ContextType> imageReconstructionProgram = createImageReconstructionProgram(resources);
             Program<ContextType> fittedImageReconstructionProgram = createFittedImageReconstructionProgram(resources);
             Program<ContextType> basisImageProgram = resources.context.getShaderProgramBuilder()
@@ -180,13 +183,14 @@ public class Nam2018Request implements IBRRequest
                 .createFramebufferObject();
             FramebufferObject<ContextType> normalFramebuffer1 = resources.context.buildFramebufferObject(width, height)
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F).setLinearFilteringEnabled(true))
+                .addColorAttachment(ColorFormat.R32F) // Damping factor while fitting
                 .createFramebufferObject();
             FramebufferObject<ContextType> normalFramebuffer2 = resources.context.buildFramebufferObject(width, height)
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F).setLinearFilteringEnabled(true))
+                .addColorAttachment(ColorFormat.R32F) // Damping factor while fitting
                 .createFramebufferObject();
             FramebufferObject<ContextType> imageReconstructionFramebuffer =
                 resources.context.buildFramebufferObject(imageWidth, imageHeight)
-                    .addColorAttachment(ColorFormat.RGBA32F)
                     .addColorAttachment(ColorFormat.RGBA32F)
                     .addDepthAttachment()
                     .createFramebufferObject();
@@ -233,18 +237,34 @@ public class Nam2018Request implements IBRRequest
 
             Drawable<ContextType> reflectanceDrawable = createDrawable(reflectanceProgram, resources);
             reflectanceProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
-
-            Drawable<ContextType> reflectanceImageSpaceDrawable = createDrawable(reflectanceImageSpaceProgram, resources);
-            reflectanceImageSpaceProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
+            reflectanceProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
 
             Drawable<ContextType> normalEstimationDrawable = createDrawable(normalEstimationProgram, resources);
             normalEstimationProgram.setTexture("basisFunctions", basisMaps);
             normalEstimationProgram.setTexture("weightMaps", weightMaps);
+            normalEstimationProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
             normalEstimationProgram.setUniformBuffer("DiffuseColors", diffuseUniformBuffer);
+
+            Drawable<ContextType> errorCalcDrawable = createDrawable(errorCalcProgram, resources);
+            errorCalcProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
+            errorCalcProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
+            errorCalcProgram.setTexture("basisFunctions", basisMaps);
+            errorCalcProgram.setTexture("weightMaps", weightMaps);
+            errorCalcProgram.setUniformBuffer("DiffuseColors", diffuseUniformBuffer);
 
             Drawable<ContextType> basisImageDrawable = resources.context.createDrawable(basisImageProgram);
             basisImageDrawable.addVertexBuffer("position", rect);
             basisImageProgram.setTexture("basisFunctions", basisMaps);
+
+            Drawable<ContextType> specularFitDrawable = resources.context.createDrawable(specularFitProgram);
+            specularFitDrawable.addVertexBuffer("position", rect);
+            specularFitProgram.setUniform("gamma", (float)GAMMA);
+            specularFitProgram.setTexture("weightMaps", weightMaps);
+            specularFitProgram.setTexture("weightMask", weightMask);
+            specularFitProgram.setTexture("basisFunctions", basisMaps);
+
+            // Set initial assumption for roughness when calculating masking/shadowing.
+            specularTexFramebuffer.clearColorBuffer(1, 1.0f, 1.0f, 1.0f,1.0f);
 
             Arrays.fill(diffuseAlbedos, DoubleVector3.ZERO);
 
@@ -261,14 +281,14 @@ public class Nam2018Request implements IBRRequest
 //            }
 
             double previousError;
-            double previousWeightedError;
+//            double previousWeightedError;
 
-            float dampingFactor = 0.5f;
+//            float dampingFactor = 1.0f;
 
             do
             {
                 previousError = error;
-                previousWeightedError = weightedError;
+//                previousWeightedError = weightedError;
 
                 // Use the current front normal buffer for extracting reflectance information.
                 reflectanceProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
@@ -279,14 +299,14 @@ public class Nam2018Request implements IBRRequest
                 if (DEBUG)
                 {
                     double previousErrorLocal = error;
-                    double previousWeightedErrorLocal = weightedError;
-                    updateError(reflectanceImageSpaceDrawable, imageReconstructionFramebuffer, viewCount);
+//                    double previousWeightedErrorLocal = weightedError;
+                    updateError(errorCalcDrawable, imageReconstructionFramebuffer);
 
                     System.out.println("--------------------------------------------------");
                     System.out.println("Error: " + error);
                     System.out.println("(Previous error: " + previousErrorLocal + ')');
-                    System.out.println("Weighted error: " + weightedError);
-                    System.out.println("(Previous weighted error: " + previousWeightedErrorLocal + ')');
+//                    System.out.println("Weighted error: " + weightedError);
+//                    System.out.println("(Previous weighted error: " + previousWeightedErrorLocal + ')');
                     System.out.println("--------------------------------------------------");
                     System.out.println();
                 }
@@ -297,14 +317,14 @@ public class Nam2018Request implements IBRRequest
                 if (DEBUG)
                 {
                     double previousErrorLocal = error;
-                    double previousWeightedErrorLocal = weightedError;
-                    updateError(reflectanceImageSpaceDrawable, imageReconstructionFramebuffer, viewCount);
+//                    double previousWeightedErrorLocal = weightedError;
+                    updateError(errorCalcDrawable, imageReconstructionFramebuffer);
 
                     System.out.println("--------------------------------------------------");
                     System.out.println("Error: " + error);
                     System.out.println("(Previous error: " + previousErrorLocal + ')');
-                    System.out.println("Weighted error: " + weightedError);
-                    System.out.println("(Previous weighted error: " + previousWeightedErrorLocal + ')');
+//                    System.out.println("Weighted error: " + weightedError);
+//                    System.out.println("(Previous weighted error: " + previousWeightedErrorLocal + ')');
                     System.out.println("--------------------------------------------------");
                     System.out.println();
                 }
@@ -314,11 +334,15 @@ public class Nam2018Request implements IBRRequest
 
                 if (NORMAL_REFINEMENT)
                 {
+                    // Set damping factor to 1.0 initially at each position.
+                    frontNormalFramebuffer.clearColorBuffer(1, 1.0f, 1.0f, 1.0f, 1.0f);
+
                     // Keep track of whether each normal update is actually an improvement.
                     double previousErrorLocal = error;
-                    double previousWeightedErrorLocal = weightedError;
+//                    double previousWeightedErrorLocal = weightedError;
 
-                    float lastSuccessfulDampingFactor = 0.0f;
+//                    float lastSuccessfulDampingFactor = 0.0f;
+                    int unsuccessfulIterations = 0;
 
                     do
                     {
@@ -326,15 +350,16 @@ public class Nam2018Request implements IBRRequest
                         {
                             // Revert error calculations to what they were before attempting to optimize normals.
                             error = previousErrorLocal;
-                            weightedError = previousWeightedErrorLocal;
+//                            weightedError = previousWeightedErrorLocal;
                         }
 
                         // Update normal estimation program to use the new front buffer.
                         normalEstimationProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
+                        normalEstimationProgram.setTexture("dampingTex", frontNormalFramebuffer.getColorAttachmentTexture(1));
 
                         // Estimate new normals.
-                        System.out.println("Using damping factor: " + dampingFactor);
-                        normalEstimationProgram.setUniform("dampingFactor", dampingFactor);
+//                        System.out.println("Using damping factor: " + dampingFactor);
+//                        normalEstimationProgram.setUniform("dampingFactor", dampingFactor);
                         reconstructNormals(normalEstimationDrawable, backNormalFramebuffer);
 
                         // Swap framebuffers for normal map.
@@ -342,15 +367,15 @@ public class Nam2018Request implements IBRRequest
                         frontNormalFramebuffer = backNormalFramebuffer;
                         backNormalFramebuffer = tmp;
 
-                        // Update image-space program to use the new front buffer for error calculation.
-                        reflectanceImageSpaceProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
+                        // Update program to use the new front buffer for error calculation.
+                        errorCalcProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
 
                         // Check if the normal update actually was an improvement.
                         previousErrorLocal = error;
-                        previousWeightedErrorLocal = weightedError;
+//                        previousWeightedErrorLocal = weightedError;
 
                         // Calculate the error to determine if we should stop.
-                        updateError(reflectanceImageSpaceDrawable, imageReconstructionFramebuffer, viewCount);
+                        updateError(errorCalcDrawable, imageReconstructionFramebuffer);
 
                         System.out.println("--------------------------------------------------");
                         System.out.println("Error: " + error);
@@ -358,8 +383,8 @@ public class Nam2018Request implements IBRRequest
                         if (DEBUG)
                         {
                             System.out.println("(Previous error: " + previousErrorLocal + ')');
-                            System.out.println("Weighted error: " + weightedError);
-                            System.out.println("(Previous weighted error: " + previousWeightedErrorLocal + ')');
+//                            System.out.println("Weighted error: " + weightedError);
+//                            System.out.println("(Previous weighted error: " + previousWeightedErrorLocal + ')');
                         }
                         else
                         {
@@ -369,23 +394,28 @@ public class Nam2018Request implements IBRRequest
                         System.out.println("--------------------------------------------------");
                         System.out.println();
 
-                        if (error >= previousErrorLocal)
+                        if (previousErrorLocal - error <= CONVERGENCE_TOLERANCE /*error >= previousErrorLocal*/)
                         {
-                            // Error is worse; reject new normal estimate.
                             if (DEBUG)
                             {
-                                saveNormalMap(frontNormalFramebuffer, "normal_reject.png");
+                                saveNormalMap(frontNormalFramebuffer/*, "normal_reject.png"*/);
                             }
 
-                            // Swap normal map framebuffers back to use the old normal map, if the new one isn't better.
-                            backNormalFramebuffer = frontNormalFramebuffer;
-                            frontNormalFramebuffer = tmp;
+                            unsuccessfulIterations++;
 
-                            // Update image space program to use the old front buffer for error calculation.
-                            reflectanceImageSpaceProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
+                            if (error > previousErrorLocal)
+                            {
+                                // Error is worse; reject new normal estimate.
+                                // Swap normal map framebuffers back to use the old normal map, if the new one isn't better.
+                                backNormalFramebuffer = frontNormalFramebuffer;
+                                frontNormalFramebuffer = tmp;
 
-                            // Adjust damping factor.
-                            dampingFactor /= 2.0f;
+                                // Update program to use the old front buffer for error calculation.
+                                errorCalcProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
+
+    //                            // Adjust damping factor.
+    //                            dampingFactor *= 2.0f;
+                            }
                         }
                         else
                         {
@@ -394,100 +424,41 @@ public class Nam2018Request implements IBRRequest
                                 saveNormalMap(frontNormalFramebuffer);
                             }
 
-                            lastSuccessfulDampingFactor = dampingFactor;
+                            unsuccessfulIterations = 0;
+//                            lastSuccessfulDampingFactor = dampingFactor;
+//                            dampingFactor /= 2.0f;
                         }
                     }
-                    while (dampingFactor >= 1.0f / 256.0f);
+                    while (!ORIGINAL_NAM_METHOD && error <= previousErrorLocal && unsuccessfulIterations < 8 /*&& dampingFactor <= 256.0f*/);
 
                     if (error > previousErrorLocal)
                     {
-                        // Revert error calculations to what they were before attempting to optimize normals.
+                        // Revert error calculations to the last accepted result.
                         error = previousErrorLocal;
-                        weightedError = previousWeightedErrorLocal;
+//                        weightedError = previousWeightedErrorLocal;
                     }
 
-//                    if (lastSuccessfulDampingFactor > 0.0f)
-//                    {
-//                        dampingFactor = 2 * lastSuccessfulDampingFactor;
-//                    }
-//                    else
-//                    {
-//                        dampingFactor = 1.0f / 256.0f;
-//                    }
+//                    dampingFactor = 1.0f;
+                }
 
-                    dampingFactor = 0.5f;
+                // Fit specular so that we have a roughness estimate for masking/shadowing.
+                specularTexFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f,0.0f);
+                specularTexFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f,0.0f);
+                specularFitDrawable.draw(PrimitiveMode.TRIANGLE_FAN, specularTexFramebuffer);
+
+                try
+                {
+                    specularTexFramebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, "specular.png"));
+                    specularTexFramebuffer.saveColorBufferToFile(1, "PNG", new File(outputDirectory, "roughness.png"));
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
                 }
             }
             while (/*previousWeightedError - weightedError > CONVERGENCE_TOLERANCE*/ previousError - error > CONVERGENCE_TOLERANCE);
 
-            // Fill holes
-            // TODO Quick hack; should be replaced with something more robust.
-            System.out.println("Filling holes...");
-
-            for (int i = 0; i < 64; i++)
-            {
-                Collection<Integer> filledPositions = new HashSet<>(256);
-                for (int p = 0; p < weightsValidity.length; p++)
-                {
-                    if (!weightsValidity[p])
-                    {
-                        int left = (weightsValidity.length + p - 1) % weightsValidity.length;
-                        int right = (p + 1) % weightsValidity.length;
-                        int up = (weightsValidity.length + p - width) % weightsValidity.length;
-                        int down = (p + width) % weightsValidity.length;
-
-                        int count = 0;
-
-                        for (int b = 0; b < BASIS_COUNT; b++)
-                        {
-                            count = 0;
-                            double sum = 0.0;
-
-                            if (weightsValidity[left])
-                            {
-                                sum += weightSolutions[left].get(b);
-                                count++;
-                            }
-
-                            if (weightsValidity[right])
-                            {
-                                sum += weightSolutions[right].get(b);
-                                count++;
-                            }
-
-                            if (weightsValidity[up])
-                            {
-                                sum += weightSolutions[up].get(b);
-                                count++;
-                            }
-
-                            if (weightsValidity[down])
-                            {
-                                sum += weightSolutions[down].get(b);
-                                count++;
-                            }
-
-                            if (sum > 0.0)
-                            {
-                                weightSolutions[p].set(b, sum / count);
-                            }
-                        }
-
-                        if (count > 0)
-                        {
-                            filledPositions.add(p);
-                        }
-                    }
-                }
-
-                for (int p : filledPositions)
-                {
-                    weightsValidity[p] = true;
-                }
-            }
-
-            System.out.println("DONE!");
-
+            fillHoles();
             updateGraphicsResources(weightMaps, weightMask, basisMaps, diffuseUniformBuffer);
 
             saveBasisFunctions(basisImageDrawable, basisImageFramebuffer);
@@ -495,22 +466,37 @@ public class Nam2018Request implements IBRRequest
             saveDiffuseMap();
             saveNormalMap(frontNormalFramebuffer);
 
+            // Diffuse fit
+            Drawable<ContextType> diffuseFitDrawable = createDrawable(diffuseEstimationProgram, resources);
+            diffuseEstimationProgram.setTexture("basisFunctions", basisMaps);
+            diffuseEstimationProgram.setTexture("weightMaps", weightMaps);
+            diffuseEstimationProgram.setTexture("weightMask", weightMask);
+            diffuseEstimationProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
+            diffuseEstimationProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
+            framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+            diffuseFitDrawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+
+            try
+            {
+                framebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, "diffuse.png"));
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+
+            // Render and save images using more accurate basis function reconstruction.
             Drawable<ContextType> imageReconstructionDrawable = createDrawable(imageReconstructionProgram, resources);
             imageReconstructionProgram.setTexture("basisFunctions", basisMaps);
             imageReconstructionProgram.setTexture("weightMaps", weightMaps);
             imageReconstructionProgram.setTexture("weightMask", weightMask);
             imageReconstructionProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
-            imageReconstructionProgram.setUniformBuffer("DiffuseColors", diffuseUniformBuffer);
+            imageReconstructionProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
+            imageReconstructionProgram.setTexture("diffuseEstimate", framebuffer.getColorAttachmentTexture(0));
 
             reconstructImages(imageReconstructionDrawable, imageReconstructionFramebuffer, resources.viewSet, "reconstructions");
 
-            // Fit specular textures
-            specularFitProgram.setUniform("gamma", (float)GAMMA);
-            specularFitProgram.setTexture("weightMaps", weightMaps);
-            specularFitProgram.setTexture("weightMask", weightMask);
-            specularFitProgram.setTexture("basisFunctions", basisMaps);
-            Drawable<ContextType> specularFitDrawable = resources.context.createDrawable(specularFitProgram);
-            specularFitDrawable.addVertexBuffer("position", rect);
+            // Fit specular textures after filling holes
             specularTexFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f,0.0f);
             specularTexFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f,0.0f);
             specularFitDrawable.draw(PrimitiveMode.TRIANGLE_FAN, specularTexFramebuffer);
@@ -525,12 +511,13 @@ public class Nam2018Request implements IBRRequest
                 e.printStackTrace();
             }
 
+            // Render and save images using parameterized fit.
             Drawable<ContextType> fittedImageReconstructionDrawable = createDrawable(fittedImageReconstructionProgram, resources);
             fittedImageReconstructionProgram.setTexture("weightMaps", weightMaps);
             fittedImageReconstructionProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
             fittedImageReconstructionProgram.setTexture("specularEstimate", specularTexFramebuffer.getColorAttachmentTexture(0));
             fittedImageReconstructionProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
-            fittedImageReconstructionProgram.setUniformBuffer("DiffuseColors", diffuseUniformBuffer);
+            fittedImageReconstructionProgram.setTexture("diffuseEstimate", framebuffer.getColorAttachmentTexture(0));
 
             reconstructImages(fittedImageReconstructionDrawable, imageReconstructionFramebuffer, resources.viewSet, "fitted");
         }
@@ -546,9 +533,10 @@ public class Nam2018Request implements IBRRequest
         Program<ContextType> program = resources.getIBRShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/nam2018/average.frag"))
+            .define("VISIBILITY_TEST_ENABLED", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"))
+            .define("SHADOW_TEST_ENABLED", resources.shadowTextures != null && this.settingsModel.getBoolean("shadowsEnabled"))
             .createProgram();
 
-        program.setUniform("occlusionEnabled", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"));
         program.setUniform("occlusionBias", this.settingsModel.getFloat("occlusionBias"));
 
         resources.setupShaderProgram(program);
@@ -562,29 +550,13 @@ public class Nam2018Request implements IBRRequest
         Program<ContextType> program = resources.getIBRShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/nam2018/extractReflectance.frag"))
+            .define("VISIBILITY_TEST_ENABLED", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"))
+            .define("SHADOW_TEST_ENABLED", resources.shadowTextures != null && this.settingsModel.getBoolean("shadowsEnabled"))
             .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
-            .define("SMITH_MASKING_SHADOWING", 0)
+            .define("SMITH_MASKING_SHADOWING", ORIGINAL_NAM_METHOD ? 0 : 1)
             .createProgram();
 
-        program.setUniform("occlusionEnabled", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"));
         program.setUniform("occlusionBias", this.settingsModel.getFloat("occlusionBias"));
-
-        resources.setupShaderProgram(program);
-
-        return program;
-    }
-
-    private <ContextType extends Context<ContextType>>
-    Program<ContextType> createReflectanceImageSpaceProgram(IBRResources<ContextType> resources) throws FileNotFoundException
-    {
-        Program<ContextType> program = resources.getIBRShaderProgramBuilder()
-            .addShader(ShaderType.VERTEX, new File("shaders/colorappearance/imgspace_multi_as_single.vert"))
-            .addShader(ShaderType.FRAGMENT, new File("shaders/nam2018/extractReflectance.frag"))
-            .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
-            .define("SMITH_MASKING_SHADOWING", 0)
-            .createProgram();
-
-        program.setUniform("occlusionEnabled", false);
 
         resources.setupShaderProgram(program);
 
@@ -597,9 +569,10 @@ public class Nam2018Request implements IBRRequest
         Program<ContextType> program = resources.getIBRShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/nam2018/estimateNormalsInitial.frag"))
+            .define("VISIBILITY_TEST_ENABLED", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"))
+            .define("SHADOW_TEST_ENABLED", resources.shadowTextures != null && this.settingsModel.getBoolean("shadowsEnabled"))
             .createProgram();
 
-        program.setUniform("occlusionEnabled", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"));
         program.setUniform("occlusionBias", this.settingsModel.getFloat("occlusionBias"));
         program.setUniform("delta", 1.0f);
         program.setUniform("iterations", 64);
@@ -617,12 +590,51 @@ public class Nam2018Request implements IBRRequest
         Program<ContextType> program = resources.getIBRShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/nam2018/estimateNormals.frag"))
+            .define("VISIBILITY_TEST_ENABLED", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"))
+            .define("SHADOW_TEST_ENABLED", resources.shadowTextures != null && this.settingsModel.getBoolean("shadowsEnabled"))
             .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
-            .define("SMITH_MASKING_SHADOWING", 0)
+            .define("SMITH_MASKING_SHADOWING", ORIGINAL_NAM_METHOD ? 0 : 1)
+            .define("USE_LEVENBERG_MARQUARDT", ORIGINAL_NAM_METHOD ? 0 : 1)
             .define("BASIS_COUNT", BASIS_COUNT)
             .createProgram();
 
-        program.setUniform("occlusionEnabled", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"));
+        program.setUniform("occlusionBias", this.settingsModel.getFloat("occlusionBias"));
+
+        resources.setupShaderProgram(program);
+
+        return program;
+    }
+
+    private static <ContextType extends Context<ContextType>>
+    Program<ContextType> createErrorCalcProgram(IBRResources<ContextType> resources) throws FileNotFoundException
+    {
+        Program<ContextType> program = resources.getIBRShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, new File("shaders/colorappearance/imgspace_multi_as_single.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/nam2018/errorCalc.frag"))
+            .define("VISIBILITY_TEST_ENABLED", 0)
+            .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
+            .define("SMITH_MASKING_SHADOWING", ORIGINAL_NAM_METHOD ? 0 : 1)
+            .define("BASIS_COUNT", BASIS_COUNT)
+            .createProgram();
+
+        resources.setupShaderProgram(program);
+
+        return program;
+    }
+
+    private <ContextType extends Context<ContextType>>
+    Program<ContextType> createDiffuseEstimationProgram(IBRResources<ContextType> resources) throws FileNotFoundException
+    {
+        Program<ContextType> program = resources.getIBRShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/nam2018/estimateDiffuse.frag"))
+            .define("VISIBILITY_TEST_ENABLED", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"))
+            .define("SHADOW_TEST_ENABLED", resources.shadowTextures != null && this.settingsModel.getBoolean("shadowsEnabled"))
+            .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
+            .define("SMITH_MASKING_SHADOWING", ORIGINAL_NAM_METHOD ? 0 : 1)
+            .define("BASIS_COUNT", BASIS_COUNT)
+            .createProgram();
+
         program.setUniform("occlusionBias", this.settingsModel.getFloat("occlusionBias"));
 
         resources.setupShaderProgram(program);
@@ -637,7 +649,7 @@ public class Nam2018Request implements IBRRequest
             .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/nam2018/reconstructImage.frag"))
             .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
-            .define("SMITH_MASKING_SHADOWING", 0)
+            .define("SMITH_MASKING_SHADOWING", ORIGINAL_NAM_METHOD ? 0 : 1)
             .define("BASIS_COUNT", BASIS_COUNT)
             .createProgram();
 
@@ -653,7 +665,7 @@ public class Nam2018Request implements IBRRequest
             .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/nam2018/renderFit.frag"))
             .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
-            .define("SMITH_MASKING_SHADOWING", 0)
+            .define("SMITH_MASKING_SHADOWING", ORIGINAL_NAM_METHOD ? 0 : 1)
             .define("BASIS_COUNT", BASIS_COUNT)
             .createProgram();
 
@@ -1222,7 +1234,7 @@ public class Nam2018Request implements IBRRequest
             float[] halfwayAndGeomAndWeights = framebuffer.readFloatingPointColorBufferRGBA(1);
 
             // Update matrix for each pixel.
-            for (int p = 0; p < width * height; p++)
+            IntStream.range(0, width * height).parallel().forEach(p ->
             {
                 // Skip samples that aren't visible or are otherwise invalid.
                 if (colorAndVisibility[4 * p + 3] > 0)
@@ -1231,6 +1243,11 @@ public class Nam2018Request implements IBRRequest
                     weightsValidity[p] = true;
 
                     // Precalculate frequently used values.
+
+                    // For original Nam 2018 version, weights were optimized against reflectance, not reflected radiance,
+                    // so we don't want to multiply by n dot l when attempting to reproduce that version.
+                    double nDotLSquared = ORIGINAL_NAM_METHOD ? 1.0 : halfwayAndGeomAndWeights[4 * p + 3] * halfwayAndGeomAndWeights[4 * p + 3];
+
                     double weightSquared = halfwayAndGeomAndWeights[4 * p + 2] * halfwayAndGeomAndWeights[4 * p + 2];
                     double geomFactor = halfwayAndGeomAndWeights[4 * p + 1];
                     double mExact = halfwayAndGeomAndWeights[4 * p] * MICROFACET_DISTRIBUTION_RESOLUTION;
@@ -1262,7 +1279,7 @@ public class Nam2018Request implements IBRRequest
                         }
 
                         // Store the weighted product of the basis BRDF and the actual BRDF in the vector.
-                        weightsQTrAugmented[p].set(b1, weightsQTrAugmented[p].get(b1) + weightSquared * f1.dot(fActual));
+                        weightsQTrAugmented[p].set(b1, weightsQTrAugmented[p].get(b1) + weightSquared * nDotLSquared * f1.dot(fActual));
 
                         for (int b2 = 0; b2 < BASIS_COUNT; b2++)
                         {
@@ -1287,11 +1304,11 @@ public class Nam2018Request implements IBRRequest
                             }
 
                             // Store the weighted product of the two BRDFs in the matrix.
-                            weightsQTQAugmented[p].set(b1, b2, weightsQTQAugmented[p].get(b1, b2) + weightSquared * f1.dot(f2));
+                            weightsQTQAugmented[p].set(b1, b2, weightsQTQAugmented[p].get(b1, b2) + weightSquared * nDotLSquared * f1.dot(f2));
                         }
                     }
                 }
-            }
+            });
 
             System.out.println("Finished view " + k + '.');
         }
@@ -1347,7 +1364,7 @@ public class Nam2018Request implements IBRRequest
         diffuseUniformBuffer.setData(diffuseNativeBuffer);
     }
 
-    private <ContextType extends Context<ContextType>> void reconstructNormals(
+    private static <ContextType extends Context<ContextType>> void reconstructNormals(
         Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
     {
         if (DEBUG)
@@ -1367,100 +1384,108 @@ public class Nam2018Request implements IBRRequest
         }
     }
 
-    private DoubleVector3 evaluateBRDF(int p, double encodedHalfAngle, double geomFactor)
-    {
-        DoubleVector3 reflectance = DoubleVector3.ZERO;
-
-        // Calculate which discretized MDF element the current sample belongs to.
-        double mExact = encodedHalfAngle * MICROFACET_DISTRIBUTION_RESOLUTION;
-        int mFloor = Math.min(MICROFACET_DISTRIBUTION_RESOLUTION, (int) Math.floor(mExact));
-
-        // When floor and exact are the same, t = 1.0.  When exact is almost a whole increment greater than floor, t approaches 0.0.
-        // If mFloor is clamped to MICROFACET_DISTRIBUTION_RESOLUTION -1, then mExact will be much larger, so t = 0.0.
-        double t = Math.max(0.0, 1.0 + mFloor - mExact);
-
-        for (int b = 0; b < BASIS_COUNT; b++)
-        {
-            double weight = weightSolutions[p].get(b);
-
-            reflectance = reflectance.plus(diffuseAlbedos[b].times(weight / PI));
-
-            if (mFloor < MICROFACET_DISTRIBUTION_RESOLUTION)
-            {
-                double weightedGeomFactor = weight * geomFactor;
-
-                reflectance = reflectance
-                    .plus(new DoubleVector3(
-                        t * weightedGeomFactor * specularRed.get(mFloor, b),
-                        t * weightedGeomFactor * specularGreen.get(mFloor, b),
-                        t * weightedGeomFactor * specularBlue.get(mFloor, b)))
-                    .plus(new DoubleVector3(
-                        (1 - t) * weightedGeomFactor * specularRed.get(mFloor + 1, b),
-                        (1 - t) * weightedGeomFactor * specularGreen.get(mFloor + 1, b),
-                        (1 - t) * weightedGeomFactor * specularBlue.get(mFloor + 1, b)));
-            }
-            else if (metallicity > 0.0f)
-            {
-                double weightedGeomFactor = weight * geomFactor;
-
-                reflectance = reflectance
-                    .plus(new DoubleVector3(
-                        weightedGeomFactor * specularRed.get(mFloor, b),
-                        weightedGeomFactor * specularGreen.get(mFloor, b),
-                        weightedGeomFactor * specularBlue.get(mFloor, b)));
-            }
-        }
-
-        return reflectance;
-    }
-
-    private <ContextType extends Context<ContextType>> void updateError(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int viewCount)
+    private <ContextType extends Context<ContextType>> void updateError(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
     {
         if (DEBUG)
         {
             System.out.println("Calculating error...");
         }
 
+        // Clear framebuffer
+        framebuffer.clearDepthBuffer();
+        framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+
+        // Run shader program to fill framebuffer with per-pixel error.
+        drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+
+        // Copy framebuffer from GPU to main memory.
+        float[] pixelErrors = framebuffer.readFloatingPointColorBufferRGBA(0);
+
         double errorTotal = 0.0;
         int validCount = 0;
-        double weightedErrorTotal = 0.0;
-        double weightTotal = 0.0;
 
-        for (int k = 0; k < viewCount; k++)
+        // Add up per-pixel error.
+        for (int p = 0; p < width * height; p++)
         {
-            // Clear framebuffer
-            framebuffer.clearDepthBuffer();
-            framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-            framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-
-            // Run shader program to fill framebuffer with per-pixel information.
-            drawable.program().setUniform("viewIndex", k);
-            drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
-
-            // Copy framebuffer from GPU to main memory.
-            float[] colorAndVisibility = framebuffer.readFloatingPointColorBufferRGBA(0);
-            float[] halfwayAndGeomAndWeights = framebuffer.readFloatingPointColorBufferRGBA(1);
-
-            // Update matrix for each pixel.
-            for (int p = 0; p < width * height; p++)
+            if (pixelErrors[4 * p + 3] > 0)
             {
-                if (colorAndVisibility[4 * p + 3] > 0)
-                {
-                    DoubleVector3 fEstimate = evaluateBRDF(p, halfwayAndGeomAndWeights[4 * p], halfwayAndGeomAndWeights[4 * p + 1]);
-                    DoubleVector3 fActual = new DoubleVector3(colorAndVisibility[4 * p], colorAndVisibility[4 * p + 1], colorAndVisibility[4 * p + 2]);
-                    DoubleVector3 diff = fEstimate.minus(fActual);
-
-                    double sqError = diff.dot(diff);
-                    errorTotal += sqError;
-                    validCount++;
-                    weightedErrorTotal += halfwayAndGeomAndWeights[4 * p + 2] * halfwayAndGeomAndWeights[4 * p + 2] * sqError;
-                    weightTotal += halfwayAndGeomAndWeights[4 * p + 2] * halfwayAndGeomAndWeights[4 * p + 2];
-                }
+                errorTotal += pixelErrors[4 * p];
+                validCount += pixelErrors[4 * p + 3];
             }
         }
 
-        error = Math.sqrt(errorTotal / (3 * validCount));
-        weightedError = Math.sqrt(weightedErrorTotal / (3 * weightTotal));
+        error = Math.sqrt(errorTotal / validCount);
+    }
+
+    private void fillHoles()
+    {
+        // Fill holes
+        // TODO Quick hack; should be replaced with something more robust.
+        System.out.println("Filling holes...");
+
+        for (int i = 0; i < 64; i++)
+        {
+            Collection<Integer> filledPositions = new HashSet<>(256);
+            for (int p = 0; p < weightsValidity.length; p++)
+            {
+                if (!weightsValidity[p])
+                {
+                    int left = (weightsValidity.length + p - 1) % weightsValidity.length;
+                    int right = (p + 1) % weightsValidity.length;
+                    int up = (weightsValidity.length + p - width) % weightsValidity.length;
+                    int down = (p + width) % weightsValidity.length;
+
+                    int count = 0;
+
+                    for (int b = 0; b < BASIS_COUNT; b++)
+                    {
+                        count = 0;
+                        double sum = 0.0;
+
+                        if (weightsValidity[left])
+                        {
+                            sum += weightSolutions[left].get(b);
+                            count++;
+                        }
+
+                        if (weightsValidity[right])
+                        {
+                            sum += weightSolutions[right].get(b);
+                            count++;
+                        }
+
+                        if (weightsValidity[up])
+                        {
+                            sum += weightSolutions[up].get(b);
+                            count++;
+                        }
+
+                        if (weightsValidity[down])
+                        {
+                            sum += weightSolutions[down].get(b);
+                            count++;
+                        }
+
+                        if (sum > 0.0)
+                        {
+                            weightSolutions[p].set(b, sum / count);
+                        }
+                    }
+
+                    if (count > 0)
+                    {
+                        filledPositions.add(p);
+                    }
+                }
+            }
+
+            for (int p : filledPositions)
+            {
+                weightsValidity[p] = true;
+            }
+        }
+
+        System.out.println("DONE!");
     }
 
     private <ContextType extends Context<ContextType>> void saveBasisFunctions(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
@@ -1575,7 +1600,7 @@ public class Nam2018Request implements IBRRequest
 
         try
         {
-            ImageIO.write(diffuseImg, "PNG", new File(outputDirectory, "diffuse.png"));
+            ImageIO.write(diffuseImg, "PNG", new File(outputDirectory, "diffuse_frombasis.png"));
         }
         catch (IOException e)
         {
