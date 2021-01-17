@@ -41,7 +41,8 @@ void main()
     float nDotL = max(0.0, dot(normal, light));
     float nDotV = max(0.0, dot(normal, view));
     float hDotV = max(0.0, dot(halfway, view));
-    float roughness = texture(roughnessEstimate, fTexCoord)[0];
+    float sqrtRoughness = texture(roughnessEstimate, fTexCoord)[0];
+    float roughness = sqrtRoughness * sqrtRoughness;
     float geomRatio;
 
     if (nDotL > 0.0 && nDotV > 0.0)
@@ -68,7 +69,7 @@ void main()
         else
         {
             // Limit as n dot l and n dot v both go to zero.
-            vec3 mfd = 0 * getMFDEstimate(nDotH) / filteredMask;
+            vec3 mfd = getMFDEstimate(nDotH) / filteredMask;
             fragColor = vec4(pow(incidentRadiance * mfd * 0.5 / roughness, vec3(1.0 / gamma)), 1.0);
         }
     }

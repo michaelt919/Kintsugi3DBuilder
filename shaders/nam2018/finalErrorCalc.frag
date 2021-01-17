@@ -16,6 +16,8 @@
 #include "evaluateBRDF.glsl"
 #line 18 0
 
+uniform sampler2D diffuseEstimate;
+
 uniform float errorGamma;
 
 layout(location = 0) out vec4 errorOut;
@@ -26,7 +28,7 @@ void main()
     float filteredMask = sqrtRoughness_Mask[1];
 
     float roughness = sqrtRoughness_Mask[0] * sqrtRoughness_Mask[0];
-    vec3 diffuseColor = getDiffuseEstimate();
+    vec3 diffuseColor = pow(clamp(texture(diffuseEstimate, fTexCoord).rgb, 0, 1), vec3(gamma));
 
     vec3 triangleNormal = normalize(fNormal);
 
@@ -67,7 +69,6 @@ void main()
         {
             float hDotV = max(0.0, dot(halfway, view));
             float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-//            vec3 reflectanceEstimate = getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV));
             vec3 specular = getMFDEstimate(nDotH) * maskingShadowing / (4 * nDotV);
             vec3 reflectanceEstimateTimesNDotL = pow(diffuseColor * nDotL / PI + specular, vec3(1 / errorGamma));
 

@@ -19,28 +19,10 @@ layout(location = 0) out vec4 fragColor;
 
 uniform sampler2D diffuseEstimate;
 uniform sampler2D specularEstimate;
-uniform sampler2DArray weightMaps;
 
 #ifndef BASIS_COUNT
 #define BASIS_COUNT 8
 #endif
-
-layout(std140) uniform DiffuseColors
-{
-    vec4 diffuseColors[BASIS_COUNT];
-};
-
-vec3 getDiffuseEstimate()
-{
-    vec3 estimate = vec3(0);
-
-    for (int b = 0; b < BASIS_COUNT; b++)
-    {
-        estimate += texture(weightMaps, vec3(fTexCoord, b))[0] * diffuseColors[b].rgb;
-    }
-
-    return estimate;
-}
 
 void main()
 {

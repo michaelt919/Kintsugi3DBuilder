@@ -19,6 +19,7 @@ layout(location = 1) out vec4 sqrtRoughness;
 uniform sampler2DArray weightMaps;
 uniform sampler2D weightMask;
 uniform sampler1DArray basisFunctions;
+uniform float fittingGamma;
 
 #ifndef PI
 #define PI 3.1415926535897932384626433832795
@@ -72,11 +73,11 @@ void main()
         vec3 numerator = (1.0 - nDotHSq) * sqrt(f);
         vec3 denominator = sqrt(f0) - nDotHSq * sqrt(f);
 
-        sumNumerator += pow(numerator * denominator, vec3(1.0 / gamma));
-        sumDenominator += pow(denominator * denominator, vec3(1.0 / gamma));
+        sumNumerator += pow(numerator * denominator, vec3(1.0 / fittingGamma));
+        sumDenominator += pow(denominator * denominator, vec3(1.0 / fittingGamma));
     }
 
-    vec3 fresnel = PI * f0 * pow(sumNumerator / sumDenominator, vec3(gamma));
+    vec3 fresnel = PI * f0 * pow(sumNumerator / sumDenominator, vec3(fittingGamma));
     float roughnessSq = getLuminance(fresnel) / getLuminance(PI * f0);
     float roughness = sqrt(roughnessSq);
 

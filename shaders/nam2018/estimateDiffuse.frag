@@ -20,6 +20,9 @@ layout(location = 0) out vec4 diffuseOut;
 
 void main()
 {
+    float sqrtRoughness = texture(roughnessEstimate, fTexCoord)[0];
+    float roughness = sqrtRoughness * sqrtRoughness;
+
     vec3 triangleNormal = normalize(fNormal);
 
     vec3 tangent = normalize(fTangent - dot(triangleNormal, fTangent) * triangleNormal);
@@ -57,18 +60,15 @@ void main()
             if (nDotH > 0.0 && nDotL > 0.0 && nDotV > 0.0)
             {
                 float hDotV = max(0.0, dot(halfway, view));
-
-                float roughness = texture(roughnessEstimate, fTexCoord)[0];
                 float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-
                 vec3 specularEstimate = getMFDEstimate(nDotH) * maskingShadowing / (4 * nDotV);
 
-                vec3 diffuse = max(vec3(0.0), PI * (actualReflectanceTimesNDotL - specularEstimate));
+                vec3 diffuse = PI * (actualReflectanceTimesNDotL - specularEstimate); // could be negative
 //                diffuseSum += vec4(pow(vec4(diffuse, nDotL), vec4(1.0 / gamma)));
-                diffuseSum += vec4(diffuse, nDotL);
+                diffuseSum += vec4(diffuse * nDotL * triangleNDotV, nDotL * nDotL * triangleNDotV);
             }
         }
     }
 
-    diffuseOut = vec4(pow(diffuseSum.rgb / diffuseSum.a, vec3(1.0 / gamma)), 1.0);
+    diffuseOut = vec4(pow(max(vec3(0), diffuseSum.rgb / diffuseSum.a), vec3(1.0 / gamma)), 1.0);
 }

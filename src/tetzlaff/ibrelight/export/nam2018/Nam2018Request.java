@@ -41,6 +41,7 @@ import static java.lang.Math.PI;
 public class Nam2018Request implements IBRRequest
 {
     static final boolean ORIGINAL_NAM_METHOD = false;
+    static final boolean USE_LEVENBERG_MARQUARDT = !ORIGINAL_NAM_METHOD;
 
     static final int BASIS_COUNT = 8;
     static final int MICROFACET_DISTRIBUTION_RESOLUTION = 90;
@@ -163,7 +164,13 @@ public class Nam2018Request implements IBRRequest
             Program<ContextType> initialNormalEstimationProgram = createInitialNormalEstimationProgram(resources);
             Program<ContextType> normalEstimationProgram = createNormalEstimationProgram(resources);
             Program<ContextType> diffuseEstimationProgram = createDiffuseEstimationProgram(resources);
+            Program<ContextType> diffuseHoleFillProgram = resources.context.getShaderProgramBuilder()
+                .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
+                .addShader(ShaderType.FRAGMENT, new File("shaders/texturefit/holefill.frag"))
+                .createProgram();
             Program<ContextType> errorCalcProgram = createErrorCalcProgram(resources);
+            Program<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(resources);
+            Program<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(resources);
             Program<ContextType> imageReconstructionProgram = createImageReconstructionProgram(resources);
             Program<ContextType> fittedImageReconstructionProgram = createFittedImageReconstructionProgram(resources);
             Program<ContextType> basisImageProgram = resources.context.getShaderProgramBuilder()
@@ -201,6 +208,10 @@ public class Nam2018Request implements IBRRequest
             FramebufferObject<ContextType> specularTexFramebuffer = resources.context.buildFramebufferObject(width, height)
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGBA8).setLinearFilteringEnabled(true))
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGBA8).setLinearFilteringEnabled(true))
+                .createFramebufferObject();
+            FramebufferObject<ContextType> diffuseHoleFillFramebuffer = resources.context.buildFramebufferObject(width, height)
+                .addColorAttachment(ColorFormat.RGBA32F)
+                .addColorAttachment(ColorFormat.RGBA32F)
                 .createFramebufferObject();
             Texture3D<ContextType> weightMaps = resources.context.getTextureFactory().build2DColorTextureArray(width, height, BASIS_COUNT)
                 .setInternalFormat(ColorFormat.R32F)
@@ -251,6 +262,7 @@ public class Nam2018Request implements IBRRequest
             errorCalcProgram.setTexture("basisFunctions", basisMaps);
             errorCalcProgram.setTexture("weightMaps", weightMaps);
             errorCalcProgram.setUniformBuffer("DiffuseColors", diffuseUniformBuffer);
+            errorCalcProgram.setUniform("errorGamma", 1.0f);
 
             Drawable<ContextType> basisImageDrawable = resources.context.createDrawable(basisImageProgram);
             basisImageDrawable.addVertexBuffer("position", rect);
@@ -262,6 +274,7 @@ public class Nam2018Request implements IBRRequest
             specularFitProgram.setTexture("weightMaps", weightMaps);
             specularFitProgram.setTexture("weightMask", weightMask);
             specularFitProgram.setTexture("basisFunctions", basisMaps);
+            specularFitProgram.setUniform("fittingGamma", 1.0f);
 
             // Set initial assumption for roughness when calculating masking/shadowing.
             specularTexFramebuffer.clearColorBuffer(1, 1.0f, 1.0f, 1.0f,1.0f);
@@ -313,13 +326,13 @@ public class Nam2018Request implements IBRRequest
 
                 reconstructWeights(reflectanceDrawable, framebuffer, viewCount);
 
-                // Calculate the error for debugging.
+                // Calculate the error in preparation for normal estimation.
+                double previousErrorLocal = error;
+//                    double previousWeightedErrorLocal = weightedError;
+                updateError(errorCalcDrawable, imageReconstructionFramebuffer);
+
                 if (DEBUG)
                 {
-                    double previousErrorLocal = error;
-//                    double previousWeightedErrorLocal = weightedError;
-                    updateError(errorCalcDrawable, imageReconstructionFramebuffer);
-
                     System.out.println("--------------------------------------------------");
                     System.out.println("Error: " + error);
                     System.out.println("(Previous error: " + previousErrorLocal + ')');
@@ -338,7 +351,7 @@ public class Nam2018Request implements IBRRequest
                     frontNormalFramebuffer.clearColorBuffer(1, 1.0f, 1.0f, 1.0f, 1.0f);
 
                     // Keep track of whether each normal update is actually an improvement.
-                    double previousErrorLocal = error;
+                    previousErrorLocal = error;
 //                    double previousWeightedErrorLocal = weightedError;
 
 //                    float lastSuccessfulDampingFactor = 0.0f;
@@ -429,7 +442,7 @@ public class Nam2018Request implements IBRRequest
 //                            dampingFactor /= 2.0f;
                         }
                     }
-                    while (!ORIGINAL_NAM_METHOD && error <= previousErrorLocal && unsuccessfulIterations < 8 /*&& dampingFactor <= 256.0f*/);
+                    while (USE_LEVENBERG_MARQUARDT && error <= previousErrorLocal && unsuccessfulIterations < 8 /*&& dampingFactor <= 256.0f*/);
 
                     if (error > previousErrorLocal)
                     {
@@ -458,68 +471,120 @@ public class Nam2018Request implements IBRRequest
             }
             while (/*previousWeightedError - weightedError > CONVERGENCE_TOLERANCE*/ previousError - error > CONVERGENCE_TOLERANCE);
 
-            fillHoles();
-            updateGraphicsResources(weightMaps, weightMask, basisMaps, diffuseUniformBuffer);
-
-            saveBasisFunctions(basisImageDrawable, basisImageFramebuffer);
-            saveWeightMaps();
-            saveDiffuseMap();
-            saveNormalMap(frontNormalFramebuffer);
-
-            // Diffuse fit
-            Drawable<ContextType> diffuseFitDrawable = createDrawable(diffuseEstimationProgram, resources);
-            diffuseEstimationProgram.setTexture("basisFunctions", basisMaps);
-            diffuseEstimationProgram.setTexture("weightMaps", weightMaps);
-            diffuseEstimationProgram.setTexture("weightMask", weightMask);
-            diffuseEstimationProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
-            diffuseEstimationProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
-            framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-            diffuseFitDrawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
-
-            try
+            try (PrintStream rmseOut = new PrintStream(new File(outputDirectory, "rmse.txt")))
             {
-                framebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, "diffuse.png"));
+                rmseOut.println("Previously calculated RMSE: " + error);
+
+                updateGraphicsResources(weightMaps, weightMask, basisMaps, diffuseUniformBuffer);
+                updateError(errorCalcDrawable, imageReconstructionFramebuffer);
+                rmseOut.println("RMSE before hole fill: " + error);
+
+                fillHoles();
+                updateGraphicsResources(weightMaps, weightMask, basisMaps, diffuseUniformBuffer);
+
+                updateError(errorCalcDrawable, imageReconstructionFramebuffer);
+                rmseOut.println("RMSE after hole fill: " + error);
+
+                errorCalcProgram.setUniform("errorGamma", 2.2f);
+                updateError(errorCalcDrawable, imageReconstructionFramebuffer);
+                rmseOut.println("RMSE after hole fill (gamma-corrected): " + error);
+
+                saveBasisFunctions(basisImageDrawable, basisImageFramebuffer);
+                saveWeightMaps();
+                saveDiffuseMap();
+                saveNormalMap(frontNormalFramebuffer);
+
+                // Diffuse fit
+                Drawable<ContextType> diffuseFitDrawable = createDrawable(diffuseEstimationProgram, resources);
+                diffuseEstimationProgram.setTexture("basisFunctions", basisMaps);
+                diffuseEstimationProgram.setTexture("weightMaps", weightMaps);
+                diffuseEstimationProgram.setTexture("weightMask", weightMask);
+                diffuseEstimationProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
+                diffuseEstimationProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
+                framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+                diffuseFitDrawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+
+                Drawable<ContextType> diffuseHoleFillDrawable = resources.context.createDrawable(diffuseHoleFillProgram);
+                diffuseHoleFillDrawable.addVertexBuffer("position", rect);
+                FramebufferObject<ContextType> finalDiffuse = fillHolesShader(diffuseHoleFillDrawable, framebuffer, diffuseHoleFillFramebuffer);
+
+                try
+                {
+                    finalDiffuse.saveColorBufferToFile(0, "PNG", new File(outputDirectory, "diffuse.png"));
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+
+                Drawable<ContextType> finalErrorCalcDrawable = createDrawable(finalErrorCalcProgram, resources);
+                finalErrorCalcProgram.setTexture("basisFunctions", basisMaps);
+                finalErrorCalcProgram.setTexture("weightMaps", weightMaps);
+                finalErrorCalcProgram.setTexture("weightMask", weightMask);
+                finalErrorCalcProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
+                finalErrorCalcProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
+                finalErrorCalcProgram.setTexture("diffuseEstimate", finalDiffuse.getColorAttachmentTexture(0));
+                finalErrorCalcProgram.setUniform("errorGamma", 1.0f);
+
+                updateError(finalErrorCalcDrawable, imageReconstructionFramebuffer);
+                rmseOut.println("RMSE after final diffuse estimate: " + error);
+
+                finalErrorCalcProgram.setUniform("errorGamma", 2.2f);
+                updateError(finalErrorCalcDrawable, imageReconstructionFramebuffer);
+                rmseOut.println("RMSE after final diffuse estimate (gamma-corrected): " + error);
+
+                Drawable<ContextType> ggxErrorCalcDrawable = createDrawable(ggxErrorCalcProgram, resources);
+                ggxErrorCalcProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
+                ggxErrorCalcProgram.setTexture("specularEstimate", specularTexFramebuffer.getColorAttachmentTexture(0));
+                ggxErrorCalcProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
+                ggxErrorCalcProgram.setTexture("diffuseEstimate", finalDiffuse.getColorAttachmentTexture(0));
+                ggxErrorCalcProgram.setUniform("errorGamma", 1.0f);
+                updateError(ggxErrorCalcDrawable, imageReconstructionFramebuffer);
+                rmseOut.println("RMSE for GGX fit: " + error);
+
+                ggxErrorCalcProgram.setUniform("errorGamma", 2.2f);
+                updateError(ggxErrorCalcDrawable, imageReconstructionFramebuffer);
+                rmseOut.println("RMSE for GGX fit (gamma-corrected): " + error);
+
+                // Render and save images using more accurate basis function reconstruction.
+                Drawable<ContextType> imageReconstructionDrawable = createDrawable(imageReconstructionProgram, resources);
+                imageReconstructionProgram.setTexture("basisFunctions", basisMaps);
+                imageReconstructionProgram.setTexture("weightMaps", weightMaps);
+                imageReconstructionProgram.setTexture("weightMask", weightMask);
+                imageReconstructionProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
+                imageReconstructionProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
+                imageReconstructionProgram.setTexture("diffuseEstimate", finalDiffuse.getColorAttachmentTexture(0));
+
+                reconstructImages(imageReconstructionDrawable, imageReconstructionFramebuffer, resources.viewSet, "reconstructions");
+
+                // Fit specular textures after filling holes
+                specularTexFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f,0.0f);
+                specularTexFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f,0.0f);
+                specularFitDrawable.draw(PrimitiveMode.TRIANGLE_FAN, specularTexFramebuffer);
+
+                try
+                {
+                    specularTexFramebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, "specular.png"));
+                    specularTexFramebuffer.saveColorBufferToFile(1, "PNG", new File(outputDirectory, "roughness.png"));
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+
+                // Render and save images using parameterized fit.
+                Drawable<ContextType> fittedImageReconstructionDrawable = createDrawable(fittedImageReconstructionProgram, resources);
+                fittedImageReconstructionProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
+                fittedImageReconstructionProgram.setTexture("specularEstimate", specularTexFramebuffer.getColorAttachmentTexture(0));
+                fittedImageReconstructionProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
+                fittedImageReconstructionProgram.setTexture("diffuseEstimate", finalDiffuse.getColorAttachmentTexture(0));
+
+                reconstructImages(fittedImageReconstructionDrawable, imageReconstructionFramebuffer, resources.viewSet, "fitted");
             }
-            catch (IOException e)
+            catch (FileNotFoundException e)
             {
                 e.printStackTrace();
             }
-
-            // Render and save images using more accurate basis function reconstruction.
-            Drawable<ContextType> imageReconstructionDrawable = createDrawable(imageReconstructionProgram, resources);
-            imageReconstructionProgram.setTexture("basisFunctions", basisMaps);
-            imageReconstructionProgram.setTexture("weightMaps", weightMaps);
-            imageReconstructionProgram.setTexture("weightMask", weightMask);
-            imageReconstructionProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
-            imageReconstructionProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
-            imageReconstructionProgram.setTexture("diffuseEstimate", framebuffer.getColorAttachmentTexture(0));
-
-            reconstructImages(imageReconstructionDrawable, imageReconstructionFramebuffer, resources.viewSet, "reconstructions");
-
-            // Fit specular textures after filling holes
-            specularTexFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f,0.0f);
-            specularTexFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f,0.0f);
-            specularFitDrawable.draw(PrimitiveMode.TRIANGLE_FAN, specularTexFramebuffer);
-
-            try
-            {
-                specularTexFramebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, "specular.png"));
-                specularTexFramebuffer.saveColorBufferToFile(1, "PNG", new File(outputDirectory, "roughness.png"));
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
-
-            // Render and save images using parameterized fit.
-            Drawable<ContextType> fittedImageReconstructionDrawable = createDrawable(fittedImageReconstructionProgram, resources);
-            fittedImageReconstructionProgram.setTexture("weightMaps", weightMaps);
-            fittedImageReconstructionProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
-            fittedImageReconstructionProgram.setTexture("specularEstimate", specularTexFramebuffer.getColorAttachmentTexture(0));
-            fittedImageReconstructionProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
-            fittedImageReconstructionProgram.setTexture("diffuseEstimate", framebuffer.getColorAttachmentTexture(0));
-
-            reconstructImages(fittedImageReconstructionDrawable, imageReconstructionFramebuffer, resources.viewSet, "fitted");
         }
         catch(FileNotFoundException e) // thrown by createReflectanceProgram
         {
@@ -594,7 +659,7 @@ public class Nam2018Request implements IBRRequest
             .define("SHADOW_TEST_ENABLED", resources.shadowTextures != null && this.settingsModel.getBoolean("shadowsEnabled"))
             .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
             .define("SMITH_MASKING_SHADOWING", ORIGINAL_NAM_METHOD ? 0 : 1)
-            .define("USE_LEVENBERG_MARQUARDT", ORIGINAL_NAM_METHOD ? 0 : 1)
+            .define("USE_LEVENBERG_MARQUARDT", USE_LEVENBERG_MARQUARDT ? 1 : 0)
             .define("BASIS_COUNT", BASIS_COUNT)
             .createProgram();
 
@@ -611,6 +676,40 @@ public class Nam2018Request implements IBRRequest
         Program<ContextType> program = resources.getIBRShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/colorappearance/imgspace_multi_as_single.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/nam2018/errorCalc.frag"))
+            .define("VISIBILITY_TEST_ENABLED", 0)
+            .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
+            .define("SMITH_MASKING_SHADOWING", ORIGINAL_NAM_METHOD ? 0 : 1)
+            .define("BASIS_COUNT", BASIS_COUNT)
+            .createProgram();
+
+        resources.setupShaderProgram(program);
+
+        return program;
+    }
+
+    private static <ContextType extends Context<ContextType>>
+    Program<ContextType> createFinalErrorCalcProgram(IBRResources<ContextType> resources) throws FileNotFoundException
+    {
+        Program<ContextType> program = resources.getIBRShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, new File("shaders/colorappearance/imgspace_multi_as_single.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/nam2018/finalErrorCalc.frag"))
+            .define("VISIBILITY_TEST_ENABLED", 0)
+            .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
+            .define("SMITH_MASKING_SHADOWING", ORIGINAL_NAM_METHOD ? 0 : 1)
+            .define("BASIS_COUNT", BASIS_COUNT)
+            .createProgram();
+
+        resources.setupShaderProgram(program);
+
+        return program;
+    }
+
+    private static <ContextType extends Context<ContextType>>
+    Program<ContextType> createGGXErrorCalcProgram(IBRResources<ContextType> resources) throws FileNotFoundException
+    {
+        Program<ContextType> program = resources.getIBRShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, new File("shaders/colorappearance/imgspace_multi_as_single.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/nam2018/ggxErrorCalc.frag"))
             .define("VISIBILITY_TEST_ENABLED", 0)
             .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
             .define("SMITH_MASKING_SHADOWING", ORIGINAL_NAM_METHOD ? 0 : 1)
@@ -1417,13 +1516,33 @@ public class Nam2018Request implements IBRRequest
         error = Math.sqrt(errorTotal / validCount);
     }
 
+    private <ContextType extends Context<ContextType>>
+    FramebufferObject<ContextType> fillHolesShader(Drawable<ContextType> holeFillDrawable, FramebufferObject<ContextType> initFrontFramebuffer,
+        FramebufferObject<ContextType> initBackFramebuffer)
+    {
+        FramebufferObject<ContextType> frontFramebuffer = initFrontFramebuffer;
+        FramebufferObject<ContextType> backFramebuffer = initBackFramebuffer;
+
+        for (int i = 0; i < Math.max(width, height); i++)
+        {
+            holeFillDrawable.program().setTexture("input0", frontFramebuffer.getColorAttachmentTexture(0));
+            holeFillDrawable.draw(PrimitiveMode.TRIANGLE_FAN, backFramebuffer);
+
+            FramebufferObject<ContextType> tmp = frontFramebuffer;
+            frontFramebuffer = backFramebuffer;
+            backFramebuffer = tmp;
+        }
+
+        return frontFramebuffer;
+    }
+
     private void fillHoles()
     {
         // Fill holes
         // TODO Quick hack; should be replaced with something more robust.
         System.out.println("Filling holes...");
 
-        for (int i = 0; i < 64; i++)
+        for (int i = 0; i < Math.max(width, height); i++)
         {
             Collection<Integer> filledPositions = new HashSet<>(256);
             for (int p = 0; p < weightsValidity.length; p++)

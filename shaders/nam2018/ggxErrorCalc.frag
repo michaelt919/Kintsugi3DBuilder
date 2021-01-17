@@ -1,7 +1,7 @@
 #version 330
 
 /*
- *  Copyright (c) Michael Tetzlaff 2020
+ *  Copyright (c) Michael Tetzlaff 2021
  *  Copyright (c) The Regents of the University of Minnesota 2019
  *
  *  Licensed under GPLv3
@@ -13,8 +13,10 @@
  */
 
 #include "nam2018.glsl"
-#include "evaluateBRDF.glsl"
-#line 18 0
+#line 17 0
+
+uniform sampler2D diffuseEstimate;
+uniform sampler2D specularEstimate;
 
 uniform float errorGamma;
 
@@ -26,7 +28,9 @@ void main()
     float filteredMask = sqrtRoughness_Mask[1];
 
     float roughness = sqrtRoughness_Mask[0] * sqrtRoughness_Mask[0];
-    vec3 diffuseColor = getDiffuseEstimate();
+
+    vec3 diffuseColor = pow(clamp(texture(diffuseEstimate, fTexCoord).rgb, 0, 1), vec3(gamma));
+    vec3 specularColor = pow(texture(specularEstimate, fTexCoord).rgb, vec3(gamma));
 
     vec3 triangleNormal = normalize(fNormal);
 
@@ -66,11 +70,13 @@ void main()
         if (nDotH > 0.0 && nDotL > 0.0 && nDotV > 0.0 && filteredMask > 0.0)
         {
             float hDotV = max(0.0, dot(halfway, view));
-            float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-//            vec3 reflectanceEstimate = getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV));
-            vec3 specular = getMFDEstimate(nDotH) * maskingShadowing / (4 * nDotV);
-            vec3 reflectanceEstimateTimesNDotL = pow(diffuseColor * nDotL / PI + specular, vec3(1 / errorGamma));
 
+            vec3 specular = 1 / PI * distTimesPi(nDotH, vec3(roughness))
+                * geom(roughness, nDotH, nDotV, nDotL, hDotV)
+                * fresnel(specularColor.rgb, vec3(1), hDotV) / (4 * nDotV);
+
+            // Reflectance is implicitly multiplied by n dot l.
+            vec3 reflectanceEstimateTimesNDotL = pow(diffuseColor * nDotL + specular, vec3(1 / errorGamma));
             vec3 diff = actualReflectanceTimesNDotL - reflectanceEstimateTimesNDotL;
             error += weight * dot(diff, diff);
         }
