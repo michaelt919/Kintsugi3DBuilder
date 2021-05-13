@@ -41,7 +41,7 @@ import static java.lang.Math.PI;
 /**
  * Implement specular fit using algorithm described by Nam et al., 2018
  */
-public class SpecularFitRequest implements IBRRequest
+public class SpecularFitRequest extends TextureFitRequest
 {
     static final boolean ORIGINAL_NAM_METHOD = false;
     static final boolean USE_LEVENBERG_MARQUARDT = !ORIGINAL_NAM_METHOD;
@@ -60,14 +60,9 @@ public class SpecularFitRequest implements IBRRequest
     private static final boolean DEBUG = true;
     private static final int MAX_RUNNING_THREADS = 5;
 
-    private final int width;
-    private final int height;
-    private final File outputDirectory;
-    private final ReadonlySettingsModel settingsModel;
     private static final double METALLICITY = 0.0f; // Implemented and minimally tested but doesn't seem to make much difference.
 
     private double error = Double.POSITIVE_INFINITY;
-//    private double weightedError = Double.POSITIVE_INFINITY;
 
     private final SimpleMatrix brdfATA = new SimpleMatrix(BRDF_MATRIX_SIZE, BRDF_MATRIX_SIZE, DMatrixRMaj.class);
     private final SimpleMatrix brdfATyRed = new SimpleMatrix(BRDF_MATRIX_SIZE, 1, DMatrixRMaj.class);
@@ -88,10 +83,7 @@ public class SpecularFitRequest implements IBRRequest
 
     public SpecularFitRequest(int width, int height, File outputDirectory, ReadonlySettingsModel settingsModel)
     {
-        this.width = width;
-        this.height = height;
-        this.outputDirectory = outputDirectory;
-        this.settingsModel = settingsModel;
+        super(width, height, outputDirectory, settingsModel);
 
         weightSolutions = IntStream.range(0, width * height)
             .mapToObj(p -> new SimpleMatrix(BASIS_COUNT + 1, 1, DMatrixRMaj.class))
@@ -128,9 +120,11 @@ public class SpecularFitRequest implements IBRRequest
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback)
     {
+        // Get GPU resources and disable back face culling since we're rendering in texture space
         IBRResources<ContextType> resources = renderable.getResources();
         resources.context.getState().disableBackFaceCulling();
 
+        // Calculate reasonable image resolution for reconstructed images (supplemental output)
         Projection defaultProj = resources.viewSet.getCameraProjection(resources.viewSet.getCameraProjectionIndex(
             resources.viewSet.getPrimaryViewIndex()));
 
@@ -150,34 +144,66 @@ public class SpecularFitRequest implements IBRRequest
 
         try
         (
-            Program<ContextType> averageProgram = createAverageProgram(resources);
-            Program<ContextType> reflectanceProgram = createReflectanceProgram(resources);
-            Program<ContextType> normalEstimationProgram = createNormalEstimationProgram(resources);
-            Program<ContextType> diffuseEstimationProgram = createDiffuseEstimationProgram(resources);
-            Program<ContextType> diffuseHoleFillProgram = resources.context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/holefill.frag"))
-                .createProgram();
+            // Shader programs
+            Program<ContextType> reflectanceProgram = createReflectanceProgram(resources); // Extract reflectance and other geometric info
+
+            // Compare fitted models against actual photographs
             Program<ContextType> errorCalcProgram = createErrorCalcProgram(resources);
             Program<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(resources);
             Program<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(resources);
+
+            // Reconstruct images as supplemental output
             Program<ContextType> imageReconstructionProgram = createImageReconstructionProgram(resources);
             Program<ContextType> fittedImageReconstructionProgram = createFittedImageReconstructionProgram(resources);
-            Program<ContextType> basisImageProgram = resources.context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/basisImage.frag"))
-                .createProgram();
-            Program<ContextType> specularFitProgram = resources.context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/specularFit.frag"))
-                .define("BASIS_COUNT", BASIS_COUNT)
-                .define("MICROFACET_DISTRIBUTION_RESOLUTION", MICROFACET_DISTRIBUTION_RESOLUTION)
-                .createProgram();
+
+            // Rectangle vertex buffer
             VertexBuffer<ContextType> rect = resources.context.createRectangle();
+
+            // Framebuffers
+
+            // Framebuffer used for extracting reflectance and related geometric data
             FramebufferObject<ContextType> framebuffer = resources.context.buildFramebufferObject(width, height)
                 .addColorAttachment(ColorFormat.RGBA32F)
                 .addColorAttachment(ColorFormat.RGBA32F)
                 .createFramebufferObject();
+
+            // Framebuffer for reconstructing 3D renderings of the object
+            FramebufferObject<ContextType> imageReconstructionFramebuffer =
+                resources.context.buildFramebufferObject(imageWidth, imageHeight)
+                    .addColorAttachment(ColorFormat.RGBA32F)
+                    .addDepthAttachment()
+                    .createFramebufferObject();
+
+
+            // Resources specific to this technique:
+
+            Program<ContextType> averageProgram = createAverageProgram(resources); // For K-means clustering
+
+            // Estimation programs
+            Program<ContextType> normalEstimationProgram = createNormalEstimationProgram(resources);
+            Program<ContextType> diffuseEstimationProgram = createDiffuseEstimationProgram(resources);
+
+            // Hole fill program
+            Program<ContextType> diffuseHoleFillProgram = resources.context.getShaderProgramBuilder()
+                .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
+                .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/holefill.frag"))
+                .createProgram();
+
+            // Draw basis functions as supplemental output
+            Program<ContextType> basisImageProgram = resources.context.getShaderProgramBuilder()
+                .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
+                .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/basisImage.frag"))
+                .createProgram();
+
+            // Fit specular parameters from weighted basis functions
+            Program<ContextType> specularRoughnessFitProgram = resources.context.getShaderProgramBuilder()
+                .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
+                .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/specularRoughnessFit.frag"))
+                .define("BASIS_COUNT", BASIS_COUNT)
+                .define("MICROFACET_DISTRIBUTION_RESOLUTION", MICROFACET_DISTRIBUTION_RESOLUTION)
+                .createProgram();
+
+            // Framebuffers (double-buffered) for estimating normals on the GPU
             FramebufferObject<ContextType> normalFramebuffer1 = resources.context.buildFramebufferObject(width, height)
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F).setLinearFilteringEnabled(true))
                 .addColorAttachment(ColorFormat.R32F) // Damping factor while fitting
@@ -186,23 +212,27 @@ public class SpecularFitRequest implements IBRRequest
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F).setLinearFilteringEnabled(true))
                 .addColorAttachment(ColorFormat.R32F) // Damping factor while fitting
                 .createFramebufferObject();
-            FramebufferObject<ContextType> imageReconstructionFramebuffer =
-                resources.context.buildFramebufferObject(imageWidth, imageHeight)
-                    .addColorAttachment(ColorFormat.RGBA32F)
-                    .addDepthAttachment()
-                    .createFramebufferObject();
+
+            // Framebuffer for visualizing the basis functions
             FramebufferObject<ContextType> basisImageFramebuffer = resources.context.buildFramebufferObject(
-                    2 * MICROFACET_DISTRIBUTION_RESOLUTION + 1, 2 * MICROFACET_DISTRIBUTION_RESOLUTION + 1)
+                2 * MICROFACET_DISTRIBUTION_RESOLUTION + 1, 2 * MICROFACET_DISTRIBUTION_RESOLUTION + 1)
                 .addColorAttachment(ColorFormat.RGBA8)
                 .createFramebufferObject();
+
+            // Framebuffer for fitting and storing the specular parameter estimates (specular Fresnel color and roughness)
             FramebufferObject<ContextType> specularTexFramebuffer = resources.context.buildFramebufferObject(width, height)
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGBA8).setLinearFilteringEnabled(true))
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGBA8).setLinearFilteringEnabled(true))
                 .createFramebufferObject();
+
+            // Framebuffer for filling holes
+            // This framebuffer is used to double-buffer another primary framebuffer
             FramebufferObject<ContextType> diffuseHoleFillFramebuffer = resources.context.buildFramebufferObject(width, height)
                 .addColorAttachment(ColorFormat.RGBA32F)
                 .addColorAttachment(ColorFormat.RGBA32F)
                 .createFramebufferObject();
+
+            // Textures calculated on CPU and passed to GPU (not framebuffers)
             Texture3D<ContextType> weightMaps = resources.context.getTextureFactory().build2DColorTextureArray(width, height, BASIS_COUNT)
                 .setInternalFormat(ColorFormat.R32F)
                 .setLinearFilteringEnabled(true)
@@ -214,11 +244,13 @@ public class SpecularFitRequest implements IBRRequest
                 .setMipmapsEnabled(false)
                 .createTexture();
             Texture2D<ContextType> basisMaps = resources.context.getTextureFactory().build1DColorTextureArray(
-                    MICROFACET_DISTRIBUTION_RESOLUTION + 1, BASIS_COUNT)
+                MICROFACET_DISTRIBUTION_RESOLUTION + 1, BASIS_COUNT)
                 .setInternalFormat(ColorFormat.RGB32F)
                 .setLinearFilteringEnabled(true)
                 .setMipmapsEnabled(false)
                 .createTexture();
+
+            // Uniform buffer for diffuse basis colors
             UniformBuffer<ContextType> diffuseUniformBuffer = resources.context.createUniformBuffer()
         )
         {
@@ -258,13 +290,13 @@ public class SpecularFitRequest implements IBRRequest
             basisImageDrawable.addVertexBuffer("position", rect);
             basisImageProgram.setTexture("basisFunctions", basisMaps);
 
-            Drawable<ContextType> specularFitDrawable = resources.context.createDrawable(specularFitProgram);
-            specularFitDrawable.addVertexBuffer("position", rect);
-            specularFitProgram.setUniform("gamma", (float)GAMMA);
-            specularFitProgram.setTexture("weightMaps", weightMaps);
-            specularFitProgram.setTexture("weightMask", weightMask);
-            specularFitProgram.setTexture("basisFunctions", basisMaps);
-            specularFitProgram.setUniform("fittingGamma", 1.0f);
+            Drawable<ContextType> specularRoughnessFitDrawable = resources.context.createDrawable(specularRoughnessFitProgram);
+            specularRoughnessFitDrawable.addVertexBuffer("position", rect);
+            specularRoughnessFitProgram.setUniform("gamma", (float)GAMMA);
+            specularRoughnessFitProgram.setTexture("weightMaps", weightMaps);
+            specularRoughnessFitProgram.setTexture("weightMask", weightMask);
+            specularRoughnessFitProgram.setTexture("basisFunctions", basisMaps);
+            specularRoughnessFitProgram.setUniform("fittingGamma", 1.0f);
 
             // Set initial assumption for roughness when calculating masking/shadowing.
             specularTexFramebuffer.clearColorBuffer(1, 1.0f, 1.0f, 1.0f,1.0f);
@@ -411,7 +443,7 @@ public class SpecularFitRequest implements IBRRequest
                 // Fit specular so that we have a roughness estimate for masking/shadowing.
                 specularTexFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f,0.0f);
                 specularTexFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f,0.0f);
-                specularFitDrawable.draw(PrimitiveMode.TRIANGLE_FAN, specularTexFramebuffer);
+                specularRoughnessFitDrawable.draw(PrimitiveMode.TRIANGLE_FAN, specularTexFramebuffer);
 
                 try
                 {
@@ -514,7 +546,7 @@ public class SpecularFitRequest implements IBRRequest
                 // Fit specular textures after filling holes
                 specularTexFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f,0.0f);
                 specularTexFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f,0.0f);
-                specularFitDrawable.draw(PrimitiveMode.TRIANGLE_FAN, specularTexFramebuffer);
+                specularRoughnessFitDrawable.draw(PrimitiveMode.TRIANGLE_FAN, specularTexFramebuffer);
 
                 try
                 {

@@ -12,7 +12,7 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-#include "nam2018.glsl"
+#include "specularFit.glsl"
 #line 17 0
 
 layout(location = 0) out vec4 reflectance_visibility;
