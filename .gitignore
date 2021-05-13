@@ -1,3 +1,5 @@
 .idea/*
 target/*
+classes/*
 ImageBasedColorAppearance.iml
+*.log
