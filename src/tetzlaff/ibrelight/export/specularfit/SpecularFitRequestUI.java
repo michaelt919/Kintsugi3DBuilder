@@ -10,7 +10,7 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.ibrelight.export.nam2018;
+package tetzlaff.ibrelight.export.specularfit;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,9 +31,8 @@ import javafx.stage.Window;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.IBRRequestUI;
 import tetzlaff.ibrelight.core.IBRelightModels;
-import tetzlaff.ibrelight.export.svd.SVDRequest;
 
-public class Nam2018RequestUI implements IBRRequestUI
+public class SpecularFitRequestUI implements IBRRequestUI
 {
     @FXML private TextField widthTextField;
     @FXML private TextField heightTextField;
@@ -47,15 +46,15 @@ public class Nam2018RequestUI implements IBRRequestUI
 
     private File lastDirectory;
 
-    public static Nam2018RequestUI create(Window window, IBRelightModels modelAccess) throws IOException
+    public static SpecularFitRequestUI create(Window window, IBRelightModels modelAccess) throws IOException
     {
-        String fxmlFileName = "fxml/export/Nam2018RequestUI.fxml";
-        URL url = Nam2018RequestUI.class.getClassLoader().getResource(fxmlFileName);
+        String fxmlFileName = "fxml/export/SpecularFitRequestUI.fxml";
+        URL url = SpecularFitRequestUI.class.getClassLoader().getResource(fxmlFileName);
         assert url != null : "Can't find " + fxmlFileName;
 
         FXMLLoader fxmlLoader = new FXMLLoader(url);
         Parent parent = fxmlLoader.load();
-        Nam2018RequestUI svdRequestUI = fxmlLoader.getController();
+        SpecularFitRequestUI svdRequestUI = fxmlLoader.getController();
         svdRequestUI.modelAccess = modelAccess;
 
         svdRequestUI.stage = new Stage();
@@ -106,7 +105,7 @@ public class Nam2018RequestUI implements IBRRequestUI
         {
             //stage.close();
 
-            IBRRequest request = new Nam2018Request(
+            IBRRequest request = new SpecularFitRequest(
                 Integer.parseInt(widthTextField.getText()),
                 Integer.parseInt(heightTextField.getText()),
                 new File(exportDirectoryField.getText()),
