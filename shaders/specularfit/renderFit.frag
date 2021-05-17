@@ -20,10 +20,6 @@ layout(location = 0) out vec4 fragColor;
 uniform sampler2D diffuseEstimate;
 uniform sampler2D specularEstimate;
 
-#ifndef BASIS_COUNT
-#define BASIS_COUNT 8
-#endif
-
 void main()
 {
     vec2 sqrtRoughness_Mask = texture(roughnessEstimate, fTexCoord).ra;

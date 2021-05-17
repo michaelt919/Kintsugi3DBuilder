@@ -20,17 +20,11 @@ import tetzlaff.models.ReadonlySettingsModel;
 
 public abstract class TextureFitRequest implements IBRRequest
 {
-    protected final int width;
-    protected final int height;
-    protected final File outputDirectory;
-    protected final ReadonlySettingsModel settingsModel;
+    private final TextureFitSettings settings;
 
-    public TextureFitRequest(int width, int height, File outputDirectory, ReadonlySettingsModel settingsModel)
+    protected TextureFitRequest(TextureFitSettings settings)
     {
-        this.width = width;
-        this.height = height;
-        this.outputDirectory = outputDirectory;
-        this.settingsModel = settingsModel;
+        this.settings = settings;
     }
 
 //    @Override

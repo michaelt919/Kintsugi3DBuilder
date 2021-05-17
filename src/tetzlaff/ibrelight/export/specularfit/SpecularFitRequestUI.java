@@ -46,6 +46,12 @@ public class SpecularFitRequestUI implements IBRRequestUI
 
     private File lastDirectory;
 
+    // TODO expose this as a UI field
+    private static final int BASIS_COUNT = 8;
+
+    // TODO expose this as a UI field
+    private static final int MICROFACET_DISTRIBUTION_RESOLUTION = 90;
+
     public static SpecularFitRequestUI create(Window window, IBRelightModels modelAccess) throws IOException
     {
         String fxmlFileName = "fxml/export/SpecularFitRequestUI.fxml";
@@ -59,7 +65,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
 
         svdRequestUI.stage = new Stage();
         svdRequestUI.stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
-        svdRequestUI.stage.setTitle("Nam 2018 request");
+        svdRequestUI.stage.setTitle("Specular fits request");
         svdRequestUI.stage.setScene(new Scene(parent));
         svdRequestUI.stage.initOwner(window);
 
@@ -105,11 +111,13 @@ public class SpecularFitRequestUI implements IBRRequestUI
         {
             //stage.close();
 
-            IBRRequest request = new SpecularFitRequest(
+            IBRRequest request = new SpecularFitRequest(new SpecularFitSettings(
                 Integer.parseInt(widthTextField.getText()),
                 Integer.parseInt(heightTextField.getText()),
+                BASIS_COUNT,
+                MICROFACET_DISTRIBUTION_RESOLUTION,
                 new File(exportDirectoryField.getText()),
-                modelAccess.getSettingsModel());
+                modelAccess.getSettingsModel()));
 
             requestHandler.accept(request);
         });
