@@ -50,6 +50,31 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
     }
 
     @Override
+    public GraphicsStream<ColorList[]> sequential()
+    {
+        return new SequentialViewRenderStream<>(viewCount, drawable, framebuffer, attachmentCount);
+    }
+
+    @Override
+    public GraphicsStream<ColorList[]> parallel()
+    {
+        return this;
+    }
+
+    @Override
+    public GraphicsStream<ColorList[]> parallel(int maxRunningThreads)
+    {
+        if (maxRunningThreads == this.maxRunningThreads)
+        {
+            return this;
+        }
+        else
+        {
+            return new ParallelViewRenderStream<>(viewCount, drawable, framebuffer, attachmentCount, maxRunningThreads);
+        }
+    }
+
+    @Override
     public int count()
     {
         return viewCount;
@@ -77,9 +102,11 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
                 }
             }
 
-            // Clear framebuffer
-            framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-            framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+            for (int i = 0; i < attachmentCount; i++)
+            {
+                // Clear framebuffer
+                framebuffer.clearColorBuffer(i, 0.0f, 0.0f, 0.0f, 0.0f);
+            }
 
             // Run shader program to fill framebuffer with per-pixel information.
             drawable.program().setUniform("viewIndex", k);

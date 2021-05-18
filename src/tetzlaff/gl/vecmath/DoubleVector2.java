@@ -92,6 +92,11 @@ public class DoubleVector2 implements Iterable<Double>
         return new IntVector2((int)this.x, (int)this.y);
     }
 
+    public Vector2 asSinglePrecision()
+    {
+        return new Vector2((float)x, (float)y);
+    }
+
     public DoubleVector2 plus(DoubleVector2 other)
     {
         return new DoubleVector2(

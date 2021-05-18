@@ -91,6 +91,11 @@ public class Vector3 implements Iterable<Float>
         return new IntVector3((int)this.x, (int)this.y, (int)this.z);
     }
 
+    public DoubleVector3 asDoublePrecision()
+    {
+        return new DoubleVector3(x, y, z);
+    }
+
     @Override
     @SuppressWarnings("FloatingPointEquality")
     public boolean equals(Object obj)

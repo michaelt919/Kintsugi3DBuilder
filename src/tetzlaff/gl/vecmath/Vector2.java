@@ -90,6 +90,11 @@ public class Vector2 implements Iterable<Float>
         return new IntVector2((int)this.x, (int)this.y);
     }
 
+    public DoubleVector2 asDoublePrecision()
+    {
+        return new DoubleVector2(x, y);
+    }
+
     @Override
     @SuppressWarnings("FloatingPointEquality")
     public boolean equals(Object obj)

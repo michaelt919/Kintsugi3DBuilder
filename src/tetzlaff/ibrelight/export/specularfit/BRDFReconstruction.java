@@ -16,12 +16,9 @@ import java.util.stream.IntStream;
 
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
-import tetzlaff.gl.core.Context;
-import tetzlaff.gl.core.Drawable;
-import tetzlaff.gl.core.Framebuffer;
 import tetzlaff.gl.vecmath.DoubleVector3;
-import tetzlaff.ibrelight.rendering.IBRResources;
-import tetzlaff.util.ColorList;
+import tetzlaff.ibrelight.rendering.GraphicsStream;
+import tetzlaff.util.Counter;
 import tetzlaff.util.NonNegativeLeastSquares;
 
 public class BRDFReconstruction
@@ -39,11 +36,10 @@ public class BRDFReconstruction
         matrixSize = settings.basisCount * (settings.microfacetDistributionResolution + 1);
     }
 
-    public <ContextType extends Context<ContextType>> void execute(IBRResources<ContextType> resources,
-        Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, SpecularFitSolution solution)
+    public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularFitSolution solution)
     {
         System.out.println("Building reflectance fitting matrix...");
-        ReflectanceMatrixSystem system = buildReflectanceMatrix(resources, drawable, framebuffer, solution);
+        ReflectanceMatrixSystem system = buildReflectanceMatrix(viewStream, solution);
 
         System.out.println("Finished building matrix; solving now...");
         double medianATyRed = IntStream.range(0, system.vectorATyRed.getNumElements()).mapToDouble(system.vectorATyRed::get)
@@ -141,31 +137,23 @@ public class BRDFReconstruction
         }
     }
 
-    private <ContextType extends Context<ContextType>> ReflectanceMatrixSystem buildReflectanceMatrix(IBRResources<ContextType> resources,
-        Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, SpecularFitSolution solution)
+    private ReflectanceMatrixSystem buildReflectanceMatrix(GraphicsStream<ReflectanceData> viewStream, SpecularFitSolution solution)
     {
-        class Counter
-        {
-            int count = 0;
-        }
         Counter counter = new Counter();
 
-        ReflectanceMatrixSystem system = resources.parallelStream(drawable, framebuffer, 2)
-            .map(framebufferData ->
+        ReflectanceMatrixSystem system = viewStream
+            .map(reflectanceData ->
             {
-                ColorList colorAndVisibility = framebufferData[0];
-                ColorList halfwayAndGeom = framebufferData[1];
-
                 // Create scratch space for the thread handling this view.
                 ReflectanceMatrixSystem contribution = new ReflectanceMatrixSystem(matrixSize, DMatrixRMaj.class);
 
                 // Get the contributions from the current view.
-                new ReflectanceMatrixBuilder(colorAndVisibility, halfwayAndGeom, solution, contribution, metallicity).execute();
+                new ReflectanceMatrixBuilder(reflectanceData, solution, contribution, metallicity).execute();
 
                 synchronized (counter)
                 {
-                    System.out.println("Finished view " + counter.count + '.');
-                    counter.count++;
+                    System.out.println("Finished view " + counter.get() + '.');
+                    counter.increment();
                 }
 
                 return contribution;

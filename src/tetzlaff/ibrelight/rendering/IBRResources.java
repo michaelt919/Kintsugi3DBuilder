@@ -17,12 +17,14 @@ import java.io.*;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
 import javax.xml.stream.XMLStreamException;
 
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.ProgramBuilder;
+import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.material.Material;
 import tetzlaff.gl.nativebuffer.NativeDataType;
@@ -1295,6 +1297,28 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         return drawable;
     }
 
+    public GraphicsStream<ColorList[]> stream(
+        Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int attachmentCount)
+    {
+        return new SequentialViewRenderStream<>(viewSet.getCameraPoseCount(), drawable, framebuffer, attachmentCount);
+    }
+
+    public GraphicsStream<ColorList> stream(
+        Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
+    {
+        return new SequentialViewRenderStream<>(viewSet.getCameraPoseCount(), drawable, framebuffer, 1)
+            .map(singletonList -> singletonList[0]);
+    }
+
+    public GraphicsStreamResource<ContextType> streamAsResource(
+        Supplier<ProgramBuilder<ContextType>> programSupplier,
+        Supplier<FramebufferObjectBuilder<ContextType>> framebufferSupplier) throws FileNotFoundException
+    {
+        return new GraphicsStreamResource<>(programSupplier, framebufferSupplier,
+            (program, framebuffer) -> new SequentialViewRenderStream<>(
+                viewSet.getCameraPoseCount(), createDrawable(program), framebuffer, framebuffer.getColorAttachmentCount()));
+    }
+
     public GraphicsStream<ColorList[]> parallelStream(
         Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int attachmentCount, int maxRunningThreads)
     {
@@ -1312,6 +1336,25 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
     {
         return new ParallelViewRenderStream<>(viewSet.getCameraPoseCount(), drawable, framebuffer, 1)
             .map(singletonList -> singletonList[0]);
+    }
+
+    public GraphicsStreamResource<ContextType> parallelStreamAsResource(
+        Supplier<ProgramBuilder<ContextType>> programSupplier,
+        Supplier<FramebufferObjectBuilder<ContextType>> framebufferSupplier,
+        int maxRunningThreads) throws FileNotFoundException
+    {
+        return new GraphicsStreamResource<>(programSupplier, framebufferSupplier,
+            (program, framebuffer) -> new ParallelViewRenderStream<>(
+                viewSet.getCameraPoseCount(), createDrawable(program), framebuffer, framebuffer.getColorAttachmentCount(), maxRunningThreads));
+    }
+
+    public GraphicsStreamResource<ContextType> parallelStreamAsResource(
+        Supplier<ProgramBuilder<ContextType>> programSupplier,
+        Supplier<FramebufferObjectBuilder<ContextType>> framebufferSupplier) throws FileNotFoundException
+    {
+        return new GraphicsStreamResource<>(programSupplier, framebufferSupplier,
+            (program, framebuffer) -> new ParallelViewRenderStream<>(
+                viewSet.getCameraPoseCount(), createDrawable(program), framebuffer, framebuffer.getColorAttachmentCount()));
     }
 
     public double getPrimaryViewDistance()

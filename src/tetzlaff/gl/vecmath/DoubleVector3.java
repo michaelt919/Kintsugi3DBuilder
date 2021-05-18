@@ -94,6 +94,10 @@ public class DoubleVector3 implements Iterable<Double>
         return new IntVector3((int)this.x, (int)this.y, (int)this.z);
     }
 
+    public Vector3 asSinglePrecision()
+    {
+        return new Vector3((float)x, (float)y, (float)z);
+    }
 
     public DoubleVector3 plus(DoubleVector3 other)
     {

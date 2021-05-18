@@ -85,6 +85,11 @@ public class Vector4 implements Iterable<Float>
         return new IntVector4((int)this.x, (int)this.y, (int)this.z, (int)this.w);
     }
 
+    public DoubleVector4 asDoublePrecision()
+    {
+        return new DoubleVector4(x, y, z, w);
+    }
+
     @Override
     @SuppressWarnings("FloatingPointEquality")
     public boolean equals(Object obj)

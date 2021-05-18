@@ -372,6 +372,12 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
     }
 
     @Override
+    public int getColorAttachmentCount()
+    {
+        return colorAttachments.length;
+    }
+
+    @Override
     public void close()
     {
         glDeleteFramebuffers(contents.fboId);

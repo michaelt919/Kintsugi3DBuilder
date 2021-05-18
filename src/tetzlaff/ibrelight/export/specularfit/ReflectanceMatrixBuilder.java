@@ -16,6 +16,7 @@ import java.util.stream.IntStream;
 
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
+import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.util.ColorList;
 
 import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
@@ -66,14 +67,9 @@ final class ReflectanceMatrixBuilder
     private final ReflectanceMatrixSystem contribution;
 
     /**
-     * Color and visibility components of the samples
+     * Reflectance information for all the data.
      */
-    private final ColorList colorAndVisibility;
-
-    /**
-     * Halfway angles and geometric factors for the samples.
-     */
-    private final ColorList halfwayAndGeom;
+    private final ReflectanceData reflectanceData;
 
     /**
      * Weight solution from the previous iteration.
@@ -93,18 +89,14 @@ final class ReflectanceMatrixBuilder
     /**
      * Construct by accepting matrices where the final results will be stored.
      */
-    ReflectanceMatrixBuilder(ColorList colorAndVisibility, ColorList halfwayAndGeom, SpecularFitSolution solution, ReflectanceMatrixSystem contribution, double metallicity)
+    ReflectanceMatrixBuilder(ReflectanceData reflectanceData, SpecularFitSolution solution, ReflectanceMatrixSystem contribution, double metallicity)
     {
         this.contribution = contribution;
 
         this.solution = solution;
 
         //noinspection AssignmentOrReturnOfFieldWithMutableType
-        this.colorAndVisibility = colorAndVisibility;
-
-        //noinspection AssignmentOrReturnOfFieldWithMutableType
-        this.halfwayAndGeom = halfwayAndGeom;
-
+        this.reflectanceData = reflectanceData;
         this.metallicity = metallicity;
 
         settings = solution.getSettings();
@@ -121,10 +113,10 @@ final class ReflectanceMatrixBuilder
     public void execute()
     {
         // Sort pixel samples within a view by the halfway direction so that we avoid repeating the same additions over and over again
-        IntStream.range(0, halfwayAndGeom.size())
-            .filter(p -> colorAndVisibility.get(p).w > 0) // Eliminate pixels without valid samples
+        IntStream.range(0, reflectanceData.size())
+            .filter(p -> reflectanceData.getVisibility(p) > 0) // Eliminate pixels without valid samples
             .boxed() // Box integers to use custom sorting function
-            .sorted((p1, p2) -> Float.compare(halfwayAndGeom.get(p1).x, halfwayAndGeom.get(p2).x)) // Should sort ascending to visit low m values first
+            .sorted((p1, p2) -> Float.compare(reflectanceData.getHalfwayIndex(p1), reflectanceData.getHalfwayIndex(p2))) // Should sort ascending to visit low m values first
             .forEachOrdered(this::processSample);
 
         if (VALIDATE)
@@ -140,9 +132,10 @@ final class ReflectanceMatrixBuilder
 
     private void processSample(int p)
     {
-        float halfwayIndex = halfwayAndGeom.get(p).x;
-        float geomRatio = halfwayAndGeom.get(p).y;
-        float addlWeight = halfwayAndGeom.get(p).z;
+        float halfwayIndex = reflectanceData.getHalfwayIndex(p);
+        float geomRatio = reflectanceData.getGeomRatio(p);
+        float addlWeight = reflectanceData.getAdditionalWeight(p);
+        Vector3 color = reflectanceData.getColor(p);
 
         // Calculate which discretized MDF element the current sample belongs to.
         double mExact = halfwayIndex * settings.microfacetDistributionResolution;
@@ -174,9 +167,9 @@ final class ReflectanceMatrixBuilder
         {
             // Updates to ATy
 
-            double weightedReflectanceRed   = solution.getWeights(p).get(b1) * addlWeightSquared * colorAndVisibility.get(p).x;
-            double weightedReflectanceGreen = solution.getWeights(p).get(b1) * addlWeightSquared * colorAndVisibility.get(p).y;
-            double weightedReflectanceBlue  = solution.getWeights(p).get(b1) * addlWeightSquared * colorAndVisibility.get(p).z;
+            double weightedReflectanceRed   = solution.getWeights(p).get(b1) * addlWeightSquared * color.x;
+            double weightedReflectanceGreen = solution.getWeights(p).get(b1) * addlWeightSquared * color.y;
+            double weightedReflectanceBlue  = solution.getWeights(p).get(b1) * addlWeightSquared * color.z;
 
             // For each basis function: update the vector.
             // Top partition of the vector corresponds to diffuse coefficients
@@ -329,26 +322,27 @@ final class ReflectanceMatrixBuilder
     private void validate()
     {
         // Calculate the matrix products the slow way to make sure that the implementation is correct.
-        SimpleMatrix mA = new SimpleMatrix(colorAndVisibility.size(), settings.basisCount * (settings.microfacetDistributionResolution + 1), DMatrixRMaj.class);
-        SimpleMatrix yRed = new SimpleMatrix(colorAndVisibility.size(), 1);
-        SimpleMatrix yGreen = new SimpleMatrix(colorAndVisibility.size(), 1);
-        SimpleMatrix yBlue = new SimpleMatrix(colorAndVisibility.size(), 1);
+        SimpleMatrix mA = new SimpleMatrix(reflectanceData.size(), settings.basisCount * (settings.microfacetDistributionResolution + 1), DMatrixRMaj.class);
+        SimpleMatrix yRed = new SimpleMatrix(reflectanceData.size(), 1);
+        SimpleMatrix yGreen = new SimpleMatrix(reflectanceData.size(), 1);
+        SimpleMatrix yBlue = new SimpleMatrix(reflectanceData.size(), 1);
 
-        for (int p = 0; p < colorAndVisibility.size(); p++)
+        for (int p = 0; p < reflectanceData.size(); p++)
         {
-            if (colorAndVisibility.get(p).w > 0)
+            if (reflectanceData.getVisibility(p) > 0)
             {
-                float halfwayIndex = halfwayAndGeom.get(p).x;
-                float geomRatio = halfwayAndGeom.get(p).y;
-                float addlWeight = halfwayAndGeom.get(p).z;
+                float halfwayIndex = reflectanceData.getHalfwayIndex(p);
+                float geomRatio = reflectanceData.getGeomRatio(p);
+                float addlWeight = reflectanceData.getAdditionalWeight(p);
+                Vector3 color = reflectanceData.getColor(p);
 
                 // Calculate which discretized MDF element the current sample belongs to.
                 double mExact = halfwayIndex * settings.microfacetDistributionResolution;
                 int mFloor = Math.min(settings.microfacetDistributionResolution - 1, (int) Math.floor(mExact));
 
-                yRed.set(p, addlWeight * colorAndVisibility.get(p).x);
-                yGreen.set(p, addlWeight * colorAndVisibility.get(p).y);
-                yBlue.set(p, addlWeight * colorAndVisibility.get(p).z);
+                yRed.set(p, addlWeight * color.x);
+                yGreen.set(p, addlWeight * color.y);
+                yBlue.set(p, addlWeight * color.z);
 
                 // When floor and exact are the same, t = 1.0.  When exact is almost a whole increment greater than floor, t approaches 0.0.
                 // If mFloor is clamped to MICROFACET_DISTRIBUTION_RESOLUTION -1, then mExact will be much larger, so t = 0.0.

@@ -10,22 +10,28 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.ibrelight.export.specularfit;
+package tetzlaff.util;
 
-import java.io.File;
-
-import tetzlaff.ibrelight.core.TextureFitSettings;
-import tetzlaff.models.ReadonlySettingsModel;
-
-public class SpecularFitSettings extends TextureFitSettings
+/**
+ * A simple utility to allow lambda expressions to keep track of the number of times they've been called
+ * without violating the "no non-final variable access" rule.
+ */
+public class Counter
 {
-    public final int basisCount;
-    public final int microfacetDistributionResolution;
+    private int count = 0;
 
-    public SpecularFitSettings(int width, int height, int basisCount, int microfacetDistributionResolution, File outputDirectory, ReadonlySettingsModel additional)
+    public int get()
     {
-        super(width, height, outputDirectory, additional);
-        this.basisCount = basisCount;
-        this.microfacetDistributionResolution = microfacetDistributionResolution;
+        return count;
+    }
+
+    public void reset()
+    {
+        count = 0;
+    }
+
+    public void increment()
+    {
+        count++;
     }
 }

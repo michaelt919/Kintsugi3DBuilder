@@ -38,20 +38,37 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
         this.settings = settings;
     }
 
+    public ProgramBuilder<ContextType> getShaderProgramBuilder(File vertexShader, File fragmentShader, boolean visibilityAndShadowTests)
+    {
+        // Common definitions for all specular fitting related shaders.
+        return resources.getIBRShaderProgramBuilder()
+                .addShader(ShaderType.VERTEX, vertexShader)
+                .addShader(ShaderType.FRAGMENT, fragmentShader)
+                .define("VISIBILITY_TEST_ENABLED",
+                    visibilityAndShadowTests && resources.depthTextures != null && settings.additional.getBoolean("occlusionEnabled"))
+                .define("SHADOW_TEST_ENABLED",
+                    visibilityAndShadowTests && resources.shadowTextures != null && settings.additional.getBoolean("shadowsEnabled"))
+                .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
+                .define("SMITH_MASKING_SHADOWING", SMITH_MASKING_SHADOWING)
+                .define("BASIS_COUNT", settings.basisCount);
+    }
+
+    public ProgramBuilder<ContextType> getShaderProgramBuilder(File vertexShader, File fragmentShader)
+    {
+        return getShaderProgramBuilder(vertexShader, fragmentShader, true);
+    }
+
+    public void setupShaderProgram(Program<ContextType> program)
+    {
+        resources.setupShaderProgram(program);
+        program.setUniform("occlusionBias", settings.additional.getFloat("occlusionBias"));
+    }
+
     public Program<ContextType> createProgram(File vertexShader, File fragmentShader, boolean visibilityAndShadowTests, Map<String, Object> additionalDefines)
         throws FileNotFoundException
     {
         // Common definitions for all specular fitting related shaders.
-        ProgramBuilder<ContextType> programBuilder = resources.getIBRShaderProgramBuilder()
-            .addShader(ShaderType.VERTEX, vertexShader)
-            .addShader(ShaderType.FRAGMENT, fragmentShader)
-            .define("VISIBILITY_TEST_ENABLED",
-                visibilityAndShadowTests && resources.depthTextures != null && settings.additional.getBoolean("occlusionEnabled"))
-            .define("SHADOW_TEST_ENABLED",
-                visibilityAndShadowTests && resources.shadowTextures != null && settings.additional.getBoolean("shadowsEnabled"))
-            .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
-            .define("SMITH_MASKING_SHADOWING", SMITH_MASKING_SHADOWING)
-            .define("BASIS_COUNT", settings.basisCount);
+        ProgramBuilder<ContextType> programBuilder = getShaderProgramBuilder(vertexShader, fragmentShader, visibilityAndShadowTests);
 
         // Add additional defines provided to the function.
         for (Entry<String, Object> definition : additionalDefines.entrySet())
@@ -62,12 +79,8 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
         // Actually create the program.
         Program<ContextType> program = programBuilder.createProgram();
 
-        if (visibilityAndShadowTests)
-        {
-            program.setUniform("occlusionBias", settings.additional.getFloat("occlusionBias"));
-        }
-
-        resources.setupShaderProgram(program);
+        // Setup uniforms.
+        setupShaderProgram(program);
 
         return program;
     }

@@ -17,6 +17,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import tetzlaff.util.ColorList;
+
 /**
  * An abstract base class to facilitate writing stream classes that contain graphics operations.
  * The only functions that the base class need provide are forEach() and count().
@@ -61,15 +63,33 @@ public abstract class GraphicsStreamBase<T> implements GraphicsStream<T>
         }
 
         @Override
-        public <R> GraphicsStream<R> map(Function<T, ? extends R> mapper)
+        public GraphicsStream<T> sequential()
         {
-            return new Mapped<>(this, mapper);
+            return new Mapped<>(base.sequential(), mapper);
+        }
+
+        @Override
+        public GraphicsStream<T> parallel()
+        {
+            return new Mapped<>(base.parallel(), mapper);
+        }
+
+        @Override
+        public GraphicsStream<T> parallel(int maxRunningThreads)
+        {
+            return new Mapped<>(base.parallel(maxRunningThreads), mapper);
         }
 
         @Override
         public int count()
         {
             return base.count();
+        }
+
+        @Override
+        public <R> GraphicsStream<R> map(Function<T, ? extends R> mapper)
+        {
+            return new Mapped<>(this, mapper);
         }
 
         @Override

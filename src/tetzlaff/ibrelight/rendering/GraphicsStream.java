@@ -17,6 +17,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import tetzlaff.util.ColorList;
+
 /**
  * An interface that provides a small subset of the functionality of the standard Java Stream API.
  * Intended for when graphics operations will be part of the stream and parallelism is required so that the standard API is insufficient.
@@ -24,8 +26,11 @@ import java.util.function.Supplier;
  */
 public interface GraphicsStream<T>
 {
+    GraphicsStream<T> sequential();
+    GraphicsStream<T> parallel();
+    GraphicsStream<T> parallel(int maxRunningThreads);
+    int count();
     void forEach(Consumer<? super T> action);
     <R> GraphicsStream<R> map(Function<T, ? extends R> mapper);
     <R> R collect(Supplier<R> supplier, BiConsumer<R, ? super T> accumulator);
-    int count();
 }

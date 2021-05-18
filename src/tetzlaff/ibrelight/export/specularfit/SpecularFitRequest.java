@@ -14,19 +14,14 @@ package tetzlaff.ibrelight.export.specularfit;
 
 import java.io.*;
 import java.util.*;
-import java.util.stream.IntStream;
 
-
-import org.ejml.data.DMatrixRMaj;
-import org.ejml.simple.SimpleMatrix;
+import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.rendering.GraphicsStreamResource;
 import tetzlaff.ibrelight.rendering.IBRResources;
-import tetzlaff.util.NonNegativeLeastSquares;
-
-import static java.lang.Math.PI;
 
 /**
  * Implement specular fit using algorithm described by Nam et al., 2018
@@ -35,56 +30,20 @@ public class SpecularFitRequest extends TextureFitRequest
 {
     static final boolean DEBUG = true;
     static final boolean ORIGINAL_NAM_METHOD = false;
+
     static final boolean USE_LEVENBERG_MARQUARDT = !ORIGINAL_NAM_METHOD;
-
-    private static final double NNLS_TOLERANCE_SCALE = 0.000000000001;
     private static final double CONVERGENCE_TOLERANCE = 0.0001;
-
     private static final boolean NORMAL_REFINEMENT = true;
 
     private static final double METALLICITY = 0.0f; // Implemented and minimally tested but doesn't seem to make much difference.
 
     private final SpecularFitSettings settings;
 
-    private final ShaderBasedErrorCalculator errorCalculator;
-
-    private final SimpleMatrix[] weightsQTQAugmented;
-    private final SimpleMatrix[] weightsQTrAugmented;
-
-    private final SpecularFitSolution solution;
     public SpecularFitRequest(SpecularFitSettings settings)
     {
         super(settings);
 
         this.settings = settings;
-        solution = new SpecularFitSolution(settings);
-
-        errorCalculator = new ShaderBasedErrorCalculator(settings.width * settings.height);
-
-        weightsQTQAugmented = IntStream.range(0, settings.width * settings.height)
-            .mapToObj(p ->
-            {
-                SimpleMatrix mQTQAugmented = new SimpleMatrix(settings.basisCount + 1, settings.basisCount + 1, DMatrixRMaj.class);
-
-                // Set up equality constraint.
-                for (int b = 0; b < settings.basisCount; b++)
-                {
-                    mQTQAugmented.set(b, settings.basisCount, 1.0);
-                    mQTQAugmented.set(settings.basisCount, b, 1.0);
-                }
-
-                return mQTQAugmented;
-            })
-            .toArray(SimpleMatrix[]::new);
-
-        weightsQTrAugmented = IntStream.range(0, settings.width * settings.height)
-            .mapToObj(p ->
-            {
-                SimpleMatrix mQTrAugmented = new SimpleMatrix(settings.basisCount + 1, 1, DMatrixRMaj.class);
-                mQTrAugmented.set(settings.basisCount, 1.0); // Set up equality constraint
-                return mQTrAugmented;
-            })
-            .toArray(SimpleMatrix[]::new);
     }
 
     @Override
@@ -114,22 +73,26 @@ public class SpecularFitRequest extends TextureFitRequest
             imageWidth = Math.round(imageHeight * defaultProj.getAspectRatio());
         }
 
+        // Create space for the solution.
+        SpecularFitSolution solution = new SpecularFitSolution(settings);
+
+        // Initialize weights using K-means.
+         new SpecularFitInitializer<>(resources, programFactory, settings).initialize(solution);
+
         try
         (
-            // Shader program to extract reflectance and other geometric info
-            Program<ContextType> reflectanceProgram = createReflectanceProgram(programFactory);
+            // Reflectance stream: includes a shader program and a framebuffer object for extracting reflectance data from images.
+            GraphicsStreamResource<ContextType> reflectanceStream = resources.streamAsResource(
+                () -> getReflectanceProgramBuilder(programFactory),
+                () -> context.buildFramebufferObject(settings.width, settings.height)
+                        .addColorAttachment(ColorFormat.RGBA32F)
+                        .addColorAttachment(ColorFormat.RGBA32F));
 
             // Compare fitted models against actual photographs
             Program<ContextType> errorCalcProgram = createErrorCalcProgram(programFactory);
 
             // Rectangle vertex buffer
             VertexBuffer<ContextType> rect = context.createRectangle();
-
-            // Framebuffer used for extracting reflectance and related geometric data
-            FramebufferObject<ContextType> framebuffer = context.buildFramebufferObject(settings.width, settings.height)
-                .addColorAttachment(ColorFormat.RGBA32F)
-                .addColorAttachment(ColorFormat.RGBA32F)
-                .createFramebufferObject();
 
             // Framebuffer for calculating error and reconstructing 3D renderings of the object
             FramebufferObject<ContextType> tempFramebuffer =
@@ -168,11 +131,11 @@ public class SpecularFitRequest extends TextureFitRequest
                 .createFramebufferObject();
 
             // Textures calculated on CPU and passed to GPU (not framebuffers)
-            SpecularFitResources<ContextType> specularFitResources = new SpecularFitResources<ContextType>(context, settings)
+            SpecularFitResources<ContextType> specularFitResources = new SpecularFitResources<>(context, settings)
         )
         {
-            // Initialize weights using K-means.
-            new SpecularFitInitializer<>(resources, programFactory, framebuffer, settings).initialize(solution);
+            // Setup reflectance extraction program
+            programFactory.setupShaderProgram(reflectanceStream.getProgram());
 
             normalFramebuffer1.clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
             normalFramebuffer2.clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
@@ -181,9 +144,8 @@ public class SpecularFitRequest extends TextureFitRequest
             FramebufferObject<ContextType> frontNormalFramebuffer = normalFramebuffer1;
             FramebufferObject<ContextType> backNormalFramebuffer = normalFramebuffer2;
 
-            Drawable<ContextType> reflectanceDrawable = resources.createDrawable(reflectanceProgram);
-            reflectanceProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
-            reflectanceProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
+            reflectanceStream.getProgram().setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
+            reflectanceStream.getProgram().setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
 
             Drawable<ContextType> normalEstimationDrawable = resources.createDrawable(normalEstimationProgram);
             specularFitResources.useWithShaderProgram(normalEstimationProgram);
@@ -208,20 +170,24 @@ public class SpecularFitRequest extends TextureFitRequest
                 solution.setDiffuseAlbedo(i, DoubleVector3.ZERO);
             }
 
-            int viewCount = resources.viewSet.getCameraPoseCount();
-
             double previousError;
 
             BRDFReconstruction brdfReconstruction = new BRDFReconstruction(settings, METALLICITY);
+            WeightOptimization weightOptimization = new WeightOptimization(settings, METALLICITY);
+            ShaderBasedErrorCalculator errorCalculator = new ShaderBasedErrorCalculator(settings.width * settings.height);
 
             do
             {
                 previousError = errorCalculator.getError();
 
                 // Use the current front normal buffer for extracting reflectance information.
-                reflectanceProgram.setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
+                reflectanceStream.getProgram().setTexture("normalEstimate", frontNormalFramebuffer.getColorAttachmentTexture(0));
 
-                brdfReconstruction.execute(resources, reflectanceDrawable, framebuffer, solution);
+                // Set up a stream and pass it to the BRDF reconstruction module to give it access to the reflectance information.
+                // Operate in parallel for optimal performance.
+                brdfReconstruction.execute(
+                    reflectanceStream.parallel().map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
+                    solution);
 
                 // Calculate the error for debugging.
                 if (DEBUG)
@@ -237,7 +203,9 @@ public class SpecularFitRequest extends TextureFitRequest
                     System.out.println();
                 }
 
-                reconstructWeights(reflectanceDrawable, framebuffer, viewCount);
+                weightOptimization.reconstructWeights(
+                    reflectanceStream.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
+                    solution);
 
                 if (DEBUG)
                 {
@@ -360,7 +328,7 @@ public class SpecularFitRequest extends TextureFitRequest
             // Save the final normal map (finalize will not do this)
             saveNormalMap(frontNormalFramebuffer);
 
-            new SpecularFitFinalizer(settings).finalize(programFactory, resources, rect, framebuffer, tempFramebuffer, specularRoughnessFitDrawable,
+            new SpecularFitFinalizer(settings).finalize(programFactory, resources, rect, tempFramebuffer, specularRoughnessFitDrawable,
                 specularTexFramebuffer, errorCalcDrawable, errorCalculator, solution, specularFitResources, frontNormalFramebuffer.getColorAttachmentTexture(0));
         }
         catch(FileNotFoundException e) // thrown by createReflectanceProgram
@@ -370,9 +338,9 @@ public class SpecularFitRequest extends TextureFitRequest
     }
 
     private static <ContextType extends Context<ContextType>>
-        Program<ContextType> createReflectanceProgram(SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
+        ProgramBuilder<ContextType> getReflectanceProgramBuilder(SpecularFitProgramFactory<ContextType> programFactory)
     {
-        return programFactory.createProgram(
+        return programFactory.getShaderProgramBuilder(
             new File("shaders/common/texspace_noscale.vert"),
             new File("shaders/specularfit/extractReflectance.frag"));
     }
@@ -394,139 +362,6 @@ public class SpecularFitRequest extends TextureFitRequest
             new File("shaders/colorappearance/imgspace_multi_as_single.vert"),
             new File("shaders/specularfit/errorCalc.frag"),
             false); // Disable visibility and shadow tests for error calculation.
-    }
-
-    private <ContextType extends Context<ContextType>> void reconstructWeights(
-        Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int viewCount)
-    {
-        System.out.println("Building weight fitting matrices...");
-
-        // Setup all the matrices for fitting weights (one per texel)
-        buildWeightMatrices(drawable, framebuffer, viewCount);
-
-        System.out.println("Finished building matrices; solving now...");
-
-        for (int p = 0; p < settings.width * settings.height; p++)
-        {
-            if (solution.areWeightsValid(p))
-            {
-                double median = IntStream.range(0, weightsQTrAugmented[p].getNumElements()).mapToDouble(weightsQTrAugmented[p]::get)
-                    .sorted().skip(weightsQTrAugmented[p].getNumElements() / 2).filter(x -> x > 0).findFirst().orElse(1.0);
-                solution.setWeights(p, NonNegativeLeastSquares.solvePremultipliedWithEqualityConstraints(
-                    weightsQTQAugmented[p], weightsQTrAugmented[p], median * NNLS_TOLERANCE_SCALE, 1));
-            }
-        }
-
-        System.out.println("DONE!");
-
-        if (DEBUG)
-        {
-            // write out weight textures for debugging
-            solution.saveWeightMaps();
-
-            // write out diffuse texture for debugging
-            solution.saveDiffuseMap(settings.additional.getFloat("gamma"));
-        }
-    }
-
-    private <ContextType extends Context<ContextType>> void buildWeightMatrices(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int viewCount)
-    {
-        // Initially assume that all texels are invalid.
-        solution.invalidateWeights();
-
-        for (int k = 0; k < viewCount; k++)
-        {
-            // Clear framebuffer
-            framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-            framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-
-            // Run shader program to fill framebuffer with per-pixel information.
-            drawable.program().setUniform("viewIndex", k);
-            drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
-
-            // Copy framebuffer from GPU to main memory.
-            float[] colorAndVisibility = framebuffer.readFloatingPointColorBufferRGBA(0);
-            float[] halfwayAndGeomAndWeights = framebuffer.readFloatingPointColorBufferRGBA(1);
-
-            // Update matrix for each pixel.
-            IntStream.range(0, settings.width * settings.height).parallel().forEach(p ->
-            {
-                // Skip samples that aren't visible or are otherwise invalid.
-                if (colorAndVisibility[4 * p + 3] > 0)
-                {
-                    // Any time we have a visible, valid sample, mark that the corresponding texel is valid.
-                    solution.setWeightsValidity(p, true);
-
-                    // Precalculate frequently used values.
-
-                    // For original Nam 2018 version, weights were optimized against reflectance, not reflected radiance,
-                    // so we don't want to multiply by n dot l when attempting to reproduce that version.
-                    double nDotLSquared = ORIGINAL_NAM_METHOD ? 1.0 : halfwayAndGeomAndWeights[4 * p + 3] * halfwayAndGeomAndWeights[4 * p + 3];
-
-                    double weightSquared = halfwayAndGeomAndWeights[4 * p + 2] * halfwayAndGeomAndWeights[4 * p + 2];
-                    double geomFactor = halfwayAndGeomAndWeights[4 * p + 1];
-                    double mExact = halfwayAndGeomAndWeights[4 * p] * settings.microfacetDistributionResolution;
-                    int m1 = (int)Math.floor(mExact);
-                    int m2 = m1 + 1;
-                    double t = mExact - m1;
-                    DoubleVector3 fActual = new DoubleVector3(colorAndVisibility[4 * p], colorAndVisibility[4 * p + 1], colorAndVisibility[4 * p + 2]);
-
-                    for (int b1 = 0; b1 < settings.basisCount; b1++)
-                    {
-                        // Evaluate the first basis BRDF.
-                        DoubleVector3 f1 = solution.getDiffuseAlbedo(b1).dividedBy(PI);
-
-                        if (m1 < settings.microfacetDistributionResolution)
-                        {
-                            f1 = f1.plus(new DoubleVector3(solution.getSpecularRed().get(m1, b1), solution.getSpecularGreen().get(m1, b1), solution.getSpecularBlue().get(m1, b1))
-                                .times(1.0 - t)
-                                .plus(new DoubleVector3(solution.getSpecularRed().get(m2, b1), solution.getSpecularGreen().get(m2, b1), solution.getSpecularBlue().get(m2, b1))
-                                    .times(t))
-                                .times(geomFactor));
-                        }
-                        else if (METALLICITY > 0.0f)
-                        {
-                            f1 = f1.plus(new DoubleVector3(
-                                    solution.getSpecularRed().get(settings.microfacetDistributionResolution, b1),
-                                    solution.getSpecularGreen().get(settings.microfacetDistributionResolution, b1),
-                                    solution.getSpecularBlue().get(settings.microfacetDistributionResolution, b1))
-                                .times(geomFactor));
-                        }
-
-                        // Store the weighted product of the basis BRDF and the actual BRDF in the vector.
-                        weightsQTrAugmented[p].set(b1, weightsQTrAugmented[p].get(b1) + weightSquared * nDotLSquared * f1.dot(fActual));
-
-                        for (int b2 = 0; b2 < settings.basisCount; b2++)
-                        {
-                            // Evaluate the second basis BRDF.
-                            DoubleVector3 f2 = solution.getDiffuseAlbedo(b2).dividedBy(PI);
-
-                            if (m1 < settings.microfacetDistributionResolution)
-                            {
-                                f2 = f2.plus(new DoubleVector3(solution.getSpecularRed().get(m1, b2), solution.getSpecularGreen().get(m1, b2), solution.getSpecularBlue().get(m1, b2))
-                                    .times(1.0 - t)
-                                    .plus(new DoubleVector3(solution.getSpecularRed().get(m2, b2), solution.getSpecularGreen().get(m2, b2), solution.getSpecularBlue().get(m2, b2))
-                                        .times(t))
-                                    .times(geomFactor));
-                            }
-                            else if (METALLICITY > 0.0f)
-                            {
-                                f2 = f2.plus(new DoubleVector3(
-                                        solution.getSpecularRed().get(settings.microfacetDistributionResolution, b2),
-                                        solution.getSpecularGreen().get(settings.microfacetDistributionResolution, b2),
-                                        solution.getSpecularBlue().get(settings.microfacetDistributionResolution, b2))
-                                    .times(geomFactor));
-                            }
-
-                            // Store the weighted product of the two BRDFs in the matrix.
-                            weightsQTQAugmented[p].set(b1, b2, weightsQTQAugmented[p].get(b1, b2) + weightSquared * nDotLSquared * f1.dot(f2));
-                        }
-                    }
-                }
-            });
-
-            System.out.println("Finished view " + k + '.');
-        }
     }
 
     private static <ContextType extends Context<ContextType>> void reconstructNormals(
@@ -551,14 +386,9 @@ public class SpecularFitRequest extends TextureFitRequest
 
     private <ContextType extends Context<ContextType>> void saveNormalMap(Framebuffer<ContextType> framebuffer)
     {
-        saveNormalMap(framebuffer, "normal.png");
-    }
-
-    private <ContextType extends Context<ContextType>> void saveNormalMap(Framebuffer<ContextType> framebuffer, String filename)
-    {
         try
         {
-            framebuffer.saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, filename));
+            framebuffer.saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "normal.png"));
         }
         catch (IOException e)
         {

@@ -36,8 +36,7 @@ public class SpecularFitFinalizer
         SpecularFitProgramFactory<ContextType> programFactory,
         IBRResources<ContextType> resources,
         VertexBuffer<ContextType> rect,
-        FramebufferObject<ContextType> framebuffer,
-        FramebufferObject<ContextType> imageReconstructionFramebuffer,
+        Framebuffer<ContextType> imageReconstructionFramebuffer,
 
         // Specular fit
         Drawable<ContextType> specularRoughnessFitDrawable,
@@ -50,7 +49,7 @@ public class SpecularFitFinalizer
         // Solution
         SpecularFitSolution solution,
         SpecularFitResources<ContextType> specularFitResources,
-        Texture2D<ContextType> normalMap)
+        Texture<ContextType> normalMap)
     {
         try (
             // Text file containing error information
@@ -81,16 +80,21 @@ public class SpecularFitFinalizer
 
             // Framebuffer for filling holes
             // This framebuffer is used to double-buffer another primary framebuffer
-            FramebufferObject<ContextType> diffuseHoleFillFramebuffer = resources.context.buildFramebufferObject(settings.width, settings.height)
+            FramebufferObject<ContextType> diffuseFramebuffer1 = resources.context.buildFramebufferObject(settings.width, settings.height)
                 .addColorAttachment(ColorFormat.RGBA32F)
-//                    .addColorAttachment(ColorFormat.RGBA32F)
+                .createFramebufferObject();
+
+            // Framebuffer for filling holes
+            // This framebuffer is used to double-buffer another primary framebuffer
+            FramebufferObject<ContextType> diffuseFramebuffer2 = resources.context.buildFramebufferObject(settings.width, settings.height)
+                .addColorAttachment(ColorFormat.RGBA32F)
                 .createFramebufferObject();
 
             // Framebuffer for visualizing the basis functions
             FramebufferObject<ContextType> basisImageFramebuffer = resources.context.buildFramebufferObject(
                 2 * settings.microfacetDistributionResolution + 1, 2 * settings.microfacetDistributionResolution + 1)
                 .addColorAttachment(ColorFormat.RGBA8)
-                .createFramebufferObject();
+                .createFramebufferObject()
         )
         {
             // Print out RMSE from the penultimate iteration (to verify convergence)
@@ -130,13 +134,13 @@ public class SpecularFitFinalizer
             specularFitResources.useWithShaderProgram(diffuseEstimationProgram);
             diffuseEstimationProgram.setTexture("normalEstimate", normalMap);
             diffuseEstimationProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
-            framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-            diffuseFitDrawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+            diffuseFramebuffer1.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+            diffuseFitDrawable.draw(PrimitiveMode.TRIANGLES, diffuseFramebuffer1);
 
             Drawable<ContextType> diffuseHoleFillDrawable = resources.context.createDrawable(diffuseHoleFillProgram);
             diffuseHoleFillDrawable.addVertexBuffer("position", rect);
             FramebufferObject<ContextType> finalDiffuse = fillHolesShader(
-                diffuseHoleFillDrawable, framebuffer, diffuseHoleFillFramebuffer, Math.max(settings.width, settings.height));
+                diffuseHoleFillDrawable, diffuseFramebuffer1, diffuseFramebuffer2, Math.max(settings.width, settings.height));
 
             try
             {

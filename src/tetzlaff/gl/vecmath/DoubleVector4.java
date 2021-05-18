@@ -90,6 +90,11 @@ public class DoubleVector4 implements Iterable<Double>
         return new IntVector4((int)this.x, (int)this.y, (int)this.z, (int)this.w);
     }
 
+    public Vector4 asSinglePrecision()
+    {
+        return new Vector4((float)x, (float)y, (float)z, (float)w);
+    }
+
     public DoubleVector4 plus(DoubleVector4 other)
     {
         return new DoubleVector4(
@@ -164,6 +169,7 @@ public class DoubleVector4 implements Iterable<Double>
     {
         return new DoubleVector4(operator.applyAsDouble(x), operator.applyAsDouble(y), operator.applyAsDouble(z), operator.applyAsDouble(w));
     }
+
     @Override
     public String toString()
     {

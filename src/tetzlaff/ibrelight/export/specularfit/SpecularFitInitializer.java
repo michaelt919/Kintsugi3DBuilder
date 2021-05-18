@@ -30,15 +30,12 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
 {
     private final IBRResources<ContextType> resources;
     private final SpecularFitProgramFactory<ContextType> programFactory;
-    private final Framebuffer<ContextType> framebuffer;
     private final SpecularFitSettings settings;
 
-    public SpecularFitInitializer(IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
-        Framebuffer<ContextType> framebuffer, SpecularFitSettings settings)
+    public SpecularFitInitializer(IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory, SpecularFitSettings settings)
     {
         this.resources = resources;
         this.programFactory = programFactory;
-        this.framebuffer = framebuffer;
         this.settings = settings;
     }
 
@@ -49,9 +46,13 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
             new File("shaders/specularfit/average.frag"));
     }
 
-    public void initialize(SpecularFitSolution solution) throws FileNotFoundException
+    public void initialize(SpecularFitSolution solution)
     {
-        try (Program<ContextType> averageProgram = createAverageProgram())
+        try (Program<ContextType> averageProgram = createAverageProgram();
+            FramebufferObject<ContextType> framebuffer =
+                resources.context.buildFramebufferObject(settings.width, settings.height)
+                    .addColorAttachment(ColorFormat.RGBA32F)
+                    .createFramebufferObject())
         {
             Drawable<ContextType> drawable = resources.createDrawable(averageProgram);
 
@@ -151,6 +152,10 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
                     e.printStackTrace();
                 }
             }
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
         }
     }
 }
