@@ -12,8 +12,6 @@
 
 package tetzlaff.ibrelight.export.specularfit;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -21,12 +19,7 @@ import java.io.PrintStream;
 import java.util.Collection;
 import java.util.HashSet;
 
-import javax.imageio.ImageIO;
-
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.vecmath.DoubleVector3;
-import tetzlaff.gl.vecmath.DoubleVector4;
-import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.rendering.IBRResources;
 
@@ -40,6 +33,7 @@ public class SpecularFitFinalizer
     }
 
     public <ContextType extends Context<ContextType>> void finalize(
+        SpecularFitProgramFactory<ContextType> programFactory,
         IBRResources<ContextType> resources,
         VertexBuffer<ContextType> rect,
         FramebufferObject<ContextType> framebuffer,
@@ -63,11 +57,11 @@ public class SpecularFitFinalizer
             PrintStream rmseOut = new PrintStream(new File(settings.outputDirectory, "rmse.txt"));
 
             // Error calculation shader programs
-            Program<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(resources, settings.basisCount);
-            Program<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(resources);
+            Program<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(programFactory);
+            Program<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(programFactory);
 
             // Final diffuse estimation program
-            Program<ContextType> diffuseEstimationProgram = createDiffuseEstimationProgram(resources, settings);
+            Program<ContextType> diffuseEstimationProgram = createDiffuseEstimationProgram(programFactory);
 
             // Hole fill program
             Program<ContextType> diffuseHoleFillProgram = resources.context.getShaderProgramBuilder()
@@ -82,8 +76,8 @@ public class SpecularFitFinalizer
                 .createProgram();
 
             // Reconstruct images as supplemental output
-            Program<ContextType> imageReconstructionProgram = createImageReconstructionProgram(resources, settings.basisCount);
-            Program<ContextType> fittedImageReconstructionProgram = createFittedImageReconstructionProgram(resources);
+            Program<ContextType> imageReconstructionProgram = createImageReconstructionProgram(programFactory);
+            Program<ContextType> fittedImageReconstructionProgram = createFittedImageReconstructionProgram(programFactory);
 
             // Framebuffer for filling holes
             // This framebuffer is used to double-buffer another primary framebuffer
@@ -111,8 +105,8 @@ public class SpecularFitFinalizer
             fillHoles(solution);
 
             // Save the weight map and preliminary diffuse result after filling holes
-            saveWeightMaps(solution);
-            saveDiffuseMap(solution);
+            solution.saveWeightMaps();
+            solution.saveDiffuseMap(settings.additional.getFloat("gamma"));
 
             // Calculate RMSE after filling holes
             specularFitResources.updateFromSolution(solution);
@@ -128,13 +122,12 @@ public class SpecularFitFinalizer
             Drawable<ContextType> basisImageDrawable = resources.context.createDrawable(basisImageProgram);
             basisImageDrawable.addVertexBuffer("position", rect);
             basisImageProgram.setTexture("basisFunctions", specularFitResources.basisMaps);
-            saveBasisFunctions(solution, basisImageDrawable, basisImageFramebuffer);
+            solution.saveBasisFunctions();
+            solution.createBasisFunctionImages(basisImageDrawable, basisImageFramebuffer);
 
             // Diffuse fit
-            Drawable<ContextType> diffuseFitDrawable = createDrawable(diffuseEstimationProgram, resources);
-            diffuseEstimationProgram.setTexture("basisFunctions", specularFitResources.basisMaps);
-            diffuseEstimationProgram.setTexture("weightMaps", specularFitResources.weightMaps);
-            diffuseEstimationProgram.setTexture("weightMask", specularFitResources.weightMask);
+            Drawable<ContextType> diffuseFitDrawable = resources.createDrawable(diffuseEstimationProgram);
+            specularFitResources.useWithShaderProgram(diffuseEstimationProgram);
             diffuseEstimationProgram.setTexture("normalEstimate", normalMap);
             diffuseEstimationProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
             framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -154,10 +147,8 @@ public class SpecularFitFinalizer
                 e.printStackTrace();
             }
 
-            Drawable<ContextType> finalErrorCalcDrawable = createDrawable(finalErrorCalcProgram, resources);
-            finalErrorCalcProgram.setTexture("basisFunctions", specularFitResources.basisMaps);
-            finalErrorCalcProgram.setTexture("weightMaps", specularFitResources.weightMaps);
-            finalErrorCalcProgram.setTexture("weightMask", specularFitResources.weightMask);
+            Drawable<ContextType> finalErrorCalcDrawable = resources.createDrawable(finalErrorCalcProgram);
+            specularFitResources.useWithShaderProgram(finalErrorCalcProgram);
             finalErrorCalcProgram.setTexture("normalEstimate", normalMap);
             finalErrorCalcProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
             finalErrorCalcProgram.setTexture("diffuseEstimate", finalDiffuse.getColorAttachmentTexture(0));
@@ -170,7 +161,7 @@ public class SpecularFitFinalizer
             errorCalculator.update(finalErrorCalcDrawable, imageReconstructionFramebuffer);
             rmseOut.println("RMSE after final diffuse estimate (gamma-corrected): " + errorCalculator.getError());
 
-            Drawable<ContextType> ggxErrorCalcDrawable = createDrawable(ggxErrorCalcProgram, resources);
+            Drawable<ContextType> ggxErrorCalcDrawable = resources.createDrawable(ggxErrorCalcProgram);
             ggxErrorCalcProgram.setTexture("normalEstimate", normalMap);
             ggxErrorCalcProgram.setTexture("specularEstimate", specularTexFramebuffer.getColorAttachmentTexture(0));
             ggxErrorCalcProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
@@ -184,10 +175,8 @@ public class SpecularFitFinalizer
             rmseOut.println("RMSE for GGX fit (gamma-corrected): " + errorCalculator.getError());
 
             // Render and save images using more accurate basis function reconstruction.
-            Drawable<ContextType> imageReconstructionDrawable = createDrawable(imageReconstructionProgram, resources);
-            imageReconstructionProgram.setTexture("basisFunctions", specularFitResources.basisMaps);
-            imageReconstructionProgram.setTexture("weightMaps", specularFitResources.weightMaps);
-            imageReconstructionProgram.setTexture("weightMask", specularFitResources.weightMask);
+            Drawable<ContextType> imageReconstructionDrawable = resources.createDrawable(imageReconstructionProgram);
+            specularFitResources.useWithShaderProgram(imageReconstructionProgram);
             imageReconstructionProgram.setTexture("normalEstimate", normalMap);
             imageReconstructionProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
             imageReconstructionProgram.setTexture("diffuseEstimate", finalDiffuse.getColorAttachmentTexture(0));
@@ -210,7 +199,7 @@ public class SpecularFitFinalizer
             }
 
             // Render and save images using parameterized fit.
-            Drawable<ContextType> fittedImageReconstructionDrawable = createDrawable(fittedImageReconstructionProgram, resources);
+            Drawable<ContextType> fittedImageReconstructionDrawable = resources.createDrawable(fittedImageReconstructionProgram);
             fittedImageReconstructionProgram.setTexture("normalEstimate", normalMap);
             fittedImageReconstructionProgram.setTexture("specularEstimate", specularTexFramebuffer.getColorAttachmentTexture(0));
             fittedImageReconstructionProgram.setTexture("roughnessEstimate", specularTexFramebuffer.getColorAttachmentTexture(1));
@@ -225,87 +214,45 @@ public class SpecularFitFinalizer
     }
 
     private static <ContextType extends Context<ContextType>>
-    Program<ContextType> createFinalErrorCalcProgram(IBRResources<ContextType> resources, int basisCount) throws FileNotFoundException
+    Program<ContextType> createFinalErrorCalcProgram(SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {
-        Program<ContextType> program = resources.getIBRShaderProgramBuilder()
-            .addShader(ShaderType.VERTEX, new File("shaders/colorappearance/imgspace_multi_as_single.vert"))
-            .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/finalErrorCalc.frag"))
-            .define("VISIBILITY_TEST_ENABLED", 0)
-            .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
-            .define("SMITH_MASKING_SHADOWING", ORIGINAL_NAM_METHOD ? 0 : 1)
-            .define("BASIS_COUNT", basisCount)
-            .createProgram();
-
-        resources.setupShaderProgram(program);
-
-        return program;
+        return programFactory.createProgram(
+            new File("shaders/colorappearance/imgspace_multi_as_single.vert"),
+            new File("shaders/specularfit/finalErrorCalc.frag"),
+            false); // Disable visibility and shadow tests for error calculation.
     }
 
     private static <ContextType extends Context<ContextType>>
-    Program<ContextType> createGGXErrorCalcProgram(IBRResources<ContextType> resources) throws FileNotFoundException
+    Program<ContextType> createGGXErrorCalcProgram(SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {
-        Program<ContextType> program = resources.getIBRShaderProgramBuilder()
-            .addShader(ShaderType.VERTEX, new File("shaders/colorappearance/imgspace_multi_as_single.vert"))
-            .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/ggxErrorCalc.frag"))
-            .define("VISIBILITY_TEST_ENABLED", 0)
-            .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
-            .define("SMITH_MASKING_SHADOWING", ORIGINAL_NAM_METHOD ? 0 : 1)
-            .createProgram();
-
-        resources.setupShaderProgram(program);
-
-        return program;
+        return programFactory.createProgram(
+            new File("shaders/colorappearance/imgspace_multi_as_single.vert"),
+            new File("shaders/specularfit/ggxErrorCalc.frag"),
+            false); // Disable visibility and shadow tests for error calculation.
     }
 
     private static <ContextType extends Context<ContextType>>
-    Program<ContextType> createDiffuseEstimationProgram(IBRResources<ContextType> resources, SpecularFitSettings settings) throws FileNotFoundException
+    Program<ContextType> createDiffuseEstimationProgram(SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {
-        Program<ContextType> program = resources.getIBRShaderProgramBuilder()
-            .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-            .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/estimateDiffuse.frag"))
-            .define("VISIBILITY_TEST_ENABLED", resources.depthTextures != null && settings.additional.getBoolean("occlusionEnabled"))
-            .define("SHADOW_TEST_ENABLED", resources.shadowTextures != null && settings.additional.getBoolean("shadowsEnabled"))
-            .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
-            .define("SMITH_MASKING_SHADOWING", ORIGINAL_NAM_METHOD ? 0 : 1)
-            .define("BASIS_COUNT", settings.basisCount)
-            .createProgram();
-
-        program.setUniform("occlusionBias", settings.additional.getFloat("occlusionBias"));
-
-        resources.setupShaderProgram(program);
-
-        return program;
+        return programFactory.createProgram(
+            new File("shaders/common/texspace_noscale.vert"),
+            new File("shaders/specularfit/estimateDiffuse.frag"));
     }
 
     private static <ContextType extends Context<ContextType>>
-    Program<ContextType> createImageReconstructionProgram(IBRResources<ContextType> resources, int basisCount) throws FileNotFoundException
+    Program<ContextType> createImageReconstructionProgram(SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {
-        Program<ContextType> program = resources.getIBRShaderProgramBuilder()
-            .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-            .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/reconstructImage.frag"))
-            .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
-            .define("SMITH_MASKING_SHADOWING", ORIGINAL_NAM_METHOD ? 0 : 1)
-            .define("BASIS_COUNT", basisCount)
-            .createProgram();
-
-        resources.setupShaderProgram(program);
-
-        return program;
+        return programFactory.createProgram(
+            new File("shaders/common/imgspace.vert"),
+            new File("shaders/specularfit/reconstructImage.frag"));
     }
 
     private static <ContextType extends Context<ContextType>>
-    Program<ContextType> createFittedImageReconstructionProgram(IBRResources<ContextType> resources) throws FileNotFoundException
+    Program<ContextType> createFittedImageReconstructionProgram(SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {
-        Program<ContextType> program = resources.getIBRShaderProgramBuilder()
-            .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-            .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/renderFit.frag"))
-            .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
-            .define("SMITH_MASKING_SHADOWING", ORIGINAL_NAM_METHOD ? 0 : 1)
-            .createProgram();
-
-        resources.setupShaderProgram(program);
-
-        return program;
+        return programFactory.createProgram(
+            new File("shaders/common/imgspace.vert"),
+            new File("shaders/specularfit/renderFit.frag"));
     }
 
     private static <ContextType extends Context<ContextType>>
@@ -400,127 +347,6 @@ public class SpecularFitFinalizer
         }
 
         System.out.println("DONE!");
-    }
-
-    private <ContextType extends Context<ContextType>> void saveBasisFunctions(
-        SpecularFitSolution solution, Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
-    {
-        // Text file format
-        try (PrintStream out = new PrintStream(new File(settings.outputDirectory, "basisFunctions.csv")))
-        {
-            for (int b = 0; b < settings.basisCount; b++)
-            {
-                out.print("Red#" + b);
-                for (int m = 0; m <= settings.microfacetDistributionResolution; m++)
-                {
-                    out.print(", ");
-                    out.print(solution.getSpecularRed().get(m, b));
-                }
-                out.println();
-
-                out.print("Green#" + b);
-                for (int m = 0; m <= settings.microfacetDistributionResolution; m++)
-                {
-                    out.print(", ");
-                    out.print(solution.getSpecularGreen().get(m, b));
-                }
-                out.println();
-
-                out.print("Blue#" + b);
-                for (int m = 0; m <= settings.microfacetDistributionResolution; m++)
-                {
-                    out.print(", ");
-                    out.print(solution.getSpecularBlue().get(m, b));
-                }
-                out.println();
-            }
-
-            out.println();
-        }
-        catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-        }
-
-        // Image format
-        try
-        {
-            for (int i = 0; i < settings.basisCount; i++)
-            {
-                drawable.program().setUniform("basisIndex", i);
-                drawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
-                framebuffer.saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, String.format("basis_%02d.png", i)));
-            }
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    private void saveWeightMaps(SpecularFitSolution solution)
-    {
-        for (int b = 0; b < settings.basisCount; b++)
-        {
-            BufferedImage weightImg = new BufferedImage(settings.width, settings.height, BufferedImage.TYPE_INT_ARGB);
-            int[] weightDataPacked = new int[settings.width * settings.height];
-
-            for (int p = 0; p < settings.width * settings.height; p++)
-            {
-                float weight = (float)solution.getWeights(p).get(b);
-
-                // Flip vertically
-                int dataBufferIndex = p % settings.width + settings.width * (settings.height - p / settings.width - 1);
-                weightDataPacked[dataBufferIndex] = new Color(weight, weight, weight).getRGB();
-            }
-
-            weightImg.setRGB(0, 0, weightImg.getWidth(), weightImg.getHeight(), weightDataPacked, 0, weightImg.getWidth());
-
-            try
-            {
-                ImageIO.write(weightImg, "PNG", new File(settings.outputDirectory, String.format("weights%02d.png", b)));
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void saveDiffuseMap(SpecularFitSolution solution)
-    {
-        BufferedImage diffuseImg = new BufferedImage(settings.width, settings.height, BufferedImage.TYPE_INT_ARGB);
-        int[] diffuseDataPacked = new int[settings.width * settings.height];
-        for (int p = 0; p < settings.width * settings.height; p++)
-        {
-            DoubleVector4 diffuseSum = DoubleVector4.ZERO_DIRECTION;
-
-            for (int b = 0; b < settings.basisCount; b++)
-            {
-                diffuseSum = diffuseSum.plus(solution.getDiffuseAlbedo(b).asVector4(1.0)
-                    .times(solution.getWeights(p).get(b)));
-            }
-
-            if (diffuseSum.w > 0)
-            {
-                DoubleVector3 diffuseAvgGamma = diffuseSum.getXYZ().dividedBy(diffuseSum.w).applyOperator(x -> Math.min(1.0, Math.pow(x, 1.0 / GAMMA)));
-
-                // Flip vertically
-                int dataBufferIndex = p % settings.width + settings.width * (settings.height - p / settings.width - 1);
-                diffuseDataPacked[dataBufferIndex] = new Color((float) diffuseAvgGamma.x, (float) diffuseAvgGamma.y, (float) diffuseAvgGamma.z).getRGB();
-            }
-        }
-
-        diffuseImg.setRGB(0, 0, diffuseImg.getWidth(), diffuseImg.getHeight(), diffuseDataPacked, 0, diffuseImg.getWidth());
-
-        try
-        {
-            ImageIO.write(diffuseImg, "PNG", new File(settings.outputDirectory, "diffuse_frombasis.png"));
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
     }
 
     private <ContextType extends Context<ContextType>> void reconstructImages(

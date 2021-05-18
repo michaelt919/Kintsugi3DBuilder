@@ -38,6 +38,7 @@ import tetzlaff.ibrelight.core.LoadingMonitor;
 import tetzlaff.ibrelight.core.ReadonlyLoadOptionsModel;
 import tetzlaff.ibrelight.core.RenderingMode;
 import tetzlaff.ibrelight.core.ViewSet;
+import tetzlaff.util.ColorList;
 
 public final class IBRResources<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -1282,6 +1283,35 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         {
             program.setTexture("residualMap", this.residualTexture);
         }
+    }
+
+    public Drawable<ContextType> createDrawable(Program<ContextType> program)
+    {
+        Drawable<ContextType> drawable = program.getContext().createDrawable(program);
+        drawable.addVertexBuffer("position", positionBuffer);
+        drawable.addVertexBuffer("texCoord", texCoordBuffer);
+        drawable.addVertexBuffer("normal", normalBuffer);
+        drawable.addVertexBuffer("tangent", tangentBuffer);
+        return drawable;
+    }
+
+    public GraphicsStream<ColorList[]> parallelStream(
+        Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int attachmentCount, int maxRunningThreads)
+    {
+        return new ParallelViewRenderStream<>(viewSet.getCameraPoseCount(), drawable, framebuffer, attachmentCount, maxRunningThreads);
+    }
+
+    public GraphicsStream<ColorList[]> parallelStream(
+        Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int attachmentCount)
+    {
+        return new ParallelViewRenderStream<>(viewSet.getCameraPoseCount(), drawable, framebuffer, attachmentCount);
+    }
+
+    public GraphicsStream<ColorList> parallelStream(
+        Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
+    {
+        return new ParallelViewRenderStream<>(viewSet.getCameraPoseCount(), drawable, framebuffer, 1)
+            .map(singletonList -> singletonList[0]);
     }
 
     public double getPrimaryViewDistance()

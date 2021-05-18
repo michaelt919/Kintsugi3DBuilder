@@ -50,6 +50,10 @@ public class SpecularFitResources <ContextType extends Context<ContextType>> imp
             .createTexture();
 
         diffuseUniformBuffer = context.createUniformBuffer();
+
+        weightMaps.setTextureWrap(TextureWrapMode.None, TextureWrapMode.None, TextureWrapMode.None);
+        basisMaps.setTextureWrap(TextureWrapMode.None, TextureWrapMode.None);
+
     }
 
     public void updateFromSolution(SpecularFitSolution solution)
@@ -99,6 +103,14 @@ public class SpecularFitResources <ContextType extends Context<ContextType>> imp
 
         // Send the diffuse albedos to the GPU.
         diffuseUniformBuffer.setData(diffuseNativeBuffer);
+    }
+
+    public void useWithShaderProgram(Program<ContextType> program)
+    {
+        program.setTexture("basisFunctions", basisMaps);
+        program.setTexture("weightMaps", weightMaps);
+        program.setTexture("weightMask", weightMask);
+        program.setUniformBuffer("DiffuseColors", diffuseUniformBuffer);
     }
 
     @Override

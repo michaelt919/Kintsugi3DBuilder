@@ -47,8 +47,8 @@ public class DoubleVector4 implements Iterable<Double>
      */
     public final double w;
 
-    public static final DoubleVector4 ZERO_DIRECTION = DoubleVector3.ZERO.asDirection();
-    public static final DoubleVector4 ZERO_POSITION = DoubleVector3.ZERO.asPosition();
+    public static final DoubleVector4 ZERO = DoubleVector3.ZERO.asDirection();
+    public static final DoubleVector4 ORIGIN = DoubleVector3.ZERO.asPosition();
 
     /**
      * Construct a vector in four dimensions with the given values.

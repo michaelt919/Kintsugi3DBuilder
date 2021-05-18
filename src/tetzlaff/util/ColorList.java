@@ -10,23 +10,27 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.ibrelight.export.specularfit;
+package tetzlaff.util;
 
-import java.io.File;
+import java.util.AbstractList;
 
-import tetzlaff.ibrelight.core.TextureFitSettings;
-import tetzlaff.models.ReadonlySettingsModel;
+import tetzlaff.gl.vecmath.DoubleVector4;
+import tetzlaff.gl.vecmath.Vector4;
 
-public class SpecularFitSettings extends TextureFitSettings
+public class ColorList extends AbstractList<Vector4>
 {
-    public final int basisCount;
-    public final int microfacetDistributionResolution;
+    private final float[] colorData;
 
-
-    public SpecularFitSettings(int width, int height, int basisCount, int microfacetDistributionResolution, File outputDirectory, ReadonlySettingsModel additional)
+    public ColorList(float[] colorData)
     {
-        super(width, height, outputDirectory, additional);
-        this.basisCount = basisCount;
-        this.microfacetDistributionResolution = microfacetDistributionResolution;
+        //noinspection AssignmentOrReturnOfFieldWithMutableType
+        this.colorData = colorData;
     }
+
+    @Override public Vector4 get(int p)
+    {
+        return new Vector4(colorData[4 * p], colorData[4 * p + 1], colorData[4 * p + 2], colorData[4 * p + 3]);
+    }
+
+    @Override public int size() { return colorData.length / 4; }
 }

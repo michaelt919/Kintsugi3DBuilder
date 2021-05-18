@@ -12,12 +12,26 @@
 
 package tetzlaff.ibrelight.export.specularfit;
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.IntStream;
+
+import javax.imageio.ImageIO;
 
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Drawable;
+import tetzlaff.gl.core.Framebuffer;
+import tetzlaff.gl.core.PrimitiveMode;
 import tetzlaff.gl.vecmath.DoubleVector3;
+import tetzlaff.gl.vecmath.DoubleVector4;
 
 public class SpecularFitSolution
 {
@@ -28,7 +42,7 @@ public class SpecularFitSolution
     private final SimpleMatrix[] weightsByTexel;
     private final boolean[] weightsValidity;
 
-    private SpecularFitSettings settings;
+    private final SpecularFitSettings settings;
 
     public SpecularFitSolution(SpecularFitSettings settings)
     {
@@ -80,6 +94,11 @@ public class SpecularFitSolution
         weightsByTexel[texelIndex] = weights;
     }
 
+    public List<SimpleMatrix> getWeightsList()
+    {
+        return Arrays.asList(weightsByTexel);
+    }
+
     public boolean areWeightsValid(int texelIndex)
     {
         return weightsValidity[texelIndex];
@@ -99,5 +118,128 @@ public class SpecularFitSolution
     public SpecularFitSettings getSettings()
     {
         return settings;
+    }
+
+    public void saveBasisFunctions()
+    {
+        // Text file format
+        try (PrintStream out = new PrintStream(new File(settings.outputDirectory, "basisFunctions.csv")))
+        {
+            for (int b = 0; b < settings.basisCount; b++)
+            {
+                out.print("Red#" + b);
+                for (int m = 0; m <= settings.microfacetDistributionResolution; m++)
+                {
+                    out.print(", ");
+                    out.print(specularRed.get(m, b));
+                }
+                out.println();
+
+                out.print("Green#" + b);
+                for (int m = 0; m <= settings.microfacetDistributionResolution; m++)
+                {
+                    out.print(", ");
+                    out.print(specularGreen.get(m, b));
+                }
+                out.println();
+
+                out.print("Blue#" + b);
+                for (int m = 0; m <= settings.microfacetDistributionResolution; m++)
+                {
+                    out.print(", ");
+                    out.print(specularBlue.get(m, b));
+                }
+                out.println();
+            }
+
+            out.println();
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+
+    public <ContextType extends Context<ContextType>> void createBasisFunctionImages(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
+    {
+        try
+        {
+            for (int i = 0; i < settings.basisCount; i++)
+            {
+                drawable.program().setUniform("basisIndex", i);
+                drawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+                framebuffer.saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, String.format("basis_%02d.png", i)));
+            }
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void saveWeightMaps()
+    {
+        for (int b = 0; b < settings.basisCount; b++)
+        {
+            BufferedImage weightImg = new BufferedImage(settings.width, settings.height, BufferedImage.TYPE_INT_ARGB);
+            int[] weightDataPacked = new int[settings.width * settings.height];
+
+            for (int p = 0; p < settings.width * settings.height; p++)
+            {
+                float weight = (float)weightsByTexel[p].get(b);
+
+                // Flip vertically
+                int dataBufferIndex = p % settings.width + settings.width * (settings.height - p / settings.width - 1);
+                weightDataPacked[dataBufferIndex] = new Color(weight, weight, weight).getRGB();
+            }
+
+            weightImg.setRGB(0, 0, weightImg.getWidth(), weightImg.getHeight(), weightDataPacked, 0, weightImg.getWidth());
+
+            try
+            {
+                ImageIO.write(weightImg, "PNG", new File(settings.outputDirectory, String.format("weights%02d.png", b)));
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void saveDiffuseMap(double gamma)
+    {
+        BufferedImage diffuseImg = new BufferedImage(settings.width, settings.height, BufferedImage.TYPE_INT_ARGB);
+        int[] diffuseDataPacked = new int[settings.width * settings.height];
+        for (int p = 0; p < settings.width * settings.height; p++)
+        {
+            DoubleVector4 diffuseSum = DoubleVector4.ZERO;
+
+            for (int b = 0; b < settings.basisCount; b++)
+            {
+                diffuseSum = diffuseSum.plus(diffuseAlbedos[b].asVector4(1.0)
+                    .times(weightsByTexel[p].get(b)));
+            }
+
+            if (diffuseSum.w > 0)
+            {
+                DoubleVector3 diffuseAvgGamma = diffuseSum.getXYZ().dividedBy(diffuseSum.w).applyOperator(x -> Math.min(1.0, Math.pow(x, 1.0 / gamma)));
+
+                // Flip vertically
+                int dataBufferIndex = p % settings.width + settings.width * (settings.height - p / settings.width - 1);
+                diffuseDataPacked[dataBufferIndex] = new Color((float) diffuseAvgGamma.x, (float) diffuseAvgGamma.y, (float) diffuseAvgGamma.z).getRGB();
+            }
+        }
+
+        diffuseImg.setRGB(0, 0, diffuseImg.getWidth(), diffuseImg.getHeight(), diffuseDataPacked, 0, diffuseImg.getWidth());
+
+        try
+        {
+            ImageIO.write(diffuseImg, "PNG", new File(settings.outputDirectory, "diffuse_frombasis.png"));
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 }
