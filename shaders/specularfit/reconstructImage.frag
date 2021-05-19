@@ -57,25 +57,15 @@ void main()
 
     vec3 incidentRadiance = PI * lightIntensity / dot(lightDisplacement, lightDisplacement);
 
-    float filteredMask = texture(weightMask, fTexCoord)[0];
-
-    if (filteredMask > 0)
+    if (nDotL > 0.0)
     {
-        if (nDotL > 0.0)
-        {
-            vec3 brdf = pow(texture(diffuseEstimate, fTexCoord).rgb / filteredMask, vec3(gamma)) / PI + geomRatio * getMFDEstimate(nDotH) / filteredMask;
-            fragColor = vec4(pow(incidentRadiance * nDotL * brdf, vec3(1.0 / gamma)), 1.0);
-        }
-        else
-        {
-            // Limit as n dot l and n dot v both go to zero.
-            vec3 mfd = getMFDEstimate(nDotH) / filteredMask;
-            fragColor = vec4(pow(incidentRadiance * mfd * 0.5 / roughness, vec3(1.0 / gamma)), 1.0);
-        }
+        vec3 brdf = pow(texture(diffuseEstimate, fTexCoord).rgb / filteredMask, vec3(gamma)) / PI + geomRatio * getMFDEstimate(nDotH) / filteredMask;
+        fragColor = vec4(pow(incidentRadiance * nDotL * brdf, vec3(1.0 / gamma)), 1.0);
     }
     else
     {
-        fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        // Limit as n dot l and n dot v both go to zero.
+        vec3 mfd = getMFDEstimate(nDotH) / filteredMask;
+        fragColor = vec4(pow(incidentRadiance * mfd * 0.5 / roughness, vec3(1.0 / gamma)), 1.0);
     }
-
 }

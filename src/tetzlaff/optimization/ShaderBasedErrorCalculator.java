@@ -10,7 +10,7 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.ibrelight.export.specularfit;
+package tetzlaff.optimization;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Drawable;
@@ -19,30 +19,20 @@ import tetzlaff.gl.core.PrimitiveMode;
 
 public class ShaderBasedErrorCalculator
 {
-    private double previousError = Double.POSITIVE_INFINITY;
-    private double error = Double.POSITIVE_INFINITY;
-    private final int texelCount;
+    private final ErrorReport report;
 
-    public ShaderBasedErrorCalculator(int texelCount)
+    public ShaderBasedErrorCalculator(int sampleCount)
     {
-        this.texelCount = texelCount;
+        this.report = new ErrorReport(sampleCount);
     }
 
-    public double getPreviousError()
+    public ReadonlyErrorReport getReport()
     {
-        return previousError;
-    }
-
-    public double getError()
-    {
-        return error;
+        return report;
     }
 
     public <ContextType extends Context<ContextType>> void update(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
     {
-        // Current error will become the previous error.
-        previousError = error;
-
         // Clear framebuffer
         framebuffer.clearDepthBuffer();
         framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -57,7 +47,7 @@ public class ShaderBasedErrorCalculator
         int validCount = 0;
 
         // Add up per-pixel error.
-        for (int p = 0; p < texelCount; p++)
+        for (int p = 0; p < report.getSampleCount(); p++)
         {
             if (pixelErrors[4 * p + 3] > 0)
             {
@@ -66,12 +56,12 @@ public class ShaderBasedErrorCalculator
             }
         }
 
-        error = Math.sqrt(errorTotal / validCount);
+        report.setError(Math.sqrt(errorTotal / validCount));
     }
 
     public void reject()
     {
         // Roll back to previous error calculation.
-        error = previousError;
+        report.reject();
     }
 }

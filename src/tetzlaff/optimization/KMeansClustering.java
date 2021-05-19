@@ -10,7 +10,7 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.util;
+package tetzlaff.optimization;
 
 import java.security.SecureRandom;
 import java.util.Arrays;

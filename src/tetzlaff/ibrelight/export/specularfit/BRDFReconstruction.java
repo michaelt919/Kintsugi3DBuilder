@@ -19,7 +19,7 @@ import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.ibrelight.rendering.GraphicsStream;
 import tetzlaff.util.Counter;
-import tetzlaff.util.NonNegativeLeastSquares;
+import tetzlaff.optimization.NonNegativeLeastSquares;
 
 public class BRDFReconstruction
 {
@@ -84,7 +84,7 @@ public class BRDFReconstruction
             }
         }
 
-        if (SpecularFitRequest.DEBUG)
+        if (SpecularOptimization.DEBUG)
         {
             System.out.println();
 
@@ -160,7 +160,7 @@ public class BRDFReconstruction
             })
             .collect(() -> new ReflectanceMatrixSystem(matrixSize, DMatrixRMaj.class), ReflectanceMatrixSystem::addContribution);
 
-        if (SpecularFitRequest.DEBUG)
+        if (SpecularOptimization.DEBUG)
         {
             System.out.println();
 

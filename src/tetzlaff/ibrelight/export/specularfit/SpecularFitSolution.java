@@ -26,10 +26,6 @@ import javax.imageio.ImageIO;
 
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
-import tetzlaff.gl.core.Context;
-import tetzlaff.gl.core.Drawable;
-import tetzlaff.gl.core.Framebuffer;
-import tetzlaff.gl.core.PrimitiveMode;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.gl.vecmath.DoubleVector4;
 
@@ -49,6 +45,12 @@ public class SpecularFitSolution
         this.settings = settings;
 
         diffuseAlbedos = new DoubleVector3[settings.basisCount];
+
+        for (int i = 0; i < settings.basisCount; i++)
+        {
+            diffuseAlbedos[i] = DoubleVector3.ZERO;
+        }
+
         specularRed = new SimpleMatrix(settings.microfacetDistributionResolution + 1, settings.basisCount, DMatrixRMaj.class);
         specularGreen = new SimpleMatrix(settings.microfacetDistributionResolution + 1, settings.basisCount, DMatrixRMaj.class);
         specularBlue = new SimpleMatrix(settings.microfacetDistributionResolution + 1, settings.basisCount, DMatrixRMaj.class);
@@ -155,24 +157,6 @@ public class SpecularFitSolution
             out.println();
         }
         catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-
-    public <ContextType extends Context<ContextType>> void createBasisFunctionImages(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
-    {
-        try
-        {
-            for (int i = 0; i < settings.basisCount; i++)
-            {
-                drawable.program().setUniform("basisIndex", i);
-                drawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
-                framebuffer.saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, String.format("basis_%02d.png", i)));
-            }
-        }
-        catch (IOException e)
         {
             e.printStackTrace();
         }

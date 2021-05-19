@@ -18,7 +18,7 @@ import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 
 @SuppressWarnings("PublicField")
-public class SpecularFitResources <ContextType extends Context<ContextType>> implements AutoCloseable
+public class BasisResources<ContextType extends Context<ContextType>> implements AutoCloseable
 {
     public final Texture3D<ContextType> weightMaps;
     public final Texture2D<ContextType> weightMask;
@@ -26,7 +26,7 @@ public class SpecularFitResources <ContextType extends Context<ContextType>> imp
     public final UniformBuffer<ContextType> diffuseUniformBuffer;
     public final SpecularFitSettings settings;
 
-    public SpecularFitResources(ContextType context, SpecularFitSettings settings)
+    public BasisResources(ContextType context, SpecularFitSettings settings)
     {
         this.settings = settings;
 

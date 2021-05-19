@@ -33,6 +33,12 @@ class OpenGLDefaultFramebuffer extends OpenGLFramebuffer implements DoubleFrameb
     }
 
     @Override
+    public int getColorAttachmentCount()
+    {
+        return 1;
+    }
+
+    @Override
     public void swapBuffers()
     {
         this.context.swapDefaultFramebuffer();

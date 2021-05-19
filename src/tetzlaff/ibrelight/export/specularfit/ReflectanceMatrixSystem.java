@@ -15,6 +15,7 @@ package tetzlaff.ibrelight.export.specularfit;
 import org.ejml.dense.row.CommonOps_DDRM;
 import org.ejml.simple.SimpleMatrix;
 
+@SuppressWarnings("PublicField")
 public class ReflectanceMatrixSystem
 {
     /**

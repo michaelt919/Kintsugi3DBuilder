@@ -1311,10 +1311,10 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
     }
 
     public GraphicsStreamResource<ContextType> streamAsResource(
-        Supplier<ProgramBuilder<ContextType>> programSupplier,
-        Supplier<FramebufferObjectBuilder<ContextType>> framebufferSupplier) throws FileNotFoundException
+        ProgramBuilder<ContextType> programBuilder,
+        FramebufferObjectBuilder<ContextType> framebufferBuilder) throws FileNotFoundException
     {
-        return new GraphicsStreamResource<>(programSupplier, framebufferSupplier,
+        return new GraphicsStreamResource<>(programBuilder, framebufferBuilder,
             (program, framebuffer) -> new SequentialViewRenderStream<>(
                 viewSet.getCameraPoseCount(), createDrawable(program), framebuffer, framebuffer.getColorAttachmentCount()));
     }
@@ -1339,20 +1339,20 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
     }
 
     public GraphicsStreamResource<ContextType> parallelStreamAsResource(
-        Supplier<ProgramBuilder<ContextType>> programSupplier,
-        Supplier<FramebufferObjectBuilder<ContextType>> framebufferSupplier,
+        ProgramBuilder<ContextType> programBuilder,
+        FramebufferObjectBuilder<ContextType> framebufferBuilder,
         int maxRunningThreads) throws FileNotFoundException
     {
-        return new GraphicsStreamResource<>(programSupplier, framebufferSupplier,
+        return new GraphicsStreamResource<>(programBuilder, framebufferBuilder,
             (program, framebuffer) -> new ParallelViewRenderStream<>(
                 viewSet.getCameraPoseCount(), createDrawable(program), framebuffer, framebuffer.getColorAttachmentCount(), maxRunningThreads));
     }
 
     public GraphicsStreamResource<ContextType> parallelStreamAsResource(
-        Supplier<ProgramBuilder<ContextType>> programSupplier,
-        Supplier<FramebufferObjectBuilder<ContextType>> framebufferSupplier) throws FileNotFoundException
+        ProgramBuilder<ContextType> programBuilder,
+        FramebufferObjectBuilder<ContextType> framebufferBuilder) throws FileNotFoundException
     {
-        return new GraphicsStreamResource<>(programSupplier, framebufferSupplier,
+        return new GraphicsStreamResource<>(programBuilder, framebufferBuilder,
             (program, framebuffer) -> new ParallelViewRenderStream<>(
                 viewSet.getCameraPoseCount(), createDrawable(program), framebuffer, framebuffer.getColorAttachmentCount()));
     }

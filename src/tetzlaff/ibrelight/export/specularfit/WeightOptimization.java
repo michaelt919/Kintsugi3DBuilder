@@ -19,7 +19,7 @@ import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.ibrelight.rendering.GraphicsStream;
 import tetzlaff.util.Counter;
-import tetzlaff.util.NonNegativeLeastSquares;
+import tetzlaff.optimization.NonNegativeLeastSquares;
 
 import static java.lang.Math.PI;
 
@@ -27,7 +27,7 @@ public class WeightOptimization
 {
     // For original Nam 2018 version, weights were optimized against reflectance, not reflected radiance,
     // so we don't want to multiply by n dot l when attempting to reproduce that version.
-    private static final boolean OPTIMIZE_REFLECTANCE = SpecularFitRequest.ORIGINAL_NAM_METHOD;
+    private static final boolean OPTIMIZE_REFLECTANCE = SpecularOptimization.ORIGINAL_NAM_METHOD;
 
     private static final double NNLS_TOLERANCE_SCALE = 0.000000000001;
 
@@ -90,7 +90,7 @@ public class WeightOptimization
 
         System.out.println("DONE!");
 
-        if (SpecularFitRequest.DEBUG)
+        if (SpecularOptimization.DEBUG)
         {
             // write out weight textures for debugging
             solution.saveWeightMaps();

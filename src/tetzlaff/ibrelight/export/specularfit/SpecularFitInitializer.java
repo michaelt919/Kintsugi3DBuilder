@@ -24,24 +24,22 @@ import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.rendering.IBRResources;
 import tetzlaff.util.ColorList;
-import tetzlaff.util.KMeansClustering;
+import tetzlaff.optimization.KMeansClustering;
 
 public class SpecularFitInitializer<ContextType extends Context<ContextType>>
 {
     private final IBRResources<ContextType> resources;
-    private final SpecularFitProgramFactory<ContextType> programFactory;
     private final SpecularFitSettings settings;
 
-    public SpecularFitInitializer(IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory, SpecularFitSettings settings)
+    public SpecularFitInitializer(IBRResources<ContextType> resources, SpecularFitSettings settings)
     {
         this.resources = resources;
-        this.programFactory = programFactory;
         this.settings = settings;
     }
 
     private Program<ContextType> createAverageProgram() throws FileNotFoundException
     {
-        return programFactory.createProgram(
+        return new SpecularFitProgramFactory<>(resources, settings).createProgram(
             new File("shaders/common/texspace_noscale.vert"),
             new File("shaders/specularfit/average.frag"));
     }
@@ -64,7 +62,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
             // Run shader program to fill framebuffer with per-pixel information.
             drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
 
-            if (SpecularFitRequest.DEBUG)
+            if (SpecularOptimization.DEBUG)
             {
                 try
                 {
@@ -87,7 +85,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
                 System.out.println(centers.get(b));
             }
 
-            if (SpecularFitRequest.DEBUG)
+            if (SpecularOptimization.DEBUG)
             {
                 BufferedImage weightImg = new BufferedImage(settings.width, settings.height, BufferedImage.TYPE_INT_ARGB);
                 int[] weightDataPacked = new int[settings.width * settings.height];

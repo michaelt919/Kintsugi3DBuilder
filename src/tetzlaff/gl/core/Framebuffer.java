@@ -33,6 +33,8 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
 
     FramebufferSize getSize();
 
+    int getColorAttachmentCount();
+
     void readColorBufferARGB(int attachmentIndex, ByteBuffer destination, int x, int y, int width, int height);
     void readFloatingPointColorBufferRGBA(int attachmentIndex, FloatBuffer destination, int x, int y, int width, int height);
     void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination, int x, int y, int width, int height);

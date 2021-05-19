@@ -31,12 +31,12 @@ public class GraphicsStreamResource<ContextType extends Context<ContextType>> im
     private final FramebufferObject<ContextType> framebuffer;
     private final GraphicsStream<ColorList[]> base;
 
-    GraphicsStreamResource(Supplier<ProgramBuilder<ContextType>> programSupplier,
-        Supplier<FramebufferObjectBuilder<ContextType>> framebufferSupplier,
+    GraphicsStreamResource(ProgramBuilder<ContextType> programBuilder,
+        FramebufferObjectBuilder<ContextType> framebufferBuilder,
         BiFunction<Program<ContextType>, FramebufferObject<ContextType>, GraphicsStream<ColorList[]>> streamFactory) throws FileNotFoundException
     {
-        program = programSupplier.get().createProgram();
-        framebuffer = framebufferSupplier.get().createFramebufferObject();
+        program = programBuilder.createProgram();
+        framebuffer = framebufferBuilder.createFramebufferObject();
         base = streamFactory.apply(program, framebuffer);
     }
 

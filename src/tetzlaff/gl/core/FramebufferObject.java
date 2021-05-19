@@ -29,6 +29,4 @@ public interface FramebufferObject<ContextType extends Context<ContextType>> ext
     void setDepthAttachment(FramebufferAttachment<ContextType> attachment);
     void setStencilAttachment(FramebufferAttachment<ContextType> attachment);
     void setDepthStencilAttachment(FramebufferAttachment<ContextType> attachment);
-
-    int getColorAttachmentCount();
 }

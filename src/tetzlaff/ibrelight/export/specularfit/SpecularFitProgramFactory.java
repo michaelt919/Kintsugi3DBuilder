@@ -27,7 +27,7 @@ import tetzlaff.ibrelight.rendering.IBRResources;
 public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
 {
     // Use height-correlated Smith for masking / shadowing unless trying to replicate Nam et al. 2018.
-    private static final boolean SMITH_MASKING_SHADOWING = !SpecularFitRequest.ORIGINAL_NAM_METHOD;
+    private static final boolean SMITH_MASKING_SHADOWING = !SpecularOptimization.ORIGINAL_NAM_METHOD;
 
     private final IBRResources<ContextType> resources;
     private final SpecularFitSettings settings;
