@@ -132,6 +132,12 @@ public final class DefaultFramebufferFactory
         }
 
         @Override
+        public int getColorAttachmentCount()
+        {
+            return 1;
+        }
+
+        @Override
         public void readColorBufferARGB(int attachmentIndex, ByteBuffer destination, int x, int y, int width, int height)
         {
             frontFBO.readColorBufferARGB(attachmentIndex, destination, x, y, width, height);
