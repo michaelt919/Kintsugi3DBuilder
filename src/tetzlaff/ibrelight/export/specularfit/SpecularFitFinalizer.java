@@ -70,12 +70,14 @@ public class SpecularFitFinalizer
             solution.saveWeightMaps();
             solution.saveDiffuseMap(settings.additional.getFloat("gamma"));
 
+            // Update the GPU resources with the hole-filled weight maps.
+            specularFit.basisResources.updateFromSolution(solution);
+
             // Fit specular textures after filling holes
             specularFit.roughnessOptimization.execute();
             specularFit.roughnessOptimization.saveTextures();
 
             // Calculate RMSE after filling holes
-            specularFit.basisResources.updateFromSolution(solution);
             errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
             rmseOut.println("RMSE after hole fill: " + errorCalculator.getReport().getError());
 

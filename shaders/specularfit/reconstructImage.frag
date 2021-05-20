@@ -59,13 +59,13 @@ void main()
 
     if (nDotL > 0.0)
     {
-        vec3 brdf = pow(texture(diffuseEstimate, fTexCoord).rgb / filteredMask, vec3(gamma)) / PI + geomRatio * getMFDEstimate(nDotH) / filteredMask;
+        vec3 brdf = pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma)) / PI + geomRatio * getMFDEstimate(nDotH);
         fragColor = vec4(pow(incidentRadiance * nDotL * brdf, vec3(1.0 / gamma)), 1.0);
     }
     else
     {
         // Limit as n dot l and n dot v both go to zero.
-        vec3 mfd = getMFDEstimate(nDotH) / filteredMask;
+        vec3 mfd = getMFDEstimate(nDotH);
         fragColor = vec4(pow(incidentRadiance * mfd * 0.5 / roughness, vec3(1.0 / gamma)), 1.0);
     }
 }

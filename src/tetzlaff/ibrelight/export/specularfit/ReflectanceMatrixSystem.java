@@ -50,7 +50,7 @@ public class ReflectanceMatrixSystem
     {
         // Add the contribution into the main matrix and vectors.
         CommonOps_DDRM.addEquals(this.matrixATA.getMatrix(), contribution.matrixATA.getMatrix());
-        CommonOps_DDRM.addEquals(this.vectorATyBlue.getMatrix(), contribution.vectorATyRed.getMatrix());
+        CommonOps_DDRM.addEquals(this.vectorATyRed.getMatrix(), contribution.vectorATyRed.getMatrix());
         CommonOps_DDRM.addEquals(this.vectorATyGreen.getMatrix(), contribution.vectorATyGreen.getMatrix());
         CommonOps_DDRM.addEquals(this.vectorATyBlue.getMatrix(), contribution.vectorATyBlue.getMatrix());
     }

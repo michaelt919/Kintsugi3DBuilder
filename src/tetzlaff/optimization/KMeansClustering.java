@@ -21,14 +21,15 @@ import java.util.stream.IntStream;
 import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
+import tetzlaff.util.ColorList;
 
 public class KMeansClustering
 {
     private static final double TOLERANCE = 0.0001;
 
-    private final List<Vector4> colorMap;
+    private final ColorList colorMap;
 
-    public KMeansClustering(List<Vector4> colorMap)
+    public KMeansClustering(ColorList colorMap)
     {
         //noinspection AssignmentOrReturnOfFieldWithMutableType
         this.colorMap = colorMap;
@@ -46,29 +47,30 @@ public class KMeansClustering
         {
             firstCenterIndex = random.nextInt(colorMap.size());
         }
-        while(colorMap.get(firstCenterIndex).w < 1.0); // Make sure the center chosen is valid.
+        while(colorMap.getAlpha(firstCenterIndex) < 1.0); // Make sure the center chosen is valid.
 
-        Vector3[] centers = new Vector3[solutionOut.size()];
-        centers[0] = colorMap.get(firstCenterIndex).getXYZ();
+        int basisCount = solutionOut.get(0).getNumElements();
+        Vector3[] centers = new Vector3[basisCount];
+        centers[0] = colorMap.getRGB(firstCenterIndex);
 
         // Populate a CDF for the purpose of randomly selecting from a weighted probability distribution.
         double[] cdf = new double[colorMap.size() + 1];
 
-        for (int b = 1; b < solutionOut.size(); b++)
+        for (int b = 1; b < basisCount; b++)
         {
             cdf[0] = 0.0;
 
             for (int p = 0; p < colorMap.size(); p++)
             {
-                if (colorMap.get(p).w > 0.0)
+                if (colorMap.getAlpha(p) > 0.0)
                 {
-                    double minDistance = Double.MAX_VALUE;
+                    Vector3 sample = colorMap.getRGB(p);
 
-                    for (int b2 = 0; b2 < b; b2++)
-                    {
-                        minDistance = Math.min(minDistance, centers[b2].distance(colorMap.get(p).getXYZ()));
-                    }
-
+                    // Find the minimum distance from the sample to any of the current centers.
+                    double minDistance = IntStream.range(0, b)
+                        .mapToDouble(b2 -> centers[b2].distance(sample))
+                        .min()
+                        .orElse(Double.MAX_VALUE);
                     cdf[p + 1] = cdf[p] + minDistance * minDistance;
                 }
             }
@@ -98,7 +100,7 @@ public class KMeansClustering
 
             // If the index was actually positive to begin with, that's probably fine; just make sure that it's a valid location.
             // It's also possible in theory for the index to be zero if the random number generator produced 0.0.
-            while (index < 0 || colorMap.get(index).w == 0.0)
+            while (index < 0 || colorMap.getAlpha(index) == 0.0)
             {
                 // Search forward until a valid index is found.
                 index++;
@@ -109,11 +111,11 @@ public class KMeansClustering
             }
 
             // We've found a new center.
-            centers[b] = colorMap.get(index).getXYZ();
+            centers[b] = colorMap.getRGB(index);
         }
 
         System.out.println("Initial centers:");
-        for (int b = 0; b < solutionOut.size(); b++)
+        for (int b = 0; b < basisCount; b++)
         {
             System.out.println(centers[b]);
         }
@@ -123,19 +125,19 @@ public class KMeansClustering
         do
         {
             // Initialize sums to zero.
-            Vector4[] sums = IntStream.range(0, solutionOut.size()).mapToObj(i -> Vector4.ZERO).toArray(Vector4[]::new);
+            Vector4[] sums = IntStream.range(0, basisCount).mapToObj(i -> Vector4.ZERO).toArray(Vector4[]::new);
 
-            for (Vector4 color : colorMap)
+            for (int p = 0; p < colorMap.size(); p++)
             {
-                if (color.w > 0.0)
+                if (colorMap.getAlpha(p) > 0.0)
                 {
                     int bMin = -1;
 
                     double minDistance = Double.MAX_VALUE;
 
-                    for (int b = 0; b < solutionOut.size(); b++)
+                    for (int b = 0; b < basisCount; b++)
                     {
-                        double distance = centers[b].distance(color.getXYZ());
+                        double distance = centers[b].distance(colorMap.getRGB(p));
                         if (distance < minDistance)
                         {
                             minDistance = distance;
@@ -143,12 +145,12 @@ public class KMeansClustering
                         }
                     }
 
-                    sums[bMin] = sums[bMin].plus(color.getXYZ().asVector4(1.0f));
+                    sums[bMin] = sums[bMin].plus(new Vector4(colorMap.getRed(p), colorMap.getGreen(p), colorMap.getBlue(p), 1.0f));
                 }
             }
 
             changed = false;
-            for (int b = 0; b < solutionOut.size(); b++)
+            for (int b = 0; b < basisCount; b++)
             {
                 if (sums[b].w > 0.0)
                 {
@@ -171,7 +173,7 @@ public class KMeansClustering
 
                 double minDistance = Double.MAX_VALUE;
 
-                for (int b = 0; b < solutionOut.size(); b++)
+                for (int b = 0; b < basisCount; b++)
                 {
                     double distance = centers[b].distance(colorMap.get(p).getXYZ());
                     if (distance < minDistance)

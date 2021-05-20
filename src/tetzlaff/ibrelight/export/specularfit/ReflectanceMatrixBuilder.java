@@ -17,7 +17,6 @@ import java.util.stream.IntStream;
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.util.ColorList;
 
 import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
 
@@ -27,7 +26,7 @@ import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
 final class ReflectanceMatrixBuilder
 {
     // Set to true to validate the implementation (should generally be turned off for much better efficiency).
-    private static final boolean VALIDATE = true;
+    private static final boolean VALIDATE = false;
 
     private int mPrevious = 0;
 

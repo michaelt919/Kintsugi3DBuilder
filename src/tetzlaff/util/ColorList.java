@@ -15,6 +15,7 @@ package tetzlaff.util;
 import java.util.AbstractList;
 
 import tetzlaff.gl.vecmath.DoubleVector4;
+import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
 
 public class ColorList extends AbstractList<Vector4>
@@ -27,9 +28,46 @@ public class ColorList extends AbstractList<Vector4>
         this.colorData = colorData;
     }
 
-    @Override public Vector4 get(int p)
+    @Override public Vector4 get(int index)
     {
-        return new Vector4(colorData[4 * p], colorData[4 * p + 1], colorData[4 * p + 2], colorData[4 * p + 3]);
+        return new Vector4(colorData[4 * index], colorData[4 * index + 1], colorData[4 * index + 2], colorData[4 * index + 3]);
+    }
+
+    public Vector3 getRGB(int index)
+    {
+        return new Vector3(colorData[4 * index], colorData[4 * index + 1], colorData[4 * index + 2]);
+    }
+
+    /**
+     * This is more efficient than the other version of get() when you only need to work with a single component at a time,
+     * since it avoids the overhead of constructing a Vector4 object.
+     * @param index
+     * @param component
+     * @return
+     */
+    public float get(int index, int component)
+    {
+        return colorData[4 * index + component];
+    }
+
+    public float getRed(int index)
+    {
+        return get(index, 0);
+    }
+
+    public float getGreen(int index)
+    {
+        return get(index, 1);
+    }
+
+    public float getBlue(int index)
+    {
+        return get(index, 2);
+    }
+
+    public float getAlpha(int index)
+    {
+        return get(index, 3);
     }
 
     @Override public int size() { return colorData.length / 4; }

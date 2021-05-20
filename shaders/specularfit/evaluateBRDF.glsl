@@ -1,7 +1,6 @@
 #line 2 4001
 
 uniform sampler2DArray weightMaps;
-uniform sampler2D weightMask;
 uniform sampler1DArray basisFunctions;
 
 layout(std140) uniform DiffuseColors

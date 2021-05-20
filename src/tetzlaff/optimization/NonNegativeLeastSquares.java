@@ -201,7 +201,7 @@ public final class NonNegativeLeastSquares
                     sizeP = mapping.size() - constraintCount;
 
                     // Make sure that none of the free variables went negative.
-                    while (minNonConstraint(s_P, constraintCount) <= 0.0)
+                    while (minNonConstraint(s_P, constraintCount) < 0.0)
                     {
                         double alpha = 1.0;
                         int j = -1;

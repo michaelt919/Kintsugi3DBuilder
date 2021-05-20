@@ -39,32 +39,32 @@ public class ReflectanceData
 
     public Vector3 getColor(int p)
     {
-        return colorAndVisibility.get(p).getXYZ();
+        return colorAndVisibility.getRGB(p);
     }
 
     public float getVisibility(int p)
     {
-        return colorAndVisibility.get(p).w;
+        return colorAndVisibility.get(p, 3);
     }
 
     public float getHalfwayIndex(int p)
     {
-        return halfwayGeomWeightNDotL.get(p).x;
+        return halfwayGeomWeightNDotL.get(p, 0);
     }
 
     public float getGeomRatio(int p)
     {
-        return halfwayGeomWeightNDotL.get(p).y;
+        return halfwayGeomWeightNDotL.get(p, 1);
     }
 
     public float getAdditionalWeight(int p)
     {
-        return halfwayGeomWeightNDotL.get(p).z;
+        return halfwayGeomWeightNDotL.get(p, 2);
     }
 
     public float getNDotL(int p)
     {
-        return halfwayGeomWeightNDotL.get(p).w;
+        return halfwayGeomWeightNDotL.get(p, 3);
     }
 
     public int size()

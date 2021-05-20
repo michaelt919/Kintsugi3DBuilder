@@ -61,12 +61,13 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         // Create reconstruction provider
         try (ImageReconstruction<ContextType> reconstruction = new ImageReconstruction<>(
             resources,
-            programBuilder, //getImageReconstructionProgramBuilder(programFactory),
+            programBuilder,
             resources.context.buildFramebufferObject(imageWidth, imageHeight)
                 .addColorAttachment(ColorFormat.RGBA32F)
                 .addDepthAttachment(),
             program ->
             {
+                resources.setupShaderProgram(program);
                 specularFit.basisResources.useWithShaderProgram(program);
                 program.setTexture("normalEstimate", specularFit.getNormalMap());
                 program.setTexture("specularEstimate", specularFit.getSpecularReflectivityMap());
