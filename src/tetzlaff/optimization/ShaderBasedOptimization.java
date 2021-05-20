@@ -24,6 +24,11 @@ import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
 
+/**
+ * A class for optimization where the entirety of the solving happens on the graphics card (typically useful for optimizing 4 parameters or less).
+ * This class is primarily designed for the iterative portion of the algorithm, i.e. when using Levenberg-Marquardt or some other iterative method.
+ * @param <ContextType> The type of the graphics context.
+ */
 public class ShaderBasedOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
 {
     private final Program<ContextType> estimationProgram;
