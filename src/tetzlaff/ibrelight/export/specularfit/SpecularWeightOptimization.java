@@ -22,10 +22,6 @@ import static java.lang.Math.PI;
 
 public class SpecularWeightOptimization
 {
-    // For original Nam 2018 version, weights were optimized against reflectance, not reflected radiance,
-    // so we don't want to multiply by n dot l when attempting to reproduce that version.
-    private static final boolean OPTIMIZE_REFLECTANCE = SpecularOptimization.ORIGINAL_NAM_METHOD;
-
     private final SpecularFitSettings settings;
     private final double metallicity;
 
@@ -48,72 +44,9 @@ public class SpecularWeightOptimization
         solution.invalidateWeights();
 
         // Setup all the matrices for fitting weights (one per texel)
-        base.buildMatrices(
-            // Stream of data coming from the GPU
-            viewStream,
-
-            // Visibility test
-            (reflectanceData, p) -> reflectanceData.getVisibility(p) > 0,
-
+        base.buildMatrices(viewStream, new SpecularWeightModel(solution, settings, metallicity, SpecularOptimization.ORIGINAL_NAM_METHOD),
             // If a pixel is valid in some view, mark it as such in the solution.
-            p -> solution.setWeightsValidity(p, true),
-
-            // Weight function.
-            // For original Nam 2018 version, weights were optimized against reflectance, not reflected radiance,
-            // so we don't want to multiply by n dot l when attempting to reproduce that version.
-            (reflectanceData, p) -> reflectanceData.getAdditionalWeight(p) * (OPTIMIZE_REFLECTANCE ? 1 : reflectanceData.getNDotL(p)),
-
-            // Sampler (ground truth data)
-            (reflectanceData, p) -> reflectanceData.getColor(p).asDoublePrecision(),
-
-            // Basis function calculator
-            (reflectanceData, p) ->
-            {
-                // Precompute values that will be reused; captured by the lambda expression.
-                float halfwayIndex = reflectanceData.getHalfwayIndex(p);
-                float geomRatio = reflectanceData.getGeomRatio(p);
-
-                // Precalculate frequently used values.
-                double mExact = halfwayIndex * settings.microfacetDistributionResolution;
-
-                int m1 = (int)Math.floor(mExact);
-                int m2 = m1 + 1;
-                double t = mExact - m1;
-
-                return b ->
-                {
-                    // Evaluate the basis BRDF.
-                    DoubleVector3 fDiffuse = solution.getDiffuseAlbedo(b).dividedBy(PI);
-
-                    if (m1 < settings.microfacetDistributionResolution)
-                    {
-                        return fDiffuse
-                            .plus(new DoubleVector3(
-                                    solution.getSpecularRed().get(m1, b),
-                                    solution.getSpecularGreen().get(m1, b),
-                                    solution.getSpecularBlue().get(m1, b))
-                                .times(1.0 - t)
-                            .plus(new DoubleVector3(
-                                    solution.getSpecularRed().get(m2, b),
-                                    solution.getSpecularGreen().get(m2, b),
-                                    solution.getSpecularBlue().get(m2, b))
-                                .times(t))
-                            .times((double) geomRatio));
-                    }
-                    else if (metallicity > 0.0f)
-                    {
-                        return fDiffuse
-                            .plus(new DoubleVector3(
-                                    solution.getSpecularRed().get(settings.microfacetDistributionResolution, b),
-                                    solution.getSpecularGreen().get(settings.microfacetDistributionResolution, b),
-                                    solution.getSpecularBlue().get(settings.microfacetDistributionResolution, b))
-                                .times((double) geomRatio));
-                    }
-
-                    return fDiffuse;
-                };
-            },
-            DoubleVector3::dot);
+            p -> solution.setWeightsValidity(p, true));
 
         System.out.println("Finished building matrices; solving now...");
 

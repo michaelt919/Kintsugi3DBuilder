@@ -22,7 +22,7 @@ import tetzlaff.ibrelight.rendering.GraphicsStream;
 
 public class NonNegativeWeightOptimization
 {
-    private static final double NNLS_TOLERANCE_SCALE = 0.000000000001;
+    private static final double DEFAULT_TOLERANCE_SCALE = 0.000000000001;
 
     private final LeastSquaresMatrixBuilder matrixBuilder;
 
@@ -43,14 +43,12 @@ public class NonNegativeWeightOptimization
         this(sampleCount, weightCount, Collections.emptyList(), Collections.emptyList());
     }
 
-    public <S, T> void buildMatrices(GraphicsStream<S> viewStream, BiPredicate<S, Integer> validityTest,
-        IntConsumer sampleValidator, ToDoubleBiFunction<S, Integer> weightFunction, BiFunction<S, Integer, T> sampler,
-        BiFunction<S, Integer, IntFunction<T>> basisCalculator, ToDoubleBiFunction<T, T> innerProduct)
+    public <S, T> void buildMatrices(GraphicsStream<S> viewStream, LeastSquaresModel<S, T> leastSquaresModel, IntConsumer sampleValidator)
     {
-        matrixBuilder.buildMatrices(viewStream, validityTest, sampleValidator, weightFunction, sampler, basisCalculator, innerProduct);
+        matrixBuilder.buildMatrices(viewStream, leastSquaresModel, sampleValidator);
     }
 
-    public void optimizeWeights(IntPredicate areWeightsValid, BiConsumer<Integer, SimpleMatrix> weightSolutionConsumer)
+    public void optimizeWeights(IntPredicate areWeightsValid, BiConsumer<Integer, SimpleMatrix> weightSolutionConsumer, double toleranceScale)
     {
         for (int p = 0; p < matrixBuilder.sampleCount; p++)
         {
@@ -68,8 +66,13 @@ public class NonNegativeWeightOptimization
                 // Solve the system.
                 weightSolutionConsumer.accept(p, NonNegativeLeastSquares.solvePremultipliedWithEqualityConstraints(
                     matrixBuilder.weightsQTQAugmented[p], matrixBuilder.weightsQTrAugmented[p],
-                    median * NNLS_TOLERANCE_SCALE, matrixBuilder.constraintCount));
+                    median * toleranceScale, matrixBuilder.constraintCount));
             }
         }
+    }
+
+    public void optimizeWeights(IntPredicate areWeightsValid, BiConsumer<Integer, SimpleMatrix> weightSolutionConsumer)
+    {
+        optimizeWeights(areWeightsValid, weightSolutionConsumer, DEFAULT_TOLERANCE_SCALE);
     }
 }

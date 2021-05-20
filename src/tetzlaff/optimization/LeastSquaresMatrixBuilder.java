@@ -21,6 +21,15 @@ import org.ejml.simple.SimpleMatrix;
 import tetzlaff.ibrelight.rendering.GraphicsStream;
 import tetzlaff.util.Counter;
 
+/**
+ * When working with image-based data, it is common to need to solve multiple least squares systems in parallel.
+ * For example, when solving for certain kinds of texture maps, each pixel of the texture map may be its own least squares system.
+ * This class contains a generic implementation of this kind of system.
+ * It is set up to support taking input from a generic graphics stream
+ * (typically data obtained from a sequence of GPU draw calls into an offscreen framebuffer),
+ * and interprets that data as a set of samples that span all of the systems that need to be solved.
+ * These samples are used to build the matrices for the actual systems that need to be solved to obtain a least squares solution.
+ */
 @SuppressWarnings("PublicField")
 public class LeastSquaresMatrixBuilder
 {
@@ -75,9 +84,7 @@ public class LeastSquaresMatrixBuilder
             .toArray(SimpleMatrix[]::new);
     }
 
-    public <S, T> void buildMatrices(GraphicsStream<S> viewStream, BiPredicate<S, Integer> validityTest,
-        IntConsumer sampleValidator, ToDoubleBiFunction<S, Integer> weightFunction, BiFunction<S, Integer, T> sampler,
-        BiFunction<S, Integer, IntFunction<T>> basisCalculator, ToDoubleBiFunction<T, T> innerProduct)
+    public <S, T> void buildMatrices(GraphicsStream<S> viewStream, LeastSquaresModel<S, T> leastSquaresModel, IntConsumer sampleValidator)
     {
         Counter counter = new Counter();
 
@@ -87,19 +94,19 @@ public class LeastSquaresMatrixBuilder
             IntStream.range(0, sampleCount).parallel().forEach(p ->
             {
                 // Skip samples that aren't visible or are otherwise invalid.
-                if (validityTest.test(reflectanceData, p))
+                if (leastSquaresModel.isValid(reflectanceData, p))
                 {
                     // Any time we have a visible, valid sample, mark that the corresponding texel is valid.
                     sampleValidator.accept(p);
 
-                    double weight = weightFunction.applyAsDouble(reflectanceData, p);
+                    double weight = leastSquaresModel.getSampleWeight(reflectanceData, p);
                     double weightSquared = weight * weight;
 
                     // Evaluate sampler (get the ground truth value)
-                    T fActual = sampler.apply(reflectanceData, p);
+                    T fActual = leastSquaresModel.getSamples(reflectanceData, p);
 
                     // Evaluate the "basisCalculator" to get another function that can provide the actual basis function values.
-                    IntFunction<T> basisFunctions = basisCalculator.apply(reflectanceData, p);
+                    IntFunction<T> basisFunctions = leastSquaresModel.getBasisFunctions(reflectanceData, p);
 
                     for (int b1 = 0; b1 < weightCount; b1++)
                     {
@@ -107,7 +114,7 @@ public class LeastSquaresMatrixBuilder
                         T f1 = basisFunctions.apply(b1);
 
                         // Store the weighted product of the basis function and the actual sample in the vector.
-                        weightsQTrAugmented[p].set(b1, weightsQTrAugmented[p].get(b1) + weightSquared * innerProduct.applyAsDouble(f1, fActual));
+                        weightsQTrAugmented[p].set(b1, weightsQTrAugmented[p].get(b1) + weightSquared * leastSquaresModel.innerProduct(f1, fActual));
 
                         for (int b2 = 0; b2 < weightCount; b2++)
                         {
@@ -115,7 +122,7 @@ public class LeastSquaresMatrixBuilder
 
                             // Store the weighted product of the two basis functions in the matrix.
                             weightsQTQAugmented[p].set(b1, b2,
-                                weightsQTQAugmented[p].get(b1, b2) + weightSquared * innerProduct.applyAsDouble(f1, f2));
+                                weightsQTQAugmented[p].get(b1, b2) + weightSquared * leastSquaresModel.innerProduct(f1, f2));
                         }
                     }
                 }
