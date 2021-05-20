@@ -113,7 +113,7 @@ public class SpecularOptimization
             double previousIterationError;
 
             BRDFReconstruction brdfReconstruction = new BRDFReconstruction(settings, METALLICITY);
-            WeightOptimization weightOptimization = new WeightOptimization(settings, METALLICITY);
+            SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(settings, METALLICITY);
             ShaderBasedErrorCalculator errorCalculator = new ShaderBasedErrorCalculator(settings.width * settings.height);
 
             do
@@ -139,7 +139,7 @@ public class SpecularOptimization
                 }
 
                 // Optimize weights.
-                weightOptimization.reconstructWeights(
+                weightOptimization.execute(
                     reflectanceStream.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
                     solution);
 

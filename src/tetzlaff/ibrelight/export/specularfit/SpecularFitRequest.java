@@ -24,7 +24,6 @@ public class SpecularFitRequest extends TextureFitRequest
     public SpecularFitRequest(SpecularFitSettings settings)
     {
         super(settings);
-
         this.settings = settings;
     }
 
@@ -33,7 +32,8 @@ public class SpecularFitRequest extends TextureFitRequest
     {
         try
         {
-            new SpecularOptimization(settings).createFit(renderable.getResources());
+            new SpecularOptimization(settings).createFit(renderable.getResources())
+                .close(); // Close immediately when this is just an export operation.
         }
         catch(IOException e) // thrown by createReflectanceProgram
         {
