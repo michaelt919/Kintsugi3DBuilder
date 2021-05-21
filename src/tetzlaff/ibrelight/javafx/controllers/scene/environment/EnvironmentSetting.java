@@ -99,7 +99,7 @@ public class EnvironmentSetting implements DOMConvertable
         newEnvironment.envRotation.setValue(Double.valueOf(element.getAttribute("envRotation")));
         newEnvironment.envColor.setValue(Color.valueOf(element.getAttribute("envColor")));
         newEnvironment.envFilteringBias.setValue(element.hasAttribute("envFilteringBias") ?
-            Integer.valueOf(element.getAttribute("envFilteringBias")) : 0);
+            (int)Math.round(Double.valueOf(element.getAttribute("envFilteringBias"))) : 0);
         newEnvironment.bpColor.setValue(Color.valueOf(element.getAttribute("bpColor")));
         newEnvironment.name.setValue(String.valueOf(element.getAttribute("name")));
         newEnvironment.locked.setValue(Boolean.valueOf(element.getAttribute("locked")));
