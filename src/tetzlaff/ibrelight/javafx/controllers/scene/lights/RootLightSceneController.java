@@ -96,7 +96,7 @@ public class RootLightSceneController implements Initializable
             if (!selectedCells.isEmpty())
             {
                 //new cell selected
-                assert change.getAddedSize() == 1;
+                assert change.next() && change.getAddedSize() == 1;
                 TablePosition<?, ?> tablePosition = tableView.getSelectionModel().getSelectedCells().get(0);
                 ObservableValue<?> selectedCell = tablePosition.getTableColumn().getCellObservableValue(tablePosition.getRow());
                 LightGroupSetting selectedLightGroup = getSelectedLightGroup();
