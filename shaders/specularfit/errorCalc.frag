@@ -67,7 +67,6 @@ void main()
         {
             float hDotV = max(0.0, dot(halfway, view));
             float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-//            vec3 reflectanceEstimate = getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV));
             vec3 specular = getMFDEstimate(nDotH) * maskingShadowing / (4 * nDotV);
             vec3 reflectanceEstimateTimesNDotL = pow(diffuseColor * nDotL / PI + specular, vec3(1 / errorGamma));
 

@@ -100,13 +100,11 @@ public class SpecularOptimization
         {
             // Setup reflectance extraction program
             programFactory.setupShaderProgram(reflectanceStream.getProgram());
-            reflectanceStream.getProgram().setTexture("normalEstimate", specularFit.normalOptimization.getNormalMap());
-            reflectanceStream.getProgram().setTexture("roughnessEstimate", specularFit.roughnessOptimization.getRoughnessTexture());
+            reflectanceStream.getProgram().setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
 
             Drawable<ContextType> errorCalcDrawable = resources.createDrawable(errorCalcProgram);
             specularFit.basisResources.useWithShaderProgram(errorCalcProgram);
-            errorCalcProgram.setTexture("normalEstimate", specularFit.normalOptimization.getNormalMap());
-            errorCalcProgram.setTexture("roughnessEstimate", specularFit.roughnessOptimization.getRoughnessTexture());
+            errorCalcProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
             errorCalcProgram.setUniform("errorGamma", 1.0f);
 
             // Track how the error improves over iterations of the whole algorithm.
@@ -121,7 +119,7 @@ public class SpecularOptimization
                 previousIterationError = errorCalculator.getReport().getError();
 
                 // Use the current front normal buffer for extracting reflectance information.
-                reflectanceStream.getProgram().setTexture("normalEstimate", specularFit.normalOptimization.getNormalMap());
+                reflectanceStream.getProgram().setTexture("normalEstimate", specularFit.getNormalMap());
 
                 // Reconstruct the basis BRDFs.
                 // Set up a stream and pass it to the BRDF reconstruction module to give it access to the reflectance information.
@@ -130,9 +128,16 @@ public class SpecularOptimization
                     reflectanceStream.parallel().map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
                     solution);
 
+                // Use the current front normal buffer for calculating error.
+                errorCalcProgram.setTexture("normalEstimate", specularFit.getNormalMap());
+
                 // Log error in debug mode.
                 if (DEBUG)
                 {
+                    // Prepare for error calculation on the GPU.
+                    // Basis functions will have changed.
+                    specularFit.basisResources.updateFromSolution(solution);
+
                     System.out.println("Calculating error...");
                     errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
                     logError(errorCalculator.getReport());
@@ -148,6 +153,10 @@ public class SpecularOptimization
                     System.out.println("Calculating error...");
                 }
 
+                // Prepare for error calculation and then normal optimization on the GPU.
+                // Weight maps will have changed.
+                specularFit.basisResources.updateFromSolution(solution);
+
                 // Calculate the error in preparation for normal estimation.
                 errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
 
@@ -157,38 +166,30 @@ public class SpecularOptimization
                     logError(errorCalculator.getReport());
                 }
 
-                // Prepare for normal estimation on the GPU.
-                specularFit.basisResources.updateFromSolution(solution);
-
                 if (NORMAL_REFINEMENT)
                 {
-                    if (DEBUG)
-                    {
-                        System.out.println("Estimating normals...");
-                    }
-
                     specularFit.normalOptimization.execute(normalMap ->
+                    {
+                        // Update program to use the new front buffer for error calculation.
+                        errorCalcProgram.setTexture("normalEstimate", normalMap);
+
+                        if (DEBUG)
                         {
-                            // Update program to use the new front buffer for error calculation.
-                            errorCalcProgram.setTexture("normalEstimate", normalMap);
+                            System.out.println("Calculating error...");
+                        }
 
-                            if (DEBUG)
-                            {
-                                System.out.println("Calculating error...");
-                            }
+                        // Calculate the error to determine if we should stop.
+                        errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
 
-                            // Calculate the error to determine if we should stop.
-                            errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
+                        if (DEBUG)
+                        {
+                            // Log error in debug mode.
+                            logError(errorCalculator.getReport());
+                        }
 
-                            if (DEBUG)
-                            {
-                                // Log error in debug mode.
-                                logError(errorCalculator.getReport());
-                            }
-
-                            return errorCalculator.getReport();
-                        },
-                        CONVERGENCE_TOLERANCE);
+                        return errorCalculator.getReport();
+                    },
+                    CONVERGENCE_TOLERANCE);
 
                     if (errorCalculator.getReport().getError() > errorCalculator.getReport().getPreviousError())
                     {

@@ -12,6 +12,8 @@
 
 package tetzlaff.optimization;
 
+import java.util.stream.IntStream;
+
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Drawable;
 import tetzlaff.gl.core.Framebuffer;
@@ -31,6 +33,19 @@ public class ShaderBasedErrorCalculator
         return report;
     }
 
+    @SuppressWarnings("PackageVisibleField")
+    private static class WeightedError
+    {
+        double error;
+        double weight;
+
+        WeightedError(double error, double weight)
+        {
+            this.error = error;
+            this.weight = weight;
+        }
+    }
+
     public <ContextType extends Context<ContextType>> void update(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
     {
         // Clear framebuffer
@@ -43,20 +58,23 @@ public class ShaderBasedErrorCalculator
         // Copy framebuffer from GPU to main memory.
         float[] pixelErrors = framebuffer.readFloatingPointColorBufferRGBA(0);
 
-        double errorTotal = 0.0;
-        int validCount = 0;
-
         // Add up per-pixel error.
-        for (int p = 0; p < report.getSampleCount(); p++)
-        {
-            if (pixelErrors[4 * p + 3] > 0)
-            {
-                errorTotal += pixelErrors[4 * p];
-                validCount += pixelErrors[4 * p + 3];
-            }
-        }
+        WeightedError errorTotal = IntStream.range(0, report.getSampleCount())
+            .parallel()
+            .filter(p -> pixelErrors[4 * p + 3] > 0)
+            .collect(() -> new WeightedError(0, 0),
+                (total, p) ->
+                {
+                    total.error += pixelErrors[4 * p];
+                    total.weight += pixelErrors[4 * p + 3];
+                },
+                (total1, total2) ->
+                {
+                    total1.error += total2.error;
+                    total1.weight += total2.weight;
+                });
 
-        report.setError(Math.sqrt(errorTotal / validCount));
+        report.setError(Math.sqrt(errorTotal.error / errorTotal.weight));
     }
 
     public void reject()

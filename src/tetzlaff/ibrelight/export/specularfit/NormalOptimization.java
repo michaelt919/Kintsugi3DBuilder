@@ -54,6 +54,11 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
 
             // Clear framebuffer
             backFramebuffer.clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
+
+            if (SpecularOptimization.DEBUG)
+            {
+                System.out.println("Estimating normals...");
+            }
         });
 
         base.addPostUpdateCallback(framebuffer ->

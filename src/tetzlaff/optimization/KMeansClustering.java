@@ -13,9 +13,8 @@
 package tetzlaff.optimization;
 
 import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.ejml.simple.SimpleMatrix;
@@ -124,30 +123,39 @@ public class KMeansClustering
         boolean changed;
         do
         {
-            // Initialize sums to zero.
-            Vector4[] sums = IntStream.range(0, basisCount).mapToObj(i -> Vector4.ZERO).toArray(Vector4[]::new);
-
-            for (int p = 0; p < colorMap.size(); p++)
-            {
-                if (colorMap.getAlpha(p) > 0.0)
-                {
-                    int bMin = -1;
-
-                    double minDistance = Double.MAX_VALUE;
-
-                    for (int b = 0; b < basisCount; b++)
+            Vector4[] sums = IntStream.range(0, colorMap.size())
+                .parallel()
+                .collect(
+                    // Supplier:
+                    () -> IntStream.range(0, basisCount)
+                        .mapToObj(i -> Vector4.ZERO) // Initialize sums to zero.
+                        .toArray(Vector4[]::new),
+                    // Accumulator:
+                    (partialSums, p) ->
                     {
-                        double distance = centers[b].distance(colorMap.getRGB(p));
-                        if (distance < minDistance)
+                        if (colorMap.getAlpha(p) > 0.0)
                         {
-                            minDistance = distance;
-                            bMin = b;
-                        }
-                    }
+                            int bMin = -1;
 
-                    sums[bMin] = sums[bMin].plus(new Vector4(colorMap.getRed(p), colorMap.getGreen(p), colorMap.getBlue(p), 1.0f));
-                }
-            }
+                            double minDistance = Double.MAX_VALUE;
+
+                            for (int b = 0; b < basisCount; b++)
+                            {
+                                double distance = centers[b].distance(colorMap.getRGB(p));
+                                if (distance < minDistance)
+                                {
+                                    minDistance = distance;
+                                    bMin = b;
+                                }
+                            }
+
+                            partialSums[bMin] = partialSums[bMin]
+                                .plus(new Vector4(colorMap.getRed(p), colorMap.getGreen(p), colorMap.getBlue(p), 1.0f));
+                        }
+                    },
+                    // Combiner:
+                    (sums1, sums2) -> IntStream.range(0, basisCount)
+                        .forEach(b -> sums1[b] = sums1[b].plus(sums2[b])));
 
             changed = false;
             for (int b = 0; b < basisCount; b++)
