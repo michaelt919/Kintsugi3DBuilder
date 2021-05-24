@@ -13,6 +13,7 @@
 package tetzlaff.ibrelight.javafx.internal;//Created by alexk on 7/25/2017.
 
 import javafx.beans.value.ObservableValue;
+import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.javafx.controllers.scene.lights.LightGroupSetting;
 import tetzlaff.models.EnvironmentModel;
 import tetzlaff.models.impl.ExtendedLightingModelBase;

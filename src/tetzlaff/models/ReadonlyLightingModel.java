@@ -35,4 +35,9 @@ public interface ReadonlyLightingModel
 
     Vector3 getBackgroundColor();
     BackgroundMode getBackgroundMode();
+
+    Vector3 getGroundPlaneColor();
+    boolean isGroundPlaneEnabled();
+    float getGroundPlaneHeight();
+    float getGroundPlaneSize();
 }

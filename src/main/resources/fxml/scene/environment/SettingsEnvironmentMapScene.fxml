@@ -1,9 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
 <!--
   ~  Copyright (c) Michael Tetzlaff 2019
   ~  Copyright (c) The Regents of the University of Minnesota 2019
@@ -94,6 +106,34 @@
                   </GridPane>
               </content>
           </TitledPane>
+         <TitledPane animated="false" text="Ground Plane">
+            <content>
+               <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+                 <columnConstraints>
+                   <ColumnConstraints hgrow="SOMETIMES" maxWidth="131.0" minWidth="10.0" prefWidth="59.0" />
+                   <ColumnConstraints hgrow="SOMETIMES" maxWidth="140.0" minWidth="10.0" prefWidth="85.0" />
+                     <ColumnConstraints hgrow="SOMETIMES" maxWidth="228.0" minWidth="10.0" prefWidth="226.0" />
+                 </columnConstraints>
+                 <rowConstraints>
+                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                 </rowConstraints>
+                  <children>
+                     <Label text="Color: " GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+                     <CheckBox fx:id="gpEnabledCheckBox" mnemonicParsing="false" prefHeight="17.0" prefWidth="121.0" text="Use Ground Plane" GridPane.columnSpan="2" />
+                     <ColorPicker fx:id="gpColorPicker" prefHeight="25.0" prefWidth="300.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+                     <Label text="Height: " GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+                     <TextField fx:id="gpHeightTextField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                     <Slider fx:id="gpHeightSlider" blockIncrement="0.1" majorTickUnit="0.25" max="1.0" min="-1.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                     <Label layoutX="37.0" layoutY="87.0" text="Size:" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
+                     <TextField fx:id="gpSizeTextField" layoutX="79.0" layoutY="83.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                     <Slider fx:id="gpSizeSlider" blockIncrement="0.1" layoutX="164.0" layoutY="76.0" majorTickUnit="1.0" max="2.0" min="-2.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                  </children>
+               </GridPane>
+            </content>
+         </TitledPane>
      </panes>
    </Accordion>
 </VBox>

@@ -104,4 +104,28 @@ public class EnvironmentModelWrapper implements EnvironmentModel
     {
         this.backgroundIntensity.setValue(backgroundIntensity);
     }
+
+    @Override
+    public boolean isGroundPlaneEnabled()
+    {
+        return baseModel.isGroundPlaneEnabled();
+    }
+
+    @Override
+    public Vector3 getGroundPlaneColor()
+    {
+        return baseModel.getGroundPlaneColor();
+    }
+
+    @Override
+    public float getGroundPlaneHeight()
+    {
+        return baseModel.getGroundPlaneHeight();
+    }
+
+    @Override
+    public float getGroundPlaneSize()
+    {
+        return baseModel.getGroundPlaneSize();
+    }
 }

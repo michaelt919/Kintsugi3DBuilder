@@ -12,6 +12,8 @@
 
 package tetzlaff.models;
 
+import tetzlaff.gl.vecmath.Vector3;
+
 public interface EnvironmentModel extends ReadonlyEnvironmentModel
 {
     void setEnvironmentRotation(float environmentRotation);

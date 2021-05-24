@@ -167,6 +167,30 @@ public abstract class ExtendedLightingModelBase<LightInstanceType extends LightI
     }
 
     @Override
+    public Vector3 getGroundPlaneColor()
+    {
+        return environmentModel.getGroundPlaneColor();
+    }
+
+    @Override
+    public boolean isGroundPlaneEnabled()
+    {
+        return environmentModel.isGroundPlaneEnabled();
+    }
+
+    @Override
+    public float getGroundPlaneHeight()
+    {
+        return environmentModel.getGroundPlaneHeight();
+    }
+
+    @Override
+    public float getGroundPlaneSize()
+    {
+        return environmentModel.getGroundPlaneSize();
+    }
+
+    @Override
     public void setBackgroundMode(BackgroundMode backgroundMode)
     {
         throw new UnsupportedOperationException();

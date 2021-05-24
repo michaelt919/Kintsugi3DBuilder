@@ -746,19 +746,18 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         float farPlane;
         float nearPlane;
 
-        // if (settingsModel.getBoolean("isGroundPlaneEnabled"))
+        if (lightingModel.isGroundPlaneEnabled())
         {
             fov = 2.0f * (float)Math.asin(Math.min(0.99, (this.getScale() + lookAtDist) / lightDist));
             farPlane = lightDist + 2 * this.getScale();
             nearPlane = Math.max((lightDist + radius) / 32.0f, lightDist - 2 * radius);
-
         }
-//        else
-//        {
-//            fov = 2.0f * (float)Math.asin(Math.min(0.99, (radius + lookAtDist) / lightDist));
-//            farPlane = lightDist + radius;
-//            nearPlane = Math.max(farPlane / 1024.0f, lightDist - 2 * radius);
-//        }
+        else
+        {
+            fov = 2.0f * (float)Math.asin(Math.min(0.99, (radius + lookAtDist) / lightDist));
+            farPlane = lightDist + radius;
+            nearPlane = Math.max(farPlane / 1024.0f, lightDist - 2 * radius);
+        }
 
         // Limit fov by the light's spot size.
         float spotFOV = 2.0f * lightingModel.getLightPrototype(lightIndex).getSpotSize();
@@ -1187,29 +1186,38 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     this.solidProgram.setUniform("objectID", 0);
                     this.gridDrawable.draw(PrimitiveMode.LINES, offscreenFBO);
                 }
-                else // if (settingsModel.getBoolean("isGroundPlaneEnabled"))
+
+                if (lightingModel.isGroundPlaneEnabled())
                 {
                     this.program.setUniform("imageBasedRenderingEnabled", false);
                     this.program.setUniform("objectID", this.sceneObjectIDLookup.get("SceneObject"));
+                    this.program.setUniform("diffuseConstantColor", lightingModel.getGroundPlaneColor());
 
                     float scale = getScale();
                     for (int lightIndex = 0; lightIndex < lightingModel.getLightCount(); lightIndex++)
                     {
                         setupLight(lightIndex,
                              Matrix4.scale(scale)
-                                .times(lightingModel.getLightMatrix(lightIndex))
-                                .times(Matrix4.scale(1.0f / scale))
-                                .times(Matrix4.rotateX(Math.PI / 2))
-                                .times(Matrix4.scale(this.getScale())));
+                                 .times(lightingModel.getLightMatrix(lightIndex))
+                                 .times(Matrix4.translate(new Vector3(0, lightingModel.getGroundPlaneHeight(), 0)))
+                                 .times(Matrix4.scale(1.0f / scale))
+                                 .times(Matrix4.rotateX(Math.PI / 2))
+                                 .times(Matrix4.scale(this.getScale() * lightingModel.getGroundPlaneSize())));
                     }
 
                     this.drawGroundPlane(offscreenFBO,
                         partialViewMatrix
+                            .times(Matrix4.scale(scale))
+                            .times(Matrix4.translate(new Vector3(0, lightingModel.getGroundPlaneHeight(), 0)))
+                            .times(Matrix4.scale(1.0f / scale))
                             .times(Matrix4.rotateX(Math.PI / 2))
-                            .times(Matrix4.scale(this.getScale())));
+                            .times(Matrix4.scale(this.getScale() * lightingModel.getGroundPlaneSize())));
                 }
 
                 context.getState().disableBackFaceCulling();
+
+                // After the ground plane, use a gray color for anything without a texture map.
+                this.program.setUniform("diffuseConstantColor", new Vector3(0.125f));
 
                 this.program.setUniform("imageBasedRenderingEnabled", false);
                 this.program.setUniform("objectID", this.sceneObjectIDLookup.get("SceneObject"));

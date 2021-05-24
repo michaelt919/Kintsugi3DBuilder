@@ -28,4 +28,9 @@ public interface ReadonlyEnvironmentModel
     BackgroundMode getBackgroundMode();
     float getBackgroundIntensity();
     Vector3 getBackgroundColor();
+
+    Vector3 getGroundPlaneColor();
+    boolean isGroundPlaneEnabled();
+    float getGroundPlaneHeight();
+    float getGroundPlaneSize();
 }

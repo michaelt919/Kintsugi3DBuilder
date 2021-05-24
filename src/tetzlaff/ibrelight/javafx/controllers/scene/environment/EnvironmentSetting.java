@@ -43,6 +43,12 @@ public class EnvironmentSetting implements DOMConvertable
     private final BooleanProperty envLoaded = new SimpleBooleanProperty();
     private final BooleanProperty bpLoaded = new SimpleBooleanProperty();
 
+    // ground plane
+    private final BooleanProperty gpEnabled = new SimpleBooleanProperty();
+    private final Property<Color> gpColor = new SimpleObjectProperty<>(Color.WHITE);
+    private final DoubleProperty gpHeight = new SimpleDoubleProperty();
+    private final DoubleProperty gpSize = new SimpleDoubleProperty(1.0);
+
     public static final EnvironmentSetting NO_ENVIRONMENT;
 
     static
@@ -79,6 +85,10 @@ public class EnvironmentSetting implements DOMConvertable
         element.setAttribute("locked", locked.getValue().toString());
         element.setAttribute("envLoaded", envLoaded.getValue().toString());
         element.setAttribute("bpLoaded", bpLoaded.getValue().toString());
+        element.setAttribute("gpEnabled", gpEnabled.getValue().toString());
+        element.setAttribute("gpColor", gpColor.getValue().toString());
+        element.setAttribute("gpHeight", gpHeight.getValue().toString());
+        element.setAttribute("gpSize", gpSize.getValue().toString());
         return element;
     }
 
@@ -105,6 +115,11 @@ public class EnvironmentSetting implements DOMConvertable
         newEnvironment.locked.setValue(Boolean.valueOf(element.getAttribute("locked")));
         newEnvironment.envLoaded.setValue(Boolean.valueOf(element.getAttribute("envLoaded")));
         newEnvironment.bpLoaded.setValue(Boolean.valueOf(element.getAttribute("bpLoaded")));
+        newEnvironment.gpEnabled.setValue(element.hasAttribute("gpEnabled") && Boolean.valueOf(element.getAttribute("gpEnabled")));
+        newEnvironment.gpColor.setValue(element.hasAttribute("gpColor") ?
+            Color.valueOf(element.getAttribute("gpColor")) : Color.WHITE);
+        newEnvironment.gpHeight.setValue(element.hasAttribute("gpHeight") ? Double.valueOf(element.getAttribute("gpHeight")) : 0.0);
+        newEnvironment.gpSize.setValue(element.hasAttribute("gpSize") ? Double.valueOf(element.getAttribute("gpSize")) : 0.0);
         return newEnvironment;
     }
 
@@ -141,6 +156,10 @@ public class EnvironmentSetting implements DOMConvertable
         newEnvironment.locked.setValue(locked.getValue());
         newEnvironment.envLoaded.setValue(envLoaded.getValue());
         newEnvironment.bpLoaded.setValue(bpLoaded.getValue());
+        newEnvironment.gpEnabled.setValue(gpEnabled.getValue());
+        newEnvironment.gpColor.setValue(gpColor.getValue());
+        newEnvironment.gpHeight.setValue(gpHeight.getValue());
+        newEnvironment.gpSize.setValue(gpSize.getValue());
         return newEnvironment;
     }
 
@@ -397,5 +416,65 @@ public class EnvironmentSetting implements DOMConvertable
     public void setBPLoaded(boolean bpLoaded)
     {
         this.bpLoaded.set(bpLoaded);
+    }
+
+    public boolean isGPEnabled()
+    {
+        return gpEnabled.get();
+    }
+
+    public BooleanProperty gpEnabledProperty()
+    {
+        return gpEnabled;
+    }
+
+    public void setGpEnabled(boolean gpEnabled)
+    {
+        this.gpEnabled.set(gpEnabled);
+    }
+
+    public Color getGPColor()
+    {
+        return gpColor.getValue();
+    }
+
+    public Property<Color> gpColorProperty()
+    {
+        return gpColor;
+    }
+
+    public void setGPColor(Color gpColor)
+    {
+        this.gpColor.setValue(gpColor);
+    }
+
+    public double getGPHeight()
+    {
+        return gpHeight.getValue();
+    }
+
+    public DoubleProperty gpHeightProperty()
+    {
+        return gpHeight;
+    }
+
+    public void setGPHeight(double gpHeight)
+    {
+        this.gpHeight.setValue(gpHeight);
+    }
+
+    public double getGPSize()
+    {
+        return gpSize.getValue();
+    }
+
+    public DoubleProperty gpSizeProperty()
+    {
+        return gpSize;
+    }
+
+    public void setGPSize(double gpSize)
+    {
+        this.gpSize.setValue(gpSize);
     }
 }
