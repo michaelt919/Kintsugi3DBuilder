@@ -30,7 +30,7 @@ public class LightInstanceSetting implements DOMConvertable
     private final DoubleProperty intensity = StaticUtilities.clamp(0, Double.MAX_VALUE, new SimpleDoubleProperty(1.0));
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final StringProperty name = new SimpleStringProperty();
-    private final DoubleProperty spotSize = StaticUtilities.clamp(0.0, 90.0, new SimpleDoubleProperty(90.0));
+    private final DoubleProperty spotSize = StaticUtilities.clamp(0.0, 90.0, new SimpleDoubleProperty(45.0));
     private final DoubleProperty spotTaper = StaticUtilities.clamp(0.0, 1.0, new SimpleDoubleProperty());
     private final Property<Color> color = new SimpleObjectProperty<>(Color.WHITE);
 

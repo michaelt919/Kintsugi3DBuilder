@@ -309,4 +309,37 @@ public class EnvironmentModelImpl implements EnvironmentModel
             selected.getValue().setBackgroundIntensity(backgroundIntensity);
         }
     }
+
+    @Override
+    public boolean isGroundPlaneEnabled()
+    {
+        return doesSelectedExist() && selected.getValue().isGPEnabled();
+    }
+
+    @Override
+    public Vector3 getGroundPlaneColor()
+    {
+        if (doesSelectedExist())
+        {
+            Color color = selected.getValue().getGPColor();
+            return new Vector3((float) color.getRed(), (float) color.getGreen(), (float) color.getBlue());
+        }
+        else
+        {
+            return new Vector3(1);
+        }
+
+    }
+
+    @Override
+    public float getGroundPlaneHeight()
+    {
+        return doesSelectedExist() ? (float)selected.getValue().getGPHeight() : 0.0f;
+    }
+
+    @Override
+    public float getGroundPlaneSize()
+    {
+        return doesSelectedExist() ? (float)selected.getValue().getGPSize() : 1.0f;
+    }
 }

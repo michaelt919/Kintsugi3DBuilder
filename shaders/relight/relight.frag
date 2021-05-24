@@ -122,9 +122,11 @@ uniform mat4 fullProjection;
 
 #if !MATERIAL_EXPLORATION_MODE
 
+uniform vec3 defaultDiffuseColor;
+
 #ifndef DEFAULT_DIFFUSE_COLOR
 #if !SPECULAR_TEXTURE_ENABLED && !IMAGE_BASED_RENDERING_ENABLED
-#define DEFAULT_DIFFUSE_COLOR (vec3(0.125))
+#define DEFAULT_DIFFUSE_COLOR (defaultDiffuseColor)
 #else
 #define DEFAULT_DIFFUSE_COLOR (vec3(0.0))
 #endif // !SPECULAR_TEXTURE_ENABLED && !IMAGE_BASED_RENDERING_ENABLED
