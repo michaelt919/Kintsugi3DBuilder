@@ -804,6 +804,11 @@ void main()
     float roughness = sqrt(roughnessSq);
 
     float nDotV = useTSOverrides ? viewDir.z : dot(normalDir, viewDir);
+
+    // Flip normals if necessary, but don't do anything if nDotV is zero.
+    normalDir *= (sign(nDotV) + 1 - abs(sign(nDotV)));
+    nDotV = abs(nDotV);
+
     vec3 radiance = vec3(0.0);
 
     vec4[MAX_VIRTUAL_LIGHT_COUNT] weightedAverages;
@@ -894,10 +899,12 @@ void main()
                 vec4 projTexCoord = lightMatrixVirtual[i] * vec4(fPosition, 1.0);
                 projTexCoord /= projTexCoord.w;
                 projTexCoord = (projTexCoord + vec4(1)) / 2;
-                shadow = !(projTexCoord.x >= 0 && projTexCoord.x <= 1
-                    && projTexCoord.y >= 0 && projTexCoord.y <= 1
-                    && projTexCoord.z >= 0 && projTexCoord.z <= 1
-                    && texture(shadowMaps, vec3(projTexCoord.xy, i)).r - projTexCoord.z >= -0.01);
+                float depth = clamp(projTexCoord.z, 0, 1.0);
+                float shadowMapDepth = texture(shadowMaps, vec3(projTexCoord.xy, i)).r;
+                shadow = (projTexCoord.z >= 0) && // within near plane assume no shadows
+                    !(projTexCoord.x >= 0 && projTexCoord.x <= 1
+                        && projTexCoord.y >= 0 && projTexCoord.y <= 1
+                        && shadowMapDepth - depth >= -0.001);
             }
 
             if (!shadow)

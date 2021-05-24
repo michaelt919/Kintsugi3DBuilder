@@ -417,7 +417,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                     this.context,
                     this.textureTarget,
                     this.getMultisamples(),
-                    TextureType.DEPTH,
+                    this.isFloatingPointEnabled() ? TextureType.FLOATING_POINT_DEPTH : TextureType.DEPTH,
                     this.getInternalPrecision(),
                     this.width,
                     this.height,
@@ -536,7 +536,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
     {
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context, textureType);
-        init(context, textureTarget, multisamples, getSpecialInternalFormat(context, textureType, precision), width, height, format,
+        init(context, textureTarget, multisamples, getSpecialInternalFormat(textureType, precision), width, height, format,
                 fixedMultisampleLocations, useLinearFiltering, useMipmaps, maxAnisotropy);
     }
 

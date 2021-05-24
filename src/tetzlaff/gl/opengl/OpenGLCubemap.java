@@ -275,7 +275,7 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
     {
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context, textureType);
-        init(textureTarget, getSpecialInternalFormat(context, textureType, precision), faceSize, opt);
+        init(textureTarget, getSpecialInternalFormat(textureType, precision), faceSize, opt);
     }
 
     private void init(int textureTarget, int internalFormat, int faceSize, OptionalParameters opt)

@@ -361,7 +361,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             shadowDrawable.addVertexBuffer("position", resources.positionBuffer);
 
-            shadowMaps = context.getTextureFactory().build2DDepthTextureArray(2048, 2048, lightingModel.getLightCount()).createTexture();
+            shadowMaps = createShadowMaps();
             shadowFramebuffer = context.buildFramebufferObject(2048, 2048)
                 .addDepthAttachment()
                 .createFramebufferObject();
@@ -386,6 +386,14 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             }
             throw new InitializationException(e);
         }
+    }
+
+    private Texture3D<ContextType> createShadowMaps()
+    {
+        return context.getTextureFactory().build2DDepthTextureArray(2048, 2048, lightingModel.getLightCount())
+            .setInternalPrecision(32)
+            .setFloatingPointEnabled(true)
+            .createTexture();
     }
 
     @Override
@@ -734,10 +742,27 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 .times(new Vector3(this.boundingRadius))
                 .length() / Math.sqrt(3));
 
-        float fov = 2.0f * (float)Math.asin(Math.min(0.99, (radius + lookAtDist) / lightDist));
+        float fov;
+        float farPlane;
+        float nearPlane;
 
-        float farPlane = lightDist + radius;
-        float nearPlane = Math.max(farPlane / 1024.0f, lightDist - radius);
+        // if (settingsModel.getBoolean("isGroundPlaneEnabled"))
+        {
+            fov = 2.0f * (float)Math.asin(Math.min(0.99, (this.getScale() + lookAtDist) / lightDist));
+            farPlane = lightDist + 2 * this.getScale();
+            nearPlane = Math.max((lightDist + radius) / 32.0f, lightDist - 2 * radius);
+
+        }
+//        else
+//        {
+//            fov = 2.0f * (float)Math.asin(Math.min(0.99, (radius + lookAtDist) / lightDist));
+//            farPlane = lightDist + radius;
+//            nearPlane = Math.max(farPlane / 1024.0f, lightDist - 2 * radius);
+//        }
+
+        // Limit fov by the light's spot size.
+        float spotFOV = 2.0f * lightingModel.getLightPrototype(lightIndex).getSpotSize();
+        fov = Math.min(fov, spotFOV);
 
         return Matrix4.perspective(fov, 1.0f, nearPlane, farPlane);
     }
@@ -762,22 +787,25 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private void setupLight(int lightIndex, int modelInstance)
     {
-        Matrix4 lightMatrix = this.multiTransformationModel.get(modelInstance).quickInverse(0.01f).times(getLightMatrix(lightIndex));
+        setupLight(lightIndex, this.multiTransformationModel.get(modelInstance).quickInverse(0.01f).times(getLightMatrix(lightIndex)));
 
         // lightMatrix can be hardcoded here (comment out previous line)
 
-            // Contemporary gallery and stonewall
-            //Matrix4.rotateY(16 * Math.PI / 16).times(Matrix4.rotateX(0 * Math.PI / 16))
+        // Contemporary gallery and stonewall
+        //Matrix4.rotateY(16 * Math.PI / 16).times(Matrix4.rotateX(0 * Math.PI / 16))
 
-            // Color studio 2:
-            //Matrix4.rotateY(6 * Math.PI / 16).times(Matrix4.rotateX(0 * Math.PI / 16))
+        // Color studio 2:
+        //Matrix4.rotateY(6 * Math.PI / 16).times(Matrix4.rotateX(0 * Math.PI / 16))
 
-            // For the synthetic falcon example?
-            //Matrix4.rotateY(5 * Math.PI / 4).times(Matrix4.rotateX(-Math.PI / 4))
+        // For the synthetic falcon example?
+        //Matrix4.rotateY(5 * Math.PI / 4).times(Matrix4.rotateX(-Math.PI / 4))
 
-            // Always end with this when hardcoding:
-            //    .times(new Matrix4(new Matrix3(getDefaultCameraPose())));
+        // Always end with this when hardcoding:
+        //    .times(new Matrix4(new Matrix3(getDefaultCameraPose())));
+    }
 
+    private void setupLight(int lightIndex, Matrix4 lightMatrix)
+    {
         Matrix4 lightMatrixInverse = lightMatrix.quickInverse(0.001f);
 
         Vector3 lightPos = lightMatrixInverse.times(Vector4.ORIGIN).getXYZ();
@@ -796,7 +824,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 controllerLightIntensity.times(lightDistance * lightDistance * resources.viewSet.getLightIntensity(0).y / (lightScale * lightScale)));
         program.setUniform("lightMatrixVirtual[" + lightIndex + ']', getLightProjection(lightIndex).times(lightMatrix));
         program.setUniform("lightOrientationVirtual[" + lightIndex + ']',
-            lightMatrixInverse.times(new Vector4(0.0f, 0.0f, -1.0f, 0.0f)).getXYZ());
+            lightMatrixInverse.times(new Vector4(0.0f, 0.0f, -1.0f, 0.0f)).getXYZ().normalized());
         program.setUniform("lightSpotSizeVirtual[" + lightIndex + ']',
             (float)Math.sin(lightingModel.getLightPrototype(lightIndex).getSpotSize()));
         program.setUniform("lightSpotTaperVirtual[" + lightIndex + ']', lightingModel.getLightPrototype(lightIndex).getSpotTaper());
@@ -898,6 +926,26 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             // Do first pass at half resolution to off-screen buffer
             drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
         }
+    }
+
+    private void drawGroundPlane(Framebuffer<ContextType> framebuffer, Matrix4 view)
+    {
+        Drawable<ContextType> drawable = context.createDrawable(program);
+        drawable.addVertexBuffer("position", rectangleVertices);
+        drawable.setVertexAttrib("normal", new Vector3(0, 0, 1));
+
+        program.setUniform("useDiffuseTexture", false);
+        program.setUniform("model_view", view);
+        program.setUniform("viewPos", view.quickInverse(0.01f).getColumn(3).getXYZ());
+
+        // Disable back face culling since the plane is one-sided.
+        context.getState().disableBackFaceCulling();
+
+        // Do first pass at half resolution to off-screen buffer
+        drawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+
+        // Re-enable back face culling
+        context.getState().enableBackFaceCulling();
     }
 
     private NativeVectorBuffer generateViewWeights(Matrix4 targetView)
@@ -1117,11 +1165,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     offscreenFBO.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
                 }
 
+                // Too many lights; need to re-allocate shadow maps
                 if (shadowMaps.getDepth() < lightingModel.getLightCount())
                 {
                     shadowMaps.close();
                     shadowMaps = null;
-                    shadowMaps = context.getTextureFactory().build2DDepthTextureArray(2048, 2048, lightingModel.getLightCount()).createTexture();
+                    shadowMaps = createShadowMaps();
                 }
 
                 for (int lightIndex = 0; lightIndex < lightingModel.getLightCount(); lightIndex++)
@@ -1137,6 +1186,27 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     this.solidProgram.setUniform("color", new Vector4(0.5f, 0.5f, 0.5f, 1.0f));
                     this.solidProgram.setUniform("objectID", 0);
                     this.gridDrawable.draw(PrimitiveMode.LINES, offscreenFBO);
+                }
+                else // if (settingsModel.getBoolean("isGroundPlaneEnabled"))
+                {
+                    this.program.setUniform("imageBasedRenderingEnabled", false);
+                    this.program.setUniform("objectID", this.sceneObjectIDLookup.get("SceneObject"));
+
+                    float scale = getScale();
+                    for (int lightIndex = 0; lightIndex < lightingModel.getLightCount(); lightIndex++)
+                    {
+                        setupLight(lightIndex,
+                             Matrix4.scale(scale)
+                                .times(lightingModel.getLightMatrix(lightIndex))
+                                .times(Matrix4.scale(1.0f / scale))
+                                .times(Matrix4.rotateX(Math.PI / 2))
+                                .times(Matrix4.scale(this.getScale())));
+                    }
+
+                    this.drawGroundPlane(offscreenFBO,
+                        partialViewMatrix
+                            .times(Matrix4.rotateX(Math.PI / 2))
+                            .times(Matrix4.scale(this.getScale())));
                 }
 
                 context.getState().disableBackFaceCulling();

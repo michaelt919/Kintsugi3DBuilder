@@ -130,7 +130,7 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
                     this.context,
                     this.textureTarget,
                     this.getMultisamples(),
-                    TextureType.DEPTH,
+                    this.isFloatingPointEnabled() ? TextureType.FLOATING_POINT_DEPTH : TextureType.DEPTH,
                     this.getInternalPrecision(),
                     this.width,
                     this.height,
@@ -250,29 +250,7 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
         this.width = width;
         this.height = height;
 
-        int internalFormat;
-        switch(textureType)
-        {
-        case DEPTH:
-            internalFormat = OpenGLContext.getOpenGLInternalDepthFormat(precision);
-            break;
-        case STENCIL:
-            internalFormat = OpenGLContext.getOpenGLInternalStencilFormat(precision);
-            break;
-        case DEPTH_STENCIL:
-            internalFormat = GL_DEPTH24_STENCIL8;
-            break;
-        case FLOATING_POINT_DEPTH_STENCIL:
-            internalFormat = GL_DEPTH32F_STENCIL8;
-            break;
-        case COLOR:
-        default:
-            internalFormat = OpenGLContext.getOpenGLInternalColorFormat(
-                ColorFormat.createCustom(precision, precision, precision, precision, DataType.NORMALIZED_FIXED_POINT));
-            break;
-        }
-
-        init(openGLTextureTarget, multisamples, internalFormat, width, height, layerCount, format,
+        init(openGLTextureTarget, multisamples, getSpecialInternalFormat(textureType, precision), width, height, layerCount, format,
                 fixedSampleLocations, useLinearFiltering, useMipmaps, maxAnisotropy);
     }
 
