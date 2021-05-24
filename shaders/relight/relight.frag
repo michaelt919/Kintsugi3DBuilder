@@ -793,6 +793,10 @@ void main()
     vec3 normalDir = getRefinedNormalDir(triangleNormal);
     float nDotV = max(0.0, dot(normalDir, viewDir));
 
+    // Flip normals if necessary, but don't do anything if nDotV is zero.
+    normalDir *= (sign(nDotV) + 1 - abs(sign(nDotV)));
+    nDotV = abs(nDotV);
+
     Material m = getMaterial();
 
     vec3 radiance = vec3(0.0);
@@ -852,10 +856,12 @@ void main()
             projTexCoord /= projTexCoord.w;
             projTexCoord = (projTexCoord + vec4(1)) / 2;
 
+            float depth = clamp(projTexCoord.z, 0, 1);
+            float shadowMapDepth = texture(shadowMaps, vec3(projTexCoord.xy, i)).r;
+
             if (projTexCoord.x >= 0 && projTexCoord.x <= 1
-                && projTexCoord.y >= 0 && projTexCoord.y <= 1
-                && projTexCoord.z >= 0 && projTexCoord.z <= 1
-                && texture(shadowMaps, vec3(projTexCoord.xy, i)).r - projTexCoord.z >= -0.01)
+                    && projTexCoord.y >= 0 && projTexCoord.y <= 1
+                    && shadowMapDepth - depth >= -0.001)
 #endif
             {
                 vec3 halfDir = normalize(viewDir + lightDir);
