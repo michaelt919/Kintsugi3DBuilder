@@ -58,91 +58,99 @@ public interface Texture3D<ContextType extends Context<ContextType>> extends Tex
     /**}
      * Loads pixel data and sends it to the GPU for a specific layer of the 3D texture, replacing whatever pixel data was there before.
      * @param layerIndex The index of the layer where the pixel data should go.
-     * @param fileStream
-     * @param flipVertical
-     * @throws IOException
+     * @param fileStream The stream from which to read the texture layer.
+     * @param flipVertical Whether or not to automatically flip all of the pixels vertically to resolve discrepancies with respect to the orientation of the vertical axis.
+     * @throws IOException Upon a File I/O problem while loading the image.
      */
     void loadLayer(int layerIndex, InputStream fileStream, boolean flipVertical) throws IOException;
 
     /**
      * Loads pixel data and sends it to the GPU for a specific layer of the 3D texture, replacing whatever pixel data was there before.
      * @param layerIndex The index of the layer where the pixel data should go.
-     * @param file
-     * @param flipVertical
-     * @throws IOException
+     * @param file A file containing the image in a format supported by Java's ImageIO library.
+     * @param flipVertical Whether or not to automatically flip all of the pixels vertically to resolve discrepancies with respect to the orientation of the vertical axis.
+     * @throws IOException Upon a File I/O problem while loading the image.
      */
     void loadLayer(int layerIndex, File file, boolean flipVertical) throws IOException;
 
     /**
      * Loads pixel data and sends it to the GPU for a specific layer of the 3D texture, replacing whatever pixel data was there before.
      * @param layerIndex The index of the layer where the pixel data should go.
-     * @param imageStream
-     * @param maskStream
-     * @param flipVertical
-     * @throws IOException
+     * @param imageStream A stream containing the image in a format supported by Java's ImageIO library.
+     * @param maskStream A stream containing the alpha mask in a format supported by Java's ImageIO library.
+     * @param flipVertical Whether or not to automatically flip all of the pixels vertically to resolve discrepancies with respect to the orientation of the vertical axis.
+     * @throws IOException Upon a File I/O problem while loading the image.
      */
     void loadLayer(int layerIndex, InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException;
 
     /**
      * Loads pixel data and sends it to the GPU for a specific layer of the 3D texture, replacing whatever pixel data was there before.
      * @param layerIndex The index of the layer where the pixel data should go.
-     * @param imageFile
-     * @param maskFile
-     * @param flipVertical
-     * @throws IOException
+     * @param imageFile A file containing the image in a format supported by Java's ImageIO library.
+     * @param maskFile A file containing the alpha mask in a format supported by Java's ImageIO library.
+     * @param flipVertical Whether or not to automatically flip all of the pixels vertically to resolve discrepancies with respect to the orientation of the vertical axis.
+     * @throws IOException Upon a File I/O problem while loading the image.
      */
     void loadLayer(int layerIndex, File imageFile, File maskFile, boolean flipVertical) throws IOException;
 
     /**
      * Loads pixel data and sends it to the GPU for a specific layer of the 3D texture, replacing whatever pixel data was there before.
+     * Maps the pixel data to another format before storing it in the texture layer.
      * @param layerIndex The index of the layer where the pixel data should go.
-     * @param fileStream
-     * @param flipVertical
-     * @param mappedType
-     * @param mappingFunction
-     * @param <MappedType>
-     * @throws IOException
+     * @param fileStream A stream containing the image in a format supported by Java's ImageIO library.
+     * @param flipVertical Whether or not to automatically flip all of the pixels vertically to resolve discrepancies with respect to the orientation of the vertical axis.
+     * @param mappedType The type to which to map the data for storage in the texture.
+     * @param mappingFunction The function that transforms the color from the image to the mapped type for storage in the texture.
+     * @param <MappedType> The high-level return type of the mapping function.
+     *                     This is typically either Number (for single-channel textures) or an Iterable of Numbers for multi-channel textures.
+     * @throws IOException Upon a File I/O problem while loading the image.
      */
     <MappedType> void loadLayer(int layerIndex, InputStream fileStream, boolean flipVertical,
         AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException;
 
     /**
      * Loads pixel data and sends it to the GPU for a specific layer of the 3D texture, replacing whatever pixel data was there before.
+     * Maps the pixel data to another format before storing it in the texture layer.
      * @param layerIndex The index of the layer where the pixel data should go.
-     * @param file
-     * @param flipVertical
-     * @param mappedType
-     * @param mappingFunction
-     * @param <MappedType>
-     * @throws IOException
+     * @param file A file containing the image in a format supported by Java's ImageIO library.
+     * @param flipVertical Whether or not to automatically flip all of the pixels vertically to resolve discrepancies with respect to the orientation of the vertical axis.
+     * @param mappedType The type to which to map the data for storage in the texture.
+     * @param mappingFunction The function that transforms the color from the image to the mapped type for storage in the texture.
+     * @param <MappedType> The high-level return type of the mapping function.
+     *                     This is typically either Number (for single-channel textures) or an Iterable of Numbers for multi-channel textures.
+     * @throws IOException Upon a File I/O problem while loading the image.
      */
     <MappedType> void loadLayer(int layerIndex, File file, boolean flipVertical,
         AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException;
 
     /**
      * Loads pixel data and sends it to the GPU for a specific layer of the 3D texture, replacing whatever pixel data was there before.
+     * Maps the pixel data to another format before storing it in the texture layer.
      * @param layerIndex The index of the layer where the pixel data should go.
-     * @param imageStream
-     * @param maskStream
-     * @param flipVertical
-     * @param mappedType
-     * @param mappingFunction
-     * @param <MappedType>
-     * @throws IOException
+     * @param imageStream A stream containing the image in a format supported by Java's ImageIO library.
+     * @param maskStream A stream containing the alpha mask in a format supported by Java's ImageIO library.
+     * @param flipVertical Whether or not to automatically flip all of the pixels vertically to resolve discrepancies with respect to the orientation of the vertical axis.
+     * @param mappedType The type to which to map the data for storage in the texture.
+     * @param mappingFunction The function that transforms the color from the image to the mapped type for storage in the texture.
+     * @param <MappedType> The high-level return type of the mapping function.
+     *                     This is typically either Number (for single-channel textures) or an Iterable of Numbers for multi-channel textures.
+     * @throws IOException Upon a File I/O problem while loading the image.
      */
     <MappedType> void loadLayer(int layerIndex, InputStream imageStream, InputStream maskStream, boolean flipVertical,
         AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException;
 
     /**
      * Loads pixel data and sends it to the GPU for a specific layer of the 3D texture, replacing whatever pixel data was there before.
+     * Maps the pixel data to another format before storing it in the texture layer.
      * @param layerIndex The index of the layer where the pixel data should go.
-     * @param imageFile
-     * @param maskFile
-     * @param flipVertical
-     * @param mappedType
-     * @param mappingFunction
-     * @param <MappedType>
-     * @throws IOException
+     * @param imageFile A file containing the image in a format supported by Java's ImageIO library.
+     * @param maskFile A file containing the alpha mask in a format supported by Java's ImageIO library.
+     * @param flipVertical Whether or not to automatically flip all of the pixels vertically to resolve discrepancies with respect to the orientation of the vertical axis.
+     * @param mappedType The type to which to map the data for storage in the texture.
+     * @param mappingFunction The function that transforms the color from the image to the mapped type for storage in the texture.
+     * @param <MappedType> The high-level return type of the mapping function.
+     *                     This is typically either Number (for single-channel textures) or an Iterable of Numbers for multi-channel textures.
+     * @throws IOException Upon a File I/O problem while loading the image.
      */
     <MappedType> void loadLayer(int layerIndex, File imageFile, File maskFile, boolean flipVertical,
         AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException;

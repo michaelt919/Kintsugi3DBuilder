@@ -21,6 +21,16 @@ package tetzlaff.gl.core;
  */
 public interface IndexBuffer<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
 {
+    /**
+     * Gets the number of indices in the buffer.
+     * @return The number of indices in the buffer.
+     */
     int count();
+
+    /**
+     * Sets the data of the index buffer from an array.
+     * @param data The data to store in the index buffer.
+     * @return The same index buffer to support chained operations.
+     */
     IndexBuffer<ContextType> setData(int... data);
 }

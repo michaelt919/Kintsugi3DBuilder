@@ -28,7 +28,7 @@ import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.core.AlphaBlendingFunction.Weight;
+import tetzlaff.gl.core.BlendFunction.Weight;
 import tetzlaff.gl.core.ColorFormat.DataType;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
@@ -1464,7 +1464,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             // Draw lights
             for (int i = 0; i < lightingModel.getLightCount(); i++)
             {
-                this.context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+                this.context.getState().setBlendFunction(new BlendFunction(Weight.ONE, Weight.ONE));
                 this.context.getState().enableDepthTest();
 
                 if (settingsModel.getBoolean("lightWidgetsEnabled") && lightingModel.isLightWidgetEnabled(i)
@@ -1500,7 +1500,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 if (lightingModel.isLightVisualizationEnabled(i))
                 {
-                    this.context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+                    this.context.getState().setBlendFunction(new BlendFunction(Weight.ONE, Weight.ONE));
                     this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i));
                     this.lightProgram.setUniform("color", lightingModel.getLightPrototype(i).getColor().times((float)Math.PI));
 
@@ -1537,7 +1537,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     float perspectiveWidgetScale = -widgetPosition.z * getVerticalFieldOfView(size) / 128;
 
                     this.context.getState().disableDepthTest();
-                    this.context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+                    this.context.getState().setBlendFunction(new BlendFunction(Weight.ONE, Weight.ONE));
 
                     if (lightingModel.getLightWidgetModel(i).isDistanceWidgetVisible() || lightingModel.getLightWidgetModel(i).isCenterWidgetVisible())
                     {
@@ -1721,7 +1721,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 //                            Vector3 arrow3PositionL = widgetTransformation.times(new Vector4(0,0,-1,1)).getXYZ();
 
                     this.context.getState().disableDepthTest();
-                    this.context.getState().disableAlphaBlending();
+                    this.context.getState().disableBlending();
                     this.solidProgram.setUniform("color", new Vector4(1));
 
                     if (lightingModel.getLightWidgetModel(i).isAzimuthWidgetVisible() &&
@@ -1814,7 +1814,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 }
             }
 
-            context.getState().disableAlphaBlending();
+            context.getState().disableBlending();
             context.getState().enableDepthWrite();
             this.context.getState().enableDepthTest();
         }

@@ -14,7 +14,7 @@ package tetzlaff.gl.core;
 
 /**
  * An interface for an object that can serve as a texture, an image stored in graphics memory.
- * This is an empty interface that simply serves as a placeholder in the type hierarchy,
+ * In addition to the required methods, this interface also serves as a placeholder in the type hierarchy,
  * so that a class can explicitly state that it can serve this role in a manner that can be checked at compile-time with loose coupling.
  * Implementations should provide whatever methods are needed to ensure that they can fulfill this role for a specific GL architecture.
  * @author Michael Tetzlaff
@@ -23,9 +23,33 @@ package tetzlaff.gl.core;
  */
 public interface Texture<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
 {
+    /**
+     * Gets the number of mipmap levels in the texture.
+     * @return The number of mipmap levels in the texture.
+     */
     int getMipmapLevelCount();
+
+    /**
+     * Gets the texture's color format, if it is uncompressed.
+     * @return The uncompressed color format, or null if the color format is compressed.
+     */
     ColorFormat getInternalUncompressedColorFormat();
+
+    /**
+     * Gets the texture's compression format, if it is compressed.
+     * @return The compression format, or null if the color format is uncompressed.
+     */
     CompressionFormat getInternalCompressedColorFormat();
+
+    /**
+     * Gets whether the internal format is compressed.
+     * @return True if the format is compressed; false if it is uncompressed.
+     */
     boolean isInternalFormatCompressed();
+
+    /**
+     * Gets the type of the texture (color / depth / stencil).
+     * @return The type of the texture.
+     */
     TextureType getTextureType();
 }

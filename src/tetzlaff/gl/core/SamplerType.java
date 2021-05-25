@@ -12,26 +12,98 @@
 
 package tetzlaff.gl.core;
 
+/**
+ * Enumerates the types of samplers that can be used with textures.
+ */
 public enum SamplerType
 {
+    /**
+     * A 1D texture with floating-point pixel values.
+     */
     FLOAT_1D,
+
+    /**
+     * A 2D texture with floating-point pixel values.
+     */
     FLOAT_2D,
+
+    /**
+     * A 3D texture with floating-point pixel values.
+     */
     FLOAT_3D,
+
+    /**
+     * A cubemap with floating-point pixel values.
+     */
     FLOAT_CUBE_MAP,
+
+    /**
+     * An array of 1D textures with floating-point pixel values.
+     */
     FLOAT_1D_ARRAY,
+
+    /**
+     * An array of 2D textures with floating-point pixel values.
+     */
     FLOAT_2D_ARRAY,
 
+    /**
+     * A 1D texture with integer pixel values.
+     */
     INTEGER_1D,
+
+    /**
+     * A 2D texture with integer pixel values.
+     */
     INTEGER_2D,
+
+    /**
+     * A 3D texture with integer pixel values.
+     */
     INTEGER_3D,
+
+    /**
+     * A cubemap with integer pixel values.
+     */
     INTEGER_CUBE_MAP,
+
+    /**
+     * An array of 1D texture with integer pixel values.
+     */
     INTEGER_1D_ARRAY,
+
+    /**
+     * An array of 2D texture with integer pixel values.
+     */
     INTEGER_2D_ARRAY,
 
+    /**
+     * A 1D texture with unsigned integer pixel values.
+     */
     UNSIGNED_INTEGER_1D,
+
+    /**
+     * A 2D texture with unsigned integer pixel values.
+     */
     UNSIGNED_INTEGER_2D,
+
+    /**
+     * A 3D texture with unsigned integer pixel values.
+     */
     UNSIGNED_INTEGER_3D,
+
+    /**
+     * A cubemap with unsigned integer pixel values.
+     */
     UNSIGNED_INTEGER_CUBE_MAP,
+
+    /**
+     * An array of 1D textures with unsigned integer pixel values.
+     */
     UNSIGNED_INTEGER_1D_ARRAY,
+
+    /**
+     * An array of 2D textures with unsigned integer pixel values.
+     */
     UNSIGNED_INTEGER_2D_ARRAY
 }

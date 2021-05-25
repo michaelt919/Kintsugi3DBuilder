@@ -12,10 +12,28 @@
 
 package tetzlaff.gl.core;
 
+/**
+ * Enumerates the possible wrap modes for a texture in a particular direction.
+ */
 public enum TextureWrapMode 
 {
+    /**
+     * Do not wrap at all; clamp texture coordinate to the range [0, 1].
+     */
     None,
+
+    /**
+     * Mirror the image once and then clamp texture coordinate to the range [0, 2].
+     */
     MirrorOnce,
+
+    /**
+     * Repeat the texture as the texture coordinate increases.
+     */
     Repeat,
+
+    /**
+     * Repeat the texture but alternate the orientation each time as the texture coordinate increases.
+     */
     MirroredRepeat
 }

@@ -12,12 +12,38 @@
 
 package tetzlaff.gl.core;
 
+/**
+ * Enumerates the six faces of a cubemap.
+ */
 public enum CubemapFace 
 {
+    /**
+     * The face whose outward-facing normal is oriented in the +x direction.
+     */
     POSITIVE_X,
+
+    /**
+     * The face whose outward-facing normal is oriented in the -x direction.
+     */
     NEGATIVE_X,
+
+    /**
+     * The face whose outward-facing normal is oriented in the +y direction.
+     */
     POSITIVE_Y,
+
+    /**
+     * The face whose outward-facing normal is oriented in the -y direction.
+     */
     NEGATIVE_Y,
+
+    /**
+     * The face whose outward-facing normal is oriented in the +z direction.
+     */
     POSITIVE_Z,
+
+    /**
+     * The face whose outward-facing normal is oriented in the -z direction.
+     */
     NEGATIVE_Z
 }

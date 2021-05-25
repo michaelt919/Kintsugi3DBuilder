@@ -18,10 +18,17 @@ import java.util.function.Consumer;
 
 import tetzlaff.gl.nativebuffer.NativeDataType;
 
+/**
+ * A singleton factory object that can create concrete instances of the AbstractDataType interface.
+ */
 public final class AbstractDataTypeFactory
 {
     private static final AbstractDataTypeFactory INSTANCE = new AbstractDataTypeFactory();
 
+    /**
+     * Gets the singleton instance.
+     * @return The singleton instance.
+     */
     public static AbstractDataTypeFactory getInstance()
     {
         return INSTANCE;
@@ -148,11 +155,22 @@ public final class AbstractDataTypeFactory
         }
     }
 
+    /**
+     * Creates an AbstractDataType for an element that has only a single component.
+     * @param nativeType The internal type of each element.
+     * @return An AbstractDataType representing a single component of the specified internal type.
+     */
     public AbstractDataType<Number> getSingleComponentDataType(NativeDataType nativeType)
     {
         return new SingleComponentDataType(nativeType);
     }
 
+    /**
+     * Creates an AbstractDataType for an element that has multiple components.
+     * @param nativeType The internal type of each component.
+     * @param componentCount The number of components.
+     * @return An AbstractDataType representing a vector with the specified number of components of the specified internal type.
+     */
     public AbstractDataType<Iterable<? extends Number>> getMultiComponentDataType(NativeDataType nativeType, int componentCount)
     {
         return new MultiComponentDataType(nativeType, componentCount);

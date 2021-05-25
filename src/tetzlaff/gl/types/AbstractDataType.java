@@ -17,10 +17,37 @@ import java.util.function.Consumer;
 
 import tetzlaff.gl.nativebuffer.NativeDataType;
 
+/**
+ * An interface that abstracts the concept of a data type in the graphics pipeline.
+ * Typically an instance of this interface is created using the AbstractDataTypeFactory
+ * @param <HighLevelType> The high-level type (typically Number for single-component or an Iterable of Numbers for multi-component)
+ *                        that this data type can store.
+ */
 public interface AbstractDataType<HighLevelType>
 {
+    /**
+     * Gets the type that will be used to store the components of this data type.
+     * @return The native data type.
+     */
     NativeDataType getNativeDataType();
+
+    /**
+     * Gets the number of components of this data type.
+     * @return The number of components.
+     */
     int getComponentCount();
+
+    /**
+     * Gets the size of this data type in bytes.
+     * @return The size  in bytes.
+     */
     int getSizeInBytes();
+
+    /**
+     * Creates a consumer function that will store a data element of this type in the specified buffer.
+     * @param baseBuffer The buffer in which to store data.
+     * @return A function which, when invoked on the high-level type associated with this data type  (typically Number single-component
+     *         or an Iterable of Numbers for multi-component) will format and store the element in the previously specified buffer.
+     */
     Consumer<HighLevelType> wrapByteBuffer(ByteBuffer baseBuffer);
 }

@@ -13,12 +13,12 @@
 package tetzlaff.gl.core;
 
 /**
- * Represents a function to be used for alpha blending.
+ * Represents a function to be used for blending.
  * The function must be a linear combination of a source color and a destination color, weighted using one of several predefined weighting function.
  * @author Michael Tetzlaff
  *
  */
-public class AlphaBlendingFunction 
+public class BlendFunction
 {
     /**
      * An enumeration of the possible ways that either a source or a destination color can contribute to the final color.
@@ -101,7 +101,7 @@ public class AlphaBlendingFunction
      * @param source The weighting function to be used for the source color.
      * @param destination The weighting function to be used for the destination color.
      */
-    public AlphaBlendingFunction(Weight source, Weight destination)
+    public BlendFunction(Weight source, Weight destination)
     {
         this.sourceWeightFunction = source;
         this.destinationWeightFunction = destination;

@@ -12,6 +12,11 @@
 
 package tetzlaff.gl.core;
 
+/**
+ * An interface for a cubemap texture.
+ * @author Michael Tetzlaff
+ * @param <ContextType> The type of the GL context that the texture is associated with.
+ */
 public interface Cubemap <ContextType extends Context<ContextType>> extends Texture<ContextType>
 {
     /**
@@ -20,7 +25,17 @@ public interface Cubemap <ContextType extends Context<ContextType>> extends Text
      */
     int getFaceSize();
 
+    /**
+     * Sets the wrap mode for the texture.
+     * @param wrapS The horiozontal wrap mode.
+     * @param wrapT The vertical wrap mode.
+     */
     void setTextureWrap(TextureWrapMode wrapS, TextureWrapMode wrapT);
 
+    /**
+     * Gets a framebuffer attachment that can be used to render into a particular face of the cubemap.
+     * @param face The face for which to retrieve the framebuffer attachment.
+     * @return The face as a framebuffer attachment.
+     */
     FramebufferAttachment<ContextType> getFaceAsFramebufferAttachment(CubemapFace face);
 }

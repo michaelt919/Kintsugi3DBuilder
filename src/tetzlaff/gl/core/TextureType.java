@@ -12,13 +12,43 @@
 
 package tetzlaff.gl.core;
 
+/**
+ * Enumerates the possible texture types.
+ */
 public enum TextureType 
 {
+    /**
+     * A "null" texture for representing the absence of a texture in a particular context.
+     */
     NULL,
+
+    /**
+     * A traditional color texture map.
+     */
     COLOR,
+
+    /**
+     * A depth or "z" buffer such as for hidden surface removal, shadows, etc.
+     */
     DEPTH,
+
+    /**
+     * A depth buffer where the depth values are stored as floating-point numbers.
+     */
     FLOATING_POINT_DEPTH,
+
+    /**
+     * A stencil buffer.
+     */
     STENCIL,
+
+    /**
+     * A combined depth / stencil buffer.
+     */
     DEPTH_STENCIL,
+
+    /**
+     * A combined depth / stencil buffer where the depth values are stored as floating-point numbers.
+     */
     FLOATING_POINT_DEPTH_STENCIL
 }

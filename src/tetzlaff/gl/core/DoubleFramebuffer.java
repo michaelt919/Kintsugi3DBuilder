@@ -12,7 +12,14 @@
 
 package tetzlaff.gl.core;
 
+/**
+ * An interface for a framebuffer that internally contains two buffers that can be double-buffered.
+ * @param <ContextType>
+ */
 public interface DoubleFramebuffer<ContextType extends Context<ContextType>> extends Framebuffer<ContextType>
 {
+    /**
+     * Swap the front and the back buffer.
+     */
     void swapBuffers();
 }

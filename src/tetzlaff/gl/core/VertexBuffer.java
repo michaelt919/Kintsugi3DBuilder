@@ -23,9 +23,25 @@ import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
  */
 public interface VertexBuffer<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
 {
+    /**
+     * Gets the number of vertices in the vertex buffer.
+     * @return The number of vertices.
+     */
     int count();
+
+    /**
+     * Sets the content of the vertex buffer from a memory buffer with a defined format (an array of vectors).
+     * @param data The buffer containing the vertex data.
+     * @param normalize Whether or not each vertex should be automatically normalized.
+     * @return The calling object.
+     */
     VertexBuffer<ContextType> setData(NativeVectorBuffer data, boolean normalize);
 
+    /**
+     * Sets the content of the vertex buffer from a memory buffer with a defined format (an array of vectors).
+     * @param data The buffer containing the vertex data.
+     * @return The calling object.
+     */
     default VertexBuffer<ContextType> setData(NativeVectorBuffer  data)
     {
         return this.setData(data, false);

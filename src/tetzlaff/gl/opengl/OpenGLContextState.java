@@ -12,8 +12,8 @@
 
 package tetzlaff.gl.opengl;
 
-import tetzlaff.gl.core.AlphaBlendingFunction;
-import tetzlaff.gl.core.AlphaBlendingFunction.Weight;
+import tetzlaff.gl.core.BlendFunction;
+import tetzlaff.gl.core.BlendFunction.Weight;
 import tetzlaff.gl.core.ContextState;
 
 import static org.lwjgl.opengl.GL11.*;
@@ -106,7 +106,7 @@ public class OpenGLContextState implements ContextState
     }
 
     @Override
-    public void setAlphaBlendingFunction(AlphaBlendingFunction func)
+    public void setBlendFunction(BlendFunction func)
     {
         glEnable(GL_BLEND);
         OpenGLContext.errorCheck();
@@ -115,7 +115,7 @@ public class OpenGLContextState implements ContextState
     }
 
     @Override
-    public void disableAlphaBlending()
+    public void disableBlending()
     {
         glDisable(GL_BLEND);
         OpenGLContext.errorCheck();

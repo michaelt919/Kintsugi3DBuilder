@@ -14,9 +14,23 @@ package tetzlaff.gl.core;
 
 import java.util.function.Consumer;
 
+/**
+ * An interface for a double-buffered framebuffer that internally contains two offscreen FBOs.
+ * @param <ContextType>
+ */
 public interface DoubleFramebufferObject<ContextType extends Context<ContextType>>
     extends DoubleFramebuffer<ContextType>, Resource
 {
+    /**
+     * Request that the FBOs be resized.
+     * @param width The new width for the FBO.
+     * @param height The new height for the FBO.
+     */
     void requestResize(int width, int height);
+
+    /**
+     * Add a listener that will be called whenever the framebuffers swap.
+     * @param listener The listener that runs when a framebuffer swap occurs.
+     */
     void addSwapListener(Consumer<Framebuffer<ContextType>> listener);
 }

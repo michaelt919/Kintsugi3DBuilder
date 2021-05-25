@@ -103,6 +103,15 @@ public final class ColorFormat
         this.dataType = dataType;
     }
 
+    /**
+     * Creates a custom color format by specifying the target precision (in bits) for each color component
+     * @param redBits The desired number of bits to be allocated for the red component.
+     * @param greenBits The desired number of bits to be allocated for the green component.
+     * @param blueBits The desired number of bits to be allocated for the blue component.
+     * @param alphaBits The desired number of bits to be allocated for the alpha component.
+     * @param dataType The data type of each component in the color.
+     * @return An object representing the requested color format.
+     */
     public static ColorFormat createCustom(int redBits, int greenBits, int blueBits, int alphaBits, DataType dataType)
     {
         return new ColorFormat(redBits, greenBits, blueBits, alphaBits, dataType);

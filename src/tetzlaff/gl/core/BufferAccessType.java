@@ -12,6 +12,9 @@
 
 package tetzlaff.gl.core;
 
+/**
+ * Enumerates the primary use cases for a GPU buffer.
+ */
 public enum BufferAccessType 
 {
     /**
