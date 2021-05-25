@@ -39,9 +39,7 @@ public interface LeastSquaresModel<S, T>
      * @param systemIndex The index of the system to check for a valid sample.
      * @return True if a valid sample was found for that system; false otherwise.
      */
-    boolean isValid(S sampleData, int systemIndex){
-        return sampleData.getVisibility(systemIndex) > 0;
-    }
+    boolean isValid(S sampleData, int systemIndex);
 
     /**
      * Often, least squares problems are weighted.  This function takes as input the bundled data for a set of samples
@@ -51,9 +49,7 @@ public interface LeastSquaresModel<S, T>
      * @param systemIndex The index of the system for which to evaluate the weight function.
      * @return The weight for all of the samples in the current data bundle for the specified system.
      */
-    double getSampleWeight(S sampleData, int systemIndex){
-        return sampleData.getAdditionalWeight(systemIndex);
-    }
+    double getSampleWeight(S sampleData, int systemIndex);
 
     /**
      * This function actually retrieves the sample from the data bundle (which may be multi-dimensional) for a particular system.
@@ -62,9 +58,7 @@ public interface LeastSquaresModel<S, T>
      * @param systemIndex The index of the system for which to process the samples.
      * @return The set of samples that were produced for the specified system.
      */
-    T getSamples(S sampleData, int systemIndex){
-        return sampleData.getColor(systemIndex).asDoublePrecision();
-    }
+    T getSamples(S sampleData, int systemIndex);
 
     /**
      * This function takes as input the bundled data for a set of samples (no more than one sample for each system) and provides an object that is
@@ -91,6 +85,7 @@ public interface LeastSquaresModel<S, T>
      * @return The inner product between the operands.
      */
     double innerProduct(T t1, T t2);
+
 
 
 }
