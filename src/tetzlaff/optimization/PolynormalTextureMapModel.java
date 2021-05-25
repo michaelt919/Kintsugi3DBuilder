@@ -1,7 +1,8 @@
 package tetzlaff.optimization;
+import java.util.function.IntFunction;
+
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.ibrelight.export.specularfit.ReflectanceData;
-import tetzlaff.optimization.LeastSquaresModel;
 
 public class PolynormalTextureMapModel implements LeastSquaresModel<ReflectanceData, DoubleVector3>
 {
@@ -22,7 +23,7 @@ public class PolynormalTextureMapModel implements LeastSquaresModel<ReflectanceD
     }
 
     @Override
-    public IntFunction<T> getBasisFunctions(ReflectanceData sampleData, int systemIndex) {
+    public IntFunction<DoubleVector3> getBasisFunctions(ReflectanceData sampleData, int systemIndex) {
         return null;
     }
 
