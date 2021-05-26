@@ -238,8 +238,6 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
             return OpenGLContext.getOpenGLInternalDepthFormat(precision);
         case STENCIL:
             return OpenGLContext.getOpenGLInternalStencilFormat(precision);
-        case FLOATING_POINT_DEPTH:
-            return GL_DEPTH_COMPONENT32F;
         case DEPTH_STENCIL:
             return GL_DEPTH24_STENCIL8;
         case FLOATING_POINT_DEPTH:
