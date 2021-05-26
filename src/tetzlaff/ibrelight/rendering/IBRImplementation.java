@@ -54,6 +54,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 {
     private final ContextType context;
     private Program<ContextType> program;
+
+    private Program<ContextType> groundPlaneProgram;
+    Drawable<ContextType> groundPlaneDrawable;
+
     private Program<ContextType> shadowProgram;
     private volatile LoadingMonitor loadingMonitor;
     private boolean suppressErrors = false;
@@ -252,6 +256,15 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             {
                 this.program = loadMainProgram();
             }
+
+            if (this.groundPlaneProgram == null)
+            {
+                this.groundPlaneProgram = loadMainProgram(getReferenceScenePreprocessorDefines(), RenderingMode.LAMBERTIAN_SHADED);
+            }
+
+            groundPlaneDrawable = context.createDrawable(groundPlaneProgram);
+            groundPlaneDrawable.addVertexBuffer("position", rectangleVertices);
+            groundPlaneDrawable.setVertexAttrib("normal", new Vector3(0, 0, 1));
 
             this.mainDrawable = context.createDrawable(program);
             this.mainDrawable.addVertexBuffer("position", this.resources.positionBuffer);
@@ -830,7 +843,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private void setupLight(Program<ContextType> program, int lightIndex, int modelInstance)
     {
-        setupLight(lightIndex, this.multiTransformationModel.get(modelInstance < 0 ? 0 : modelInstance).quickInverse(0.01f)
+        setupLight(program, lightIndex, this.multiTransformationModel.get(modelInstance < 0 ? 0 : modelInstance).quickInverse(0.01f)
             .times(getLightMatrix(lightIndex)));
 
         // lightMatrix can be hardcoded here (comment out previous line)
@@ -848,7 +861,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         //    .times(new Matrix4(new Matrix3(getDefaultCameraPose())));
     }
 
-    private void setupLight(int lightIndex, Matrix4 lightMatrix)
+    private void setupLight(Program<ContextType> program, int lightIndex, Matrix4 lightMatrix)
     {
         Matrix4 lightMatrixInverse = lightMatrix.quickInverse(0.001f);
 
@@ -959,26 +972,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 0.01f * scale, 100.0f * scale);
     }
 
-    private void drawGroundPlane(Framebuffer<ContextType> framebuffer, Matrix4 view)
-    {
-        Drawable<ContextType> drawable = context.createDrawable(program);
-        drawable.addVertexBuffer("position", rectangleVertices);
-        drawable.setVertexAttrib("normal", new Vector3(0, 0, 1));
-
-        program.setUniform("useDiffuseTexture", false);
-        program.setUniform("model_view", view);
-        program.setUniform("viewPos", view.quickInverse(0.01f).getColumn(3).getXYZ());
-
-        // Disable back face culling since the plane is one-sided.
-        context.getState().disableBackFaceCulling();
-
-        // Do first pass at half resolution to off-screen buffer
-        drawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
-
-        // Re-enable back face culling
-        context.getState().enableBackFaceCulling();
-    }
-
     private NativeVectorBuffer generateViewWeights(Matrix4 targetView)
     {
         float[] viewWeights = //new PowerViewWeightGenerator(settings.getWeightExponent())
@@ -1034,7 +1027,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 weightBuffer = context.createUniformBuffer();
             }
             weightBuffer.setData(this.generateViewWeights(view)); // TODO should this use modelView instead?
-            program.setUniformBuffer("ViewWeights", weightBuffer);
+            p.setUniformBuffer("ViewWeights", weightBuffer);
         }
 
         return modelView;
@@ -1081,6 +1074,22 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             // Do first pass at half resolution to off-screen buffer
             drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
         }
+    }
+
+    private void drawGroundPlane(Framebuffer<ContextType> framebuffer, Matrix4 view)
+    {
+        // Set up camera for ground plane program.
+        groundPlaneDrawable.program().setUniform("model_view", view);
+        groundPlaneDrawable.program().setUniform("viewPos", view.quickInverse(0.01f).getColumn(3).getXYZ());
+
+        // Disable back face culling since the plane is one-sided.
+        context.getState().disableBackFaceCulling();
+
+        // Do first pass at half resolution to off-screen buffer
+        groundPlaneDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+
+        // Re-enable back face culling
+        context.getState().enableBackFaceCulling();
     }
 
     @Override
@@ -1297,14 +1306,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 if (lightingModel.isGroundPlaneEnabled())
                 {
-                    this.program.setUniform("imageBasedRenderingEnabled", false);
-                    this.program.setUniform("objectID", this.sceneObjectIDLookup.get("SceneObject"));
-                    this.program.setUniform("defaultDiffuseColor", lightingModel.getGroundPlaneColor());
+                    this.groundPlaneProgram.setUniform("objectID", this.sceneObjectIDLookup.get("SceneObject"));
+                    this.groundPlaneProgram.setUniform("defaultDiffuseColor", lightingModel.getGroundPlaneColor());
+                    this.groundPlaneProgram.setUniform("projection", this.getProjectionMatrix(size));
+
+                    this.setupForDraw(groundPlaneProgram);
 
                     float scale = getScale();
                     for (int lightIndex = 0; lightIndex < lightingModel.getLightCount(); lightIndex++)
                     {
-                        setupLight(lightIndex,
+                        setupLight(groundPlaneProgram, lightIndex,
                              Matrix4.scale(scale)
                                  .times(lightingModel.getLightMatrix(lightIndex))
                                  .times(Matrix4.translate(new Vector3(0, lightingModel.getGroundPlaneHeight(), 0)))
@@ -1322,10 +1333,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             .times(Matrix4.scale(this.getScale() * lightingModel.getGroundPlaneSize())));
                 }
 
-                context.getState().disableBackFaceCulling();
-
                 // After the ground plane, use a gray color for anything without a texture map.
                 this.program.setUniform("defaultDiffuseColor", new Vector3(0.125f));
+
+                context.getState().disableBackFaceCulling();
                 drawReferenceScene(offscreenFBO, view, projection);
 
                 setupForDraw(this.program);
@@ -2375,6 +2386,19 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         {
             this.mainDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
         }
+
+        // Also reload ground plane program as it uses the same base shaders.
+        if (this.groundPlaneProgram != null)
+        {
+            this.groundPlaneProgram.close();
+            this.groundPlaneProgram = null;
+        }
+
+        this.groundPlaneProgram = loadMainProgram(getReferenceScenePreprocessorDefines(), RenderingMode.LAMBERTIAN_SHADED);
+
+        groundPlaneDrawable = context.createDrawable(groundPlaneProgram);
+        groundPlaneDrawable.addVertexBuffer("position", rectangleVertices);
+        groundPlaneDrawable.setVertexAttrib("normal", new Vector3(0, 0, 1));
 
         suppressErrors = false;
     }

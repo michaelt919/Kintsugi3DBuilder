@@ -783,21 +783,26 @@ bool shadowTest(int lightIndex)
 void main()
 {
     vec3 triangleNormal = normalize(fNormal);
-    vec3 viewDir = normalize(viewPos - fPosition);
-    float nDotV_triangle = max(0.0, dot(triangleNormal, viewDir));
-
-    if (nDotV_triangle == 0.0)
-    {
-        fragColor = vec4(0, 0, 0, 1);
-        return;
-    }
-
     vec3 normalDir = getRefinedNormalDir(triangleNormal);
-    float nDotV = max(0.0, dot(normalDir, viewDir));
+
+    vec3 viewDir = normalize(viewPos - fPosition);
+    float nDotV_triangle = dot(triangleNormal, viewDir);
 
     // Flip normals if necessary, but don't do anything if nDotV is zero.
-    normalDir *= (sign(nDotV) + 1 - abs(sign(nDotV)));
-    nDotV = abs(nDotV);
+    // This is required for the ground plane.
+    float flip = (sign(nDotV_triangle) + 1 - abs(sign(nDotV_triangle)));
+    triangleNormal *= flip;
+        normalDir *= flip;
+    nDotV_triangle = abs(nDotV_triangle);
+
+// TODO: is it desirable for the primary object (not the groudn plane) to NOT shade backfacing polygons?
+//    if (nDotV_triangle == 0.0)
+//    {
+//        fragColor = vec4(0, 0, 0, 1);
+//        return;
+//    }
+
+    float nDotV = max(0.0, dot(normalDir, viewDir));
 
     Material m = getMaterial();
 
