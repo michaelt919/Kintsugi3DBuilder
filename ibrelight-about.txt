@@ -1,7 +1,7 @@
 IBRelight
-Version: In-Development / Experimental
-Originally written by:
-Michael Tetzlaff (University of Wisconsin - Stout) - primary developer
+Version: 0.2.0
+Contributors:
+Michael Tetzlaff (University of Minnesota / University of Wisconsin - Stout) - primary developer
 Alex Kautz (University of Rochester) - contributor
 Seth Berrier (University of Wisconsin - Stout) - contributor
 Michael Ludwig (University of Minnesota) - contributor
