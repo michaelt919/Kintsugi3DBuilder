@@ -19,5 +19,5 @@ IBRelight is free software: you can redistribute it and/or modify it under the t
 
 IBRelight is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  
-Requests for source code, comments, or bug reports should be sent to:
+Requests for source code, comments, or bug reports should be sent to
 Michael Tetzlaff ( tetzlaffm@uwstout.edu )
