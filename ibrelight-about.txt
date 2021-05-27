@@ -8,7 +8,7 @@ Michael Ludwig (University of Minnesota) - contributor
 Sam Steinkamp (University of Minnesota) - contributor
 Gary Meyer (University of Minnesota) - designer and advisor
 
-Copyright (c) Michael Tetzlaff 2019
+Copyright (c) Michael Tetzlaff 2021
 Copyright (c) The Regents of the University of Minnesota 2019
 
 Licensed under GPLv3 
