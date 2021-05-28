@@ -21,4 +21,8 @@ public class CoefficientData {
     public double[] getCoeff() {
         return coeff;
     }
+
+    public void setCoeff(double[] coeff) {
+        this.coeff = coeff;
+    }
 }

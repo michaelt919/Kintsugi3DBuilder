@@ -1,9 +1,10 @@
 package tetzlaff.optimization;
-import tetzlaff.gl.vecmath.DoubleVector3;
+
 import tetzlaff.ibrelight.export.PTMfit.CoefficientData;
 import tetzlaff.ibrelight.export.PTMfit.LuminaceData;
 import tetzlaff.ibrelight.export.PTMfit.PTMData;
-import tetzlaff.optimization.LeastSquaresModel;
+
+import java.util.function.IntFunction;
 
 public class PolynormalTextureMapModel implements LeastSquaresModel<PTMData, LuminaceData>
 {
@@ -25,8 +26,8 @@ public class PolynormalTextureMapModel implements LeastSquaresModel<PTMData, Lum
     }
 
     @Override
-    public double[] getSamples(PTMData sampleData, int systemIndex) {
-        return sampleData.getProw(systemIndex);
+    public LuminaceData getSamples(PTMData sampleData, int systemIndex) {
+        return sampleData.getRealLumin();
     }
 
     @Override
@@ -35,7 +36,7 @@ public class PolynormalTextureMapModel implements LeastSquaresModel<PTMData, Lum
         return b->
         {
             LuminaceData Luminance= new LuminaceData(sampleData.getRownumber(),coefficients.getX(),coefficients.getY());
-            double[] p_i=getSamples(sampleData,systemIndex);
+            double[] p_i= sampleData.getProw(systemIndex);
             double[] c_xy=coefficients.getCoeff();
             for(int i=0;i<6;i++){
                 Luminance.setLumin(index,Luminance.getLumin(index)+p_i[i]*c_xy[i]);
@@ -45,7 +46,7 @@ public class PolynormalTextureMapModel implements LeastSquaresModel<PTMData, Lum
     }
 
     @Override
-    public double innerProduct(DoubleVector3 t1, DoubleVector3 t2) {
+    public double innerProduct(LuminaceData t1, LuminaceData t2) {
         return t1.dot(t2);
     }
 }

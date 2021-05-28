@@ -47,4 +47,16 @@ public class LuminaceData {
     public void setLumin(int index, double value) {
         this.lumin[index] = value;
     }
+
+    public double dot(LuminaceData t2) {
+        double[] t1lumin=this.getLumin();
+        double[] t2lumin=this.getLumin();
+        double result=0;
+            for(int i=0;i<size;i++){
+                result+=t1lumin[i]*t2lumin[i];
+            }
+
+        return result;
+
+    }
 }
