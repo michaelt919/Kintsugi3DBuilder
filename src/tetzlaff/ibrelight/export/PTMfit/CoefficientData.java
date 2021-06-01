@@ -25,4 +25,7 @@ public class CoefficientData {
     public void setCoeff(double[] coeff) {
         this.coeff = coeff;
     }
+    public void setCoeff(int index, double value) {
+        this.coeff[index]=value;
+    }
 }
