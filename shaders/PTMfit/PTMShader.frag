@@ -1,9 +1,8 @@
 #version 330
 #include "PTMfit.glsl"
-
+#line 4 0
 layout(location = 0) out vec4 colorInfo;
 layout(location = 1) out vec3 lightDir;
-
 void main(){
     //get rgb
     colorInfo=getLinearColor();
