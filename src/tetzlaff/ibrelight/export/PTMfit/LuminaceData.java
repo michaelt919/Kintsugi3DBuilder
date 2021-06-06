@@ -7,7 +7,7 @@ import tetzlaff.util.ColorList;
 
 public class LuminaceData {
     private int size;
-    private Float[] lumin;
+    private ColorList lumin;
     private Float[] lightdir;
     //private CoefficientData coeffcient;
 
@@ -16,27 +16,27 @@ public class LuminaceData {
         this.lumin=null;
         this.lightdir=null;
     }
-    public LuminaceData(Float[] lumin, Float[] lightdir){
+    public LuminaceData(ColorList lumin, Float[] lightdir){
         //this.size=lumindata.length;
 
         this.lumin=lumin;
         this.lightdir=lightdir;
-        this.size= lumin.length;
+        this.size= lumin.size();
         //this.coeffcient=cululateCoeff();
 
     }
 
 
 
-    public Float[] getLumin() {
+    public ColorList getLumin() {
         return lumin;
     }
     public Float[] getLightdir() {
         return lightdir;
     }
-    public Float getLumin(int index){
-        return lumin[index];
-    }
+//    public Float getLumin(int index){
+//        return lumin.;
+//    }
 
 
     public int getsize(){
