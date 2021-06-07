@@ -1,14 +1,12 @@
 package tetzlaff.ibrelight.export.PTMfit;
 
-import org.ejml.data.DMatrixRMaj;
-import org.ejml.simple.SimpleMatrix;
-import tetzlaff.gl.vecmath.Vector3;
+
 import tetzlaff.util.ColorList;
 
 public class LuminaceData {
     private int size;
     private ColorList lumin;
-    private Float[] lightdir;
+    private ColorList lightdir;
     //private CoefficientData coeffcient;
 
     public LuminaceData(){
@@ -16,7 +14,7 @@ public class LuminaceData {
         this.lumin=null;
         this.lightdir=null;
     }
-    public LuminaceData(ColorList lumin, Float[] lightdir){
+    public LuminaceData(ColorList lumin, ColorList lightdir){
         //this.size=lumindata.length;
 
         this.lumin=lumin;
@@ -31,7 +29,7 @@ public class LuminaceData {
     public ColorList getLumin() {
         return lumin;
     }
-    public Float[] getLightdir() {
+    public ColorList getLightdir() {
         return lightdir;
     }
 //    public Float getLumin(int index){

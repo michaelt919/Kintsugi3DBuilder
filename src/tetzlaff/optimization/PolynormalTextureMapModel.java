@@ -37,13 +37,14 @@ public class PolynormalTextureMapModel implements LeastSquaresModel<LuminaceData
     public IntFunction<Float> getBasisFunctions(LuminaceData sampleData, int systemIndex) {
 //
         // b :column of the p matrix, system index :row
-        Float[] row=new Float[6];
-        for(int i=0;i<6;i++){
-            row[i]=sampleData.getLightdir()[6*systemIndex+i];
-        }
+        Float u=sampleData.getLightdir().getRed(systemIndex);
+        Float v=sampleData.getLightdir().getGreen(systemIndex);
+        Float w=sampleData.getLightdir().getBlue(systemIndex);
+        Float[] row={1.0f,u,v,w,u*u,v*u};
+
         return b->
         {
-            return row[b];
+            return row[b%6];
         };
     }
 
