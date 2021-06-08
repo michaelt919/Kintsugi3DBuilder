@@ -42,10 +42,26 @@ import tetzlaff.ibrelight.core.RenderingMode;
 import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.util.ColorList;
 
+/**
+ * A class that encapsulates all of the GPU resources like vertex buffers, uniform buffers, and textures for a given
+ * IBR instance and provides helper methods for applying these resources in typical use cases.
+ * @param <ContextType>
+ */
 public final class IBRResources<ContextType extends Context<ContextType>> implements AutoCloseable
 {
+    /**
+     * The graphics context associated with this instance.
+     */
     public final ContextType context;
+
+    /**
+     * The view set that these resources were loaded from.
+     */
     public final ViewSet viewSet;
+
+    /**
+     * The geometry for this instance that the vertex buffers were loaded from.
+     */
     public final VertexGeometry geometry;
 
     /**
@@ -85,8 +101,10 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
      */
     public final Texture3D<ContextType> colorTextures;
 
+    @Deprecated
     public final Texture3D<ContextType> eigentextures;
 
+    @Deprecated
     public final Texture2D<ContextType> residualTexture;
 
     /**
@@ -99,20 +117,70 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
      */
     private Texture1D<ContextType> inverseLuminanceMap;
 
+    /**
+     * A vertex buffer containing vertex positions.
+     */
     public final VertexBuffer<ContextType> positionBuffer;
+
+    /**
+     * A vertex buffer containing texture coordinates.
+     */
     public final VertexBuffer<ContextType> texCoordBuffer;
+
+    /**
+     * A vertex buffer containing surface normals.
+     */
     public final VertexBuffer<ContextType> normalBuffer;
+
+    /**
+     * A vertex buffer containing tangent vectors.
+     */
     public final VertexBuffer<ContextType> tangentBuffer;
+
+    /**
+     * A depth texture array containing a depth image for every view.
+     */
     public final Texture3D<ContextType> depthTextures;
+
+    /**
+     * A diffuse texture map, if one exists.
+     */
     public final Texture2D<ContextType> diffuseTexture;
+
+    /**
+     * A normal map, if one exists.
+     */
     public final Texture2D<ContextType> normalTexture;
+
+    /**
+     * A specular reflectivity map, if one exists.
+     */
     public final Texture2D<ContextType> specularTexture;
+
+    /**
+     * A specular roughness map, if one exists.
+     */
     public final Texture2D<ContextType> roughnessTexture;
+
+    /**
+     * A depth texture array containing a shadow map for every view.
+     */
     public final Texture3D<ContextType> shadowTextures;
+
+    /**
+     * A GPU buffer containing the matrices that were used for each shadow map in the shadowTextures array.
+     */
     public final UniformBuffer<ContextType> shadowMatrixBuffer;
+
+    /**
+     * A GPU buffer containing the weights associated with all the views (determined by the distance from other views).
+     */
     public final UniformBuffer<ContextType> cameraWeightBuffer;
 
+    @Deprecated
     public final Texture2D<ContextType> blockPositionTexture;
+
+    @Deprecated
     public final Texture2D<ContextType> blockNormalTexture;
 
     private final double primaryViewDistance;
@@ -953,6 +1021,30 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
     }
 
+    /**
+     * Gets a shader program builder with the following preprocessor defines automatically injected based on the
+     * characteristics of this instance:
+     * <ul>
+     *     <li>CAMERA_POSE_COUNT</li>
+     *     <li>LIGHT_COUNT</li>
+     *     <li>CAMERA_PROJECTION_COUNT</li>
+     *     <li>LUMINANCE_MAP_ENABLED</li>
+     *     <li>INVERSE_LUMINANCE_MAP_ENABLED</li>
+     *     <li>INFINITE_LIGHT_SOURCES</li>
+     *     <li>VISIBILITY_TEST_ENABLED</li>
+     *     <li>SHADOW_TEST_ENABLED</li>
+     *     <li>IMAGE_BASED_RENDERING_ENABLED</li>
+     *     <li>DIFFUSE_TEXTURE_ENABLED</li>
+     *     <li>SPECULAR_TEXTURE_ENABLED</li>
+     *     <li>ROUGHNESS_TEXTURE_ENABLED</li>
+     *     <li>NORMAL_TEXTURE_ENABLED</li>
+     *     <li>SVD_MODE</li>
+     * </ul>
+     *
+     * @param renderingMode The rendering mode to use, which may change some of the preprocessor defines.
+     * @return A program builder with all of the above preprocessor defines specified, ready to have the
+     * vertex and fragment shaders added as well as any additional application-specific preprocessor definitions.
+     */
     public ProgramBuilder<ContextType> getIBRShaderProgramBuilder(RenderingMode renderingMode)
     {
         ProgramBuilder<ContextType> builder = context.getShaderProgramBuilder()
@@ -981,12 +1073,35 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         return builder;
     }
 
+    /**
+     * Gets a shader program builder with the following preprocessor defines automatically injected based on the
+     * characteristics of this instance:
+     * <ul>
+     *     <li>CAMERA_POSE_COUNT</li>
+     *     <li>LIGHT_COUNT</li>
+     *     <li>CAMERA_PROJECTION_COUNT</li>
+     *     <li>LUMINANCE_MAP_ENABLED</li>
+     *     <li>INVERSE_LUMINANCE_MAP_ENABLED</li>
+     *     <li>INFINITE_LIGHT_SOURCES</li>
+     *     <li>VISIBILITY_TEST_ENABLED</li>
+     *     <li>SHADOW_TEST_ENABLED</li>
+     *     <li>IMAGE_BASED_RENDERING_ENABLED</li>
+     *     <li>DIFFUSE_TEXTURE_ENABLED</li>
+     *     <li>SPECULAR_TEXTURE_ENABLED</li>
+     *     <li>ROUGHNESS_TEXTURE_ENABLED</li>
+     *     <li>NORMAL_TEXTURE_ENABLED</li>
+     *     <li>SVD_MODE</li>
+     * </ul>
+     * This overload uses the default mode of RenderingMode.IMAGE_BASED.
+     * @return A program builder with all of the above preprocessor defines specified, ready to have the
+     * vertex and fragment shaders added as well as any additional application-specific preprocessor definitions.
+     */
     public ProgramBuilder<ContextType> getIBRShaderProgramBuilder()
     {
         return getIBRShaderProgramBuilder(RenderingMode.IMAGE_BASED);
     }
 
-    public static File findImageFile(File requestedFile) throws FileNotFoundException
+    private static File findImageFile(File requestedFile) throws FileNotFoundException
     {
         if (requestedFile.exists())
         {
@@ -1027,6 +1142,12 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
     }
 
+    /**
+     * Finds the image file for a particular view index.
+     * @param index The index of the view to find.
+     * @return The image file at the specified view index.
+     * @throws FileNotFoundException if the image file cannot be found.
+     */
     public File findImageFile(int index) throws FileNotFoundException
     {
         return findImageFile(viewSet.getImageFile(index));
@@ -1110,6 +1231,9 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         return 2 * nearPlane * farPlane / (farPlane + nearPlane - nonLinearDepth * (farPlane - nearPlane));
     }
 
+    /**
+     * Refresh the luminance map textures using the current values in the view set.
+     */
     public void updateLuminanceMap()
     {
         if (luminanceMap != null)
@@ -1131,6 +1255,9 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
     }
 
+    /**
+     * Refresh the light data in the uniform buffers using the current values in the view set.
+     */
     public void updateLightData()
     {
         // Store the light positions in a uniform buffer
@@ -1157,11 +1284,19 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
     }
 
+    /**
+     * Gets the luminance map (the gamma decoding function) as a 1D texture.
+     * @return The 1D luminance map texture.
+     */
     public Texture1D<ContextType> getLuminanceMap()
     {
         return luminanceMap;
     }
 
+    /**
+     * Gets the inverse luminance map (the gamma encoding function) as a 1D texture.
+     * @return The 1D inverse luminance map texture.
+     */
     public Texture1D<ContextType> getInverseLuminanceMap()
     {
         return inverseLuminanceMap;
@@ -1237,6 +1372,13 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
     }
 
+    /**
+     * Sets up a shader program to use this instance's IBR resources.
+     * While the geometry is generally associated with a Drawable using the createDrawable function,
+     * this method binds all of the textures and associated data like camera poses, light positions, etc.
+     * to the shader program's uniform variables.
+     * @param program The shader program to set up using this instance's resources.
+     */
     public void setupShaderProgram(Program<ContextType> program)
     {
         setupCommon(program);
@@ -1287,6 +1429,11 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
     }
 
+    /**
+     * Creates a Drawable using this instance's geometry resources, and the specified shader program.
+     * @param program The program to use to construct the Drawable.
+     * @return A Drawable for rendering this instance using the specified shader program.
+     */
     public Drawable<ContextType> createDrawable(Program<ContextType> program)
     {
         Drawable<ContextType> drawable = program.getContext().createDrawable(program);
@@ -1297,12 +1444,31 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         return drawable;
     }
 
+    /**
+     * Returns a sequential stream with the views in this IBR instance as its source.
+     * A shader program and a framebuffer (which may contain multiple attachments) must be specified in order to map
+     * the views (which live only on the GPU) to a data buffer that can be examined on the CPU.
+     * @param drawable A drawable (typically obtained using IBRResources.createDrawable)
+     *                 that contains the shader program to be invoked on each view in this instance.
+     * @param framebuffer The GPU framebuffer which will store the result of invoking the specified drawable.
+     * @param attachmentCount The number of attachments that the framebuffer contains.
+     * @return a sequential Stream over the views in this instance.
+     */
     public GraphicsStream<ColorList[]> stream(
         Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int attachmentCount)
     {
         return new SequentialViewRenderStream<>(viewSet.getCameraPoseCount(), drawable, framebuffer, attachmentCount);
     }
 
+    /**
+     * Returns a sequential stream with the views in this IBR instance as its source.
+     * A shader program and a framebuffer (with a single attachment for this overload) must be specified in order to map
+     * the views (which live only on the GPU) to a data buffer that can be examined on the CPU.
+     * @param drawable A drawable (typically obtained using IBRResources.createDrawable)
+     *                 that contains the shader program to be invoked on each view in this instance.
+     * @param framebuffer The GPU framebuffer which will store the result of invoking the specified drawable.
+     * @return a sequential Stream over the views in this instance.
+     */
     public GraphicsStream<ColorList> stream(
         Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
     {
@@ -1310,6 +1476,19 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             .map(singletonList -> singletonList[0]);
     }
 
+    /**
+     * Returns a sequential stream with the views in this IBR instance as its source.
+     * Unlike stream(), this function manages the allocation of the shader program and the framebuffer object
+     * and returns an AutoCloseable so that they may be automatically deallocated using a try-with-resources block.
+     * Builders for the shader program and framebuffer object must still be specified in order to map
+     * the views (which live only on the GPU) to a data buffer that can be examined on the CPU.
+     * @param programBuilder A builder for the shader program to be invoked on each view in this instance.
+     * @param framebufferBuilder A builder for the GPU framebuffer which will store the result of invoking the
+     *                           specified drawable.
+     * @return a sequential Stream over the views in this instance,
+     * with a dual function as an AutoCloseable that manages the associated GPU resources.
+     * @throws FileNotFoundException if the shader program files cannot be found.
+     */
     public GraphicsStreamResource<ContextType> streamAsResource(
         ProgramBuilder<ContextType> programBuilder,
         FramebufferObjectBuilder<ContextType> framebufferBuilder) throws FileNotFoundException
@@ -1319,18 +1498,50 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 viewSet.getCameraPoseCount(), createDrawable(program), framebuffer, framebuffer.getColorAttachmentCount()));
     }
 
+    /**
+     * Returns a parallel stream with the views in this IBR instance as its source.
+     * A shader program and a framebuffer (which may contain multiple attachments) must be specified in order to map
+     * the views (which live only on the GPU) to a data buffer that can be examined on the CPU.
+     * @param drawable A drawable (typically obtained using IBRResources.createDrawable)
+     *                 that contains the shader program to be invoked on each view in this instance.
+     * @param framebuffer The GPU framebuffer which will store the result of invoking the specified drawable.
+     * @param attachmentCount The number of attachments that the framebuffer contains.
+     * @param maxRunningThreads The maximum number of threads allowed to be running at once.  The fact that one thread
+     *                          will be dedicated to GPU rendering should be considered when specifying this parameter.
+     * @return a parallel Stream over the views in this instance.
+     */
     public GraphicsStream<ColorList[]> parallelStream(
         Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int attachmentCount, int maxRunningThreads)
     {
         return new ParallelViewRenderStream<>(viewSet.getCameraPoseCount(), drawable, framebuffer, attachmentCount, maxRunningThreads);
     }
 
+    /**
+     * Returns a parallel stream with the views in this IBR instance as its source,
+     * with a default limit for the number of threads running at once.
+     * A shader program and a framebuffer (which may contain multiple attachments) must be specified in order to map
+     * the views (which live only on the GPU) to a data buffer that can be examined on the CPU.
+     * @param drawable A drawable (typically obtained using IBRResources.createDrawable)
+     *                 that contains the shader program to be invoked on each view in this instance.
+     * @param framebuffer The GPU framebuffer which will store the result of invoking the specified drawable.
+     * @param attachmentCount The number of attachments that the framebuffer contains.
+     * @return a parallel Stream over the views in this instance.
+     */
     public GraphicsStream<ColorList[]> parallelStream(
         Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int attachmentCount)
     {
         return new ParallelViewRenderStream<>(viewSet.getCameraPoseCount(), drawable, framebuffer, attachmentCount);
     }
 
+    /**
+     * Returns a parallel stream with the views in this IBR instance as its source.
+     * A shader program and a framebuffer (with a single attachment for this overload) must be specified in order to map
+     * the views (which live only on the GPU) to a data buffer that can be examined on the CPU.
+     * @param drawable A drawable (typically obtained using IBRResources.createDrawable)
+     *                 that contains the shader program to be invoked on each view in this instance.
+     * @param framebuffer The GPU framebuffer which will store the result of invoking the specified drawable.
+     * @return a parallel Stream over the views in this instance.
+     */
     public GraphicsStream<ColorList> parallelStream(
         Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
     {
@@ -1338,6 +1549,21 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             .map(singletonList -> singletonList[0]);
     }
 
+    /**
+     * Returns a parallel stream with the views in this IBR instance as its source.
+     * Unlike parallelStream(), this function manages the allocation of the shader program and the framebuffer object
+     * and returns an AutoCloseable so that they may be automatically deallocated using a try-with-resources block.
+     * Builders for the shader program and framebuffer object must still be specified in order to map
+     * the views (which live only on the GPU) to a data buffer that can be examined on the CPU.
+     * @param programBuilder A builder for the shader program to be invoked on each view in this instance.
+     * @param framebufferBuilder A builder for the GPU framebuffer which will store the result of invoking the
+     *                           specified drawable.
+     * @param maxRunningThreads The maximum number of threads allowed to be running at once.  The fact that one thread
+     *                          will be dedicated to GPU rendering should be considered when specifying this parameter.
+     * @return a parallel Stream over the views in this instance,
+     * with a dual function as an AutoCloseable that manages the associated GPU resources.
+     * @throws FileNotFoundException if the shader program files cannot be found.
+     */
     public GraphicsStreamResource<ContextType> parallelStreamAsResource(
         ProgramBuilder<ContextType> programBuilder,
         FramebufferObjectBuilder<ContextType> framebufferBuilder,
@@ -1348,6 +1574,20 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 viewSet.getCameraPoseCount(), createDrawable(program), framebuffer, framebuffer.getColorAttachmentCount(), maxRunningThreads));
     }
 
+    /**
+     * Returns a parallel stream with the views in this IBR instance as its source,
+     * with a default limit for the number of threads running at once.
+     * Unlike parallelStream(), this function manages the allocation of the shader program and the framebuffer object
+     * and returns an AutoCloseable so that they may be automatically deallocated using a try-with-resources block.
+     * Builders for the shader program and framebuffer object must still be specified in order to map
+     * the views (which live only on the GPU) to a data buffer that can be examined on the CPU.
+     * @param programBuilder A builder for the shader program to be invoked on each view in this instance.
+     * @param framebufferBuilder A builder for the GPU framebuffer which will store the result of invoking the
+     *                           specified drawable.
+     * @return a parallel Stream over the views in this instance,
+     * with a dual function as an AutoCloseable that manages the associated GPU resources.
+     * @throws FileNotFoundException if the shader program files cannot be found.
+     */
     public GraphicsStreamResource<ContextType> parallelStreamAsResource(
         ProgramBuilder<ContextType> programBuilder,
         FramebufferObjectBuilder<ContextType> framebufferBuilder) throws FileNotFoundException
@@ -1357,11 +1597,21 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 viewSet.getCameraPoseCount(), createDrawable(program), framebuffer, framebuffer.getColorAttachmentCount()));
     }
 
+    /**
+     * Gets the distance from the camera to the centroid in the primary view.
+     * This is frequently used to calibrate scale in IBRelight.
+     * @return The camera distance in the primary view.
+     */
     public double getPrimaryViewDistance()
     {
         return primaryViewDistance;
     }
 
+    /**
+     * Consider this method deprecated; will be deleted as soon as there's time for some cleanup efforts.
+     * @return
+     */
+    @Deprecated
     public IntVector2 getSVDViewWeightResolution()
     {
         if (this.eigentextures == null)
@@ -1374,6 +1624,11 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
     }
 
+    /**
+     * Gets the weight associated with a given view/camera (determined by the distance from other views).
+     * @param index The index of the view for which to retrieve its weight.
+     * @return The weight for the specified view.
+     */
     public float getCameraWeight(int index)
     {
         if (this.cameraWeights != null)
