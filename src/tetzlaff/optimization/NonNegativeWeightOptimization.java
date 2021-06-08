@@ -50,7 +50,7 @@ public class NonNegativeWeightOptimization
 
     public void optimizeWeights(IntPredicate areWeightsValid, BiConsumer<Integer, SimpleMatrix> weightSolutionConsumer, double toleranceScale)
     {
-        for (int p = 0; p < matrixBuilder.sampleCount; p++)
+        for (int p = 0; p < matrixBuilder.systemCount; p++)
         {
             if (areWeightsValid.test(p))
             {

@@ -71,9 +71,9 @@ public class GraphicsStreamResource<ContextType extends Context<ContextType>> im
     }
 
     @Override
-    public int count()
+    public int getCount()
     {
-        return base.count();
+        return base.getCount();
     }
 
     @Override

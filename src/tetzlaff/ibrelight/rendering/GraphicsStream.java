@@ -26,11 +26,63 @@ import tetzlaff.util.ColorList;
  */
 public interface GraphicsStream<T>
 {
+    /**
+     * Returns an equivalent stream that is sequential. May return itself, either because the stream was already
+     * sequential, or because the underlying stream state was modified to be sequential.
+     * @return a sequential stream
+     */
     GraphicsStream<T> sequential();
+
+    /**
+     * Returns an equivalent stream that is parallel. May return itself, either because the stream was already parallel,
+     * or because the underlying stream state was modified to be parallel.
+     * This is an intermediate operation.
+     * @return a parallel stream
+     */
     GraphicsStream<T> parallel();
+
+    /**
+     * Returns an equivalent stream that is parallel. May return itself, either because the stream was already parallel,
+     * or because the underlying stream state was modified to be parallel.
+     * This is an intermediate operation.
+     * @return a parallel stream
+     */
     GraphicsStream<T> parallel(int maxRunningThreads);
-    int count();
+
+    /**
+     * Gets the count of elements in this stream.  Unlike count() in the Java 8 Stream API, this is not technically a
+     * terminal operation in that it does not consume the stream pipeline.
+     * @return the count of elements in this stream
+     */
+    int getCount();
+
+    /**
+     * Performs an action for each element of this stream.
+     * This is a terminal operation.
+     * @param action a non-interfering action to perform on the elements
+     */
     void forEach(Consumer<? super T> action);
+
+    /**
+     * Returns a stream consisting of the results of applying the given function to the elements of this stream.
+     * This is an intermediate operation.
+     * @param mapper a non-interfering, stateless function to apply to each element
+     * @param <R> The element type of the new stream
+     * @return the new stream
+     */
     <R> GraphicsStream<R> map(Function<T, ? extends R> mapper);
+
+    /**
+     * Performs a mutable reduction operation on the elements of this stream.
+     * For more information, please refer to the documentation for Stream.collect in the Java 8 API.
+     * Unlike the Java 8 API, no combiner is required for this function.
+     * This is a terminal operation.
+     * @param supplier a function that creates a new result container. For a parallel execution, this function may be
+     *                 called multiple times and must return a fresh value each time.
+     * @param accumulator an associative, non-interfering, stateless function for incorporating an additional element
+     *                    into a result
+     * @param <R> type of the result
+     * @return the result of the reduction
+     */
     <R> R collect(Supplier<R> supplier, BiConsumer<R, ? super T> accumulator);
 }
