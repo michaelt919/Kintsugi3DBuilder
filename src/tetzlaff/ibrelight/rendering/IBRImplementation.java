@@ -131,18 +131,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private UniformBuffer<ContextType> weightBuffer;
 
     private FramebufferObject<ContextType> screenSpaceDepthFBO;
-    
-    private List<Matrix4> multiTransformationModel;
+
     private Vector3 centroid;
     private float boundingRadius;
 
-    private Program<ContextType> referenceSceneProgram;
-    private VertexGeometry referenceScene;
-    private boolean referenceSceneChanged = false;
-    private VertexBuffer<ContextType> refScenePositions;
-    private VertexBuffer<ContextType> refSceneTexCoords;
-    private VertexBuffer<ContextType> refSceneNormals;
-    private Texture2D<ContextType> refSceneTexture;
     
     private final String[] sceneObjectNameList;
     private final Map<String, Integer> sceneObjectIDLookup;
@@ -172,8 +164,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         this.resourceBuilder = resourceBuilder;
 
         this.clearColor = new Vector3(0.0f);
-        this.multiTransformationModel = new ArrayList<>(1);
-        this.multiTransformationModel.add(Matrix4.IDENTITY);
         this.settingsModel = new DefaultSettingsModel();
 
         this.sceneObjectNameList = new String[256];
@@ -446,7 +436,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             Matrix4 projection = this.getProjectionMatrix(windowSize);
             // TODO break this into blocks just in case there's a GPU timeout?
             this.setupForDraw(this.program);
-            Matrix4 modelView = setupModelView(this.program, 0, view);
+            Matrix4 modelView = setupModelView(this.program, true, view);
             this.program.setUniform("projection", projection);
 
             // Render to off-screen buffer
@@ -625,53 +615,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.resources.updateLightData();
             this.newLightCalibrationAvailable = false;
         }
-
-        if (this.referenceSceneChanged && this.referenceScene != null)
-        {
-            this.referenceSceneChanged = false;
-
-            try
-            {
-                System.out.println("Using new reference scene.");
-
-                if (this.refScenePositions != null)
-                {
-                    this.refScenePositions.close();
-                    this.refScenePositions = null;
-                }
-
-                if (this.refSceneTexCoords != null)
-                {
-                    this.refSceneTexCoords.close();
-                    this.refSceneTexCoords = null;
-                }
-
-                if (this.refSceneNormals != null)
-                {
-                    this.refSceneNormals.close();
-                    this.refSceneNormals = null;
-                }
-
-                if (this.refSceneTexture != null)
-                {
-                    this.refSceneTexture.close();
-                    this.refSceneTexture = null;
-                }
-
-                this.refScenePositions = context.createVertexBuffer().setData(referenceScene.getVertices());
-                this.refSceneTexCoords = context.createVertexBuffer().setData(referenceScene.getTexCoords());
-                this.refSceneNormals = context.createVertexBuffer().setData(referenceScene.getNormals());
-                this.refSceneTexture = context.getTextureFactory().build2DColorTextureFromFile(
-                        new File(referenceScene.getFilename().getParentFile(), referenceScene.getMaterial().getDiffuseMap().getMapName()), true)
-                    .setMipmapsEnabled(true)
-                    .setLinearFilteringEnabled(true)
-                    .createTexture();
-            }
-            catch (IOException|RuntimeException e)
-            {
-                e.printStackTrace();
-            }
-        }
     }
 
     @Override
@@ -729,23 +672,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         Vector4 sumPositions = new Vector4(0.0f);
         this.boundingRadius = resources.geometry.getBoundingRadius();
         this.centroid = resources.geometry.getCentroid();
-
-        if (multiTransformationModel != null)
-        {
-            for (Matrix4 m : multiTransformationModel)
-            {
-                Vector4 position = m.times(resources.geometry.getCentroid().asPosition());
-                sumPositions = sumPositions.plus(position);
-            }
-
-            this.centroid = sumPositions.getXYZ().dividedBy(sumPositions.w);
-
-            for(Matrix4 m : multiTransformationModel)
-            {
-                float distance = m.times(resources.geometry.getCentroid().asPosition()).getXYZ().distance(this.centroid);
-                this.boundingRadius = Math.max(this.boundingRadius, distance + resources.geometry.getBoundingRadius());
-            }
-        }
     }
 
     private Matrix4 getDefaultCameraPose()
@@ -834,17 +760,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         shadowFramebuffer.setDepthAttachment(attachment);
         shadowFramebuffer.clearDepthBuffer();
 
-        for (Matrix4 m : this.multiTransformationModel)
-        {
-            shadowProgram.setUniform("model_view", getLightMatrix(lightIndex).times(m));
-            shadowDrawable.draw(PrimitiveMode.TRIANGLES, shadowFramebuffer);
-        }
+        shadowProgram.setUniform("model_view", getLightMatrix(lightIndex));
+        shadowDrawable.draw(PrimitiveMode.TRIANGLES, shadowFramebuffer);
     }
 
-    private void setupLight(Program<ContextType> program, int lightIndex, int modelInstance)
+    private void setupLight(Program<ContextType> program, int lightIndex)
     {
-        setupLight(program, lightIndex, this.multiTransformationModel.get(modelInstance < 0 ? 0 : modelInstance).quickInverse(0.01f)
-            .times(getLightMatrix(lightIndex)));
+        setupLight(program, lightIndex, getLightMatrix(lightIndex));
 
         // lightMatrix can be hardcoded here (comment out previous line)
 
@@ -929,7 +851,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             .times(Matrix4.translate(this.centroid.negated()));
     }
 
-    private Matrix4 getModelViewMatrix(Matrix4 partialViewMatrix, int modelInstance)
+    private Matrix4 getModelViewMatrix(Matrix4 partialViewMatrix)
     {
         float scale = getScale();
 
@@ -938,16 +860,14 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 .times(this.objectModel.getTransformationMatrix())
                 .times(Matrix4.scale(1.0f / scale))
                 .times(getDefaultCameraPose().getUpperLeft3x3().asMatrix4())
-                .times(Matrix4.translate(this.centroid.negated()))
-                .times(multiTransformationModel.get(modelInstance));
+                .times(Matrix4.translate(this.centroid.negated()));
     }
 
-    private Matrix4 getPartialViewFromModelViewMatrix(Matrix4 modelViewMatrix, int modelInstance)
+    private Matrix4 getPartialViewFromModelViewMatrix(Matrix4 modelViewMatrix)
     {
         float scale = getScale();
 
         return modelViewMatrix
-            .times(multiTransformationModel.get(modelInstance).quickInverse(0.01f))
             .times(Matrix4.translate(this.centroid))
             .times(getDefaultCameraPose().getUpperLeft3x3().asMatrix4().quickInverse(0.01f))
             .times(Matrix4.scale(scale))
@@ -1004,17 +924,17 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         return cameraDistance * Math.min(cameraModel.getHorizontalFOV(), getVerticalFieldOfView(size)) / 4;
     }
 
-    private Matrix4 setupModelView(Program<ContextType> p, int modelInstance, Matrix4 view)
+    private Matrix4 setupModelView(Program<ContextType> p, boolean useModel, Matrix4 view)
     {
         Matrix4 partialViewMatrix = getPartialViewMatrix(view);
 
         for (int lightIndex = 0; lightIndex < lightingModel.getLightCount(); lightIndex++)
         {
-            setupLight(p, lightIndex, modelInstance);
+            setupLight(p, lightIndex);
         }
 
         // Draw instance
-        Matrix4 modelView = modelInstance < 0 ? view : getModelViewMatrix(partialViewMatrix, modelInstance);
+        Matrix4 modelView = !useModel ? view : getModelViewMatrix(partialViewMatrix);
 
         p.setUniform("model_view", modelView);
         p.setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());
@@ -1048,32 +968,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         p.setUniform("fullProjection", projection);
 
         return adjustedProjection;
-    }
-
-    private void drawReferenceScene(Framebuffer<ContextType> framebuffer, Matrix4 view, Matrix4 projection)
-    {
-        if (referenceSceneProgram != null && referenceScene != null && refScenePositions != null && refSceneNormals != null)
-        {
-            setupForDraw(referenceSceneProgram);
-            referenceSceneProgram.setUniform("projection", projection);
-            referenceSceneProgram.setUniform("objectID", this.sceneObjectIDLookup.get("SceneObject"));
-
-            Drawable<ContextType> drawable = context.createDrawable(referenceSceneProgram);
-            drawable.addVertexBuffer("position", refScenePositions);
-            drawable.addVertexBuffer("normal", refSceneNormals);
-
-            if (refSceneTexture != null && refSceneTexCoords != null)
-            {
-                drawable.addVertexBuffer("texCoord", refSceneTexCoords);
-                referenceSceneProgram.setTexture("diffuseMap", refSceneTexture);
-            }
-
-            referenceSceneProgram.setUniform("model_view", view);
-            referenceSceneProgram.setUniform("viewPos", view.quickInverse(0.01f).getColumn(3).getXYZ());
-
-            // Do first pass at half resolution to off-screen buffer
-            drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
-        }
     }
 
     private void drawGroundPlane(Framebuffer<ContextType> framebuffer, Matrix4 view)
@@ -1148,7 +1042,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             if (overriddenViewMatrix)
             {
-                view = getFullViewMatrix(getPartialViewFromModelViewMatrix(viewOverride, 0));
+                view = getFullViewMatrix(getPartialViewFromModelViewMatrix(viewOverride));
             }
             else if (settingsModel.getBoolean("lightCalibrationMode"))
             {
@@ -1337,7 +1231,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 this.program.setUniform("defaultDiffuseColor", new Vector3(0.125f));
 
                 context.getState().disableBackFaceCulling();
-                drawReferenceScene(offscreenFBO, view, projection);
 
                 setupForDraw(this.program);
 
@@ -1357,11 +1250,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 shadowProgram.setUniform("projection", projection);
                 screenSpaceDepthFBO.clearDepthBuffer();
 
-                for (int i = 0; i < this.multiTransformationModel.size(); i++)
-                {
-                    setupModelView(shadowProgram, i, view);
-                    shadowDrawable.draw(PrimitiveMode.TRIANGLES, screenSpaceDepthFBO);
-                }
+                setupModelView(shadowProgram, true, view);
+                shadowDrawable.draw(PrimitiveMode.TRIANGLES, screenSpaceDepthFBO);
 
                 context.flush();
 
@@ -1372,7 +1262,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 {
                     this.environmentWeightsProgram.setTexture("screenSpaceDepthBuffer", screenSpaceDepthFBO.getDepthAttachmentTexture());
                     setupForDraw(this.environmentWeightsProgram);
-                    setupModelView(this.environmentWeightsProgram, 0, view);
+                    setupModelView(this.environmentWeightsProgram, true, view);
                     this.environmentWeightsProgram.setUniform("fullProjection", projection);
                     this.environmentWeightsProgram.setTexture("positionMap", this.resources.blockPositionTexture);
                     this.environmentWeightsProgram.setTexture("normalMap", this.resources.blockNormalTexture);
@@ -1410,16 +1300,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     context.flush();
 
                     this.program.setTexture("environmentWeightsTexture", environmentWeightsTexture);
+
                     drawModelInSubdivisions(this.mainDrawable, offscreenFBO, subdivWidth, subdivHeight,
-                        lightCalibrationMode ? -1 : 0, view, projection);
+                        // Don't use the model matrix when in light calibration mode.
+                        !lightCalibrationMode, view, projection);
                 }
                 else
                 {
-                    for (int modelInstance = 0; modelInstance < (lightCalibrationMode ? 1 : multiTransformationModel.size()); modelInstance++)
-                    {
-                        drawModelInSubdivisions(this.mainDrawable, offscreenFBO, subdivWidth, subdivHeight,
-                            lightCalibrationMode ? -1 : modelInstance, view, projection);
-                    }
+                    drawModelInSubdivisions(this.mainDrawable, offscreenFBO, subdivWidth, subdivHeight,
+                            // Don't use the model matrix when in light calibration mode.
+                            !lightCalibrationMode, view, projection);
                 }
 
                 context.getState().enableBackFaceCulling();
@@ -1516,7 +1406,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     }
 
     private void drawModelInSubdivisions(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int subdivWidth, int subdivHeight,
-        int modelInstance, Matrix4 view, Matrix4 projection)
+        boolean useModel, Matrix4 view, Matrix4 projection)
     {
         FramebufferSize fullFBOSize = framebuffer.getSize();
 
@@ -1528,7 +1418,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 int effectiveWidth = Math.min(subdivWidth, fullFBOSize.width - x);
                 int effectiveHeight = Math.min(subdivHeight, fullFBOSize.height - y);
 
-                setupModelView(drawable.program(), modelInstance, view);
+                setupModelView(drawable.program(), useModel, view);
                 setupProjection(drawable.program(), fullFBOSize.width, fullFBOSize.height, x, y, effectiveWidth, effectiveHeight, projection);
 
                 // Render to off-screen buffer
@@ -1923,30 +1813,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.environmentWeightsProgram = null;
         }
 
-        if (this.refScenePositions != null)
-        {
-            this.refScenePositions.close();
-            this.refScenePositions = null;
-        }
-
-        if (this.refSceneTexCoords != null)
-        {
-            this.refSceneTexCoords.close();
-            this.refSceneTexCoords = null;
-        }
-
-        if (this.refSceneNormals != null)
-        {
-            this.refSceneNormals.close();
-            this.refSceneNormals = null;
-        }
-
-        if (this.refSceneTexture != null)
-        {
-            this.refSceneTexture.close();
-            this.refSceneTexture = null;
-        }
-
         if (this.environmentBackgroundProgram != null)
         {
             this.environmentBackgroundProgram.close();
@@ -2249,18 +2115,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         {
             reloadMainProgram();
 
-            Program<ContextType> newReferenceSceneProgram =
-                loadMainProgram(getReferenceScenePreprocessorDefines(),
-                    refSceneTexture != null && refSceneTexCoords != null ? RenderingMode.LAMBERTIAN_DIFFUSE_TEXTURED : RenderingMode.SPECULAR_SHADED);
-
-            if (this.referenceSceneProgram != null)
-            {
-                this.referenceSceneProgram.close();
-                this.referenceSceneProgram = null;
-            }
-
-            this.referenceSceneProgram = newReferenceSceneProgram;
-
             Program<ContextType> newEnvironmentBackgroundProgram = resources.getIBRShaderProgramBuilder()
                     .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
                     .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
@@ -2539,56 +2393,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 e.printStackTrace();
             }
         }
-
-        //noinspection VariableNotUsedInsideIf
-        if (this.referenceScene != null)
-        {
-            Map<String, Optional<Object>> refSceneDefineMap = getReferenceScenePreprocessorDefines();
-
-            if (this.referenceSceneProgram == null
-                || !Objects.equals(this.program.getDefine("DIFFUSE_TEXTURE_ENABLED").orElse(false),
-                    refSceneTexture != null && refSceneTexCoords != null)
-                || refSceneDefineMap.entrySet().stream().anyMatch(
-                    defineEntry -> !Objects.equals(this.program.getDefine(defineEntry.getKey()), defineEntry.getValue())))
-            {
-                try
-                {
-                    System.out.println("Updating compiled render settings for reference scene.");
-
-                    Program<ContextType> newReferenceSceneProgram =
-                        loadMainProgram(refSceneDefineMap, refSceneTexture != null && refSceneTexCoords != null ?
-                            RenderingMode.LAMBERTIAN_DIFFUSE_TEXTURED : RenderingMode.SPECULAR_SHADED);
-
-                    if (this.referenceSceneProgram != null)
-                    {
-                        this.referenceSceneProgram.close();
-                        this.referenceSceneProgram = null;
-                    }
-
-                    this.referenceSceneProgram = newReferenceSceneProgram;
-                }
-                catch (RuntimeException|FileNotFoundException e)
-                {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    @Override
-    public void setMultiTransformationModel(List<Matrix4> multiTransformationModel)
-    {
-        if (multiTransformationModel != null)
-        {
-            this.multiTransformationModel = multiTransformationModel;
-        }
-    }
-
-    @Override
-    public void setReferenceScene(VertexGeometry scene)
-    {
-        this.referenceScene = scene;
-        this.referenceSceneChanged = true;
     }
 
     @Override

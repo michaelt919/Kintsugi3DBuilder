@@ -55,7 +55,7 @@ public class SequentialViewRenderStream<ContextType extends Context<ContextType>
     }
 
     @Override
-    public int count()
+    public int getCount()
     {
         return viewCount;
     }
