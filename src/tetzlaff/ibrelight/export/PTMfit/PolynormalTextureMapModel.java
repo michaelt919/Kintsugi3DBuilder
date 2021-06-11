@@ -1,8 +1,9 @@
-package tetzlaff.optimization;
+package tetzlaff.ibrelight.export.PTMfit;
 
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibrelight.export.PTMfit.CoefficientData;
 import tetzlaff.ibrelight.export.PTMfit.LuminaceData;
+import tetzlaff.optimization.LeastSquaresModel;
 //import tetzlaff.ibrelight.export.PTMfit.PTMData;
 
 import java.util.function.IntFunction;
