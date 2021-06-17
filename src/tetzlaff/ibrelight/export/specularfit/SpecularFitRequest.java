@@ -17,13 +17,12 @@ import java.io.*;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.*;
 
-public class SpecularFitRequest extends TextureFitRequest
+public class SpecularFitRequest implements IBRRequest
 {
     private final SpecularFitSettings settings;
 
     public SpecularFitRequest(SpecularFitSettings settings)
     {
-        super(settings);
         this.settings = settings;
     }
 

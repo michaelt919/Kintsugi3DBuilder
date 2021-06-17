@@ -75,7 +75,7 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
     }
 
     @Override
-    public int count()
+    public int getCount()
     {
         return viewCount;
     }

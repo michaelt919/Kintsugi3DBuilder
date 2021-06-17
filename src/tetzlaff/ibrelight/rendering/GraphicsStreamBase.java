@@ -17,8 +17,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import tetzlaff.util.ColorList;
-
 /**
  * An abstract base class to facilitate writing stream classes that contain graphics operations.
  * The only functions that the base class need provide are forEach() and count().
@@ -81,9 +79,9 @@ public abstract class GraphicsStreamBase<T> implements GraphicsStream<T>
         }
 
         @Override
-        public int count()
+        public int getCount()
         {
-            return base.count();
+            return base.getCount();
         }
 
         @Override

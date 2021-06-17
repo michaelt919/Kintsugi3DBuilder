@@ -62,8 +62,17 @@ public class SettingsEnvironmentSceneController implements Initializable
     @FXML private ImageView envImageView;
     @FXML private ImageView bpImageView;
 
+    // Ground plane
+    @FXML private CheckBox gpEnabledCheckBox;
+    @FXML private ColorPicker gpColorPicker;
+    @FXML private TextField gpHeightTextField;
+    @FXML private Slider gpHeightSlider;
+    @FXML private TextField gpSizeTextField;
+    @FXML private Slider gpSizeSlider;
+
     private final DoubleProperty trueEnvColorIntensity = new SimpleDoubleProperty();
     private final DoubleProperty trueBackgroundIntensity = new SimpleDoubleProperty();
+    private final DoubleProperty trueGPSize = new SimpleDoubleProperty();
 
     private final SafeNumberStringConverter numberStringConverter = new SafeNumberStringConverter(0);
 
@@ -108,6 +117,7 @@ public class SettingsEnvironmentSceneController implements Initializable
 
         trueEnvColorIntensity.bindBidirectional(envSetting.envColorIntensityProperty());
         trueBackgroundIntensity.bindBidirectional(envSetting.backgroundIntensityProperty());
+        trueGPSize.bindBidirectional(envSetting.gpSizeProperty());
 
         envRotationSlider.valueProperty().bindBidirectional(envSetting.envRotationProperty());
         envIntensityTextField.textProperty().bindBidirectional(envSetting.envColorIntensityProperty(), numberStringConverter);
@@ -122,6 +132,12 @@ public class SettingsEnvironmentSceneController implements Initializable
 
         envUseImageCheckBox.disableProperty().bind(envSetting.envLoadedProperty().not());
         bpUseImageCheckBox.disableProperty().bind(envSetting.bpLoadedProperty().not());
+
+        gpEnabledCheckBox.selectedProperty().bindBidirectional(envSetting.gpEnabledProperty());
+        gpColorPicker.valueProperty().bindBidirectional(envSetting.gpColorProperty());
+        gpHeightSlider.valueProperty().bindBidirectional(envSetting.gpHeightProperty());
+        gpHeightTextField.textProperty().bindBidirectional(envSetting.gpHeightProperty(), numberStringConverter);
+        gpSizeTextField.textProperty().bindBidirectional(trueGPSize, numberStringConverter);
     }
 
     private void unbind(EnvironmentSetting envSetting)
@@ -144,6 +160,12 @@ public class SettingsEnvironmentSceneController implements Initializable
 
         localEnvImageFile.unbindBidirectional(envSetting.envImageFileProperty());
         localBPImageFile.unbindBidirectional(envSetting.bpImageFileProperty());
+
+        gpEnabledCheckBox.selectedProperty().unbindBidirectional(envSetting.gpEnabledProperty());
+        gpColorPicker.valueProperty().unbindBidirectional(envSetting.gpColorProperty());
+        gpHeightSlider.valueProperty().unbindBidirectional(envSetting.gpHeightProperty());
+        gpHeightTextField.textProperty().unbindBidirectional(envSetting.gpHeightProperty());
+        gpSizeTextField.textProperty().unbindBidirectional(trueGPSize);
     }
 
     private static final DoubleStringConverter LOG_SCALE_CONVERTER = new DoubleStringConverter()
@@ -162,12 +184,17 @@ public class SettingsEnvironmentSceneController implements Initializable
         StaticUtilities.makeClampedNumeric(0, Double.MAX_VALUE, envIntensityTextField);
         StaticUtilities.makeClampedNumeric(0, Double.MAX_VALUE, backgroundIntensityTextField);
         StaticUtilities.makeNumeric(envFilteringBiasTextField);
+        StaticUtilities.makeNumeric(gpHeightTextField);
+        StaticUtilities.makeNumeric(gpSizeTextField);
 
         envIntensitySlider.setLabelFormatter(LOG_SCALE_CONVERTER);
         StaticUtilities.bindLogScaleToLinear(envIntensitySlider.valueProperty(), trueEnvColorIntensity);
 
         backgroundIntensitySlider.setLabelFormatter(LOG_SCALE_CONVERTER);
         StaticUtilities.bindLogScaleToLinear(backgroundIntensitySlider.valueProperty(), trueBackgroundIntensity);
+
+        gpSizeSlider.setLabelFormatter(LOG_SCALE_CONVERTER);
+        StaticUtilities.bindLogScaleToLinear(gpSizeSlider.valueProperty(), trueGPSize);
 
         envImageFileChooser.setTitle("Select an environment map");
         bpImageFileChooser.setTitle("Select a backplate image");

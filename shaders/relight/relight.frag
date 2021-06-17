@@ -122,9 +122,11 @@ uniform mat4 fullProjection;
 
 #if !MATERIAL_EXPLORATION_MODE
 
+uniform vec3 defaultDiffuseColor;
+
 #ifndef DEFAULT_DIFFUSE_COLOR
 #if !SPECULAR_TEXTURE_ENABLED && !IMAGE_BASED_RENDERING_ENABLED
-#define DEFAULT_DIFFUSE_COLOR (vec3(0.125))
+#define DEFAULT_DIFFUSE_COLOR (defaultDiffuseColor)
 #else
 #define DEFAULT_DIFFUSE_COLOR (vec3(0.0))
 #endif // !SPECULAR_TEXTURE_ENABLED && !IMAGE_BASED_RENDERING_ENABLED
@@ -781,16 +783,25 @@ bool shadowTest(int lightIndex)
 void main()
 {
     vec3 triangleNormal = normalize(fNormal);
-    vec3 viewDir = normalize(viewPos - fPosition);
-    float nDotV_triangle = max(0.0, dot(triangleNormal, viewDir));
-
-    if (nDotV_triangle == 0.0)
-    {
-        fragColor = vec4(0, 0, 0, 1);
-        return;
-    }
-
     vec3 normalDir = getRefinedNormalDir(triangleNormal);
+
+    vec3 viewDir = normalize(viewPos - fPosition);
+    float nDotV_triangle = dot(triangleNormal, viewDir);
+
+    // Flip normals if necessary, but don't do anything if nDotV is zero.
+    // This is required for the ground plane.
+    float flip = (sign(nDotV_triangle) + 1 - abs(sign(nDotV_triangle)));
+    triangleNormal *= flip;
+        normalDir *= flip;
+    nDotV_triangle = abs(nDotV_triangle);
+
+// TODO: is it desirable for the primary object (not the groudn plane) to NOT shade backfacing polygons?
+//    if (nDotV_triangle == 0.0)
+//    {
+//        fragColor = vec4(0, 0, 0, 1);
+//        return;
+//    }
+
     float nDotV = max(0.0, dot(normalDir, viewDir));
 
     Material m = getMaterial();
@@ -852,10 +863,12 @@ void main()
             projTexCoord /= projTexCoord.w;
             projTexCoord = (projTexCoord + vec4(1)) / 2;
 
+            float depth = clamp(projTexCoord.z, 0, 1);
+            float shadowMapDepth = texture(shadowMaps, vec3(projTexCoord.xy, i)).r;
+
             if (projTexCoord.x >= 0 && projTexCoord.x <= 1
-                && projTexCoord.y >= 0 && projTexCoord.y <= 1
-                && projTexCoord.z >= 0 && projTexCoord.z <= 1
-                && texture(shadowMaps, vec3(projTexCoord.xy, i)).r - projTexCoord.z >= -0.01)
+                    && projTexCoord.y >= 0 && projTexCoord.y <= 1
+                    && shadowMapDepth - depth >= -0.001)
 #endif
             {
                 vec3 halfDir = normalize(viewDir + lightDir);

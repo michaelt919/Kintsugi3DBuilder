@@ -26,6 +26,11 @@ import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
 
+/**
+ * A data structure for representing a geometry mesh consisting of vertex positions, surface normals, and texture coordinates.
+ * @author Michael Tetzlaff
+ *
+ */
 public final class VertexGeometry
 {
     private File filename;
@@ -86,6 +91,8 @@ public final class VertexGeometry
 
     /**
      * Initializes the mesh from a file containing the mesh in Wavefront OBJ format.
+     * @param file The file to load.
+     * @throws FileNotFoundException Thrown if any File I/O errors occur.
      */
     public static VertexGeometry createFromOBJFile(File file) throws FileNotFoundException
     {
@@ -415,71 +422,127 @@ public final class VertexGeometry
         return orthoTangent.asVector4(orthoBitangent.dot(normal.cross(orthoTangent)));
     }
 
+    /**
+     * Gets whether or not the mesh has surface normals.
+     * @return true if the mesh has surface normals, false otherwise.
+     */
     public boolean hasNormals()
     {
         return hasNormals;
     }
 
+    /**
+     * Gets whether or not the mesh has texture coordinates.
+     * @return true if the mesh has texture coordinates, false otherwise.
+     */
     public boolean hasTexCoords()
     {
         return hasTexCoords;
     }
 
+    /**
+     * Gets a packed list containing the vertex positions of the mesh that can be used by a GL.
+     * @return A packed list containing the vertex positions.
+     */
     public NativeVectorBuffer getVertices()
     {
         return vertices;
     }
 
+    /**
+     * Gets a packed list containing the surface normals of the mesh that can be used by a GL.
+     * @return A packed list containing the surface normals.
+     */
     public NativeVectorBuffer getNormals()
     {
         return normals;
     }
 
+    /**
+     * Gets a packed list containing the texture coordinates of the mesh that can be used by a GL.
+     * @return A packed list containing the texture coordinates.
+     */
     public NativeVectorBuffer getTexCoords()
     {
         return texCoords;
     }
 
+    /**
+     * Gets the centroid of the mesh - that is, the average of all the vertex positions.
+     * @return The centroid of the mesh.
+     */
     public Vector3 getCentroid()
     {
         return centroid;
     }
 
+    /**
+     * Gets the bounding radius of the mesh - that is, the furthest distance from the centroid to a vertex position.
+     * @return The centroid of the mesh.
+     */
     public float getBoundingRadius()
     {
         return boundingRadius;
     }
 
+    /**
+     * Gets the center of the mesh's bounding box.
+     * @return The centroid of the mesh.
+     */
     public Vector3 getBoundingBoxCenter()
     {
         return boundingBoxCenter;
     }
 
+    /**
+     * Gets the size of the mesh's bounding box.
+     * @return The centroid of the mesh.
+     */
     public Vector3 getBoundingBoxSize()
     {
         return boundingBoxSize;
     }
 
+    /**
+     * Gets a packed list containing the tangents of the mesh that can be used by a GL.
+     * @return A packed list containing the tangents.
+     */
     public NativeVectorBuffer getTangents()
     {
         return tangents;
     }
 
+    /**
+     * Gets the filename of the mesh's associated material.
+     * @return The name of the material file for this mesh.
+     */
     public String getMaterialFileName()
     {
         return this.materialFileName;
     }
 
+    /**
+     * Gets the associated material for this mesh.
+     * @return The material for this mesh.
+     */
     public Material getMaterial()
     {
         return this.material;
     }
 
+    /**
+     * Gets the mesh filename.
+     * @return The filename of the mesh.
+     */
     public File getFilename()
     {
         return filename;
     }
 
+    /**
+     * Sets the mesh filename.
+     * @param filename The new filename of the mesh.
+     */
     public void setFilename(File filename)
     {
         this.filename = filename;

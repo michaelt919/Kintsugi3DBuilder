@@ -14,15 +14,28 @@ package tetzlaff.gl.nativebuffer;
 
 import java.nio.ByteBuffer;
 
+/**
+ * A singleton factory object for creating NativeVectorBuffer instances.
+ */
 public final class NativeVectorBufferFactory 
 {
     private static final NativeVectorBufferFactory INSTANCE = new NativeVectorBufferFactory();
 
+    /**
+     * Gets the singleton instance.
+     * @return The singleton instance.
+     */
     public static NativeVectorBufferFactory getInstance()
     {
         return INSTANCE;
     }
 
+    /**
+     * Creates a new empty buffer with the specified number of dimensions and elements.
+     * @param dataType The underlying type of the data in the buffer.
+     * @param dimensions The number of dimensions in each vector element.
+     * @param count The number of vector elements in the list.
+     */
     public NativeVectorBuffer createEmpty(NativeDataType dataType, int dimensions, int count)
     {
         switch(dataType)
@@ -39,6 +52,15 @@ public final class NativeVectorBufferFactory
         }
     }
 
+    /**
+     * Creates a new vector buffer with the specified number of dimensions and elements, using a pre-existing buffer as storage.
+     * Any data already in the buffer will persist.
+     * A runtime exception will be thrown if the buffer is not big enough.
+     * @param dataType The underlying type of the data in the buffer.
+     * @param dimensions The number of dimensions in each vector element.
+     * @param count The number of elements in the buffer.
+     * @param buffer The buffer to use as storage.
+     */
     public NativeVectorBuffer createFromExistingBuffer(NativeDataType dataType, int dimensions, int count, ByteBuffer buffer)
     {
         switch(dataType)
@@ -55,6 +77,13 @@ public final class NativeVectorBufferFactory
         }
     }
 
+    /**
+     * Creates a new vector buffer with the specified number of dimensions and elements, and an array of initial values to write to the buffer.
+     * @param dataType The underlying type of the data in the buffer.
+     * @param dimensions The number of dimensions in each vector element.
+     * @param count The number of vector elements in the buffer.
+     * @param byteArray The elements to use to initialize the vector buffer.
+     */
     public NativeVectorBuffer createFromByteArray(NativeDataType dataType, int dimensions, int count, byte... byteArray)
     {
         switch(dataType)
@@ -71,6 +100,14 @@ public final class NativeVectorBufferFactory
         }
     }
 
+    /**
+     * Creates a new vector buffer with the specified number of dimensions and elements, and an array of initial values to write to the buffer.
+     * Each dimension of every vector is to be represented as an 16-bit integer.
+     * @param unsigned True if the elements in the buffer should be interpreted as unsigned; false otherwise.
+     * @param dimensions The number of dimensions in each vector element.
+     * @param count The number of vector elements in the buffer.
+     * @param shortArray The elements to use to initialize the vector buffer.
+     */
     public NativeVectorBuffer createFromShortArray(boolean unsigned, int dimensions, int count, short... shortArray)
     {
         if (!unsigned)
@@ -83,6 +120,14 @@ public final class NativeVectorBufferFactory
         }
     }
 
+    /**
+     * Creates a new vector buffer with the specified number of dimensions and elements, and an array of initial values to write to the buffer.
+     * Each dimension of every vector is to be represented as an 32-bit integer.
+     * @param unsigned True if the elements in the buffer should be interpreted as unsigned; false otherwise.
+     * @param dimensions The number of dimensions in each vector element.
+     * @param count The number of vector elements in the buffer.
+     * @param intArray The elements to use to initialize the vector buffer.
+     */
     public NativeVectorBuffer createFromIntArray(boolean unsigned, int dimensions, int count, int... intArray)
     {
         if (!unsigned)
@@ -95,11 +140,25 @@ public final class NativeVectorBufferFactory
         }
     }
 
+    /**
+     * Creates a new vector buffer with the specified number of dimensions and elements, and an array of initial values to write to the buffer.
+     * Each dimension of every vector is to be represented as an 32-bit floating-point number.
+     * @param dimensions The number of dimensions in each vector element.
+     * @param count The number of vector elements in the buffer.
+     * @param floatArray The elements to use to initialize the vector buffer.
+     */
     public NativeVectorBuffer createFromFloatArray(int dimensions, int count, float... floatArray)
     {
         return new NativeFloatVectorBuffer(dimensions, count, floatArray);
     }
 
+    /**
+     * Creates a new vector buffer with the specified number of dimensions and elements, and an array of initial values to write to the buffer.
+     * Each dimension of every vector is to be represented as an 64-bit floating-point number.
+     * @param dimensions The number of dimensions in each vector element.
+     * @param count The number of vector elements in the buffer.
+     * @param doubleArray The elements to use to initialize the vector buffer.
+     */
     public NativeVectorBuffer createFromDoubleArray(int dimensions, int count, double... doubleArray)
     {
         return new NativeDoubleVectorBuffer(dimensions, count, doubleArray);

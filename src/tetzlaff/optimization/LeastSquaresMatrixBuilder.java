@@ -12,6 +12,7 @@
 
 package tetzlaff.optimization;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.*;
 import java.util.stream.IntStream;
@@ -36,17 +37,32 @@ public class LeastSquaresMatrixBuilder
     public final SimpleMatrix[] weightsQTQAugmented;
     public final SimpleMatrix[] weightsQTrAugmented;
 
-    public final int sampleCount;
+    public final int systemCount;
     public final int weightCount;
     public final int constraintCount;
 
-    public LeastSquaresMatrixBuilder(int sampleCount, int weightCount, List<IntToDoubleFunction> constraintWeights, List<Double> constraintsRHS)
+    /**
+     * Construct a least squares matrix builder which may have constraints.
+     * This does not actually build the matrices, just allocates space and sets the initial settings.
+     * @param systemCount The number of systems that are being solved at once. Typically each pixel/texel is its own
+     *                    system.  Sometimes, each red / green / blue channel at each pixel may also be its own system.
+     * @param weightCount The number of basis function / weight pairs in the solution.
+     * @param constraintWeights A list of constraints on the weights.  These constraints will be appended to the least
+     *                          squares system.  If a given entry in constraintWeights maps (0, 1, 2) to (c0, c1, c2),
+     *                          the constraint equation is c0 * w0 + c1 * w1 + c2 * w2 = b.
+     *                          The "b" values are set in the subsequent parameter, constraintsRHS.
+     *                          An empty list can be used here if no constraints are required.
+     * @param constraintsRHS The RHS of the equation for each constraints (the "b" coefficients).
+     *                       The length of this list must match the length of constraintWeights.
+     */
+    public LeastSquaresMatrixBuilder(int systemCount, int weightCount,
+                                     List<IntToDoubleFunction> constraintWeights, List<Double> constraintsRHS)
     {
-        this.sampleCount = sampleCount;
+        this.systemCount = systemCount;
         this.weightCount = weightCount;
         this.constraintCount = constraintWeights.size();
 
-        weightsQTQAugmented = IntStream.range(0, sampleCount)
+        weightsQTQAugmented = IntStream.range(0, systemCount)
             .mapToObj(p ->
             {
                 SimpleMatrix mQTQAugmented = new SimpleMatrix(
@@ -69,7 +85,7 @@ public class LeastSquaresMatrixBuilder
             })
             .toArray(SimpleMatrix[]::new);
 
-        weightsQTrAugmented = IntStream.range(0, sampleCount)
+        weightsQTrAugmented = IntStream.range(0, systemCount)
             .mapToObj(p ->
             {
                 SimpleMatrix mQTrAugmented = new SimpleMatrix(weightCount + constraintWeights.size(), 1, DMatrixRMaj.class);
@@ -84,14 +100,46 @@ public class LeastSquaresMatrixBuilder
             .toArray(SimpleMatrix[]::new);
     }
 
-    public <S, T> void buildMatrices(GraphicsStream<S> viewStream, LeastSquaresModel<S, T> leastSquaresModel, IntConsumer sampleValidator)
+    /**
+     * Construct a least squares matrix builder with no constraints.
+     * This does not actually build the matrices, just allocates space and sets the initial settings.
+     * @param systemCount The number of systems that are being solved at once. Typically each pixel/texel is its own
+     *                    system.  Sometimes, each red / green / blue channel at each pixel may also be its own system.
+     * @param weightCount The number of basis function / weight pairs in the solution.
+     */
+    public LeastSquaresMatrixBuilder(int systemCount, int weightCount)
+    {
+        this(systemCount, weightCount, Collections.emptyList(), Collections.emptyList());
+    }
+
+    /**
+     * Build the matrices that can be used to solve the system.
+     * @param viewStream A stream of data from the GPU, which typically takes the form of a sequence of framebuffer data
+     *                   from each view in the view set.
+     * @param leastSquaresModel The least squares model that defines the basis functions that are being fit to as well
+     *                          as the method for extracting the "ground truth" data from the view stream.
+     * @param sampleValidator A callback that is invoked whenever a valid sample is encountered.
+     *                        This can be used to track the number of (or even merely the existence of) valid samples
+     *                        found for each system.
+     * @param <S> The type of the data bundles coming from the graphics stream.
+     *            Each bundle should contain no more than one valid sample for each system to be solved.
+     *            For instance, this is typically the case when each bundle comes from a single view
+     *            and each system is a unique position on a 3D surface.
+     * @param <T> The type of a sample (ground truth data) after being processed and the evaluated basis functions.
+     *            This type may be a multi-dimensional entity; for instance, a color with red, green, and blue components.
+     *            When a sample is a multi-dimensional entity, it is assumed that a single solution will apply to all
+     *            components.  Alternatively, if it is desired for each dimension to be solved for separately, each one
+     *            should be its own system and the definition of a "system index" can be redefined accordingly.
+     */
+    public <S, T> void buildMatrices(GraphicsStream<S> viewStream, LeastSquaresModel<S, T> leastSquaresModel,
+                                     IntConsumer sampleValidator)
     {
         Counter counter = new Counter();
 
         viewStream.forEach(reflectanceData ->
         {
             // Update matrix for each pixel.
-            IntStream.range(0, sampleCount).parallel().forEach(p ->
+            IntStream.range(0, systemCount).parallel().forEach(p ->
             {
                 // Skip samples that aren't visible or are otherwise invalid.
                 if (leastSquaresModel.isValid(reflectanceData, p))
