@@ -19,4 +19,7 @@ public class PolynormalTextureMapBuilder {
         matrixBuilder.buildMatrices(viewStream, PTMmodel, sampleValidator);
     }
 
+    public LeastSquaresMatrixBuilder getMatrixBuilder() {
+        return matrixBuilder;
+    }
 }
