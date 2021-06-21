@@ -30,25 +30,26 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
         context.getState().disableBackFaceCulling();
 
         PTMProgramFactory programFactory=new PTMProgramFactory(resources);
-
+        try(
         GraphicsStreamResource<ContextType> LuminaceStream = resources.streamAsResource(
                 getLuminaceProgramBuilder(programFactory),
                 context.buildFramebufferObject(imageWidth, imageHeight)
                         .addColorAttachment(ColorFormat.RGBA32F)
                         .addColorAttachment(ColorFormat.RGBA32F));
 
-        System.out.println("Building weight fitting matrices...");
-        PolynormalTextureMapModel solution=new PolynormalTextureMapModel();
-        mapbuilder.buildMatrices(LuminaceStream.map(framebufferData -> new LuminaceData(framebufferData[0], framebufferData[1]))
-                ,solution);
 
-        System.out.println("Finished building matrices; solving now...");
 
-        // TODO:
-//        base.optimizeWeights(solution::areWeightsValid, solution::setWeights);
-        optimizeWeights(imageHeight*imageWidth!=0, solution::setWeights);
-        System.out.println("DONE!");
-
+        )
+        {
+            System.out.println("Building weight fitting matrices...");
+            PolynormalTextureMapModel solution=new PolynormalTextureMapModel();
+            mapbuilder.buildMatrices(LuminaceStream.map(framebufferData -> new LuminaceData(framebufferData[0], framebufferData[1]))
+                    ,solution);
+            System.out.println("Finished building matrices; solving now...");
+            System.out.println("Finished building matrices; solving now...");
+            optimizeWeights(imageHeight * imageWidth != 0, solution::setWeights);
+            System.out.println("DONE!");
+        }
 
     }
     public void optimizeWeights(IntPredicate areWeightsValid, BiConsumer<Integer, SimpleMatrix> weightSolutionConsumer, double toleranceScale)
