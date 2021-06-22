@@ -3,4 +3,4 @@ target/*
 classes/*
 ImageBasedColorAppearance.iml
 *.log
-src/tetzlaff/optimization/PolynormalTextureMapModel.java
+
