@@ -17,11 +17,15 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
     private int imageHeight;
     private int imageWidth;
     private PolynormalTextureMapBuilder mapbuilder;
+    private final SimpleMatrix[] weightsByTexel;
 
     public PTMOptimiztion(int width, int height){
         imageWidth=width;
         imageHeight=height;
         mapbuilder=new PolynormalTextureMapBuilder(imageWidth,imageHeight);
+        weightsByTexel=IntStream.range(0, imageWidth * imageHeight)
+                .mapToObj(p -> new SimpleMatrix(6 + 1, 1, DMatrixRMaj.class))
+                .toArray(SimpleMatrix[]::new);
     }
 
     public <ContextType extends Context<ContextType>> void createFit(IBRResources<ContextType> resources)
@@ -46,11 +50,15 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
             mapbuilder.buildMatrices(LuminaceStream.map(framebufferData -> new LuminaceData(framebufferData[0], framebufferData[1]))
                     ,solution);
             System.out.println("Finished building matrices; solving now...");
-            System.out.println("Finished building matrices; solving now...");
-            optimizeWeights(imageHeight * imageWidth != 0, solution::setWeights);
+
+            optimizeWeights(imageHeight * imageWidth != 0,this::setWeights);
             System.out.println("DONE!");
         }
 
+    }
+    public void setWeights(int texelIndex, SimpleMatrix weights)
+    {
+        weightsByTexel[texelIndex] = weights;
     }
     public void optimizeWeights(IntPredicate areWeightsValid, BiConsumer<Integer, SimpleMatrix> weightSolutionConsumer, double toleranceScale)
     {
