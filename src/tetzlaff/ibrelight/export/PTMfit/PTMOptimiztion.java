@@ -1,5 +1,7 @@
 package tetzlaff.ibrelight.export.PTMfit;
 
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.ColorFormat;
 import tetzlaff.gl.core.Context;
@@ -10,6 +12,7 @@ import tetzlaff.optimization.NonNegativeLeastSquares;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.function.BiConsumer;
 import java.util.function.IntPredicate;
 import java.util.stream.IntStream;
 
@@ -51,7 +54,7 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
                     ,solution);
             System.out.println("Finished building matrices; solving now...");
 
-            optimizeWeights(imageHeight * imageWidth != 0,this::setWeights);
+            optimizeWeights(p->imageHeight * imageWidth != 0,this::setWeights);
             System.out.println("DONE!");
         }
 
