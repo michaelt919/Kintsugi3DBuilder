@@ -6,6 +6,11 @@ import tetzlaff.ibrelight.export.PTMfit.LuminaceData;
 import tetzlaff.optimization.LeastSquaresModel;
 //import tetzlaff.ibrelight.export.PTMfit.PTMData;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.function.IntFunction;
 
 public class PolynormalTextureMapModel implements LeastSquaresModel<LuminaceData, Float>
@@ -53,4 +58,6 @@ public class PolynormalTextureMapModel implements LeastSquaresModel<LuminaceData
     public double innerProduct(Float t1, Float t2) {
         return t1*t2;
     }
+
+
 }

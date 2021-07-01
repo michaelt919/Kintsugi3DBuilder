@@ -20,7 +20,7 @@ public class PTMrequest implements IBRRequest {
     public <ContextType extends Context<ContextType>> void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws Exception {
         try
         {
-            new PTMOptimiztion(setting.width, setting.height).createFit(renderable.getResources());
+            new PTMOptimiztion(setting).createFit(renderable.getResources());
         }
         catch(IOException e) // thrown by createReflectanceProgram
         {

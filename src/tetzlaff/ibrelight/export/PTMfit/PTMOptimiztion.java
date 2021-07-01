@@ -5,6 +5,8 @@ import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.ColorFormat;
 import tetzlaff.gl.core.Context;
+import tetzlaff.ibrelight.core.TextureFitSettings;
+
 import tetzlaff.ibrelight.rendering.GraphicsStreamResource;
 import tetzlaff.ibrelight.rendering.IBRResources;
 import tetzlaff.optimization.LeastSquaresMatrixBuilder;
@@ -17,18 +19,14 @@ import java.util.function.IntPredicate;
 import java.util.stream.IntStream;
 
 public class PTMOptimiztion <ContextType extends Context<ContextType>>{
-    private int imageHeight;
-    private int imageWidth;
+    private TextureFitSettings settings;
     private PolynormalTextureMapBuilder mapbuilder;
-    private final SimpleMatrix[] weightsByTexel;
 
-    public PTMOptimiztion(int width, int height){
-        imageWidth=width;
-        imageHeight=height;
-        mapbuilder=new PolynormalTextureMapBuilder(imageWidth,imageHeight);
-        weightsByTexel=IntStream.range(0, imageWidth * imageHeight)
-                .mapToObj(p -> new SimpleMatrix(6 + 1, 1, DMatrixRMaj.class))
-                .toArray(SimpleMatrix[]::new);
+
+    public PTMOptimiztion(TextureFitSettings setting){
+        settings=setting;
+        mapbuilder=new PolynormalTextureMapBuilder(settings.width,settings.height);
+
     }
 
     public <ContextType extends Context<ContextType>> void createFit(IBRResources<ContextType> resources)
@@ -40,29 +38,27 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
         try(
         GraphicsStreamResource<ContextType> LuminaceStream = resources.streamAsResource(
                 getLuminaceProgramBuilder(programFactory),
-                context.buildFramebufferObject(imageWidth, imageHeight)
+                context.buildFramebufferObject(settings.width, settings.height)
                         .addColorAttachment(ColorFormat.RGBA32F)
                         .addColorAttachment(ColorFormat.RGBA32F));
-
-
-
         )
         {
             System.out.println("Building weight fitting matrices...");
-            PolynormalTextureMapModel solution=new PolynormalTextureMapModel();
+//            PolynormalTextureMapModel solution=new PolynormalTextureMapModel();
+            PTMsolution solution=new PTMsolution(settings);
+
             mapbuilder.buildMatrices(LuminaceStream.map(framebufferData -> new LuminaceData(framebufferData[0], framebufferData[1]))
-                    ,solution);
+                    ,solution.getPTMmodel());
             System.out.println("Finished building matrices; solving now...");
 
-            optimizeWeights(p->imageHeight * imageWidth != 0,this::setWeights);
+            optimizeWeights(p->settings.height * settings.width != 0,solution.setWeights);
             System.out.println("DONE!");
+            solution.saveWeightMaps();
+                // write out weight textures for debugging
         }
 
     }
-    public void setWeights(int texelIndex, SimpleMatrix weights)
-    {
-        weightsByTexel[texelIndex] = weights;
-    }
+
     public void optimizeWeights(IntPredicate areWeightsValid, BiConsumer<Integer, SimpleMatrix> weightSolutionConsumer, double toleranceScale)
     {
         LeastSquaresMatrixBuilder matrixBuilder=mapbuilder.getMatrixBuilder();
