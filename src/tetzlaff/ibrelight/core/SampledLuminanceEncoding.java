@@ -40,21 +40,47 @@ public class SampledLuminanceEncoding
             throw new IllegalArgumentException("Input arrays must be of equal length.");
         }
 
-        double[] x = new double[encoded.length + 2];
-        x[0] = 0.0;
-        for (int k = 1; k < x.length-1; k++)
-        {
-            x[k] = (double)(0xFF & (int)encoded[k-1]);
-        }
-        x[x.length-1] = 255.0;
+        int length = encoded.length;
 
-        double[] y = new double[linear.length + 2];
-        y[0] = 0.0;
-        for (int k = 1; k < y.length-1; k++)
+        // Add endpoint if first encoded value is not 0
+        if (encoded[0] != (byte)0x00)
         {
-            y[k] = Math.pow(linear[k-1], 1.0 / gamma);
+            length++;
         }
-        y[y.length-1] = y[y.length-2] * 255.0 / x[x.length-2]; // Extrapolate linearly in gamma-corrected color space
+
+        // Add endpoint if last encoded value is not 255
+        if (encoded[encoded.length-1] != (byte)0xFF)
+        {
+            length++;
+        }
+
+        double[] x = new double[length];
+        double[] y = new double[length];
+
+        int k = 0;
+
+        // Add endpoint if first encoded value is not 0
+        if (encoded[0] != (byte)0x00)
+        {
+            x[0] = 0.0;
+            y[0] = 0.0;
+            k++;
+        }
+
+        // Fill intermediate values.
+        for (int i = 0; i < encoded.length; i++)
+        {
+            x[k] = (double)(0xFF & (int)encoded[i]);
+            y[k] = Math.pow(linear[i], 1.0 / gamma);
+            k++;
+        }
+
+        // Add endpoint if last encoded value is not 255
+        if (encoded[encoded.length-1] != (byte)0xFF)
+        {
+            x[x.length - 1] = 255.0;
+            y[y.length - 1] = y[y.length - 2] * 255.0 / x[x.length - 2]; // Extrapolate linearly in gamma-corrected color space
+        }
 
         this.decodeFunction = new CubicHermiteSpline(x, y, true)
             .andThen(gammaCorrected -> Math.pow(gammaCorrected, gamma));

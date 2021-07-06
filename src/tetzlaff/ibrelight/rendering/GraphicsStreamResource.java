@@ -47,9 +47,22 @@ public class GraphicsStreamResource<ContextType extends Context<ContextType>> im
         framebuffer.close();
     }
 
+    /**
+     * Retrieves the program managed by this graphics stream resource.
+     * @return The shader program.
+     */
     public Program<ContextType> getProgram()
     {
         return program;
+    }
+
+    /**
+     * Retrieves the framebuffer managed by this graphics stream resource.
+     * @return The framebuffer.
+     */
+    public Framebuffer<ContextType> getFramebuffer()
+    {
+        return framebuffer;
     }
 
     @Override
@@ -93,4 +106,5 @@ public class GraphicsStreamResource<ContextType extends Context<ContextType>> im
     {
         return base.collect(supplier, accumulator);
     }
+
 }

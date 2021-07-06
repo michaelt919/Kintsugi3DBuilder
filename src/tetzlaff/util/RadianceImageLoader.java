@@ -22,7 +22,11 @@ import java.util.regex.Pattern;
 
 /**
  * RadianceImageLoader loads 2D textures in high dynamic range from the Radiance (.hdr) file format.
+ *
+ * https://floyd.lbl.gov/radiance/refer/filefmts.pdf (page 28)
+ * http://paulbourke.net/dataformats/pic/
  */
+
 public class RadianceImageLoader
 {
     private static final Pattern COMMON_RES = Pattern.compile("-Y (\\d+) \\+X (\\d+)");
