@@ -18,11 +18,13 @@ public class PTMsolution {
     private TextureFitSettings settings;
     private SimpleMatrix[] weightsByTexel;
 
-    public PTMsolution(TextureFitSettings settings) {
+    public PTMsolution(TextureFitSettings setting) {
         PTMmodel = new PolynormalTextureMapModel();
+        settings=setting;
         weightsByTexel= IntStream.range(0, settings.width * settings.height)
                 .mapToObj(p -> new SimpleMatrix(6 + 1, 1, DMatrixRMaj.class))
                 .toArray(SimpleMatrix[]::new);
+
     }
     public void setWeights(int texelIndex, SimpleMatrix weights)
     {

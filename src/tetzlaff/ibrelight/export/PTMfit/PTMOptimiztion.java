@@ -1,6 +1,7 @@
 package tetzlaff.ibrelight.export.PTMfit;
 
 import org.ejml.data.DMatrixRMaj;
+import org.ejml.data.SingularMatrixException;
 import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.ColorFormat;
@@ -51,10 +52,11 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
                     ,solution.getPTMmodel());
             System.out.println("Finished building matrices; solving now...");
 
-            optimizeWeights(p->settings.height * settings.width != 0,solution.setWeights);
+            optimizeWeights(p->settings.height * settings.width != 0,solution::setWeights);
             System.out.println("DONE!");
-            solution.saveWeightMaps();
+
                 // write out weight textures for debugging
+            solution.saveWeightMaps();
         }
 
     }
@@ -76,9 +78,13 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
                         .orElse(1.0);
 
                 // Solve the system.
-                weightSolutionConsumer.accept(p, NonNegativeLeastSquares.solvePremultipliedWithEqualityConstraints(
-                        matrixBuilder.weightsQTQAugmented[p], matrixBuilder.weightsQTrAugmented[p],
-                        median * toleranceScale, matrixBuilder.constraintCount));
+                try{
+                    weightSolutionConsumer.accept(p, matrixBuilder.weightsQTQAugmented[p].solve(matrixBuilder.weightsQTrAugmented[p]));
+                }
+                catch (SingularMatrixException e){
+                    e.printStackTrace();
+                }
+
             }
         }
     }
