@@ -22,6 +22,7 @@ import org.ejml.simple.SimpleMatrix;
 import static org.ejml.dense.row.CommonOps_FDRM.elementMin;
 import static org.ejml.dense.row.CommonOps_FDRM.multTransA;
 
+// TODO combine with double-precision version via abstract class?
 public final class NonNegativeLeastSquaresSinglePrecision
 {
     private static SimpleMatrix solvePartial(SimpleMatrix mATA, SimpleMatrix vATb, boolean[] p, int sizeP, List<Integer> mapping, SimpleMatrix sOut)
