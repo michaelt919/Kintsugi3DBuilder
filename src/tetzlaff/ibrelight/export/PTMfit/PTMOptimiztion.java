@@ -48,7 +48,14 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
 //            PolynormalTextureMapModel solution=new PolynormalTextureMapModel();
             PTMsolution solution=new PTMsolution(settings);
 
-            mapbuilder.buildMatrices(LuminaceStream.map(framebufferData -> new LuminaceData(framebufferData[0], framebufferData[1]))
+            mapbuilder.buildMatrices(LuminaceStream.map(framebufferData -> {
+                try {
+                    LuminaceStream.getFramebuffer().saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "test.png"))
+                } catch (IOException e) {
+                    e.printStackTrace();
+                });
+                return new LuminaceData(framebufferData[0], framebufferData[1]);
+            }))
                     ,solution.getPTMmodel());
             System.out.println("Finished building matrices; solving now...");
 
