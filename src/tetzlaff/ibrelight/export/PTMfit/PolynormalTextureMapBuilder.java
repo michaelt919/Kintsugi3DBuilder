@@ -15,7 +15,9 @@ public class PolynormalTextureMapBuilder {
     }
     public <S, T> void buildMatrices(GraphicsStream<LuminaceData> viewStream, PolynormalTextureMapModel PTMmodel)
     {
-        IntConsumer sampleValidator = i -> {};
+        IntConsumer sampleValidator = i -> {
+
+        };
         matrixBuilder.buildMatrices(viewStream, PTMmodel, sampleValidator);
     }
 

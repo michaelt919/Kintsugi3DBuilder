@@ -50,16 +50,15 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
 
             mapbuilder.buildMatrices(LuminaceStream.map(framebufferData -> {
                 try {
-                    LuminaceStream.getFramebuffer().saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "test.png"))
+                    LuminaceStream.getFramebuffer().saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "test.png"));
                 } catch (IOException e) {
                     e.printStackTrace();
-                });
+                }
                 return new LuminaceData(framebufferData[0], framebufferData[1]);
-            }))
-                    ,solution.getPTMmodel());
+            }), solution.getPTMmodel());
             System.out.println("Finished building matrices; solving now...");
 
-            optimizeWeights(p->settings.height * settings.width != 0,solution::setWeights);
+            optimizeWeights(p->true,solution::setWeights);
             System.out.println("DONE!");
 
                 // write out weight textures for debugging
