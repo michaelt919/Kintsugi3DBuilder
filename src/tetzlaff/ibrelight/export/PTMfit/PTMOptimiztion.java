@@ -44,13 +44,14 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
                         .addColorAttachment(ColorFormat.RGBA32F));
         )
         {
+            resources.setupShaderProgram(LuminaceStream.getProgram());
             System.out.println("Building weight fitting matrices...");
 //            PolynormalTextureMapModel solution=new PolynormalTextureMapModel();
             PTMsolution solution=new PTMsolution(settings);
 
             mapbuilder.buildMatrices(LuminaceStream.map(framebufferData -> {
                 try {
-                    LuminaceStream.getFramebuffer().saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "test.png"));
+                    LuminaceStream.getFramebuffer().saveColorBufferToFile(1, "PNG", new File(settings.outputDirectory, "test.png"));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -58,7 +59,7 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
             }), solution.getPTMmodel());
             System.out.println("Finished building matrices; solving now...");
 
-            optimizeWeights(p->true,solution::setWeights);
+            optimizeWeights(p->settings.height * settings.width != 0,solution::setWeights);
             System.out.println("DONE!");
 
                 // write out weight textures for debugging

@@ -40,9 +40,9 @@ public class PolynormalTextureMapModel implements LeastSquaresModel<LuminaceData
     public Float getSamples(LuminaceData sampleData, int systemIndex) {
         Vector4 lumindata=sampleData.getLumin().get(systemIndex);
         Float result=0.0f;
-        if (isNaN(lumindata.x)) result+=lumindata.x;
-        if (isNaN(lumindata.y)) result+=lumindata.y;
-        if (isNaN(lumindata.z)) result+=lumindata.z;
+        if (!isNaN(lumindata.x)) result+=lumindata.x;
+        if (!isNaN(lumindata.y)) result+=lumindata.y;
+        if (!isNaN(lumindata.z)) result+=lumindata.z;
 
         return result;
     }
