@@ -30,12 +30,12 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
 
     }
 
-    public <ContextType extends Context<ContextType>> void createFit(IBRResources<ContextType> resources)
+    public void createFit(IBRResources<ContextType> resources)
             throws IOException{
         ContextType context = resources.context;
         context.getState().disableBackFaceCulling();
 
-        PTMProgramFactory programFactory=new PTMProgramFactory(resources);
+        PTMProgramFactory<ContextType> programFactory=new PTMProgramFactory<>(resources);
         try(
         GraphicsStreamResource<ContextType> LuminaceStream = resources.streamAsResource(
                 getLuminaceProgramBuilder(programFactory),

@@ -13,7 +13,7 @@ public class PolynormalTextureMapBuilder {
         this.sampleCount=width*height;
         this.matrixBuilder = new LeastSquaresMatrixBuilder(sampleCount, weightCount,Collections.emptyList(), Collections.emptyList());
     }
-    public <S, T> void buildMatrices(GraphicsStream<LuminaceData> viewStream, PolynormalTextureMapModel PTMmodel)
+    public void buildMatrices(GraphicsStream<LuminaceData> viewStream, PolynormalTextureMapModel PTMmodel)
     {
         IntConsumer sampleValidator = i -> {
 
