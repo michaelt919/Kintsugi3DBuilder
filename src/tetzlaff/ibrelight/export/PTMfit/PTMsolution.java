@@ -41,7 +41,7 @@ public class PTMsolution {
 
             for (int p = 0; p < settings.width * settings.height; p++)
             {
-                float weight = (float)weightsByTexel[p].get(b);
+                float weight = Math.max(0, Math.min(1, (float)weightsByTexel[p].get(b)));
 
                 // Flip vertically
                 int dataBufferIndex = p % settings.width + settings.width * (settings.height - p / settings.width - 1);
