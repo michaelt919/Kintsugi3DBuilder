@@ -64,6 +64,8 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
 
                 // write out weight textures for debugging
             solution.saveWeightMaps();
+            PTMReconstruction reconstruct=new PTMReconstruction(resources,settings);
+            reconstruct.reconstruct(solution,getReconstructionProgramBuilder(programFactory),"reconstruction");
         }
 
     }
@@ -107,6 +109,11 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
         return programFactory.getShaderProgramBuilder(
                 new File("shaders/common/texspace_noscale.vert"),
                 new File("shaders/PTMfit/PTMShader.frag"));
+    }
+    ProgramBuilder<ContextType> getReconstructionProgramBuilder(PTMProgramFactory<ContextType> programFactory){
+        return programFactory.getShaderProgramBuilder(
+                new File("shaders/common/imgspace.vert"),
+                new File("shaders/PTMfit/PTMreconstruction.frag"));
     }
 
 }
