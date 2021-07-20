@@ -4,55 +4,54 @@
 #line 18 0
 
 uniform sampler2D diffuseEstimate;
+uniform sampler2DArray weightMaps;
 
-layout(location = 0) out vec4 fragColor;
+#ifndef BASIS_COUNT
+#define BASIS_COUNT 8
+#endif
+
+#ifndef MICROFACET_DISTRIBUTION_RESOLUTION
+#define MICROFACET_DISTRIBUTION_RESOLUTION 90
+#endif
+
+layout(location = 0) out vec4 Color;
 
 void main()
 {
-    vec3 triangleNormal = normalize(fNormal);
-    vec3 tangent = normalize(fTangent - dot(triangleNormal, fTangent) * triangleNormal);
-    vec3 bitangent = normalize(fBitangent
-        - dot(triangleNormal, fBitangent) * triangleNormal
-        - dot(tangent, fBitangent) * tangent);
-    mat3 tangentToObject = mat3(tangent, bitangent, triangleNormal);
+    vec3 f0 = vec3(0);
 
-    vec2 normalDirXY = texture(normalEstimate, fTexCoord).xy * 2 - vec2(1.0);
-    vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
-    vec3 normal = tangentToObject * normalDirTS;
+    float weights[BASIS_COUNT];
 
-    vec3 lightDisplacement = getLightVector();
-    vec3 light = normalize(lightDisplacement);
-    vec3 view = normalize(getViewVector());
-    vec3 halfway = normalize(light + view);
-    float nDotH = max(0.0, dot(normal, halfway));
-    float nDotL = max(0.0, dot(normal, light));
-    float nDotV = max(0.0, dot(normal, view));
-    float hDotV = max(0.0, dot(halfway, view));
-    float sqrtRoughness = texture(roughnessEstimate, fTexCoord)[0];
-    float roughness = sqrtRoughness * sqrtRoughness;
-    float geomRatio;
-
-    if (nDotL > 0.0 && nDotV > 0.0)
+    for (int b = 0; b < BASIS_COUNT; b++)
     {
-        float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-        geomRatio = maskingShadowing / (4 * nDotL * nDotV);
-    }
-    else if (nDotL > 0.0)
-    {
-        geomRatio = 0.5 / (roughness * nDotL); // Limit as n dot v goes to zero.
+        weights[b] = texture(weightMaps, vec3(fTexCoord, b))[0];
+        f0 += weights[b] * texelFetch(basisFunctions, ivec2(0, b), 0).rgb;
     }
 
-    vec3 incidentRadiance = PI * lightIntensity / dot(lightDisplacement, lightDisplacement);
+    vec3 sqrtF0 = sqrt(f0);
 
-    if (nDotL > 0.0)
+    vec3 sumNumerator = vec3(0);
+    vec3 sumDenominator = vec3(0);
+
+    for (int m = 1; m < MICROFACET_DISTRIBUTION_RESOLUTION; m++)
     {
-        vec3 brdf = pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma)) / PI + geomRatio * getMFDEstimate(nDotH);
-        fragColor = vec4(pow(incidentRadiance * nDotL * brdf, vec3(1.0 / gamma)), 1.0);
+        vec3 f = vec3(0);
+        for (int b = 0; b < BASIS_COUNT; b++)
+        {
+            f += weights[b] * texelFetch(basisFunctions, ivec2(m, b), 0).rgb;
+        }
+
+        float sqrtAngle = float(m) / float(MICROFACET_DISTRIBUTION_RESOLUTION);
+        float nDotH = cos(sqrtAngle * sqrtAngle * PI / 3.0);
+        float nDotHSq = nDotH * nDotH;
+
+        vec3 numerator = (1.0 - nDotHSq) * sqrt(f);
+        vec3 denominator = sqrt(f0) - nDotHSq * sqrt(f);
+
+        sumNumerator += pow(numerator * denominator, vec3(1.0 / fittingGamma));
+        sumDenominator += pow(denominator * denominator, vec3(1.0 / fittingGamma));
     }
-    else
-    {
-        // Limit as n dot l and n dot v both go to zero.
-        vec3 mfd = getMFDEstimate(nDotH);
-        fragColor = vec4(pow(incidentRadiance * mfd * 0.5 / roughness, vec3(1.0 / gamma)), 1.0);
-    }
+
+    vec3 fresnel = PI * f0 * pow(sumNumerator / sumDenominator, vec3(fittingGamma));
+    Color = vec4(pow(fresnel, vec3(1.0 / gamma)), 1.0);
 }

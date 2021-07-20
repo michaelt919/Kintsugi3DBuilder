@@ -21,9 +21,9 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
     private final int imageWidth;
     private final int imageHeight;
     public final Texture3D<ContextType> weightMaps;
-    public final Texture2D<ContextType> weightMask;
-    public final Texture2D<ContextType> basisMaps;
-    public final UniformBuffer<ContextType> diffuseUniformBuffer;
+//    public final Texture2D<ContextType> weightMask;
+//    public final Texture2D<ContextType> basisMaps;
+//    public final UniformBuffer<ContextType> diffuseUniformBuffer;
 
 
 
@@ -50,23 +50,23 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
                 .setMipmapsEnabled(false)
                 .createTexture();
 
-        weightMask = context.getTextureFactory().build2DColorTexture(settings.width, settings.height)
-                .setInternalFormat(ColorFormat.R8)
-                .setLinearFilteringEnabled(true)
-                .setMipmapsEnabled(false)
-                .createTexture();
+//        weightMask = context.getTextureFactory().build2DColorTexture(settings.width, settings.height)
+//                .setInternalFormat(ColorFormat.R8)
+//                .setLinearFilteringEnabled(true)
+//                .setMipmapsEnabled(false)
+//                .createTexture();
 
-        basisMaps = context.getTextureFactory().build1DColorTextureArray(
-                91,8)
-                .setInternalFormat(ColorFormat.RGB32F)
-                .setLinearFilteringEnabled(true)
-                .setMipmapsEnabled(false)
-                .createTexture();
-
-        diffuseUniformBuffer = context.createUniformBuffer();
-
-        weightMaps.setTextureWrap(TextureWrapMode.None, TextureWrapMode.None, TextureWrapMode.None);
-        basisMaps.setTextureWrap(TextureWrapMode.None, TextureWrapMode.None);
+//        basisMaps = context.getTextureFactory().build1DColorTextureArray(
+//                91,8)
+//                .setInternalFormat(ColorFormat.RGB32F)
+//                .setLinearFilteringEnabled(true)
+//                .setMipmapsEnabled(false)
+//                .createTexture();
+//
+//        diffuseUniformBuffer = context.createUniformBuffer();
+//
+//        weightMaps.setTextureWrap(TextureWrapMode.None, TextureWrapMode.None, TextureWrapMode.None);
+//        basisMaps.setTextureWrap(TextureWrapMode.None, TextureWrapMode.None);
     }
 
     public void reconstruct(PTMsolution solutions,ProgramBuilder<ContextType> programBuilder, String directoryName){
@@ -81,10 +81,10 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
                 program ->
                 {
                     resources.setupShaderProgram(program);
-                    program.setTexture("basisFunctions", this.basisMaps);
+//                    program.setTexture("basisFunctions", this.basisMaps);
                     program.setTexture("weightMaps", this.weightMaps);
-                    program.setTexture("weightMask", this.weightMask);
-                    program.setUniformBuffer("DiffuseColors", this.diffuseUniformBuffer);
+//                    program.setTexture("weightMask", this.weightMask);
+//                    program.setUniformBuffer("DiffuseColors", this.diffuseUniformBuffer);
                 }
                 )
 
@@ -101,7 +101,7 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
             {
                 weightMapBuffer.set(p, 0, solutions.areWeightsValid(p) ? 1.0 : 0.0);
             }
-            weightMask.load(weightMapBuffer);
+//            weightMask.load(weightMapBuffer);
 
             for (int b = 0; b < 8; b++)
             {
@@ -131,10 +131,10 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
             }
 
             // Send the basis functions to the GPU.
-            basisMaps.load(basisMapBuffer);
+//            basisMaps.load(basisMapBuffer);
 
             // Send the diffuse albedos to the GPU.
-            diffuseUniformBuffer.setData(diffuseNativeBuffer);
+//            diffuseUniformBuffer.setData(diffuseNativeBuffer);
 
         }
         catch (FileNotFoundException e)
