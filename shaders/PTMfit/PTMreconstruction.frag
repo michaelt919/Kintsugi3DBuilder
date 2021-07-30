@@ -1,6 +1,6 @@
 #version 330
 #include "PTMfit.glsl"
-#include "evaluateBRDF.glsl"
+
 #line 14 0
 
 uniform sampler2DArray weightMaps;
@@ -15,7 +15,7 @@ void main()
 {
     float result=0;
     vec3 lightDisplacement = getLightVector();
-    lightDir=normalize(lightDisplacement);
+    vec3 lightDir=normalize(lightDisplacement);
     float u=lightDir.x;
     float v=lightDir.y;
     float w=lightDir.w;
