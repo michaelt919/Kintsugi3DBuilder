@@ -9,11 +9,12 @@ uniform sampler2DArray weightMaps;
 #define BASIS_COUNT 6
 #endif
 
-layout(location = 0) out float result;
+layout(location = 0) out vec4 result;
 
 void main()
 {
-    float result=0;
+    result=vec4(0,0,0,1);
+
     vec3 lightDisplacement = getLightVector();
     vec3 lightDir=normalize(lightDisplacement);
     float u=lightDir.x;
@@ -31,7 +32,8 @@ void main()
     for (int b = 0; b < BASIS_COUNT; b++)
     {
         weights[b] = texture(weightMaps, vec3(fTexCoord, b))[0];
-        result=result+weights[b]*row[b];
+        result.r=result.r+weights[b]*row[b];
+        //result= vec4(vec3(fTexCoord, 0),1);
     }
 
 

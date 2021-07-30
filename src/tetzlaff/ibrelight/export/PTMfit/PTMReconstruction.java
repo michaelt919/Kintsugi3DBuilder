@@ -69,7 +69,7 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
         {
             // Run the reconstruction and save the results to file
 
-            reconstruction.execute((k, framebuffer) -> saveReconstructionToFile(directoryName, k, framebuffer));
+
             NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
             NativeVectorBuffer weightMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 1, settings.width * settings.height);
             for (int p = 0; p < settings.width * settings.height; p++)
@@ -90,7 +90,9 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
                 weightMaps.loadLayer(b, weightMapBuffer);
 
             }
+            reconstruction.execute((k, framebuffer) -> saveReconstructionToFile(directoryName, k, framebuffer));
         }
+
         catch (FileNotFoundException e)
         {
             e.printStackTrace();
