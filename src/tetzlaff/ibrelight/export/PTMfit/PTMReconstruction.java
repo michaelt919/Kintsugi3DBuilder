@@ -64,9 +64,11 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
                 )
 
 
+
         )
         {
             // Run the reconstruction and save the results to file
+
             reconstruction.execute((k, framebuffer) -> saveReconstructionToFile(directoryName, k, framebuffer));
             NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
             NativeVectorBuffer weightMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 1, settings.width * settings.height);

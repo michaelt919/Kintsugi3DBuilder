@@ -18,7 +18,7 @@ void main()
     vec3 lightDir=normalize(lightDisplacement);
     float u=lightDir.x;
     float v=lightDir.y;
-    float w=lightDir.w;
+    float w=lightDir.z;
 
     float weights[BASIS_COUNT];
     float row[BASIS_COUNT];

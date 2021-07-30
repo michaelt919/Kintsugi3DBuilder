@@ -64,6 +64,7 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
 
                 // write out weight textures for debugging
             solution.saveWeightMaps();
+
             PTMReconstruction reconstruct=new PTMReconstruction(resources,settings);
             reconstruct.reconstruct(solution,getReconstructionProgramBuilder(programFactory),"reconstruction");
         }
