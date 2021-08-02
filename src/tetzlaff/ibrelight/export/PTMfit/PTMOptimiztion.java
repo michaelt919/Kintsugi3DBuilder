@@ -8,6 +8,7 @@ import tetzlaff.gl.core.ColorFormat;
 import tetzlaff.gl.core.Context;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 
+import tetzlaff.ibrelight.export.specularfit.SpecularFitSolution;
 import tetzlaff.ibrelight.rendering.GraphicsStreamResource;
 import tetzlaff.ibrelight.rendering.IBRResources;
 import tetzlaff.optimization.LeastSquaresMatrixBuilder;
@@ -15,6 +16,8 @@ import tetzlaff.optimization.NonNegativeLeastSquares;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.function.BiConsumer;
 import java.util.function.IntPredicate;
 import java.util.stream.IntStream;
@@ -67,10 +70,85 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
 
             PTMReconstruction reconstruct=new PTMReconstruction(resources,settings);
             reconstruct.reconstruct(solution,getReconstructionProgramBuilder(programFactory),"reconstruction");
+
+//            fillHoles(solution);
+
+
         }
 
     }
+    private void fillHoles(PTMsolution solution)
+    {
+        // Fill holes
+        // TODO Quick hack; should be replaced with something more robust.
+        System.out.println("Filling holes...");
 
+        int texelCount = settings.width * settings.height;
+
+        for (int i = 0; i < Math.max(settings.width, settings.height); i++)
+        {
+            Collection<Integer> filledPositions = new HashSet<>(256);
+            for (int p = 0; p < texelCount; p++)
+            {
+                if (!solution.areWeightsValid(p))
+                {
+                    int left = (texelCount + p - 1) % texelCount;
+                    int right = (p + 1) % texelCount;
+                    int up = (texelCount + p - settings.width) % texelCount;
+                    int down = (p + settings.width) % texelCount;
+
+                    int count = 0;
+
+                    for (int b = 0; b < 6; b++)
+                    {
+                        count = 0;
+                        double sum = 0.0;
+
+                        if (solution.areWeightsValid(left))
+                        {
+                            sum += solution.getWeights(left).get(b);
+                            count++;
+                        }
+
+                        if (solution.areWeightsValid(right))
+                        {
+                            sum += solution.getWeights(right).get(b);
+                            count++;
+                        }
+
+                        if (solution.areWeightsValid(up))
+                        {
+                            sum += solution.getWeights(up).get(b);
+                            count++;
+                        }
+
+                        if (solution.areWeightsValid(down))
+                        {
+                            sum += solution.getWeights(down).get(b);
+                            count++;
+                        }
+
+                        if (sum > 0.0)
+                        {
+                            solution.getWeights(p).set(b, sum / count);
+                        }
+                    }
+
+                    if (count > 0)
+                    {
+                        filledPositions.add(p);
+                    }
+                }
+            }
+
+            for (int p : filledPositions)
+            {
+                solution.setWeightsValidity(p, true);
+            }
+        }
+
+        System.out.println("DONE!");
+    }
     public void optimizeWeights(IntPredicate areWeightsValid, BiConsumer<Integer, SimpleMatrix> weightSolutionConsumer, double toleranceScale)
     {
         LeastSquaresMatrixBuilder matrixBuilder=mapbuilder.getMatrixBuilder();

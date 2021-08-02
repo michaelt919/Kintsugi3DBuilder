@@ -10,6 +10,8 @@ import tetzlaff.ibrelight.rendering.IBRResources;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.ibrelight.core.Projection;
@@ -90,6 +92,74 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
                 weightMaps.loadLayer(b, weightMapBuffer);
 
             }
+            System.out.println("Filling holes...");
+
+            int texelCount = settings.width * settings.height;
+
+            for (int i = 0; i < Math.max(settings.width, settings.height); i++)
+            {
+                Collection<Integer> filledPositions = new HashSet<>(256);
+                for (int p = 0; p < texelCount; p++)
+                {
+                    if (!solutions.areWeightsValid(p))
+                    {
+                        int left = (texelCount + p - 1) % texelCount;
+                        int right = (p + 1) % texelCount;
+                        int up = (texelCount + p - settings.width) % texelCount;
+                        int down = (p + settings.width) % texelCount;
+
+                        int count = 0;
+
+                        for (int b = 0; b < 6; b++)
+                        {
+                            count = 0;
+                            double sum = 0.0;
+
+                            if (solutions.areWeightsValid(left))
+                            {
+                                sum += solutions.getWeights(left).get(b);
+                                count++;
+                            }
+
+                            if (solutions.areWeightsValid(right))
+                            {
+                                sum += solutions.getWeights(right).get(b);
+                                count++;
+                            }
+
+                            if (solutions.areWeightsValid(up))
+                            {
+                                sum += solutions.getWeights(up).get(b);
+                                count++;
+                            }
+
+                            if (solutions.areWeightsValid(down))
+                            {
+                                sum += solutions.getWeights(down).get(b);
+                                count++;
+                            }
+
+                            if (sum > 0.0)
+                            {
+                                solutions.getWeights(p).set(b, sum / count);
+                            }
+                        }
+
+                        if (count > 0)
+                        {
+                            filledPositions.add(p);
+                        }
+                    }
+                }
+
+                for (int p : filledPositions)
+                {
+                    solutions.setWeightsValidity(p, true);
+                }
+            }
+
+            System.out.println("DONE!");
+
             reconstruction.execute((k, framebuffer) -> saveReconstructionToFile(directoryName, k, framebuffer));
         }
 
