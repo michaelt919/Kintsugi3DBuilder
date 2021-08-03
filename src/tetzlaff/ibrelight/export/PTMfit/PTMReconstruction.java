@@ -71,27 +71,6 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
         {
             // Run the reconstruction and save the results to file
 
-
-            NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
-            NativeVectorBuffer weightMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 1, settings.width * settings.height);
-            for (int p = 0; p < settings.width * settings.height; p++)
-            {
-                weightMapBuffer.set(p, 0, solutions.areWeightsValid(p) ? 1.0 : 0.0);
-            }
-
-
-            for (int b = 0; b < 6; b++)
-            {
-                // Copy weights from the individual solutions into the weight buffer laid out in texture space to be sent to the GPU.
-                for (int p = 0; p < settings.width * settings.height; p++)
-                {
-                    weightMapBuffer.set(p, 0, solutions.getWeights(p).get(b));
-                }
-
-                // Immediately load the weight map so that we can reuse the local memory buffer.
-                weightMaps.loadLayer(b, weightMapBuffer);
-
-            }
             System.out.println("Filling holes...");
 
             int texelCount = settings.width * settings.height;
@@ -159,6 +138,27 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
             }
 
             System.out.println("DONE!");
+            NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
+            NativeVectorBuffer weightMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 1, settings.width * settings.height);
+            for (int p = 0; p < settings.width * settings.height; p++)
+            {
+                weightMapBuffer.set(p, 0, solutions.areWeightsValid(p) ? 1.0 : 0.0);
+            }
+
+
+            for (int b = 0; b < 6; b++)
+            {
+                // Copy weights from the individual solutions into the weight buffer laid out in texture space to be sent to the GPU.
+                for (int p = 0; p < settings.width * settings.height; p++)
+                {
+                    weightMapBuffer.set(p, 0, solutions.getWeights(p).get(b));
+                }
+
+                // Immediately load the weight map so that we can reuse the local memory buffer.
+                weightMaps.loadLayer(b, weightMapBuffer);
+
+            }
+
 
             reconstruction.execute((k, framebuffer) -> saveReconstructionToFile(directoryName, k, framebuffer));
         }

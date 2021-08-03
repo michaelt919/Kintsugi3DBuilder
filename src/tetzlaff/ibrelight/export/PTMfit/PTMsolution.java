@@ -23,7 +23,7 @@ public class PTMsolution {
     private final DoubleVector3[] diffuseAlbedos;
 
     public PTMsolution(TextureFitSettings setting) {
-        PTMmodel = new PolynormalTextureMapModel();
+        PTMmodel = new PolynormalTextureMapModel(setting.width,setting.height);
         settings=setting;
         weightsByTexel= IntStream.range(0, settings.width * settings.height)
                 .mapToObj(p -> new SimpleMatrix(6 + 1, 1, DMatrixRMaj.class))

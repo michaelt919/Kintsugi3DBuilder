@@ -13,9 +13,11 @@ import tetzlaff.ibrelight.rendering.GraphicsStreamResource;
 import tetzlaff.ibrelight.rendering.IBRResources;
 import tetzlaff.optimization.LeastSquaresMatrixBuilder;
 import tetzlaff.optimization.NonNegativeLeastSquares;
+import tetzlaff.util.ColorList;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.function.BiConsumer;
@@ -60,12 +62,20 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
                 }
                 return new LuminaceData(framebufferData[0], framebufferData[1]);
             }), solution.getPTMmodel());
-            System.out.println("Finished building matrices; solving now...");
+            int index=0;
+            LuminaceStream.forEach(Lumin->{
+                ColorList[] colorlist = Lumin.clone();
+                solution.getPTMmodel().setRedchannel(index,colorlist[0].getRed(index));
+                solution.getPTMmodel().setGreenchannel(index,colorlist[0].getGreen(index));
+                solution.getPTMmodel().setBluechannel(index,colorlist[0].getBlue(index));
 
+            });
+            System.out.println("Finished building matrices; solving now...");
             optimizeWeights(p->settings.height * settings.width != 0,solution::setWeights);
             System.out.println("DONE!");
 
                 // write out weight textures for debugging
+            fillHoles(solution);
             solution.saveWeightMaps();
 
             PTMReconstruction reconstruct=new PTMReconstruction(resources,settings);

@@ -23,8 +23,19 @@ public class PolynormalTextureMapModel implements LeastSquaresModel<LuminaceData
 //    public PolynormalTextureMapModel(CoefficientData coefficient) {
 //        coefficients = coefficient;
 //    }
+    private int width;
+    private int length;
+    private float[] redchannel;
+    private float[] greenchannel;
+    private float[] bluechannel;
+    public PolynormalTextureMapModel(int Width,int Length){
+        width=Width;
+        length=Length;
+        redchannel=new float[width*length];
+        greenchannel=new float[width*length];
+        bluechannel=new float[width*length];
 
-
+    }
     @Override
     public boolean isValid(LuminaceData sampleData, int systemIndex) {
         return sampleData.getLumin().getAlpha(systemIndex)!=0;
@@ -68,5 +79,11 @@ public class PolynormalTextureMapModel implements LeastSquaresModel<LuminaceData
         return t1*t2;
     }
 
-
+    public void setBluechannel(int index, float value) {
+        this.bluechannel[index]=value;
+    }
+    public void setRedchannel(int index, float value) {
+        this.redchannel[index]=value;
+    }
+    public void setGreenchannel(int index, float value) { this.greenchannel[index]=value; }
 }
