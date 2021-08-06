@@ -74,18 +74,18 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
         {
             // Run the reconstruction and save the results to file
             NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
-            NativeVectorBuffer weightMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3, settings.width * settings.height*3);
+            NativeVectorBuffer weightMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3, settings.width * settings.height);
             for (int p = 0; p < settings.width * settings.height; p++)
             {
                 weightMapBuffer.set(p, 0, solutions.areWeightsValid(p) ? 1.0 : 0.0);
             }
             for (int p = settings.width * settings.height; p < settings.width * settings.height*2; p++)
             {
-                weightMapBuffer.set(p%settings.width * settings.height, 1, solutions.areWeightsValid(p) ? 1.0 : 0.0);
+                weightMapBuffer.set(p%(settings.width * settings.height), 1, solutions.areWeightsValid(p) ? 1.0 : 0.0);
             }
             for (int p = settings.width * settings.height*2; p < settings.width * settings.height*3; p++)
             {
-                weightMapBuffer.set(p%settings.width * settings.height, 2, solutions.areWeightsValid(p) ? 1.0 : 0.0);
+                weightMapBuffer.set(p%(settings.width * settings.height), 2, solutions.areWeightsValid(p) ? 1.0 : 0.0);
             }
 
 
@@ -100,12 +100,12 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
                 for (int p =settings.width * settings.height ; p < settings.width * settings.height*2; p++)
                 {
                     //123 for rgb
-                    weightMapBuffer.set(p, 1, solutions.getWeights(p).get(b));
+                    weightMapBuffer.set(p%(settings.width * settings.height), 1, solutions.getWeights(p).get(b));
                 }
                 for (int p = settings.width * settings.height*2; p < settings.width * settings.height*3; p++)
                 {
                     //123 for rgb
-                    weightMapBuffer.set(p, 2, solutions.getWeights(p).get(b));
+                    weightMapBuffer.set(p%(settings.width * settings.height), 2, solutions.getWeights(p).get(b));
                 }
 
                 // Immediately load the weight map so that we can reuse the local memory buffer.
