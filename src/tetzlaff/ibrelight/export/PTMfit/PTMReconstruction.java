@@ -43,7 +43,7 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
         }
         ContextType context=resources.context;
         weightMaps = context.getTextureFactory().build2DColorTextureArray(settings.width, settings.height, 6)
-                .setInternalFormat(ColorFormat.R32F)
+                .setInternalFormat(ColorFormat.RGB32F)
                 .setLinearFilteringEnabled(true)
                 .setMipmapsEnabled(false)
                 .createTexture();
@@ -62,6 +62,9 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
                 {
                     resources.setupShaderProgram(program);
                     program.setTexture("weightMaps", this.weightMaps);
+                    program.setUniform("width",this.imageWidth);
+                    program.setUniform("length",this.imageHeight);
+
                 }
                 )
 
@@ -70,79 +73,19 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
         )
         {
             // Run the reconstruction and save the results to file
-
-            System.out.println("Filling holes...");
-
-            int texelCount = settings.width * settings.height;
-
-            for (int i = 0; i < Math.max(settings.width, settings.height); i++)
-            {
-                Collection<Integer> filledPositions = new HashSet<>(256);
-                for (int p = 0; p < texelCount; p++)
-                {
-                    if (!solutions.areWeightsValid(p))
-                    {
-                        int left = (texelCount + p - 1) % texelCount;
-                        int right = (p + 1) % texelCount;
-                        int up = (texelCount + p - settings.width) % texelCount;
-                        int down = (p + settings.width) % texelCount;
-
-                        int count = 0;
-
-                        for (int b = 0; b < 6; b++)
-                        {
-                            count = 0;
-                            double sum = 0.0;
-
-                            if (solutions.areWeightsValid(left))
-                            {
-                                sum += solutions.getWeights(left).get(b);
-                                count++;
-                            }
-
-                            if (solutions.areWeightsValid(right))
-                            {
-                                sum += solutions.getWeights(right).get(b);
-                                count++;
-                            }
-
-                            if (solutions.areWeightsValid(up))
-                            {
-                                sum += solutions.getWeights(up).get(b);
-                                count++;
-                            }
-
-                            if (solutions.areWeightsValid(down))
-                            {
-                                sum += solutions.getWeights(down).get(b);
-                                count++;
-                            }
-
-                            if (sum > 0.0)
-                            {
-                                solutions.getWeights(p).set(b, sum / count);
-                            }
-                        }
-
-                        if (count > 0)
-                        {
-                            filledPositions.add(p);
-                        }
-                    }
-                }
-
-                for (int p : filledPositions)
-                {
-                    solutions.setWeightsValidity(p, true);
-                }
-            }
-
-            System.out.println("DONE!");
             NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
-            NativeVectorBuffer weightMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 1, settings.width * settings.height);
+            NativeVectorBuffer weightMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3, settings.width * settings.height*3);
             for (int p = 0; p < settings.width * settings.height; p++)
             {
                 weightMapBuffer.set(p, 0, solutions.areWeightsValid(p) ? 1.0 : 0.0);
+            }
+            for (int p = settings.width * settings.height; p < settings.width * settings.height*2; p++)
+            {
+                weightMapBuffer.set(p%settings.width * settings.height, 1, solutions.areWeightsValid(p) ? 1.0 : 0.0);
+            }
+            for (int p = settings.width * settings.height*2; p < settings.width * settings.height*3; p++)
+            {
+                weightMapBuffer.set(p%settings.width * settings.height, 2, solutions.areWeightsValid(p) ? 1.0 : 0.0);
             }
 
 
@@ -151,7 +94,18 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
                 // Copy weights from the individual solutions into the weight buffer laid out in texture space to be sent to the GPU.
                 for (int p = 0; p < settings.width * settings.height; p++)
                 {
+
                     weightMapBuffer.set(p, 0, solutions.getWeights(p).get(b));
+                }
+                for (int p =settings.width * settings.height ; p < settings.width * settings.height*2; p++)
+                {
+                    //123 for rgb
+                    weightMapBuffer.set(p, 1, solutions.getWeights(p).get(b));
+                }
+                for (int p = settings.width * settings.height*2; p < settings.width * settings.height*3; p++)
+                {
+                    //123 for rgb
+                    weightMapBuffer.set(p, 2, solutions.getWeights(p).get(b));
                 }
 
                 // Immediately load the weight map so that we can reuse the local memory buffer.

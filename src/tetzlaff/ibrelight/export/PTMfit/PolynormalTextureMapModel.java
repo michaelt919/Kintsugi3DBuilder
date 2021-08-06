@@ -38,7 +38,9 @@ public class PolynormalTextureMapModel implements LeastSquaresModel<LuminaceData
     }
     @Override
     public boolean isValid(LuminaceData sampleData, int systemIndex) {
-        return sampleData.getLumin().getAlpha(systemIndex)!=0;
+        if(systemIndex<width*length) return sampleData.getLumin().getRed(systemIndex)!=0;
+        else if(systemIndex>=width*length && systemIndex<width*length) return sampleData.getLumin().getGreen(systemIndex%(width*length))!=0;
+        else return sampleData.getLumin().getBlue(systemIndex%(width*length))!=0;
     }
 
     @Override
@@ -49,7 +51,7 @@ public class PolynormalTextureMapModel implements LeastSquaresModel<LuminaceData
 
     @Override
     public Float getSamples(LuminaceData sampleData, int systemIndex) {
-        Vector4 lumindata=sampleData.getLumin().get(systemIndex);
+        Vector4 lumindata=sampleData.getLumin().get(systemIndex%(width*length));
         Float result=0.0f;
         if (!isNaN(lumindata.x)) result+=lumindata.x;
         if (!isNaN(lumindata.y)) result+=lumindata.y;
@@ -63,9 +65,9 @@ public class PolynormalTextureMapModel implements LeastSquaresModel<LuminaceData
     public IntFunction<Float> getBasisFunctions(LuminaceData sampleData, int systemIndex) {
 //
         // b :column of the p matrix, system index :row
-        Float u=sampleData.getLightdir().getRed(systemIndex);
-        Float v=sampleData.getLightdir().getGreen(systemIndex);
-        Float w=sampleData.getLightdir().getBlue(systemIndex);
+        Float u=sampleData.getLightdir().getRed(systemIndex%(width*length));
+        Float v=sampleData.getLightdir().getGreen(systemIndex%(width*length));
+        Float w=sampleData.getLightdir().getBlue(systemIndex%(width*length));
         Float[] row={1.0f,u,v,w,u*u,v*u};
 
         return b->

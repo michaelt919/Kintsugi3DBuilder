@@ -61,15 +61,15 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
                     e.printStackTrace();
                 }
                 return new LuminaceData(framebufferData[0], framebufferData[1]);
-            }), solution.getPTMmodel());
-            int index=0;
-            LuminaceStream.forEach(Lumin->{
-                ColorList[] colorlist = Lumin.clone();
-                solution.getPTMmodel().setRedchannel(index,colorlist[0].getRed(index));
-                solution.getPTMmodel().setGreenchannel(index,colorlist[0].getGreen(index));
-                solution.getPTMmodel().setBluechannel(index,colorlist[0].getBlue(index));
-
-            });
+            }), solution.getPTMmodel(),solution);
+//            int index=0;
+//            LuminaceStream.forEach(Lumin->{
+//                ColorList[] colorlist = Lumin.clone();
+//                solution.getPTMmodel().setRedchannel(index,colorlist[0].getRed(index));
+//                solution.getPTMmodel().setGreenchannel(index,colorlist[0].getGreen(index));
+//                solution.getPTMmodel().setBluechannel(index,colorlist[0].getBlue(index));
+//
+//            });
             System.out.println("Finished building matrices; solving now...");
             optimizeWeights(p->settings.height * settings.width != 0,solution::setWeights);
             System.out.println("DONE!");

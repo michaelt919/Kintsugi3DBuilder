@@ -4,6 +4,8 @@
 #line 14 0
 
 uniform sampler2DArray weightMaps;
+uniform int width;
+uniform int length;
 
 #ifndef BASIS_COUNT
 #define BASIS_COUNT 6
@@ -21,7 +23,7 @@ void main()
     float v=lightDir.y;
     float w=lightDir.z;
 
-    float weights[BASIS_COUNT];
+    vec3 weights[BASIS_COUNT];
     float row[BASIS_COUNT];
     row[0]=1.0f;
     row[1]=u;
@@ -29,10 +31,11 @@ void main()
     row[3]=w;
     row[4]=u*u;
     row[5]=u*v;
+
     for (int b = 0; b < BASIS_COUNT; b++)
     {
-        weights[b] = texture(weightMaps, vec3(fTexCoord, b))[0];
-        result.r=result.r+weights[b]*row[b];
+        weights[b] = texture(weightMaps, vec3(fTexCoord, b)).xyz;
+        result=result+vec4(weights[b]*row[b],0.0);
         //result= vec4(vec3(fTexCoord, 0),1);
     }
 
