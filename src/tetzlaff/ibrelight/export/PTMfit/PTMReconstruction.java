@@ -94,17 +94,14 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
                 // Copy weights from the individual solutions into the weight buffer laid out in texture space to be sent to the GPU.
                 for (int p = 0; p < settings.width * settings.height; p++)
                 {
-
                     weightMapBuffer.set(p, 0, solutions.getWeights(p).get(b));
                 }
                 for (int p =settings.width * settings.height ; p < settings.width * settings.height*2; p++)
                 {
-                    //123 for rgb
                     weightMapBuffer.set(p%(settings.width * settings.height), 1, solutions.getWeights(p).get(b));
                 }
                 for (int p = settings.width * settings.height*2; p < settings.width * settings.height*3; p++)
                 {
-                    //123 for rgb
                     weightMapBuffer.set(p%(settings.width * settings.height), 2, solutions.getWeights(p).get(b));
                 }
 

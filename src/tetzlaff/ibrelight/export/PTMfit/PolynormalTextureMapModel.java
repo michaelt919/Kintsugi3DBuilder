@@ -39,7 +39,7 @@ public class PolynormalTextureMapModel implements LeastSquaresModel<LuminaceData
     @Override
     public boolean isValid(LuminaceData sampleData, int systemIndex) {
         if(systemIndex<width*length) return sampleData.getLumin().getRed(systemIndex)!=0;
-        else if(systemIndex>=width*length && systemIndex<width*length) return sampleData.getLumin().getGreen(systemIndex%(width*length))!=0;
+        else if(systemIndex<2*width*length) return sampleData.getLumin().getGreen(systemIndex%(width*length))!=0;
         else return sampleData.getLumin().getBlue(systemIndex%(width*length))!=0;
     }
 
@@ -51,13 +51,24 @@ public class PolynormalTextureMapModel implements LeastSquaresModel<LuminaceData
 
     @Override
     public Float getSamples(LuminaceData sampleData, int systemIndex) {
-        Vector4 lumindata=sampleData.getLumin().get(systemIndex%(width*length));
-        Float result=0.0f;
-        if (!isNaN(lumindata.x)) result+=lumindata.x;
-        if (!isNaN(lumindata.y)) result+=lumindata.y;
-        if (!isNaN(lumindata.z)) result+=lumindata.z;
+//        Vector4 lumindata=sampleData.getLumin().get(systemIndex%(width*length));
+//        Float result=0.0f;
 
-        return result;
+//        if (!isNaN(lumindata.x)) result+=lumindata.x;
+//
+//        if (!isNaN(lumindata.y)) result+=lumindata.y;
+//
+//        if (!isNaN(lumindata.z)) result+=lumindata.z;
+        if(systemIndex<width*length) {
+            return sampleData.getLumin().getRed(systemIndex);
+        }
+        else if(systemIndex<2*width*length){
+            return sampleData.getLumin().getGreen(systemIndex%(width*length));
+        }
+        else{
+            return sampleData.getLumin().getBlue(systemIndex%(width*length));
+        }
+
     }
 
     @Override
