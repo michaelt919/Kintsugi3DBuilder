@@ -161,6 +161,8 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
     }
     public void optimizeWeights(IntPredicate areWeightsValid, BiConsumer<Integer, SimpleMatrix> weightSolutionConsumer, double toleranceScale)
     {
+        boolean suppressErrors = false;
+
         LeastSquaresMatrixBuilder matrixBuilder=mapbuilder.getMatrixBuilder();
         for (int p = 0; p < mapbuilder.getMatrixBuilder().systemCount; p++)
         {
@@ -180,7 +182,11 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
                     weightSolutionConsumer.accept(p, matrixBuilder.weightsQTQAugmented[p].solve(matrixBuilder.weightsQTrAugmented[p]));
                 }
                 catch (SingularMatrixException e){
-                    e.printStackTrace();
+                    if (!suppressErrors)
+                    {
+                        e.printStackTrace();
+                        suppressErrors = true;
+                    }
                 }
 
             }

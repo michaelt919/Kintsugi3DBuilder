@@ -37,7 +37,7 @@ void main()
         weights[b] = texture(weightMaps, vec3(fTexCoord, b)).xyz;
         result=result+vec4(weights[b]*row[b],0);
         //result= vec4(vec3(fTexCoord, 0),1);
-        result=pow(result,vec4(1/2.2));
     }
 
+    result=pow(result,vec4(1/2.2));
 }
