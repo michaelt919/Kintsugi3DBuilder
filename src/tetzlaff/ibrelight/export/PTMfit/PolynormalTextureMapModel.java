@@ -38,9 +38,14 @@ public class PolynormalTextureMapModel implements LeastSquaresModel<LuminaceData
     }
     @Override
     public boolean isValid(LuminaceData sampleData, int systemIndex) {
-        if(systemIndex<width*length) return sampleData.getLumin().getRed(systemIndex)!=0;
-        else if(systemIndex<2*width*length) return sampleData.getLumin().getGreen(systemIndex%(width*length))!=0;
-        else return sampleData.getLumin().getBlue(systemIndex%(width*length))!=0;
+        int pixelIndex = systemIndex % (width * length);
+        return sampleData.getLumin().getAlpha(pixelIndex) > 0.99
+            && !isNaN(sampleData.getLumin().getRed(pixelIndex))
+            && !isNaN(sampleData.getLumin().getGreen(pixelIndex))
+            && !isNaN(sampleData.getLumin().getBlue(pixelIndex));
+//        if(systemIndex<width*length) return sampleData.getLumin().getRed(systemIndex)!=0;
+//        else if(systemIndex<2*width*length) return sampleData.getLumin().getGreen(systemIndex%(width*length))!=0;
+//        else return sampleData.getLumin().getBlue(systemIndex%(width*length))!=0;
     }
 
     @Override

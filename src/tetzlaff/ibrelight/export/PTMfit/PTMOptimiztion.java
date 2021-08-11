@@ -100,53 +100,56 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
             Collection<Integer> filledPositions = new HashSet<>(256);
             for (int p = 0; p < texelCount; p++)
             {
-                if (!solution.areWeightsValid(p))
+                for (int channel = 0; channel < 3; channel++)
                 {
-                    int left = (texelCount + p - 1) % texelCount;
-                    int right = (p + 1) % texelCount;
-                    int up = (texelCount + p - settings.width) % texelCount;
-                    int down = (p + settings.width) % texelCount;
-
-                    int count = 0;
-
-                    for (int b = 0; b < 6; b++)
+                    if (!solution.areWeightsValid(p + channel * texelCount))
                     {
-                        count = 0;
-                        double sum = 0.0;
+                        int left = (texelCount + p - 1) % texelCount + channel * texelCount;
+                        int right = (p + 1) % texelCount + channel * texelCount;
+                        int up = (texelCount + p - settings.width) % texelCount + channel * texelCount;
+                        int down = (p + settings.width) % texelCount + channel * texelCount;
 
-                        if (solution.areWeightsValid(left))
+                        int count = 0;
+
+                        for (int b = 0; b < 6; b++)
                         {
-                            sum += solution.getWeights(left).get(b);
-                            count++;
+                            count = 0;
+                            double sum = 0.0;
+
+                            if (solution.areWeightsValid(left))
+                            {
+                                sum += solution.getWeights(left).get(b);
+                                count++;
+                            }
+
+                            if (solution.areWeightsValid(right))
+                            {
+                                sum += solution.getWeights(right).get(b);
+                                count++;
+                            }
+
+                            if (solution.areWeightsValid(up))
+                            {
+                                sum += solution.getWeights(up).get(b);
+                                count++;
+                            }
+
+                            if (solution.areWeightsValid(down))
+                            {
+                                sum += solution.getWeights(down).get(b);
+                                count++;
+                            }
+
+                            if (sum > 0.0)
+                            {
+                                solution.getWeights(p + channel * texelCount).set(b, sum / count);
+                            }
                         }
 
-                        if (solution.areWeightsValid(right))
+                        if (count > 0)
                         {
-                            sum += solution.getWeights(right).get(b);
-                            count++;
+                            filledPositions.add(p + channel * texelCount);
                         }
-
-                        if (solution.areWeightsValid(up))
-                        {
-                            sum += solution.getWeights(up).get(b);
-                            count++;
-                        }
-
-                        if (solution.areWeightsValid(down))
-                        {
-                            sum += solution.getWeights(down).get(b);
-                            count++;
-                        }
-
-                        if (sum > 0.0)
-                        {
-                            solution.getWeights(p).set(b, sum / count);
-                        }
-                    }
-
-                    if (count > 0)
-                    {
-                        filledPositions.add(p);
                     }
                 }
             }
