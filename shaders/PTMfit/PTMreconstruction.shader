@@ -51,32 +51,26 @@ Shader "Custom/PTMreconstruction"
                 row[3] = w;
                 row[4] = u * u;
                 row[5] = u * v;
-                Texture2D weights[BASIS_COUNT];
-                weights[0] = _Weight0;
-                weights[1] = _Weight1;
-                weights[2] = _Weight2;
-                weights[3] = _Weight3;
-                weights[4] = _Weight4;
-                weights[5] = _Weight5;
-                for (int b = 0; b < BASIS_COUNT; b++)
-                {
-                    half4 color = SAMPLE_TEXTURE2D(_Weight0, sampler__Weight, TEXCOORD0);
-                    pixelColor = pixelColor + color*row[b]；
-                    half4 color = SAMPLE_TEXTURE2D(_Weight1, sampler__Weight, TEXCOORD0);
-                    pixelColor = pixelColor + color * row[b];
-                    half4 color = SAMPLE_TEXTURE2D(_Weight2, sampler__Weight, TEXCOORD0);
-                    pixelColor = pixelColor + color * row[b];
-                    half4 color = SAMPLE_TEXTURE2D(_Weight3, sampler__Weight, TEXCOORD0);
-                    pixelColor = pixelColor + color * row[b];
-                    half4 color = SAMPLE_TEXTURE2D(_Weight4, sampler__Weight, TEXCOORD0);
-                    pixelColor = pixelColor + color * row[b];
-                    half4 color = SAMPLE_TEXTURE2D(_Weight5, sampler__Weight, TEXCOORD0);
-                    pixelColor = pixelColor + color * row[b];
 
-                }
+                half4 color0 = 2*SAMPLE_TEXTURE2D(_Weight0, sampler__Weight0, TEXCOORD0)- (1, 1, 1, 1);
+                pixelColor = pixelColor + color0*row[0]；
+                
+                half4 color1 = 2*SAMPLE_TEXTURE2D(_Weight1, sampler__Weight1, TEXCOORD0)- (1, 1, 1, 1);
+                pixelColor = pixelColor + color1*row[1]；
 
+                half4 color2 = 2*SAMPLE_TEXTURE2D(_Weight2, sampler__Weight2, TEXCOORD0)- (1, 1, 1, 1);
+                pixelColor = pixelColor + color2*row[2]；
 
-                return  pow(pixelColor, float4(1 / 2.2));;
+                half4 color3 = 2*SAMPLE_TEXTURE2D(_Weight3, sampler__Weight3, TEXCOORD0)- (1, 1, 1, 1);
+                pixelColor = pixelColor + color3*row[3]；
+                
+                half4 color4 = 2*SAMPLE_TEXTURE2D(_Weight4, sampler__Weight4, TEXCOORD0)- (1, 1, 1, 1);
+                pixelColor = pixelColor + color4*row[4]；
+
+                half4 color5 = 2*SAMPLE_TEXTURE2D(_Weight5, sampler__Weight5, TEXCOORD0)- (1, 1, 1, 1);
+                pixelColor = pixelColor + color5*row[5]；
+
+                return  pixelColor;
             }
 
             ENDCG

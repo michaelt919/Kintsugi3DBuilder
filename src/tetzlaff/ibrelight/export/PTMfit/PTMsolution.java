@@ -69,7 +69,7 @@ public class PTMsolution {
 
                 // Flip vertically
                 int dataBufferIndex = p % settings.width + settings.width * (settings.height - p / settings.width - 1);
-                weightDataPacked[dataBufferIndex] = new Color(weight, weight, weight).getRGB();
+                weightDataPacked[dataBufferIndex] = new Color(weight*0.5f+0.5f, weight*0.5f+0.5f, weight*0.5f+0.5f).getRGB();
             }
 
             weightImg.setRGB(0, 0, weightImg.getWidth(), weightImg.getHeight(), weightDataPacked, 0, weightImg.getWidth());
