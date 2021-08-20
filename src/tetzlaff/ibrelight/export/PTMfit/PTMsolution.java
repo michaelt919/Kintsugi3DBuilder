@@ -65,11 +65,13 @@ public class PTMsolution {
 
             for (int p = 0; p < settings.width * settings.height; p++)
             {
-                float weight = Math.max(0, Math.min(1, (float)weightsByTexel[p].get(b)));
+                float weight1 = Math.max(0, Math.min(1, (float)weightsByTexel[p].get(b)));
+                float weight2 = Math.max(0, Math.min(1, (float)weightsByTexel[p+settings.width * settings.height].get(b)));
+                float weight3 = Math.max(0, Math.min(1, (float)weightsByTexel[p+2*settings.width * settings.height].get(b)));
 
                 // Flip vertically
                 int dataBufferIndex = p % settings.width + settings.width * (settings.height - p / settings.width - 1);
-                weightDataPacked[dataBufferIndex] = new Color(weight*0.5f+0.5f, weight*0.5f+0.5f, weight*0.5f+0.5f).getRGB();
+                weightDataPacked[dataBufferIndex] = new Color(weight1*0.5f+0.5f, weight2*0.5f+0.5f, weight3*0.5f+0.5f).getRGB();
             }
 
             weightImg.setRGB(0, 0, weightImg.getWidth(), weightImg.getHeight(), weightDataPacked, 0, weightImg.getWidth());
@@ -83,6 +85,7 @@ public class PTMsolution {
                 e.printStackTrace();
             }
         }
+
     }
     public boolean areWeightsValid(int texelIndex)
     {
