@@ -18,6 +18,8 @@ import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.ibrelight.rendering.GraphicsStream;
+import tetzlaff.optimization.Basis;
+import tetzlaff.optimization.MatrixSystem;
 import tetzlaff.util.Counter;
 import tetzlaff.optimization.NonNegativeLeastSquares;
 
@@ -26,12 +28,14 @@ public class BRDFReconstruction
     private static final double NNLS_TOLERANCE_SCALE = 0.000000000001;
 
     private final SpecularFitSettings settings;
+    private final Basis stepBasis;
     private final double metallicity;
     private final int matrixSize;
 
-    public BRDFReconstruction(SpecularFitSettings settings, double metallicity)
+    public BRDFReconstruction(SpecularFitSettings settings, Basis stepBasis, double metallicity)
     {
         this.settings = settings;
+        this.stepBasis = stepBasis;
         this.metallicity = metallicity;
         matrixSize = settings.basisCount * (settings.microfacetDistributionResolution + 1);
     }
@@ -39,20 +43,20 @@ public class BRDFReconstruction
     public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularFitSolution solution)
     {
         System.out.println("Building reflectance fitting matrix...");
-        ReflectanceMatrixSystem system = buildReflectanceMatrix(viewStream, solution);
+        MatrixSystem system = buildReflectanceMatrix(viewStream, solution);
 
         System.out.println("Finished building matrix; solving now...");
-        double medianATyRed = IntStream.range(0, system.vectorATyRed.getNumElements()).mapToDouble(system.vectorATyRed::get)
-            .sorted().skip(system.vectorATyRed.getNumElements() / 2).filter(x -> x > 0).findFirst().orElse(1.0);
-        double medianATyGreen = IntStream.range(0, system.vectorATyGreen.getNumElements()).mapToDouble(system.vectorATyGreen::get)
-            .sorted().skip(system.vectorATyGreen.getNumElements() / 2).filter(x -> x > 0).findFirst().orElse(1.0);
-        double medianATyBlue = IntStream.range(0, system.vectorATyBlue.getNumElements()).mapToDouble(system.vectorATyBlue::get)
-            .sorted().skip(system.vectorATyBlue.getNumElements() / 2).filter(x -> x > 0).findFirst().orElse(1.0);
-        SimpleMatrix brdfSolutionRed = NonNegativeLeastSquares.solvePremultiplied(system.matrixATA, system.vectorATyRed,
+        double medianATyRed = IntStream.range(0, system.rhs[0].getNumElements()).mapToDouble(system.rhs[0]::get)
+            .sorted().skip(system.rhs[0].getNumElements() / 2).filter(x -> x > 0).findFirst().orElse(1.0);
+        double medianATyGreen = IntStream.range(0, system.rhs[1].getNumElements()).mapToDouble(system.rhs[1]::get)
+            .sorted().skip(system.rhs[1].getNumElements() / 2).filter(x -> x > 0).findFirst().orElse(1.0);
+        double medianATyBlue = IntStream.range(0, system.rhs[2].getNumElements()).mapToDouble(system.rhs[2]::get)
+            .sorted().skip(system.rhs[2].getNumElements() / 2).filter(x -> x > 0).findFirst().orElse(1.0);
+        SimpleMatrix brdfSolutionRed = NonNegativeLeastSquares.solvePremultiplied(system.lhs, system.rhs[0],
             NNLS_TOLERANCE_SCALE * medianATyRed);
-        SimpleMatrix brdfSolutionGreen = NonNegativeLeastSquares.solvePremultiplied(system.matrixATA, system.vectorATyGreen,
+        SimpleMatrix brdfSolutionGreen = NonNegativeLeastSquares.solvePremultiplied(system.lhs, system.rhs[1],
             NNLS_TOLERANCE_SCALE * medianATyGreen);
-        SimpleMatrix brdfSolutionBlue = NonNegativeLeastSquares.solvePremultiplied(system.matrixATA, system.vectorATyBlue,
+        SimpleMatrix brdfSolutionBlue = NonNegativeLeastSquares.solvePremultiplied(system.lhs, system.rhs[2],
             NNLS_TOLERANCE_SCALE * medianATyBlue);
 
         System.out.println("DONE!");
@@ -137,18 +141,18 @@ public class BRDFReconstruction
         }
     }
 
-    private ReflectanceMatrixSystem buildReflectanceMatrix(GraphicsStream<ReflectanceData> viewStream, SpecularFitSolution solution)
+    private MatrixSystem buildReflectanceMatrix(GraphicsStream<ReflectanceData> viewStream, SpecularFitSolution solution)
     {
         Counter counter = new Counter();
 
-        ReflectanceMatrixSystem system = viewStream
+        MatrixSystem system = viewStream
             .map(reflectanceData ->
             {
                 // Create scratch space for the thread handling this view.
-                ReflectanceMatrixSystem contribution = new ReflectanceMatrixSystem(matrixSize, DMatrixRMaj.class);
+                MatrixSystem contribution = new MatrixSystem(matrixSize, 3, DMatrixRMaj.class);
 
                 // Get the contributions from the current view.
-                new ReflectanceMatrixBuilder(reflectanceData, solution, contribution, metallicity).execute();
+                new ReflectanceMatrixBuilder(reflectanceData, solution, contribution, stepBasis, metallicity).execute();
 
                 synchronized (counter)
                 {
@@ -158,7 +162,7 @@ public class BRDFReconstruction
 
                 return contribution;
             })
-            .collect(() -> new ReflectanceMatrixSystem(matrixSize, DMatrixRMaj.class), ReflectanceMatrixSystem::addContribution);
+            .collect(() -> new MatrixSystem(matrixSize, 3, DMatrixRMaj.class), MatrixSystem::addContribution);
 
         if (SpecularOptimization.DEBUG)
         {
@@ -168,31 +172,31 @@ public class BRDFReconstruction
             {
                 System.out.print("RHS, red for BRDF #" + b + ": ");
 
-                System.out.print(system.vectorATyRed.get(b));
+                System.out.print(system.rhs[0].get(b));
                 for (int m = 0; m < settings.microfacetDistributionResolution; m++)
                 {
                     System.out.print(", ");
-                    System.out.print(system.vectorATyRed.get((m + 1) * settings.basisCount + b));
+                    System.out.print(system.rhs[0].get((m + 1) * settings.basisCount + b));
                 }
                 System.out.println();
 
                 System.out.print("RHS, green for BRDF #" + b + ": ");
 
-                System.out.print(system.vectorATyGreen.get(b));
+                System.out.print(system.rhs[1].get(b));
                 for (int m = 0; m < settings.microfacetDistributionResolution; m++)
                 {
                     System.out.print(", ");
-                    System.out.print(system.vectorATyGreen.get((m + 1) * settings.basisCount + b));
+                    System.out.print(system.rhs[1].get((m + 1) * settings.basisCount + b));
                 }
                 System.out.println();
 
                 System.out.print("RHS, blue for BRDF #" + b + ": ");
 
-                System.out.print(system.vectorATyBlue.get(b));
+                System.out.print(system.rhs[2].get(b));
                 for (int m = 0; m < settings.microfacetDistributionResolution; m++)
                 {
                     System.out.print(", ");
-                    System.out.print(system.vectorATyBlue.get((m + 1) * settings.basisCount + b));
+                    System.out.print(system.rhs[2].get((m + 1) * settings.basisCount + b));
                 }
                 System.out.println();
 

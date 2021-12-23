@@ -21,8 +21,10 @@ import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.Projection;
 import tetzlaff.ibrelight.rendering.GraphicsStreamResource;
 import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.optimization.Basis;
 import tetzlaff.optimization.ReadonlyErrorReport;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
+import tetzlaff.optimization.StepBasis;
 
 /**
  * Implement specular fit using algorithm described by Nam et al., 2018
@@ -34,6 +36,7 @@ public class SpecularOptimization
 
     private static final boolean NORMAL_REFINEMENT = true;
     private static final double METALLICITY = 0.0f; // Implemented and minimally tested but doesn't seem to make much difference.
+    private static final Basis STEP_BASIS = new StepBasis(METALLICITY);
     private static final double CONVERGENCE_TOLERANCE = 0.0001;
 
     private final SpecularFitSettings settings;
@@ -110,7 +113,7 @@ public class SpecularOptimization
             // Track how the error improves over iterations of the whole algorithm.
             double previousIterationError;
 
-            BRDFReconstruction brdfReconstruction = new BRDFReconstruction(settings, METALLICITY);
+            BRDFReconstruction brdfReconstruction = new BRDFReconstruction(settings, STEP_BASIS, METALLICITY);
             SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(settings, METALLICITY);
             ShaderBasedErrorCalculator errorCalculator = new ShaderBasedErrorCalculator(settings.width * settings.height);
 
