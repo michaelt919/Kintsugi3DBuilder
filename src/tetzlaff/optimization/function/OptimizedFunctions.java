@@ -113,6 +113,6 @@ public class OptimizedFunctions
     public void evaluateNonConstantSolution(int instanceIndex, int channelIndex, ObjIntConsumer<Double> functionConsumer)
     {
         basisFunctions.evaluateSolution(solutions[channelIndex].get(instanceIndex),
-                b -> solutions[channelIndex].get(instanceIndex + 1, b), functionConsumer);
+                m -> solutions[channelIndex].get(m + 1, instanceIndex), functionConsumer);
     }
 }
