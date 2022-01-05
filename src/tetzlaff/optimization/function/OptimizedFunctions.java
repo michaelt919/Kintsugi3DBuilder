@@ -112,7 +112,10 @@ public class OptimizedFunctions
      */
     public void evaluateNonConstantSolution(int instanceIndex, int channelIndex, ObjIntConsumer<Double> functionConsumer)
     {
+        // vector length = instance count * (library size + 1)
+        int instanceCount = solutions[0].getNumElements() / (basisFunctions.getFunctionCount() + 1);
+
         basisFunctions.evaluateSolution(solutions[channelIndex].get(instanceIndex),
-                m -> solutions[channelIndex].get(m + 1, instanceIndex), functionConsumer);
+                m -> solutions[channelIndex].get((m + 1) * instanceCount + instanceIndex), functionConsumer);
     }
 }

@@ -66,6 +66,10 @@ public class BRDFReconstruction
 
                 brdfSolution.evaluateNonConstantSolution(b, 0,
                         (value, m) -> solution.getSpecularRed().set(m, bCopy, value));
+                brdfSolution.evaluateNonConstantSolution(b, 1,
+                        (value, m) -> solution.getSpecularGreen().set(m, bCopy, value));
+                brdfSolution.evaluateNonConstantSolution(b, 2,
+                        (value, m) -> solution.getSpecularBlue().set(m, bCopy, value));
             }
         }
 
