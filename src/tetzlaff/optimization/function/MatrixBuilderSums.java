@@ -83,35 +83,36 @@ public class MatrixBuilderSums
 
         for (int b1 = 0; b1 < instanceCount; b1++)
         {
+            double singleWeightedAnalyticSample = sample.analytic * sample.weightByInstance.applyAsDouble(b1) * sampleWeightSquared;
+
             for (int i = 0; i < weightedAnalyticTimesObserved.length; i++)
             {
-                double singleWeightedAnalyticSample = sample.analytic * sample.weightByInstance.applyAsDouble(b1) * sampleWeightSquared;
                 double weightedAnalyticTimesObservedSample = singleWeightedAnalyticSample * sample.observed[i];
-                addWeightedAnalyticTimesObserved(i, b1,weightedAnalyticTimesObservedSample);
+                addWeightedAnalyticTimesObserved(i, b1, weightedAnalyticTimesObservedSample);
 
                 double singleWeightedAnalyticBlendedSample = sample.blendingWeight * weightedAnalyticTimesObservedSample;
-                addWeightedAnalyticTimesObservedBlended(i, b1,singleWeightedAnalyticBlendedSample * sample.observed[i]);
+                addWeightedAnalyticTimesObservedBlended(i, b1, singleWeightedAnalyticBlendedSample * sample.observed[i]);
+            }
 
-                for (int b2 = 0; b2 < instanceCount; b2++)
-                {
-                    // Update non-squared total without blending weight.
-                    double weightedAnalyticSample = singleWeightedAnalyticSample * sample.weightByInstance.applyAsDouble(b2);
-                    addWeightedAnalytic(b1, b2, weightedAnalyticSample);
+            for (int b2 = 0; b2 < instanceCount; b2++)
+            {
+                // Update non-squared total without blending weight.
+                double weightedAnalyticSample = singleWeightedAnalyticSample * sample.weightByInstance.applyAsDouble(b2);
+                addWeightedAnalytic(b1, b2, weightedAnalyticSample);
 
-                    // Update non-squared total with blending weight.
-                    addWeightedAnalyticBlended(b1, b2, sample.blendingWeight * weightedAnalyticSample);
+                // Update non-squared total with blending weight.
+                addWeightedAnalyticBlended(b1, b2, sample.blendingWeight * weightedAnalyticSample);
 
-                    // Update squared total without blending weight.
-                    double weightedAnalyticSquared = weightedAnalyticSample * sample.analytic;
-                    addWeightedAnalyticSquared(b1, b2, weightedAnalyticSquared);
+                // Update squared total without blending weight.
+                double weightedAnalyticSquared = weightedAnalyticSample * sample.analytic;
+                addWeightedAnalyticSquared(b1, b2, weightedAnalyticSquared);
 
-                    // Update squared total with blending weight.
-                    double weightedAnalyticSquaredBlendedSample = sample.blendingWeight * weightedAnalyticSquared;
-                    addWeightedAnalyticSquaredBlended(b1, b2, weightedAnalyticSquaredBlendedSample);
+                // Update squared total with blending weight.
+                double weightedAnalyticSquaredBlendedSample = sample.blendingWeight * weightedAnalyticSquared;
+                addWeightedAnalyticSquaredBlended(b1, b2, weightedAnalyticSquaredBlendedSample);
 
-                    // Update squared total with blending weight squared.
-                    addWeightedAnalyticSquaredBlendedSquared(b1, b2, sample.blendingWeight * weightedAnalyticSquaredBlendedSample);
-                }
+                // Update squared total with blending weight squared.
+                addWeightedAnalyticSquaredBlendedSquared(b1, b2, sample.blendingWeight * weightedAnalyticSquaredBlendedSample);
             }
         }
     }
