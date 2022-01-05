@@ -1,4 +1,4 @@
-package tetzlaff.optimization;
+package tetzlaff.optimization.function;
 
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
@@ -110,7 +110,7 @@ public class MatrixBuilderSums
                     addWeightedAnalyticSquaredBlended(b1, b2, weightedAnalyticSquaredBlendedSample);
 
                     // Update squared total with blending weight squared.
-                    addWeightedAnalyticSquaredBlended(b1, b2, sample.blendingWeight * weightedAnalyticSquaredBlendedSample);
+                    addWeightedAnalyticSquaredBlendedSquared(b1, b2, sample.blendingWeight * weightedAnalyticSquaredBlendedSample);
                 }
             }
         }

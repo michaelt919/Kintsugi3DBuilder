@@ -16,6 +16,7 @@ import org.ejml.dense.row.CommonOps_DDRM;
 import org.ejml.simple.SimpleMatrix;
 
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 @SuppressWarnings("PublicField")
 public class MatrixSystem
@@ -55,5 +56,23 @@ public class MatrixSystem
     public void addToRHS(int row, int vectorIndex, double amount)
     {
         rhs[vectorIndex].set(row, 0, rhs[vectorIndex].get(row, 0) + amount);
+    }
+
+    public SimpleMatrix solve(int rhsIndex)
+    {
+        return lhs.solve(rhs[rhsIndex]);
+    }
+
+    public SimpleMatrix solveNonNegative(int rhsIndex, double toleranceScale)
+    {
+        double medianATy = IntStream.range(0, rhs[rhsIndex].getNumElements())
+                .mapToDouble(rhs[rhsIndex]::get)
+                .sorted()
+                .skip(rhs[rhsIndex].getNumElements() / 2)
+                .filter(x -> x > 0)
+                .findFirst()
+                .orElse(1.0);
+
+        return NonNegativeLeastSquares.solvePremultiplied(lhs, rhs[rhsIndex],toleranceScale * medianATy);
     }
 }

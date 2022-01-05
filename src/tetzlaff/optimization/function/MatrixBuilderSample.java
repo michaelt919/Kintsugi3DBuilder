@@ -1,4 +1,4 @@
-package tetzlaff.optimization;
+package tetzlaff.optimization.function;
 
 import java.util.function.IntToDoubleFunction;
 
@@ -14,6 +14,22 @@ import java.util.function.IntToDoubleFunction;
  */
 public class MatrixBuilderSample
 {
+    /**
+     * The actual value of the parameter serving as the input to the function being optimized.
+     */
+    public final double actual;
+
+    /**
+     * Which integer "bin" the sample falls into when the input to the function is rounded down.
+     */
+    public final int floor;
+
+    /**
+     * Whether the sample is in the proper domain of the function being optimized.
+     * Samples outside this domain may still contribute to the constant term.
+     */
+    public final boolean inOptimizedDomain;
+
     /**
      * The analytic factor evaluated for the current sample.
      */
@@ -41,11 +57,23 @@ public class MatrixBuilderSample
      */
     public final double[] observed;
 
-    public MatrixBuilderSample(double analytic, double sampleWeight, double blendingWeight, IntToDoubleFunction weightByInstance, double... observed)
+    public MatrixBuilderSample(double actual, BasisFunctions basisLibrary, double analytic, double sampleWeight,
+                               IntToDoubleFunction weightByInstance, double... observed)
     {
+        this.actual = actual;
+
+        // Calculate which discretized element the current sample belongs to.
+        this.floor = Math.min(basisLibrary.getOptimizedDomainSize() - 1, (int) Math.floor(actual));
+        this.inOptimizedDomain = (actual < basisLibrary.getOptimizedDomainSize());
+
         this.analytic = analytic;
         this.sampleWeight = sampleWeight;
-        this.blendingWeight = blendingWeight;
+
+        // When floor and actual are the same, t = 1.0.
+        // When actual is almost a whole increment greater than floor, t approaches 0.0.
+        // If mFloor is clamped to the domain size - 1, then mExact will be much larger, so t = 0.0.
+        this.blendingWeight = Math.max(0.0, 1.0 + this.floor - this.actual);
+
         this.weightByInstance = weightByInstance;
         this.observed = observed;
     }
