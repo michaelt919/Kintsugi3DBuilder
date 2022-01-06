@@ -166,7 +166,7 @@ public class MatrixBuilder
 
             // Zero out the blended sums after every time that sample.floor changes,
             // since it should only apply to a single m-value (as opposed to the other sums which continue to accumulate).
-            sums.clearBlendedSums();
+            sums.clearNonCumulativeSums();
         }
 
         double sampleWeightSquared = sample.sampleWeight * sample.sampleWeight;

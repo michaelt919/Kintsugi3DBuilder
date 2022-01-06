@@ -25,6 +25,7 @@ import tetzlaff.ibrelight.rendering.IBRResources;
 import tetzlaff.optimization.function.BasisFunctions;
 import tetzlaff.optimization.ReadonlyErrorReport;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
+import tetzlaff.optimization.function.GeneralizedSmoothStepBasis;
 import tetzlaff.optimization.function.StepBasis;
 
 /**
@@ -37,7 +38,8 @@ public class SpecularOptimization
 
     private static final boolean NORMAL_REFINEMENT = true;
     private static final double METALLICITY = 0.0f; // Implemented and minimally tested but doesn't seem to make much difference.
-    private static final IntFunction<StepBasis> STEP_BASIS = resolution -> new StepBasis(resolution, METALLICITY);
+    private static final IntFunction<BasisFunctions> STEP_BASIS = resolution ->
+            new GeneralizedSmoothStepBasis(resolution, METALLICITY, 1, x -> x);
     private static final double CONVERGENCE_TOLERANCE = 0.0001;
 
     private final SpecularFitSettings settings;

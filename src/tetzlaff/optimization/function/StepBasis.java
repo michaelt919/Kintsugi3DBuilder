@@ -1,6 +1,5 @@
 package tetzlaff.optimization.function;
 
-import org.ejml.simple.SimpleMatrix;
 import tetzlaff.optimization.MatrixSystem;
 
 import java.util.function.IntToDoubleFunction;
@@ -45,10 +44,6 @@ public class StepBasis implements BasisFunctions
     public void contributeToFittingSystem(int valueCurrent, int valueNext, int instanceCount,
                                           MatrixBuilderSums sums, MatrixSystem fittingSystem)
     {
-        // Number of rows / columns in LHS = instanceCount * (stepCount + 1)
-        // The +1 comes from the diffuse term.
-        int stepCount = fittingSystem.lhs.numRows() / instanceCount - 1;
-
         // Add the running total to elements of the ATA matrix and the ATy vector corresponding to the next value
         // as well as any values skipped over.
         // These elements also need to get some more contributions that have blending weights that are yet to be
@@ -86,7 +81,7 @@ public class StepBasis implements BasisFunctions
 
                 // Visit every element of the microfacet distribution that comes after the current value.
                 // This is because the form of ATA is such that the values in the matrix are determined by the lower of the two values.
-                for (int m2 = valueCurrent + 1; m2 < stepCount; m2++)
+                for (int m2 = valueCurrent + 1; m2 < resolution; m2++)
                 {
                     j = instanceCount * (m2 + 1) + b2;
 
@@ -106,9 +101,9 @@ public class StepBasis implements BasisFunctions
                 i = instanceCount * (m1 + 1) + b1;
 
                 // Update ATy vector
-                fittingSystem.addToRHS(i, 0, sums.getWeightedAnalyticTimesObserved(0, b1));
-                fittingSystem.addToRHS(i, 1, sums.getWeightedAnalyticTimesObserved(1, b1));
-                fittingSystem.addToRHS(i, 2, sums.getWeightedAnalyticTimesObserved(2, b1));
+                fittingSystem.addToRHS(i, 0, sums.getWeightedAnalyticTimesObservedCumulative(0, b1));
+                fittingSystem.addToRHS(i, 1, sums.getWeightedAnalyticTimesObservedCumulative(1, b1));
+                fittingSystem.addToRHS(i, 2, sums.getWeightedAnalyticTimesObservedCumulative(2, b1));
 
                 // Update ATA matrix
                 for (int b2 = 0; b2 < instanceCount; b2++)
@@ -117,30 +112,30 @@ public class StepBasis implements BasisFunctions
                     // row corresponds to diffuse coefficients and column corresponds to specular, or vice-versa.
                     // The matrix is symmetric so we also need to swap row and column and update that way.
                     fittingSystem.addToLHS(i, b2,
-                            metallicity * sums.getWeightedAnalyticSquared(b1, b2)
-                                    + (1 - metallicity) * sums.getWeightedAnalytic(b1, b2));
+                            metallicity * sums.getWeightedAnalyticSquaredCumulative(b1, b2)
+                                    + (1 - metallicity) * sums.getWeightedAnalyticCumulative(b1, b2));
                     fittingSystem.addToLHS(b2, i,
-                            metallicity * sums.getWeightedAnalyticSquared(b2, b1)
-                                    + (1 - metallicity) * sums.getWeightedAnalytic(b2, b1));
+                            metallicity * sums.getWeightedAnalyticSquaredCumulative(b2, b1)
+                                    + (1 - metallicity) * sums.getWeightedAnalyticCumulative(b2, b1));
 
                     // Bottom right partition of the matrix: row and column both correspond to specular.
 
                     // Handle "corner" case where m1 = m2 (don't want to repeat with row and column swapped as elements
                     // would then be duplicated).
                     int j = instanceCount * (m1 + 1) + b2;
-                    fittingSystem.addToLHS(i, j, sums.getWeightedAnalyticSquared(b1, b2));
+                    fittingSystem.addToLHS(i, j, sums.getWeightedAnalyticSquaredCumulative(b1, b2));
 
                     // Visit every element of the microfacet distribution that comes after m1.
                     // This is because the form of ATA is such that the values in the matrix are determined by the lower
                     // of the two values.
-                    for (int m2 = m1 + 1; m2 < stepCount; m2++)
+                    for (int m2 = m1 + 1; m2 < resolution; m2++)
                     {
                         j = instanceCount * (m2 + 1) + b2;
 
                         // Add the current running total to the appropriate location in the matrix.
                         // The matrix is symmetric so we also need to swap row and column and update that way.
-                        fittingSystem.addToLHS(i, j, sums.getWeightedAnalyticSquared(b1, b2));
-                        fittingSystem.addToLHS(j, i, sums.getWeightedAnalyticSquared(b2, b1));
+                        fittingSystem.addToLHS(i, j, sums.getWeightedAnalyticSquaredCumulative(b1, b2));
+                        fittingSystem.addToLHS(j, i, sums.getWeightedAnalyticSquaredCumulative(b2, b1));
                     }
                 }
             }
