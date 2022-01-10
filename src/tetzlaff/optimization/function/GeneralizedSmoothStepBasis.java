@@ -133,7 +133,7 @@ public class GeneralizedSmoothStepBasis implements BasisFunctions
             // This range is inclusive on both ends due to linear interpolation.
             // i.e., the library function at i=transitionEnd will be interpolating from 1 to a value less than 1 for
             // parameter values between valueCurrent and valueCurrent+1.
-            for (int k = valueCurrent; k <= transitionEnd; k++)
+            for (int k = valueCurrent; k <= transitionEnd && k < resolution; k++)
             {
                 int i = instanceCount * (k + 1) + b1;
 
@@ -172,7 +172,7 @@ public class GeneralizedSmoothStepBasis implements BasisFunctions
 
                     // Matrix coefficients where both row and column correspond to transition range:
                     // Need a nested loop to consider every combination of library functions in the range.
-                    for (int k2 = valueCurrent; k2 <= transitionEnd; k2++)
+                    for (int k2 = valueCurrent; k2 <= transitionEnd && k2 < resolution; k2++)
                     {
                         int j = instanceCount * (k2 + 1) + b2;
 
@@ -211,7 +211,7 @@ public class GeneralizedSmoothStepBasis implements BasisFunctions
             // will be deferred until the sums are complete for those functions.
             // This loop usually would only run once, but could run multiple times if we skipped a few values.
             int nextTransitionEnd = Math.min(valueNext - 1 + transitionRange, resolution);
-            for (int m1 = transitionEnd + 1; m1 <= nextTransitionEnd; m1++)
+            for (int m1 = transitionEnd + 1; m1 <= nextTransitionEnd && m1 < resolution; m1++) // TODO work out why m1 < resolution is necessary
             {
                 int i = instanceCount * (m1 + 1) + b1;
 

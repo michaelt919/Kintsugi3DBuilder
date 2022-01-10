@@ -39,7 +39,7 @@ public class SpecularOptimization
     private static final boolean NORMAL_REFINEMENT = true;
     private static final double METALLICITY = 0.0f; // Implemented and minimally tested but doesn't seem to make much difference.
     private static final IntFunction<BasisFunctions> STEP_BASIS = resolution ->
-            new GeneralizedSmoothStepBasis(resolution, METALLICITY, 1, x -> x);
+            new GeneralizedSmoothStepBasis(resolution, METALLICITY, 16, x -> 3*x*x-2*x*x*x);
     private static final double CONVERGENCE_TOLERANCE = 0.0001;
 
     private final SpecularFitSettings settings;

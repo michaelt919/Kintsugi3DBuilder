@@ -24,11 +24,6 @@ import tetzlaff.optimization.function.OptimizedFunctions;
 import tetzlaff.util.Counter;
 import tetzlaff.optimization.NonNegativeLeastSquares;
 
-/*
- TODO: Did the refactor in Jan 2022 break the quality?  Only tested with the reduced Kuan Yu dataset and it looked worse.
- Should try the pre-refactor code with reduced Kuan Yu and/or the post-refactor code with the complete Kuan Yu
- to determine if the reduced dataset is the source of the problem or if it's a problem with the refactor.
-*/
 public class BRDFReconstruction
 {
     private static final double NNLS_TOLERANCE_SCALE = 0.000000000001;
