@@ -181,8 +181,8 @@ public class MatrixBuilder
             sums.accept(sample);
         }
 
-        // Regardless of whether sample.floor changed: Update running total for each pair of basis functions,
-        // and add blended samples to elements where no work is saved by deferring the update to the matrix or vector.
+        // Regardless of whether sample.floor changed: Update for constant term,
+        // where no work is saved by deferring the update to the matrix or vector.
         for (int b1 = 0; b1 < instanceCount; b1++)
         {
             // Update to ATy
