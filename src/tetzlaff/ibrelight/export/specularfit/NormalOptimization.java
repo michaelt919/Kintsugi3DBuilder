@@ -28,7 +28,8 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     private static final boolean USE_LEVENBERG_MARQUARDT = !SpecularOptimization.ORIGINAL_NAM_METHOD;
     private static final int UNSUCCESSFUL_ITERATIONS_ALLOWED = 8;
 
-    private final ShaderBasedOptimization<ContextType> base;
+    private final ShaderBasedOptimization<ContextType> estimateNormals;
+    private final ShaderBasedOptimization<ContextType> cleanNormals;
     private final SpecularFitSettings settings;
 
     public NormalOptimization(
@@ -38,19 +39,28 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         SpecularFitSettings settings)
         throws FileNotFoundException
     {
-        base = new ShaderBasedOptimization<>(
+        estimateNormals = new ShaderBasedOptimization<>(
             getNormalEstimationProgramBuilder(programFactory),
             context.buildFramebufferObject(settings.width, settings.height)
-                .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F).setLinearFilteringEnabled(true))
+                .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F)
+                    .setLinearFilteringEnabled(true))
                 .addColorAttachment(ColorFormat.R32F), // Damping factor while fitting,
             drawableFactory);
+
+        cleanNormals = new ShaderBasedOptimization<>(
+            getNormalCleanProgramBuilder(programFactory),
+            context.buildFramebufferObject(settings.width, settings.height)
+                .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F)
+                    .setLinearFilteringEnabled(true)),
+            drawableFactory);
+
         this.settings = settings;
 
-        base.addSetupCallback((estimationProgram, backFramebuffer) ->
+        estimateNormals.addSetupCallback((estimationProgram, backFramebuffer) ->
         {
             // Update normal estimation program to use the new front buffer.
-            estimationProgram.setTexture("normalEstimate", base.getFrontFramebuffer().getColorAttachmentTexture(0));
-            estimationProgram.setTexture("dampingTex", base.getFrontFramebuffer().getColorAttachmentTexture(1));
+            estimationProgram.setTexture("normalEstimate", estimateNormals.getFrontFramebuffer().getColorAttachmentTexture(0));
+            estimationProgram.setTexture("dampingTex", estimateNormals.getFrontFramebuffer().getColorAttachmentTexture(1));
 
             // Clear framebuffer
             backFramebuffer.clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
@@ -61,7 +71,30 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
             }
         });
 
-        base.addPostUpdateCallback(framebuffer ->
+        cleanNormals.addSetupCallback((cleanProgram, backFramebuffer) ->
+        {
+            // Update normal estimation program to use the new front buffer.
+            cleanProgram.setTexture("normalEstimate", estimateNormals.getFrontFramebuffer().getColorAttachmentTexture(0));
+
+            // Clear framebuffer
+            backFramebuffer.clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
+
+            if (SpecularOptimization.DEBUG)
+            {
+                System.out.println("Cleaning normals...");
+            }
+        });
+
+        estimateNormals.addPostUpdateCallback(framebuffer ->
+        {
+            if (SpecularOptimization.DEBUG)
+            {
+                System.out.println("DONE!");
+                saveNormalMapEstimate();
+            }
+        });
+
+        cleanNormals.addPostUpdateCallback(framebuffer ->
         {
             if (SpecularOptimization.DEBUG)
             {
@@ -74,12 +107,14 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     @Override
     public void close()
     {
-        base.close();
+        estimateNormals.close();
+        cleanNormals.close();
     }
 
     public void finish()
     {
-        base.finish();
+        estimateNormals.finish();
+        cleanNormals.finish();
     }
 
     public void execute(Function<Texture<ContextType>, ReadonlyErrorReport> errorCalculator, double convergenceTolerance)
@@ -87,28 +122,42 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         if (USE_LEVENBERG_MARQUARDT)
         {
             // Set damping factor to 1.0 initially at each position.
-            base.getFrontFramebuffer().clearColorBuffer(1, 1.0f, 1.0f, 1.0f, 1.0f);
+            estimateNormals.getFrontFramebuffer().clearColorBuffer(1, 1.0f, 1.0f, 1.0f, 1.0f);
 
             // Estimate using the Levenberg-Marquardt algorithm.
-            base.runUntilConvergence(errorCalculator, convergenceTolerance, UNSUCCESSFUL_ITERATIONS_ALLOWED);
+            estimateNormals.runUntilConvergence(errorCalculator, convergenceTolerance, UNSUCCESSFUL_ITERATIONS_ALLOWED);
         }
         else
         {
             // Single pass normal estimation.
-            base.runOnce(errorCalculator);
+            estimateNormals.runOnce(errorCalculator);
         }
+
+        cleanNormals.runOnce(errorCalculator);
     }
 
     public Texture2D<ContextType> getNormalMap()
     {
-        return base.getFrontFramebuffer().getColorAttachmentTexture(0);
+        return cleanNormals.getFrontFramebuffer().getColorAttachmentTexture(0);
+    }
+
+    public void saveNormalMapEstimate()
+    {
+        try
+        {
+            estimateNormals.getFrontFramebuffer().saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "normalPreClean.png"));
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     public void saveNormalMap()
     {
         try
         {
-            base.getFrontFramebuffer().saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "normal.png"));
+            cleanNormals.getFrontFramebuffer().saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "normal.png"));
         }
         catch (IOException e)
         {
@@ -124,5 +173,14 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
                 new File("shaders/specularfit/estimateNormals.frag"),
                 true)
             .define("USE_LEVENBERG_MARQUARDT", USE_LEVENBERG_MARQUARDT);
+    }
+
+    private static <ContextType extends Context<ContextType>>
+    ProgramBuilder<ContextType> getNormalCleanProgramBuilder(SpecularFitProgramFactory<ContextType> programFactory)
+    {
+        return programFactory.getShaderProgramBuilder(
+                new File("shaders/common/texspace_noscale.vert"),
+                new File("shaders/specularfit/cleanNormals.frag"),
+                true);
     }
 }

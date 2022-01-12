@@ -18,8 +18,6 @@
 layout(location = 0) out vec4 reflectance_visibility;
 layout(location = 1) out vec4 halfway_geom_weight;
 
-#define COSINE_CUTOFF 0.0
-
 vec3 getNormalEstimate()
 {
     vec3 triangleNormal = normalize(fNormal);

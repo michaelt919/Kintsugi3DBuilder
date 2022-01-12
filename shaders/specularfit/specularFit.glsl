@@ -35,3 +35,5 @@ uniform sampler2D roughnessEstimate;
 
 #include <shaders/colorappearance/colorappearance_multi_as_single.glsl>
 #include <shaders/relight/reflectanceequations.glsl>
+
+#define COSINE_CUTOFF 0.0
