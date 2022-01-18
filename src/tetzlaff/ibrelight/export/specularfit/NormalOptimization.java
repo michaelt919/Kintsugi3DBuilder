@@ -28,9 +28,13 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     private static final boolean USE_LEVENBERG_MARQUARDT = !SpecularOptimization.ORIGINAL_NAM_METHOD;
     private static final int UNSUCCESSFUL_ITERATIONS_ALLOWED = 8;
 
+    private static final int CLEAN_ITERATIONS_FACTOR = 32;
+
     private final ShaderBasedOptimization<ContextType> estimateNormals;
     private final ShaderBasedOptimization<ContextType> cleanNormals;
     private final SpecularFitSettings settings;
+
+    private boolean firstClean = true;
 
     public NormalOptimization(
         ContextType context,
@@ -73,8 +77,19 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
 
         cleanNormals.addSetupCallback((cleanProgram, backFramebuffer) ->
         {
-            // Update normal estimation program to use the new front buffer.
-            cleanProgram.setTexture("normalEstimate", estimateNormals.getFrontFramebuffer().getColorAttachmentTexture(0));
+            if (firstClean)
+            {
+                // Use front buffer from original fitting.
+                cleanProgram.setTexture("prevNormalEstimate", estimateNormals.getFrontFramebuffer().getColorAttachmentTexture(0));
+            }
+            else
+            {
+                // Update normal clean program to use the new front buffer.
+                cleanProgram.setTexture("prevNormalEstimate", cleanNormals.getFrontFramebuffer().getColorAttachmentTexture(0));
+            }
+
+            // Pass front buffer from original fitting.
+            cleanProgram.setTexture("origNormalEstimate", estimateNormals.getFrontFramebuffer().getColorAttachmentTexture(0));
 
             // Clear framebuffer
             backFramebuffer.clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
@@ -99,7 +114,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
             if (SpecularOptimization.DEBUG)
             {
                 System.out.println("DONE!");
-                saveNormalMap();
+//                saveNormalMap();
             }
         });
     }
@@ -113,7 +128,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
 
     public void finish()
     {
-        estimateNormals.finish();
+        estimateNormals.close();
         cleanNormals.finish();
     }
 
@@ -133,7 +148,14 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
             estimateNormals.runOnce(errorCalculator);
         }
 
-        cleanNormals.runOnce(errorCalculator);
+        firstClean = true;
+        int cleanIterations = Math.max(settings.width, settings.height) / (2 * CLEAN_ITERATIONS_FACTOR);
+        for (int i = 0; i < cleanIterations; i++)
+        {
+            cleanNormals.runOnce();
+            firstClean = false;
+        }
+        saveNormalMap();
     }
 
     public Texture2D<ContextType> getNormalMap()
@@ -145,7 +167,8 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     {
         try
         {
-            estimateNormals.getFrontFramebuffer().saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "normalPreClean.png"));
+            estimateNormals.getFrontFramebuffer().saveColorBufferToFile(0, "PNG",
+                new File(settings.outputDirectory, "normalPreClean.png"));
         }
         catch (IOException e)
         {
@@ -157,7 +180,8 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     {
         try
         {
-            cleanNormals.getFrontFramebuffer().saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "normal.png"));
+            cleanNormals.getFrontFramebuffer().saveColorBufferToFile(0, "PNG",
+                new File(settings.outputDirectory, "normal.png"));
         }
         catch (IOException e)
         {

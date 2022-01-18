@@ -24,8 +24,11 @@ layout(location = 0) out vec4 cleanNormalTS;
 #endif
 
 #ifndef CLEAN_THRESHOLD
-#define CLEAN_THRESHOLD 0.25
+#define CLEAN_THRESHOLD 1.0
 #endif
+
+uniform sampler2D origNormalEstimate;
+uniform sampler2D prevNormalEstimate;
 
 void main()
 {
@@ -36,13 +39,28 @@ void main()
         - dot(tangent, fBitangent) * tangent);
     mat3 tangentToObject = mat3(tangent, bitangent, triangleNormal);
 
-    vec2 estNormalXY = texture(normalEstimate, fTexCoord).xy * 2 - vec2(1.0);
-    vec3 estNormalTS = vec3(estNormalXY, sqrt(1 - dot(estNormalXY, estNormalXY)));
-    vec3 estNormal = tangentToObject * estNormalTS;
+    vec2 origNormalXY = texture(origNormalEstimate, fTexCoord).xy * 2 - vec2(1.0);
+    vec3 origNormalTS = vec3(origNormalXY, sqrt(1 - dot(origNormalXY, origNormalXY)));
+    vec3 origNormal = tangentToObject * origNormalTS;
 
-    float estError = calculateError(triangleNormal, estNormal);
-    float origError = calculateError(triangleNormal, triangleNormal);
+    vec2 prevNormalXY = texture(prevNormalEstimate, fTexCoord).xy * 2 - vec2(1.0);
+    vec3 prevNormalTS = vec3(prevNormalXY, sqrt(1 - dot(prevNormalXY, prevNormalXY)));
+    vec3 prevNormal = tangentToObject * prevNormalTS;
 
-    float alpha = clamp((1 - estError / origError) / CLEAN_THRESHOLD, 0, 1);
-    cleanNormalTS = vec4(mix(vec3(0, 0, 1), estNormalTS, alpha) * 0.5 + vec3(0.5), 1.0);
+    vec2 newNormalXY = (textureOffset(prevNormalEstimate, fTexCoord, ivec2(0, 1)).xy
+        + textureOffset(prevNormalEstimate, fTexCoord, ivec2(0, -1)).xy
+        + textureOffset(prevNormalEstimate, fTexCoord, ivec2(1, 0)).xy
+        + textureOffset(prevNormalEstimate, fTexCoord, ivec2(-1, 0)).xy) * 0.5 - vec2(1.0);
+    vec3 newNormalTS = vec3(newNormalXY, sqrt(1 - dot(newNormalXY, newNormalXY)));
+    vec3 newNormal = tangentToObject * newNormalTS;
+
+    float origError = calculateError(triangleNormal, origNormal);
+    float newError = calculateError(triangleNormal, newNormal);
+
+    // 1 if sqrt(newError / originalError) >= 1 + threshold [use estimate from previous iteration]
+    // 0 otherwise [use new, smoothed estimate]
+    float alpha = step((1 + CLEAN_THRESHOLD) * (1 + CLEAN_THRESHOLD), newError / origError);
+
+    // Max alpha is 0.5 since it should also still include the previous normal with 50% weight regardless of error.
+    cleanNormalTS = vec4(normalize(mix(newNormalTS, prevNormalTS, alpha * 0.5 + 0.5)) * 0.5 + vec3(0.5), 1.0);
 }

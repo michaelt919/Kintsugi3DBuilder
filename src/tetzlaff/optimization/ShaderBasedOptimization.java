@@ -120,7 +120,10 @@ public class ShaderBasedOptimization<ContextType extends Context<ContextType>> i
         return frontFramebuffer;
     }
 
-    public ReadonlyErrorReport runOnce(Function<Texture<ContextType>, ReadonlyErrorReport> errorCalculator)
+    /**
+     * Runs once and swap framebuffers
+     */
+    public void runOnce()
     {
         if (finished)
         {
@@ -145,6 +148,17 @@ public class ShaderBasedOptimization<ContextType extends Context<ContextType>> i
         {
             callback.accept(frontFramebuffer);
         }
+    }
+
+    /**
+     * Runs once and reverts the framebuffer swap if the error got worse.
+     * Callbacks will run on the new estimate before reverting the framebuffer swap
+     * @param errorCalculator
+     * @return
+     */
+    public ReadonlyErrorReport runOnce(Function<Texture<ContextType>, ReadonlyErrorReport> errorCalculator)
+    {
+        runOnce();
 
         // Check error
         ReadonlyErrorReport report = errorCalculator.apply(frontFramebuffer.getColorAttachmentTexture(0));
