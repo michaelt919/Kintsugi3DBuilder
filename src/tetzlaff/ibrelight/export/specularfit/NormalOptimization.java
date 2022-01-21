@@ -105,7 +105,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
             if (SpecularOptimization.DEBUG)
             {
                 System.out.println("DONE!");
-                saveNormalMapEstimate();
+                //saveNormalMapEstimate();
             }
         });
 
@@ -114,7 +114,6 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
             if (SpecularOptimization.DEBUG)
             {
                 System.out.println("DONE!");
-//                saveNormalMap();
             }
         });
     }
@@ -147,6 +146,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
             // Single pass normal estimation.
             estimateNormals.runOnce(errorCalculator);
         }
+        saveNormalMapEstimate();
 
         firstClean = true;
         int cleanIterations = Math.max(settings.width, settings.height) / (2 * CLEAN_ITERATIONS_FACTOR);

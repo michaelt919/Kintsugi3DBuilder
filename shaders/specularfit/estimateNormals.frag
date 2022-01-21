@@ -15,7 +15,8 @@
 #include "specularFit.glsl"
 #include "evaluateBRDF.glsl"
 #include "normalError.glsl"
-#line 19 0
+//#include "findTopThree.glsl"
+#line 20 0
 
 layout(location = 0) out vec4 normalTS;
 layout(location = 1) out vec4 dampingOut;
@@ -99,6 +100,9 @@ void main()
     float estimatedPeak = getLuminance(getBRDFEstimate(1.0, 0.25));
     float dampingFactor = texture(dampingTex, fTexCoord)[0];
 
+//    // Get the top three samples for the purposes of weight calculations
+//    Sample[3] topThree = findTopThree();
+
     for (int k = 0; k < CAMERA_POSE_COUNT; k++)
     {
         vec4 imgColor = getLinearColor(k);
@@ -124,11 +128,11 @@ void main()
             vec3 actualReflectanceTimesNDotL = imgColor.rgb / incidentRadiance;
             vec3 reflectanceEstimate = getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV));
 
+            float weight = triangleNDotV * nDotL * sqrt(max(0, 1 - nDotH * nDotH));
+
 #if USE_LEVENBERG_MARQUARDT
             mat3x2 mfdGradient = outerProduct(halfway.xy, getMFDGradient(nDotH)); // (d NdotH / dN) * (dD / d NdotH)
             mat3x2 specularGradient;
-
-            float weight = triangleNDotV;
 
 #if SMITH_MASKING_SHADOWING
             vec3 mfdEstimate = getMFDEstimate(nDotH); // Also includes Fresnel
@@ -169,7 +173,6 @@ void main()
             mJTJ += weight * weight * (fullGradient * transpose(fullGradient) + mat2(dampingFactor));
             vJTb += weight * weight * fullGradient * (actualReflectanceTimesNDotL - reflectanceEstimate * nDotL);
 #else
-            float weight = triangleNDotV * sqrt(max(0, 1 - nDotH * nDotH));
 
             mATA += weight * weight * dot(reflectanceEstimate, reflectanceEstimate) * outerProduct(light, light);
             vATb += weight * weight * dot(reflectanceEstimate, actualReflectanceTimesNDotL) * light;

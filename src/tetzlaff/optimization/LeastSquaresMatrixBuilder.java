@@ -12,6 +12,7 @@
 
 package tetzlaff.optimization;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.*;
@@ -156,17 +157,24 @@ public class LeastSquaresMatrixBuilder
                     // Evaluate the "basisCalculator" to get another function that can provide the actual basis function values.
                     IntFunction<T> basisFunctions = leastSquaresModel.getBasisFunctions(reflectanceData, p);
 
+                    ArrayList<T> basisEval = new ArrayList<T>(weightCount);
+
+                    for (int b = 0; b < weightCount; b++)
+                    {
+                        // Evaluate the basis function.
+                        basisEval.add(basisFunctions.apply(b));
+                    }
+
                     for (int b1 = 0; b1 < weightCount; b1++)
                     {
-                        // Evaluate the first basis function.
-                        T f1 = basisFunctions.apply(b1);
+                        T f1 = basisEval.get(b1);
 
                         // Store the weighted product of the basis function and the actual sample in the vector.
                         weightsQTrAugmented[p].set(b1, weightsQTrAugmented[p].get(b1) + weightSquared * leastSquaresModel.innerProduct(f1, fActual));
 
                         for (int b2 = 0; b2 < weightCount; b2++)
                         {
-                            T f2 = basisFunctions.apply(b2);
+                            T f2 = basisEval.get(b2);
 
                             // Store the weighted product of the two basis functions in the matrix.
                             weightsQTQAugmented[p].set(b1, b2,
