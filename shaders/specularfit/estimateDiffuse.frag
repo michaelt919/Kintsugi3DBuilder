@@ -63,9 +63,12 @@ void main()
                 float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
                 vec3 specularEstimate = getMFDEstimate(nDotH) * maskingShadowing / (4 * nDotV);
 
+                // Avoid overfitting to specular dominated samples
+                float weight = sqrt(max(0, 1 - nDotH * nDotH));//max(0, getLuminance(getMFDEstimate(0.7)) - getLuminance(actualReflectanceTimesNDotL));
+
                 vec3 diffuse = PI * (actualReflectanceTimesNDotL - specularEstimate); // could be negative
 //                diffuseSum += vec4(pow(vec4(diffuse, nDotL), vec4(1.0 / gamma)));
-                diffuseSum += vec4(diffuse * nDotL * triangleNDotV, nDotL * nDotL * triangleNDotV);
+                diffuseSum += vec4(weight * diffuse * nDotL * triangleNDotV, weight * nDotL * nDotL * triangleNDotV);
             }
         }
     }

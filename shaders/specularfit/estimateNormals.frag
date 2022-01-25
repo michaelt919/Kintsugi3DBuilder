@@ -32,6 +32,10 @@ uniform sampler2D dampingTex;
 #define USE_LEVENBERG_MARQUARDT 1
 #endif
 
+#ifndef MIN_DAMPING
+#define MIN_DAMPING 1.0
+#endif
+
 vec3 getMFDGradient(float nDotH)
 {
     vec3 estimate = vec3(0);
@@ -100,8 +104,8 @@ void main()
     float estimatedPeak = getLuminance(getBRDFEstimate(1.0, 0.25));
     float dampingFactor = texture(dampingTex, fTexCoord)[0];
 
-//    // Get the top three samples for the purposes of weight calculations
-//    Sample[3] topThree = findTopThree();
+    // Get the top three samples for the purposes of weight calculations
+    //Sample[3] topThree = findTopThree();
 
     for (int k = 0; k < CAMERA_POSE_COUNT; k++)
     {
@@ -202,7 +206,7 @@ void main()
         {
             // Map to the correct range for a texture.
             normalTS = vec4(newNormalTS * 0.5 + vec3(0.5), 1.0);
-            dampingOut = vec4(vec3(dampingFactor / 2.0), 1.0);
+            dampingOut = vec4(vec3(max(MIN_DAMPING, dampingFactor / 2.0)), 1.0);
         }
         else
         {
