@@ -45,6 +45,16 @@ public class SpecularFitSettings extends TextureFitSettings
                                File outputDirectory, ReadonlySettingsModel additional)
     {
         super(width, height, outputDirectory, additional);
+
+        if (basisCount <= 0)
+        {
+            throw new IllegalArgumentException("Basis count must be greater than zero.");
+        }
+        else if (microfacetDistributionResolution <= 0)
+        {
+            throw new IllegalArgumentException("Microfacet distribution resolution must be greater than zero.");
+        }
+
         this.basisCount = basisCount;
         this.microfacetDistributionResolution = microfacetDistributionResolution;
     }
@@ -66,6 +76,11 @@ public class SpecularFitSettings extends TextureFitSettings
      */
     public void setConvergenceTolerance(double convergenceTolerance)
     {
+        if (convergenceTolerance < 0)
+        {
+            throw new IllegalArgumentException("Convergence tolerance must not be less than zero.");
+        }
+
         this.convergenceTolerance = convergenceTolerance;
     }
 
@@ -84,6 +99,11 @@ public class SpecularFitSettings extends TextureFitSettings
      */
     public void setSpecularSmoothness(double specularSmoothness)
     {
+        if (specularSmoothness < 0)
+        {
+            throw new IllegalArgumentException("Specular smoothness must not be less than zero.");
+        }
+
         this.specularSmoothness = specularSmoothness;
     }
 
@@ -104,6 +124,11 @@ public class SpecularFitSettings extends TextureFitSettings
      */
     public void setMetallicity(double metallicity)
     {
+        if (metallicity < 0 || metallicity > 1)
+        {
+            throw new IllegalArgumentException("Metallicity must be between 0 and 1.");
+        }
+
         this.metallicity = metallicity;
     }
 
@@ -128,6 +153,7 @@ public class SpecularFitSettings extends TextureFitSettings
     /**
      * Gets the minimum allowed damping factor for the the Levenberg-Marquardt algorithm for optimizing the normal map.
      * Default is 1.0.
+     * Negative values will have the same effect as 0.0.
      * @return
      */
     public double getMinNormalDamping()
@@ -138,15 +164,18 @@ public class SpecularFitSettings extends TextureFitSettings
     /**
      * Sets the minimum allowed damping factor for the the Levenberg-Marquardt algorithm for optimizing the normal map.
      * Default is 1.0.
+     * Negative values will have the same effect as 0.0.
      * @param minNormalDamping
      */
     public void setMinNormalDamping(double minNormalDamping)
     {
+        // Negative values shouldn't break anything here.
         this.minNormalDamping = minNormalDamping;
     }
 
     /**
      * Gets the number of smoothing iterations for the normal map.  Default is zero (no smoothing).
+     * Negative values will have the same effect as 0.
      * @return
      */
     public int getNormalSmoothingIterations()
@@ -156,10 +185,12 @@ public class SpecularFitSettings extends TextureFitSettings
 
     /**
      * Sets the number of smoothing iterations for the normal map.  Default is zero (no smoothing).
+     * Negative values will have the same effect as 0.
      * @param normalSmoothingIterations
      */
     public void setNormalSmoothingIterations(int normalSmoothingIterations)
     {
+        // Negative values shouldn't break anything here.
         this.normalSmoothingIterations = normalSmoothingIterations;
     }
 

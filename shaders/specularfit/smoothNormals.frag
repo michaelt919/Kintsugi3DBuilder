@@ -13,14 +13,9 @@
  */
 
 #include "specularFit.glsl"
-#include "evaluateBRDF.glsl"
-#line 18 0
+#line 17 0
 
 layout(location = 0) out vec4 smoothNormalTS;
-
-#ifndef MICROFACET_DISTRIBUTION_RESOLUTION
-#define MICROFACET_DISTRIBUTION_RESOLUTION 90
-#endif
 
 uniform sampler2D origNormalEstimate;
 uniform sampler2D prevNormalEstimate;

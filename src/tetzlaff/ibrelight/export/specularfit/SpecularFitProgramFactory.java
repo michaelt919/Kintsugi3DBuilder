@@ -50,7 +50,8 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
                     visibilityAndShadowTests && resources.shadowTextures != null && settings.additional.getBoolean("shadowsEnabled"))
                 .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
                 .define("SMITH_MASKING_SHADOWING", SMITH_MASKING_SHADOWING)
-                .define("BASIS_COUNT", settings.basisCount);
+                .define("BASIS_COUNT", settings.basisCount)
+                .define("MICROFACET_DISTRIBUTION_RESOLUTION", settings.microfacetDistributionResolution);
     }
 
     public ProgramBuilder<ContextType> getShaderProgramBuilder(File vertexShader, File fragmentShader)
