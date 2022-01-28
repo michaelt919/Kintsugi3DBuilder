@@ -13,7 +13,6 @@
  */
 
 #include "specularFit.glsl"
-#include "evaluateBRDF.glsl"
 #include "normalError.glsl"
 #line 19 0
 

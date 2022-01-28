@@ -13,73 +13,12 @@
  */
 
 #include "specularFit.glsl"
-#line 17 0
+#line 18 0
 
 layout(location = 0) out vec4 averageLab;
 
-//struct IndexedValue
-//{
-//    int index;
-//    float value;
-//};
-
 void main()
 {
-//    IndexedValue luminances[CAMERA_POSE_COUNT];
-//    int visibleCount = 0;
-//
-//    for (int k = 0; k < CAMERA_POSE_COUNT; k++)
-//    {
-//        vec4 imgColor = getLinearColor(k);
-//        vec3 lightDisplacement = getLightVector(k);
-//
-//        if (imgColor.a > 0 && dot(fNormal, getViewVector(k)) > 0)
-//        {
-//            // For now, just getting Y (in CIE-XYZ) is sufficient since it should have the same ordering as L* in L*a*b*.
-//            luminances[visibleCount] = IndexedValue(k, getLuminance(imgColor.rgb * dot(lightDisplacement, lightDisplacement) / getLightIntensity(k).rgb));
-//            visibleCount++;
-//        }
-//    }
-//
-//    if (visibleCount == 0)
-//    {
-//        discard;
-//    }
-//
-//    int minIndex;
-//
-//    // Selection sort, but only loop until the middle of the list since we just need the median.
-//    for (int i = 0; i <= visibleCount / 2; i++)
-//    {
-//        // The first i elements are sorted (and are smaller than the median).
-//        // Search for the next smallest.
-//        minIndex = i;
-//        for (int j = i + 1; j < visibleCount; j++)
-//        {
-//            if (luminances[minIndex].value > luminances[j].value)
-//            {
-//                minIndex = j;
-//            }
-//        }
-//
-//        // Swap between index i (the beginning of the range still being considered) and minIndex where the minimum remaining was found.
-//        IndexedValue tmp = luminances[minIndex];
-//        luminances[minIndex] = luminances[i];
-//        luminances[i] = tmp;
-//    }
-//
-//    // All the values up to and including visibleCount/2 should be sorted now, so we retrieve the median.
-//    IndexedValue median = luminances[visibleCount / 2];
-//
-//    vec4 imgColor = getLinearColor(median.index);
-//    vec3 lightDisplacement = getLightVector(median.index);
-//    vec3 rgb = imgColor.rgb * dot(lightDisplacement, lightDisplacement) / getLightIntensity(median.index).rgb;
-//
-//    // Only a simple RGB to L*a*b* is necessary, since this is just for the purposes of initial clustering.
-//    averageLab = vec4(xyzToLab(rgbToXYZ(rgb)), 1.0);
-
-
-
     vec4 sum = vec4(0);
 
     for (int k = 0; k < CAMERA_POSE_COUNT; k++)

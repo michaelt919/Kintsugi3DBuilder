@@ -13,10 +13,12 @@
  */
 
 #include "specularFit.glsl"
-#include "evaluateBRDF.glsl"
-#line 18 0
+#line 17 0
 
-uniform sampler2D diffuseEstimate;
+uniform vec3 reconstructionCameraPos;
+uniform vec3 reconstructionLightPos;
+uniform vec3 reconstructionLightIntensity;
+// gamma defined in colorappearance.glsl
 
 layout(location = 0) out vec4 fragColor;
 
@@ -33,9 +35,9 @@ void main()
     vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
     vec3 normal = tangentToObject * normalDirTS;
 
-    vec3 lightDisplacement = getLightVector();
+    vec3 lightDisplacement = reconstructionLightPos - fPosition;
     vec3 light = normalize(lightDisplacement);
-    vec3 view = normalize(getViewVector());
+    vec3 view = normalize(reconstructionCameraPos - fPosition);
     vec3 halfway = normalize(light + view);
     float nDotH = max(0.0, dot(normal, halfway));
     float nDotL = max(0.0, dot(normal, light));
@@ -55,7 +57,7 @@ void main()
         geomRatio = 0.5 / (roughness * nDotL); // Limit as n dot v goes to zero.
     }
 
-    vec3 incidentRadiance = PI * lightIntensity / dot(lightDisplacement, lightDisplacement);
+    vec3 incidentRadiance = PI * reconstructionLightIntensity / dot(lightDisplacement, lightDisplacement);
 
     if (nDotL > 0.0)
     {

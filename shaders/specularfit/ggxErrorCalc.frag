@@ -13,9 +13,8 @@
  */
 
 #include "specularFit.glsl"
-#line 17 0
+#line 18 0
 
-uniform sampler2D diffuseEstimate;
 uniform sampler2D specularEstimate;
 
 uniform float errorGamma;

@@ -13,7 +13,6 @@
  */
 
 #include "specularFit.glsl"
-#include "evaluateBRDF.glsl"
 #line 18 0
 
 layout(location = 0) out vec4 diffuseOut;

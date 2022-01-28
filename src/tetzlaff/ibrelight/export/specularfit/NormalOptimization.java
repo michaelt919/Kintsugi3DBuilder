@@ -41,6 +41,8 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         SpecularFitSettings settings)
         throws FileNotFoundException
     {
+        this.settings = settings;
+
         estimateNormals = new ShaderBasedOptimization<>(
             getNormalEstimationProgramBuilder(programFactory),
             context.buildFramebufferObject(settings.width, settings.height)
@@ -55,8 +57,6 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F)
                     .setLinearFilteringEnabled(true)),
             drawableFactory);
-
-        this.settings = settings;
 
         estimateNormals.addSetupCallback((estimationProgram, backFramebuffer) ->
         {
@@ -188,14 +188,15 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         }
     }
 
-    private static <ContextType extends Context<ContextType>>
+    private <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getNormalEstimationProgramBuilder(SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(
                 new File("shaders/common/texspace_noscale.vert"),
                 new File("shaders/specularfit/estimateNormals.frag"),
                 true)
-            .define("USE_LEVENBERG_MARQUARDT", USE_LEVENBERG_MARQUARDT);
+            .define("USE_LEVENBERG_MARQUARDT", USE_LEVENBERG_MARQUARDT)
+            .define("MIN_DAMPING", settings.getMinNormalDamping());
     }
 
     private static <ContextType extends Context<ContextType>>

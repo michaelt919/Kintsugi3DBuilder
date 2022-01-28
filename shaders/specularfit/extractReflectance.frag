@@ -13,7 +13,8 @@
  */
 
 #include "specularFit.glsl"
-#line 17 0
+#include <shaders/colorappearance/colorappearance_multi_as_single.glsl>
+#line 18 0
 
 layout(location = 0) out vec4 reflectance_visibility;
 layout(location = 1) out vec4 halfway_geom_weight;
