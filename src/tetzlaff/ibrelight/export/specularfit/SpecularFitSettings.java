@@ -15,6 +15,7 @@ package tetzlaff.ibrelight.export.specularfit;
 import java.io.File;
 
 import tetzlaff.ibrelight.core.TextureFitSettings;
+import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.models.ReadonlySettingsModel;
 
 public class SpecularFitSettings extends TextureFitSettings
@@ -22,10 +23,161 @@ public class SpecularFitSettings extends TextureFitSettings
     public final int basisCount;
     public final int microfacetDistributionResolution;
 
-    public SpecularFitSettings(int width, int height, int basisCount, int microfacetDistributionResolution, File outputDirectory, ReadonlySettingsModel additional)
+    private double convergenceTolerance = 0.00001;
+    private double specularSmoothness = 0.0;
+    private double metallicity = 0.0;
+    private boolean normalRefinementEnabled = true;
+    private double minNormalDamping = 1.0;
+    private int normalSmoothingIterations = 0;
+
+    private ViewSet reconstructionViewSet = null;
+
+    /**
+     * Constructs an object to hold the settings for specular texture fitting.
+     * @param width The width of the textures
+     * @param height The height of the textures
+     * @param basisCount The number of basis functions to use for the specular lobe.
+     * @param microfacetDistributionResolution The number of discrete values in the definition of the specular lobe.
+     * @param outputDirectory The directory where the results should be saved.
+     * @param additional Other settings from the IBRelight interface
+     */
+    public SpecularFitSettings(int width, int height, int basisCount, int microfacetDistributionResolution,
+                               File outputDirectory, ReadonlySettingsModel additional)
     {
         super(width, height, outputDirectory, additional);
         this.basisCount = basisCount;
         this.microfacetDistributionResolution = microfacetDistributionResolution;
+    }
+
+    /**
+     * Gets the convergence tolerance used to determine whether the Levenberg-Marquardt algorithm for optimizing
+     * the normal map has converged.
+     * @return
+     */
+    public double getConvergenceTolerance()
+    {
+        return convergenceTolerance;
+    }
+
+    /**
+     * Sets the convergence tolerance used to determine whether the Levenberg-Marquardt algorithm for optimizing
+     * the normal map has converged.
+     * @param convergenceTolerance
+     */
+    public void setConvergenceTolerance(double convergenceTolerance)
+    {
+        this.convergenceTolerance = convergenceTolerance;
+    }
+
+    /**
+     * Gets the required smoothness for the specular lobe (the width of the smoothstep function used to optimize it).
+     * @return
+     */
+    public double getSpecularSmoothness()
+    {
+        return specularSmoothness;
+    }
+
+    /**
+     * Sets the required smoothness for the specular lobe (the width of the smoothstep function used to optimize it).
+     * @param specularSmoothness
+     */
+    public void setSpecularSmoothness(double specularSmoothness)
+    {
+        this.specularSmoothness = specularSmoothness;
+    }
+
+    /**
+     * Gets the assumed metallicity of the material (metallic meaning that the diffuse reflectance exhibits specular characteristics
+     * like the Fresnel effect and is scattered by first-surface microfacet geometry, not subsurface scattering)
+     * @return
+     */
+    public double getMetallicity()
+    {
+        return metallicity;
+    }
+
+    /**
+     * Sets the assumed metallicity of the material (metallic meaning that the diffuse reflectance exhibits specular characteristics
+     * like the Fresnel effect and is scattered by first-surface microfacet geometry, not subsurface scattering)
+     * @return
+     */
+    public void setMetallicity(double metallicity)
+    {
+        this.metallicity = metallicity;
+    }
+
+    /**
+     * Gets whether normal refinement is enabled (if not, the vertex normals will be assumed to be accurate enough)
+     * @return
+     */
+    public boolean isNormalRefinementEnabled()
+    {
+        return normalRefinementEnabled;
+    }
+
+    /**
+     * Sets whether normal refinement is enabled (if not, the vertex normals will be assumed to be accurate enough)
+     * @param normalRefinementEnabled
+     */
+    public void setNormalRefinementEnabled(boolean normalRefinementEnabled)
+    {
+        this.normalRefinementEnabled = normalRefinementEnabled;
+    }
+
+    /**
+     * Gets the minimum allowed damping factor for the the Levenberg-Marquardt algorithm for optimizing the normal map.
+     * Default is 1.0.
+     * @return
+     */
+    public double getMinNormalDamping()
+    {
+        return minNormalDamping;
+    }
+
+    /**
+     * Sets the minimum allowed damping factor for the the Levenberg-Marquardt algorithm for optimizing the normal map.
+     * Default is 1.0.
+     * @param minNormalDamping
+     */
+    public void setMinNormalDamping(double minNormalDamping)
+    {
+        this.minNormalDamping = minNormalDamping;
+    }
+
+    /**
+     * Gets the number of smoothing iterations for the normal map.  Default is zero (no smoothing).
+     * @return
+     */
+    public int getNormalSmoothingIterations()
+    {
+        return normalSmoothingIterations;
+    }
+
+    /**
+     * Sets the number of smoothing iterations for the normal map.  Default is zero (no smoothing).
+     * @param normalSmoothingIterations
+     */
+    public void setNormalSmoothingIterations(int normalSmoothingIterations)
+    {
+        this.normalSmoothingIterations = normalSmoothingIterations;
+    }
+
+    /**
+     * Gets the view set used to create the reconstructed images for manually evaluating the effectiveness of the fit.
+     * @return
+     */
+    public ViewSet getReconstructionViewSet()
+    {
+        return reconstructionViewSet;
+    }
+
+    /**
+     * Sets the view set used to create the reconstructed images for manually evaluating the effectiveness of the fit.
+     * @return
+     */
+    public void setReconstructionViewSet(ViewSet reconstructionViewSet)
+    {
+        this.reconstructionViewSet = reconstructionViewSet;
     }
 }

@@ -14,6 +14,7 @@ package tetzlaff.ibrelight.export.specularfit;
 
 import java.io.*;
 
+import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.*;
 
@@ -31,12 +32,36 @@ public class SpecularFitRequest implements IBRRequest
     {
         try
         {
-            new SpecularOptimization(settings).createFit(renderable.getResources())
-                .close(); // Close immediately when this is just an export operation.
+            // Perform the specular fit
+            SpecularFit specularFit = new SpecularOptimization(settings).createFit(renderable.getResources());
+
+            // Reconstruct images both from basis functions and from fitted roughness
+            SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(renderable.getResources(), settings);
+            FinalReconstruction<ContextType> reconstruction = new FinalReconstruction<>(renderable.getResources(), settings);
+            reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(programFactory), "reconstructions");
+            reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(programFactory), "fitted");
+
+            specularFit.close(); // Close immediately when this is just an export operation.
         }
         catch(IOException e) // thrown by createReflectanceProgram
         {
             e.printStackTrace();
         }
+    }
+
+    private static <ContextType extends Context<ContextType>>
+    ProgramBuilder<ContextType> getImageReconstructionProgramBuilder(SpecularFitProgramFactory<ContextType> programFactory)
+    {
+        return programFactory.getShaderProgramBuilder(
+                new File("shaders/common/imgspace.vert"),
+                new File("shaders/specularfit/reconstructImage.frag"));
+    }
+
+    private static <ContextType extends Context<ContextType>>
+    ProgramBuilder<ContextType> getFittedImageReconstructionProgramBuilder(SpecularFitProgramFactory<ContextType> programFactory)
+    {
+        return programFactory.getShaderProgramBuilder(
+                new File("shaders/common/imgspace.vert"),
+                new File("shaders/specularfit/renderFit.frag"));
     }
 }

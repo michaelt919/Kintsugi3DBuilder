@@ -21,6 +21,7 @@ import tetzlaff.gl.core.ColorFormat;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Framebuffer;
 import tetzlaff.ibrelight.core.Projection;
+import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.rendering.IBRResources;
 import tetzlaff.ibrelight.rendering.ImageReconstruction;
 
@@ -75,8 +76,17 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
                 program.setTexture("diffuseEstimate", specularFit.getDiffuseMap());
             }))
         {
+            ViewSet reconstructionViewSet = settings.getReconstructionViewSet();
+
+            if (reconstructionViewSet == null)
+            {
+                // Use the same view set as for fitting if another wasn't specified for reconstruction.
+                reconstructionViewSet = resources.viewSet;
+            }
+
             // Run the reconstruction and save the results to file
-            reconstruction.execute((k, framebuffer) -> saveReconstructionToFile(directoryName, k, framebuffer));
+            reconstruction.execute(reconstructionViewSet,
+                (k, framebuffer) -> saveReconstructionToFile(directoryName, k, framebuffer));
         }
         catch (FileNotFoundException e)
         {

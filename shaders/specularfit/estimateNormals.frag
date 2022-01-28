@@ -15,8 +15,7 @@
 #include "specularFit.glsl"
 #include "evaluateBRDF.glsl"
 #include "normalError.glsl"
-//#include "findTopThree.glsl"
-#line 20 0
+#line 19 0
 
 layout(location = 0) out vec4 normalTS;
 layout(location = 1) out vec4 dampingOut;

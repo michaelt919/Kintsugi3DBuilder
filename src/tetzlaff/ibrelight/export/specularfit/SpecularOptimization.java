@@ -15,18 +15,15 @@ package tetzlaff.ibrelight.export.specularfit;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.function.IntFunction;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.Projection;
 import tetzlaff.ibrelight.rendering.GraphicsStreamResource;
 import tetzlaff.ibrelight.rendering.IBRResources;
-import tetzlaff.optimization.function.BasisFunctions;
 import tetzlaff.optimization.ReadonlyErrorReport;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
 import tetzlaff.optimization.function.GeneralizedSmoothStepBasis;
-import tetzlaff.optimization.function.StepBasis;
 
 /**
  * Implement specular fit using algorithm described by Nam et al., 2018
@@ -35,12 +32,6 @@ public class SpecularOptimization
 {
     static final boolean DEBUG = true;
     static final boolean ORIGINAL_NAM_METHOD = false;
-
-    private static final boolean NORMAL_REFINEMENT = true;
-    private static final double METALLICITY = 0.0f; // Implemented and minimally tested but doesn't seem to make much difference.
-    private static final IntFunction<BasisFunctions> STEP_BASIS = resolution ->
-            new GeneralizedSmoothStepBasis(resolution, METALLICITY, 16, x -> 3*x*x-2*x*x*x);
-    private static final double CONVERGENCE_TOLERANCE = 0.00001;
 
     private final SpecularFitSettings settings;
 
@@ -116,9 +107,14 @@ public class SpecularOptimization
             // Track how the error improves over iterations of the whole algorithm.
             double previousIterationError;
 
-            BRDFReconstruction brdfReconstruction = new BRDFReconstruction(settings,
-                    STEP_BASIS.apply(settings.microfacetDistributionResolution), METALLICITY);
-            SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(settings, METALLICITY);
+            BRDFReconstruction brdfReconstruction = new BRDFReconstruction(
+                settings,
+                new GeneralizedSmoothStepBasis(
+                    settings.microfacetDistributionResolution,
+                    settings.getMetallicity(),
+                    (int)Math.round(settings.getSpecularSmoothness() * settings.microfacetDistributionResolution),
+                    x -> 3*x*x-2*x*x*x));
+            SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(settings);
             ShaderBasedErrorCalculator errorCalculator = new ShaderBasedErrorCalculator(settings.width * settings.height);
 
             do
@@ -173,7 +169,7 @@ public class SpecularOptimization
                     logError(errorCalculator.getReport());
                 }
 
-                if (NORMAL_REFINEMENT)
+                if (settings.isNormalRefinementEnabled())
                 {
                     specularFit.normalOptimization.execute(normalMap ->
                     {
@@ -196,7 +192,7 @@ public class SpecularOptimization
 
                         return errorCalculator.getReport();
                     },
-                    CONVERGENCE_TOLERANCE);
+                    settings.getConvergenceTolerance());
 
                     if (errorCalculator.getReport().getError() > errorCalculator.getReport().getPreviousError())
                     {
@@ -209,7 +205,7 @@ public class SpecularOptimization
                 specularFit.roughnessOptimization.execute();
                 specularFit.roughnessOptimization.saveTextures();
             }
-            while (previousIterationError - errorCalculator.getReport().getError() > CONVERGENCE_TOLERANCE);
+            while (previousIterationError - errorCalculator.getReport().getError() > settings.getConvergenceTolerance());
 
             // Save the final basis functions
             solution.saveBasisFunctions();
@@ -230,11 +226,6 @@ public class SpecularOptimization
             // Fill holes in weight maps and calculate some final error statistics.
             new SpecularFitFinalizer(settings)
                 .execute(solution, resources, specularFit, scratchFramebuffer, errorCalculator.getReport(), errorCalcDrawable);
-
-            // Reconstruct images both from basis functions and from fitted roughness
-            FinalReconstruction<ContextType> reconstruction = new FinalReconstruction<>(resources, settings);
-            reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(programFactory), "reconstructions");
-            reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(programFactory), "fitted");
 
             return specularFit;
         }
@@ -264,21 +255,5 @@ public class SpecularOptimization
             new File("shaders/colorappearance/imgspace_multi_as_single.vert"),
             new File("shaders/specularfit/errorCalc.frag"),
             false); // Disable visibility and shadow tests for error calculation.
-    }
-
-    private static <ContextType extends Context<ContextType>>
-    ProgramBuilder<ContextType> getImageReconstructionProgramBuilder(SpecularFitProgramFactory<ContextType> programFactory)
-    {
-        return programFactory.getShaderProgramBuilder(
-            new File("shaders/common/imgspace.vert"),
-            new File("shaders/specularfit/reconstructImage.frag"));
-    }
-
-    private static <ContextType extends Context<ContextType>>
-    ProgramBuilder<ContextType> getFittedImageReconstructionProgramBuilder(SpecularFitProgramFactory<ContextType> programFactory)
-    {
-        return programFactory.getShaderProgramBuilder(
-            new File("shaders/common/imgspace.vert"),
-            new File("shaders/specularfit/renderFit.frag"));
     }
 }
