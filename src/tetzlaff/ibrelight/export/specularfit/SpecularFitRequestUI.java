@@ -52,6 +52,18 @@ public class SpecularFitRequestUI implements IBRRequestUI
     // TODO expose this as a UI field
     private static final int MICROFACET_DISTRIBUTION_RESOLUTION = 90;
 
+    // TODO expose this as a UI field
+    private static final int NORMAL_SMOOTHING_ITERATIONS = 0;
+
+    // TODO expose this as a UI field
+    private static final double CONVERGENCE_TOLERANCE = 0.00001;
+
+    // TODO expose this as a UI field
+    private static final double MIN_NORMAL_DAMPING = 1.0;
+
+    // TODO expose this as a UI field
+    private static final double SPECULAR_SMOOTHNESS = 0.18;
+
     public static SpecularFitRequestUI create(Window window, IBRelightModels modelAccess) throws IOException
     {
         String fxmlFileName = "fxml/export/SpecularFitRequestUI.fxml";
@@ -111,13 +123,19 @@ public class SpecularFitRequestUI implements IBRRequestUI
         {
             //stage.close();
 
-            IBRRequest request = new SpecularFitRequest(new SpecularFitSettings(
-                Integer.parseInt(widthTextField.getText()),
-                Integer.parseInt(heightTextField.getText()),
-                BASIS_COUNT,
-                MICROFACET_DISTRIBUTION_RESOLUTION,
-                new File(exportDirectoryField.getText()),
-                modelAccess.getSettingsModel()));
+            SpecularFitSettings settings = new SpecularFitSettings(
+                    Integer.parseInt(widthTextField.getText()),
+                    Integer.parseInt(heightTextField.getText()),
+                    BASIS_COUNT,
+                    MICROFACET_DISTRIBUTION_RESOLUTION,
+                    new File(exportDirectoryField.getText()),
+                    modelAccess.getSettingsModel());
+            settings.setMinNormalDamping(MIN_NORMAL_DAMPING);
+            settings.setConvergenceTolerance(CONVERGENCE_TOLERANCE);
+            settings.setNormalSmoothingIterations(NORMAL_SMOOTHING_ITERATIONS);
+            settings.setSpecularSmoothness(SPECULAR_SMOOTHNESS);
+
+            IBRRequest request = new SpecularFitRequest(settings);
 
             requestHandler.accept(request);
         });

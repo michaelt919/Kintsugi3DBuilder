@@ -30,20 +30,17 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
     private final Drawable<ContextType> drawable;
     private final FramebufferObject<ContextType> framebuffer;
 
-    private final ViewSet viewSet;
-
     public ImageReconstruction(IBRResources<ContextType> resources, ProgramBuilder<ContextType> programBuilder,
         FramebufferObjectBuilder<ContextType> framebufferObjectBuilder, Consumer<Program<ContextType>> programSetup)
         throws FileNotFoundException
     {
-        this.viewSet = resources.viewSet;
         this.program = programBuilder.createProgram();
         programSetup.accept(program);
         this.drawable = resources.createDrawable(program);
         this.framebuffer = framebufferObjectBuilder.createFramebufferObject();
     }
 
-    public void execute(BiConsumer<Integer, Framebuffer<ContextType>> reconstructionAction)
+    public void execute(ViewSet viewSet, BiConsumer<Integer, Framebuffer<ContextType>> reconstructionAction)
     {
         for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
         {

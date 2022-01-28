@@ -28,13 +28,11 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     private static final boolean USE_LEVENBERG_MARQUARDT = !SpecularOptimization.ORIGINAL_NAM_METHOD;
     private static final int UNSUCCESSFUL_ITERATIONS_ALLOWED = 8;
 
-    private static final int CLEAN_ITERATIONS_FACTOR = 32;
-
     private final ShaderBasedOptimization<ContextType> estimateNormals;
-    private final ShaderBasedOptimization<ContextType> cleanNormals;
+    private final ShaderBasedOptimization<ContextType> smoothNormals;
     private final SpecularFitSettings settings;
 
-    private boolean firstClean = true;
+    private boolean firstSmooth = true;
 
     public NormalOptimization(
         ContextType context,
@@ -51,8 +49,8 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
                 .addColorAttachment(ColorFormat.R32F), // Damping factor while fitting,
             drawableFactory);
 
-        cleanNormals = new ShaderBasedOptimization<>(
-            getNormalCleanProgramBuilder(programFactory),
+        smoothNormals = new ShaderBasedOptimization<>(
+            getNormalSmoothProgramBuilder(programFactory),
             context.buildFramebufferObject(settings.width, settings.height)
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F)
                     .setLinearFilteringEnabled(true)),
@@ -75,28 +73,28 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
             }
         });
 
-        cleanNormals.addSetupCallback((cleanProgram, backFramebuffer) ->
+        smoothNormals.addSetupCallback((smoothProgram, backFramebuffer) ->
         {
-            if (firstClean)
+            if (firstSmooth)
             {
                 // Use front buffer from original fitting.
-                cleanProgram.setTexture("prevNormalEstimate", estimateNormals.getFrontFramebuffer().getColorAttachmentTexture(0));
+                smoothProgram.setTexture("prevNormalEstimate", estimateNormals.getFrontFramebuffer().getColorAttachmentTexture(0));
             }
             else
             {
-                // Update normal clean program to use the new front buffer.
-                cleanProgram.setTexture("prevNormalEstimate", cleanNormals.getFrontFramebuffer().getColorAttachmentTexture(0));
+                // Update normal smooth program to use the new front buffer.
+                smoothProgram.setTexture("prevNormalEstimate", smoothNormals.getFrontFramebuffer().getColorAttachmentTexture(0));
             }
 
             // Pass front buffer from original fitting.
-            cleanProgram.setTexture("origNormalEstimate", estimateNormals.getFrontFramebuffer().getColorAttachmentTexture(0));
+            smoothProgram.setTexture("origNormalEstimate", estimateNormals.getFrontFramebuffer().getColorAttachmentTexture(0));
 
             // Clear framebuffer
             backFramebuffer.clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
 
             if (SpecularOptimization.DEBUG)
             {
-                System.out.println("Cleaning normals...");
+                System.out.println("Smoothing normals...");
             }
         });
 
@@ -109,7 +107,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
             }
         });
 
-        cleanNormals.addPostUpdateCallback(framebuffer ->
+        smoothNormals.addPostUpdateCallback(framebuffer ->
         {
             if (SpecularOptimization.DEBUG)
             {
@@ -122,13 +120,13 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     public void close()
     {
         estimateNormals.close();
-        cleanNormals.close();
+        smoothNormals.close();
     }
 
     public void finish()
     {
         estimateNormals.close();
-        cleanNormals.finish();
+        smoothNormals.finish();
     }
 
     public void execute(Function<Texture<ContextType>, ReadonlyErrorReport> errorCalculator, double convergenceTolerance)
@@ -148,19 +146,18 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         }
         saveNormalMapEstimate();
 
-        firstClean = true;
-        int cleanIterations = Math.max(settings.width, settings.height) / (2 * CLEAN_ITERATIONS_FACTOR);
-        for (int i = 0; i < cleanIterations; i++)
+        firstSmooth = true;
+        for (int i = 0; i < settings.getNormalSmoothingIterations(); i++)
         {
-            cleanNormals.runOnce();
-            firstClean = false;
+            smoothNormals.runOnce();
+            firstSmooth = false;
         }
         saveNormalMap();
     }
 
     public Texture2D<ContextType> getNormalMap()
     {
-        return cleanNormals.getFrontFramebuffer().getColorAttachmentTexture(0);
+        return smoothNormals.getFrontFramebuffer().getColorAttachmentTexture(0);
     }
 
     public void saveNormalMapEstimate()
@@ -168,7 +165,8 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         try
         {
             estimateNormals.getFrontFramebuffer().saveColorBufferToFile(0, "PNG",
-                new File(settings.outputDirectory, "normalPreClean.png"));
+                new File(settings.outputDirectory, settings.getNormalSmoothingIterations() > 0 ?
+                        "normalPreSmooth.png" : "normal.png"));
         }
         catch (IOException e)
         {
@@ -180,8 +178,9 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     {
         try
         {
-            cleanNormals.getFrontFramebuffer().saveColorBufferToFile(0, "PNG",
-                new File(settings.outputDirectory, "normal.png"));
+            (settings.getNormalSmoothingIterations() > 0 ? smoothNormals : estimateNormals)
+                .getFrontFramebuffer().saveColorBufferToFile(0, "PNG",
+                    new File(settings.outputDirectory, "normal.png"));
         }
         catch (IOException e)
         {
@@ -200,11 +199,11 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     }
 
     private static <ContextType extends Context<ContextType>>
-    ProgramBuilder<ContextType> getNormalCleanProgramBuilder(SpecularFitProgramFactory<ContextType> programFactory)
+    ProgramBuilder<ContextType> getNormalSmoothProgramBuilder(SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(
                 new File("shaders/common/texspace_noscale.vert"),
-                new File("shaders/specularfit/cleanNormals.frag"),
+                new File("shaders/specularfit/smoothNormals.frag"),
                 true);
     }
 }

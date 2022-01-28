@@ -23,23 +23,20 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
 {
     private final SpecularFitSolution solution;
     private final SpecularFitSettings settings;
-    private final double metallicity;
     private final boolean optimizeReflectance;
 
     /**
      *
      * @param solution
      * @param settings
-     * @param metallicity
      * @param optimizeReflectance Whether or not to optimize reflectance (no cosine weighting) as opposed to radiance (with cosine weighting).
      *                            For original Nam 2018 version, weights were optimized against reflectance, not reflected radiance,
      *                            so we don't want to multiply by the cosine (n dot l) when attempting to reproduce that version.
      */
-    public SpecularWeightModel(SpecularFitSolution solution, SpecularFitSettings settings, double metallicity, boolean optimizeReflectance)
+    public SpecularWeightModel(SpecularFitSolution solution, SpecularFitSettings settings, boolean optimizeReflectance)
     {
         this.solution = solution;
-        this.settings = settings;
-        this.metallicity = metallicity;
+        this.settings = settings;;
         this.optimizeReflectance = optimizeReflectance;
     }
 
@@ -96,7 +93,7 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
                         (solution.getSpecularBlue().get(m1, b) * (1 - t)
                             + solution.getSpecularBlue().get(m2, b) * t) * geomRatio);
             }
-            else if (metallicity > 0.0f)
+            else if (settings.getMetallicity() > 0.0f)
             {
                 return new DoubleVector3(
                     solution.getDiffuseAlbedo(b).x / PI +
