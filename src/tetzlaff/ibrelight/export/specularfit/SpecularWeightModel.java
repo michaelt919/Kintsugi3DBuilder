@@ -23,21 +23,16 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
 {
     private final SpecularFitSolution solution;
     private final SpecularFitSettings settings;
-    private final boolean optimizeReflectance;
 
     /**
      *
      * @param solution
      * @param settings
-     * @param optimizeReflectance Whether or not to optimize reflectance (no cosine weighting) as opposed to radiance (with cosine weighting).
-     *                            For original Nam 2018 version, weights were optimized against reflectance, not reflected radiance,
-     *                            so we don't want to multiply by the cosine (n dot l) when attempting to reproduce that version.
      */
-    public SpecularWeightModel(SpecularFitSolution solution, SpecularFitSettings settings, boolean optimizeReflectance)
+    public SpecularWeightModel(SpecularFitSolution solution, SpecularFitSettings settings)
     {
         this.solution = solution;
-        this.settings = settings;;
-        this.optimizeReflectance = optimizeReflectance;
+        this.settings = settings;
     }
 
     @Override
@@ -51,7 +46,7 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
     public double getSampleWeight(ReflectanceData sampleData, int systemIndex)
     {
         // Don't multiply by n dot l when optimizing reflectance (rather than radiance)
-        return sampleData.getAdditionalWeight(systemIndex) * (optimizeReflectance ? 1 : sampleData.getNDotL(systemIndex));
+        return sampleData.getAdditionalWeight(systemIndex);
     }
 
     @Override

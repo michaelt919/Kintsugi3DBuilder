@@ -30,6 +30,10 @@ public class SpecularFitSettings extends TextureFitSettings
     private double minNormalDamping = 1.0;
     private int normalSmoothingIterations = 0;
 
+    private boolean smithMaskingShadowingEnabled = true;
+    private boolean levenbergMarquardtEnabled = true;
+    private int unsuccessfulLMIterationsAllowed = 8;
+
     private ViewSet reconstructionViewSet = null;
 
     /**
@@ -210,5 +214,63 @@ public class SpecularFitSettings extends TextureFitSettings
     public void setReconstructionViewSet(ViewSet reconstructionViewSet)
     {
         this.reconstructionViewSet = reconstructionViewSet;
+    }
+
+    /**
+     * Whether or not to use height-correlated Smith for masking / shadowing.  Default is true.
+     * @return
+     */
+    public boolean isSmithMaskingShadowingEnabled()
+    {
+        return smithMaskingShadowingEnabled;
+    }
+
+    /**
+     * Whether or not to use height-correlated Smith for masking / shadowing.  Default is true.
+     * @param smithMaskingShadowingEnabled
+     */
+    public void setSmithMaskingShadowingEnabled(boolean smithMaskingShadowingEnabled)
+    {
+        this.smithMaskingShadowingEnabled = smithMaskingShadowingEnabled;
+    }
+
+    /**
+     * Whether or not to use Levenberg-Marquardt for normal optimization.
+     * Default is true.  Highly recommended unless attempting to reproduce Nam et al. 2018.
+     * @return
+     */
+    public boolean isLevenbergMarquardtEnabled()
+    {
+        return levenbergMarquardtEnabled;
+    }
+
+    /**
+     * Whether or not to use Levenberg-Marquardt for normal optimization.
+     * Highly recommended unless attempting to reproduce Nam et al. 2018.
+     * @param levenbergMarquardtEnabled
+     */
+    public void setLevenbergMarquardtEnabled(boolean levenbergMarquardtEnabled)
+    {
+        this.levenbergMarquardtEnabled = levenbergMarquardtEnabled;
+    }
+
+    /**
+     * The number of unsuccessful iterations of Levenberg-Marquardt (iterations which fail to decrease the error
+     * by the required threshold) before the algorithm will be considered terminated.
+     * @return
+     */
+    public int getUnsuccessfulLMIterationsAllowed()
+    {
+        return unsuccessfulLMIterationsAllowed;
+    }
+
+    /**
+     * The number of unsuccessful iterations of Levenberg-Marquardt (iterations which fail to decrease the error
+     * by the required threshold) before the algorithm will be considered terminated.
+     * @param unsuccessfulLMIterationsAllowed
+     */
+    public void setUnsuccessfulLMIterationsAllowed(int unsuccessfulLMIterationsAllowed)
+    {
+        this.unsuccessfulLMIterationsAllowed = unsuccessfulLMIterationsAllowed;
     }
 }
