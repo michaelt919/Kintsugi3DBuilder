@@ -102,9 +102,6 @@ void main()
     float estimatedPeak = getLuminance(getBRDFEstimate(1.0, 0.25));
     float dampingFactor = texture(dampingTex, fTexCoord)[0];
 
-    // Get the top three samples for the purposes of weight calculations
-    //Sample[3] topThree = findTopThree();
-
     for (int k = 0; k < CAMERA_POSE_COUNT; k++)
     {
         vec4 imgColor = getLinearColor(k);

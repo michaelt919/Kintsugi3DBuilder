@@ -42,7 +42,7 @@ public class SpecularWeightOptimization
         solution.invalidateWeights();
 
         // Setup all the matrices for fitting weights (one per texel)
-        base.buildMatrices(viewStream, new SpecularWeightModel(solution, settings, SpecularOptimization.ORIGINAL_NAM_METHOD),
+        base.buildMatrices(viewStream, new SpecularWeightModel(solution, settings),
             // If a pixel is valid in some view, mark it as such in the solution.
             p -> solution.setWeightsValidity(p, true));
 

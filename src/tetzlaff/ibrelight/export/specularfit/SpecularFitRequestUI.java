@@ -39,6 +39,9 @@ import tetzlaff.ibrelight.core.ViewSet;
 
 public class SpecularFitRequestUI implements IBRRequestUI
 {
+    @FXML private CheckBox smithCheckBox;
+    @FXML private CheckBox levenbergMarquardtCheckBox;
+    @FXML private TextField unsuccessfulLMIterationsTextField;
     @FXML private TextField widthTextField;
     @FXML private TextField heightTextField;
     @FXML private TextField exportDirectoryField;
@@ -113,7 +116,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
     public void reconstructionViewSetButtonAction()
     {
         this.fileChooser.setTitle("Choose an view set for image reconstruction");
-        this.fileChooser.setSelectedExtensionFilter(
+        this.fileChooser.setSelectedExtensionFilter( // Doesn't work; not sure why.
             new FileChooser.ExtensionFilter("View Set files", "*.vset"));
         if (reconstructionViewSetField.getText().isEmpty())
         {
@@ -173,6 +176,12 @@ public class SpecularFitRequestUI implements IBRRequestUI
             settings.setMinNormalDamping(Double.parseDouble(minNormalDampingTextField.getText()));
             settings.setNormalSmoothingIterations(Integer.parseInt(normalSmoothingIterationsTextField.getText()));
 
+            // Settings which shouldn't usually need to be changed
+            settings.setSmithMaskingShadowingEnabled(smithCheckBox.isSelected());
+            settings.setLevenbergMarquardtEnabled(levenbergMarquardtCheckBox.isSelected());;
+            settings.setUnsuccessfulLMIterationsAllowed(Integer.parseInt(unsuccessfulLMIterationsTextField.getText()));
+
+            if (reconstructionViewSetField.getText() != null && !reconstructionViewSetField.getText().equals(""))
             // Reconstruction view set
             try
             {

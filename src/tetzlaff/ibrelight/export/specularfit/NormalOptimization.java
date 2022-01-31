@@ -25,9 +25,6 @@ import tetzlaff.optimization.ShaderBasedOptimization;
 
 public class NormalOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
 {
-    private static final boolean USE_LEVENBERG_MARQUARDT = !SpecularOptimization.ORIGINAL_NAM_METHOD;
-    private static final int UNSUCCESSFUL_ITERATIONS_ALLOWED = 8;
-
     private final ShaderBasedOptimization<ContextType> estimateNormals;
     private final ShaderBasedOptimization<ContextType> smoothNormals;
     private final SpecularFitSettings settings;
@@ -131,13 +128,13 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
 
     public void execute(Function<Texture<ContextType>, ReadonlyErrorReport> errorCalculator, double convergenceTolerance)
     {
-        if (USE_LEVENBERG_MARQUARDT)
+        if (settings.isLevenbergMarquardtEnabled())
         {
             // Set damping factor to 1.0 initially at each position.
             estimateNormals.getFrontFramebuffer().clearColorBuffer(1, 1.0f, 1.0f, 1.0f, 1.0f);
 
             // Estimate using the Levenberg-Marquardt algorithm.
-            estimateNormals.runUntilConvergence(errorCalculator, convergenceTolerance, UNSUCCESSFUL_ITERATIONS_ALLOWED);
+            estimateNormals.runUntilConvergence(errorCalculator, convergenceTolerance, settings.getUnsuccessfulLMIterationsAllowed());
         }
         else
         {
@@ -195,7 +192,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
                 new File("shaders/common/texspace_noscale.vert"),
                 new File("shaders/specularfit/estimateNormals.frag"),
                 true)
-            .define("USE_LEVENBERG_MARQUARDT", USE_LEVENBERG_MARQUARDT)
+            .define("USE_LEVENBERG_MARQUARDT", settings.isLevenbergMarquardtEnabled())
             .define("MIN_DAMPING", settings.getMinNormalDamping());
     }
 
