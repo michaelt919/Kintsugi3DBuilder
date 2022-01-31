@@ -252,7 +252,7 @@ public class SpecularOptimization
     Program<ContextType> createErrorCalcProgram(SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {
         return programFactory.createProgram(
-            new File("shaders/colorappearance/imgspace_multi_as_single.vert"),
+            new File("shaders/common/texspace_noscale.vert"),
             new File("shaders/specularfit/errorCalc.frag"),
             false); // Disable visibility and shadow tests for error calculation.
     }
