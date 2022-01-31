@@ -13,6 +13,7 @@
  */
 
 #include "specularFit.glsl"
+#include <shaders/colorappearance/colorappearance_multi_as_single.glsl>
 #line 18 0
 
 uniform sampler2D specularEstimate;
@@ -43,49 +44,41 @@ void main()
     vec3 fittedNormalTS = vec3(fittedNormalXY, sqrt(1 - dot(fittedNormalXY, fittedNormalXY)));
     vec3 fittedNormal = tangentToObject * fittedNormalTS;
 
-    float error = 0.0;
-    float validCount = 0;
+    vec4 imgColor = getLinearColor();
+    vec3 view = normalize(getViewVector());
+    float triangleNDotV = max(0.0, dot(triangleNormal, view));
 
-    for (int k = 0; k < CAMERA_POSE_COUNT; k++)
+    vec3 lightDisplacement = getLightVector();
+    vec3 light = normalize(lightDisplacement);
+    vec3 halfway = normalize(light + view);
+    float nDotH = max(0.0, dot(fittedNormal, halfway));
+    float nDotL = max(0.0, dot(fittedNormal, light));
+    float nDotV = max(0.0, dot(fittedNormal, view));
+
+    // "Light intensity" is defined in such a way that we need to multiply by pi to be properly normalized.
+    vec3 incidentRadiance = PI * lightIntensity / dot(lightDisplacement, lightDisplacement);
+
+    vec3 actualReflectanceTimesNDotL = pow(imgColor.rgb / incidentRadiance, vec3(1 / errorGamma));
+
+    float error;
+
+    if (nDotH > 0.0 && nDotL > 0.0 && nDotV > 0.0 && filteredMask > 0.0)
     {
-        vec4 imgColor = getLinearColor(k);
-        vec3 view = normalize(getViewVector(k));
-        float triangleNDotV = max(0.0, dot(triangleNormal, view));
+        float hDotV = max(0.0, dot(halfway, view));
 
-        vec3 lightDisplacement = getLightVector(k);
-        vec3 light = normalize(lightDisplacement);
-        vec3 halfway = normalize(light + view);
-        float nDotH = max(0.0, dot(fittedNormal, halfway));
-        float nDotL = max(0.0, dot(fittedNormal, light));
-        float nDotV = max(0.0, dot(fittedNormal, view));
+        vec3 specular = 1 / PI * distTimesPi(nDotH, vec3(roughness))
+            * geom(roughness, nDotH, nDotV, nDotL, hDotV)
+            * fresnel(specularColor.rgb, vec3(1), hDotV) / (4 * nDotV);
 
-        // "Light intensity" is defined in such a way that we need to multiply by pi to be properly normalized.
-        vec3 incidentRadiance = PI * getLightIntensity(k) / dot(lightDisplacement, lightDisplacement);
-
-        vec3 actualReflectanceTimesNDotL = pow(imgColor.rgb / incidentRadiance, vec3(1 / errorGamma));
-
-        float weight = imgColor.a * triangleNDotV;
-
-        if (nDotH > 0.0 && nDotL > 0.0 && nDotV > 0.0 && filteredMask > 0.0)
-        {
-            float hDotV = max(0.0, dot(halfway, view));
-
-            vec3 specular = 1 / PI * distTimesPi(nDotH, vec3(roughness))
-                * geom(roughness, nDotH, nDotV, nDotL, hDotV)
-                * fresnel(specularColor.rgb, vec3(1), hDotV) / (4 * nDotV);
-
-            // Reflectance is implicitly multiplied by n dot l.
-            vec3 reflectanceEstimateTimesNDotL = pow(diffuseColor * nDotL + specular, vec3(1 / errorGamma));
-            vec3 diff = actualReflectanceTimesNDotL - reflectanceEstimateTimesNDotL;
-            error += weight * dot(diff, diff);
-        }
-        else
-        {
-            error += weight * dot(actualReflectanceTimesNDotL, actualReflectanceTimesNDotL);
-        }
-
-        validCount += 3 * weight;
+        // Reflectance is implicitly multiplied by n dot l.
+        vec3 reflectanceEstimateTimesNDotL = pow(diffuseColor * nDotL + specular, vec3(1 / errorGamma));
+        vec3 diff = actualReflectanceTimesNDotL - reflectanceEstimateTimesNDotL;
+        error = dot(diff, diff);
+    }
+    else
+    {
+        error = dot(actualReflectanceTimesNDotL, actualReflectanceTimesNDotL);
     }
 
-    errorOut = vec4(vec3(error), validCount);
+    errorOut = vec4(vec3(imgColor.a * error / 3), imgColor.a);
 }
