@@ -16,14 +16,14 @@ import java.util.stream.IntStream;
 
 public class PTMsolution {
     public BiConsumer<Integer, SimpleMatrix> setWeights;
-    private PolynormalTextureMapModel PTMmodel;
+    private PolynomialTextureMapModel PTMmodel;
     private TextureFitSettings settings;
     private SimpleMatrix[] weightsByTexel;
     private final boolean[] weightsValidity;
     private final DoubleVector3[] diffuseAlbedos;
 
     public PTMsolution(TextureFitSettings setting) {
-        PTMmodel = new PolynormalTextureMapModel(setting.width,setting.height);
+        PTMmodel = new PolynomialTextureMapModel(setting.width,setting.height);
         settings=setting;
         weightsByTexel= IntStream.range(0, settings.width * settings.height*3)
                 .mapToObj(p -> new SimpleMatrix(6 + 1, 1, DMatrixRMaj.class))
@@ -54,7 +54,7 @@ public class PTMsolution {
     }
 
 
-    public PolynormalTextureMapModel getPTMmodel(){
+    public PolynomialTextureMapModel getPTMmodel(){
         return PTMmodel;
     }
     public void saveWeightMaps() {

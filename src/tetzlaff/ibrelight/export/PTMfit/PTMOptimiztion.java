@@ -1,6 +1,5 @@
 package tetzlaff.ibrelight.export.PTMfit;
 
-import org.ejml.data.DMatrixRMaj;
 import org.ejml.data.SingularMatrixException;
 import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.builders.ProgramBuilder;
@@ -8,16 +7,12 @@ import tetzlaff.gl.core.ColorFormat;
 import tetzlaff.gl.core.Context;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 
-import tetzlaff.ibrelight.export.specularfit.SpecularFitSolution;
 import tetzlaff.ibrelight.rendering.GraphicsStreamResource;
 import tetzlaff.ibrelight.rendering.IBRResources;
 import tetzlaff.optimization.LeastSquaresMatrixBuilder;
-import tetzlaff.optimization.NonNegativeLeastSquares;
-import tetzlaff.util.ColorList;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.function.BiConsumer;
@@ -26,12 +21,12 @@ import java.util.stream.IntStream;
 
 public class PTMOptimiztion <ContextType extends Context<ContextType>>{
     private TextureFitSettings settings;
-    private PolynormalTextureMapBuilder mapbuilder;
+    private PolynomialTextureMapBuilder mapbuilder;
 
 
     public PTMOptimiztion(TextureFitSettings setting){
         settings=setting;
-        mapbuilder=new PolynormalTextureMapBuilder(settings.width,settings.height);
+        mapbuilder=new PolynomialTextureMapBuilder(settings.width,settings.height);
 
     }
 
@@ -51,7 +46,7 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
         {
             resources.setupShaderProgram(LuminaceStream.getProgram());
             System.out.println("Building weight fitting matrices...");
-//            PolynormalTextureMapModel solution=new PolynormalTextureMapModel();
+//            PolynomialTextureMapModel solution=new PolynomialTextureMapModel();
             PTMsolution solution=new PTMsolution(settings);
 
             mapbuilder.buildMatrices(LuminaceStream.map(framebufferData -> {
@@ -60,7 +55,7 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                return new LuminaceData(framebufferData[0], framebufferData[1]);
+                return new LuminanceData(framebufferData[0], framebufferData[1]);
             }), solution.getPTMmodel(),solution);
 //            int index=0;
 //            LuminaceStream.forEach(Lumin->{

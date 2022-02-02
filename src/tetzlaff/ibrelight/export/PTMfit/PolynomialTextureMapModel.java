@@ -1,26 +1,17 @@
 package tetzlaff.ibrelight.export.PTMfit;
 
-import tetzlaff.gl.vecmath.Vector4;
-import tetzlaff.ibrelight.export.PTMfit.CoefficientData;
-import tetzlaff.ibrelight.export.PTMfit.LuminaceData;
 import tetzlaff.optimization.LeastSquaresModel;
 //import tetzlaff.ibrelight.export.PTMfit.PTMData;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.function.IntFunction;
 
-import static java.lang.Float.NaN;
 import static java.lang.Float.isNaN;
 
-public class PolynormalTextureMapModel implements LeastSquaresModel<LuminaceData, Float>
+public class PolynomialTextureMapModel implements LeastSquaresModel<LuminanceData, Float>
 {
 //    private final CoefficientData coefficients;
 //
-//    public PolynormalTextureMapModel(CoefficientData coefficient) {
+//    public PolynomialTextureMapModel(CoefficientData coefficient) {
 //        coefficients = coefficient;
 //    }
     private int width;
@@ -28,7 +19,7 @@ public class PolynormalTextureMapModel implements LeastSquaresModel<LuminaceData
     private float[] redchannel;
     private float[] greenchannel;
     private float[] bluechannel;
-    public PolynormalTextureMapModel(int Width,int Length){
+    public PolynomialTextureMapModel(int Width,int Length){
         width=Width;
         length=Length;
         redchannel=new float[width*length];
@@ -37,7 +28,7 @@ public class PolynormalTextureMapModel implements LeastSquaresModel<LuminaceData
 
     }
     @Override
-    public boolean isValid(LuminaceData sampleData, int systemIndex) {
+    public boolean isValid(LuminanceData sampleData, int systemIndex) {
         int pixelIndex = systemIndex % (width * length);
         return sampleData.getLumin().getAlpha(pixelIndex) > 0.99
             && !isNaN(sampleData.getLumin().getRed(pixelIndex))
@@ -49,13 +40,13 @@ public class PolynormalTextureMapModel implements LeastSquaresModel<LuminaceData
     }
 
     @Override
-    public double getSampleWeight(LuminaceData sampleData, int systemIndex) {
+    public double getSampleWeight(LuminanceData sampleData, int systemIndex) {
 //        return 0;
         return 0.5;
     }
 
     @Override
-    public Float getSamples(LuminaceData sampleData, int systemIndex) {
+    public Float getSamples(LuminanceData sampleData, int systemIndex) {
 //        Vector4 lumindata=sampleData.getLumin().get(systemIndex%(width*length));
 //        Float result=0.0f;
 
@@ -78,7 +69,7 @@ public class PolynormalTextureMapModel implements LeastSquaresModel<LuminaceData
 
     @Override
     //sampleDate: light dir
-    public IntFunction<Float> getBasisFunctions(LuminaceData sampleData, int systemIndex) {
+    public IntFunction<Float> getBasisFunctions(LuminanceData sampleData, int systemIndex) {
 //
         // b :column of the p matrix, system index :row
         Float u=sampleData.getLightdir().getRed(systemIndex%(width*length));

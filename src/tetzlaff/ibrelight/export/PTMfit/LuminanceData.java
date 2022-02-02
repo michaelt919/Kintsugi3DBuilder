@@ -3,18 +3,19 @@ package tetzlaff.ibrelight.export.PTMfit;
 
 import tetzlaff.util.ColorList;
 
-public class LuminaceData {
+public class LuminanceData
+{
     private int size;
     private ColorList lumin;
     private ColorList lightdir;
     //private CoefficientData coeffcient;
 
-    public LuminaceData(){
+    public LuminanceData(){
         this.size=0;
         this.lumin=null;
         this.lightdir=null;
     }
-    public LuminaceData(ColorList lumin, ColorList lightdir){
+    public LuminanceData(ColorList lumin, ColorList lightdir){
         //this.size=lumindata.length;
 
         this.lumin=lumin;
@@ -43,7 +44,7 @@ public class LuminaceData {
 
 
 
-//    public double dot(LuminaceData t2) {
+//    public double dot(LuminanceData t2) {
 //        double[] t1lumin=this.getLumin();
 //        double[] t2lumin=this.getLumin();
 //        double result=0;

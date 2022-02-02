@@ -8,15 +8,16 @@ import tetzlaff.ibrelight.rendering.GraphicsStream;
 import tetzlaff.optimization.LeastSquaresMatrixBuilder;
 import tetzlaff.util.Counter;
 
-public class PolynormalTextureMapBuilder {
+public class PolynomialTextureMapBuilder
+{
     private final LeastSquaresMatrixBuilder matrixBuilder;
     private final int weightCount=6;
     private final int sampleCount;
-    public PolynormalTextureMapBuilder(int width, int height){
+    public PolynomialTextureMapBuilder(int width, int height){
         this.sampleCount=width*height*3;
         this.matrixBuilder = new LeastSquaresMatrixBuilder(sampleCount, weightCount,Collections.emptyList(), Collections.emptyList());
     }
-    public void buildMatrices(GraphicsStream<LuminaceData> viewStream, PolynormalTextureMapModel PTMmodel, PTMsolution solution)
+    public void buildMatrices(GraphicsStream<LuminanceData> viewStream, PolynomialTextureMapModel PTMmodel, PTMsolution solution)
     {
         IntConsumer sampleValidator = i -> {solution.setWeightsValidity(i,true);};
         matrixBuilder.buildMatrices(viewStream, PTMmodel, sampleValidator);
