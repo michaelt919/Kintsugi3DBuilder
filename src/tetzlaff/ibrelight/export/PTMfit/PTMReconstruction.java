@@ -111,7 +111,7 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
             }
 
 
-            reconstruction.execute((k, framebuffer) -> saveReconstructionToFile(directoryName, k, framebuffer));
+            reconstruction.execute(resources.viewSet, (k, framebuffer) -> saveReconstructionToFile(directoryName, k, framebuffer));
         }
 
         catch (FileNotFoundException e)
