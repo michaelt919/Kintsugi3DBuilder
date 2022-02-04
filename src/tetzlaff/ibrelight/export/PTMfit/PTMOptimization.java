@@ -3,8 +3,7 @@ package tetzlaff.ibrelight.export.PTMfit;
 import org.ejml.data.SingularMatrixException;
 import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.builders.ProgramBuilder;
-import tetzlaff.gl.core.ColorFormat;
-import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 
 import tetzlaff.ibrelight.rendering.GraphicsStreamResource;
@@ -17,54 +16,80 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.function.BiConsumer;
 import java.util.function.IntPredicate;
-import java.util.stream.IntStream;
 
-public class PTMOptimiztion <ContextType extends Context<ContextType>>{
+public class PTMOptimization<ContextType extends Context<ContextType>>
+{
     private TextureFitSettings settings;
-    private PolynomialTextureMapBuilder mapbuilder;
+    private PolynomialTextureMapBuilder mapBuilder;
 
+    private float[] averageColors;
+    private float[] normals;
 
-    public PTMOptimiztion(TextureFitSettings setting){
-        settings=setting;
-        mapbuilder=new PolynomialTextureMapBuilder(settings.width,settings.height);
-
+    public PTMOptimization(TextureFitSettings setting)
+    {
+        settings = setting;
+        mapBuilder = new PolynomialTextureMapBuilder(settings.width,settings.height);
     }
 
     public void createFit(IBRResources<ContextType> resources)
-            throws IOException{
+            throws IOException
+    {
         ContextType context = resources.context;
         context.getState().disableBackFaceCulling();
 
-        PTMProgramFactory<ContextType> programFactory=new PTMProgramFactory<>(resources);
+        PTMProgramFactory<ContextType> programFactory = new PTMProgramFactory<>(resources);
         try(
-        GraphicsStreamResource<ContextType> LuminaceStream = resources.streamAsResource(
-                getLuminaceProgramBuilder(programFactory),
+            GraphicsStreamResource<ContextType> luminanceStream = resources.streamAsResource(
+                getLuminanceProgramBuilder(programFactory),
                 context.buildFramebufferObject(settings.width, settings.height)
-                        .addColorAttachment(ColorFormat.RGBA32F)
-                        .addColorAttachment(ColorFormat.RGBA32F));
+                    .addColorAttachment(ColorFormat.RGBA32F)
+                    .addColorAttachment(ColorFormat.RGBA32F))
         )
         {
-            resources.setupShaderProgram(LuminaceStream.getProgram());
+
+            // Estimate average color without polynomial terms as a fallback for numerically unstable points.
+            try(
+                FramebufferObject<ContextType> averageFBO = context.buildFramebufferObject(settings.width, settings.height)
+                    .addColorAttachment(ColorFormat.RGBA32F) // color
+                    .addColorAttachment(ColorFormat.RGBA32F) // normal
+                    .createFramebufferObject();
+                Program<ContextType> averageProgram = getColorAverageProgramBuilder(programFactory).createProgram())
+            {
+                resources.setupShaderProgram(averageProgram);
+                Drawable<ContextType> averageDrawable = resources.createDrawable(averageProgram);
+                averageFBO.clearColorBuffer(0, 0, 0, 0, 0);
+                averageDrawable.draw(PrimitiveMode.TRIANGLES, averageFBO);
+                averageColors = averageFBO.readFloatingPointColorBufferRGBA(0);
+                normals = averageFBO.readFloatingPointColorBufferRGBA(1); // per-pixel normals (interpolated per-vertex normals)
+            }
+
+            resources.setupShaderProgram(luminanceStream.getProgram());
             System.out.println("Building weight fitting matrices...");
 //            PolynomialTextureMapModel solution=new PolynomialTextureMapModel();
             PTMsolution solution=new PTMsolution(settings);
 
-            mapbuilder.buildMatrices(LuminaceStream.map(framebufferData -> {
-                try {
-                    LuminaceStream.getFramebuffer().saveColorBufferToFile(1, "PNG", new File(settings.outputDirectory, "test.png"));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            mapBuilder.buildMatrices(luminanceStream.map(framebufferData ->
+            {
+//                try
+//                {
+//                    luminanceStream.getFramebuffer().saveColorBufferToFile(1, "PNG", new File(settings.outputDirectory, "test.png"));
+//                }
+//                catch (IOException e)
+//                {
+//                    e.printStackTrace();
+//                }
                 return new LuminanceData(framebufferData[0], framebufferData[1]);
-            }), solution.getPTMmodel(),solution);
+            }), solution.getPTMmodel(), solution);
+
 //            int index=0;
-//            LuminaceStream.forEach(Lumin->{
+//            luminanceStream.forEach(Lumin->{
 //                ColorList[] colorlist = Lumin.clone();
 //                solution.getPTMmodel().setRedchannel(index,colorlist[0].getRed(index));
 //                solution.getPTMmodel().setGreenchannel(index,colorlist[0].getGreen(index));
 //                solution.getPTMmodel().setBluechannel(index,colorlist[0].getBlue(index));
 //
 //            });
+
             System.out.println("Finished building matrices; solving now...");
             optimizeWeights(p->settings.height * settings.width != 0,solution::setWeights);
             System.out.println("DONE!");
@@ -73,7 +98,7 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
             fillHoles(solution);
             solution.saveWeightMaps();
 
-            PTMReconstruction reconstruct=new PTMReconstruction(resources,settings);
+            PTMReconstruction<ContextType> reconstruct=new PTMReconstruction<ContextType>(resources,settings);
             reconstruct.reconstruct(solution,getReconstructionProgramBuilder(programFactory),"reconstruction");
 
 //            fillHoles(solution);
@@ -82,6 +107,7 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
         }
 
     }
+
     private void fillHoles(PTMsolution solution)
     {
         // Fill holes
@@ -135,7 +161,7 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
                                 count++;
                             }
 
-                            if (sum > 0.0)
+                            if (count > 0)
                             {
                                 solution.getWeights(p + channel * texelCount).set(b, sum / count);
                             }
@@ -161,32 +187,52 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
     {
         boolean suppressErrors = false;
 
-        LeastSquaresMatrixBuilder matrixBuilder=mapbuilder.getMatrixBuilder();
-        for (int p = 0; p < mapbuilder.getMatrixBuilder().systemCount; p++)
+        LeastSquaresMatrixBuilder matrixBuilder= mapBuilder.getMatrixBuilder();
+        for (int p = 0; p < mapBuilder.getMatrixBuilder().systemCount; p++)
         {
             if (areWeightsValid.test(p))
             {
-                // Find the median value in the RHS of the system to help calibrate the tolerance scale.
-                double median = IntStream.range(0, matrixBuilder.weightsQTrAugmented[p].getNumElements())
-                        .mapToDouble(matrixBuilder.weightsQTrAugmented[p]::get)
-                        .sorted()
-                        .skip(matrixBuilder.weightsQTrAugmented[p].getNumElements() / 2)
-                        .filter(x -> x > 0)
-                        .findFirst()
-                        .orElse(1.0);
-
                 // Solve the system.
-                try{
-                    weightSolutionConsumer.accept(p, matrixBuilder.weightsQTQAugmented[p].solve(matrixBuilder.weightsQTrAugmented[p]));
+                try
+                {
+                    int colorChannel = p / (settings.width * settings.height);
+                    int pixelIndex = p % (settings.width * settings.height);
+
+                    float albedo = averageColors[pixelIndex * 4 + colorChannel];
+
+                    SimpleMatrix lambertian = new SimpleMatrix(6, 1);
+                    lambertian.set(0, 0.0);
+                    lambertian.set(1, albedo * normals[pixelIndex * 4]);
+                    lambertian.set(2, albedo * normals[pixelIndex * 4 + 1]);
+                    lambertian.set(3, albedo * normals[pixelIndex * 4 + 2]);
+                    lambertian.set(4, 0.0);
+                    lambertian.set(5, 0.0);
+
+                    // Scale the PTM solution by the determinant of the matrix and fill with the Lambertian solution as necessary.
+                    double determinant = matrixBuilder.weightsQTQAugmented[p].determinant();
+
+                    if (determinant > 0.0)  // Prevent singular matrix exceptions.
+                    {
+                        double alpha = Math.min(determinant, 1.0);
+
+                        SimpleMatrix rawSolution = matrixBuilder.weightsQTQAugmented[p].solve(matrixBuilder.weightsQTrAugmented[p]);
+                        SimpleMatrix blendedSolution = rawSolution.scale(alpha).plus(1 - alpha, lambertian);
+
+                        weightSolutionConsumer.accept(p, blendedSolution);
+                    }
+                    else
+                    {
+                        weightSolutionConsumer.accept(p, lambertian);
+                    }
                 }
-                catch (SingularMatrixException e){
+                catch (SingularMatrixException e)
+                {
                     if (!suppressErrors)
                     {
                         e.printStackTrace();
                         suppressErrors = true;
                     }
                 }
-
             }
         }
     }
@@ -196,17 +242,28 @@ public class PTMOptimiztion <ContextType extends Context<ContextType>>{
         double DEFAULT_TOLERANCE_SCALE=0.000000000001;
         optimizeWeights(areWeightsValid, weightSolutionConsumer, DEFAULT_TOLERANCE_SCALE);
     }
+
     private static <ContextType extends Context<ContextType>>
-    ProgramBuilder<ContextType> getLuminaceProgramBuilder(PTMProgramFactory<ContextType> programFactory)
+    ProgramBuilder<ContextType> getLuminanceProgramBuilder(PTMProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(
                 new File("shaders/common/texspace_noscale.vert"),
                 new File("shaders/PTMfit/PTMShader.frag"));
     }
-    ProgramBuilder<ContextType> getReconstructionProgramBuilder(PTMProgramFactory<ContextType> programFactory){
+
+    ProgramBuilder<ContextType> getReconstructionProgramBuilder(PTMProgramFactory<ContextType> programFactory)
+    {
         return programFactory.getShaderProgramBuilder(
                 new File("shaders/common/imgspace.vert"),
                 new File("shaders/PTMfit/PTMreconstruction.frag"));
+    }
+
+    private static <ContextType extends Context<ContextType>>
+    ProgramBuilder<ContextType> getColorAverageProgramBuilder(PTMProgramFactory<ContextType> programFactory)
+    {
+        return programFactory.getShaderProgramBuilder(
+            new File("shaders/common/texspace_noscale.vert"),
+            new File("shaders/PTMfit/colorAverage.frag"));
     }
 
 }

@@ -1,7 +1,8 @@
 #version 330
 #include "PTMfit.glsl"
+#include <shaders/colorappearance/colorappearance_multi_as_single.glsl>
 
-#line 14 0
+#line 6 0
 
 uniform sampler2DArray weightMaps;
 uniform int width;
@@ -24,6 +25,7 @@ void main()
     float w=lightDir.z;
 
     vec3 weights[BASIS_COUNT];
+
     float row[BASIS_COUNT];
     row[0]=1.0f;
     row[1]=u;
@@ -36,8 +38,7 @@ void main()
     {
         weights[b] = texture(weightMaps, vec3(fTexCoord, b)).xyz;
         result=result+vec4(weights[b]*row[b],0);
-        //result= vec4(vec3(fTexCoord, 0),1);
     }
 
-    result=pow(result,vec4(1/2.2));
+    result = pow(result,vec4(1/2.2));
 }

@@ -21,5 +21,4 @@ uniform sampler2D roughnessEstimate;
 #include <shaders/colorappearance/imgspace.glsl>
 #endif
 
-#include <shaders/colorappearance/colorappearance_multi_as_single.glsl>
 #include <shaders/relight/reflectanceequations.glsl>
