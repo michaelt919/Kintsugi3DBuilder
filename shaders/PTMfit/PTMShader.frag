@@ -9,6 +9,8 @@ void main(){
     //get light uv
     lightDir=normalize(lightDisplacement);
 
+    vec3 incidentRadiance = PI * lightIntensity / dot(lightDisplacement, lightDisplacement);
+
     //get rgb
-    colorInfo=getLinearColor() * step(0, dot(lightDir, normalize(fNormal)));
+    colorInfo = step(0, dot(lightDir, fNormal)) * getLinearColor() / vec4(incidentRadiance, 1);
 }

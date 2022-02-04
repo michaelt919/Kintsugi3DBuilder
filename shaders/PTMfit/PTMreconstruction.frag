@@ -1,6 +1,5 @@
 #version 330
 #include "PTMfit.glsl"
-#include <shaders/colorappearance/colorappearance_multi_as_single.glsl>
 
 #line 6 0
 
@@ -12,13 +11,16 @@ uniform int length;
 #define BASIS_COUNT 6
 #endif
 
+uniform vec3 reconstructionLightPos;
+uniform vec3 reconstructionLightIntensity;
+
 layout(location = 0) out vec4 result;
 
 void main()
 {
     result=vec4(0,0,0,1);
 
-    vec3 lightDisplacement = getLightVector();
+    vec3 lightDisplacement = reconstructionLightPos - fPosition;
     vec3 lightDir=normalize(lightDisplacement);
     float u=lightDir.x;
     float v=lightDir.y;
@@ -40,5 +42,7 @@ void main()
         result=result+vec4(weights[b]*row[b],0);
     }
 
-    result = pow(result,vec4(1/2.2));
+    vec3 incidentRadiance = PI * reconstructionLightIntensity / dot(lightDisplacement, lightDisplacement);
+
+    result = pow(result * vec4(incidentRadiance, 1),vec4(1/2.2));
 }
