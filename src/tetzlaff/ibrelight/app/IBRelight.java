@@ -21,7 +21,7 @@ import tetzlaff.interactive.InitializationException;
 public final class IBRelight
 {
     private static final boolean DEBUG = true;
-    private static final boolean GRAPHICS_WINDOW_ENABLED = false;
+    private static final boolean GRAPHICS_WINDOW_ENABLED = true;
 
     private IBRelight()
     {

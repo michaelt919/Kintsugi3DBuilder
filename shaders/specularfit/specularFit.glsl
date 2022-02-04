@@ -16,6 +16,7 @@ in vec3 fNormal;
 in vec3 fTangent;
 in vec3 fBitangent;
 
+uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
 uniform sampler2D roughnessEstimate;
 
@@ -33,5 +34,12 @@ uniform sampler2D roughnessEstimate;
 #include <shaders/colorappearance/imgspace.glsl>
 #endif
 
-#include <shaders/colorappearance/colorappearance_multi_as_single.glsl>
 #include <shaders/relight/reflectanceequations.glsl>
+
+#define COSINE_CUTOFF 0.0
+
+#ifndef MICROFACET_DISTRIBUTION_RESOLUTION
+#define MICROFACET_DISTRIBUTION_RESOLUTION 90
+#endif
+
+#include "evaluateBRDF.glsl"

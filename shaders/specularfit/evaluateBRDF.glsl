@@ -3,14 +3,14 @@
 uniform sampler2DArray weightMaps;
 uniform sampler1DArray basisFunctions;
 
+#ifndef BASIS_COUNT
+#define BASIS_COUNT 8
+#endif
+
 layout(std140) uniform DiffuseColors
 {
     vec4 diffuseColors[BASIS_COUNT];
 };
-
-#ifndef BASIS_COUNT
-#define BASIS_COUNT 8
-#endif
 
 vec3 getMFDEstimate(float nDotH)
 {

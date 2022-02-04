@@ -13,12 +13,11 @@
  */
 
 #include "specularFit.glsl"
-#line 17 0
+#include <shaders/colorappearance/colorappearance_multi_as_single.glsl>
+#line 18 0
 
 layout(location = 0) out vec4 reflectance_visibility;
 layout(location = 1) out vec4 halfway_geom_weight;
-
-#define COSINE_CUTOFF 0.0
 
 vec3 getNormalEstimate()
 {
@@ -66,7 +65,10 @@ void main()
         halfway_geom_weight = vec4(
             sqrt(max(0.0, acos(min(1.0, nDotH)) * 3.0 / PI)),
             maskingShadowing / (4 * nDotL * nDotV),
-            triangleNDotV * sqrt(max(0, 1 - nDotH * nDotH)),
+            // n.v accounts for fitting in texture space rather than image space (more samples near grazing angles)
+            // n.l accounts for fitting reflectance rather than radiance
+            // sin(theta_h) prevents bias towards specular (from Nam et al.)
+            triangleNDotV * nDotL * sqrt(max(0, 1 - nDotH * nDotH)),
             nDotL);
     }
     else

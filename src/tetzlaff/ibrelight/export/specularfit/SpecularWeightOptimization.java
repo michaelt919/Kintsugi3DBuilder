@@ -23,14 +23,12 @@ import static java.lang.Math.PI;
 public class SpecularWeightOptimization
 {
     private final SpecularFitSettings settings;
-    private final double metallicity;
 
     private final NonNegativeWeightOptimization base;
 
-    public SpecularWeightOptimization(SpecularFitSettings settings, double metallicity)
+    public SpecularWeightOptimization(SpecularFitSettings settings)
     {
         this.settings = settings;
-        this.metallicity = metallicity;
 
         base = new NonNegativeWeightOptimization(settings.width * settings.height, settings.basisCount,
             Collections.singletonList(b -> 1.0), Collections.singletonList(1.0)); // Equality constraint to ensure that the weights sum up to 1.0.
@@ -44,7 +42,7 @@ public class SpecularWeightOptimization
         solution.invalidateWeights();
 
         // Setup all the matrices for fitting weights (one per texel)
-        base.buildMatrices(viewStream, new SpecularWeightModel(solution, settings, metallicity, SpecularOptimization.ORIGINAL_NAM_METHOD),
+        base.buildMatrices(viewStream, new SpecularWeightModel(solution, settings),
             // If a pixel is valid in some view, mark it as such in the solution.
             p -> solution.setWeightsValidity(p, true));
 

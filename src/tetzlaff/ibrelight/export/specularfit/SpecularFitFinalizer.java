@@ -17,6 +17,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.stream.IntStream;
 
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.rendering.IBRResources;
@@ -93,12 +94,12 @@ public class SpecularFitFinalizer
             finalErrorCalcProgram.setTexture("diffuseEstimate", specularFit.getDiffuseMap());
             finalErrorCalcProgram.setUniform("errorGamma", 1.0f);
 
-            errorCalculator.update(finalErrorCalcDrawable, scratchFramebuffer);
-            rmseOut.println("RMSE after final diffuse estimate: " + errorCalculator.getReport().getError());
+            rmseOut.println("Final RMSE after diffuse estimate: " +
+                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.viewSet.getCameraPoseCount()));
 
             finalErrorCalcProgram.setUniform("errorGamma", 2.2f);
-            errorCalculator.update(finalErrorCalcDrawable, scratchFramebuffer);
-            rmseOut.println("RMSE after final diffuse estimate (gamma-corrected): " + errorCalculator.getReport().getError());
+            rmseOut.println("Final RMSE after diffuse estimate (gamma-corrected): " +
+                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.viewSet.getCameraPoseCount()));
 
             Drawable<ContextType> ggxErrorCalcDrawable = resources.createDrawable(ggxErrorCalcProgram);
             ggxErrorCalcProgram.setTexture("normalEstimate", specularFit.getNormalMap());
@@ -106,18 +107,76 @@ public class SpecularFitFinalizer
             ggxErrorCalcProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
             ggxErrorCalcProgram.setTexture("diffuseEstimate", specularFit.getDiffuseMap());
             ggxErrorCalcProgram.setUniform("errorGamma", 1.0f);
-            errorCalculator.update(ggxErrorCalcDrawable, scratchFramebuffer);
-            rmseOut.println("RMSE for GGX fit: " + errorCalculator.getReport().getError());
+
+            rmseOut.println("RMSE for GGX fit: " +
+                runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, resources.viewSet.getCameraPoseCount()));
 
             ggxErrorCalcProgram.setUniform("errorGamma", 2.2f);
-            errorCalculator.update(ggxErrorCalcDrawable, scratchFramebuffer);
-            rmseOut.println("RMSE for GGX fit (gamma-corrected): " + errorCalculator.getReport().getError());
+            rmseOut.println("RMSE for GGX fit (gamma-corrected): " +
+                runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, resources.viewSet.getCameraPoseCount()));
         }
         catch (FileNotFoundException e)
         {
             e.printStackTrace();
         }
     }
+
+    @SuppressWarnings("PackageVisibleField")
+    private static class WeightedError
+    {
+        double error;
+        double weight;
+
+        WeightedError(double error, double weight)
+        {
+            this.error = error;
+            this.weight = weight;
+        }
+    }
+
+    private static <ContextType extends Context<ContextType>>
+    double runFinalErrorCalculation(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int viewCount)
+    {
+        WeightedError errorTotal = new WeightedError(0, 0);
+
+        for (int k = 0; k < viewCount; k++)
+        {
+            drawable.program().setUniform("viewIndex", k);
+
+            // Clear framebuffer
+            framebuffer.clearDepthBuffer();
+            framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+
+            // Run shader program to fill framebuffer with per-pixel error.
+            drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+
+            // Copy framebuffer from GPU to main memory.
+            float[] pixelErrors = framebuffer.readFloatingPointColorBufferRGBA(0);
+
+            // Add up per-pixel error.
+            WeightedError errorViewTotal = IntStream.range(0, pixelErrors.length / 4)
+                .parallel()
+                .filter(p -> pixelErrors[4 * p + 3] > 0)
+                .collect(() -> new WeightedError(0, 0),
+                    (total, p) ->
+                    {
+                        total.error += pixelErrors[4 * p];
+                        total.weight += pixelErrors[4 * p + 3];
+                    },
+                    (total1, total2) ->
+                    {
+                        total1.error += total2.error;
+                        total1.weight += total2.weight;
+                    });
+
+            // Add results from view to final total
+            errorTotal.error += errorViewTotal.error;
+            errorTotal.weight += errorViewTotal.weight;
+        }
+
+        return Math.sqrt(errorTotal.error / errorTotal.weight);
+    }
+
     private static <ContextType extends Context<ContextType>>
     Program<ContextType> createFinalErrorCalcProgram(SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {

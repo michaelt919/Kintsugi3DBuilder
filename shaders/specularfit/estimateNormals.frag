@@ -13,8 +13,8 @@
  */
 
 #include "specularFit.glsl"
-#include "evaluateBRDF.glsl"
-#line 18 0
+#include "normalError.glsl"
+#line 19 0
 
 layout(location = 0) out vec4 normalTS;
 layout(location = 1) out vec4 dampingOut;
@@ -22,14 +22,16 @@ layout(location = 1) out vec4 dampingOut;
 //uniform float dampingFactor;
 uniform sampler2D dampingTex;
 
-#define COSINE_CUTOFF 0.0
-
 #ifndef MICROFACET_DISTRIBUTION_RESOLUTION
 #define MICROFACET_DISTRIBUTION_RESOLUTION 90
 #endif
 
 #ifndef USE_LEVENBERG_MARQUARDT
 #define USE_LEVENBERG_MARQUARDT 1
+#endif
+
+#ifndef MIN_DAMPING
+#define MIN_DAMPING 1.0
 #endif
 
 vec3 getMFDGradient(float nDotH)
@@ -69,50 +71,6 @@ vec2 getHeightCorrelatedSmithGradient(float roughness, vec3 light, vec3 view)
 
     float denominator = (1 + lambda(roughness, view.z) + lambda(roughness, light.z));
     return -(getLambdaGradient(roughness, view) + getLambdaGradient(roughness, light)) / (denominator * denominator);
-}
-
-float calculateError(vec3 triangleNormal, vec3 estimatedNormal)
-{
-    float error = 0.0;
-
-    for (int k = 0; k < CAMERA_POSE_COUNT; k++)
-    {
-        vec4 imgColor = getLinearColor(k);
-        vec3 view = normalize(getViewVector(k));
-        float triangleNDotV = max(0.0, dot(triangleNormal, view));
-
-        vec3 lightDisplacement = getLightVector(k);
-        vec3 light = normalize(lightDisplacement);
-        vec3 halfway = normalize(light + view);
-        float nDotH = max(0.0, dot(estimatedNormal, halfway));
-        float nDotL = max(0.0, dot(estimatedNormal, light));
-        float nDotV = max(0.0, dot(estimatedNormal, view));
-
-        // "Light intensity" is defined in such a way that we need to multiply by pi to be properly normalized.
-        vec3 incidentRadiance = PI * getLightIntensity(k) / dot(lightDisplacement, lightDisplacement);
-
-        vec3 actualReflectanceTimesNDotL = imgColor.rgb / incidentRadiance;
-        float weight = triangleNDotV;
-
-        if (nDotH > COSINE_CUTOFF && nDotL > COSINE_CUTOFF && nDotV > COSINE_CUTOFF)
-        {
-            float hDotV = max(0.0, dot(halfway, view));
-
-            float roughness = texture(roughnessEstimate, fTexCoord)[0];
-            float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-
-            vec3 reflectanceEstimate = getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV));
-
-            vec3 diff = reflectanceEstimate * nDotL - actualReflectanceTimesNDotL;
-            error += weight * dot(diff, diff);
-        }
-        else
-        {
-            error += sign(imgColor.a * triangleNDotV) * weight * dot(actualReflectanceTimesNDotL, actualReflectanceTimesNDotL);
-        }
-    }
-
-    return error;
 }
 
 void main()
@@ -169,11 +127,12 @@ void main()
             vec3 actualReflectanceTimesNDotL = imgColor.rgb / incidentRadiance;
             vec3 reflectanceEstimate = getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV));
 
+            // n dot l is already incorporated by virtue of the fact that radiance is being optimized, not reflectance.
+            float weight = triangleNDotV * sqrt(max(0, 1 - nDotH * nDotH));
+
 #if USE_LEVENBERG_MARQUARDT
             mat3x2 mfdGradient = outerProduct(halfway.xy, getMFDGradient(nDotH)); // (d NdotH / dN) * (dD / d NdotH)
             mat3x2 specularGradient;
-
-            float weight = triangleNDotV;
 
 #if SMITH_MASKING_SHADOWING
             vec3 mfdEstimate = getMFDEstimate(nDotH); // Also includes Fresnel
@@ -214,7 +173,6 @@ void main()
             mJTJ += weight * weight * (fullGradient * transpose(fullGradient) + mat2(dampingFactor));
             vJTb += weight * weight * fullGradient * (actualReflectanceTimesNDotL - reflectanceEstimate * nDotL);
 #else
-            float weight = triangleNDotV * sqrt(max(0, 1 - nDotH * nDotH));
 
             mATA += weight * weight * dot(reflectanceEstimate, reflectanceEstimate) * outerProduct(light, light);
             vATb += weight * weight * dot(reflectanceEstimate, actualReflectanceTimesNDotL) * light;
@@ -244,7 +202,7 @@ void main()
         {
             // Map to the correct range for a texture.
             normalTS = vec4(newNormalTS * 0.5 + vec3(0.5), 1.0);
-            dampingOut = vec4(vec3(dampingFactor / 2.0), 1.0);
+            dampingOut = vec4(vec3(max(MIN_DAMPING, dampingFactor / 2.0)), 1.0);
         }
         else
         {
