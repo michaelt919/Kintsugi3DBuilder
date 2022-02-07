@@ -40,15 +40,6 @@
                 </configuration>
             </plugin>
         </plugins>
-        <resources>
-            <resource>
-                <filtering>false</filtering>
-                <directory>${basedir}/src/main/native</directory>
-                <includes>
-                    <include>native.so</include>
-                </includes>
-            </resource>
-        </resources>
     </build>
     <dependencies>
         <!-- https://mvnrepository.com/artifact/org.openjfx/javafx -->
