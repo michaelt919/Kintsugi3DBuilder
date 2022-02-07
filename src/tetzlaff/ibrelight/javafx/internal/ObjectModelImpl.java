@@ -12,7 +12,6 @@
 
 package tetzlaff.ibrelight.javafx.internal;//Created by alexk on 7/21/2017.
 
-import com.sun.istack.internal.NotNull;
 import javafx.beans.value.ObservableValue;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
@@ -38,7 +37,6 @@ public class ObjectModelImpl extends ExtendedObjectModelBase
         this.selectedObjectPoseProperty = selectedObjectPoseProperty;
     }
 
-    @NotNull
     private ObjectPoseSetting getActiveObjectPose()
     {
         if (selectedObjectPoseProperty == null || selectedObjectPoseProperty.getValue() == null)
