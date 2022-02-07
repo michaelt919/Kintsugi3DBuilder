@@ -12,7 +12,6 @@
 
 package tetzlaff.ibrelight.javafx.internal;//Created by alexk on 7/21/2017.
 
-import com.sun.istack.internal.NotNull;
 import javafx.beans.value.ObservableValue;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.javafx.controllers.scene.camera.CameraSetting;
@@ -34,7 +33,6 @@ public class CameraModelImpl extends ExtendedCameraModelBase
         this.selectedCameraSetting = selectedCameraSetting;
     }
 
-    @NotNull
     private CameraSetting getActiveCameraSetting()
     {
         if (selectedCameraSetting == null || selectedCameraSetting.getValue() == null)

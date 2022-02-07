@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.Predicate;
 
-import com.sun.javafx.scene.control.skin.TableHeaderRow;
+import javafx.scene.control.skin.TableHeaderRow;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
@@ -126,9 +126,9 @@ public class RootLightSceneController implements Initializable
         //preventing reordering or rearranging
         tableView.skinProperty().addListener((obs, oldS, newS) ->
         {
-            TableHeaderRow tableHeaderRow = (TableHeaderRow) tableView.lookup("TableHeaderRow");
-            tableHeaderRow.reorderingProperty().addListener((p, o, n) ->
-                tableHeaderRow.setReordering(false));
+//            TableHeaderRow tableHeaderRow = (TableHeaderRow) tableView.lookup("TableHeaderRow");
+//            tableHeaderRow.reorderingProperty().addListener((p, o, n) ->
+//                tableHeaderRow.setReordering(false));
         });
 
         tableView.setSortPolicy(param -> false);
