@@ -12,15 +12,14 @@
 
 package tetzlaff.optimization;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.IntStream;
-
 import org.ejml.data.SingularMatrixException;
 import org.ejml.dense.row.CommonOps_DDRM;
 import org.ejml.simple.SimpleMatrix;
 
-import static org.ejml.dense.row.CommonOps_DDRM.elementMin;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.IntStream;
+
 import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
 
 public final class NonNegativeLeastSquares
@@ -247,7 +246,7 @@ public final class NonNegativeLeastSquares
                         }
 
                         mapping.clear();
-                        s.set(0.0); // Set all elements to zero.
+                        s.fill(0.0); // Set all elements to zero.
 
                         // Populates the mapping, solves the system and copies it into s, and returns a vector containing only the free variables.
                         s_P = solvePartial(augmentedATA, augmentedATb, p, mapping, s, constraintCount);
@@ -265,7 +264,7 @@ public final class NonNegativeLeastSquares
                     x.set(k, 0.0);
 
                     mapping.clear();
-                    s.set(0.0); // Set all elements to zero.
+                    s.fill(0.0); // Set all elements to zero.
 
                     // Populates the mapping, solves the system and copies it into s, and returns a vector containing only the free variables.
                     solvePartial(augmentedATA, augmentedATb, p, mapping, s, constraintCount);
@@ -289,40 +288,40 @@ public final class NonNegativeLeastSquares
 
     public static void main(String... args)
     {
-        SimpleMatrix mA = new SimpleMatrix(10, 5, true
-        ,    0.8147,    0.1576,    0.6557,    0.7060,    0.4387
-        ,    0.9058,    0.9706,    0.0357,    0.0318,    0.3816
-        ,    0.1270,    0.9572,    0.8491,    0.2769,    0.7655
-        ,    0.9134,    0.4854,    0.9340,    0.0462,    0.7952
-        ,    0.6324,    0.8003,    0.6787,    0.0971,    0.1869
-        ,    0.0975,    0.1419,    0.7577,    0.8235,    0.4898
-        ,    0.2785,    0.4218,    0.7431,    0.6948,    0.4456
-        ,    0.5469,    0.9157,    0.3922,    0.3171,    0.6463
-        ,    0.9575,    0.7922,    0.6555,    0.9502,    0.7094
-        ,    0.9649,    0.9595,    0.1712,    0.0344,    0.7547
-        );
-
-        SimpleMatrix b = new SimpleMatrix(10, 1, true
-                ,    0.2760
-                ,    0.6797
-                ,    0.6551
-                ,    0.1626
-                ,    0.1190
-                ,    0.4984
-                ,    0.9597
-                ,    0.3404
-                ,    0.5853
-                ,    0.2238
-        );
-
-        // Result should be:
-        //        0
-        //   0.3594
-        //        0
-        //   0.5265
-        //        0
-
-        SimpleMatrix x = solve(mA, b, 0.001);
-        x.print();
+//        SimpleMatrix mA = new SimpleMatrix(10, 5, true
+//        ,    0.8147,    0.1576,    0.6557,    0.7060,    0.4387
+//        ,    0.9058,    0.9706,    0.0357,    0.0318,    0.3816
+//        ,    0.1270,    0.9572,    0.8491,    0.2769,    0.7655
+//        ,    0.9134,    0.4854,    0.9340,    0.0462,    0.7952
+//        ,    0.6324,    0.8003,    0.6787,    0.0971,    0.1869
+//        ,    0.0975,    0.1419,    0.7577,    0.8235,    0.4898
+//        ,    0.2785,    0.4218,    0.7431,    0.6948,    0.4456
+//        ,    0.5469,    0.9157,    0.3922,    0.3171,    0.6463
+//        ,    0.9575,    0.7922,    0.6555,    0.9502,    0.7094
+//        ,    0.9649,    0.9595,    0.1712,    0.0344,    0.7547
+//        );
+//
+//        SimpleMatrix b = new SimpleMatrix(10, 1, true
+//                ,    0.2760
+//                ,    0.6797
+//                ,    0.6551
+//                ,    0.1626
+//                ,    0.1190
+//                ,    0.4984
+//                ,    0.9597
+//                ,    0.3404
+//                ,    0.5853
+//                ,    0.2238
+//        );
+//
+//        // Result should be:
+//        //        0
+//        //   0.3594
+//        //        0
+//        //   0.5265
+//        //        0
+//
+//        SimpleMatrix x = solve(mA, b, 0.001);
+//        x.print();
     }
 }

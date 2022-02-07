@@ -12,21 +12,24 @@
 
 package tetzlaff.gl.glfw;
 
-import java.nio.ByteBuffer;
-import java.util.function.Function;
-
-import org.lwjgl.*;
-import org.lwjgl.Version.*;
-import org.lwjgl.glfw.*;
-import org.lwjgl.opengl.*;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.Version;
+import org.lwjgl.Version.BuildType;
+import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.opengl.GL;
 import tetzlaff.gl.core.DoubleFramebuffer;
 import tetzlaff.gl.core.FramebufferSize;
 import tetzlaff.gl.exceptions.GLFWException;
 import tetzlaff.gl.window.*;
 
+import java.nio.DoubleBuffer;
+import java.nio.IntBuffer;
+import java.util.function.Function;
+
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.system.MemoryUtil.*;
+import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class WindowImpl<ContextType extends WindowContextBase<ContextType>>
     extends WindowBase<ContextType> implements PollableWindow<ContextType>
@@ -40,12 +43,12 @@ public class WindowImpl<ContextType extends WindowContextBase<ContextType>>
         Function<ContextType, DoubleFramebuffer<ContextType>> createDefaultFramebuffer,
         WindowSpecification windowSpec)
     {
-        glfwSetErrorCallback(GLFWErrorCallback.createString((error, description) ->
+        glfwSetErrorCallback(GLFWErrorCallback.create((error, description) ->
         {
-            throw new GLFWException(description);
+            throw new GLFWException(GLFWErrorCallback.getDescription(description));
         }));
 
-        if ( glfwInit() != GL_TRUE )
+        if ( !glfwInit() )
         {
             throw new GLFWException("Unable to initialize GLFW.");
         }
@@ -170,7 +173,7 @@ public class WindowImpl<ContextType extends WindowContextBase<ContextType>>
     @Override
     public boolean isWindowClosing()
     {
-        return glfwWindowShouldClose(handle) == GL_TRUE;
+        return glfwWindowShouldClose(handle);
     }
 
     @Override
@@ -182,34 +185,34 @@ public class WindowImpl<ContextType extends WindowContextBase<ContextType>>
     @Override
     public void requestWindowClose()
     {
-        glfwSetWindowShouldClose(handle, GL_TRUE);
+        glfwSetWindowShouldClose(handle, true);
     }
 
     @Override
     public void cancelWindowClose()
     {
-        glfwSetWindowShouldClose(handle, GL_FALSE);
+        glfwSetWindowShouldClose(handle, false);
     }
 
     @Override
     public WindowSize getWindowSize()
     {
-        ByteBuffer widthBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
-        ByteBuffer heightBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
+        IntBuffer widthBuffer = BufferUtils.createByteBuffer(Integer.BYTES).asIntBuffer();
+        IntBuffer heightBuffer = BufferUtils.createByteBuffer(Integer.BYTES).asIntBuffer();
         glfwGetWindowSize(handle, widthBuffer, heightBuffer);
-        int width = widthBuffer.asIntBuffer().get(0);
-        int height = heightBuffer.asIntBuffer().get(0);
+        int width = widthBuffer.get(0);
+        int height = heightBuffer.get(0);
         return new WindowSize(width, height);
     }
 
     @Override
     public WindowPosition getWindowPosition()
     {
-        ByteBuffer xBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
-        ByteBuffer yBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
+        IntBuffer xBuffer = BufferUtils.createByteBuffer(Integer.BYTES).asIntBuffer();
+        IntBuffer yBuffer = BufferUtils.createByteBuffer(Integer.BYTES).asIntBuffer();
         glfwGetWindowPos(handle, xBuffer, yBuffer);
-        int x = xBuffer.asIntBuffer().get(0);
-        int y = yBuffer.asIntBuffer().get(0);
+        int x = xBuffer.get(0);
+        int y = yBuffer.get(0);
         return new WindowPosition(x, y);
     }
 
@@ -269,18 +272,18 @@ public class WindowImpl<ContextType extends WindowContextBase<ContextType>>
     @Override
     public CursorPosition getCursorPosition()
     {
-        ByteBuffer xBuffer = BufferUtils.createByteBuffer(Double.BYTES);
-        ByteBuffer yBuffer = BufferUtils.createByteBuffer(Double.BYTES);
+        DoubleBuffer xBuffer = BufferUtils.createByteBuffer(Double.BYTES).asDoubleBuffer();
+        DoubleBuffer yBuffer = BufferUtils.createByteBuffer(Double.BYTES).asDoubleBuffer();
         glfwGetCursorPos(handle, xBuffer, yBuffer);
-        double x = xBuffer.asDoubleBuffer().get(0);
-        double y = yBuffer.asDoubleBuffer().get(0);
+        double x = xBuffer.get(0);
+        double y = yBuffer.get(0);
         return new CursorPosition(x, y);
     }
 
     @Override
     public tetzlaff.gl.window.ModifierKeys getModifierKeys()
     {
-        return new ModifierKeys(
+        return new tetzlaff.gl.glfw.ModifierKeys(
             getKeyState(GLFW_KEY_LEFT_SHIFT) == KeyState.PRESSED || getKeyState(GLFW_KEY_RIGHT_SHIFT) == KeyState.PRESSED,
             getKeyState(GLFW_KEY_LEFT_CONTROL) == KeyState.PRESSED || getKeyState(GLFW_KEY_RIGHT_CONTROL) == KeyState.PRESSED,
             getKeyState(GLFW_KEY_LEFT_ALT) == KeyState.PRESSED || getKeyState(GLFW_KEY_RIGHT_ALT) == KeyState.PRESSED,

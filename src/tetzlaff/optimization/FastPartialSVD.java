@@ -12,13 +12,13 @@
 
 package tetzlaff.optimization;
 
-import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.Random;
-
 import org.ejml.data.FMatrix;
 import org.ejml.data.FMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
+
+import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.Random;
 
 import static org.ejml.dense.row.CommonOps_FDRM.*;
 
@@ -100,7 +100,7 @@ public final class FastPartialSVD
 
             for (int k = 0; k < singularValueCount; k++)
             {
-                SimpleMatrix vk = SimpleMatrix.random32(this.v.numRows(), 1, -1, 1, random);
+                SimpleMatrix vk = SimpleMatrix.random_FDRM(this.v.numRows(), 1, -1, 1, random);
                 divide(vk.getMatrix(), (float)vk.normF());
 
                 double ev;
