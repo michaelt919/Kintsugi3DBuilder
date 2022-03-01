@@ -13,16 +13,26 @@
 package tetzlaff.ibrelight.export.general;
 
 import java.io.File;
+import java.util.function.Consumer;
 
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Program;
 import tetzlaff.ibrelight.core.IBRRequest;
 
-public interface RenderRequestBuilder
+public interface RenderRequestBuilder<ContextType extends Context<ContextType>>
 {
-    RenderRequestBuilder useTextureSpaceVertexShader();
-    RenderRequestBuilder useCameraSpaceVertexShader();
-    RenderRequestBuilder useCustomVertexShader(File vertexShader);
+    RenderRequestBuilder<ContextType> useTextureSpaceVertexShader();
+    RenderRequestBuilder<ContextType> useCameraSpaceVertexShader();
+    RenderRequestBuilder<ContextType> useCustomVertexShader(File vertexShader);
 
-    IBRRequest create();
-    RenderRequestBuilder setWidth(int width);
-    RenderRequestBuilder setHeight(int height);
+    /**
+     * Define a callback function that will be called to set up the shaders immediately before rendering.
+     * @param shaderSetupCallback A function to be called to set up a shader program immediately before rendering.
+     * @return Reference to the same builder.
+     */
+    RenderRequestBuilder<ContextType> setShaderSetupCallback(Consumer<Program<ContextType>> shaderSetupCallback);
+
+    IBRRequest<ContextType> create();
+    RenderRequestBuilder<ContextType> setWidth(int width);
+    RenderRequestBuilder<ContextType> setHeight(int height);
 }

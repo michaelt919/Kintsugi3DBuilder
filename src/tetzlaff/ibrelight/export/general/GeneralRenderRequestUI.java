@@ -32,6 +32,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import tetzlaff.gl.core.Context;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.IBRRequestUI;
 import tetzlaff.ibrelight.core.IBRelightModels;
@@ -126,7 +127,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
     }
 
     @Override
-    public void prompt(Consumer<IBRRequest> requestHandler)
+    public <ContextType extends Context<ContextType>> void prompt(Consumer<IBRRequest<ContextType>> requestHandler)
     {
         stage.show();
 
@@ -137,7 +138,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
             File fragmentShader = new File(fragmentShaderField.getText());
             File outputDirectory = new File(exportDirectoryField.getText());
 
-            RenderRequestBuilder builder;
+            RenderRequestBuilder<ContextType> builder;
             switch(loopModeComboBox.getValue())
             {
                 case SINGLE_FRAME:

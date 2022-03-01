@@ -27,7 +27,7 @@ import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
 import tetzlaff.ibrelight.core.ViewSet;
 
-public class ResampleRequest implements IBRRequest
+public class ResampleRequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>
 {
     private final int resampleWidth;
     private final int resampleHeight;
@@ -43,7 +43,7 @@ public class ResampleRequest implements IBRRequest
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
+    public void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
     {
         ViewSet targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile);
 

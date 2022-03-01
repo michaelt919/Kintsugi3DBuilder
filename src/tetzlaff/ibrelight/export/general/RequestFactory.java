@@ -12,12 +12,21 @@
 
 package tetzlaff.ibrelight.export.general;
 
+import tetzlaff.gl.core.Context;
+
 import java.io.File;
 
 public interface RequestFactory
 {
-    RenderRequestBuilder buildSingleFrameRenderRequest(File fragmentShader, File outputDirectory, String outputImageName);
-    RenderRequestBuilder buildMultiframeRenderRequest(File fragmentShader, File outputDirectory, int frameCount);
-    RenderRequestBuilder buildMultiviewRenderRequest(File fragmentShader, File outputDirectory);
-    RenderRequestBuilder buildMultiviewRetargetRenderRequest(File fragmentShader, File outputDirectory, File retargetViewSet);
+    <ContextType extends Context<ContextType>>
+    RenderRequestBuilder<ContextType> buildSingleFrameRenderRequest(File fragmentShader, File outputDirectory, String outputImageName);
+
+    <ContextType extends Context<ContextType>>
+    RenderRequestBuilder<ContextType> buildMultiframeRenderRequest(File fragmentShader, File outputDirectory, int frameCount);
+
+    <ContextType extends Context<ContextType>>
+    RenderRequestBuilder<ContextType> buildMultiviewRenderRequest(File fragmentShader, File outputDirectory);
+
+    <ContextType extends Context<ContextType>>
+    RenderRequestBuilder<ContextType> buildMultiviewRetargetRenderRequest(File fragmentShader, File outputDirectory, File retargetViewSet);
 }

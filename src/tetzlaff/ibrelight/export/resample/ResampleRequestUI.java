@@ -30,6 +30,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import tetzlaff.gl.core.Context;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.IBRRequestUI;
 import tetzlaff.ibrelight.core.IBRelightModels;
@@ -126,7 +127,7 @@ public class ResampleRequestUI implements IBRRequestUI
     }
 
     @Override
-    public void prompt(Consumer<IBRRequest> requestHandler)
+    public <ContextType extends Context<ContextType>> void prompt(Consumer<IBRRequest<ContextType>> requestHandler)
     {
         stage.show();
 
@@ -135,7 +136,7 @@ public class ResampleRequestUI implements IBRRequestUI
             //stage.close();
 
             requestHandler.accept(
-                new ResampleRequest(
+                new ResampleRequest<>(
                     Integer.parseInt(widthTextField.getText()),
                     Integer.parseInt(heightTextField.getText()),
                     new File(targetVSetFileField.getText()),

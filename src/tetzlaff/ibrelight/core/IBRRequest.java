@@ -16,8 +16,9 @@ import tetzlaff.gl.core.Context;
 
 /**
  * An interface for an executable that can be launched from the IBRelight "Export" menu.
+ * @param <ContextType> The type of the graphics context that the renderer implementation uses.
  */
-public interface IBRRequest 
+public interface IBRRequest<ContextType extends Context<ContextType>>
 {
     /**
      * The entry point for the executable.
@@ -26,8 +27,7 @@ public interface IBRRequest
      *                   or just to access the IBRResources and the graphics Context.
      * @param callback A callback that can be fired to update the loading bar.
      *                 If this is unused, an "infinite loading" indicator will be displayed instead.
-     * @param <ContextType> The type of the graphics context that the renderer implementation uses.
      * @throws Exception An exception may be thrown by the executable that will be caught and logged by IBRelight.
      */
-    <ContextType extends Context<ContextType>> void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws Exception;
+     void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws Exception;
 }

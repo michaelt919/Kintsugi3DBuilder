@@ -17,7 +17,7 @@ import java.io.*;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.*;
 
-public class SpecularFitRequest implements IBRRequest
+public class SpecularFitRequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>
 {
     private final SpecularFitSettings settings;
 
@@ -27,7 +27,7 @@ public class SpecularFitRequest implements IBRRequest
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback)
+    public void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback)
     {
         try
         {

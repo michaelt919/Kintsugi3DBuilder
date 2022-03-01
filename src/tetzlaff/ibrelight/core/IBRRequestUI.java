@@ -12,9 +12,11 @@
 
 package tetzlaff.ibrelight.core;
 
+import tetzlaff.gl.core.Context;
+
 import java.util.function.Consumer;
 
 public interface IBRRequestUI
 {
-    void prompt(Consumer<IBRRequest> requestHandler);
+    <ContextType extends Context<ContextType>> void prompt(Consumer<IBRRequest<ContextType>> requestHandler);
 }
