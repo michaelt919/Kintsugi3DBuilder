@@ -11,6 +11,7 @@ import javafx.scene.image.Image;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import tetzlaff.gl.core.Context;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.IBRRequestUI;
 import tetzlaff.ibrelight.core.IBRelightModels;
@@ -89,14 +90,14 @@ public class PTMrequestUI implements IBRRequestUI {
 
 
     @Override
-    public void prompt(Consumer<IBRRequest> requestHandler) {
+    public <ContextType extends Context<ContextType>> void prompt(Consumer<IBRRequest<ContextType>> requestHandler) {
         stage.show();
 
         runButton.setOnAction(event ->
         {
             //stage.close();
 
-            IBRRequest request = new PTMrequest(new TextureFitSettings(
+            IBRRequest<ContextType> request = new PTMrequest<>(new TextureFitSettings(
                     Integer.parseInt(widthTextField.getText()),
                     Integer.parseInt(heightTextField.getText()),
                     new File(exportDirectoryField.getText()),

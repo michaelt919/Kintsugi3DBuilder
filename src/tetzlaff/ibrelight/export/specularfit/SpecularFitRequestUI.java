@@ -32,6 +32,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import tetzlaff.gl.core.Context;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.IBRRequestUI;
 import tetzlaff.ibrelight.core.IBRelightModels;
@@ -150,7 +151,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
     }
 
     @Override
-    public void prompt(Consumer<IBRRequest> requestHandler)
+    public <ContextType extends Context<ContextType>> void prompt(Consumer<IBRRequest<ContextType>> requestHandler)
     {
         stage.show();
 

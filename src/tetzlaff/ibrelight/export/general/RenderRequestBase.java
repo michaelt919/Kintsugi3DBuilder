@@ -15,6 +15,7 @@ package tetzlaff.ibrelight.export.general;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.file.Paths;
+import java.util.function.Consumer;
 
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.IBRRequest;
@@ -22,7 +23,7 @@ import tetzlaff.ibrelight.core.RenderingMode;
 import tetzlaff.ibrelight.rendering.IBRResources;
 import tetzlaff.models.ReadonlySettingsModel;
 
-abstract class RenderRequestBase implements IBRRequest
+abstract class RenderRequestBase<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>
 {
     private static final File TEX_SPACE_VERTEX_SHADER = Paths.get("shaders", "common", "texspace_noscale.vert").toFile();
     private static final File IMG_SPACE_VERTEX_SHADER = Paths.get("shaders", "common", "imgspace.vert").toFile();
@@ -32,19 +33,22 @@ abstract class RenderRequestBase implements IBRRequest
     private final File vertexShader;
     private final File fragmentShader;
     private final ReadonlySettingsModel settingsModel;
+    private final Consumer<Program<ContextType>> shaderSetupCallback;
     private final File outputDirectory;
 
-    RenderRequestBase(int width, int height, ReadonlySettingsModel settingsModel, File vertexShader, File fragmentShader, File outputDirectory)
+    RenderRequestBase(int width, int height, ReadonlySettingsModel settingsModel, Consumer<Program<ContextType>> shaderSetupCallback,
+                      File vertexShader, File fragmentShader, File outputDirectory)
     {
         this.width = width;
         this.height = height;
         this.settingsModel = settingsModel;
+        this.shaderSetupCallback = shaderSetupCallback;
         this.vertexShader = vertexShader;
         this.fragmentShader = fragmentShader;
         this.outputDirectory = outputDirectory;
     }
 
-    abstract static class BuilderBase implements RenderRequestBuilder
+    abstract static class BuilderBase<ContextType extends Context<ContextType>> implements RenderRequestBuilder<ContextType>
     {
         private final ReadonlySettingsModel settingsModel;
         private final File fragmentShader;
@@ -53,6 +57,7 @@ abstract class RenderRequestBase implements IBRRequest
         private int width = 1024;
         private int height = 1024;
         private File vertexShader = TEX_SPACE_VERTEX_SHADER;
+        private Consumer<Program<ContextType>> shaderSetupCallback = null;
 
         BuilderBase(ReadonlySettingsModel settingsModel, File fragmentShader, File outputDirectory)
         {
@@ -76,6 +81,11 @@ abstract class RenderRequestBase implements IBRRequest
             return settingsModel;
         }
 
+        protected Consumer<Program<ContextType>> getShaderSetupCallback()
+        {
+            return shaderSetupCallback;
+        }
+
         protected File getVertexShader()
         {
             return vertexShader;
@@ -92,42 +102,49 @@ abstract class RenderRequestBase implements IBRRequest
         }
 
         @Override
-        public RenderRequestBuilder useTextureSpaceVertexShader()
+        public RenderRequestBuilder<ContextType> useTextureSpaceVertexShader()
         {
             this.vertexShader = TEX_SPACE_VERTEX_SHADER;
             return this;
         }
 
         @Override
-        public RenderRequestBuilder useCameraSpaceVertexShader()
+        public RenderRequestBuilder<ContextType> useCameraSpaceVertexShader()
         {
             this.vertexShader = IMG_SPACE_VERTEX_SHADER;
             return this;
         }
 
         @Override
-        public RenderRequestBuilder useCustomVertexShader(File vertexShader)
+        public RenderRequestBuilder<ContextType> useCustomVertexShader(File vertexShader)
         {
             this.vertexShader = vertexShader;
             return this;
         }
 
         @Override
-        public RenderRequestBuilder setWidth(int width)
+        public RenderRequestBuilder<ContextType> setShaderSetupCallback(Consumer<Program<ContextType>> shaderSetupCallback)
+        {
+            this.shaderSetupCallback = shaderSetupCallback;
+            return this;
+        }
+
+        @Override
+        public RenderRequestBuilder<ContextType> setWidth(int width)
         {
             this.width = width;
             return this;
         }
 
         @Override
-        public RenderRequestBuilder setHeight(int height)
+        public RenderRequestBuilder<ContextType> setHeight(int height)
         {
             this.height = height;
             return this;
         }
     }
 
-    protected <ContextType extends Context<ContextType>>
+    protected
     Program<ContextType> createProgram(IBRResources<ContextType> resources) throws FileNotFoundException
     {
         Program<ContextType> program =
@@ -150,7 +167,7 @@ abstract class RenderRequestBase implements IBRRequest
         return program;
     }
 
-    protected <ContextType extends Context<ContextType>> FramebufferObject<ContextType> createFramebuffer(ContextType context)
+    protected FramebufferObject<ContextType> createFramebuffer(ContextType context)
     {
         return context.buildFramebufferObject(width, height)
             .addColorAttachment()
@@ -169,11 +186,12 @@ abstract class RenderRequestBase implements IBRRequest
         return drawable;
     }
 
-    protected static <ContextType extends Context<ContextType>> void render(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
+    protected void render(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
     {
         drawable.getContext().getState().disableBackFaceCulling();
         framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
         framebuffer.clearDepthBuffer();
+        shaderSetupCallback.accept(drawable.program());
         drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
     }
 

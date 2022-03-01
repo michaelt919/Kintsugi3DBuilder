@@ -14,6 +14,7 @@ package tetzlaff.ibrelight.export.general;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.function.Consumer;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Drawable;
@@ -26,18 +27,18 @@ import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.rendering.IBRResources;
 import tetzlaff.models.ReadonlySettingsModel;
 
-class MultiviewRetargetRenderRequest extends RenderRequestBase
+class MultiviewRetargetRenderRequest<ContextType extends Context<ContextType>> extends RenderRequestBase<ContextType>
 {
     private final File targetViewSetFile;
 
-    MultiviewRetargetRenderRequest(int width, int height, ReadonlySettingsModel settingsModel,
+    MultiviewRetargetRenderRequest(int width, int height, ReadonlySettingsModel settingsModel, Consumer<Program<ContextType>> shaderSetupCallback,
         File targetViewSet, File vertexShader, File fragmentShader, File outputDirectory)
     {
-        super(width, height, settingsModel, vertexShader, fragmentShader, outputDirectory);
+        super(width, height, settingsModel, shaderSetupCallback, vertexShader, fragmentShader, outputDirectory);
         this.targetViewSetFile = targetViewSet;
     }
 
-    static class Builder extends BuilderBase
+    static class Builder<ContextType extends Context<ContextType>> extends BuilderBase<ContextType>
     {
         private final File targetViewSet;
 
@@ -48,17 +49,15 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
         }
 
         @Override
-        public IBRRequest create()
+        public IBRRequest<ContextType> create()
         {
-            return new MultiviewRetargetRenderRequest(getWidth(), getHeight(), getSettingsModel(),
+            return new MultiviewRetargetRenderRequest<>(getWidth(), getHeight(), getSettingsModel(), getShaderSetupCallback(),
                 targetViewSet, getVertexShader(), getFragmentShader(), getOutputDirectory());
         }
     }
 
     @Override
-    public <ContextType extends Context<ContextType>>
-        void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback)
-            throws IOException
+    public void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
     {
         ViewSet targetViewSet = ViewSet.loadFromVSETFile(targetViewSetFile);
 

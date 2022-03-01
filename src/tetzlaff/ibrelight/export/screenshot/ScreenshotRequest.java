@@ -21,21 +21,22 @@ import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
 
-public class ScreenshotRequest implements IBRRequest
+public class ScreenshotRequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>
 {
     private final int width;
     private final int height;
     private final File exportFile;
 
-    public interface Builder<RequestType extends ScreenshotRequest>
+    public interface Builder<ContextType extends Context<ContextType>, RequestType extends ScreenshotRequest<ContextType>>
     {
-        Builder<RequestType> setWidth(int width);
-        Builder<RequestType> setHeight(int height);
-        Builder<RequestType> setExportFile(File exportFile);
+        Builder<ContextType, RequestType> setWidth(int width);
+        Builder<ContextType, RequestType> setHeight(int height);
+        Builder<ContextType, RequestType> setExportFile(File exportFile);
         RequestType create();
     }
 
-    protected static class BuilderImplementation implements Builder<ScreenshotRequest>
+    protected static class BuilderImplementation<ContextType extends Context<ContextType>>
+            implements Builder<ContextType, ScreenshotRequest<ContextType>>
     {
         private int width;
         private int height;
@@ -57,21 +58,21 @@ public class ScreenshotRequest implements IBRRequest
         }
 
         @Override
-        public Builder<ScreenshotRequest> setWidth(int width)
+        public Builder<ContextType, ScreenshotRequest<ContextType>> setWidth(int width)
         {
             this.width = width;
             return this;
         }
 
         @Override
-        public Builder<ScreenshotRequest> setHeight(int height)
+        public Builder<ContextType, ScreenshotRequest<ContextType>> setHeight(int height)
         {
             this.height = height;
             return this;
         }
 
         @Override
-        public Builder<ScreenshotRequest> setExportFile(File exportFile)
+        public Builder<ContextType, ScreenshotRequest<ContextType>> setExportFile(File exportFile)
         {
             this.exportFile = exportFile;
             return this;
@@ -79,9 +80,9 @@ public class ScreenshotRequest implements IBRRequest
 
 
         @Override
-        public ScreenshotRequest create()
+        public ScreenshotRequest<ContextType> create()
         {
-            return new ScreenshotRequest(getWidth(), getHeight(), getExportFile());
+            return new ScreenshotRequest<>(getWidth(), getHeight(), getExportFile());
         }
     }
 
@@ -93,7 +94,7 @@ public class ScreenshotRequest implements IBRRequest
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
+    public void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
     {
         try
         (

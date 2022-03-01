@@ -15,6 +15,7 @@ package tetzlaff.ibrelight.export.screenshot;
 import java.io.IOException;
 
 import javafx.stage.Window;
+import tetzlaff.gl.core.Context;
 import tetzlaff.ibrelight.core.IBRelightModels;
 import tetzlaff.ibrelight.export.screenshot.ScreenshotRequest.BuilderImplementation;
 

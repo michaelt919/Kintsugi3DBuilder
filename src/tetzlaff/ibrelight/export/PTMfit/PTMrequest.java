@@ -8,7 +8,7 @@ import tetzlaff.ibrelight.core.TextureFitSettings;
 
 import java.io.IOException;
 
-public class PTMrequest implements IBRRequest {
+public class PTMrequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType> {
 
     private TextureFitSettings setting;
     public PTMrequest(TextureFitSettings settings){
@@ -16,7 +16,8 @@ public class PTMrequest implements IBRRequest {
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws Exception {
+    public void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws Exception
+    {
         try
         {
             new PTMOptimization<ContextType>(setting).createFit(renderable.getResources());

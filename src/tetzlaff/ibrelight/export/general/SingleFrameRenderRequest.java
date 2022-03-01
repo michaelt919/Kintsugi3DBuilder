@@ -14,6 +14,7 @@ package tetzlaff.ibrelight.export.general;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.function.Consumer;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Drawable;
@@ -25,18 +26,18 @@ import tetzlaff.ibrelight.core.LoadingMonitor;
 import tetzlaff.ibrelight.rendering.IBRResources;
 import tetzlaff.models.ReadonlySettingsModel;
 
-class SingleFrameRenderRequest extends RenderRequestBase
+class SingleFrameRenderRequest<ContextType extends Context<ContextType>> extends RenderRequestBase<ContextType>
 {
     private final String outputImageName;
 
     SingleFrameRenderRequest(int width, int height, String outputImageName, ReadonlySettingsModel settingsModel,
-        File vertexShader, File fragmentShader, File outputDirectory)
+        Consumer<Program<ContextType>> shaderSetupCallback, File vertexShader, File fragmentShader, File outputDirectory)
     {
-        super(width, height, settingsModel, vertexShader, fragmentShader, outputDirectory);
+        super(width, height, settingsModel, shaderSetupCallback, vertexShader, fragmentShader, outputDirectory);
         this.outputImageName = outputImageName;
     }
 
-    static class Builder extends BuilderBase
+    static class Builder<ContextType extends Context<ContextType>> extends BuilderBase<ContextType>
     {
         private final String outputImageName;
 
@@ -47,17 +48,15 @@ class SingleFrameRenderRequest extends RenderRequestBase
         }
 
         @Override
-        public IBRRequest create()
+        public IBRRequest<ContextType> create()
         {
-            return new SingleFrameRenderRequest(getWidth(), getHeight(), outputImageName, getSettingsModel(),
+            return new SingleFrameRenderRequest<>(getWidth(), getHeight(), outputImageName, getSettingsModel(), getShaderSetupCallback(),
                 getVertexShader(), getFragmentShader(), getOutputDirectory());
         }
     }
 
     @Override
-    public <ContextType extends Context<ContextType>>
-        void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback)
-            throws IOException
+    public void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
     {
         IBRResources<ContextType> resources = renderable.getResources();
 

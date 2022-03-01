@@ -30,6 +30,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import tetzlaff.gl.core.Context;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.IBRRequestUI;
 import tetzlaff.ibrelight.core.IBRelightModels;
@@ -45,7 +46,12 @@ public class ScreenshotUI implements IBRRequestUI
     private final FileChooser fileChooser = new FileChooser();
     private File lastDirectory;
 
-    private Supplier<Builder<?>> builderSupplier;
+    public interface BuilderSupplier
+    {
+        <ContextType extends Context<ContextType>> Builder<ContextType, ScreenshotRequest<ContextType>> get();
+    }
+
+    private BuilderSupplier builderSupplier;
 
     private Stage stage;
 
@@ -71,7 +77,7 @@ public class ScreenshotUI implements IBRRequestUI
         return screenshotUI;
     }
 
-    public void setBuilderSupplier(Supplier<Builder<?>> builderSupplier)
+    public void setBuilderSupplier(BuilderSupplier builderSupplier)
     {
         this.builderSupplier = builderSupplier;
     }
@@ -107,7 +113,7 @@ public class ScreenshotUI implements IBRRequestUI
     }
 
     @Override
-    public void prompt(Consumer<IBRRequest> requestHandler)
+    public <ContextType extends Context<ContextType>> void prompt(Consumer<IBRRequest<ContextType>> requestHandler)
     {
         stage.show();
 
@@ -117,7 +123,7 @@ public class ScreenshotUI implements IBRRequestUI
             if (builderSupplier != null)
             {
                 requestHandler.accept(
-                    builderSupplier.get()
+                    builderSupplier.<ContextType>get()
                         .setWidth(Integer.parseInt(widthTextField.getText()))
                         .setHeight(Integer.parseInt(heightTextField.getText()))
                         .setExportFile(new File(exportFileField.getText()))

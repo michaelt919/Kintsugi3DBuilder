@@ -22,7 +22,7 @@ import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
 
-public abstract class SimpleAnimationRequestBase implements IBRRequest
+public abstract class SimpleAnimationRequestBase<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>
 {
     private final int width;
     private final int height;
@@ -110,7 +110,7 @@ public abstract class SimpleAnimationRequestBase implements IBRRequest
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
+    public void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
     {
         try
         (
