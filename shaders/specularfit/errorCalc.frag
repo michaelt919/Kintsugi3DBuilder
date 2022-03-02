@@ -13,7 +13,6 @@
  */
 
 #include "specularFit.glsl"
-#include "evaluateBRDF.glsl"
 #line 18 0
 
 uniform float errorGamma;

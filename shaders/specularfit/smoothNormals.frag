@@ -13,19 +13,9 @@
  */
 
 #include "specularFit.glsl"
-#include "evaluateBRDF.glsl"
-#include "normalError.glsl"
-#line 19 0
+#line 17 0
 
-layout(location = 0) out vec4 cleanNormalTS;
-
-#ifndef MICROFACET_DISTRIBUTION_RESOLUTION
-#define MICROFACET_DISTRIBUTION_RESOLUTION 90
-#endif
-
-#ifndef CLEAN_THRESHOLD
-#define CLEAN_THRESHOLD 1.0
-#endif
+layout(location = 0) out vec4 smoothNormalTS;
 
 uniform sampler2D origNormalEstimate;
 uniform sampler2D prevNormalEstimate;
@@ -54,13 +44,6 @@ void main()
     vec3 newNormalTS = vec3(newNormalXY, sqrt(1 - dot(newNormalXY, newNormalXY)));
     vec3 newNormal = tangentToObject * newNormalTS;
 
-    float origError = calculateError(triangleNormal, origNormal);
-    float newError = calculateError(triangleNormal, newNormal);
-
-    // 1 if sqrt(newError / originalError) >= 1 + threshold [use estimate from previous iteration]
-    // 0 otherwise [use new, smoothed estimate]
-    float alpha = step((1 + CLEAN_THRESHOLD) * (1 + CLEAN_THRESHOLD), newError / origError);
-
-    // Max alpha is 0.5 since it should also still include the previous normal with 50% weight regardless of error.
-    cleanNormalTS = vec4(normalize(mix(newNormalTS, prevNormalTS, alpha * 0.5 + 0.5)) * 0.5 + vec3(0.5), 1.0);
+    // Mix using alpha of 0.5 since it should still include the previous normal with 50% weight.
+    smoothNormalTS = vec4(normalize(mix(newNormalTS, prevNormalTS, 0.5)) * 0.5 + vec3(0.5), 1.0);
 }

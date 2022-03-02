@@ -13,7 +13,6 @@
  */
 
 #include "specularFit.glsl"
-#include "evaluateBRDF.glsl"
 #include "normalError.glsl"
 #line 19 0
 
@@ -29,6 +28,10 @@ uniform sampler2D dampingTex;
 
 #ifndef USE_LEVENBERG_MARQUARDT
 #define USE_LEVENBERG_MARQUARDT 1
+#endif
+
+#ifndef MIN_DAMPING
+#define MIN_DAMPING 1.0
 #endif
 
 vec3 getMFDGradient(float nDotH)
@@ -124,11 +127,12 @@ void main()
             vec3 actualReflectanceTimesNDotL = imgColor.rgb / incidentRadiance;
             vec3 reflectanceEstimate = getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV));
 
+            // n dot l is already incorporated by virtue of the fact that radiance is being optimized, not reflectance.
+            float weight = triangleNDotV * sqrt(max(0, 1 - nDotH * nDotH));
+
 #if USE_LEVENBERG_MARQUARDT
             mat3x2 mfdGradient = outerProduct(halfway.xy, getMFDGradient(nDotH)); // (d NdotH / dN) * (dD / d NdotH)
             mat3x2 specularGradient;
-
-            float weight = triangleNDotV;
 
 #if SMITH_MASKING_SHADOWING
             vec3 mfdEstimate = getMFDEstimate(nDotH); // Also includes Fresnel
@@ -169,7 +173,6 @@ void main()
             mJTJ += weight * weight * (fullGradient * transpose(fullGradient) + mat2(dampingFactor));
             vJTb += weight * weight * fullGradient * (actualReflectanceTimesNDotL - reflectanceEstimate * nDotL);
 #else
-            float weight = triangleNDotV * sqrt(max(0, 1 - nDotH * nDotH));
 
             mATA += weight * weight * dot(reflectanceEstimate, reflectanceEstimate) * outerProduct(light, light);
             vATb += weight * weight * dot(reflectanceEstimate, actualReflectanceTimesNDotL) * light;
@@ -199,7 +202,7 @@ void main()
         {
             // Map to the correct range for a texture.
             normalTS = vec4(newNormalTS * 0.5 + vec3(0.5), 1.0);
-            dampingOut = vec4(vec3(dampingFactor / 2.0), 1.0);
+            dampingOut = vec4(vec3(max(MIN_DAMPING, dampingFactor / 2.0)), 1.0);
         }
         else
         {

@@ -56,7 +56,7 @@ public class SpecularFitSolution
         specularBlue = new SimpleMatrix(settings.microfacetDistributionResolution + 1, settings.basisCount, DMatrixRMaj.class);
 
         weightsByTexel = IntStream.range(0, settings.width * settings.height)
-            .mapToObj(p -> new SimpleMatrix(settings.basisCount + 1, 1, DMatrixRMaj.class))
+            .mapToObj(p -> new SimpleMatrix(settings.basisCount, 1, DMatrixRMaj.class))
             .toArray(SimpleMatrix[]::new);
         weightsValidity = new boolean[settings.width * settings.height];
     }

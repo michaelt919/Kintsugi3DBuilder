@@ -30,14 +30,12 @@ public class BRDFReconstruction
 
     private final SpecularFitSettings settings;
     private final BasisFunctions stepBasis;
-    private final double metallicity;
     private final int matrixSize;
 
-    public BRDFReconstruction(SpecularFitSettings settings, BasisFunctions stepBasis, double metallicity)
+    public BRDFReconstruction(SpecularFitSettings settings, BasisFunctions stepBasis)
     {
         this.settings = settings;
         this.stepBasis = stepBasis;
-        this.metallicity = metallicity;
         matrixSize = settings.basisCount * (settings.microfacetDistributionResolution + 1);
     }
 
@@ -137,7 +135,7 @@ public class BRDFReconstruction
                 MatrixSystem contribution = new MatrixSystem(matrixSize, 3, DMatrixRMaj.class);
 
                 // Get the contributions from the current view.
-                new ReflectanceMatrixBuilder(reflectanceData, solution, metallicity, stepBasis, contribution).execute();
+                new ReflectanceMatrixBuilder(reflectanceData, solution, settings.getMetallicity(), stepBasis, contribution).execute();
 
                 synchronized (counter)
                 {

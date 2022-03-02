@@ -29,7 +29,9 @@ public class GeneralizedSmoothStepBasis implements BasisFunctions
      * endpoint is close to 0.
      * @param resolution The number of discrete elements in the domain of the function to be optimized,
      *                   which determines the number of functions in the library.
+     *                   An exception will be thrown if this number is less than 1.
      * @param metallicity The assumed "metallicity" of the function being optimized.
+     *                    This value will be clamped between 0 and 1.
      * @param transitionRange The distance between the start and end of each smoothstep function in the library.
      *                        Each smoothstep function will end (with a value of 0.0) at a different location
      *                        (spaced evenly across the domain) and will start (with a value of 1.0) at
@@ -38,6 +40,7 @@ public class GeneralizedSmoothStepBasis implements BasisFunctions
      *                        smaller transition range will be included in the library.  This is helpful when optimizing
      *                        a BRDF, for instance, which may have a steeper gradient close to the specular peak.
      *                        A transition range of 1 would correspond to a hard step function.
+     *                        The transition range will be clamped to 1 if set lower than 1.
      * @param smoothstep The actual smoothstep function to be used.  This function should have accept a domain between
      *                   0.0 and 1.0 and map the values to a range that is also between 0.0 and 1.0, where an input of
      *                   0.0 evaluates to a result of 0.0, and an input of 1.0 evaluates to a result of 1.0.
@@ -49,9 +52,14 @@ public class GeneralizedSmoothStepBasis implements BasisFunctions
     public GeneralizedSmoothStepBasis(int resolution, double metallicity,
                                       int transitionRange, DoubleUnaryOperator smoothstep)
     {
+        if (resolution < 1)
+        {
+            throw new IllegalArgumentException("Resolution must be greater than zero.");
+        }
+
         this.resolution = resolution;
-        this.metallicity = metallicity;
-        this.transitionRange = transitionRange;
+        this.metallicity = Math.max(0.0, Math.min(1.0, metallicity));
+        this.transitionRange = Math.max(1, transitionRange);
         this.smoothstep = smoothstep;
     }
 

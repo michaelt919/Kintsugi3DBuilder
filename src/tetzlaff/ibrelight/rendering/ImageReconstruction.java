@@ -30,20 +30,17 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
     private final Drawable<ContextType> drawable;
     private final FramebufferObject<ContextType> framebuffer;
 
-    private final ViewSet viewSet;
-
     public ImageReconstruction(IBRResources<ContextType> resources, ProgramBuilder<ContextType> programBuilder,
         FramebufferObjectBuilder<ContextType> framebufferObjectBuilder, Consumer<Program<ContextType>> programSetup)
         throws FileNotFoundException
     {
-        this.viewSet = resources.viewSet;
         this.program = programBuilder.createProgram();
         programSetup.accept(program);
         this.drawable = resources.createDrawable(program);
         this.framebuffer = framebufferObjectBuilder.createFramebufferObject();
     }
 
-    public void execute(BiConsumer<Integer, Framebuffer<ContextType>> reconstructionAction)
+    public void execute(ViewSet viewSet, BiConsumer<Integer, Framebuffer<ContextType>> reconstructionAction)
     {
         for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
         {
@@ -51,7 +48,13 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
             drawable.program().setUniform("projection",
                 viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(k)).getProjectionMatrix(
                     viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
-            drawable.program().setUniform("viewIndex", k);
+            drawable.program().setUniform("reconstructionCameraPos",
+                viewSet.getCameraPoseInverse(k).getColumn(3).getXYZ());
+            drawable.program().setUniform("reconstructionLightPos",
+                viewSet.getCameraPoseInverse(k).times(viewSet.getLightPosition(viewSet.getLightIndex(k)).asPosition()).getXYZ());
+            drawable.program().setUniform("reconstructionLightIntensity",
+                    viewSet.getLightIntensity(viewSet.getLightIndex(k)));
+            drawable.program().setUniform("gamma", viewSet.getGamma());
 
             for (int i = 0; i < framebuffer.getColorAttachmentCount(); i++)
             {

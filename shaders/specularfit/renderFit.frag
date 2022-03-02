@@ -15,9 +15,13 @@
 #include "specularFit.glsl"
 #line 17 0
 
+uniform vec3 reconstructionCameraPos;
+uniform vec3 reconstructionLightPos;
+uniform vec3 reconstructionLightIntensity;
+// gamma defined in colorappearance.glsl
+
 layout(location = 0) out vec4 fragColor;
 
-uniform sampler2D diffuseEstimate;
 uniform sampler2D specularEstimate;
 
 void main()
@@ -47,15 +51,15 @@ void main()
     vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
     vec3 normal = tangentToObject * normalDirTS;
 
-    vec3 lightDisplacement = getLightVector();
+    vec3 lightDisplacement = reconstructionLightPos - fPosition;
     vec3 light = normalize(lightDisplacement);
-    vec3 view = normalize(getViewVector());
+    vec3 view = normalize(reconstructionCameraPos - fPosition);
     vec3 halfway = normalize(light + view);
     float nDotH = max(0.0, dot(normal, halfway));
     float nDotL = max(0.0, dot(normal, light));
     float nDotV = max(0.0, dot(normal, view));
     float hDotV = max(0.0, dot(halfway, view));
-    vec3 incidentRadianceOverPi = lightIntensity / dot(lightDisplacement, lightDisplacement);
+    vec3 incidentRadianceOverPi = reconstructionLightIntensity / dot(lightDisplacement, lightDisplacement);
 
     vec3 specular = incidentRadianceOverPi * distTimesPi(nDotH, vec3(roughness))
         * geom(roughness, nDotH, nDotV, nDotL, hDotV)
