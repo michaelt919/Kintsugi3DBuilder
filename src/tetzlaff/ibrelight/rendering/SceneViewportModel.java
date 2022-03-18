@@ -38,7 +38,7 @@ public class SceneViewportModel<ContextType extends Context<ContextType>> implem
         this.sceneObjectNameList.add(null); // 0
     }
 
-    void addSceneObjectType(String sceneObjectTag)
+    public void addSceneObjectType(String sceneObjectTag)
     {
         sceneObjectNameList.add(sceneObjectTag);
 
@@ -46,7 +46,7 @@ public class SceneViewportModel<ContextType extends Context<ContextType>> implem
         sceneObjectIDLookup.put(sceneObjectTag, sceneObjectNameList.size() - 1);
     }
 
-    int lookupSceneObjectID(String sceneObjectTag)
+    public int lookupSceneObjectID(String sceneObjectTag)
     {
         return this.sceneObjectIDLookup.get(sceneObjectTag);
     }

@@ -32,6 +32,8 @@ import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.*;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.rendering.IBRResources.Builder;
+import tetzlaff.ibrelight.rendering.components.Grid;
+import tetzlaff.ibrelight.rendering.components.LightVisuals;
 import tetzlaff.ibrelight.util.KNNViewWeightGenerator;
 import tetzlaff.interactive.InitializationException;
 import tetzlaff.models.*;
@@ -61,10 +63,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private Drawable<ContextType> shadowDrawable;
 
     private VertexBuffer<ContextType> rectangleVertices;
-    private Program<ContextType> solidProgram;
-
-    private VertexBuffer<ContextType> gridVertices;
-    private Drawable<ContextType> gridDrawable;
 
     private final String id;
     private Drawable<ContextType> mainDrawable;
@@ -113,7 +111,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private FramebufferObject<ContextType> screenSpaceDepthFBO;
 
+    Grid<ContextType> grid;
     LightVisuals<ContextType> lightVisuals;
+
     SceneViewportModel<ContextType> sceneViewportModel;
 
     private static final int SHADING_FRAMEBUFFER_COUNT = 2;
@@ -135,6 +135,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         this.sceneViewportModel.addSceneObjectType("EnvironmentMap"); // 2
         this.sceneViewportModel.addSceneObjectType("SceneObject"); // 3
 
+        this.grid = new Grid<>(context, sceneModel);
         this.lightVisuals = new LightVisuals<>(context, sceneModel, sceneViewportModel);
     }
 
@@ -226,38 +227,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             shadowDrawable = context.createDrawable(shadowProgram);
 
-            this.solidProgram = context.getShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
-                    .createProgram();
-
-            float[] grid = new float[252];
-            for (int i = 0; i < 21; i++)
-            {
-                grid[i * 12] = i * 0.1f - 1.0f;
-                grid[i * 12 + 1] = 0;
-                grid[i * 12 + 2] = 1;
-
-                grid[i * 12 + 3] = i * 0.1f - 1.0f;
-                grid[i * 12 + 4] = 0;
-                grid[i * 12 + 5] = -1;
-
-                grid[i * 12 + 6] = 1;
-                grid[i * 12 + 7] = 0;
-                grid[i * 12 + 8] = i * 0.1f - 1.0f;
-
-                grid[i * 12 + 9] = -1;
-                grid[i * 12 + 10] = 0;
-                grid[i * 12 + 11] = i * 0.1f - 1.0f;
-            }
-
-            this.gridVertices = context.createVertexBuffer()
-                .setData(NativeVectorBufferFactory.getInstance()
-                    .createFromFloatArray(3, 84, grid));
-
-            this.gridDrawable = context.createDrawable(this.solidProgram);
-            this.gridDrawable.addVertexBuffer("position", gridVertices);
-
+            grid.initialize();
             lightVisuals.initialize();
 
             shadowDrawable.addVertexBuffer("position", resources.positionBuffer);
@@ -872,14 +842,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 }
 
                 // Draw grid
-                if (sceneModel.getSettingsModel().getBoolean("is3DGridEnabled"))
-                {
-                    this.solidProgram.setUniform("projection", sceneModel.getProjectionMatrix(size));
-                    this.solidProgram.setUniform("model_view", view.times(Matrix4.scale(sceneModel.getScale())));
-                    this.solidProgram.setUniform("color", new Vector4(0.5f, 0.5f, 0.5f, 1.0f));
-                    this.solidProgram.setUniform("objectID", 0);
-                    this.gridDrawable.draw(PrimitiveMode.LINES, offscreenFBO);
-                }
+                grid.draw(offscreenFBO, view);
 
                 if (sceneModel.getLightingModel().isGroundPlaneEnabled())
                 {
@@ -1076,12 +1039,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             rectangleVertices = null;
         }
 
-        if (solidProgram != null)
-        {
-            solidProgram.close();
-            solidProgram = null;
-        }
-
         if (weightBuffer != null)
         {
             weightBuffer.close();
@@ -1094,16 +1051,15 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             simpleTexProgram = null;
         }
 
-        if (gridVertices != null)
-        {
-            gridVertices.close();
-            gridVertices = null;
-        }
-
         if (tintedTexProgram != null)
         {
             tintedTexProgram.close();
             tintedTexProgram = null;
+        }
+
+        if (grid != null)
+        {
+            grid.close();
         }
 
         if (lightVisuals != null)
@@ -1289,21 +1245,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.environmentBackgroundDrawable = context.createDrawable(environmentBackgroundProgram);
             this.environmentBackgroundDrawable.addVertexBuffer("position", rectangleVertices);
 
-            Program<ContextType> newSolidProgram = resources.getIBRShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
-                    .createProgram();
-
-            if (this.solidProgram != null)
-            {
-                this.solidProgram.close();
-            }
-
-            this.solidProgram = newSolidProgram;
-
-            this.gridDrawable = context.createDrawable(this.solidProgram);
-            this.gridDrawable.addVertexBuffer("position", gridVertices);
-
+            grid.reloadShaders();
             lightVisuals.reloadShaders();
         }
         catch (FileNotFoundException|RuntimeException e)

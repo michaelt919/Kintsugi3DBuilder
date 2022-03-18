@@ -1,4 +1,4 @@
-package tetzlaff.ibrelight.rendering;
+package tetzlaff.ibrelight.rendering.components;
 
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.nativebuffer.NativeDataType;
@@ -8,7 +8,9 @@ import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
+import tetzlaff.ibrelight.core.RenderedComponent;
 import tetzlaff.ibrelight.core.SceneModel;
+import tetzlaff.ibrelight.rendering.SceneViewportModel;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -17,7 +19,7 @@ import java.io.FileNotFoundException;
  * Class for drawing the 3D light representations and manipulation widgets.
  * @param <ContextType>
  */
-class LightVisuals<ContextType extends Context<ContextType>> implements AutoCloseable
+public class LightVisuals<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
     private final ContextType context;
     private final SceneModel sceneModel;
@@ -36,7 +38,7 @@ class LightVisuals<ContextType extends Context<ContextType>> implements AutoClos
     private Program<ContextType> circleProgram;
     private Drawable<ContextType> circleDrawable;
 
-    LightVisuals(ContextType context, SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
+    public LightVisuals(ContextType context, SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
     {
         this.context = context;
         this.sceneModel = sceneModel;
@@ -52,7 +54,8 @@ class LightVisuals<ContextType extends Context<ContextType>> implements AutoClos
         }
     }
 
-    void initialize() throws FileNotFoundException
+    @Override
+    public void initialize() throws FileNotFoundException
     {
         this.rectangleVertices = context.createRectangle();
 
@@ -119,7 +122,8 @@ class LightVisuals<ContextType extends Context<ContextType>> implements AutoClos
                 .createTexture();
     }
 
-    void reloadShaders() throws FileNotFoundException
+    @Override
+    public void reloadShaders() throws FileNotFoundException
     {
         Program<ContextType> newLightProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
@@ -166,7 +170,8 @@ class LightVisuals<ContextType extends Context<ContextType>> implements AutoClos
         this.circleDrawable.addVertexBuffer("position", rectangleVertices);
     }
 
-    void draw(Framebuffer<ContextType> framebuffer, Matrix4 view)
+    @Override
+    public void draw(Framebuffer<ContextType> framebuffer, Matrix4 view)
     {
         FramebufferSize size = framebuffer.getSize();
 
