@@ -79,10 +79,10 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
                         .setLoadOptions(loadOptions)
                         .loadVSETFile(vsetFile));
 
-            newItem.setObjectModel(this.objectModel);
-            newItem.setCameraModel(this.cameraModel);
-            newItem.setLightingModel(this.lightingModel);
-            newItem.setSettingsModel(this.settingsModel);
+            newItem.getSceneModel().setObjectModel(this.objectModel);
+            newItem.getSceneModel().setCameraModel(this.cameraModel);
+            newItem.getSceneModel().setLightingModel(this.lightingModel);
+            newItem.getSceneModel().setSettingsModel(this.settingsModel);
 
             newItem.setLoadingMonitor(new LoadingMonitor()
             {
@@ -173,10 +173,10 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
                         .loadAgisoftFiles(xmlFile, meshFile, undistortedImageDirectory)
                         .setPrimaryView(primaryViewName));
 
-            newItem.setObjectModel(this.objectModel);
-            newItem.setCameraModel(this.cameraModel);
-            newItem.setLightingModel(this.lightingModel);
-            newItem.setSettingsModel(this.settingsModel);
+            newItem.getSceneModel().setObjectModel(this.objectModel);
+            newItem.getSceneModel().setCameraModel(this.cameraModel);
+            newItem.getSceneModel().setLightingModel(this.lightingModel);
+            newItem.getSceneModel().setSettingsModel(this.settingsModel);
 
             newItem.setLoadingMonitor(new LoadingMonitor()
             {
@@ -314,7 +314,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
         this.objectModel = objectModel;
         for (IBRRenderable<?> renderable : renderableList)
         {
-            renderable.setObjectModel(objectModel);
+            renderable.getSceneModel().setObjectModel(objectModel);
         }
     }
 
@@ -324,7 +324,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
         this.cameraModel = cameraModel;
         for (IBRRenderable<?> renderable : renderableList)
         {
-            renderable.setCameraModel(cameraModel);
+            renderable.getSceneModel().setCameraModel(cameraModel);
         }
     }
 
@@ -334,7 +334,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
         this.lightingModel = lightingModel;
         for (IBRRenderable<?> renderable : renderableList)
         {
-            renderable.setLightingModel(lightingModel);
+            renderable.getSceneModel().setLightingModel(lightingModel);
         }
     }
 
@@ -344,7 +344,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
         this.settingsModel = settingsModel;
         for (IBRRenderable<?> renderable : renderableList)
         {
-            renderable.setSettingsModel(settingsModel);
+            renderable.getSceneModel().setSettingsModel(settingsModel);
         }
     }
 

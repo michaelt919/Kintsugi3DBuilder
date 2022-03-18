@@ -127,8 +127,8 @@ public abstract class SimpleAnimationRequestBase<ContextType extends Context<Con
                 framebuffer.clearDepthBuffer();
 
                 renderable.draw(framebuffer,
-                    renderable.getUnscaledMatrix(getViewMatrix(i, renderable.getCameraModel().getLookMatrix()))
-                        .times(renderable.getBaseModelMatrix()),
+                    renderable.getSceneModel().getUnscaledMatrix(getViewMatrix(i, renderable.getSceneModel().getCameraModel().getLookMatrix()))
+                        .times(renderable.getSceneModel().getBaseModelMatrix()),
                     null, 320, 180);
 
                 File exportFile = new File(exportPath, String.format("%04d.png", i));

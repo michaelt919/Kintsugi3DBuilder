@@ -86,23 +86,18 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
     VertexGeometry getActiveGeometry();
 
     /**
+     * Gets the scene model (object, camera, and lights)
+     * Upon modifying the object, camera, or lights models,
+     * subsequent changes to the model will be reflected in the behavior of this implementation.
+     * @return The scene model.
+     */
+    SceneModel getSceneModel();
+
+    /**
      * Gets pixel-by-pixel information about what is currently being displayed on screen.
      * @return The information encapsulated as a SceneViewport instance.
      */
     SceneViewport getSceneViewportModel();
-
-    /**
-     * Gets the current settings being used by the renderer.
-     * @return The current renderer settings.
-     */
-    SafeReadonlySettingsModel getSettingsModel();
-
-    /**
-     * Changes the settings instance being used by the renderer.  Upon modifying the settings model,
-     * subsequent changes to the model will be reflected in the behavior of this implementation.
-     * @return The current renderer settings.
-     */
-    void setSettingsModel(ReadonlySettingsModel settingsModel);
 
     /**
      * Reloads all of the shaders.
@@ -124,45 +119,6 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
     Optional<AbstractImage> loadEnvironmentMap(File environmentFile) throws FileNotFoundException;
 
     /**
-     * Gets the current 3D object placement
-     * @return The placement of the 3D object.
-     */
-    ReadonlyObjectModel getObjectModel();
-
-    /**
-     * Gets the current camera.
-     * @return The camera.
-     */
-    ReadonlyCameraModel getCameraModel();
-
-    /**
-     * Gets the currently active lights.
-     * @return The lights.
-     */
-    ReadonlyLightingModel getLightingModel();
-
-    /**
-     * Sets the object placement instance being used by the renderer.  Upon modifying the object placement model,
-     * subsequent changes to the model will be reflected in the behavior of this implementation.
-     * @param objectModel
-     */
-    void setObjectModel(ReadonlyObjectModel objectModel);
-
-    /**
-     * Sets the camera instance being used by the renderer.  Upon modifying the camera model,
-     * subsequent changes to the model will be reflected in the behavior of this implementation.
-     * @param cameraModel
-     */
-    void setCameraModel(ReadonlyCameraModel cameraModel);
-
-    /**
-     * Sets the lighting instance being used by the renderer.  Upon modifying the lighting model,
-     * subsequent changes to the model will be reflected in the behavior of this implementation.
-     * @param lightingModel
-     */
-    void setLightingModel(ReadonlyLightingModel lightingModel);
-
-    /**
      * Gets the resources used by this IBR implementation.
      * These resources can be used to accomplish other shading tasks other than the built-in image-based renderer.
      * The resources are automatically destroyed when this implementation closes.
@@ -175,29 +131,6 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
      * @return The environment map.
      */
     Optional<Cubemap<ContextType>> getEnvironmentMap();
-
-    /**
-     * Gets the current rotation transformation for the environment map.
-     * @return The environment map transformation matrix.
-     */
-    Matrix4 getEnvironmentMapMatrix();
-
-    /**
-     * Rescales a transformation defined in the world space used by the user-facing widgets in IBRelight
-     * to match the scale used in the object's raw geometry file.  This is usually necessary in order to define a
-     * view transformation with respect to the original local coordinates from the geometry mesh.
-     * @param scaledMatrix The transformation at the scale used in the user-facing widgets.
-     * @return The matrix at the scale used by the object's local coordinate space defined in the geometry file.
-     */
-    Matrix4 getUnscaledMatrix(Matrix4 scaledVMatrix);
-
-    /**
-     * Gets a model transformation matrix that re-centers and rotates the object from the original local coordinates
-     * defined in the geometry file (which may be arbitrary and not necessarily centered) so that the object is roughly
-     * centered at the origin with a reasonable orientation.
-     * @return
-     */
-    Matrix4 getBaseModelMatrix();
 
     /**
      * Sets the tonemapping curve used to interpret the photographic data.
