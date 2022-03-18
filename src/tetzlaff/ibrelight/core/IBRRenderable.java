@@ -183,15 +183,21 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
     Matrix4 getEnvironmentMapMatrix();
 
     /**
-     * Converts a view transformation defined in world space into a transformation defined with respect to
-     * the original local coordinates from the geometry mesh.  This function is only intended to be used by the
-     * application; the terminology is a bit of a mess and should be cleaned up at some point in the future.
-     * In a sense, this creates a "model view" matrix in that it is a local to camera space transformation, but it
-     * does not incorporate any additional model transformation specified in the viewer.
-     * @param relativeViewMatrix The world space to camera space transformation.
-     * @return The view matrix required by the object's local coordinate space defined in the geometry file.
+     * Rescales a transformation defined in the world space used by the user-facing widgets in IBRelight
+     * to match the scale used in the object's raw geometry file.  This is usually necessary in order to define a
+     * view transformation with respect to the original local coordinates from the geometry mesh.
+     * @param scaledMatrix The transformation at the scale used in the user-facing widgets.
+     * @return The matrix at the scale used by the object's local coordinate space defined in the geometry file.
      */
-    Matrix4 getAbsoluteViewMatrix(Matrix4 relativeViewMatrix);
+    Matrix4 getUnscaledMatrix(Matrix4 scaledVMatrix);
+
+    /**
+     * Gets a model transformation matrix that re-centers and rotates the object from the original local coordinates
+     * defined in the geometry file (which may be arbitrary and not necessarily centered) so that the object is roughly
+     * centered at the origin with a reasonable orientation.
+     * @return
+     */
+    Matrix4 getBaseModelMatrix();
 
     /**
      * Sets the tonemapping curve used to interpret the photographic data.

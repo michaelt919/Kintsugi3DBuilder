@@ -102,7 +102,7 @@ public abstract class SimpleAnimationRequestBase<ContextType extends Context<Con
         this.exportPath = exportPath;
     }
 
-    protected abstract Matrix4 getRelativeViewMatrix(int frame, Matrix4 baseRelativeViewMatrix);
+    protected abstract Matrix4 getViewMatrix(int frame, Matrix4 baseViewMatrix);
 
     public int getFrameCount()
     {
@@ -126,7 +126,9 @@ public abstract class SimpleAnimationRequestBase<ContextType extends Context<Con
                 framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, /*1.0f*/0.0f);
                 framebuffer.clearDepthBuffer();
 
-                renderable.draw(framebuffer, renderable.getAbsoluteViewMatrix(getRelativeViewMatrix(i, renderable.getCameraModel().getLookMatrix())),
+                renderable.draw(framebuffer,
+                    renderable.getUnscaledMatrix(getViewMatrix(i, renderable.getCameraModel().getLookMatrix()))
+                        .times(renderable.getBaseModelMatrix()),
                     null, 320, 180);
 
                 File exportFile = new File(exportPath, String.format("%04d.png", i));
