@@ -53,8 +53,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private Program<ContextType> simpleTexProgram;
     private Drawable<ContextType> simpleTexDrawable;
-    private Program<ContextType> tintedTexProgram;
-    private Drawable<ContextType> tintedTexDrawable;
 
     private boolean newEnvironmentDataAvailable;
     private EnvironmentMap newEnvironmentData;
@@ -69,7 +67,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private boolean newBackplateDataAvailable;
     private BufferedImage newBackplateData;
     private boolean backplateUnloadRequested = false;
-    private Texture2D<ContextType> backplateTexture;
     private File currentBackplateFile;
     private long backplateLastModified;
     private final Object loadBackplateLock = new Object();
@@ -125,11 +122,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "texture.frag"))
                     .createProgram();
 
-            this.tintedTexProgram = context.getShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "texture_tint.frag"))
-                    .createProgram();
-
             this.rectangleVertices = context.createRectangle();
 
             this.resources = resourceBuilder.create();
@@ -143,14 +135,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.simpleTexDrawable = context.createDrawable(simpleTexProgram);
             this.simpleTexDrawable.addVertexBuffer("position", this.rectangleVertices);
 
-            this.tintedTexDrawable = context.createDrawable(tintedTexProgram);
-            this.tintedTexDrawable.addVertexBuffer("position", this.rectangleVertices);
-
             // i.e. shadow map, environment map, etc.
             lightingResources.initialize();
             lightingResources.setPositionBuffer(resources.positionBuffer);
 
-            // graphics resources for depicting the on-screen representation of lights
+            // the actual subject for image-based rendering
             ibrSubject = new IBRSubject<>(resources, lightingResources, sceneModel, sceneViewportModel);
             ibrSubject.initialize();
 
@@ -158,10 +147,15 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             lightVisuals = new LightVisuals<>(context, sceneModel, sceneViewportModel);
             lightVisuals.initialize();
 
+            // Backplate and environment must be first since they aren't depth tested.
+            otherComponents.add(new Backplate<>(context, lightingResources, sceneModel));
             otherComponents.add(new Environment<>(context, lightingResources, sceneModel, sceneViewportModel));
+
+            // Foreground components that will be depth tested
             otherComponents.add(new Grid<>(context, sceneModel));
             otherComponents.add(new GroundPlane<>(resources, lightingResources, sceneModel, sceneViewportModel));
 
+            // Run initialization for each additional component
             for (RenderedComponent<ContextType> component : otherComponents)
             {
                 component.initialize();
@@ -227,14 +221,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         if (this.environmentMapUnloadRequested)
         {
-            lightingResources.setEnvironmentMap(null);
+            lightingResources.takeEnvironmentMap(null);
             this.environmentMapUnloadRequested = false;
         }
 
-        if (this.backplateUnloadRequested && this.backplateTexture != null)
+        if (this.backplateUnloadRequested)
         {
-            this.backplateTexture.close();
-            this.backplateTexture = null;
+            lightingResources.takeBackplateTexture(null);
             this.backplateUnloadRequested = false;
         }
 
@@ -277,7 +270,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 if (newEnvironmentTexture != null)
                 {
-                    lightingResources.setEnvironmentMap(newEnvironmentTexture);
+                    lightingResources.takeEnvironmentMap(newEnvironmentTexture);
                 }
             }
             catch (RuntimeException e)
@@ -314,12 +307,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 if (newBackplateTexture != null)
                 {
-                    if (this.backplateTexture != null)
-                    {
-                        this.backplateTexture.close();
-                    }
-
-                    this.backplateTexture = newBackplateTexture;
+                    lightingResources.takeBackplateTexture(newBackplateTexture);
                 }
             }
             catch (RuntimeException e)
@@ -369,9 +357,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         sceneModel.setCentroid(resources.geometry.getCentroid());
     }
 
-
-
-    public Matrix4 getProjectionMatrix(FramebufferSize size)
+    private Matrix4 getProjectionMatrix(FramebufferSize size)
     {
         float scale = sceneModel.getScale();
 
@@ -436,43 +422,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             context.getState().enableBackFaceCulling();
 
-            boolean lightCalibrationMode = sceneModel.getSettingsModel().getBoolean("lightCalibrationMode");
-            int snapViewIndex = -1; // TODO used in LightCalibration
-
-            boolean overriddenViewMatrix = modelViewOverride != null;
-
-            Matrix4 lightCalibrationView = null;
-            if (lightCalibrationMode)
-            {
-                int primaryLightIndex = this.resources.viewSet.getLightIndex(this.resources.viewSet.getPrimaryViewIndex());
-
-                Vector3 lightPosition = sceneModel.getSettingsModel().get("currentLightCalibration", Vector2.class).asVector3()
-                                            .plus(resources.viewSet.getLightPosition(primaryLightIndex));
-                Matrix4 lightTransform = Matrix4.translate(lightPosition.negated());
-
-                Matrix4 viewInverse = sceneModel.getCurrentViewMatrix().quickInverse(0.01f);
-                float maxSimilarity = -1.0f;
-
-                for(int i = 0; i < this.resources.viewSet.getCameraPoseCount(); i++)
-                {
-                    Matrix4 candidateView = this.resources.viewSet.getCameraPose(i);
-
-                    float similarity = viewInverse.times(Vector4.ORIGIN).getXYZ()
-                        .dot(sceneModel.getViewMatrixFromCameraPose(candidateView).quickInverse(0.01f).times(Vector4.ORIGIN).getXYZ());
-
-                    if (similarity > maxSimilarity)
-                    {
-                        maxSimilarity = similarity;
-                        lightCalibrationView = lightTransform.times(sceneModel.getViewMatrixFromCameraPose(candidateView));
-                        snapViewIndex = i;
-                    }
-                }
-            }
-
-            Matrix4 view = overriddenViewMatrix ? sceneModel.getViewFromModelViewMatrix(modelViewOverride)
-                    : lightCalibrationMode ? lightCalibrationView
-                    : sceneModel.getCurrentViewMatrix();
-
             FramebufferSize size = framebuffer.getSize();
 
             Matrix4 projection = projectionOverride != null ? projectionOverride : getProjectionMatrix(size);
@@ -504,29 +453,54 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 Vector3 clearColor = calculateClearColor();
                 offscreenFBO.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
                 this.sceneModel.setClearColor(clearColor);
+                boolean lightCalibrationMode = sceneModel.getSettingsModel().getBoolean("lightCalibrationMode");
+                int snapViewIndex = -1;
 
-                if (backplateTexture != null && sceneModel.getLightingModel().getBackgroundMode() == BackgroundMode.IMAGE)
+                boolean overriddenViewMatrix = modelViewOverride != null;
+
+                Matrix4 lightCalibrationView = null;
+                if (lightCalibrationMode)
                 {
-                    tintedTexDrawable.program().setTexture("tex", backplateTexture);
-                    tintedTexDrawable.program().setUniform("color", sceneModel.getClearColor());
+                    int primaryLightIndex = this.resources.viewSet.getLightIndex(this.resources.viewSet.getPrimaryViewIndex());
 
-                    context.getState().disableDepthTest();
-                    tintedTexDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-                    context.getState().enableDepthTest();
+                    Vector3 lightPosition = sceneModel.getSettingsModel().get("currentLightCalibration", Vector2.class).asVector3()
+                            .plus(resources.viewSet.getLightPosition(primaryLightIndex));
+                    Matrix4 lightTransform = Matrix4.translate(lightPosition.negated());
 
-                    // Clear ID buffer again.
-                    offscreenFBO.clearIntegerColorBuffer(1, 0, 0, 0, 0);
+                    Matrix4 viewInverse = sceneModel.getCurrentViewMatrix().quickInverse(0.01f);
+                    float maxSimilarity = -1.0f;
+
+                    for(int i = 0; i < this.resources.viewSet.getCameraPoseCount(); i++)
+                    {
+                        Matrix4 candidateView = this.resources.viewSet.getCameraPose(i);
+
+                        float similarity = viewInverse.times(Vector4.ORIGIN).getXYZ()
+                                .dot(sceneModel.getViewMatrixFromCameraPose(candidateView).quickInverse(0.01f).times(Vector4.ORIGIN).getXYZ());
+
+                        if (similarity > maxSimilarity)
+                        {
+                            maxSimilarity = similarity;
+                            lightCalibrationView = lightTransform.times(sceneModel.getViewMatrixFromCameraPose(candidateView));
+                            snapViewIndex = i;
+                        }
+                    }
                 }
 
-                lightingResources.refreshShadowMaps();
+                Matrix4 view = overriddenViewMatrix ? sceneModel.getViewFromModelViewMatrix(modelViewOverride)
+                        : lightCalibrationMode ? lightCalibrationView
+                        : sceneModel.getCurrentViewMatrix();
 
-                // Draw grid
-                otherComponents.forEach(component -> component.draw(offscreenFBO, true, view, projection));
+                lightingResources.refreshShadowMaps();
 
                 // Screen space depth buffer for specular shadows
                 // Not used for light calibration so assume a model transform should be applied.
                 lightingResources.refreshScreenSpaceDepthFBO(true, view, projection);
+
                 context.flush();
+
+                // Draw "other components" first, which includes things that ignore the depth test first
+                // (environment or backplate)
+                otherComponents.forEach(component -> component.draw(offscreenFBO, true, view, projection));
 
                 // Hole fill color depends on whether in light calibration mode or not.
                 if (lightCalibrationMode)
@@ -625,12 +599,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     @Override
     public void close()
     {
-        if (this.backplateTexture != null)
-        {
-            this.backplateTexture.close();
-            this.backplateTexture = null;
-        }
-
         if (resources != null)
         {
             resources.close();
@@ -647,12 +615,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         {
             simpleTexProgram.close();
             simpleTexProgram = null;
-        }
-
-        if (tintedTexProgram != null)
-        {
-            tintedTexProgram.close();
-            tintedTexProgram = null;
         }
 
         if (ibrSubject != null)
@@ -778,7 +740,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     @Override
     public void loadBackplate(File backplateFile) throws FileNotFoundException
     {
-        if (backplateFile == null && this.backplateTexture != null)
+        if (backplateFile == null && lightingResources.getBackplateTexture() != null)
         {
             this.backplateUnloadRequested = true;
         }

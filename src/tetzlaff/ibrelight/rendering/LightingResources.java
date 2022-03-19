@@ -21,8 +21,10 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
     private FramebufferObject<ContextType> shadowFramebuffer;
     private Drawable<ContextType> shadowDrawable;
 
+    private Texture2D<ContextType> backplateTexture;
     private Cubemap<ContextType> environmentMap;
     private FramebufferObject<ContextType> screenSpaceDepthFBO;
+
 
     public LightingResources(ContextType context, SceneModel sceneModel)
     {
@@ -49,12 +51,35 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
                 .createFramebufferObject();
     }
 
+    public Texture2D<ContextType> getBackplateTexture()
+    {
+        return backplateTexture;
+    }
+
+    /**
+     * Assumes ownership of the backplate texture
+     * @param backplateTexture
+     */
+    public void takeBackplateTexture(Texture2D<ContextType> backplateTexture)
+    {
+        if (this.backplateTexture != null)
+        {
+            this.backplateTexture.close();
+        }
+
+        this.backplateTexture = backplateTexture;
+    }
+
     public Cubemap<ContextType> getEnvironmentMap()
     {
         return this.environmentMap;
     }
 
-    public void setEnvironmentMap(Cubemap<ContextType> newEnvironmentMap)
+    /**
+     * Assumes ownership of the environment map resource
+     * @param newEnvironmentMap
+     */
+    public void takeEnvironmentMap(Cubemap<ContextType> newEnvironmentMap)
     {
         if (this.environmentMap != null)
         {
@@ -66,6 +91,7 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
 
     /**
      * Used for generating shadow maps.
+     * Does not take ownership of this buffer.
      * @param positionBuffer
      */
     public void setPositionBuffer(VertexBuffer<ContextType> positionBuffer)
@@ -179,6 +205,12 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
     @Override
     public void close()
     {
+        if (this.backplateTexture != null)
+        {
+            this.backplateTexture.close();
+            this.backplateTexture = null;
+        }
+
         if (this.environmentMap != null)
         {
             this.environmentMap.close();
