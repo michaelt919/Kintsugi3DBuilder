@@ -5,6 +5,7 @@ import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.ibrelight.core.CameraViewport;
 import tetzlaff.ibrelight.core.RenderedComponent;
 import tetzlaff.ibrelight.core.SceneModel;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
@@ -44,7 +45,13 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
         this.context = resources.context;
         this.sceneModel = sceneModel;
         this.sceneViewportModel = sceneViewportModel;
+        this.sceneViewportModel.addSceneObjectType("IBRObject");
         this.standardShader = new StandardShader<>(resources, lightingResources, sceneModel);
+    }
+
+    public Program<ContextType> getProgram()
+    {
+        return standardShader.getProgram();
     }
 
     @Override
@@ -52,58 +59,38 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
     {
         standardShader.initialize(this.sceneModel.getSettingsModel() == null ?
             StandardRenderingMode.IMAGE_BASED : this.sceneModel.getSettingsModel().get("renderingMode", StandardRenderingMode.class));
-
-        this.drawable = context.createDrawable(standardShader.getProgram());
-        this.drawable.addVertexBuffer("position", this.resources.positionBuffer);
-
-        if (this.resources.normalBuffer != null)
-        {
-            this.drawable.addVertexBuffer("normal", this.resources.normalBuffer);
-        }
-
-        if (this.resources.texCoordBuffer != null)
-        {
-            this.drawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
-        }
-
-        if (this.resources.tangentBuffer != null)
-        {
-            this.drawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
-        }
+        refreshDrawable();
     }
 
-
-    public void updateCompiledSettings()
+    @Override
+    public void update() throws FileNotFoundException
     {
-        Map<String, Optional<Object>> defineMap = getPreprocessorDefines();
+        Map<String, Optional<Object>> defineMap = standardShader.getPreprocessorDefines();
 
-        StandardRenderingMode renderingMode =
-                this.sceneModel.getSettingsModel() == null ? StandardRenderingMode.IMAGE_BASED : this.sceneModel.getSettingsModel().get("renderingMode", StandardRenderingMode.class);
-
-        if (renderingMode != lastCompiledRenderingMode ||
-                defineMap.entrySet().stream().anyMatch(
-                        defineEntry -> !Objects.equals(drawable.program().getDefine(defineEntry.getKey()), defineEntry.getValue())))
+        // Reloads shaders only if compiled settings have changed.
+        if (getExpectedRenderingMode() != lastCompiledRenderingMode ||
+            defineMap.entrySet().stream().anyMatch(
+                defineEntry -> !Objects.equals(drawable.program().getDefine(defineEntry.getKey()), defineEntry.getValue())))
         {
-            try
-            {
-                System.out.println("Updating compiled render settings.");
-                standardShader.reload(renderingMode);
-            }
-            catch (RuntimeException|FileNotFoundException e)
-            {
-                e.printStackTrace();
-            }
+            System.out.println("Updating compiled render settings.");
+            reloadShaders();
         }
     }
 
     @Override
     public void reloadShaders() throws FileNotFoundException
     {
-        standardShader.reload(this.sceneModel.getSettingsModel() == null ?
-            StandardRenderingMode.IMAGE_BASED : this.sceneModel.getSettingsModel().get("renderingMode", StandardRenderingMode.class));
+        StandardRenderingMode renderingMode = getExpectedRenderingMode();
+
+        // Force reload shaders
+        standardShader.reload(renderingMode);
+        refreshDrawable();
 
         this.lastCompiledRenderingMode = renderingMode;
+    }
 
+    private void refreshDrawable()
+    {
         this.drawable = context.createDrawable(standardShader.getProgram());
         this.drawable.addVertexBuffer("position", this.resources.positionBuffer);
 
@@ -121,6 +108,12 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
         {
             this.drawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
         }
+    }
+
+    private StandardRenderingMode getExpectedRenderingMode()
+    {
+        return this.sceneModel.getSettingsModel() == null ?  StandardRenderingMode.IMAGE_BASED
+            : this.sceneModel.getSettingsModel().get("renderingMode", StandardRenderingMode.class);
     }
 
     private void setupModelView(Program<ContextType> p, Matrix4 modelView)
@@ -165,40 +158,29 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
     }
 
     @Override
-    public void draw(Framebuffer<ContextType> framebuffer, Matrix4 view, Matrix4 fullProjection,
-                     Matrix4 viewportProjection, int x, int y, int width, int height)
+    public void draw(Framebuffer<ContextType> framebuffer, CameraViewport cameraViewport)
     {
-        try(UniformBuffer<ContextType> viewIndexBuffer = context.createUniformBuffer()) {
+        context.getState().disableBackFaceCulling();
 
-            // After the ground plane, use a gray color for anything without a texture map.
-            drawable.program().setUniform("defaultDiffuseColor", new Vector3(0.125f));
+        // After the ground plane, use a gray color for anything without a texture map.
+        drawable.program().setUniform("defaultDiffuseColor", new Vector3(0.125f));
 
-            context.getState().disableBackFaceCulling();
+        standardShader.setup();
+        drawable.program().setUniform("objectID", sceneViewportModel.lookupSceneObjectID("IBRObject"));
 
-            standardShader.setup();
-            drawable.program().setUniform("objectID", sceneViewportModel.lookupSceneObjectID("IBRObject"));
+        drawable.program().setTexture("screenSpaceDepthBuffer", lightingResources.getScreenSpaceDepthTexture());
 
-            if (lightCalibrationMode) {
-                drawable.program().setUniform("holeFillColor", new Vector3(0.5f));
-                viewIndexBuffer.setData(NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, 1, snapViewIndex));
-                drawable.program().setUniformBuffer("ViewIndices", viewIndexBuffer);
-            } else {
-                drawable.program().setUniform("holeFillColor", new Vector3(0.0f));
-            }
+        Matrix4 modelView = cameraViewport.isExpectingModelTransform() ?
+            sceneModel.getModelViewMatrix(cameraViewport.getView()) : sceneModel.getCameraPoseFromViewMatrix(cameraViewport.getView());
 
-            drawable.program().setTexture("screenSpaceDepthBuffer", lightingResources.getScreenSpaceDepthTexture());
+        setupModelView(drawable.program(), modelView);
 
-            Matrix4 modelView = lightCalibrationMode ? sceneModel.getCameraPoseFromViewMatrix(view) : sceneModel.getModelViewMatrix(view);
+        drawable.program().setUniform("projection", cameraViewport.getViewportProjection());
+        drawable.program().setUniform("fullProjection", cameraViewport.getFullProjection());
 
-            setupModelView(drawable.program(), view);
+        drawable.draw(PrimitiveMode.TRIANGLES, framebuffer, cameraViewport.getX(), cameraViewport.getY(), cameraViewport.getWidth(), cameraViewport.getHeight());
 
-            drawable.program().setUniform("projection", viewportProjection);
-            drawable.program().setUniform("fullProjection", fullProjection);
-
-            drawable.draw(PrimitiveMode.TRIANGLES, framebuffer, x, y, width, height);
-
-            context.getState().enableBackFaceCulling();
-        }
+        context.getState().enableBackFaceCulling();
     }
 
     @Override

@@ -4,6 +4,7 @@ import tetzlaff.gl.core.*;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector4;
+import tetzlaff.ibrelight.core.CameraViewport;
 import tetzlaff.ibrelight.core.RenderedComponent;
 import tetzlaff.ibrelight.core.SceneModel;
 
@@ -82,17 +83,16 @@ public class Grid<ContextType extends Context<ContextType>> implements RenderedC
     }
 
     @Override
-    public void draw(Framebuffer<ContextType> framebuffer, Matrix4 view, Matrix4 fullProjection,
-                     Matrix4 viewportProjection, int x, int y, int width, int height)
+    public void draw(Framebuffer<ContextType> framebuffer, CameraViewport cameraViewport)
     {
         // Draw grid
         if (sceneModel.getSettingsModel().getBoolean("is3DGridEnabled"))
         {
-            this.solidProgram.setUniform("projection", viewportProjection);
-            this.solidProgram.setUniform("model_view", view.times(Matrix4.scale(sceneModel.getScale())));
+            this.solidProgram.setUniform("projection", cameraViewport.getViewportProjection());
+            this.solidProgram.setUniform("model_view", cameraViewport.getView().times(Matrix4.scale(sceneModel.getScale())));
             this.solidProgram.setUniform("color", new Vector4(0.5f, 0.5f, 0.5f, 1.0f));
             this.solidProgram.setUniform("objectID", 0);
-            this.gridDrawable.draw(PrimitiveMode.LINES, framebuffer, x, y, width, height);
+            this.gridDrawable.draw(PrimitiveMode.LINES, framebuffer, cameraViewport.getX(), cameraViewport.getY(), cameraViewport.getWidth(), cameraViewport.getHeight());
         }
     }
 

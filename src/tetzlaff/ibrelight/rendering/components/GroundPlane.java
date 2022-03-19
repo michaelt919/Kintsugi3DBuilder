@@ -3,6 +3,7 @@ package tetzlaff.ibrelight.rendering.components;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.ibrelight.core.CameraViewport;
 import tetzlaff.ibrelight.core.RenderedComponent;
 import tetzlaff.ibrelight.core.SceneModel;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
@@ -12,6 +13,9 @@ import tetzlaff.ibrelight.rendering.SceneViewportModel;
 import tetzlaff.ibrelight.rendering.StandardShader;
 
 import java.io.FileNotFoundException;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 public class GroundPlane<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
@@ -21,7 +25,7 @@ public class GroundPlane<ContextType extends Context<ContextType>> implements Re
     private StandardShader<ContextType> groundPlaneStandardShader;
 
     private VertexBuffer<ContextType> rectangleVertices;
-    Drawable<ContextType> groundPlaneDrawable;
+    private Drawable<ContextType> groundPlaneDrawable;
 
     public GroundPlane(IBRResources<ContextType> resources, LightingResources<ContextType> lightingResources,
                        SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
@@ -44,6 +48,20 @@ public class GroundPlane<ContextType extends Context<ContextType>> implements Re
     }
 
     @Override
+    public void update() throws FileNotFoundException
+    {
+        Map<String, Optional<Object>> defineMap = groundPlaneStandardShader.getPreprocessorDefines();
+
+        // Reloads shaders only if compiled settings have changed.
+        if (defineMap.entrySet().stream().anyMatch(
+                defineEntry -> !Objects.equals(groundPlaneDrawable.program().getDefine(defineEntry.getKey()), defineEntry.getValue())))
+        {
+            System.out.println("Updating compiled render settings.");
+            reloadShaders();
+        }
+    }
+
+    @Override
     public void reloadShaders() throws FileNotFoundException
     {
         groundPlaneStandardShader.reload(StandardRenderingMode.LAMBERTIAN_SHADED);
@@ -53,34 +71,31 @@ public class GroundPlane<ContextType extends Context<ContextType>> implements Re
     }
 
     @Override
-    public void draw(Framebuffer<ContextType> framebuffer, Matrix4 view, Matrix4 fullProjection,
-                     Matrix4 viewportProjection, int x, int y, int width, int height)
+    public void draw(Framebuffer<ContextType> framebuffer, CameraViewport cameraViewport)
     {
         if (sceneModel.getLightingModel().isGroundPlaneEnabled())
         {
-            groundPlaneStandardShader.setup(
-                sceneModel.getUnscaledMatrix(Matrix4.translate(new Vector3(0, sceneModel.getLightingModel().getGroundPlaneHeight(), 0)))
-                    .times(Matrix4.rotateX(Math.PI / 2))
-                    .times(Matrix4.scale(sceneModel.getScale() * sceneModel.getLightingModel().getGroundPlaneSize())));
+            Matrix4 model = sceneModel.getUnscaledMatrix(Matrix4.translate(new Vector3(0, sceneModel.getLightingModel().getGroundPlaneHeight(), 0)))
+                .times(Matrix4.rotateX(Math.PI / 2))
+                .times(Matrix4.scale(sceneModel.getScale() * sceneModel.getLightingModel().getGroundPlaneSize()));
+
+            groundPlaneStandardShader.setup(model);
 
             groundPlaneDrawable.program().setUniform("objectID", sceneViewportModel.lookupSceneObjectID("SceneObject"));
             groundPlaneDrawable.program().setUniform("defaultDiffuseColor", sceneModel.getLightingModel().getGroundPlaneColor());
-            groundPlaneDrawable.program().setUniform("projection", viewportProjection);
-            groundPlaneDrawable.program().setUniform("fullProjection", fullProjection);
-
-            Matrix4 model = sceneModel.getUnscaledMatrix(Matrix4.translate(new Vector3(0, sceneModel.getLightingModel().getGroundPlaneHeight(), 0)))
-                    .times(Matrix4.rotateX(Math.PI / 2))
-                    .times(Matrix4.scale(sceneModel.getScale() * sceneModel.getLightingModel().getGroundPlaneSize()));
+            groundPlaneDrawable.program().setUniform("projection", cameraViewport.getViewportProjection());
+            groundPlaneDrawable.program().setUniform("fullProjection", cameraViewport.getFullProjection());
 
             // Set up camera for ground plane program.
-            groundPlaneDrawable.program().setUniform("model_view", view.times(model));
-            groundPlaneDrawable.program().setUniform("viewPos", view.quickInverse(0.01f).getColumn(3).getXYZ());
+            Matrix4 modelView = cameraViewport.getView().times(model);
+            groundPlaneDrawable.program().setUniform("model_view", modelView);
+            groundPlaneDrawable.program().setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());
 
             // Disable back face culling since the plane is one-sided.
             context.getState().disableBackFaceCulling();
 
             // Do first pass at half resolution to off-screen buffer
-            groundPlaneDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer, x, y, width, height);
+            groundPlaneDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer, cameraViewport.getX(), cameraViewport.getY(), cameraViewport.getWidth(), cameraViewport.getHeight());
 
             // Re-enable back face culling
             context.getState().enableBackFaceCulling();

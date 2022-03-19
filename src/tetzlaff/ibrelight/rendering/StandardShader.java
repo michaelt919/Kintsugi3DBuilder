@@ -84,7 +84,7 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
                 .createProgram();
     }
 
-    private Map<String, Optional<Object>> getPreprocessorDefines()
+    public Map<String, Optional<Object>> getPreprocessorDefines()
     {
         Map<String, Optional<Object>> defineMap = new HashMap<>(256);
 
@@ -154,7 +154,7 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
 
     public void setup()
     {
-        setup(Matrix4.IDENTITY);
+        setup(sceneModel.getUnscaledMatrix(sceneModel.getObjectModel().getTransformationMatrix()).times(sceneModel.getBaseModelMatrix()));
     }
 
     public void setup(Matrix4 model)
@@ -163,7 +163,22 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
 
         for (int lightIndex = 0; lightIndex < sceneModel.getLightingModel().getLightCount(); lightIndex++)
         {
-            setupLight(program, lightIndex, sceneModel.getLightMatrix(lightIndex).times(model));
+            Matrix4 lightViewMatrix = sceneModel.getLightViewMatrix(lightIndex);
+
+            Vector3 controllerLightIntensity = sceneModel.getLightingModel().getLightPrototype(lightIndex).getColor();
+
+            // Light intensity depends on distance to centroid using the subject's model matrix (regardless of what we're drawing right now)
+            float lightDistance = sceneModel.getLightModelViewMatrix(lightIndex).times(sceneModel.getCentroid().asPosition()).getXYZ().length();
+
+            float lightScale = resources.viewSet.areLightSourcesInfinite() ? 1.0f :
+                resources.viewSet.getCameraPose(resources.viewSet.getPrimaryViewIndex())
+                    .times(resources.geometry.getCentroid().asPosition())
+                    .getXYZ().length();
+            program.setUniform("lightIntensityVirtual[" + lightIndex + ']',
+                controllerLightIntensity.times(lightDistance * lightDistance * resources.viewSet.getLightIntensity(0).y / (lightScale * lightScale)));
+
+
+            setupLight(program, lightIndex, lightViewMatrix.times(model));
         }
     }
 
@@ -175,16 +190,7 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
 
         program.setUniform("lightPosVirtual[" + lightIndex + ']', lightPos);
 
-        Vector3 controllerLightIntensity = sceneModel.getLightingModel().getLightPrototype(lightIndex).getColor();
-        float lightDistance = sceneModel.getLightMatrix(lightIndex).times(sceneModel.getCentroid().asPosition()).getXYZ().length();
 
-        float lightScale = resources.viewSet.areLightSourcesInfinite() ? 1.0f :
-            resources.viewSet.getCameraPose(resources.viewSet.getPrimaryViewIndex())
-                .times(resources.geometry.getCentroid().asPosition())
-                .getXYZ().length();
-
-        program.setUniform("lightIntensityVirtual[" + lightIndex + ']',
-                controllerLightIntensity.times(lightDistance * lightDistance * resources.viewSet.getLightIntensity(0).y / (lightScale * lightScale)));
         program.setUniform("lightMatrixVirtual[" + lightIndex + ']', lightingResources.getLightProjection(lightIndex).times(lightMatrix));
         program.setUniform("lightOrientationVirtual[" + lightIndex + ']',
                 lightMatrixInverse.times(new Vector4(0.0f, 0.0f, -1.0f, 0.0f)).getXYZ().normalized());

@@ -75,7 +75,7 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
 
     public Matrix4 getLightProjection(int lightIndex)
     {
-        Matrix4 lightMatrix = sceneModel.getLightMatrix(lightIndex);
+        Matrix4 lightMatrix = sceneModel.getLightModelViewMatrix(lightIndex);
 
         Vector4 lightDisplacement = lightMatrix.times(sceneModel.getCentroid().asPosition());
         float lightDist = lightDisplacement.getXYZ().length();
@@ -150,7 +150,7 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
         shadowFramebuffer.setDepthAttachment(attachment);
         shadowFramebuffer.clearDepthBuffer();
 
-        shadowProgram.setUniform("model_view", sceneModel.getLightMatrix(lightIndex));
+        shadowProgram.setUniform("model_view", sceneModel.getLightModelViewMatrix(lightIndex));
         shadowDrawable.draw(PrimitiveMode.TRIANGLES, shadowFramebuffer);
     }
 

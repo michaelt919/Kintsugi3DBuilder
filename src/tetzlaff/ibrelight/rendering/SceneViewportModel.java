@@ -25,6 +25,7 @@ public class SceneViewportModel<ContextType extends Context<ContextType>> implem
     private IntBuffer pixelObjectIDBuffer;
     private ShortBuffer pixelDepthBuffer;
     private FramebufferSize fboSize;
+    private Matrix4 projection;
 
     private final SceneModel sceneModel;
 
@@ -51,9 +52,10 @@ public class SceneViewportModel<ContextType extends Context<ContextType>> implem
         return this.sceneObjectIDLookup.get(sceneObjectTag);
     }
 
-    void refreshBuffers(FramebufferObject<ContextType> offscreenFBO)
+    void refreshBuffers(Matrix4 projection, FramebufferObject<ContextType> offscreenFBO)
     {
-        fboSize = offscreenFBO.getSize();
+        this.projection = projection;
+        this.fboSize = offscreenFBO.getSize();
 
         if (pixelObjectIDBuffer == null || pixelObjectIDBuffer.capacity() != 4 * fboSize.width * fboSize.height)
         {
@@ -94,10 +96,8 @@ public class SceneViewportModel<ContextType extends Context<ContextType>> implem
         }
     }
 
-
     private Matrix4 getProjectionInverse()
     {
-        Matrix4 projection = sceneModel.getProjectionMatrix(fboSize);
         return  Matrix4.fromRows(
                 new Vector4(1.0f / projection.get(0, 0), 0, 0, 0),
                 new Vector4(0, 1.0f / projection.get(1, 1), 0, 0),
@@ -161,8 +161,8 @@ public class SceneViewportModel<ContextType extends Context<ContextType>> implem
     @Override
     public Vector2 projectPoint(Vector3 point)
     {
-        Vector4 projectedPoint = sceneModel.getProjectionMatrix(fboSize)
-                .times(sceneModel.getCurrentViewMatrix())
+        Vector4 projectedPoint =
+            projection.times(sceneModel.getCurrentViewMatrix())
                 .times(point.times(sceneModel.getScale()).asPosition());
 
         return new Vector2(0.5f + projectedPoint.x / (2 * projectedPoint.w), 0.5f - projectedPoint.y / (2 * projectedPoint.w));

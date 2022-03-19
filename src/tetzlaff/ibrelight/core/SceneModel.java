@@ -84,18 +84,22 @@ public class SceneModel
         this.orientation = orientation;
     }
 
-
     public void setScale(float scale)
     {
         this.scale = scale;
     }
 
-    public Matrix4 getLightMatrix(int lightIndex)
+    public Matrix4 getLightViewMatrix(int lightIndex)
+    {
+        return getUnscaledMatrix(lightingModel.getLightMatrix(lightIndex));
+    }
+
+    public Matrix4 getLightModelViewMatrix(int lightIndex)
     {
         return getUnscaledMatrix(
-                lightingModel.getLightMatrix(lightIndex)
-                    .times(objectModel.getTransformationMatrix()))
-                .times(getBaseModelMatrix());
+            lightingModel.getLightMatrix(lightIndex)
+                .times(objectModel.getTransformationMatrix()))
+            .times(getBaseModelMatrix());
     }
 
     public Matrix4 getEnvironmentMapMatrix()
@@ -120,8 +124,7 @@ public class SceneModel
     public Matrix4 getCameraPoseFromViewMatrix(Matrix4 cameraPoseMatrix)
     {
         return cameraPoseMatrix
-                .times(orientation.asMatrix4())
-                .times(Matrix4.translate(this.centroid.negated()));
+                .times(getBaseModelMatrix());
     }
 
     public Matrix4 getUnscaledMatrix(Matrix4 scaledMatrix)

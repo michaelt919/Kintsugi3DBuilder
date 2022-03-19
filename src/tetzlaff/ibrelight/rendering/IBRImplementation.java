@@ -93,11 +93,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private final LightingResources<ContextType> lightingResources;
 
-    IBRSubject<ContextType> ibrSubject;
-    LightVisuals<ContextType> lightVisuals;
-    List<RenderedComponent<ContextType>> otherComponents = new ArrayList<>();
+    private IBRSubject<ContextType> ibrSubject;
+    private LightVisuals<ContextType> lightVisuals;
+    private final List<RenderedComponent<ContextType>> otherComponents = new ArrayList<>();
 
-    SceneViewportModel<ContextType> sceneViewportModel;
+    private final SceneViewportModel<ContextType> sceneViewportModel;
 
     private static final int SHADING_FRAMEBUFFER_COUNT = 2;
     private final Collection<FramebufferObject<ContextType>> shadingFramebuffers = new ArrayList<>(SHADING_FRAMEBUFFER_COUNT);
@@ -111,9 +111,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         this.sceneModel = new SceneModel();
 
         this.sceneViewportModel = new SceneViewportModel<>(sceneModel);
-        this.sceneViewportModel.addSceneObjectType("IBRObject"); // 1
-        this.sceneViewportModel.addSceneObjectType("EnvironmentMap"); // 2
-        this.sceneViewportModel.addSceneObjectType("SceneObject"); // 3
+        this.sceneViewportModel.addSceneObjectType("SceneObject");
+        this.sceneViewportModel.addSceneObjectType("EnvironmentMap");
 
         this.lightingResources = new LightingResources<>(context, sceneModel);
     }
@@ -200,7 +199,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             // Render an entire frame to an offscreen framebuffer before announcing that loading is complete.
             // TODO break this into blocks just in case there's a GPU timeout?
             Matrix4 projection = getProjectionMatrix(windowSize);
-            ibrSubject.draw(firstShadingFBO, sceneModel.getCurrentViewMatrix(), projection);
+            ibrSubject.draw(firstShadingFBO, true, sceneModel.getCurrentViewMatrix(), projection);
 
             // Flush to prevent timeout
             context.flush();
@@ -225,7 +224,20 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     @Override
     public void update()
     {
-        ibrSubject.updateCompiledSettings();
+        try
+        {
+            ibrSubject.update();
+            lightVisuals.update();
+
+            for (RenderedComponent<ContextType> component : otherComponents)
+            {
+                component.update();
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
 
         this.updateWorldSpaceDefinition();
 
@@ -432,7 +444,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             context.getState().enableBackFaceCulling();
 
             boolean lightCalibrationMode = sceneModel.getSettingsModel().getBoolean("lightCalibrationMode");
-            int snapViewIndex = -1; // TODO used in IBRSubject
+            int snapViewIndex = -1; // TODO used in LightCalibration
 
             boolean overriddenViewMatrix = modelViewOverride != null;
 
@@ -542,14 +554,33 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 lightingResources.refreshShadowMaps();
 
                 // Draw grid
-                otherComponents.forEach(component -> component.draw(offscreenFBO, view, projection));
+                otherComponents.forEach(component -> component.draw(offscreenFBO, true, view, projection));
 
                 // Screen space depth buffer for specular shadows
                 lightingResources.refreshScreenSpaceDepthFBO(view, projection);
                 context.flush();
 
-                // Draw the actual object
-                drawComponentInSubdivisions(ibrSubject, offscreenFBO, subdivWidth, subdivHeight, view, projection);
+                // Hole fill color depends on whether in light calibration mode or not.
+                if (lightCalibrationMode)
+                {
+                    ibrSubject.getProgram().setUniform("holeFillColor", new Vector3(0.5f));
+
+                    try(UniformBuffer<ContextType> viewIndexBuffer = context.createUniformBuffer())
+                    {
+                        viewIndexBuffer.setData(NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, 1, snapViewIndex));
+                        ibrSubject.getProgram().setUniformBuffer("ViewIndices", viewIndexBuffer);
+
+                        // Draw the actual object, without model transformation for light calibration
+                        drawComponentInSubdivisions(ibrSubject, offscreenFBO, subdivWidth, subdivHeight, false, view, projection);
+                    }
+                }
+                else
+                {
+                    ibrSubject.getProgram().setUniform("holeFillColor", new Vector3(0.0f));
+
+                    // Draw the actual object with the model transformation
+                    drawComponentInSubdivisions(ibrSubject, offscreenFBO, subdivWidth, subdivHeight, true, view, projection);
+                }
 
                 if (!sceneModel.getLightingModel().areLightWidgetsEthereal()
                     && IntStream.range(0, sceneModel.getLightingModel().getLightCount()).anyMatch(sceneModel.getLightingModel()::isLightWidgetEnabled))
@@ -557,10 +588,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     context.flush();
 
                     // Read buffers here if light widgets are ethereal (i.e. they cannot be clicked and should not be in the ID buffer)
-                    sceneViewportModel.refreshBuffers(offscreenFBO);
+                    sceneViewportModel.refreshBuffers(projection, offscreenFBO);
                 }
 
-                lightVisuals.draw(offscreenFBO, view, projection);
+                lightVisuals.draw(offscreenFBO, true, view, projection);
 
                 // Finish drawing
                 context.flush();
@@ -569,7 +600,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                         && IntStream.range(0, sceneModel.getLightingModel().getLightCount()).anyMatch(sceneModel.getLightingModel()::isLightWidgetEnabled))
                 {
                     // Read buffers here if light widgets are not ethereal (i.e. they can be clicked and should be in the ID buffer)
-                    sceneViewportModel.refreshBuffers(offscreenFBO);
+                    sceneViewportModel.refreshBuffers(projection, offscreenFBO);
                 }
 
                 // Second pass at full resolution to default framebuffer
@@ -592,7 +623,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     }
 
     private void drawComponentInSubdivisions(RenderedComponent<ContextType> component, Framebuffer<ContextType> framebuffer,
-                                         int subdivWidth, int subdivHeight, Matrix4 view, Matrix4 projection)
+                                         int subdivWidth, int subdivHeight, boolean useModel, Matrix4 view, Matrix4 projection)
     {
         FramebufferSize fullFBOSize = framebuffer.getSize();
 
@@ -614,7 +645,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                         .times(projection);
 
                 // Render to off-screen buffer
-                component.draw(framebuffer, view, projection, viewportProjection, x, y, effectiveWidth, effectiveHeight);
+                component.draw(framebuffer, new CameraViewport(useModel, view, projection, viewportProjection, x, y, effectiveWidth, effectiveHeight));
 
                 // Flush to prevent timeout
                 context.flush();
@@ -717,7 +748,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     {
         if (environmentFile == null)
         {
-            //noinspection VariableNotUsedInsideIf
             if (this.lightingResources.getEnvironmentMap() != null)
             {
                 this.environmentMapUnloadRequested = true;
