@@ -19,6 +19,8 @@ public class SceneModel
     private Matrix3 orientation = Matrix3.IDENTITY;
     private float scale = 1.0f;
 
+    private Vector3 clearColor = Vector3.ZERO;
+
     public ReadonlyObjectModel getObjectModel()
     {
         return objectModel;
@@ -54,6 +56,11 @@ public class SceneModel
         return this.scale;
     }
 
+    public Vector3 getClearColor()
+    {
+        return clearColor;
+    }
+
     public void setObjectModel(ReadonlyObjectModel objectModel)
     {
         this.objectModel = objectModel;
@@ -87,6 +94,11 @@ public class SceneModel
     public void setScale(float scale)
     {
         this.scale = scale;
+    }
+
+    public void setClearColor(Vector3 clearColor)
+    {
+        this.clearColor = clearColor;
     }
 
     public Matrix4 getLightViewMatrix(int lightIndex)

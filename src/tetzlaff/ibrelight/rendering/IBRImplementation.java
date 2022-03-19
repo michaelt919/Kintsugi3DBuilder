@@ -23,16 +23,12 @@ import javax.imageio.ImageIO;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.core.ColorFormat.DataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.*;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.rendering.IBRResources.Builder;
-import tetzlaff.ibrelight.rendering.components.Grid;
-import tetzlaff.ibrelight.rendering.components.GroundPlane;
-import tetzlaff.ibrelight.rendering.components.IBRSubject;
-import tetzlaff.ibrelight.rendering.components.LightVisuals;
+import tetzlaff.ibrelight.rendering.components.*;
 import tetzlaff.interactive.InitializationException;
 import tetzlaff.models.*;
 import tetzlaff.util.AbstractImage;
@@ -88,9 +84,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     @SuppressWarnings("FieldCanBeLocal")
     private volatile File desiredBackplateFile;
 
-    private Program<ContextType> environmentBackgroundProgram;
-    private Drawable<ContextType> environmentBackgroundDrawable;
-
     private final LightingResources<ContextType> lightingResources;
 
     private IBRSubject<ContextType> ibrSubject;
@@ -112,7 +105,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         this.sceneViewportModel = new SceneViewportModel<>(sceneModel);
         this.sceneViewportModel.addSceneObjectType("SceneObject");
-        this.sceneViewportModel.addSceneObjectType("EnvironmentMap");
 
         this.lightingResources = new LightingResources<>(context, sceneModel);
     }
@@ -138,11 +130,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "texture_tint.frag"))
                     .createProgram();
 
-            this.environmentBackgroundProgram = context.getShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
-                    .createProgram();
-
             this.rectangleVertices = context.createRectangle();
 
             this.resources = resourceBuilder.create();
@@ -159,9 +146,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.tintedTexDrawable = context.createDrawable(tintedTexProgram);
             this.tintedTexDrawable.addVertexBuffer("position", this.rectangleVertices);
 
-            this.environmentBackgroundDrawable = context.createDrawable(environmentBackgroundProgram);
-            this.environmentBackgroundDrawable.addVertexBuffer("position", this.rectangleVertices);
-
             // i.e. shadow map, environment map, etc.
             lightingResources.initialize();
             lightingResources.setPositionBuffer(resources.positionBuffer);
@@ -174,8 +158,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             lightVisuals = new LightVisuals<>(context, sceneModel, sceneViewportModel);
             lightVisuals.initialize();
 
+            otherComponents.add(new Environment<>(context, lightingResources, sceneModel, sceneViewportModel));
             otherComponents.add(new Grid<>(context, sceneModel));
-            otherComponents.add(new LightVisuals<>(context, sceneModel, sceneViewportModel));
             otherComponents.add(new GroundPlane<>(resources, lightingResources, sceneModel, sceneViewportModel));
 
             for (RenderedComponent<ContextType> component : otherComponents)
@@ -426,6 +410,15 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         this.newLightCalibrationAvailable = true;
     }
 
+    private Vector3 calculateClearColor()
+    {
+        float maxLuminance = (float)resources.viewSet.getLuminanceEncoding().decodeFunction.applyAsDouble(255.0);
+        float gamma = this.sceneModel.getSettingsModel().getFloat("gamma");
+        return new Vector3(
+                (float) Math.pow(sceneModel.getLightingModel().getBackgroundColor().x / maxLuminance, 1.0 / gamma),
+                (float) Math.pow(sceneModel.getLightingModel().getBackgroundColor().y / maxLuminance, 1.0 / gamma),
+                (float) Math.pow(sceneModel.getLightingModel().getBackgroundColor().z / maxLuminance, 1.0 / gamma));
+    }
 
     @Override
     public void draw(Framebuffer<ContextType> framebuffer, Matrix4 modelViewOverride, Matrix4 projectionOverride, int subdivWidth, int subdivHeight)
@@ -506,17 +499,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 offscreenFBO.clearIntegerColorBuffer(1, 0, 0, 0, 0);
                 offscreenFBO.clearDepthBuffer();
 
-                float maxLuminance = (float)resources.viewSet.getLuminanceEncoding().decodeFunction.applyAsDouble(255.0);
-                float gamma = this.sceneModel.getSettingsModel().getFloat("gamma");
-                Vector3 clearColor = new Vector3(
-                        (float) Math.pow(sceneModel.getLightingModel().getBackgroundColor().x / maxLuminance, 1.0 / gamma),
-                        (float) Math.pow(sceneModel.getLightingModel().getBackgroundColor().y / maxLuminance, 1.0 / gamma),
-                        (float) Math.pow(sceneModel.getLightingModel().getBackgroundColor().z / maxLuminance, 1.0 / gamma));
+                // Calculate clear color, clear the offscreen FBO and update the clear color on the scene model
+                // for components that reference it (like environment & backplate)
+                Vector3 clearColor = calculateClearColor();
+                offscreenFBO.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
+                this.sceneModel.setClearColor(clearColor);
 
                 if (backplateTexture != null && sceneModel.getLightingModel().getBackgroundMode() == BackgroundMode.IMAGE)
                 {
                     tintedTexDrawable.program().setTexture("tex", backplateTexture);
-                    tintedTexDrawable.program().setUniform("color", clearColor);
+                    tintedTexDrawable.program().setUniform("color", sceneModel.getClearColor());
 
                     context.getState().disableDepthTest();
                     tintedTexDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
@@ -525,31 +517,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     // Clear ID buffer again.
                     offscreenFBO.clearIntegerColorBuffer(1, 0, 0, 0, 0);
                 }
-                else if (lightingResources.getEnvironmentMap() != null && sceneModel.getLightingModel().getBackgroundMode() == BackgroundMode.ENVIRONMENT_MAP)
-                {
-                    Matrix4 envMapMatrix = sceneModel.getLightingModel().getEnvironmentMapMatrix();
-
-                    environmentBackgroundProgram.setUniform("objectID", sceneViewportModel.lookupSceneObjectID("EnvironmentMap"));
-                    environmentBackgroundProgram.setUniform("useEnvironmentTexture", true);
-                    environmentBackgroundProgram.setTexture("env", lightingResources.getEnvironmentMap());
-                    environmentBackgroundProgram.setUniform("model_view", view);
-                    environmentBackgroundProgram.setUniform("projection", projection);
-                    environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix);
-                    environmentBackgroundProgram.setUniform("envMapIntensity", clearColor);
-
-                    environmentBackgroundProgram.setUniform("gamma",
-                        lightingResources.getEnvironmentMap().isInternalFormatCompressed() ||
-                                lightingResources.getEnvironmentMap().getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT
-                            ? 1.0f : 2.2f);
-
-                    context.getState().disableDepthTest();
-                    environmentBackgroundDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-                    context.getState().enableDepthTest();
-                }
-                else
-                {
-                    offscreenFBO.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
-                }
 
                 lightingResources.refreshShadowMaps();
 
@@ -557,7 +524,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 otherComponents.forEach(component -> component.draw(offscreenFBO, true, view, projection));
 
                 // Screen space depth buffer for specular shadows
-                lightingResources.refreshScreenSpaceDepthFBO(view, projection);
+                // Not used for light calibration so assume a model transform should be applied.
+                lightingResources.refreshScreenSpaceDepthFBO(true, view, projection);
                 context.flush();
 
                 // Hole fill color depends on whether in light calibration mode or not.
@@ -657,12 +625,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     @Override
     public void close()
     {
-        if (this.environmentBackgroundProgram != null)
-        {
-            this.environmentBackgroundProgram.close();
-            this.environmentBackgroundProgram = null;
-        }
-
         if (this.backplateTexture != null)
         {
             this.backplateTexture.close();
@@ -876,20 +838,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     {
         try
         {
-            Program<ContextType> newEnvironmentBackgroundProgram = resources.getIBRShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
-                    .createProgram();
-
-            if (this.environmentBackgroundProgram != null)
-            {
-                this.environmentBackgroundProgram.close();
-            }
-
-            this.environmentBackgroundProgram = newEnvironmentBackgroundProgram;
-            this.environmentBackgroundDrawable = context.createDrawable(environmentBackgroundProgram);
-            this.environmentBackgroundDrawable.addVertexBuffer("position", rectangleVertices);
-
             ibrSubject.reloadShaders();
             lightVisuals.reloadShaders();
 

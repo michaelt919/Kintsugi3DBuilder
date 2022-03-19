@@ -351,8 +351,8 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 normalDir, Mat
 
         if (sampleColor.a == 0.0)
         {
-            mfdFresnel = distTimesPi(nDotH, m.roughnessRGB) * m.specularColor / PI;
-//            mfdFresnel = vec3(0);
+            //mfdFresnel = distTimesPi(nDotH, m.roughnessRGB) * m.specularColor / PI;
+            mfdFresnel = vec3(0);
         }
         else
         {
