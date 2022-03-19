@@ -47,7 +47,7 @@ public class Backplate<ContextType extends Context<ContextType>> implements Rend
     }
 
     @Override
-    public void draw(Framebuffer<ContextType> framebuffer, CameraViewport cameraViewport)
+    public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
         if (lightingResources.getBackplateTexture() != null && sceneModel.getLightingModel().getBackgroundMode() == BackgroundMode.IMAGE)
         {

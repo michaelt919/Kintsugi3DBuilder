@@ -19,7 +19,6 @@ import tetzlaff.gl.vecmath.Matrix4;
  */
 public class CameraViewport
 {
-    private final boolean expectingModelTransform;
     private final Matrix4 view;
     private final Matrix4 fullProjection;
     private final Matrix4 viewportProjection;
@@ -28,9 +27,8 @@ public class CameraViewport
     private final int width;
     private final int height;
 
-    public CameraViewport(boolean expectingModel, Matrix4 view, Matrix4 fullProjection, Matrix4 viewportProjection, int x, int y, int width, int height)
+    public CameraViewport(Matrix4 view, Matrix4 fullProjection, Matrix4 viewportProjection, int x, int y, int width, int height)
     {
-        this.expectingModelTransform = expectingModel;
         this.view = view;
         this.fullProjection = fullProjection;
         this.viewportProjection = viewportProjection;
@@ -40,15 +38,6 @@ public class CameraViewport
         this.height = height;
     }
 
-    /**
-     * If true, the view matrix is expected to be applied after the model transformation specified by the user in the IBRelight UI.
-     * If false, the view matrix should be applied directly to the object's local coordinate space.
-     * @return
-     */
-    public boolean isExpectingModelTransform()
-    {
-        return expectingModelTransform;
-    }
 
     public Matrix4 getView()
     {

@@ -159,7 +159,7 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
 
     public void setup(Matrix4 model)
     {
-        setupUnlit();
+        setupUnlit(model);
 
         for (int lightIndex = 0; lightIndex < sceneModel.getLightingModel().getLightCount(); lightIndex++)
         {
@@ -199,7 +199,7 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
         program.setUniform("lightSpotTaperVirtual[" + lightIndex + ']', sceneModel.getLightingModel().getLightPrototype(lightIndex).getSpotTaper());
     }
 
-    public void setupUnlit()
+    public void setupUnlit(Matrix4 model)
     {
         this.resources.setupShaderProgram(program);
 
@@ -229,7 +229,7 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
                         / Math.log(2.0)))));
             program.setUniform("diffuseEnvironmentMipMapLevel", lightingResources.getEnvironmentMap().getMipmapLevelCount() - 1);
 
-            Matrix4 envMapMatrix = sceneModel.getEnvironmentMapMatrix();
+            Matrix4 envMapMatrix = sceneModel.getEnvironmentMapMatrix(model);
             program.setUniform("envMapMatrix", envMapMatrix);
         }
 

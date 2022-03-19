@@ -52,7 +52,7 @@ public class SceneViewportModel<ContextType extends Context<ContextType>> implem
         return this.sceneObjectIDLookup.get(sceneObjectTag);
     }
 
-    void refreshBuffers(Matrix4 projection, FramebufferObject<ContextType> offscreenFBO)
+    public void refreshBuffers(Matrix4 projection, FramebufferObject<ContextType> offscreenFBO)
     {
         this.projection = projection;
         this.fboSize = offscreenFBO.getSize();

@@ -172,7 +172,7 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
     }
 
     @Override
-    public void draw(Framebuffer<ContextType> framebuffer, CameraViewport cameraViewport)
+    public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
         FramebufferSize size = framebuffer.getSize();
 

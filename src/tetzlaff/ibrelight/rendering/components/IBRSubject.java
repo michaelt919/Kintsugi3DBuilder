@@ -158,7 +158,7 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
     }
 
     @Override
-    public void draw(Framebuffer<ContextType> framebuffer, CameraViewport cameraViewport)
+    public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
         context.getState().disableBackFaceCulling();
 
@@ -170,8 +170,7 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
 
         drawable.program().setTexture("screenSpaceDepthBuffer", lightingResources.getScreenSpaceDepthTexture());
 
-        Matrix4 modelView = cameraViewport.isExpectingModelTransform() ?
-            sceneModel.getModelViewMatrix(cameraViewport.getView()) : sceneModel.getCameraPoseFromViewMatrix(cameraViewport.getView());
+        Matrix4 modelView = sceneModel.getModelViewMatrix(cameraViewport.getView());
 
         setupModelView(drawable.program(), modelView);
 

@@ -65,7 +65,7 @@ public class Environment<ContextType extends Context<ContextType>> implements Re
     }
 
     @Override
-    public void draw(Framebuffer<ContextType> framebuffer, CameraViewport cameraViewport)
+    public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
         if (lightingResources.getEnvironmentMap() != null && sceneModel.getLightingModel().getBackgroundMode() == BackgroundMode.ENVIRONMENT_MAP)
         {

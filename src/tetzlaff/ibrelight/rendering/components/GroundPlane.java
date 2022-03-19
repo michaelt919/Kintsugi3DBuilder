@@ -71,7 +71,7 @@ public class GroundPlane<ContextType extends Context<ContextType>> implements Re
     }
 
     @Override
-    public void draw(Framebuffer<ContextType> framebuffer, CameraViewport cameraViewport)
+    public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
         if (sceneModel.getLightingModel().isGroundPlaneEnabled())
         {
@@ -82,7 +82,8 @@ public class GroundPlane<ContextType extends Context<ContextType>> implements Re
             groundPlaneStandardShader.setup(model);
 
             groundPlaneDrawable.program().setUniform("objectID", sceneViewportModel.lookupSceneObjectID("SceneObject"));
-            groundPlaneDrawable.program().setUniform("defaultDiffuseColor", sceneModel.getLightingModel().getGroundPlaneColor());
+            groundPlaneDrawable.program().setUniform("defaultDiffuseColor",
+                sceneModel.getLightingModel().getGroundPlaneColor().applyOperator(x -> Math.pow(x, 2.2)));
             groundPlaneDrawable.program().setUniform("projection", cameraViewport.getViewportProjection());
             groundPlaneDrawable.program().setUniform("fullProjection", cameraViewport.getFullProjection());
 

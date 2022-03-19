@@ -185,15 +185,14 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
         return screenSpaceDepthFBO.getDepthAttachmentTexture();
     }
 
-    public void refreshScreenSpaceDepthFBO(boolean expectingModelTransform, Matrix4 view, Matrix4 projection)
+    public void refreshScreenSpaceDepthFBO(Matrix4 view, Matrix4 projection)
     {
         context.getState().disableBackFaceCulling();
 
         shadowProgram.setUniform("projection", projection);
         screenSpaceDepthFBO.clearDepthBuffer();
 
-        Matrix4 modelView = expectingModelTransform ?
-                sceneModel.getModelViewMatrix(view) : sceneModel.getCameraPoseFromViewMatrix(view);
+        Matrix4 modelView = sceneModel.getModelViewMatrix(view);
 
         shadowProgram.setUniform("model_view", modelView);
         shadowProgram.setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());

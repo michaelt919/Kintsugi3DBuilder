@@ -86,6 +86,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private IBRSubject<ContextType> ibrSubject;
     private LightVisuals<ContextType> lightVisuals;
     private final List<RenderedComponent<ContextType>> otherComponents = new ArrayList<>();
+    private LightCalibration<ContextType> lightCalibration;
 
     private final SceneViewportModel<ContextType> sceneViewportModel;
 
@@ -161,6 +162,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 component.initialize();
             }
 
+            lightCalibration = new LightCalibration<>(resources, lightingResources, sceneModel, sceneViewportModel);
+            lightCalibration.initialize();
+
             this.updateWorldSpaceDefinition();
 
             FramebufferSize windowSize = context.getDefaultFramebuffer().getSize();
@@ -177,7 +181,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             // Render an entire frame to an offscreen framebuffer before announcing that loading is complete.
             // TODO break this into blocks just in case there's a GPU timeout?
             Matrix4 projection = getProjectionMatrix(windowSize);
-            ibrSubject.draw(firstShadingFBO, true, sceneModel.getCurrentViewMatrix(), projection);
+            ibrSubject.draw(firstShadingFBO, sceneModel.getCurrentViewMatrix(), projection);
 
             // Flush to prevent timeout
             context.flush();
@@ -206,6 +210,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         {
             ibrSubject.update();
             lightVisuals.update();
+            lightCalibration.update();
 
             for (RenderedComponent<ContextType> component : otherComponents)
             {
@@ -453,96 +458,53 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 Vector3 clearColor = calculateClearColor();
                 offscreenFBO.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
                 this.sceneModel.setClearColor(clearColor);
-                boolean lightCalibrationMode = sceneModel.getSettingsModel().getBoolean("lightCalibrationMode");
-                int snapViewIndex = -1;
 
-                boolean overriddenViewMatrix = modelViewOverride != null;
-
-                Matrix4 lightCalibrationView = null;
-                if (lightCalibrationMode)
-                {
-                    int primaryLightIndex = this.resources.viewSet.getLightIndex(this.resources.viewSet.getPrimaryViewIndex());
-
-                    Vector3 lightPosition = sceneModel.getSettingsModel().get("currentLightCalibration", Vector2.class).asVector3()
-                            .plus(resources.viewSet.getLightPosition(primaryLightIndex));
-                    Matrix4 lightTransform = Matrix4.translate(lightPosition.negated());
-
-                    Matrix4 viewInverse = sceneModel.getCurrentViewMatrix().quickInverse(0.01f);
-                    float maxSimilarity = -1.0f;
-
-                    for(int i = 0; i < this.resources.viewSet.getCameraPoseCount(); i++)
-                    {
-                        Matrix4 candidateView = this.resources.viewSet.getCameraPose(i);
-
-                        float similarity = viewInverse.times(Vector4.ORIGIN).getXYZ()
-                                .dot(sceneModel.getViewMatrixFromCameraPose(candidateView).quickInverse(0.01f).times(Vector4.ORIGIN).getXYZ());
-
-                        if (similarity > maxSimilarity)
-                        {
-                            maxSimilarity = similarity;
-                            lightCalibrationView = lightTransform.times(sceneModel.getViewMatrixFromCameraPose(candidateView));
-                            snapViewIndex = i;
-                        }
-                    }
-                }
-
-                Matrix4 view = overriddenViewMatrix ? sceneModel.getViewFromModelViewMatrix(modelViewOverride)
-                        : lightCalibrationMode ? lightCalibrationView
+                Matrix4 view = modelViewOverride != null ? sceneModel.getViewFromModelViewMatrix(modelViewOverride)
                         : sceneModel.getCurrentViewMatrix();
 
-                lightingResources.refreshShadowMaps();
-
-                // Screen space depth buffer for specular shadows
-                // Not used for light calibration so assume a model transform should be applied.
-                lightingResources.refreshScreenSpaceDepthFBO(true, view, projection);
-
-                context.flush();
-
-                // Draw "other components" first, which includes things that ignore the depth test first
-                // (environment or backplate)
-                otherComponents.forEach(component -> component.draw(offscreenFBO, true, view, projection));
-
-                // Hole fill color depends on whether in light calibration mode or not.
-                if (lightCalibrationMode)
+                if (sceneModel.getSettingsModel().getBoolean("lightCalibrationMode"))
                 {
-                    ibrSubject.getProgram().setUniform("holeFillColor", new Vector3(0.5f));
-
-                    try(UniformBuffer<ContextType> viewIndexBuffer = context.createUniformBuffer())
-                    {
-                        viewIndexBuffer.setData(NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, 1, snapViewIndex));
-                        ibrSubject.getProgram().setUniformBuffer("ViewIndices", viewIndexBuffer);
-
-                        // Draw the actual object, without model transformation for light calibration
-                        drawComponentInSubdivisions(ibrSubject, offscreenFBO, subdivWidth, subdivHeight, false, view, projection);
-                    }
+                    lightCalibration.drawInSubdivisions(offscreenFBO, subdivWidth, subdivHeight, view, projection);
                 }
                 else
                 {
+                    lightingResources.refreshShadowMaps();
+
+                    // Screen space depth buffer for specular shadows
+                    lightingResources.refreshScreenSpaceDepthFBO(view, projection);
+
+                    context.flush();
+
+                    // Draw "other components" first, which includes things that ignore the depth test first
+                    // (environment or backplate)
+                    otherComponents.forEach(component -> component.draw(offscreenFBO, view, projection));
+
+                    // Hole fill color depends on whether in light calibration mode or not.
                     ibrSubject.getProgram().setUniform("holeFillColor", new Vector3(0.0f));
 
                     // Draw the actual object with the model transformation
-                    drawComponentInSubdivisions(ibrSubject, offscreenFBO, subdivWidth, subdivHeight, true, view, projection);
-                }
+                    ibrSubject.drawInSubdivisions(offscreenFBO, subdivWidth, subdivHeight, view, projection);
 
-                if (!sceneModel.getLightingModel().areLightWidgetsEthereal()
-                    && IntStream.range(0, sceneModel.getLightingModel().getLightCount()).anyMatch(sceneModel.getLightingModel()::isLightWidgetEnabled))
-                {
+                    if (!sceneModel.getLightingModel().areLightWidgetsEthereal()
+                            && IntStream.range(0, sceneModel.getLightingModel().getLightCount()).anyMatch(sceneModel.getLightingModel()::isLightWidgetEnabled))
+                    {
+                        context.flush();
+
+                        // Read buffers here if light widgets are ethereal (i.e. they cannot be clicked and should not be in the ID buffer)
+                        sceneViewportModel.refreshBuffers(projection, offscreenFBO);
+                    }
+
+                    lightVisuals.draw(offscreenFBO, view, projection);
+
+                    // Finish drawing
                     context.flush();
 
-                    // Read buffers here if light widgets are ethereal (i.e. they cannot be clicked and should not be in the ID buffer)
-                    sceneViewportModel.refreshBuffers(projection, offscreenFBO);
-                }
-
-                lightVisuals.draw(offscreenFBO, true, view, projection);
-
-                // Finish drawing
-                context.flush();
-
-                if (!sceneModel.getLightingModel().areLightWidgetsEthereal()
-                        && IntStream.range(0, sceneModel.getLightingModel().getLightCount()).anyMatch(sceneModel.getLightingModel()::isLightWidgetEnabled))
-                {
-                    // Read buffers here if light widgets are not ethereal (i.e. they can be clicked and should be in the ID buffer)
-                    sceneViewportModel.refreshBuffers(projection, offscreenFBO);
+                    if (!sceneModel.getLightingModel().areLightWidgetsEthereal()
+                            && IntStream.range(0, sceneModel.getLightingModel().getLightCount()).anyMatch(sceneModel.getLightingModel()::isLightWidgetEnabled))
+                    {
+                        // Read buffers here if light widgets are not ethereal (i.e. they can be clicked and should be in the ID buffer)
+                        sceneViewportModel.refreshBuffers(projection, offscreenFBO);
+                    }
                 }
 
                 // Second pass at full resolution to default framebuffer
@@ -563,38 +525,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             }
         }
     }
-
-    private void drawComponentInSubdivisions(RenderedComponent<ContextType> component, Framebuffer<ContextType> framebuffer,
-                                         int subdivWidth, int subdivHeight, boolean useModel, Matrix4 view, Matrix4 projection)
-    {
-        FramebufferSize fullFBOSize = framebuffer.getSize();
-
-        // Optionally render in subdivisions to prevent GPU timeout
-        for (int x = 0; x < fullFBOSize.width; x += subdivWidth)
-        {
-            for (int y = 0; y < fullFBOSize.height; y += subdivHeight)
-            {
-                int effectiveWidth = Math.min(subdivWidth, fullFBOSize.width - x);
-                int effectiveHeight = Math.min(subdivHeight, fullFBOSize.height - y);
-
-                float scaleX = (float)fullFBOSize.width / (float)effectiveWidth;
-                float scaleY = (float)fullFBOSize.height / (float)effectiveHeight;
-                float centerX = (2 * x + effectiveWidth - fullFBOSize.width) / (float)fullFBOSize.width;
-                float centerY = (2 * y + effectiveHeight - fullFBOSize.height) / (float)fullFBOSize.height;
-
-                Matrix4 viewportProjection = Matrix4.scale(scaleX, scaleY, 1.0f)
-                        .times(Matrix4.translate(-centerX, -centerY, 0))
-                        .times(projection);
-
-                // Render to off-screen buffer
-                component.draw(framebuffer, new CameraViewport(useModel, view, projection, viewportProjection, x, y, effectiveWidth, effectiveHeight));
-
-                // Flush to prevent timeout
-                context.flush();
-            }
-        }
-    }
-
 
     @Override
     public void close()
@@ -802,6 +732,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         {
             ibrSubject.reloadShaders();
             lightVisuals.reloadShaders();
+            lightCalibration.reloadShaders();
 
             for (RenderedComponent<ContextType> otherComponent : otherComponents)
             {

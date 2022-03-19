@@ -83,7 +83,7 @@ public class Grid<ContextType extends Context<ContextType>> implements RenderedC
     }
 
     @Override
-    public void draw(Framebuffer<ContextType> framebuffer, CameraViewport cameraViewport)
+    public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
         // Draw grid
         if (sceneModel.getSettingsModel().getBoolean("is3DGridEnabled"))

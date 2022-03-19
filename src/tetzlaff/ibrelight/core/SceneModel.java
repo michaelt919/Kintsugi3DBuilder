@@ -114,13 +114,11 @@ public class SceneModel
             .times(getBaseModelMatrix());
     }
 
-    public Matrix4 getEnvironmentMapMatrix()
+    public Matrix4 getEnvironmentMapMatrix(Matrix4 modelMatrix)
     {
-        return getUnscaledMatrix(
-                lightingModel.getEnvironmentMapMatrix()
-                        .times(objectModel.getTransformationMatrix()))
-                .times(getBaseModelMatrix());
+        return getUnscaledMatrix(lightingModel.getEnvironmentMapMatrix()).times(modelMatrix);
     }
+
     public Matrix4 getCurrentViewMatrix()
     {
         return getUnscaledMatrix(cameraModel.getLookMatrix());
@@ -146,6 +144,19 @@ public class SceneModel
                 .times(Matrix4.scale(1.0f / scale));
     }
 
+    /**
+     * Recenters and reorients the model using base model matrix, then applies the user-specified model transformation.
+     * @return
+     */
+    public Matrix4 getFullModelMatrix()
+    {
+        return getUnscaledMatrix(this.objectModel.getTransformationMatrix()).times(getBaseModelMatrix());
+    }
+
+    /**
+     * Just recentering and reorienting the model
+     * @return
+     */
     public Matrix4 getBaseModelMatrix()
     {
         return orientation.asMatrix4()
@@ -154,9 +165,7 @@ public class SceneModel
 
     public Matrix4 getModelViewMatrix(Matrix4 view)
     {
-        return view
-                .times(getUnscaledMatrix(this.objectModel.getTransformationMatrix()))
-                .times(getBaseModelMatrix());
+        return view.times(getFullModelMatrix());
     }
 
     public Matrix4 getViewFromModelViewMatrix(Matrix4 modelViewMatrix)
