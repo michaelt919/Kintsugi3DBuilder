@@ -23,6 +23,7 @@ import tetzlaff.gl.vecmath.*;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.rendering.IBRResources.Builder;
 import tetzlaff.ibrelight.rendering.components.*;
+import tetzlaff.ibrelight.rendering.components.lightcalibration.LightCalibrationRoot;
 import tetzlaff.ibrelight.rendering.components.lit.LitRoot;
 import tetzlaff.interactive.InitializationException;
 import tetzlaff.models.*;
@@ -46,7 +47,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     private Program<ContextType> simpleTexProgram;
     private Drawable<ContextType> simpleTexDrawable;
 
-    private LightCalibration<ContextType> lightCalibration;
+    private LightCalibrationRoot<ContextType> lightCalibration;
     private LitRoot<ContextType> litRoot;
 
     private DynamicResourceLoader<ContextType> dynamicResourceLoader;
@@ -102,7 +103,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             this.simpleTexDrawable = context.createDrawable(simpleTexProgram);
             this.simpleTexDrawable.addVertexBuffer("position", this.rectangleVertices);
 
-            lightCalibration = new LightCalibration<>(resources, sceneModel, sceneViewportModel);
+            lightCalibration = new LightCalibrationRoot<>(resources, sceneModel, sceneViewportModel);
             lightCalibration.initialize();
 
             litRoot = new LitRoot<>(context, sceneModel);
