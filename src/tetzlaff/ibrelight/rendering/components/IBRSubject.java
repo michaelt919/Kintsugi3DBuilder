@@ -28,7 +28,6 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
     private final SceneModel sceneModel;
     private final SceneViewportModel<ContextType> sceneViewportModel;
     private final IBRResources<ContextType> resources;
-    private final LightingResources<ContextType> lightingResources;
 
     private StandardShader<ContextType> standardShader;
     private Drawable<ContextType> drawable;
@@ -41,7 +40,6 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
                       SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
     {
         this.resources = resources;
-        this.lightingResources = lightingResources;
         this.context = resources.context;
         this.sceneModel = sceneModel;
         this.sceneViewportModel = sceneViewportModel;
@@ -167,8 +165,6 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
 
         standardShader.setup();
         drawable.program().setUniform("objectID", sceneViewportModel.lookupSceneObjectID("IBRObject"));
-
-        drawable.program().setTexture("screenSpaceDepthBuffer", lightingResources.getScreenSpaceDepthTexture());
 
         Matrix4 modelView = sceneModel.getModelViewMatrix(cameraViewport.getView());
 

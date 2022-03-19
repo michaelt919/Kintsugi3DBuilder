@@ -21,18 +21,16 @@ public class LightCalibration<ContextType extends Context<ContextType>> implemen
 {
     private final ContextType context;
     private final IBRResources<ContextType> resources;
-    private final LightingResources<ContextType> lightingResources;
     private final SceneModel sceneModel;
     private final SceneViewportModel<ContextType> sceneViewportModel;
 
     private IBRSubject<ContextType> ibrSubject;
 
-    public LightCalibration(IBRResources<ContextType> resources, LightingResources<ContextType> lightingResources,
-                            SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
+    public LightCalibration(IBRResources<ContextType> resources, SceneModel sceneModel,
+                            SceneViewportModel<ContextType> sceneViewportModel)
     {
         this.context = resources.context;
         this.resources = resources;
-        this.lightingResources = lightingResources;
         this.sceneModel = sceneModel;
         this.sceneViewportModel = sceneViewportModel;
     }
@@ -40,7 +38,8 @@ public class LightCalibration<ContextType extends Context<ContextType>> implemen
     public void initialize() throws FileNotFoundException
     {
         // the actual subject for image-based rendering
-        ibrSubject = new IBRSubject<>(resources, lightingResources, sceneModel, sceneViewportModel);
+        // No lighting resources since light calibration is effectively unlit shading
+        ibrSubject = new IBRSubject<>(resources, null, sceneModel, sceneViewportModel);
         ibrSubject.initialize();
     }
 

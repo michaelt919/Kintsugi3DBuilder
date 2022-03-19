@@ -35,7 +35,7 @@ import tetzlaff.ibrelight.core.IBRRequestQueue;
 import tetzlaff.ibrelight.core.LoadingModel;
 import tetzlaff.ibrelight.core.LoadingMonitor;
 import tetzlaff.ibrelight.javafx.MultithreadModels;
-import tetzlaff.ibrelight.rendering.ImageBasedRendererList;
+import tetzlaff.ibrelight.rendering.IBRInstanceManager;
 import tetzlaff.ibrelight.tools.DragToolType;
 import tetzlaff.ibrelight.tools.KeyPressToolType;
 import tetzlaff.ibrelight.tools.ToolBindingModel;
@@ -160,7 +160,7 @@ public final class Rendering
             toolBindingModel.setKeyPressTool(new KeyPress(Key.L, ModifierKeys.NONE), KeyPressToolType.TOGGLE_LIGHTS);
             toolBindingModel.setKeyPressTool(new KeyPress(Key.L, ModifierKeysBuilder.begin().control().end()), KeyPressToolType.TOGGLE_LIGHT_WIDGETS);
 
-            ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<>(context);
+            IBRInstanceManager<OpenGLContext> instanceManager = new IBRInstanceManager<>(context);
 
             SceneViewportModel sceneViewportModel = MultithreadModels.getInstance().getSceneViewportModel();
 
@@ -169,9 +169,9 @@ public final class Rendering
                 @Override
                 public Object getObjectAtCoordinates(double x, double y)
                 {
-                    if (rendererList.getSelectedItem() != null)
+                    if (instanceManager.getLoadedInstance() != null)
                     {
-                        return rendererList.getSelectedItem().getSceneViewportModel().getObjectAtCoordinates(x, y);
+                        return instanceManager.getLoadedInstance().getSceneViewportModel().getObjectAtCoordinates(x, y);
                     }
                     else
                     {
@@ -182,9 +182,9 @@ public final class Rendering
                 @Override
                 public Vector3 get3DPositionAtCoordinates(double x, double y)
                 {
-                    if (rendererList.getSelectedItem() != null)
+                    if (instanceManager.getLoadedInstance() != null)
                     {
-                        return rendererList.getSelectedItem().getSceneViewportModel().get3DPositionAtCoordinates(x, y);
+                        return instanceManager.getLoadedInstance().getSceneViewportModel().get3DPositionAtCoordinates(x, y);
                     }
                     else
                     {
@@ -195,9 +195,9 @@ public final class Rendering
                 @Override
                 public Vector3 getViewingDirection(double x, double y)
                 {
-                    if (rendererList.getSelectedItem() != null)
+                    if (instanceManager.getLoadedInstance() != null)
                     {
-                        return rendererList.getSelectedItem().getSceneViewportModel().getViewingDirection(x, y);
+                        return instanceManager.getLoadedInstance().getSceneViewportModel().getViewingDirection(x, y);
                     }
                     else
                     {
@@ -208,9 +208,9 @@ public final class Rendering
                 @Override
                 public Vector3 getViewportCenter()
                 {
-                    if (rendererList.getSelectedItem() != null)
+                    if (instanceManager.getLoadedInstance() != null)
                     {
-                        return rendererList.getSelectedItem().getSceneViewportModel().getViewportCenter();
+                        return instanceManager.getLoadedInstance().getSceneViewportModel().getViewportCenter();
                     }
                     else
                     {
@@ -221,9 +221,9 @@ public final class Rendering
                 @Override
                 public Vector2 projectPoint(Vector3 point)
                 {
-                    if (rendererList.getSelectedItem() != null)
+                    if (instanceManager.getLoadedInstance() != null)
                     {
-                        return rendererList.getSelectedItem().getSceneViewportModel().projectPoint(point);
+                        return instanceManager.getLoadedInstance().getSceneViewportModel().projectPoint(point);
                     }
                     else
                     {
@@ -234,9 +234,9 @@ public final class Rendering
                 @Override
                 public float getLightWidgetScale()
                 {
-                    if (rendererList.getSelectedItem() != null)
+                    if (instanceManager.getLoadedInstance() != null)
                     {
-                        return rendererList.getSelectedItem().getSceneViewportModel().getLightWidgetScale();
+                        return instanceManager.getLoadedInstance().getSceneViewportModel().getLightWidgetScale();
                     }
                     else
                     {
@@ -257,13 +257,13 @@ public final class Rendering
 
             windowBasedController.addAsWindowListener(window);
 
-            loadingModel.setLoadingHandler(rendererList);
+            loadingModel.setLoadingHandler(instanceManager);
             
-            rendererList.setObjectModel(() -> Matrix4.IDENTITY);
-            rendererList.setCameraModel(cameraModel);
-            rendererList.setLightingModel(lightingModel);
-            rendererList.setObjectModel(objectModel);
-            rendererList.setSettingsModel(settingsModel);
+            instanceManager.setObjectModel(() -> Matrix4.IDENTITY);
+            instanceManager.setCameraModel(cameraModel);
+            instanceManager.setLightingModel(lightingModel);
+            instanceManager.setObjectModel(objectModel);
+            instanceManager.setSettingsModel(settingsModel);
 
             window.addKeyPressListener((win, key, modifierKeys) ->
             {
@@ -274,7 +274,7 @@ public final class Rendering
                     try
                     {
                         // reload program
-                        rendererList.getSelectedItem().reloadShaders();
+                        instanceManager.getLoadedInstance().reloadShaders();
                     }
                     catch (RuntimeException e)
                     {
@@ -285,9 +285,9 @@ public final class Rendering
 
             // Create a new application to run our event loop and give it the WindowImpl for polling
             // of events and the OpenGL context.  The ULFRendererList provides the renderable.
-            InteractiveApplication app = InteractiveGraphics.createApplication(window, context, rendererList.getRenderable());
+            InteractiveApplication app = InteractiveGraphics.createApplication(window, context, instanceManager);
 
-            REQUEST_QUEUE.setModel(rendererList);
+            REQUEST_QUEUE.setModel(instanceManager);
             REQUEST_QUEUE.setLoadingMonitor(new LoadingMonitor()
             {
                 @Override

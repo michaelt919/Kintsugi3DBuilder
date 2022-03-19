@@ -1,7 +1,7 @@
 package tetzlaff.ibrelight.export.PTMfit;
 
 import tetzlaff.gl.core.Context;
-import tetzlaff.ibrelight.core.IBRRenderable;
+import tetzlaff.ibrelight.core.IBRInstance;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
 import tetzlaff.ibrelight.core.TextureFitSettings;
@@ -16,11 +16,11 @@ public class PTMrequest<ContextType extends Context<ContextType>> implements IBR
     }
 
     @Override
-    public void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws Exception
+    public void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws Exception
     {
         try
         {
-            new PTMOptimization<ContextType>(setting).createFit(renderable.getResources());
+            new PTMOptimization<ContextType>(setting).createFit(renderable.getIBRResources());
         }
         catch(IOException e) // thrown by createReflectanceProgram
         {

@@ -1,4 +1,4 @@
-package tetzlaff.ibrelight.rendering.components;
+package tetzlaff.ibrelight.rendering.components.scene;
 
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.nativebuffer.NativeDataType;

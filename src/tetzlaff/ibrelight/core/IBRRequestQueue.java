@@ -16,11 +16,12 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import tetzlaff.gl.core.Context;
+import tetzlaff.ibrelight.rendering.IBRInstanceManager;
 
 public class IBRRequestQueue<ContextType extends Context<ContextType>> 
 {
     private final Queue<Runnable> requestList;
-    private IBRRenderableListModel<ContextType> model;
+    private IBRInstanceManager<ContextType> model;
     private LoadingMonitor loadingMonitor;
 
     public IBRRequestQueue()
@@ -33,7 +34,7 @@ public class IBRRequestQueue<ContextType extends Context<ContextType>>
         return requestList.isEmpty();
     }
 
-    public void setModel(IBRRenderableListModel<ContextType> model)
+    public void setModel(IBRInstanceManager<ContextType> model)
     {
         this.model = model;
     }
@@ -57,7 +58,7 @@ public class IBRRequestQueue<ContextType extends Context<ContextType>>
             //noinspection ErrorNotRethrown
             try
             {
-                request.executeRequest(model.getSelectedItem(), loadingMonitor);
+                request.executeRequest(model.getLoadedInstance(), loadingMonitor);
             }
             catch(Exception | AssertionError e)
             {
@@ -68,9 +69,9 @@ public class IBRRequestQueue<ContextType extends Context<ContextType>>
 
     public void executeQueue()
     {
-        if (model != null && model.getSelectedItem() != null)
+        if (model != null && model.getLoadedInstance() != null)
         {
-            model.getSelectedItem().getResources().context.makeContextCurrent();
+            model.getLoadedInstance().getIBRResources().context.makeContextCurrent();
 
             while (!requestList.isEmpty())
             {

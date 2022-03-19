@@ -120,7 +120,7 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
             defineMap.put("BUEHLER_ALGORITHM", Optional.of(this.sceneModel.getSettingsModel().getBoolean("buehlerAlgorithm")));
             defineMap.put("SORTING_SAMPLE_COUNT", Optional.of(this.sceneModel.getSettingsModel().getInt("buehlerViewCount")));
             defineMap.put("RELIGHTING_ENABLED", Optional.of(this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
-                && !sceneModel.getSettingsModel().getBoolean("lightCalibrationMode") && this.sceneModel.getLightingModel() != null));
+                && lightingResources != null && this.sceneModel.getLightingModel() != null));
 
             boolean occlusionEnabled = this.sceneModel.getSettingsModel().getBoolean("occlusionEnabled")
                 && (this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
@@ -129,10 +129,11 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
 
             defineMap.put("VISIBILITY_TEST_ENABLED", Optional.of(occlusionEnabled && this.resources.depthTextures != null));
             defineMap.put("SHADOW_TEST_ENABLED", Optional.of(occlusionEnabled && this.resources.shadowTextures != null
-                && !sceneModel.getSettingsModel().getBoolean("lightCalibrationMode")));
+                && lightingResources != null));
 
             defineMap.put("PRECOMPUTED_VIEW_WEIGHTS_ENABLED",
-                Optional.of(!this.sceneModel.getSettingsModel().getBoolean("relightingEnabled") && !sceneModel.getSettingsModel().getBoolean("lightCalibrationMode")
+                Optional.of(!this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
+                        && !sceneModel.getSettingsModel().getBoolean("lightCalibrationMode")
                     && this.sceneModel.getSettingsModel().get("weightMode", ShadingParameterMode.class) == ShadingParameterMode.UNIFORM));
 
             if (sceneModel.getSettingsModel().getBoolean("lightCalibrationMode"))
@@ -141,7 +142,8 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
                 defineMap.put("VIEW_COUNT", Optional.of(1));
             }
 
-            if (this.sceneModel.getLightingModel() != null && this.sceneModel.getSettingsModel().getBoolean("relightingEnabled"))
+            if (this.sceneModel.getLightingModel() != null && this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
+                && lightingResources != null)
             {
                 defineMap.put("VIRTUAL_LIGHT_COUNT", Optional.of(sceneModel.getLightingModel().getLightCount()));
                 defineMap.put("ENVIRONMENT_ILLUMINATION_ENABLED", Optional.of(!Objects.equals(sceneModel.getLightingModel().getAmbientLightColor(), Vector3.ZERO)));
@@ -190,8 +192,10 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
 
         program.setUniform("lightPosVirtual[" + lightIndex + ']', lightPos);
 
-
-        program.setUniform("lightMatrixVirtual[" + lightIndex + ']', lightingResources.getLightProjection(lightIndex).times(lightMatrix));
+        if (lightingResources != null)
+        {
+            program.setUniform("lightMatrixVirtual[" + lightIndex + ']', lightingResources.getLightProjection(lightIndex).times(lightMatrix));
+        }
         program.setUniform("lightOrientationVirtual[" + lightIndex + ']',
                 lightMatrixInverse.times(new Vector4(0.0f, 0.0f, -1.0f, 0.0f)).getXYZ().normalized());
         program.setUniform("lightSpotSizeVirtual[" + lightIndex + ']',
@@ -210,9 +214,13 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
         float gamma = this.sceneModel.getSettingsModel().getFloat("gamma");
         program.setUniform("renderGamma", gamma);
 
-        program.setTexture("shadowMaps", lightingResources.getShadowMaps());
+        if (lightingResources != null)
+        {
+            program.setTexture("shadowMaps", lightingResources.getShadowMaps());
+        }
 
-        if (lightingResources.getEnvironmentMap() == null || !sceneModel.getLightingModel().isEnvironmentMappingEnabled())
+        if (lightingResources == null || lightingResources.getEnvironmentMap() == null
+            || !sceneModel.getLightingModel().isEnvironmentMappingEnabled())
         {
             program.setTexture("environmentMap", resources.context.getTextureFactory().getNullTexture(SamplerType.FLOAT_CUBE_MAP));
         }
@@ -231,6 +239,8 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
 
             Matrix4 envMapMatrix = sceneModel.getEnvironmentMapMatrix(model);
             program.setUniform("envMapMatrix", envMapMatrix);
+
+            program.setTexture("screenSpaceDepthBuffer", lightingResources.getScreenSpaceDepthTexture());
         }
 
         program.setUniform("ambientColor", sceneModel.getLightingModel().getAmbientLightColor());

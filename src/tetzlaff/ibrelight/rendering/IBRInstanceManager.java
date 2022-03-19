@@ -13,35 +13,30 @@
 package tetzlaff.ibrelight.rendering;
 
 import java.io.*;
-import java.util.AbstractList;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.DoubleUnaryOperator;
 import javax.xml.stream.XMLStreamException;
 
 import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Framebuffer;
 import tetzlaff.gl.interactive.InteractiveRenderable;
-import tetzlaff.gl.interactive.InteractiveRenderableList;
+import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibrelight.core.IBRRenderable;
-import tetzlaff.ibrelight.core.IBRRenderableListModel;
-import tetzlaff.ibrelight.core.LoadingMonitor;
-import tetzlaff.ibrelight.core.ReadonlyLoadOptionsModel;
+import tetzlaff.ibrelight.core.*;
+import tetzlaff.interactive.InitializationException;
 import tetzlaff.models.ReadonlyCameraModel;
 import tetzlaff.models.ReadonlyLightingModel;
 import tetzlaff.models.ReadonlyObjectModel;
 import tetzlaff.models.ReadonlySettingsModel;
 import tetzlaff.util.AbstractImage;
 
-// TODO NEWUI replace this class with one that is JavaFX tailored or general-purpose (not Swing)
-public class ImageBasedRendererList<ContextType extends Context<ContextType>>
-    extends AbstractList<IBRRenderable<ContextType>>
-    implements IBRRenderableListModel<ContextType>
+public class IBRInstanceManager<ContextType extends Context<ContextType>> implements LoadingHandler, InteractiveRenderable<ContextType>
 {
     private final ContextType context;
 
-    private final InteractiveRenderableList<ContextType, IBRRenderable<ContextType>> renderableList;
-    private int effectiveSize;
+    private IBRInstance<ContextType> ibrInstance = null;
+    private IBRInstance<ContextType> newInstance = null;
     private LoadingMonitor loadingMonitor;
 
     private ReadonlyObjectModel objectModel;
@@ -49,11 +44,9 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
     private ReadonlyLightingModel lightingModel;
     private ReadonlySettingsModel settingsModel;
 
-    public ImageBasedRendererList(ContextType context)
+    public IBRInstanceManager(ContextType context)
     {
         this.context = context;
-        this.renderableList = new InteractiveRenderableList<>();
-        this.effectiveSize = 0;
     }
 
     private void handleMissingFiles(Exception e)
@@ -72,8 +65,8 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
 
         try
         {
-            IBRRenderable<ContextType> newItem =
-                new IBRImplementation<>(id, context,
+            IBRInstance<ContextType> newItem =
+                new IBREngine<>(id, context,
                     IBRResources.getBuilderForContext(this.context)
                         .setLoadingMonitor(this.loadingMonitor)
                         .setLoadOptions(loadOptions)
@@ -116,10 +109,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
                 @Override
                 public void loadingComplete()
                 {
-                    renderableList.setSelectedItem(newItem);
-                    effectiveSize = renderableList.size();
-
-                    double primaryViewDistance = newItem.getResources().getPrimaryViewDistance();
+                    double primaryViewDistance = newItem.getIBRResources().getPrimaryViewDistance();
                     Vector3 lightIntensity = new Vector3((float)(primaryViewDistance * primaryViewDistance));
 
                     for (int i = 0; i < newItem.getActiveViewSet().getLightCount(); i++)
@@ -131,7 +121,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
                     }
 
                     newItem.getActiveViewSet().setInfiniteLightSources(false);
-                    newItem.getResources().updateLightData();
+                    newItem.getIBRResources().updateLightData();
                     newItem.reloadShaders();
 
                     if (loadingMonitor != null)
@@ -149,7 +139,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
                     }
                 }
             });
-            renderableList.add(newItem);
+            newInstance = newItem;
         }
         catch (FileNotFoundException e)
         {
@@ -165,8 +155,8 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
 
         try
         {
-            IBRRenderable<ContextType> newItem =
-                new IBRImplementation<>(id, context,
+            IBRInstance<ContextType> newItem =
+                new IBREngine<>(id, context,
                     IBRResources.getBuilderForContext(this.context)
                         .setLoadingMonitor(this.loadingMonitor)
                         .setLoadOptions(loadOptions)
@@ -210,9 +200,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
                 @Override
                 public void loadingComplete()
                 {
-                    renderableList.setSelectedItem(newItem);
-                    effectiveSize = renderableList.size();
-                    double primaryViewDistance = newItem.getResources().getPrimaryViewDistance();
+                    double primaryViewDistance = newItem.getIBRResources().getPrimaryViewDistance();
 
                     Vector3 lightIntensity = new Vector3((float)(primaryViewDistance * primaryViewDistance));
 
@@ -223,7 +211,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
 
                     newItem.getActiveViewSet().setInfiniteLightSources(false);
 
-                    newItem.getResources().updateLightData();
+                    newItem.getIBRResources().updateLightData();
                     newItem.reloadShaders();
 
                     if (loadingMonitor != null)
@@ -241,7 +229,6 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
                     }
                 }
             });
-            renderableList.add(newItem);
         }
         catch(FileNotFoundException|XMLStreamException e)
         {
@@ -249,34 +236,9 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
         }
     }
 
-    public IBRRenderable<ContextType> getElementAt(int index)
+    public IBRInstance<ContextType> getLoadedInstance()
     {
-        return renderableList.get(index);
-    }
-
-    @Override
-    public IBRRenderable<ContextType> getSelectedItem()
-    {
-        return renderableList.getSelectedItem();
-    }
-
-    @Override
-    public void setSelectedItem(Object item)
-    {
-        if (item == null)
-        {
-            renderableList.setSelectedItem(null);
-        }
-        else
-        {
-            for (int i = 0; i < renderableList.size(); i++)
-            {
-                if (Objects.equals(renderableList.get(i), item))
-                {
-                    renderableList.setSelectedIndex(i);
-                }
-            }
-        }
+        return ibrInstance;
     }
 
     @Override
@@ -288,76 +250,72 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
     @Override
     public DoubleUnaryOperator getLuminanceEncodingFunction()
     {
-        return this.getSelectedItem().getActiveViewSet().getLuminanceEncoding().encodeFunction;
+        return ibrInstance.getActiveViewSet().getLuminanceEncoding().encodeFunction;
     }
 
     @Override
     public void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
     {
-        this.getSelectedItem().setTonemapping(linearLuminanceValues, encodedLuminanceValues);
+        ibrInstance.getDynamicResourceManager().setTonemapping(linearLuminanceValues, encodedLuminanceValues);
     }
 
     @Override
     public void applyLightCalibration()
     {
-        this.getSelectedItem().applyLightCalibration();
+        ViewSet viewSet = ibrInstance.getIBRResources().viewSet;
+
+        ibrInstance.getDynamicResourceManager().setLightCalibration(
+            viewSet.getLightPosition(viewSet.getLightIndex(viewSet.getPrimaryViewIndex()))
+                .plus(ibrInstance.getSceneModel().getSettingsModel().get("currentLightCalibration", Vector2.class)
+                        .asVector3()));
     }
 
-    public InteractiveRenderable<ContextType> getRenderable()
-    {
-        return renderableList;
-    }
-
-    @Override
     public void setObjectModel(ReadonlyObjectModel objectModel)
     {
         this.objectModel = objectModel;
-        for (IBRRenderable<?> renderable : renderableList)
+        if (ibrInstance != null)
         {
-            renderable.getSceneModel().setObjectModel(objectModel);
+            ibrInstance.getSceneModel().setObjectModel(objectModel);
         }
     }
 
-    @Override
     public void setCameraModel(ReadonlyCameraModel cameraModel)
     {
         this.cameraModel = cameraModel;
-        for (IBRRenderable<?> renderable : renderableList)
+        if (ibrInstance != null)
         {
-            renderable.getSceneModel().setCameraModel(cameraModel);
+            ibrInstance.getSceneModel().setCameraModel(cameraModel);
         }
     }
 
-    @Override
     public void setLightingModel(ReadonlyLightingModel lightingModel)
     {
         this.lightingModel = lightingModel;
-        for (IBRRenderable<?> renderable : renderableList)
+        if (ibrInstance != null)
         {
-            renderable.getSceneModel().setLightingModel(lightingModel);
+            ibrInstance.getSceneModel().setLightingModel(lightingModel);
         }
     }
 
-    @Override
     public void setSettingsModel(ReadonlySettingsModel settingsModel)
     {
         this.settingsModel = settingsModel;
-        for (IBRRenderable<?> renderable : renderableList)
+        if (ibrInstance != null)
         {
-            renderable.getSceneModel().setSettingsModel(settingsModel);
+            ibrInstance.getSceneModel().setSettingsModel(settingsModel);
         }
     }
 
     @Override
     public Optional<AbstractImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
     {
-        return this.getSelectedItem().loadEnvironmentMap(environmentMapFile);
+        return ibrInstance.getDynamicResourceManager().loadEnvironmentMap(environmentMapFile);
     }
 
     @Override
     public void loadBackplate(File backplateFile) throws FileNotFoundException
     {
-        this.getSelectedItem().loadBackplate(backplateFile);
+        ibrInstance.getDynamicResourceManager().loadBackplate(backplateFile);
     }
 
     @Override
@@ -365,41 +323,74 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
     {
         try (OutputStream stream = new FileOutputStream(vsetFile))
         {
-            this.getSelectedItem().getActiveViewSet().writeVSETFileToStream(stream, vsetFile.getParentFile().toPath());
+            ibrInstance.getActiveViewSet().writeVSETFileToStream(stream, vsetFile.getParentFile().toPath());
         }
     }
 
     @Override
     public void unload()
     {
-        if (this.getSelectedItem() != null)
+        if (ibrInstance != null)
         {
-            this.renderableList.remove(this.renderableList.getSelectedIndex());
-            this.renderableList.setSelectedItem(null);
+            ibrInstance.close();
+            ibrInstance = null;
         }
     }
 
     @Override
-    public int size()
+    public void initialize() throws InitializationException
     {
-        return this.effectiveSize;
+        if (ibrInstance != null)
+        {
+            ibrInstance.initialize();
+        }
     }
 
     @Override
-    public IBRRenderable<ContextType> get(int index)
+    public void update()
     {
-        return renderableList.get(index);
+        if (newInstance != null)
+        {
+            // If a new instance was just loaded, initialize it.
+            try
+            {
+                newInstance.initialize();
+
+                // Check for an old instance just to be safe
+                unload();
+
+                // Use the new instance as the active instance if initialization was successful
+                ibrInstance = newInstance;
+            }
+            catch (InitializationException e)
+            {
+                e.printStackTrace();
+            }
+
+            newInstance = null;
+        }
+
+        if (ibrInstance != null)
+        {
+            ibrInstance.update();
+        }
     }
 
     @Override
-    public int getSelectedIndex()
+    public void draw(Framebuffer<ContextType> framebuffer)
     {
-        return renderableList.getSelectedIndex();
+        if (ibrInstance != null)
+        {
+            ibrInstance.draw(framebuffer);
+        }
     }
 
     @Override
-    public void setSelectedIndex(int index)
+    public void close()
     {
-        renderableList.setSelectedIndex(index);
+        if (ibrInstance != null)
+        {
+            ibrInstance.close();
+        }
     }
 }

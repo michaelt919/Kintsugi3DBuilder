@@ -12,26 +12,20 @@
 
 package tetzlaff.ibrelight.core;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.List;
-import java.util.Optional;
-
 import tetzlaff.gl.core.Context;
-import tetzlaff.gl.core.Cubemap;
 import tetzlaff.gl.core.Framebuffer;
+import tetzlaff.gl.core.FramebufferSize;
 import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.ibrelight.rendering.IBRResources;
 import tetzlaff.models.*;
-import tetzlaff.util.AbstractImage;
 
 /**
  * Interface for the implementation of the actual image-based rendering / relighting technique.
  * @param <ContextType> The type of the graphics context that this implementation uses.
  */
-public interface IBRRenderable<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
+public interface IBRInstance<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
 {
     /**
      * Draw the object using the current settings and selections in IBRelight,
@@ -53,7 +47,11 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
      * @param viewOverride The view matrix.  If this is null, it will default to the current viewpoint in the app.
      * @param projectionOverride The projection matrix.  If this is null, it will default to the current camera in the app.
      */
-    void draw(Framebuffer<ContextType> framebuffer, Matrix4 viewOverride, Matrix4 projectionOverride);
+    default void draw(Framebuffer<ContextType> framebuffer, Matrix4 viewOverride, Matrix4 projectionOverride)
+    {
+        FramebufferSize framebufferSize = framebuffer.getSize();
+        this.draw(framebuffer, viewOverride, projectionOverride, framebufferSize.width, framebufferSize.height);
+    }
 
     /**
      * Draw the object using the current settings and viewpoint in IBRelight.
@@ -105,44 +103,16 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
     void reloadShaders();
 
     /**
-     * Load a new backplate image.
-     * @param backplateFile The backplate image file.
-     * @throws FileNotFoundException If the backplate image is not found.
-     */
-    void loadBackplate(File backplateFile) throws FileNotFoundException;
-
-    /**
-     * Load a new environment map image.
-     * @param environmentFile The environment map image file.
-     * @throws FileNotFoundException If the environment map image is not found.
-     */
-    Optional<AbstractImage> loadEnvironmentMap(File environmentFile) throws FileNotFoundException;
-
-    /**
      * Gets the resources used by this IBR implementation.
      * These resources can be used to accomplish other shading tasks other than the built-in image-based renderer.
      * The resources are automatically destroyed when this implementation closes.
      * @return The IBR resources.
      */
-    IBRResources<ContextType> getResources();
+    IBRResources<ContextType> getIBRResources();
 
     /**
-     * Gets the currently loaded environment map.
-     * @return The environment map.
+     * Gets the scene resource manager (handles environment map, backplate, tonemapping, etc.)
+     * @return The secene resources manager
      */
-    Optional<Cubemap<ContextType>> getEnvironmentMap();
-
-    /**
-     * Sets the tonemapping curve used to interpret the photographic data.
-     * The data points specified using this function will be interpolated to form a smooth decoding curve.
-     * @param linearLuminanceValues A sequence of luminance values interpreted as physically linear (gamma decoded).
-     * @param encodedLuminanceValues A sequence of gamma-encoded luminance values representing the actual pixel values
-     *                               that might be found in the photographs.
-     */
-    void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues);
-
-    /**
-     * Accept the current light calibration (intended to be used only by the application, when in light calibration mode).
-     */
-    void applyLightCalibration();
+    DynamicResourceManager getDynamicResourceManager();
 }
