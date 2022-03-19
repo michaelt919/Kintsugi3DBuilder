@@ -5,7 +5,7 @@ import tetzlaff.gl.core.FramebufferObject;
 import tetzlaff.ibrelight.core.CameraViewport;
 import tetzlaff.ibrelight.core.RenderedComponent;
 import tetzlaff.ibrelight.core.SceneModel;
-import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.ibrelight.rendering.SceneViewportModel;
 import tetzlaff.ibrelight.rendering.components.snap.ViewSnap;
 

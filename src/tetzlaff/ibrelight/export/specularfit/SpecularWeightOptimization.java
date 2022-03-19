@@ -14,11 +14,8 @@ package tetzlaff.ibrelight.export.specularfit;
 
 import java.util.Collections;
 
-import tetzlaff.gl.vecmath.DoubleVector3;
-import tetzlaff.ibrelight.rendering.GraphicsStream;
+import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.optimization.NonNegativeWeightOptimization;
-
-import static java.lang.Math.PI;
 
 public class SpecularWeightOptimization
 {

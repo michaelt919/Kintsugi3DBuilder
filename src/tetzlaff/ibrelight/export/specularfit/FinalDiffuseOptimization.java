@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.Objects;
 
 import tetzlaff.gl.core.*;
-import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.util.ShaderHoleFill;
 
 public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> implements AutoCloseable

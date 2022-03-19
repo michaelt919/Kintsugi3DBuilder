@@ -24,7 +24,7 @@ import tetzlaff.ibrelight.core.IBRInstance;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
 import tetzlaff.ibrelight.core.ViewSet;
-import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.models.ReadonlySettingsModel;
 
 class MultiviewRetargetRenderRequest<ContextType extends Context<ContextType>> extends RenderRequestBase<ContextType>

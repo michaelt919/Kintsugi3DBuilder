@@ -1,4 +1,4 @@
-package tetzlaff.ibrelight.rendering;
+package tetzlaff.ibrelight.rendering.resources;
 
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.core.*;

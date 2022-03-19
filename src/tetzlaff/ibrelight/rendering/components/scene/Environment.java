@@ -5,7 +5,7 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.ibrelight.core.CameraViewport;
 import tetzlaff.ibrelight.core.RenderedComponent;
 import tetzlaff.ibrelight.core.SceneModel;
-import tetzlaff.ibrelight.rendering.LightingResources;
+import tetzlaff.ibrelight.rendering.resources.LightingResources;
 import tetzlaff.ibrelight.rendering.SceneViewportModel;
 import tetzlaff.models.BackgroundMode;
 

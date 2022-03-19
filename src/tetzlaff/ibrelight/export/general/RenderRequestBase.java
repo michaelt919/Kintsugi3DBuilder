@@ -20,7 +20,7 @@ import java.util.function.Consumer;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
-import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.models.ReadonlySettingsModel;
 
 abstract class RenderRequestBase<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>

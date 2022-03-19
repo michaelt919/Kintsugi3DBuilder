@@ -10,6 +10,8 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibrelight.core.SceneModel;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.LightingResources;
 import tetzlaff.util.ShadingParameterMode;
 
 import java.io.File;

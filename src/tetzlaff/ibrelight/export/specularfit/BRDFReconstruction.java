@@ -12,17 +12,13 @@
 
 package tetzlaff.ibrelight.export.specularfit;
 
-import java.util.stream.IntStream;
-
 import org.ejml.data.DMatrixRMaj;
-import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.vecmath.DoubleVector3;
-import tetzlaff.ibrelight.rendering.GraphicsStream;
+import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.optimization.function.BasisFunctions;
 import tetzlaff.optimization.MatrixSystem;
 import tetzlaff.optimization.function.OptimizedFunctions;
 import tetzlaff.util.Counter;
-import tetzlaff.optimization.NonNegativeLeastSquares;
 
 public class BRDFReconstruction
 {

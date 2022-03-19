@@ -9,7 +9,7 @@ import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.CameraViewport;
 import tetzlaff.ibrelight.core.SceneModel;
-import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.ibrelight.rendering.SceneViewportModel;
 import tetzlaff.ibrelight.rendering.components.IBRSubject;
 import tetzlaff.ibrelight.rendering.components.snap.ViewSnapContent;

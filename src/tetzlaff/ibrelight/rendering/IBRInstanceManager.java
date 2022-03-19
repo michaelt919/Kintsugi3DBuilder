@@ -24,6 +24,7 @@ import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.interactive.InitializationException;
 import tetzlaff.models.ReadonlyCameraModel;
 import tetzlaff.models.ReadonlyLightingModel;

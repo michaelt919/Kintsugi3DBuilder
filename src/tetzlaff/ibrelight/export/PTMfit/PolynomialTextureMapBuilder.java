@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.function.*;
 import java.util.stream.IntStream;
 
-import tetzlaff.ibrelight.rendering.GraphicsStream;
+import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.optimization.LeastSquaresMatrixBuilder;
 import tetzlaff.util.Counter;
 

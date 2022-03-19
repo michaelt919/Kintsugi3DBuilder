@@ -1,12 +1,10 @@
-package tetzlaff.ibrelight.rendering;
+package tetzlaff.ibrelight.rendering.resources;
 
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.DynamicResourceManager;
 import tetzlaff.ibrelight.core.LoadingMonitor;
-import tetzlaff.ibrelight.rendering.IBRResources;
-import tetzlaff.ibrelight.rendering.LightingResources;
 import tetzlaff.util.AbstractImage;
 import tetzlaff.util.ArrayBackedImage;
 import tetzlaff.util.EnvironmentMap;

@@ -18,7 +18,7 @@ import java.util.Queue;
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
 public class KNNViewWeightGenerator implements ViewWeightGenerator
 {

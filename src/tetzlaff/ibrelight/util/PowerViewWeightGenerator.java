@@ -14,7 +14,7 @@ package tetzlaff.ibrelight.util;
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
 public class PowerViewWeightGenerator implements ViewWeightGenerator
 {

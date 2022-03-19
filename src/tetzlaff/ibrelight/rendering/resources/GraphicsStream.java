@@ -10,14 +10,12 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.ibrelight.rendering;
+package tetzlaff.ibrelight.rendering.resources;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import tetzlaff.util.ColorList;
 
 /**
  * An interface that provides a small subset of the functionality of the standard Java Stream API.

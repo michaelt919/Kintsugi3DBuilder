@@ -6,7 +6,7 @@ import tetzlaff.gl.core.VertexBuffer;
 import tetzlaff.ibrelight.core.CameraViewport;
 import tetzlaff.ibrelight.core.RenderedComponent;
 import tetzlaff.ibrelight.core.SceneModel;
-import tetzlaff.ibrelight.rendering.LightingResources;
+import tetzlaff.ibrelight.rendering.resources.LightingResources;
 
 public class LitRoot<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {

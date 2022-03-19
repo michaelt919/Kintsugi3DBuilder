@@ -12,17 +12,15 @@
 
 package tetzlaff.ibrelight.rendering;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.ViewSet;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
 public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -31,7 +29,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
     private final FramebufferObject<ContextType> framebuffer;
 
     public ImageReconstruction(IBRResources<ContextType> resources, ProgramBuilder<ContextType> programBuilder,
-        FramebufferObjectBuilder<ContextType> framebufferObjectBuilder, Consumer<Program<ContextType>> programSetup)
+                               FramebufferObjectBuilder<ContextType> framebufferObjectBuilder, Consumer<Program<ContextType>> programSetup)
         throws FileNotFoundException
     {
         this.program = programBuilder.createProgram();

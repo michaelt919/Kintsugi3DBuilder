@@ -22,7 +22,7 @@ import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Framebuffer;
 import tetzlaff.ibrelight.core.Projection;
 import tetzlaff.ibrelight.core.ViewSet;
-import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.ibrelight.rendering.ImageReconstruction;
 
 public class FinalReconstruction<ContextType extends Context<ContextType>>
