@@ -73,7 +73,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
         try
         {
             IBRRenderable<ContextType> newItem =
-                new IBRImplementation<>(id, context, null,
+                new IBRImplementation<>(id, context,
                     IBRResources.getBuilderForContext(this.context)
                         .setLoadingMonitor(this.loadingMonitor)
                         .setLoadOptions(loadOptions)
@@ -166,7 +166,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
         try
         {
             IBRRenderable<ContextType> newItem =
-                new IBRImplementation<>(id, context, null,
+                new IBRImplementation<>(id, context,
                     IBRResources.getBuilderForContext(this.context)
                         .setLoadingMonitor(this.loadingMonitor)
                         .setLoadOptions(loadOptions)

@@ -171,7 +171,8 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
     }
 
     @Override
-    public void draw(Framebuffer<ContextType> framebuffer, Matrix4 view)
+    public void draw(Framebuffer<ContextType> framebuffer, Matrix4 view, Matrix4 fullProjection,
+                     Matrix4 viewportProjection, int x, int y, int width, int height)
     {
         FramebufferSize size = framebuffer.getSize();
 
@@ -199,14 +200,14 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
                                             -lightCenter.z * sceneModel.getVerticalFieldOfView(size) / 64.0f,
                                             -lightCenter.z * sceneModel.getVerticalFieldOfView(size) / 64.0f,
                                             1.0f)));
-                    this.lightProgram.setUniform("projection", sceneModel.getProjectionMatrix(size));
+                    this.lightProgram.setUniform("projection", viewportProjection);
 
                     this.lightProgram.setTexture("lightTexture", this.lightCenterTexture);
 
                     this.context.getState().disableDepthTest();
                     this.lightProgram.setUniform("color",
                             new Vector3(this.sceneModel.getLightingModel().getLightWidgetModel(i).isCenterWidgetSelected() ? 1.0f : 0.5f));
-                    this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+                    this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer, x, y, width, height);
                 }
 
                 Matrix4 widgetTransformation = view
@@ -223,14 +224,14 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
                     this.lightProgram.setUniform("model_view",
                             Matrix4.translate(lightPosition)
                                     .times(Matrix4.scale(-lightPosition.z / 32.0f, -lightPosition.z / 32.0f, 1.0f)));
-                    this.lightProgram.setUniform("projection", sceneModel.getProjectionMatrix(size));
+                    this.lightProgram.setUniform("projection", viewportProjection);
                     this.lightProgram.setTexture("lightTexture", this.lightTexture);
-                    this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+                    this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer, x, y, width, height);
                 }
 
                 if (sceneModel.getSettingsModel().getBoolean("lightWidgetsEnabled") && sceneModel.getLightingModel().isLightWidgetEnabled(i))
                 {
-                    this.solidProgram.setUniform("projection", sceneModel.getProjectionMatrix(size));
+                    this.solidProgram.setUniform("projection", viewportProjection);
 
                     float lightWidgetScale = sceneViewportModel.computeRawLightWidgetScale(view, size);
                     Vector3 lightCenter = view.times(this.sceneModel.getLightingModel().getLightCenter(i).times(sceneModel.getScale()).asPosition()).getXYZ();
@@ -275,7 +276,7 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
                                             || sceneModel.getLightingModel().getLightWidgetModel(i).isCenterWidgetSelected() ? 1.0f : 0.5f)
                                             .asVector4(1));
                             this.solidProgram.setUniform("objectID", sceneViewportModel.lookupSceneObjectID("Light." + i + ".Distance"));
-                            lineRenderable.draw(PrimitiveMode.LINES, framebuffer);
+                            lineRenderable.draw(PrimitiveMode.LINES, framebuffer, x, y, width, height);
                         }
                     }
 
@@ -303,14 +304,14 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
                                             || sceneModel.getLightingModel().getLightWidgetModel(i).isCenterWidgetSelected() ? 1.0f : 0.5f)
                                             .asVector4(1));
                             this.solidProgram.setUniform("objectID", 0);
-                            lineRenderable.draw(PrimitiveMode.LINES, framebuffer);
+                            lineRenderable.draw(PrimitiveMode.LINES, framebuffer, x, y, width, height);
                         }
                     }
 
                     Vector3 azimuthRotationAxis = view.times(new Vector4(0,1,0,0)).getXYZ();
 
                     this.circleProgram.setUniform("color", new Vector3(1));
-                    this.circleProgram.setUniform("projection", sceneModel.getProjectionMatrix(size));
+                    this.circleProgram.setUniform("projection", viewportProjection);
                     this.circleProgram.setUniform("width", 1 / 128.0f);
                     this.circleProgram.setUniform("maxAngle", (float)Math.PI / 4);
                     this.circleProgram.setUniform("threshold", 0.005f);
@@ -349,7 +350,7 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
                                         .times(Matrix4.scale(2 * lightDistanceAtInclination))
                                         .times(Matrix4.rotateX(-Math.PI / 2))
                                         .times(Matrix4.rotateZ(azimuth - Math.PI / 2)));
-                        this.circleDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+                        this.circleDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer, x, y, width, height);
                     }
 
                     if (sceneModel.getLightingModel().getLightWidgetModel(i).isInclinationWidgetVisible())
@@ -369,7 +370,7 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
                                                 .times(sceneModel.getLightingModel().getLightWidgetModel(i).isInclinationWidgetSelected() ?
                                                         Matrix3.rotateZ(-inclination) : Matrix3.IDENTITY)
                                                 .asMatrix4()));
-                        this.circleDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+                        this.circleDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer, x, y, width, height);
                     }
 
                     context.getState().enableBackFaceCulling();
@@ -457,7 +458,7 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
                                                 new Vector4(0, 0, 1, 0),
                                                 new Vector4(0, 0, 0, 1))));
 
-                        this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+                        this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer, x, y, width, height);
 
                         this.solidProgram.setUniform("model_view",
                                 Matrix4.translate(arrow1PositionL)
@@ -468,7 +469,7 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
                                                 new Vector4(0, 0, 1, 0),
                                                 new Vector4(0, 0, 0, 1))));
 
-                        this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+                        this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer, x, y, width, height);
                     }
 
                     if (sceneModel.getLightingModel().getLightWidgetModel(i).isInclinationWidgetVisible())
@@ -485,7 +486,7 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
                                                     arrow2RDirectionY,
                                                     new Vector4(0, 0, 1, 0),
                                                     new Vector4(0, 0, 0, 1))));
-                            this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+                            this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer, x, y, width, height);
                         }
 
                         if (Math.PI / 2 + inclination > 0.01f)
@@ -498,7 +499,7 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
                                                     arrow2LDirectionY.negated(),
                                                     new Vector4(0, 0, 1, 0),
                                                     new Vector4(0, 0, 0, 1))));
-                            this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+                            this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer, x, y, width, height);
                         }
                     }
 
@@ -515,7 +516,7 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
                                                 new Vector4(0, 0, 1, 0),
                                                 new Vector4(0, 0, 0, 1))));
 
-                        this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+                        this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer, x, y, width, height);
 
                         if (widgetTransformation.getColumn(3).getXYZ().distance(lightCenter) > 0.01f)
                         {
@@ -527,7 +528,7 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
                                                     arrow3DirectionY,
                                                     new Vector4(0, 0, 1, 0),
                                                     new Vector4(0, 0, 0, 1))));
-                            this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+                            this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer, x, y, width, height);
                         }
                     }
                 }
@@ -542,6 +543,12 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
     @Override
     public void close()
     {
+        if (rectangleVertices != null)
+        {
+            rectangleVertices.close();
+            rectangleVertices = null;
+        }
+
         if (lightProgram != null)
         {
             lightProgram.close();

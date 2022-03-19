@@ -39,7 +39,6 @@ public class SceneModel
         return this.settingsModel;
     }
 
-
     public Vector3 getCentroid()
     {
         return centroid;
@@ -95,7 +94,7 @@ public class SceneModel
     {
         return getUnscaledMatrix(
                 lightingModel.getLightMatrix(lightIndex)
-                        .times(objectModel.getTransformationMatrix()))
+                    .times(objectModel.getTransformationMatrix()))
                 .times(getBaseModelMatrix());
     }
 
@@ -156,14 +155,5 @@ public class SceneModel
     public float getVerticalFieldOfView(FramebufferSize size)
     {
         return 2 * (float)Math.atan(Math.tan(cameraModel.getHorizontalFOV() / 2) * size.height / size.width);
-    }
-
-    public Matrix4 getProjectionMatrix(FramebufferSize size)
-    {
-        float scale = getScale();
-
-        return Matrix4.perspective(getVerticalFieldOfView(size),
-                (float)size.width / (float)size.height,
-                0.01f * scale, 100.0f * scale);
     }
 }

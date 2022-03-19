@@ -12,14 +12,14 @@ import java.io.FileNotFoundException;
 
 public class Grid<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
-    private final Context<ContextType> context;
+    private final ContextType context;
     private final SceneModel sceneModel;
 
     private Program<ContextType> solidProgram;
     private VertexBuffer<ContextType> gridVertices;
     private Drawable<ContextType> gridDrawable;
 
-    public Grid(Context<ContextType> context, SceneModel sceneModel)
+    public Grid(ContextType context, SceneModel sceneModel)
     {
         this.context = context;
         this.sceneModel = sceneModel;
@@ -82,16 +82,17 @@ public class Grid<ContextType extends Context<ContextType>> implements RenderedC
     }
 
     @Override
-    public void draw(Framebuffer<ContextType> framebuffer, Matrix4 view)
+    public void draw(Framebuffer<ContextType> framebuffer, Matrix4 view, Matrix4 fullProjection,
+                     Matrix4 viewportProjection, int x, int y, int width, int height)
     {
         // Draw grid
         if (sceneModel.getSettingsModel().getBoolean("is3DGridEnabled"))
         {
-            this.solidProgram.setUniform("projection", sceneModel.getProjectionMatrix(framebuffer.getSize()));
+            this.solidProgram.setUniform("projection", viewportProjection);
             this.solidProgram.setUniform("model_view", view.times(Matrix4.scale(sceneModel.getScale())));
             this.solidProgram.setUniform("color", new Vector4(0.5f, 0.5f, 0.5f, 1.0f));
             this.solidProgram.setUniform("objectID", 0);
-            this.gridDrawable.draw(PrimitiveMode.LINES, framebuffer);
+            this.gridDrawable.draw(PrimitiveMode.LINES, framebuffer, x, y, width, height);
         }
     }
 
