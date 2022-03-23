@@ -1,21 +1,16 @@
 package tetzlaff.ibrelight.export.PTMfit;
-import org.ejml.data.DMatrixRMaj;
-import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.ibrelight.core.TextureFitSettings;
-import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.ibrelight.core.Projection;
-import tetzlaff.ibrelight.rendering.IBRResources;
 import tetzlaff.ibrelight.rendering.ImageReconstruction;
 public class PTMReconstruction <ContextType extends Context<ContextType>>{
     private final IBRResources<ContextType> resources;

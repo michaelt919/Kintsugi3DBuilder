@@ -28,16 +28,16 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback)
+    public void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback)
     {
         try
         {
             // Perform the specular fit
-            SpecularFit specularFit = new SpecularOptimization(settings).createFit(renderable.getResources());
+            SpecularFit specularFit = new SpecularOptimization(settings).createFit(renderable.getIBRResources());
 
             // Reconstruct images both from basis functions and from fitted roughness
-            SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(renderable.getResources(), settings);
-            FinalReconstruction<ContextType> reconstruction = new FinalReconstruction<>(renderable.getResources(), settings);
+            SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(renderable.getIBRResources(), settings);
+            FinalReconstruction<ContextType> reconstruction = new FinalReconstruction<>(renderable.getIBRResources(), settings);
             reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(programFactory), "reconstructions");
             reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(programFactory), "fitted");
 

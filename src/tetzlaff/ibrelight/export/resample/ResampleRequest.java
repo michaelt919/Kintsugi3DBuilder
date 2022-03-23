@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.FramebufferObject;
-import tetzlaff.ibrelight.core.IBRRenderable;
+import tetzlaff.ibrelight.core.IBRInstance;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
 import tetzlaff.ibrelight.core.ViewSet;
@@ -43,13 +43,13 @@ public class ResampleRequest<ContextType extends Context<ContextType>> implement
     }
 
     @Override
-    public void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
+    public void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
     {
         ViewSet targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile);
 
         try
         (
-            FramebufferObject<ContextType> framebuffer = renderable.getResources().context.buildFramebufferObject(resampleWidth, resampleHeight)
+            FramebufferObject<ContextType> framebuffer = renderable.getIBRResources().context.buildFramebufferObject(resampleWidth, resampleHeight)
                 .addColorAttachment()
                 .addDepthAttachment()
                 .createFramebufferObject()

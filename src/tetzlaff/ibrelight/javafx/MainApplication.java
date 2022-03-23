@@ -40,7 +40,7 @@ import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.ibrelight.app.Rendering;
 import tetzlaff.ibrelight.app.SynchronizedWindow;
 import tetzlaff.ibrelight.app.WindowSynchronization;
-import tetzlaff.ibrelight.core.RenderingMode;
+import tetzlaff.ibrelight.core.StandardRenderingMode;
 import tetzlaff.ibrelight.javafx.controllers.menubar.MenubarController;
 import tetzlaff.ibrelight.javafx.controllers.scene.RootSceneController;
 import tetzlaff.ibrelight.javafx.controllers.scene.SceneModel;
@@ -207,7 +207,7 @@ public class MainApplication extends Application
         settingsModel.createSettingFromProperty("occlusionBias", Number.class,
             StaticUtilities.clamp(0, 0.1, new SimpleFloatProperty(0.0025f)));
         settingsModel.createObjectSetting("weightMode", ShadingParameterMode.PER_PIXEL);
-        settingsModel.createObjectSetting("renderingMode", RenderingMode.IMAGE_BASED);
+        settingsModel.createObjectSetting("renderingMode", StandardRenderingMode.IMAGE_BASED);
         settingsModel.createBooleanSetting("is3DGridEnabled", false);
         settingsModel.createBooleanSetting("compassEnabled", false);
         settingsModel.createBooleanSetting("multisamplingEnabled", false);

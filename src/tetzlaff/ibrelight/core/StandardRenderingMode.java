@@ -12,7 +12,7 @@
 
 package tetzlaff.ibrelight.core;//Created by alexk on 8/2/2017.
 
-public enum RenderingMode 
+public enum StandardRenderingMode
 {
     NONE(false, false, false, false, false, false),
     WIREFRAME(false, false, false, false, false, false),
@@ -32,7 +32,7 @@ public enum RenderingMode
     private final boolean useSpecularTextures;
     private final boolean imageBased;
 
-    RenderingMode(boolean useDiffuseShading, boolean useSpecularShading, boolean useDiffuseTexture, boolean useNormalTexture, boolean useSpecularTextures, boolean imageBased)
+    StandardRenderingMode(boolean useDiffuseShading, boolean useSpecularShading, boolean useDiffuseTexture, boolean useNormalTexture, boolean useSpecularTextures, boolean imageBased)
     {
         this.useDiffuseShading = useDiffuseShading;
         this.useSpecularShading = useSpecularShading;

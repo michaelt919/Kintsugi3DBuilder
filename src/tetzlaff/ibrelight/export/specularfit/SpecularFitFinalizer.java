@@ -20,7 +20,7 @@ import java.util.HashSet;
 import java.util.stream.IntStream;
 
 import tetzlaff.gl.core.*;
-import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.optimization.ReadonlyErrorReport;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
 

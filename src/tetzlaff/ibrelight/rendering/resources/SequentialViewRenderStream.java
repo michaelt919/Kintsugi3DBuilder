@@ -10,7 +10,7 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.ibrelight.rendering;
+package tetzlaff.ibrelight.rendering.resources;
 
 import java.util.function.Consumer;
 import java.util.stream.IntStream;

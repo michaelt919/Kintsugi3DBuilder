@@ -53,52 +53,52 @@
          </fx:define>
          <RadioMenuItem mnemonicParsing="false" text="None" userData="None" toggleGroup="$renderGroup" visible="false">
              <userData>
-                 <RenderingMode fx:value="NONE" />
+                 <StandardRenderingMode fx:value="NONE" />
              </userData>
          </RadioMenuItem>
          <RadioMenuItem mnemonicParsing="false" text="Wireframe" toggleGroup="$renderGroup" visible="false">
              <userData>
-                 <RenderingMode fx:value="WIREFRAME" />
+                 <StandardRenderingMode fx:value="WIREFRAME" />
              </userData>
          </RadioMenuItem>
          <RadioMenuItem mnemonicParsing="false" text="Simple Lambertian" toggleGroup="$renderGroup" visible="false">
              <userData>
-                 <RenderingMode fx:value="LAMBERTIAN_SHADED" />
+                 <StandardRenderingMode fx:value="LAMBERTIAN_SHADED" />
              </userData>
          </RadioMenuItem>
          <RadioMenuItem mnemonicParsing="false" text="Simple specular" toggleGroup="$renderGroup">
              <userData>
-                 <RenderingMode fx:value="SPECULAR_SHADED" />
+                 <StandardRenderingMode fx:value="SPECULAR_SHADED" />
              </userData>
          </RadioMenuItem>
          <RadioMenuItem mnemonicParsing="false" text="Solid textured" toggleGroup="$renderGroup" visible="false">
              <userData>
-                 <RenderingMode fx:value="SOLID_TEXTURED" />
+                 <StandardRenderingMode fx:value="SOLID_TEXTURED" />
              </userData>
          </RadioMenuItem>
           <RadioMenuItem mnemonicParsing="false" text="Normal mapped" toggleGroup="$renderGroup">
               <userData>
-                  <RenderingMode fx:value="SPECULAR_NORMAL_TEXTURED" />
+                  <StandardRenderingMode fx:value="SPECULAR_NORMAL_TEXTURED" />
               </userData>
           </RadioMenuItem>
          <RadioMenuItem mnemonicParsing="false" text="Textured Lambertian" toggleGroup="$renderGroup">
              <userData>
-                 <RenderingMode fx:value="LAMBERTIAN_DIFFUSE_TEXTURED" />
+                 <StandardRenderingMode fx:value="LAMBERTIAN_DIFFUSE_TEXTURED" />
              </userData>
          </RadioMenuItem>
          <RadioMenuItem mnemonicParsing="false" text="Textured material" toggleGroup="$renderGroup">
              <userData>
-                 <RenderingMode fx:value="MATERIAL_SHADED" />
+                 <StandardRenderingMode fx:value="MATERIAL_SHADED" />
              </userData>
          </RadioMenuItem>
          <RadioMenuItem mnemonicParsing="false" selected="true" text="Image-based rendering (IBR)" toggleGroup="$renderGroup">
              <userData>
-                 <RenderingMode fx:value="IMAGE_BASED" />
+                 <StandardRenderingMode fx:value="IMAGE_BASED" />
              </userData>
          </RadioMenuItem>
           <RadioMenuItem mnemonicParsing="false" text="IBR with textures" toggleGroup="$renderGroup">
               <userData>
-                  <RenderingMode fx:value="IMAGE_BASED_WITH_MATERIALS" />
+                  <StandardRenderingMode fx:value="IMAGE_BASED_WITH_MATERIALS" />
               </userData>
           </RadioMenuItem>
          <SeparatorMenuItem mnemonicParsing="false" />
