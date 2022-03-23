@@ -27,17 +27,20 @@ public class LightCalibrationRoot<ContextType extends Context<ContextType>> impl
         this.viewSnapRoot = new ViewSnap<>(sceneModel, resources.viewSet);
     }
 
+    @Override
     public void initialize() throws Exception
     {
         viewSnapRoot.takeContentRoot(new LightCalibrationContent<>(resources, sceneModel, sceneViewportModel));
         viewSnapRoot.initialize();
     }
 
+    @Override
     public void update() throws Exception
     {
         viewSnapRoot.update();
     }
 
+    @Override
     public void reloadShaders() throws Exception
     {
         viewSnapRoot.reloadShaders();
