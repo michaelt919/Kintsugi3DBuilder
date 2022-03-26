@@ -29,5 +29,5 @@ public interface IBRRequest<ContextType extends Context<ContextType>>
      *                 If this is unused, an "infinite loading" indicator will be displayed instead.
      * @throws Exception An exception may be thrown by the executable that will be caught and logged by IBRelight.
      */
-     void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws Exception;
+     void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws Exception;
 }

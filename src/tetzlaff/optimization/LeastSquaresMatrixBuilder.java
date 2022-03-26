@@ -20,7 +20,7 @@ import java.util.stream.IntStream;
 
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
-import tetzlaff.ibrelight.rendering.GraphicsStream;
+import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.util.Counter;
 
 /**

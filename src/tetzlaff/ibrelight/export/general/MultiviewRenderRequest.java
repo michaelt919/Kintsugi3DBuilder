@@ -20,10 +20,10 @@ import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Drawable;
 import tetzlaff.gl.core.FramebufferObject;
 import tetzlaff.gl.core.Program;
-import tetzlaff.ibrelight.core.IBRRenderable;
+import tetzlaff.ibrelight.core.IBRInstance;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
-import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.models.ReadonlySettingsModel;
 
 class MultiviewRenderRequest<ContextType extends Context<ContextType>> extends RenderRequestBase<ContextType>
@@ -49,9 +49,9 @@ class MultiviewRenderRequest<ContextType extends Context<ContextType>> extends R
         }
     }
 
-    public void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
+    public void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
     {
-        IBRResources<ContextType> resources = renderable.getResources();
+        IBRResources<ContextType> resources = renderable.getIBRResources();
 
         try
         (

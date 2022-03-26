@@ -226,7 +226,7 @@ public class MenubarController
     {
         renderGroup.selectedToggleProperty().addListener((ob, o, n) ->
         {
-            if (n != null && n.getUserData() instanceof RenderingMode)
+            if (n != null && n.getUserData() instanceof StandardRenderingMode)
             {
                 internalModels.getSettingsModel().set("renderingMode", n.getUserData());
             }

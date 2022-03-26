@@ -20,7 +20,13 @@ public interface IBRelightModels
     ReadonlyLightingModel getLightingModel();
     ReadonlyObjectModel getObjectModel();
     ReadonlyEnvironmentModel getEnvironmentModel();
-    ReadonlySettingsModel getSettingsModel();
+
+    /**
+     * Not read-only to allow export functions to change rendering mode (i.e. focus calibration)
+     * @return
+     */
+    SettingsModel getSettingsModel();
+
     SceneViewportModel getSceneViewportModel();
     ReadonlyLoadOptionsModel getLoadOptionsModel();
     LoadingModel getLoadingModel();

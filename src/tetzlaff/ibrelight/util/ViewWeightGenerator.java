@@ -13,7 +13,7 @@
 package tetzlaff.ibrelight.util;
 
 import tetzlaff.gl.vecmath.Matrix4;
-import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
 @FunctionalInterface
 public interface ViewWeightGenerator

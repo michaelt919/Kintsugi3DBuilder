@@ -17,7 +17,7 @@ import java.io.IOException;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.FramebufferObject;
-import tetzlaff.ibrelight.core.IBRRenderable;
+import tetzlaff.ibrelight.core.IBRInstance;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
 
@@ -94,11 +94,11 @@ public class ScreenshotRequest<ContextType extends Context<ContextType>> impleme
     }
 
     @Override
-    public void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
+    public void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
     {
         try
         (
-            FramebufferObject<ContextType> framebuffer = renderable.getResources().context.buildFramebufferObject(width, height)
+            FramebufferObject<ContextType> framebuffer = renderable.getIBRResources().context.buildFramebufferObject(width, height)
                 .addColorAttachment()
                 .addDepthAttachment()
                 .createFramebufferObject()

@@ -18,7 +18,7 @@ import java.util.function.*;
 import java.util.stream.IntStream;
 
 import org.ejml.simple.SimpleMatrix;
-import tetzlaff.ibrelight.rendering.GraphicsStream;
+import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 
 public class NonNegativeWeightOptimization
 {

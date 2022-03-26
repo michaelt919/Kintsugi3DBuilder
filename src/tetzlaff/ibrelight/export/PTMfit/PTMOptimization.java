@@ -6,8 +6,8 @@ import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 
-import tetzlaff.ibrelight.rendering.GraphicsStreamResource;
-import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.GraphicsStreamResource;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.optimization.LeastSquaresMatrixBuilder;
 
 import java.io.File;

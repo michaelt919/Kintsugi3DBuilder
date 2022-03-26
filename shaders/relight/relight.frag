@@ -138,12 +138,12 @@ uniform vec3 defaultDiffuseColor;
 #elif DIFFUSE_TEXTURE_ENABLED
 #define DEFAULT_SPECULAR_COLOR (vec3(0.04))
 #else
-#define DEFAULT_SPECULAR_COLOR (vec3(0.5))
+#define DEFAULT_SPECULAR_COLOR (vec3(0.04))
 #endif // DIFFUSE_TEXTURE_ENABLED && !IMAGE_BASED_RENDERING_ENABLED
 #endif // DEFAULT_SPECULAR_COLOR
 
 #ifndef DEFAULT_SPECULAR_ROUGHNESS
-#define DEFAULT_SPECULAR_ROUGHNESS (vec3(0.25)); // TODO pass in a default?
+#define DEFAULT_SPECULAR_ROUGHNESS (vec3(0.1)); // TODO pass in a default?
 #endif
 
 #endif // !MATERIAL_EXPLORATION_MODE
@@ -351,8 +351,8 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 normalDir, Mat
 
         if (sampleColor.a == 0.0)
         {
-            mfdFresnel = distTimesPi(nDotH, m.roughnessRGB) * m.specularColor / PI;
-//            mfdFresnel = vec3(0);
+            //mfdFresnel = distTimesPi(nDotH, m.roughnessRGB) * m.specularColor / PI;
+            mfdFresnel = vec3(0);
         }
         else
         {

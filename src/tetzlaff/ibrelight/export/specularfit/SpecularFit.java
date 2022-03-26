@@ -18,7 +18,7 @@ import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Drawable;
 import tetzlaff.gl.core.Texture2D;
 import tetzlaff.gl.core.Texture3D;
-import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
 /**
  * A class that bundles all of the GPU resources for representing a final specular fit solution.

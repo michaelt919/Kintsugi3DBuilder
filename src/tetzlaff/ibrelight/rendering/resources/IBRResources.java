@@ -10,14 +10,13 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.ibrelight.rendering;
+package tetzlaff.ibrelight.rendering.resources;
 
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
 import javax.xml.stream.XMLStreamException;
@@ -38,7 +37,7 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.LoadingMonitor;
 import tetzlaff.ibrelight.core.ReadonlyLoadOptionsModel;
-import tetzlaff.ibrelight.core.RenderingMode;
+import tetzlaff.ibrelight.core.StandardRenderingMode;
 import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.util.ColorList;
 
@@ -1045,7 +1044,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
      * @return A program builder with all of the above preprocessor defines specified, ready to have the
      * vertex and fragment shaders added as well as any additional application-specific preprocessor definitions.
      */
-    public ProgramBuilder<ContextType> getIBRShaderProgramBuilder(RenderingMode renderingMode)
+    public ProgramBuilder<ContextType> getIBRShaderProgramBuilder(StandardRenderingMode renderingMode)
     {
         ProgramBuilder<ContextType> builder = context.getShaderProgramBuilder()
             .define("CAMERA_POSE_COUNT", this.viewSet.getCameraPoseCount())
@@ -1098,7 +1097,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
      */
     public ProgramBuilder<ContextType> getIBRShaderProgramBuilder()
     {
-        return getIBRShaderProgramBuilder(RenderingMode.IMAGE_BASED);
+        return getIBRShaderProgramBuilder(StandardRenderingMode.IMAGE_BASED);
     }
 
     private static File findImageFile(File requestedFile) throws FileNotFoundException

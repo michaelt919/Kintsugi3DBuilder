@@ -22,7 +22,7 @@ import javax.imageio.ImageIO;
 
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.util.ColorList;
 import tetzlaff.optimization.KMeansClustering;
 

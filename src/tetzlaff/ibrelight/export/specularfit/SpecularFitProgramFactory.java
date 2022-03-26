@@ -22,7 +22,7 @@ import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Program;
 import tetzlaff.gl.core.ShaderType;
-import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
 public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
 {
