@@ -27,7 +27,7 @@ public class PTMProgramFactory <ContextType extends Context<ContextType>>
                         visibilityAndShadowTests && resources.depthTextures != null)
                 .define("SHADOW_TEST_ENABLED",
                         visibilityAndShadowTests && resources.shadowTextures != null)
-                .define("BASIS_COUNT", 6);
+                .define("BASIS_COUNT", 10);
     }
     public ProgramBuilder<ContextType> getShaderProgramBuilder(File vertexShader, File fragmentShader)
     {
