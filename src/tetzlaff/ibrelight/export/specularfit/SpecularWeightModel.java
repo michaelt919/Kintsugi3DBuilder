@@ -106,6 +106,12 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
     }
 
     @Override
+    public int getBasisFunctionCount()
+    {
+        return solution.getSettings().basisCount;
+    }
+
+    @Override
     public double innerProduct(DoubleVector3 t1, DoubleVector3 t2)
     {
         return t1.dot(t2);
