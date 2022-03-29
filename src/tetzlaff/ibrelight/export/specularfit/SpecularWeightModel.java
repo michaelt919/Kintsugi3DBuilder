@@ -108,7 +108,7 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
     @Override
     public int getBasisFunctionCount()
     {
-        return solution.getSettings().basisCount;
+        return settings.basisCount;
     }
 
     @Override
