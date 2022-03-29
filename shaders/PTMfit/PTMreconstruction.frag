@@ -8,7 +8,7 @@ uniform int width;
 uniform int length;
 
 #ifndef BASIS_COUNT
-#define BASIS_COUNT 6
+#define BASIS_COUNT 10
 #endif
 
 uniform vec3 reconstructionLightPos;
@@ -29,13 +29,17 @@ void main()
     vec3 weights[BASIS_COUNT];
 
     float row[BASIS_COUNT];
-    row[0]=1.0f;
-    row[1]=u;
-    row[2]=v;
-    row[3]=w;
-    row[4]=u*u;
-    row[5]=u*v;
-
+    row[0] = 1.0;
+    row[1] = u;
+    row[2] = v;
+    row[3] = w;
+    row[4] = u*u;
+    row[5] = v*v;
+    row[6] = w*w;
+    row[7] = v*u;
+    row[8] = w*u;
+    row[9] = v*w;
+;
     for (int b = 0; b < BASIS_COUNT; b++)
     {
         weights[b] = texture(weightMaps, vec3(fTexCoord, b)).xyz;
