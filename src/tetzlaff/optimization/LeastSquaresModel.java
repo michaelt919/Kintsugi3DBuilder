@@ -73,6 +73,12 @@ public interface LeastSquaresModel<S, T>
     IntFunction<T> getBasisFunctions(S sampleData, int systemIndex);
 
     /**
+     * Gets the number of basis functions
+     * @return
+     */
+    int getBasisFunctionCount();
+
+    /**
      * An inner product function that takes two evaluated basis functions, or a sample and a single evaluated basis function
      * (each of which may be multi-dimensional), multiplies the corresponding components and adds them together.
      * This is necessary because, in practice, samples (and thus, basis functions as well) contain multiple dimensions of data,

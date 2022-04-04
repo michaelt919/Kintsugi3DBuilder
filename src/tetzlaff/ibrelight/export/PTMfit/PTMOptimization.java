@@ -132,7 +132,7 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
 
                         int count = 0;
 
-                        for (int b = 0; b < 6; b++)
+                        for (int b = 0; b < solution.getPTMmodel().getBasisFunctionCount(); b++)
                         {
                             count = 0;
                             double sum = 0.0;
@@ -200,7 +200,7 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
 
                     float albedo = averageColors[pixelIndex * 4 + colorChannel];
 
-                    SimpleMatrix lambertian = new SimpleMatrix(6, 1);
+                    SimpleMatrix lambertian = new SimpleMatrix(matrixBuilder.weightCount, 1);
                     lambertian.set(0, 0.0);
                     lambertian.set(1, albedo * normals[pixelIndex * 4]);
                     lambertian.set(2, albedo * normals[pixelIndex * 4 + 1]);
