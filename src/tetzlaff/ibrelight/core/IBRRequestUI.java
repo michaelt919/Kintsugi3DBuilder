@@ -13,10 +13,19 @@
 package tetzlaff.ibrelight.core;
 
 import tetzlaff.gl.core.Context;
+import tetzlaff.ibrelight.javafx.internal.SettingsModelImpl;
 
 import java.util.function.Consumer;
 
 public interface IBRRequestUI
 {
     <ContextType extends Context<ContextType>> void prompt(Consumer<IBRRequest<ContextType>> requestHandler);
+
+    /**
+     * Optional: bind UI elements to settings properties
+     * @param injectedSettingsModel
+     */
+    default void bind(SettingsModelImpl injectedSettingsModel)
+    {
+    }
 }
