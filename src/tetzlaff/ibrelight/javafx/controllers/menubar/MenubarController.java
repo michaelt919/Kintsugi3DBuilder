@@ -176,6 +176,7 @@ public class MenubarController
                                     try
                                     {
                                         IBRRequestUI requestUI = (IBRRequestUI) createMethod.invoke(null, injectedParentWindow, MultithreadModels.getInstance());
+                                        requestUI.bind(internalModels.getSettingsModel());
                                         requestUI.prompt(requestQueue::addRequest);
                                     }
                                     catch (IllegalAccessException | InvocationTargetException e)

@@ -10,15 +10,17 @@ import tetzlaff.util.Counter;
 
 public class PolynomialTextureMapBuilder
 {
-    private final LeastSquaresMatrixBuilder matrixBuilder;
-    private final int weightCount=6;
+    private LeastSquaresMatrixBuilder matrixBuilder;
+    private int weightCount;
     private final int sampleCount;
     public PolynomialTextureMapBuilder(int width, int height){
         this.sampleCount=width*height*3;
-        this.matrixBuilder = new LeastSquaresMatrixBuilder(sampleCount, weightCount,Collections.emptyList(), Collections.emptyList());
     }
     public void buildMatrices(GraphicsStream<LuminanceData> viewStream, PolynomialTextureMapModel PTMmodel, PTMsolution solution)
     {
+        this.weightCount = PTMmodel.getBasisFunctionCount();
+        this.matrixBuilder = new LeastSquaresMatrixBuilder(sampleCount, weightCount,Collections.emptyList(), Collections.emptyList());
+
         IntConsumer sampleValidator = i -> {solution.setWeightsValidity(i,true);};
         matrixBuilder.buildMatrices(viewStream, PTMmodel, sampleValidator);
 

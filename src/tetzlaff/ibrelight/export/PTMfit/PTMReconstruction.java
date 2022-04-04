@@ -37,7 +37,7 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
             imageWidth = Math.round(imageHeight * defaultProj.getAspectRatio());
         }
         ContextType context=resources.context;
-        weightMaps = context.getTextureFactory().build2DColorTextureArray(settings.width, settings.height, 6)
+        weightMaps = context.getTextureFactory().build2DColorTextureArray(settings.width, settings.height, 10)
                 .setInternalFormat(ColorFormat.RGB32F)
                 .setLinearFilteringEnabled(true)
                 .setMipmapsEnabled(false)

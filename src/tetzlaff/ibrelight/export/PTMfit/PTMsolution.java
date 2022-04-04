@@ -26,7 +26,7 @@ public class PTMsolution {
         PTMmodel = new PolynomialTextureMapModel(setting.width,setting.height);
         settings=setting;
         weightsByTexel= IntStream.range(0, settings.width * settings.height*3)
-                .mapToObj(p -> new SimpleMatrix(6 + 1, 1, DMatrixRMaj.class))
+                .mapToObj(p -> new SimpleMatrix(PTMmodel.getBasisFunctionCount() + 1, 1, DMatrixRMaj.class))
                 .toArray(SimpleMatrix[]::new);
         weightsValidity = new boolean[settings.width * settings.height*3];
         diffuseAlbedos = new DoubleVector3[8];
@@ -58,7 +58,7 @@ public class PTMsolution {
         return PTMmodel;
     }
     public void saveWeightMaps() {
-        for (int b = 0; b < 6; b++)
+        for (int b = 0; b < PTMmodel.getBasisFunctionCount(); b++)
         {
             BufferedImage weightImg = new BufferedImage(settings.width, settings.height, BufferedImage.TYPE_INT_ARGB);
             int[] weightDataPacked = new int[settings.width * settings.height];
