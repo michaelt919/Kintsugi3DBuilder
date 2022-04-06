@@ -21,10 +21,21 @@ void main()
     result=vec4(0,0,0,1);
 
     vec3 lightDisplacement = reconstructionLightPos - fPosition;
-    vec3 lightDir=normalize(lightDisplacement);
-    float u=lightDir.x;
-    float v=lightDir.y;
-    float w=lightDir.z;
+    vec3 lightDir=normalize(lightDisplacement); // object space
+
+    vec3 triangleNormal = normalize(fNormal);
+    vec3 tangent = normalize(fTangent - dot(triangleNormal, fTangent) * triangleNormal);
+    vec3 bitangent = normalize(fBitangent
+    - dot(triangleNormal, fBitangent) * triangleNormal
+    - dot(tangent, fBitangent) * tangent);
+    mat3 tangentToObject = mat3(tangent, bitangent, triangleNormal);
+
+    vec3 lightDirTS = transpose(tangentToObject) * lightDir; // tangent space
+
+
+    float u=lightDirTS.x;
+    float v=lightDirTS.y;
+    float w=lightDirTS.z;
 
     vec3 weights[BASIS_COUNT];
 
@@ -33,13 +44,17 @@ void main()
     row[1] = u;
     row[2] = v;
     row[3] = w;
-    row[4] = u*u;
-    row[5] = v*v;
-    row[6] = w*w;
-    row[7] = v*u;
-    row[8] = w*u;
-    row[9] = v*w;
-;
+    //row[4] = u*u;
+    //row[5] = v*v;
+    //row[6] = w*w;
+    //row[7] = v*u;
+    //row[8] = w*u;
+    //row[9] = v*w;
+//    row[4] = u*u+v*v;
+    row[4] = v*u;
+    row[5] = u*u;
+    row[6] = v*v;
+
     for (int b = 0; b < BASIS_COUNT; b++)
     {
         weights[b] = texture(weightMaps, vec3(fTexCoord, b)).xyz;
