@@ -23,7 +23,6 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
     private PolynomialTextureMapBuilder mapBuilder;
 
     private float[] averageColors;
-    private float[] normals;
 
     public PTMOptimization(TextureFitSettings setting)
     {
@@ -51,7 +50,6 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
             try(
                 FramebufferObject<ContextType> averageFBO = context.buildFramebufferObject(settings.width, settings.height)
                     .addColorAttachment(ColorFormat.RGBA32F) // color
-                    .addColorAttachment(ColorFormat.RGBA32F) // normal
                     .createFramebufferObject();
                 Program<ContextType> averageProgram = getColorAverageProgramBuilder(programFactory).createProgram())
             {
@@ -60,12 +58,10 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
                 averageFBO.clearColorBuffer(0, 0, 0, 0, 0);
                 averageDrawable.draw(PrimitiveMode.TRIANGLES, averageFBO);
                 averageColors = averageFBO.readFloatingPointColorBufferRGBA(0);
-                normals = averageFBO.readFloatingPointColorBufferRGBA(1); // per-pixel normals (interpolated per-vertex normals)
             }
 
             resources.setupShaderProgram(luminanceStream.getProgram());
             System.out.println("Building weight fitting matrices...");
-//            PolynomialTextureMapModel solution=new PolynomialTextureMapModel();
             PTMsolution solution=new PTMsolution(settings);
 
             mapBuilder.buildMatrices(luminanceStream.map(framebufferData ->
@@ -81,15 +77,6 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
                 return new LuminanceData(framebufferData[0], framebufferData[1]);
             }), solution.getPTMmodel(), solution);
 
-//            int index=0;
-//            luminanceStream.forEach(Lumin->{
-//                ColorList[] colorlist = Lumin.clone();
-//                solution.getPTMmodel().setRedchannel(index,colorlist[0].getRed(index));
-//                solution.getPTMmodel().setGreenchannel(index,colorlist[0].getGreen(index));
-//                solution.getPTMmodel().setBluechannel(index,colorlist[0].getBlue(index));
-//
-//            });
-
             System.out.println("Finished building matrices; solving now...");
             optimizeWeights(p->settings.height * settings.width != 0,solution::setWeights);
             System.out.println("DONE!");
@@ -100,9 +87,6 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
 
             PTMReconstruction<ContextType> reconstruct=new PTMReconstruction<ContextType>(resources,settings);
             reconstruct.reconstruct(solution,getReconstructionProgramBuilder(programFactory),"reconstruction");
-
-//            fillHoles(solution);
-
 
         }
 
@@ -202,14 +186,17 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
 
                     SimpleMatrix lambertian = new SimpleMatrix(matrixBuilder.weightCount, 1);
                     lambertian.set(0, 0.0);
-                    lambertian.set(1, albedo * normals[pixelIndex * 4]);
-                    lambertian.set(2, albedo * normals[pixelIndex * 4 + 1]);
-                    lambertian.set(3, albedo * normals[pixelIndex * 4 + 2]);
-                    lambertian.set(4, 0.0);
-                    lambertian.set(5, 0.0);
+                    lambertian.set(1, 0.0);
+                    lambertian.set(2, 0.0);
+                    lambertian.set(3, albedo); // normal direction term in tangent space
+
+                    for (int i = 4; i < lambertian.getNumElements(); i++)
+                    {
+                        lambertian.set(i, 0.0);
+                    }
 
                     // Scale the PTM solution by the determinant of the matrix and fill with the Lambertian solution as necessary.
-                    double determinant = matrixBuilder.weightsQTQAugmented[p].determinant();
+                    double determinant = matrixBuilder.weightsQTQAugmented[p].determinant() * 100;
 
                     if (determinant > 0.0)  // Prevent singular matrix exceptions.
                     {
