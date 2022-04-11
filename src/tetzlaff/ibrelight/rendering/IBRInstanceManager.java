@@ -230,6 +230,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                     }
                 }
             });
+            newInstance = newItem;
         }
         catch(FileNotFoundException|XMLStreamException e)
         {
