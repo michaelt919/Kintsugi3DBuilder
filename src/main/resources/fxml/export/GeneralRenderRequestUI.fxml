@@ -80,20 +80,23 @@
 
     <Label text="Object distance:" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="7" />
     <TextField fx:id="distance" text="${rangeSliderDistance.value}" GridPane.columnIndex="1" GridPane.halignment="left" GridPane.rowIndex="7" />
-    <Slider fx:id="rangeSliderDistance" blockIncrement="1.0" max="1000.0" min="0.0" GridPane.columnIndex="2" GridPane.rowIndex="7"
+    <Slider fx:id="rangeSliderDistance" blockIncrement="0.1" max="100.0" min="0.0" GridPane.columnIndex="2" GridPane.rowIndex="7"
             showTickLabels="true"
+            majorTickUnit="10"
             showTickMarks="true" snapToTicks="true"/>
 
     <Label text="Aperture:" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="8" />
     <TextField fx:id="Aperture" text="${rangeSliderAperture.value}" GridPane.columnIndex="1" GridPane.halignment="left" GridPane.rowIndex="8" />
-    <Slider fx:id="rangeSliderAperture" blockIncrement="1.0" max="1000.0" min="0.0" GridPane.columnIndex="2" GridPane.rowIndex="8"
+    <Slider fx:id="rangeSliderAperture" blockIncrement="0.1" max="1.0" min="0.0" GridPane.columnIndex="2" GridPane.rowIndex="8"
             showTickLabels="true"
+            majorTickUnit="0.25"
             showTickMarks="true" snapToTicks="true"/>
 
     <Label text="Focal length:" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="9" />
     <TextField fx:id="Focal" text="${rangeSliderFocalLength.value}" GridPane.columnIndex="1" GridPane.halignment="left" GridPane.rowIndex="9" />
-    <Slider fx:id="rangeSliderFocalLength" blockIncrement="1.0" max="1000.0" min="0.0" GridPane.columnIndex="2" GridPane.rowIndex="9"
+    <Slider fx:id="rangeSliderFocalLength" blockIncrement="1.0" max="100.0" min="0.0" GridPane.columnIndex="2" GridPane.rowIndex="9"
             showTickLabels="true"
+            majorTickUnit="10"
             showTickMarks="true" snapToTicks="true"/>
 
     <Button fx:id="runButton" mnemonicParsing="false" text="Run" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="10" />

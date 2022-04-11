@@ -1,5 +1,5 @@
 package tetzlaff.ibrelight.export.general;
-/*
+
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.fxml.FXML;
@@ -28,4 +28,4 @@ public class UniformValues {
         rangeDistance.setText(String.valueOf(rangeSliderDistance.getValue()));
     }
 
-}*/
+}

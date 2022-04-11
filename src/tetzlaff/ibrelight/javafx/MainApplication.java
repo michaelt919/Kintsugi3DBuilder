@@ -41,6 +41,7 @@ import tetzlaff.ibrelight.app.Rendering;
 import tetzlaff.ibrelight.app.SynchronizedWindow;
 import tetzlaff.ibrelight.app.WindowSynchronization;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
+import tetzlaff.ibrelight.export.general.GeneralRenderRequestUI;
 import tetzlaff.ibrelight.javafx.controllers.menubar.MenubarController;
 import tetzlaff.ibrelight.javafx.controllers.scene.RootSceneController;
 import tetzlaff.ibrelight.javafx.controllers.scene.SceneModel;
@@ -214,8 +215,14 @@ public class MainApplication extends Application
         settingsModel.createBooleanSetting("halfResolutionEnabled", false);
         settingsModel.createBooleanSetting("buehlerAlgorithm", true);
         settingsModel.createNumericSetting("buehlerViewCount", 5);
-
+        settingsModel.createSettingFromProperty("distance", Number.class,
+                StaticUtilities.clamp(0, 100, new SimpleFloatProperty(0.0025f)));
+        settingsModel.createSettingFromProperty("aperture", Number.class,
+                StaticUtilities.clamp(0, 1, new SimpleFloatProperty(0.0025f)));
+        settingsModel.createSettingFromProperty("focal", Number.class,
+                StaticUtilities.clamp(0, 100, new SimpleFloatProperty(0.0025f)));
         SceneModel sceneModel = new SceneModel();
+
 
         //distribute to controllers
         sceneController.init(

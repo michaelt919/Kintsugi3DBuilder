@@ -21,11 +21,14 @@ import tetzlaff.gl.core.*;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.*;
 import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.rendering.components.focal.FocalCalibrationRoot;
 import tetzlaff.ibrelight.rendering.resources.DynamicResourceLoader;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.ibrelight.rendering.resources.IBRResources.Builder;
 import tetzlaff.ibrelight.rendering.components.*;
 import tetzlaff.ibrelight.rendering.components.lightcalibration.LightCalibrationRoot;
+import tetzlaff.ibrelight.rendering.components.focal.FocalCalibrationRoot;
+
 import tetzlaff.ibrelight.rendering.components.lit.LitRoot;
 import tetzlaff.interactive.InitializationException;
 import tetzlaff.models.*;
@@ -51,6 +54,8 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
     private LightCalibrationRoot<ContextType> lightCalibration;
     private LitRoot<ContextType> litRoot;
+
+    private FocalCalibrationRoot<ContextType> FocalCalibration;
 
     private DynamicResourceLoader<ContextType> dynamicResourceLoader;
     private final SceneViewportModel<ContextType> sceneViewportModel;
@@ -108,6 +113,9 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             lightCalibration = new LightCalibrationRoot<>(resources, sceneModel, sceneViewportModel);
             lightCalibration.initialize();
 
+            FocalCalibration = new FocalCalibrationRoot<>(resources, sceneModel, sceneViewportModel);
+            FocalCalibration.initialize();
+
             litRoot = new LitRoot<>(context, sceneModel);
             litRoot.takeLitContentRoot(new StandardScene<>(resources, sceneModel, sceneViewportModel));
             litRoot.initialize();
@@ -160,6 +168,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             dynamicResourceLoader.update();
             litRoot.update();
             lightCalibration.update();
+            FocalCalibration.update();
         }
         catch (Exception e)
         {
@@ -168,6 +177,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
         this.updateWorldSpaceDefinition();
     }
+
 
     private void updateWorldSpaceDefinition()
     {
@@ -252,8 +262,18 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
                 }
                 else
                 {
-                    litRoot.drawInSubdivisions(offscreenFBO, subdivWidth, subdivHeight, view, projection);
+                    FocalCalibration.drawInSubdivisions(offscreenFBO, subdivWidth, subdivHeight, view, projection);
+                    //litRoot.drawInSubdivisions(offscreenFBO, subdivWidth, subdivHeight, view, projection);
                 }
+
+               /* if (sceneModel.getSettingsModel().getBoolean("FocalCalibrationMode"))
+                {
+                    FocalCalibration.drawInSubdivisions(offscreenFBO, subdivWidth, subdivHeight, view, projection);
+                }
+                else
+                {
+                    litRoot.drawInSubdivisions(offscreenFBO, subdivWidth, subdivHeight, view, projection);
+                }*/
 
                 // Second pass at full resolution to default framebuffer
                 simpleTexDrawable.program().setTexture("tex", offscreenFBO.getColorAttachmentTexture(0));
@@ -308,6 +328,11 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
                 litRoot.close();
                 litRoot = null;
             }
+            if (FocalCalibration != null)
+            {
+                FocalCalibration.close();
+                FocalCalibration = null;
+            }
 
             for (FramebufferObject<ContextType> fbo : shadingFramebuffers)
             {
@@ -355,7 +380,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         {
             litRoot.reloadShaders();
             lightCalibration.reloadShaders();
-
+            FocalCalibration.reloadShaders();
             suppressErrors = false;
         }
         catch (Exception e)

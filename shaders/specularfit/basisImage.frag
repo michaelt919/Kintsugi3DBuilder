@@ -17,6 +17,7 @@ layout(location = 0) out vec4 fragColor;
 uniform sampler1DArray basisFunctions;
 uniform int basisIndex;
 
+
 void main()
 {
     fragColor = vec4(vec3(texture(basisFunctions, vec2(length(fTexCoord - vec2(0.5)) * 2.0, basisIndex))), 1.0);

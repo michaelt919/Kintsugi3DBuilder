@@ -18,14 +18,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.function.Consumer;
 
+import javafx.beans.property.Property;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -36,6 +34,7 @@ import tetzlaff.gl.core.Context;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.IBRRequestUI;
 import tetzlaff.ibrelight.core.IBRelightModels;
+import tetzlaff.ibrelight.javafx.internal.SettingsModelImpl;
 
 public class GeneralRenderRequestUI implements IBRRequestUI
 {
@@ -56,6 +55,14 @@ public class GeneralRenderRequestUI implements IBRRequestUI
     @FXML private TextField widthTextField;
     @FXML private TextField heightTextField;
     @FXML private Button runButton;
+
+    @FXML private TextField distance;
+    @FXML private TextField Aperture;
+    @FXML private TextField Focal;
+
+    @FXML private Slider rangeSliderDistance;
+    @FXML private Slider rangeSliderAperture;
+    @FXML private Slider rangeSliderFocalLength;
 
     private final FileChooser fileChooser = new FileChooser();
     private final DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -174,13 +181,40 @@ public class GeneralRenderRequestUI implements IBRRequestUI
                 default:
                     throw new IllegalStateException("Unexpected vertex shader mode.");
             }
+            if(!distance.getText().equals("0.0") && !Aperture.getText().equals("0.0") && !Focal.getText().equals("0.0"))
+            {
+                System.out.println("good");
+            }
+            else {
+                System.out.println("You should give value to all the sliders");
+            }
 
             builder.setWidth(Integer.parseInt(this.widthTextField.getText()));
             builder.setHeight(Integer.parseInt(this.heightTextField.getText()));
+            builder.setShaderSetupCallback(program ->
+            {
+                program.setUniform("distance",(float)rangeSliderDistance.getValue());
+                program.setUniform("aperture",(float)rangeSliderAperture.getValue());
+                program.setUniform("focal",(float)rangeSliderFocalLength.getValue());
 
+            });
             requestHandler.accept(builder.create());
         });
     }
+
+    @Override
+    public void bind(SettingsModelImpl injectedSettingsModel) {
+
+        distance.textProperty().bindBidirectional((Property<String>) rangeSliderDistance);
+        Focal.textProperty().bindBidirectional((Property<String>) rangeSliderFocalLength);
+        Aperture.textProperty().bindBidirectional((Property<String>) rangeSliderAperture);
+
+        rangeSliderDistance.valueProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("distance"));
+        rangeSliderAperture.valueProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("aperture"));
+        rangeSliderFocalLength.valueProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("focal"));
+
+    }
+  
 
     @FXML
     private void loopModeComboBoxAction()
@@ -262,6 +296,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
         }
     }
 
+
     @FXML
     private void fragmentShaderButtonAction()
     {
@@ -312,6 +347,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
             lastDirectory = file;
         }
     }
+
 
     @FXML
     private void cancelButtonAction()

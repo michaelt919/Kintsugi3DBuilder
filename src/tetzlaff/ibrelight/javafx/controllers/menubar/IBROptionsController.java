@@ -45,6 +45,7 @@ public class IBROptionsController implements Initializable
     @FXML private ChoiceBox<ShadingParameterMode> weightModeChoiceBox;
     @FXML private GridPane root;
 
+
     private SettingsModelImpl settingsModel;
 
     @Override
