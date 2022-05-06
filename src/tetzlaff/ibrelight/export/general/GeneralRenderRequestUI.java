@@ -205,9 +205,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
     @Override
     public void bind(SettingsModelImpl injectedSettingsModel) {
 
-        distance.textProperty().bindBidirectional((Property<String>) rangeSliderDistance);
-        Focal.textProperty().bindBidirectional((Property<String>) rangeSliderFocalLength);
-        Aperture.textProperty().bindBidirectional((Property<String>) rangeSliderAperture);
+
 
         rangeSliderDistance.valueProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("distance"));
         rangeSliderAperture.valueProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("aperture"));

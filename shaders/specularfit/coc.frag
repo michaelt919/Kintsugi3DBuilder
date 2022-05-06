@@ -28,10 +28,11 @@ void main() {
 
 
     if(coc>0.25) {
-        colormask=vec4(0,0,0,1);
+        colormask=vec4(1,1,1,1);
     }
     else  {
-        colormask=vec4(1,1,1,1);
+        colormask=vec4(0,0,0,1);
+
     }
 
     //colormask=vec4(coc,coc,coc,1);
