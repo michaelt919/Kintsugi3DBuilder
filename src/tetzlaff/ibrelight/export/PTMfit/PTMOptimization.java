@@ -23,6 +23,7 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
     private PolynomialTextureMapBuilder mapBuilder;
 
     private float[] averageColors;
+    private float[] unlitColors;
 
     public PTMOptimization(TextureFitSettings setting)
     {
@@ -50,14 +51,17 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
             try(
                 FramebufferObject<ContextType> averageFBO = context.buildFramebufferObject(settings.width, settings.height)
                     .addColorAttachment(ColorFormat.RGBA32F) // color
+                    .addColorAttachment(ColorFormat.RGBA32F) // color
                     .createFramebufferObject();
                 Program<ContextType> averageProgram = getColorAverageProgramBuilder(programFactory).createProgram())
             {
                 resources.setupShaderProgram(averageProgram);
                 Drawable<ContextType> averageDrawable = resources.createDrawable(averageProgram);
                 averageFBO.clearColorBuffer(0, 0, 0, 0, 0);
+                averageFBO.clearColorBuffer(1, 0, 0, 0, 0);
                 averageDrawable.draw(PrimitiveMode.TRIANGLES, averageFBO);
                 averageColors = averageFBO.readFloatingPointColorBufferRGBA(0);
+                unlitColors = averageFBO.readFloatingPointColorBufferRGBA(1);
             }
 
             resources.setupShaderProgram(luminanceStream.getProgram());
@@ -85,9 +89,12 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
             fillHoles(solution);
             solution.saveWeightMaps();
 
-            PTMReconstruction<ContextType> reconstruct=new PTMReconstruction<ContextType>(resources,settings);
+            PTMReconstruction<ContextType> reconstruct=new PTMReconstruction<>(resources,settings);
             reconstruct.reconstruct(solution,getReconstructionProgramBuilder(programFactory),"reconstruction");
 
+            TangentSpaceWeightsToObjectSpace tsWeightsToOS = new TangentSpaceWeightsToObjectSpace(resources, settings);
+            tsWeightsToOS.run(solution, getTangentToObjectSpaceProgram1Builder(programFactory), 0, 4);
+            tsWeightsToOS.run(solution, getTangentToObjectSpaceProgram2Builder(programFactory), 4, 6);
         }
 
     }
@@ -183,9 +190,11 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
                     int pixelIndex = p % (settings.width * settings.height);
 
                     float albedo = averageColors[pixelIndex * 4 + colorChannel];
+                    float unlit = unlitColors[pixelIndex * 4 + colorChannel];
+
 
                     SimpleMatrix lambertian = new SimpleMatrix(matrixBuilder.weightCount, 1);
-                    lambertian.set(0, 0.0);
+                    lambertian.set(0, unlit);
                     lambertian.set(1, 0.0);
                     lambertian.set(2, 0.0);
                     lambertian.set(3, albedo); // normal direction term in tangent space
@@ -196,7 +205,7 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
                     }
 
                     // Scale the PTM solution by the determinant of the matrix and fill with the Lambertian solution as necessary.
-                    double determinant = matrixBuilder.weightsQTQAugmented[p].determinant() * 100;
+                    double determinant = matrixBuilder.weightsQTQAugmented[p].determinant() * 1000000;
 
                     if (determinant > 0.0)  // Prevent singular matrix exceptions.
                     {
@@ -243,6 +252,20 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
         return programFactory.getShaderProgramBuilder(
                 new File("shaders/common/imgspace.vert"),
                 new File("shaders/PTMfit/PTMreconstruction.frag"));
+    }
+
+    ProgramBuilder<ContextType> getTangentToObjectSpaceProgram1Builder(PTMProgramFactory<ContextType> programFactory)
+    {
+        return programFactory.getShaderProgramBuilder(
+                new File("shaders/common/texspace_noscale.vert"),
+                new File("shaders/PTMfit/ptm_objectspace1.frag"));
+    }
+
+    ProgramBuilder<ContextType> getTangentToObjectSpaceProgram2Builder(PTMProgramFactory<ContextType> programFactory)
+    {
+        return programFactory.getShaderProgramBuilder(
+                new File("shaders/common/texspace_noscale.vert"),
+                new File("shaders/PTMfit/ptm_objectspace2.frag"));
     }
 
     private static <ContextType extends Context<ContextType>>

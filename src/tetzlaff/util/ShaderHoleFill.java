@@ -58,12 +58,18 @@ public class ShaderHoleFill<ContextType extends Context<ContextType>> implements
         int iterations = Math.max(fboSize.width, fboSize.height);
         for (int i = 0; i < iterations; i++)
         {
-            program.setTexture("input0", frontFramebuffer.getColorAttachmentTexture(0));
+            // Loop over input / output channels
+            for (int j = 0; j < initFrontFramebuffer.getColorAttachmentCount(); j++)
+            {
+                program.setTexture("input" + j, frontFramebuffer.getColorAttachmentTexture(j));
+            }
+
             drawable.draw(PrimitiveMode.TRIANGLE_FAN, backFramebuffer);
 
             FramebufferObject<ContextType> tmp = frontFramebuffer;
             frontFramebuffer = backFramebuffer;
             backFramebuffer = tmp;
+
         }
 
         return frontFramebuffer;
