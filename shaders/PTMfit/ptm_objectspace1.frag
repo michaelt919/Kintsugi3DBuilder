@@ -22,7 +22,8 @@ void main()
     vec3 weights[BASIS_COUNT];
     for (int b = 0; b < BASIS_COUNT; b++)
     {
-        weights[b] = texture(weightMaps, vec3(fTexCoord, b)).xyz;
+        // Scale by PI to match Unity's convention and maximize precision
+        weights[b] = PI * texture(weightMaps, vec3(fTexCoord, b)).xyz;
     }
 
     objWeight0 = vec4(weights[0]*0.5+0.5, 1); // Constant term is the same
@@ -32,7 +33,7 @@ void main()
 
     // Transformation from object-space direction to weights
     mat3 objectSpaceLinearWeights = linearWeights * transpose(tangentToObject);
-    objWeight1 = vec4(vec3(triangleNormal.x*0.5+0.5), 1); //vec4(objectSpaceLinearWeights[0]*0.5+0.5, 1);
-    objWeight2 = vec4(vec3(triangleNormal.y*0.5+0.5), 1); //vec4(objectSpaceLinearWeights[1]*0.5+0.5, 1);
-    objWeight3 = vec4(vec3(triangleNormal.z*0.5+0.5), 1); //vec4(objectSpaceLinearWeights[2]*0.5+0.5, 1);
+    objWeight1 = vec4(objectSpaceLinearWeights[0]*0.5+0.5, 1);
+    objWeight2 = vec4(objectSpaceLinearWeights[1]*0.5+0.5, 1);
+    objWeight3 = vec4(objectSpaceLinearWeights[2]*0.5+0.5, 1);
 }

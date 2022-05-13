@@ -9,6 +9,7 @@ void main(){
     //get light uv
     vec3 lightDir =normalize(lightDisplacement); // object space
 
+    // physical radiance = PI * numeric radiance
     vec3 incidentRadiance = PI * lightIntensity / dot(lightDisplacement, lightDisplacement);
 
     vec3 triangleNormal = normalize(fNormal);
@@ -23,5 +24,5 @@ void main(){
     float nDotV = dot(normalize(getViewVector()), triangleNormal);
 
     //get rgb
-    colorInfo = vec4(step(0, lightDirTS.z /* n dot l */)) * vec4(vec3(nDotV * 0.5), 1);//* getLinearColor() / vec4(incidentRadiance, 1);
+    colorInfo = vec4(step(0, lightDirTS.z /* n dot l */)) * getLinearColor() / vec4(incidentRadiance, 1); // physical reflectance (analogous to albedo / pi)
 }

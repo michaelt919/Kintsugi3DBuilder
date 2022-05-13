@@ -56,7 +56,7 @@ void main()
 
     for (int b = 0; b < BASIS_COUNT; b++)
     {
-        weights[b] = texture(weightMaps, vec3(fTexCoord, b)).xyz;
+        weights[b] = clamp(texture(weightMaps, vec3(fTexCoord, b)).xyz, -1/PI, 1/PI);
         result=result+vec4(weights[b]*row[b],0);
     }
 

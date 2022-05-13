@@ -24,7 +24,8 @@ void main()
     vec3 weights[BASIS_COUNT];
     for (int b = 0; b < BASIS_COUNT; b++)
     {
-        weights[b] = texture(weightMaps, vec3(fTexCoord, b)).xyz;
+        // Scale by PI to match Unity's convention and maximize precision
+        weights[b] = PI * texture(weightMaps, vec3(fTexCoord, b)).xyz;
     }
 
     mat3 tanBitOuter = outerProduct(tangent, bitangent);
