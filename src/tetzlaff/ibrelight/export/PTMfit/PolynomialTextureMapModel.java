@@ -58,7 +58,7 @@ public class PolynomialTextureMapModel implements LeastSquaresModel<LuminanceDat
         Float u=sampleData.getLightdir().getRed(systemIndex%(width*length));
         Float v=sampleData.getLightdir().getGreen(systemIndex%(width*length));
         Float w=sampleData.getLightdir().getBlue(systemIndex%(width*length));
-        Float[] row={1.0f,u,v,w,v*u, u*u, v*v};
+        Float[] row={1.0f,u,v,w,v*u, u*u + v*v};
 
         return b->
         {
@@ -69,7 +69,7 @@ public class PolynomialTextureMapModel implements LeastSquaresModel<LuminanceDat
     @Override
     public int getBasisFunctionCount()
     {
-        return 7;
+        return 6;
     }
 
     @Override

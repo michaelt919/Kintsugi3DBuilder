@@ -50,18 +50,17 @@ void main()
     //row[7] = v*u;
     //row[8] = w*u;
     //row[9] = v*w;
-//    row[4] = u*u+v*v;
     row[4] = v*u;
-    row[5] = u*u;
-    row[6] = v*v;
+    row[5] = u*u + v*v;
+//    row[6] = v*v;
 
     for (int b = 0; b < BASIS_COUNT; b++)
     {
-        weights[b] = texture(weightMaps, vec3(fTexCoord, b)).xyz;
+        weights[b] = clamp(texture(weightMaps, vec3(fTexCoord, b)).xyz, -1/PI, 1/PI);
         result=result+vec4(weights[b]*row[b],0);
     }
 
     vec3 incidentRadiance = PI * reconstructionLightIntensity / dot(lightDisplacement, lightDisplacement);
 
-    result = pow(result * vec4(incidentRadiance, 1),vec4(1/2.2));
+    result = pow(result * vec4(incidentRadiance, 1)*vec4(vec3(step(0, lightDirTS.z)), 1),vec4(1/2.2));
 }

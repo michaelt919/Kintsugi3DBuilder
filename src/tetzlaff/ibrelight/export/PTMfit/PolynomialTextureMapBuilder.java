@@ -37,7 +37,7 @@ public class PolynomialTextureMapBuilder
             });
             synchronized (counter)
             {
-                System.out.println("Finished store color of view " + counter.get() + '.');
+                System.out.println("Finished storing color of view " + counter.get() + '.');
                 counter.increment();
             }
         });

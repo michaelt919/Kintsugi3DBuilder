@@ -5,10 +5,11 @@
 layout(location = 0) out vec4 colorInfo;
 layout(location = 1) out vec3 lightDirTS;
 void main(){
-    vec3 lightDisplacement = getLightVector();
+    vec3 lightDisplacement = getViewVector();//getLightVector();
     //get light uv
     vec3 lightDir =normalize(lightDisplacement); // object space
 
+    // physical radiance = PI * numeric radiance
     vec3 incidentRadiance = PI * lightIntensity / dot(lightDisplacement, lightDisplacement);
 
     vec3 triangleNormal = normalize(fNormal);
@@ -20,6 +21,8 @@ void main(){
 
     lightDirTS = transpose(tangentToObject) * lightDir; // tangent space
 
+    float nDotV = dot(normalize(getViewVector()), triangleNormal);
+
     //get rgb
-    colorInfo = step(0, lightDirTS.z /* n dot l */) * getLinearColor() / vec4(incidentRadiance, 1);
+    colorInfo = vec4(step(0, lightDirTS.z /* n dot l */)) * getLinearColor() / vec4(incidentRadiance, 1); // physical reflectance (analogous to albedo / pi)
 }

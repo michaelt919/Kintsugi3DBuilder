@@ -67,7 +67,7 @@ public class ResampleRequest<ContextType extends Context<ContextType>> implement
 
                 String[] parts = targetViewSet.getImageFileName(i).split("\\.");
                 File exportFile = new File(resampleExportPath,
-                    Stream.concat(Arrays.stream(parts, 0, parts.length - 1), Stream.of("png"))
+                    Stream.concat(Arrays.stream(parts, 0, Math.max(1, parts.length - 1)), Stream.of("png"))
                         .collect(Collectors.joining(".")));
 
                 exportFile.getParentFile().mkdirs();

@@ -12,7 +12,7 @@ import java.io.IOException;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.ibrelight.core.Projection;
 import tetzlaff.ibrelight.rendering.ImageReconstruction;
-public class PTMReconstruction <ContextType extends Context<ContextType>>{
+public class PTMReconstruction <ContextType extends Context<ContextType>> implements AutoCloseable {
     private final IBRResources<ContextType> resources;
     private final TextureFitSettings settings;
     private final int imageWidth;
@@ -110,6 +110,13 @@ public class PTMReconstruction <ContextType extends Context<ContextType>>{
         }
 
     }
+
+    @Override
+    public void close()
+    {
+        weightMaps.close();
+    }
+
     private void saveReconstructionToFile(String directoryName, int k, Framebuffer<ContextType> framebuffer)
     {
         try
