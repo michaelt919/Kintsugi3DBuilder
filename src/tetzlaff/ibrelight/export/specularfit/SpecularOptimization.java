@@ -18,6 +18,7 @@ import java.io.IOException;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
+import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.ibrelight.core.Projection;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStreamResource;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
@@ -146,10 +147,19 @@ public class SpecularOptimization
                     logError(errorCalculator.getReport());
                 }
 
-                // Optimize weights.
-                weightOptimization.execute(
-                    reflectanceStream.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
-                    solution);
+                // Make sure there are enough blocks for any pixels that don't go into the weight blocks evenly.
+                int blockCount = (settings.width * settings.height + settings.getWeightBlockSize() - 1) / settings.getWeightBlockSize();
+
+                // Initially assume that all texels are invalid.
+                solution.invalidateWeights();
+
+                for (int i = 0; i < blockCount; i++) // TODO: this was done quickly; may need to be refactored
+                {
+                    System.out.println("Starting block 0...");
+                    weightOptimization.execute(
+                        reflectanceStream.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
+                        solution, i * settings.getWeightBlockSize());
+                }
 
                 if (DEBUG)
                 {

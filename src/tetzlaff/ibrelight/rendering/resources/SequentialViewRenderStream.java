@@ -75,6 +75,7 @@ public class SequentialViewRenderStream<ContextType extends Context<ContextType>
             drawable.program().setUniform("viewIndex", k);
             drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
 
+            // TODO: initialize the buffer once when the stream is created and reuse it rather than relying on the garbage collector to clean up after us?
             // Copy framebuffer from GPU to main memory.
             ColorList[] framebufferData = IntStream.range(0, attachmentCount)
                 .mapToObj(i -> new ColorList(framebuffer.readFloatingPointColorBufferRGBA(i)))

@@ -17,12 +17,13 @@ import java.util.List;
 import java.util.function.*;
 import java.util.stream.IntStream;
 
+import org.ejml.data.SingularMatrixException;
 import org.ejml.simple.SimpleMatrix;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 
 public class NonNegativeWeightOptimization
 {
-    private static final double DEFAULT_TOLERANCE_SCALE = 0.000000000001;
+    public static final double DEFAULT_TOLERANCE_SCALE = 0.000000000001;
 
     private final LeastSquaresMatrixBuilder matrixBuilder;
 
@@ -48,9 +49,21 @@ public class NonNegativeWeightOptimization
         matrixBuilder.buildMatrices(viewStream, leastSquaresModel, sampleValidator);
     }
 
+    public <S, T> void buildMatrices(GraphicsStream<S> viewStream, LeastSquaresModel<S, T> leastSquaresModel, IntConsumer sampleValidator,
+        int rangeStart, int rangeEnd)
+    {
+        matrixBuilder.buildMatrices(viewStream, leastSquaresModel, sampleValidator, rangeStart, rangeEnd);
+    }
+
     public void optimizeWeights(IntPredicate areWeightsValid, BiConsumer<Integer, SimpleMatrix> weightSolutionConsumer, double toleranceScale)
     {
-        for (int p = 0; p < matrixBuilder.systemCount; p++)
+        optimizeWeights(areWeightsValid, weightSolutionConsumer, toleranceScale, matrixBuilder.systemCount);
+    }
+
+    public void optimizeWeights(IntPredicate areWeightsValid, BiConsumer<Integer, SimpleMatrix> weightSolutionConsumer, double toleranceScale,
+        int systemCount)
+    {
+        for (int p = 0; p < systemCount; p++)
         {
             if (areWeightsValid.test(p))
             {
@@ -64,9 +77,9 @@ public class NonNegativeWeightOptimization
                     .orElse(1.0);
 
                 // Solve the system.
-                weightSolutionConsumer.accept(p, NonNegativeLeastSquares.solvePremultipliedWithEqualityConstraints(
-                    matrixBuilder.weightsQTQAugmented[p], matrixBuilder.weightsQTrAugmented[p],
-                    median * toleranceScale, matrixBuilder.constraintCount));
+                    weightSolutionConsumer.accept(p, NonNegativeLeastSquares.solvePremultipliedWithEqualityConstraints(
+                        matrixBuilder.weightsQTQAugmented[p], matrixBuilder.weightsQTrAugmented[p],
+                        median * toleranceScale, matrixBuilder.constraintCount));
             }
         }
     }

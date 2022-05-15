@@ -30,6 +30,8 @@ public class SpecularFitSettings extends TextureFitSettings
     private double minNormalDamping = 1.0;
     private int normalSmoothingIterations = 0;
 
+    private int weightBlockSize = 512 * 512;
+
     private boolean smithMaskingShadowingEnabled = true;
     private boolean levenbergMarquardtEnabled = true;
     private int unsuccessfulLMIterationsAllowed = 8;
@@ -272,5 +274,15 @@ public class SpecularFitSettings extends TextureFitSettings
     public void setUnsuccessfulLMIterationsAllowed(int unsuccessfulLMIterationsAllowed)
     {
         this.unsuccessfulLMIterationsAllowed = unsuccessfulLMIterationsAllowed;
+    }
+
+    public int getWeightBlockSize()
+    {
+        return weightBlockSize;
+    }
+
+    public void setWeightBlockSize(int weightBlockSize)
+    {
+        this.weightBlockSize = weightBlockSize;
     }
 }

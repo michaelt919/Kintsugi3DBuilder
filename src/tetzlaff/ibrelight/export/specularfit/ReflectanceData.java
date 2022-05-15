@@ -37,9 +37,19 @@ public class ReflectanceData
         this.halfwayGeomWeightNDotL = halfwayGeomWeightNDotL;
     }
 
-    public Vector3 getColor(int p)
+    public float getRed(int p)
     {
-        return colorAndVisibility.getRGB(p);
+        return colorAndVisibility.get(p, 0);
+    }
+
+    public float getGreen(int p)
+    {
+        return colorAndVisibility.get(p, 1);
+    }
+
+    public float getBlue(int p)
+    {
+        return colorAndVisibility.get(p, 2);
     }
 
     public float getVisibility(int p)

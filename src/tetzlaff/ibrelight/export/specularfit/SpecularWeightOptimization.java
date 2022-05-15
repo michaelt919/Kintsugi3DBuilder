@@ -13,6 +13,7 @@
 package tetzlaff.ibrelight.export.specularfit;
 
 import java.util.Collections;
+import java.util.stream.IntStream;
 
 import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.optimization.NonNegativeWeightOptimization;
@@ -27,26 +28,32 @@ public class SpecularWeightOptimization
     {
         this.settings = settings;
 
-        base = new NonNegativeWeightOptimization(settings.width * settings.height, settings.basisCount,
+        base = new NonNegativeWeightOptimization(settings.getWeightBlockSize(), settings.basisCount,
             Collections.singletonList(b -> 1.0), Collections.singletonList(1.0)); // Equality constraint to ensure that the weights sum up to 1.0.
     }
 
-    public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularFitSolution solution)
+    public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularFitSolution solution, int pStart)
     {
         System.out.println("Building weight fitting matrices...");
-
-        // Initially assume that all texels are invalid.
-        solution.invalidateWeights();
 
         // Setup all the matrices for fitting weights (one per texel)
         base.buildMatrices(viewStream, new SpecularWeightModel(solution, settings),
             // If a pixel is valid in some view, mark it as such in the solution.
-            p -> solution.setWeightsValidity(p, true));
+            p -> solution.setWeightsValidity(p, true),
+            pStart, Math.min(pStart + settings.getWeightBlockSize(), settings.width * settings.height));
 
         System.out.println("Finished building matrices; solving now...");
 
         // Optimize the weights and store the result in the SpecularFitSolution.
-        base.optimizeWeights(solution::areWeightsValid, solution::setWeights);
+        if (pStart + settings.getWeightBlockSize() > settings.width * settings.height)
+        {
+            base.optimizeWeights(p -> solution.areWeightsValid(pStart + p), (p, weights) -> solution.setWeights(pStart + p, weights),
+                NonNegativeWeightOptimization.DEFAULT_TOLERANCE_SCALE, settings.width * settings.height - pStart);
+        }
+        else
+        {
+            base.optimizeWeights(p -> solution.areWeightsValid(pStart + p), (p, weights) -> solution.setWeights(pStart + p, weights));
+        }
 
         System.out.println("DONE!");
 

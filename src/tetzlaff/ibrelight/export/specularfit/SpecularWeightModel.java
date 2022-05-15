@@ -53,7 +53,7 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
     public DoubleVector3 getSamples(ReflectanceData sampleData, int systemIndex)
     {
         // Sampler (ground truth data)
-        return sampleData.getColor(systemIndex).asDoublePrecision();
+        return new DoubleVector3(sampleData.getRed(systemIndex), sampleData.getGreen(systemIndex), sampleData.getBlue(systemIndex));
     }
 
     @Override

@@ -87,12 +87,11 @@ final class ReflectanceMatrixBuilder
                 .filter(p -> reflectanceData.getVisibility(p) > 0) // Eliminate pixels without valid samples
                 .mapToObj(p ->
                 {
-                    Vector3 color = reflectanceData.getColor(p);
                     return new MatrixBuilderSample(
                             reflectanceData.getHalfwayIndex(p) * settings.microfacetDistributionResolution,
                             matrixBuilder.getBasisLibrary(), reflectanceData.getGeomRatio(p),
                             reflectanceData.getAdditionalWeight(p), b -> solution.getWeights(p).get(b),
-                            color.x, color.y, color.z);
+                            reflectanceData.getRed(p), reflectanceData.getGreen(p), reflectanceData.getBlue(p));
                 }));
 
         if (VALIDATE)
@@ -117,15 +116,14 @@ final class ReflectanceMatrixBuilder
                 float halfwayIndex = reflectanceData.getHalfwayIndex(p);
                 float geomRatio = reflectanceData.getGeomRatio(p);
                 float addlWeight = reflectanceData.getAdditionalWeight(p);
-                Vector3 color = reflectanceData.getColor(p);
 
                 // Calculate which discretized MDF element the current sample belongs to.
                 double mExact = halfwayIndex * settings.microfacetDistributionResolution;
                 int mFloor = Math.min(settings.microfacetDistributionResolution - 1, (int) Math.floor(mExact));
 
-                yRed.set(p, addlWeight * color.x);
-                yGreen.set(p, addlWeight * color.y);
-                yBlue.set(p, addlWeight * color.z);
+                yRed.set(p, addlWeight * reflectanceData.getRed(p));
+                yGreen.set(p, addlWeight * reflectanceData.getGreen(p));
+                yBlue.set(p, addlWeight * reflectanceData.getBlue(p));
 
                 // When floor and exact are the same, t = 1.0.  When exact is almost a whole increment greater than floor, t approaches 0.0.
                 // If mFloor is clamped to MICROFACET_DISTRIBUTION_RESOLUTION -1, then mExact will be much larger, so t = 0.0.

@@ -135,12 +135,32 @@ public class LeastSquaresMatrixBuilder
     public <S, T> void buildMatrices(GraphicsStream<S> viewStream, LeastSquaresModel<S, T> leastSquaresModel,
                                      IntConsumer sampleValidator)
     {
+        buildMatrices(viewStream, leastSquaresModel, sampleValidator, 0, systemCount);
+    }
+
+    public <S, T> void buildMatrices(GraphicsStream<S> viewStream, LeastSquaresModel<S, T> leastSquaresModel,
+        IntConsumer sampleValidator, int rangeStart, int rangeEnd)
+    {
         Counter counter = new Counter();
+
+        // Zero out all the matrices, except for the constraints.
+        for (int p = 0; p < weightsQTQAugmented.length; p++)
+        {
+            for (int i = 0; i < weightCount; i++)
+            {
+                for (int j = 0; j < weightCount; j++)
+                {
+                    weightsQTQAugmented[p].set(i, j, 0);
+                }
+
+                weightsQTrAugmented[p].set(i, 0);
+            }
+        }
 
         viewStream.forEach(reflectanceData ->
         {
             // Update matrix for each pixel.
-            IntStream.range(0, systemCount).parallel().forEach(p ->
+            IntStream.range(rangeStart, rangeEnd).parallel().forEach(p ->
             {
                 // Skip samples that aren't visible or are otherwise invalid.
                 if (leastSquaresModel.isValid(reflectanceData, p))
@@ -170,15 +190,15 @@ public class LeastSquaresMatrixBuilder
                         T f1 = basisEval.get(b1);
 
                         // Store the weighted product of the basis function and the actual sample in the vector.
-                        weightsQTrAugmented[p].set(b1, weightsQTrAugmented[p].get(b1) + weightSquared * leastSquaresModel.innerProduct(f1, fActual));
+                        weightsQTrAugmented[p - rangeStart].set(b1, weightsQTrAugmented[p - rangeStart].get(b1) + weightSquared * leastSquaresModel.innerProduct(f1, fActual));
 
                         for (int b2 = 0; b2 < weightCount; b2++)
                         {
                             T f2 = basisEval.get(b2);
 
                             // Store the weighted product of the two basis functions in the matrix.
-                            weightsQTQAugmented[p].set(b1, b2,
-                                weightsQTQAugmented[p].get(b1, b2) + weightSquared * leastSquaresModel.innerProduct(f1, f2));
+                            weightsQTQAugmented[p - rangeStart].set(b1, b2,
+                                weightsQTQAugmented[p - rangeStart].get(b1, b2) + weightSquared * leastSquaresModel.innerProduct(f1, f2));
                         }
                     }
                 }
