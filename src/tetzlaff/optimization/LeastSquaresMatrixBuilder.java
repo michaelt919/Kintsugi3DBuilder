@@ -206,7 +206,7 @@ public class LeastSquaresMatrixBuilder
 
             synchronized (counter)
             {
-                System.out.println("Finished view " + counter.get() + '.');
+//                System.out.println("Finished view " + counter.get() + '.');
                 counter.increment();
             }
         });

@@ -141,7 +141,11 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
             // Single pass normal estimation.
             estimateNormals.runOnce(errorCalculator);
         }
-        saveNormalMapEstimate();
+
+        if (SpecularOptimization.DEBUG)
+        {
+            saveNormalMapEstimate();
+        }
 
         firstSmooth = true;
         for (int i = 0; i < settings.getNormalSmoothingIterations(); i++)
@@ -149,7 +153,11 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
             smoothNormals.runOnce();
             firstSmooth = false;
         }
-        saveNormalMap();
+
+        if (SpecularOptimization.DEBUG)
+        {
+            saveNormalMap();
+        }
     }
 
     public Texture2D<ContextType> getNormalMap()

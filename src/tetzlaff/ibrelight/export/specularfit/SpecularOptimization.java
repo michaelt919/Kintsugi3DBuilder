@@ -18,21 +18,21 @@ import java.io.IOException;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.ibrelight.core.Projection;
+import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStreamResource;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.optimization.ReadonlyErrorReport;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
 import tetzlaff.optimization.function.GeneralizedSmoothStepBasis;
+import tetzlaff.util.ColorList;
 
 /**
  * Implement specular fit using algorithm described by Nam et al., 2018
  */
 public class SpecularOptimization
 {
-    static final boolean DEBUG = true;
-    static final boolean ORIGINAL_NAM_METHOD = false;
+    static final boolean DEBUG = false;
 
     private final SpecularFitSettings settings;
 
@@ -118,6 +118,9 @@ public class SpecularOptimization
             SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(settings);
             ShaderBasedErrorCalculator errorCalculator = new ShaderBasedErrorCalculator(settings.width * settings.height);
 
+            // Instantiate once so that the memory buffers can be reused.
+            GraphicsStream<ColorList[]> reflectanceStreamParallel = reflectanceStream.parallel();
+
             do
             {
                 previousIterationError = errorCalculator.getReport().getError();
@@ -129,7 +132,7 @@ public class SpecularOptimization
                 // Set up a stream and pass it to the BRDF reconstruction module to give it access to the reflectance information.
                 // Operate in parallel for optimal performance.
                 brdfReconstruction.execute(
-                    reflectanceStream.parallel().map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
+                    reflectanceStreamParallel.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
                     solution);
 
                 // Use the current front normal buffer for calculating error.
@@ -155,7 +158,7 @@ public class SpecularOptimization
 
                 for (int i = 0; i < blockCount; i++) // TODO: this was done quickly; may need to be refactored
                 {
-                    System.out.println("Starting block 0...");
+                    System.out.println("Starting block " + i + "...");
                     weightOptimization.execute(
                         reflectanceStream.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
                         solution, i * settings.getWeightBlockSize());
@@ -181,6 +184,8 @@ public class SpecularOptimization
 
                 if (settings.isNormalRefinementEnabled())
                 {
+                    System.out.println("Optimizing normals...");
+
                     specularFit.normalOptimization.execute(normalMap ->
                     {
                         // Update program to use the new front buffer for error calculation.
@@ -213,7 +218,11 @@ public class SpecularOptimization
 
                 // Estimate specular roughness and reflectivity.
                 specularFit.roughnessOptimization.execute();
-                specularFit.roughnessOptimization.saveTextures();
+
+                if (DEBUG)
+                {
+                    specularFit.roughnessOptimization.saveTextures();
+                }
             }
             while (previousIterationError - errorCalculator.getReport().getError() > settings.getConvergenceTolerance());
 

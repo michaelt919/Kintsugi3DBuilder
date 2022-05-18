@@ -12,7 +12,6 @@
 
 package tetzlaff.ibrelight.export.specularfit;
 
-import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.util.ColorList;
 
 /**

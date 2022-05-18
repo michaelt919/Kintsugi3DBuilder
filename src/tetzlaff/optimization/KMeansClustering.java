@@ -14,21 +14,20 @@ package tetzlaff.optimization;
 
 import java.security.SecureRandom;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
-import tetzlaff.util.ColorList;
+import tetzlaff.util.ColorArrayList;
 
 public class KMeansClustering
 {
     private static final double TOLERANCE = 0.0001;
 
-    private final ColorList colorMap;
+    private final ColorArrayList colorMap;
 
-    public KMeansClustering(ColorList colorMap)
+    public KMeansClustering(ColorArrayList colorMap)
     {
         //noinspection AssignmentOrReturnOfFieldWithMutableType
         this.colorMap = colorMap;

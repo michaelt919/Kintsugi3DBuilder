@@ -23,7 +23,7 @@ import javax.imageio.ImageIO;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
-import tetzlaff.util.ColorList;
+import tetzlaff.util.ColorArrayList;
 import tetzlaff.optimization.KMeansClustering;
 
 public class SpecularFitInitializer<ContextType extends Context<ContextType>>
@@ -76,7 +76,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
 
             float[] averages = framebuffer.readFloatingPointColorBufferRGBA(0);
 
-            List<Vector3> centers = new KMeansClustering(new ColorList(averages)).makeClusters(solution.getWeightsList());
+            List<Vector3> centers = new KMeansClustering(new ColorArrayList(averages)).makeClusters(solution.getWeightsList());
 
             // Output for debugging
             System.out.println("Refined centers:");

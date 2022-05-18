@@ -20,6 +20,7 @@ import tetzlaff.gl.core.Drawable;
 import tetzlaff.gl.core.Framebuffer;
 import tetzlaff.gl.core.PrimitiveMode;
 import tetzlaff.util.ColorList;
+import tetzlaff.util.ColorNativeBufferList;
 
 public class SequentialViewRenderStream<ContextType extends Context<ContextType>> extends GraphicsStreamBase<ColorList[]>
 {
@@ -27,6 +28,7 @@ public class SequentialViewRenderStream<ContextType extends Context<ContextType>
     private final Drawable<ContextType> drawable;
     private final Framebuffer<ContextType> framebuffer;
     private final int attachmentCount;
+    private final ColorNativeBufferList[] framebufferData;
 
     SequentialViewRenderStream(int viewCount, Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int attachmentCount)
     {
@@ -34,6 +36,9 @@ public class SequentialViewRenderStream<ContextType extends Context<ContextType>
         this.drawable = drawable;
         this.framebuffer = framebuffer;
         this.attachmentCount = attachmentCount;
+        this.framebufferData = IntStream.range(0, attachmentCount)
+            .mapToObj(i -> new ColorNativeBufferList(framebuffer.getSize().width * framebuffer.getSize().height))
+            .toArray(ColorNativeBufferList[]::new);
     }
 
     @Override
@@ -75,12 +80,8 @@ public class SequentialViewRenderStream<ContextType extends Context<ContextType>
             drawable.program().setUniform("viewIndex", k);
             drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
 
-            // TODO: initialize the buffer once when the stream is created and reuse it rather than relying on the garbage collector to clean up after us?
             // Copy framebuffer from GPU to main memory.
-            ColorList[] framebufferData = IntStream.range(0, attachmentCount)
-                .mapToObj(i -> new ColorList(framebuffer.readFloatingPointColorBufferRGBA(i)))
-                .toArray(ColorList[]::new);
-
+            IntStream.range(0, attachmentCount).forEach(i -> framebuffer.readFloatingPointColorBufferRGBA(i, framebufferData[i].buffer));
             action.accept(framebufferData);
         }
     }

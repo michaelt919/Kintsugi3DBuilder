@@ -18,6 +18,7 @@ import java.util.function.*;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
+import tetzlaff.util.ColorArrayList;
 import tetzlaff.util.ColorList;
 
 /**

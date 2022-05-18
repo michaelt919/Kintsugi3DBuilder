@@ -12,13 +12,17 @@
 
 package tetzlaff.ibrelight.rendering.resources;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.function.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Drawable;
 import tetzlaff.gl.core.Framebuffer;
 import tetzlaff.gl.core.PrimitiveMode;
 import tetzlaff.util.ColorList;
+import tetzlaff.util.ColorNativeBufferList;
 
 public class ParallelViewRenderStream<ContextType extends Context<ContextType>> extends GraphicsStreamBase<ColorList[]>
 {
@@ -33,6 +37,8 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
     private final Object threadsRunningLock = new Object();
     private int threadsRunning = 0;
 
+    private final Deque<ColorNativeBufferList[]> unusedColorBuffers;
+
 
     ParallelViewRenderStream(int viewCount, Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int attachmentCount,
         int maxRunningThreads)
@@ -42,6 +48,11 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
         this.framebuffer = framebuffer;
         this.attachmentCount = attachmentCount;
         this.maxRunningThreads = maxRunningThreads;
+        unusedColorBuffers = IntStream.range(0, maxRunningThreads)
+            .mapToObj(i -> IntStream.range(0, attachmentCount)
+                .mapToObj(j -> new ColorNativeBufferList(framebuffer.getSize().width * framebuffer.getSize().height))
+                .toArray(ColorNativeBufferList[]::new))
+            .collect(Collectors.toCollection(ArrayDeque::new));
     }
 
     ParallelViewRenderStream(int viewCount, Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int attachmentCount)
@@ -85,6 +96,8 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
     {
         for (int k = 0; k < viewCount; k++)
         {
+            ColorNativeBufferList[] colorBuffers;
+
             synchronized (threadsRunningLock)
             {
                 // Make sure that we don't have too many threads running.
@@ -100,6 +113,9 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
                         e.printStackTrace();
                     }
                 }
+
+                // Grab a color buffer while we still have the lock.
+                colorBuffers = unusedColorBuffers.pop();
             }
 
             for (int i = 0; i < attachmentCount; i++)
@@ -112,10 +128,9 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
             drawable.program().setUniform("viewIndex", k);
             drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
 
+
             // Copy framebuffer from GPU to main memory.
-            ColorList[] framebufferData = IntStream.range(0, attachmentCount)
-                .mapToObj(i -> new ColorList(framebuffer.readFloatingPointColorBufferRGBA(i)))
-                .toArray(ColorList[]::new);
+            IntStream.range(0, attachmentCount).forEach(i -> framebuffer.readFloatingPointColorBufferRGBA(i, colorBuffers[i].buffer));
 
             synchronized (threadsRunningLock)
             {
@@ -126,12 +141,15 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
             {
                 try
                 {
-                    action.accept(framebufferData);
+                    action.accept(colorBuffers);
                 }
                 finally
                 {
                     synchronized (threadsRunningLock)
                     {
+                        // Return the buffer to the unused pool while we have the lock.
+                        unusedColorBuffers.push(colorBuffers);
+
                         threadsRunning--;
                         threadsRunningLock.notifyAll();
                     }
