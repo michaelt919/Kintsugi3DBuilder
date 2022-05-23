@@ -37,6 +37,7 @@ import javafx.scene.image.Image;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
 import org.xml.sax.SAXException;
+import tetzlaff.gl.core.Context;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.ibrelight.app.WindowSynchronization;
 import tetzlaff.ibrelight.core.*;
@@ -90,7 +91,9 @@ public class MenubarController
 
     private Runnable userDocumentationHandler;
 
-    public void init(Window injectedParentWindow, IBRRequestQueue<?> requestQueue, InternalModels injectedInternalModels, SceneModel injectedSceneModel,
+
+    public <ContextType extends Context<ContextType>> void init(
+        Window injectedParentWindow, IBRRequestQueue<ContextType> requestQueue, InternalModels injectedInternalModels, SceneModel injectedSceneModel,
         Runnable injectedUserDocumentationHandler)
     {
         this.parentWindow = injectedParentWindow;

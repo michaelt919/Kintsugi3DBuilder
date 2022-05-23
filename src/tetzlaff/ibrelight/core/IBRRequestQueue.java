@@ -44,12 +44,7 @@ public class IBRRequestQueue<ContextType extends Context<ContextType>>
         this.loadingMonitor = loadingMonitor;
     }
 
-    public void addRequest(Runnable request)
-    {
-        this.requestList.add(request);
-    }
-
-    public void addRequest(IBRRequest request)
+    public void addRequest(IBRRequest<ContextType> request)
     {
         this.requestList.add(() ->
         {
