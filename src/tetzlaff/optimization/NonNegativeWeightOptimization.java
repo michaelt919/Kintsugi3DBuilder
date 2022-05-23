@@ -55,6 +55,26 @@ public class NonNegativeWeightOptimization
         matrixBuilder.buildMatrices(viewStream, leastSquaresModel, sampleValidator, rangeStart, rangeEnd);
     }
 
+    public void dampenWithPreviousSolution(double dampingFactor, IntFunction<IntToDoubleFunction> previousSolution)
+    {
+        if (dampingFactor > 0.0)
+        {
+            for (int p = 0; p < matrixBuilder.systemCount; p++)
+            {
+                for (int b = 0; b < matrixBuilder.weightCount; b++)
+                {
+                    // Diagonal LHS
+                    matrixBuilder.weightsQTQAugmented[p].set(b, b,
+                        matrixBuilder.weightsQTQAugmented[p].get(b, b) + dampingFactor * matrixBuilder.getViewCount());
+
+                    // RHS
+                    matrixBuilder.weightsQTrAugmented[p].set(b,
+                        matrixBuilder.weightsQTrAugmented[p].get(b) + dampingFactor * matrixBuilder.getViewCount() * previousSolution.apply(p).applyAsDouble(b));
+                }
+            }
+        }
+    }
+
     public void optimizeWeights(IntPredicate areWeightsValid, BiConsumer<Integer, SimpleMatrix> weightSolutionConsumer, double toleranceScale)
     {
         optimizeWeights(areWeightsValid, weightSolutionConsumer, toleranceScale, matrixBuilder.systemCount);
@@ -77,9 +97,9 @@ public class NonNegativeWeightOptimization
                     .orElse(1.0);
 
                 // Solve the system.
-                    weightSolutionConsumer.accept(p, NonNegativeLeastSquares.solvePremultipliedWithEqualityConstraints(
-                        matrixBuilder.weightsQTQAugmented[p], matrixBuilder.weightsQTrAugmented[p],
-                        median * toleranceScale, matrixBuilder.constraintCount));
+                weightSolutionConsumer.accept(p, NonNegativeLeastSquares.solvePremultipliedWithEqualityConstraints(
+                    matrixBuilder.weightsQTQAugmented[p], matrixBuilder.weightsQTrAugmented[p],
+                    median * toleranceScale, matrixBuilder.constraintCount));
             }
         }
     }

@@ -139,7 +139,9 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         else
         {
             // Single pass normal estimation.
-            estimateNormals.runOnce(errorCalculator);
+            // Accept results regardless of whether they make the error better or not.
+            // (Primarily to be used for comparison with Levenberg-Marquardt, probably not useful in practice).
+            estimateNormals.runOnce();
         }
 
         if (SpecularOptimization.DEBUG)

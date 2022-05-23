@@ -209,14 +209,12 @@ public class MatrixBuilder
 
     /**
      * Finishes building the matrix system by adding the final running totals the matrix system.
-     * Often this will be unnecessary if there are samples at the end of the stream that exceed the domain being
-     * optimized, but it should always be called just in case.
+     * This must always be called to add the contributions for the last bin of samples (right at the cutoff for the optimized domain)
      */
     private void finish()
     {
-        if (samplePrevious != null && samplePrevious.inOptimizedDomain)
+        if (samplePrevious != null)
         {
-            // This is where most elements of the matrix get updated.
             // This function uses the running totals that have accumulated for the previous value
             // and updates the matrix accordingly.
             basisLibrary.contributeToFittingSystem(samplePrevious.floor,

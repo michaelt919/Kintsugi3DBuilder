@@ -42,6 +42,8 @@ public class LeastSquaresMatrixBuilder
     public final int weightCount;
     public final int constraintCount;
 
+    private int viewCount;
+
     /**
      * Construct a least squares matrix builder which may have constraints.
      * This does not actually build the matrices, just allocates space and sets the initial settings.
@@ -157,9 +159,12 @@ public class LeastSquaresMatrixBuilder
             }
         }
 
+        viewCount = viewStream.getCount();
+
         viewStream.forEach(reflectanceData ->
         {
             // Update matrix for each pixel.
+            // TODO: optimize performance by only rasterizing the pixels we're actually using?
             IntStream.range(rangeStart, rangeEnd).parallel().forEach(p ->
             {
                 // Skip samples that aren't visible or are otherwise invalid.
@@ -210,5 +215,10 @@ public class LeastSquaresMatrixBuilder
                 counter.increment();
             }
         });
+    }
+
+    public int getViewCount()
+    {
+        return viewCount;
     }
 }

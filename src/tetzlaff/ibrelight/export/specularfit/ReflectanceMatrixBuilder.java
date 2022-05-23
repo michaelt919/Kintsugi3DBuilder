@@ -12,16 +12,13 @@
 
 package tetzlaff.ibrelight.export.specularfit;
 
-import java.util.Comparator;
 import java.util.stream.IntStream;
 
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
-import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.optimization.function.BasisFunctions;
 import tetzlaff.optimization.function.MatrixBuilder;
 import tetzlaff.optimization.function.MatrixBuilderSample;
-import tetzlaff.optimization.function.MatrixBuilderSums;
 import tetzlaff.optimization.MatrixSystem;
 
 import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
@@ -147,7 +144,7 @@ final class ReflectanceMatrixBuilder
                             double fCeil = matrixBuilder.getBasisLibrary().evaluate(s, mFloor + 1);
 
                             // Blend between the two sampled locations.
-                            // In the case of a simple step function, fFloor + fCeil will be either 1 or 0
+                            // In the case of a simple step function, fFloor & fCeil will both be either 1 or 0
                             // except at a boundary, where fFloor will be 1 and fCeil will be 0.
                             double fInterp = fFloor * t + fCeil * (1 - t);
 
@@ -175,13 +172,13 @@ final class ReflectanceMatrixBuilder
 
         for (int i = 0; i < mATA.numRows(); i++)
         {
-            assert Math.abs(vATyRed.get(i, 0) - contribution.rhs[0].get(i, 0)) <= vATyRed.get(i, 0) * 0.001;
-            assert Math.abs(vATyGreen.get(i, 0) - contribution.rhs[1].get(i, 0)) <= vATyGreen.get(i, 0) * 0.001;
-            assert Math.abs(vATyBlue.get(i, 0) - contribution.rhs[2].get(i, 0)) <= vATyBlue.get(i, 0) * 0.001;
+            assert Math.abs(vATyRed.get(i, 0) - contribution.rhs[0].get(i, 0)) <= vATyRed.get(i, 0) * 0.001 : "Red " + i;
+            assert Math.abs(vATyGreen.get(i, 0) - contribution.rhs[1].get(i, 0)) <= vATyGreen.get(i, 0) * 0.001 : "Green  " + i;
+            assert Math.abs(vATyBlue.get(i, 0) - contribution.rhs[2].get(i, 0)) <= vATyBlue.get(i, 0) * 0.001 : "Blue  " + i;
 
             for (int j = 0; j < mATA.numCols(); j++)
             {
-                assert Math.abs(mATA.get(i, j) - contribution.lhs.get(i, j)) <= mATA.get(i, j) * 0.001;
+                assert Math.abs(mATA.get(i, j) - contribution.lhs.get(i, j)) <= mATA.get(i, j) * 0.001 : "Matrix " + i + " " + j;
             }
         }
     }

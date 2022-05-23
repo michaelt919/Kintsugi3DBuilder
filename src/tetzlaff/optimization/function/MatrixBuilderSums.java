@@ -118,9 +118,7 @@ public class MatrixBuilderSums
             {
                 double weightedAnalyticTimesObservedSample = singleWeightedAnalyticSample * sample.observed[i];
                 addWeightedAnalyticTimesObserved(i, b1, weightedAnalyticTimesObservedSample);
-
-                double singleWeightedAnalyticBlendedSample = sample.blendingWeight * weightedAnalyticTimesObservedSample;
-                addWeightedAnalyticTimesObservedBlended(i, b1, singleWeightedAnalyticBlendedSample * sample.observed[i]);
+                addWeightedAnalyticTimesObservedBlended(i, b1, sample.blendingWeight * weightedAnalyticTimesObservedSample);
             }
 
             for (int b2 = 0; b2 < instanceCount; b2++)

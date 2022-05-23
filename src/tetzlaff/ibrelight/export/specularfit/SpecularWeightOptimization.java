@@ -42,6 +42,10 @@ public class SpecularWeightOptimization
             p -> solution.setWeightsValidity(p, true),
             pStart, Math.min(pStart + settings.getWeightBlockSize(), settings.width * settings.height));
 
+        // Dampen so that it doesn't "snap" to the optimal solution right away.
+        // TODO expose the damping factor as a setting.
+        base.dampenWithPreviousSolution(0.0, p -> b -> solution.getWeights(pStart + p).get(b));
+
         System.out.println("Finished building matrices; solving now...");
 
         // Optimize the weights and store the result in the SpecularFitSolution.
