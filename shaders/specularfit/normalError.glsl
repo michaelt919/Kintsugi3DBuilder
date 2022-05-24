@@ -21,7 +21,9 @@ float calculateError(vec3 triangleNormal, vec3 estimatedNormal)
         vec3 incidentRadiance = PI * getLightIntensity(k) / dot(lightDisplacement, lightDisplacement);
 
         vec3 actualReflectanceTimesNDotL = imgColor.rgb / incidentRadiance;
-        float weight = triangleNDotV;
+
+        // n dot l is already incorporated by virtue of the fact that radiance is being optimized, not reflectance.
+        float weight = triangleNDotV * sqrt(max(0, 1 - nDotH * nDotH));
 
         if (nDotH > COSINE_CUTOFF && nDotL > COSINE_CUTOFF && nDotV > COSINE_CUTOFF)
         {

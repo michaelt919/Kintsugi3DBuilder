@@ -44,7 +44,7 @@ public class SpecularWeightOptimization
 
         // Dampen so that it doesn't "snap" to the optimal solution right away.
         // TODO expose the damping factor as a setting.
-        base.dampenWithPreviousSolution(0.0, p -> b -> solution.getWeights(pStart + p).get(b));
+//        base.dampenWithPreviousSolution(1.0, p -> b -> solution.getWeights(pStart + p).get(b));
 
         System.out.println("Finished building matrices; solving now...");
 

@@ -148,20 +148,32 @@ public class SpecularOptimization
                     System.out.println("Calculating error...");
                     errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
                     logError(errorCalculator.getReport());
+
+                    // Save basis image visualization for reference and debugging
+                    try(BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(context, settings))
+                    {
+                        basisImageCreator.createImages(specularFit);
+                    }
+
+                    // write out diffuse texture for debugging
+                    solution.saveDiffuseMap(settings.additional.getFloat("gamma"));
                 }
 
-                // Make sure there are enough blocks for any pixels that don't go into the weight blocks evenly.
-                int blockCount = (settings.width * settings.height + settings.getWeightBlockSize() - 1) / settings.getWeightBlockSize();
-
-                // Initially assume that all texels are invalid.
-                solution.invalidateWeights();
-
-                for (int i = 0; i < blockCount; i++) // TODO: this was done quickly; may need to be refactored
+                if (settings.basisCount > 1)
                 {
-                    System.out.println("Starting block " + i + "...");
-                    weightOptimization.execute(
-                        reflectanceStream.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
-                        solution, i * settings.getWeightBlockSize());
+                    // Make sure there are enough blocks for any pixels that don't go into the weight blocks evenly.
+                    int blockCount = (settings.width * settings.height + settings.getWeightBlockSize() - 1) / settings.getWeightBlockSize();
+
+                    // Initially assume that all texels are invalid.
+                    solution.invalidateWeights();
+
+                    for (int i = 0; i < blockCount; i++) // TODO: this was done quickly; may need to be refactored
+                    {
+                        System.out.println("Starting block " + i + "...");
+                        weightOptimization.execute(
+                            reflectanceStream.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
+                            solution, i * settings.getWeightBlockSize());
+                    }
                 }
 
                 if (DEBUG)
@@ -224,7 +236,9 @@ public class SpecularOptimization
                     specularFit.roughnessOptimization.saveTextures();
                 }
             }
-            while (previousIterationError - errorCalculator.getReport().getError() > settings.getConvergenceTolerance());
+            while ((settings.basisCount > 1 || settings.isNormalRefinementEnabled()) &&
+                // Iteration not necessary if basisCount is 1 and normal refinement is off.
+                previousIterationError - errorCalculator.getReport().getError() > settings.getConvergenceTolerance());
 
             // Save the final basis functions
             solution.saveBasisFunctions();
