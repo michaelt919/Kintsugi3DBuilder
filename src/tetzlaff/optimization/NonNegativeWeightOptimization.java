@@ -64,12 +64,11 @@ public class NonNegativeWeightOptimization
                 for (int b = 0; b < matrixBuilder.weightCount; b++)
                 {
                     // Diagonal LHS
-                    matrixBuilder.weightsQTQAugmented[p].set(b, b,
-                        matrixBuilder.weightsQTQAugmented[p].get(b, b) + dampingFactor * matrixBuilder.getViewCount());
+                    matrixBuilder.weightsQTQAugmented[p].set(b, b,matrixBuilder.weightsQTQAugmented[p].get(b, b) + dampingFactor);
 
                     // RHS
                     matrixBuilder.weightsQTrAugmented[p].set(b,
-                        matrixBuilder.weightsQTrAugmented[p].get(b) + dampingFactor * matrixBuilder.getViewCount() * previousSolution.apply(p).applyAsDouble(b));
+                        matrixBuilder.weightsQTrAugmented[p].get(b) + dampingFactor * previousSolution.apply(p).applyAsDouble(b));
                 }
             }
         }

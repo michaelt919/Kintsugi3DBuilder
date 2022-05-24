@@ -51,12 +51,26 @@ public class SpecularWeightOptimization
         // Optimize the weights and store the result in the SpecularFitSolution.
         if (pStart + settings.getWeightBlockSize() > settings.width * settings.height)
         {
-            base.optimizeWeights(p -> solution.areWeightsValid(pStart + p), (p, weights) -> solution.setWeights(pStart + p, weights),
+            base.optimizeWeights(p -> solution.areWeightsValid(pStart + p),
+                (p, weights) ->
+                {
+                    solution.setWeights(pStart + p, weights);
+//                    solution.setWeights(pStart + p,
+//                        weights.extractMatrix(0, weights.numRows() - 1, 0, 1).scale(0.5)
+//                            .plus(solution.getWeights(pStart + p).scale(0.5)));
+                },
                 NonNegativeWeightOptimization.DEFAULT_TOLERANCE_SCALE, settings.width * settings.height - pStart);
         }
         else
         {
-            base.optimizeWeights(p -> solution.areWeightsValid(pStart + p), (p, weights) -> solution.setWeights(pStart + p, weights));
+            base.optimizeWeights(p -> solution.areWeightsValid(pStart + p),
+                (p, weights) ->
+                {
+                    solution.setWeights(pStart + p, weights);
+//                    solution.setWeights(pStart + p,
+//                        weights.extractMatrix(0, weights.numRows() - 1, 0, 1).scale(0.5)
+//                            .plus(solution.getWeights(pStart + p).scale(0.5)));
+                });
         }
 
         System.out.println("DONE!");

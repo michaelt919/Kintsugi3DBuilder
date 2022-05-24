@@ -18,6 +18,7 @@ import java.io.IOException;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
+import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.ibrelight.core.Projection;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStreamResource;
@@ -25,6 +26,7 @@ import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.optimization.ReadonlyErrorReport;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
 import tetzlaff.optimization.function.GeneralizedSmoothStepBasis;
+import tetzlaff.optimization.function.StepBasis;
 import tetzlaff.util.ColorList;
 
 /**
@@ -114,7 +116,9 @@ public class SpecularOptimization
                     settings.microfacetDistributionResolution,
                     settings.getMetallicity(),
                     (int)Math.round(settings.getSpecularSmoothness() * settings.microfacetDistributionResolution),
-                    x -> 3*x*x-2*x*x*x));
+                    x -> 3*x*x-2*x*x*x)
+//                new StepBasis(settings.microfacetDistributionResolution, settings.getMetallicity())
+            );
             SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(settings);
             ShaderBasedErrorCalculator errorCalculator = new ShaderBasedErrorCalculator(settings.width * settings.height);
 
@@ -229,11 +233,18 @@ public class SpecularOptimization
                 }
 
                 // Estimate specular roughness and reflectivity.
+                // This can cause error to increase but it's unclear if that poses a problem for convergence.
                 specularFit.roughnessOptimization.execute();
 
                 if (DEBUG)
                 {
                     specularFit.roughnessOptimization.saveTextures();
+
+                    // Log error in debug mode.
+                    specularFit.basisResources.updateFromSolution(solution);
+                    System.out.println("Calculating error...");
+                    errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
+                    logError(errorCalculator.getReport());
                 }
             }
             while ((settings.basisCount > 1 || settings.isNormalRefinementEnabled()) &&

@@ -69,15 +69,17 @@ public class BRDFReconstruction
 
 //        if (SpecularOptimization.DEBUG)
 //        {
+////            // Hard code solution for debugging
+////            solution.setDiffuseAlbedo(0, new DoubleVector3(1.0, 0.5, 0.25));
+////            solution.getSpecularRed().setColumn(0, 0, 0.75, 0.0, 0.0, 0.0);
+////            solution.getSpecularGreen().setColumn(0, 0, 0.75, 0.0, 0.0, 0.0);
+////            solution.getSpecularBlue().setColumn(0, 0, 0.75, 0.0, 0.0, 0.0);
+//
 //            System.out.println();
 //
 //            for (int b = 0; b < settings.basisCount; b++)
 //            {
-//                DoubleVector3 diffuseColor = new DoubleVector3(
-//                    brdfSolutionRed.get(b) * Math.PI,
-//                    brdfSolutionGreen.get(b) * Math.PI,
-//                    brdfSolutionBlue.get(b) * Math.PI);
-//                System.out.println("Diffuse #" + b + ": " + diffuseColor);
+//                System.out.println("Diffuse #" + b + ": " + solution.getDiffuseAlbedo(b));
 //            }
 //
 //            System.out.println("Basis BRDFs:");
@@ -85,33 +87,30 @@ public class BRDFReconstruction
 //            for (int b = 0; b < settings.basisCount; b++)
 //            {
 //                System.out.print("Red#" + b);
-//                double redTotal = 0.0;
+//
 //                for (int m = settings.microfacetDistributionResolution - 1; m >= 0; m--)
 //                {
 //                    System.out.print(", ");
-//                    redTotal += brdfSolutionRed.get((m + 1) * settings.basisCount + b);
-//                    System.out.print(redTotal);
+//                    System.out.print(solution.getSpecularRed().get(m));
 //                }
 //
 //                System.out.println();
 //
 //                System.out.print("Green#" + b);
-//                double greenTotal = 0.0;
+//
 //                for (int m = settings.microfacetDistributionResolution - 1; m >= 0; m--)
 //                {
 //                    System.out.print(", ");
-//                    greenTotal += brdfSolutionGreen.get((m + 1) * settings.basisCount + b);
-//                    System.out.print(greenTotal);
+//                    System.out.print(solution.getSpecularGreen().get(m));
 //                }
 //                System.out.println();
 //
 //                System.out.print("Blue#" + b);
-//                double blueTotal = 0.0;
+//
 //                for (int m = settings.microfacetDistributionResolution - 1; m >= 0; m--)
 //                {
 //                    System.out.print(", ");
-//                    blueTotal += brdfSolutionBlue.get((m + 1) * settings.basisCount + b);
-//                    System.out.print(blueTotal);
+//                    System.out.print(solution.getSpecularBlue().get(m));
 //                }
 //                System.out.println();
 //            }
