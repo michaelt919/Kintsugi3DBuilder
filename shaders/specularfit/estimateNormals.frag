@@ -170,12 +170,12 @@ void main()
             // The rows correspond to the components of N.
             mat3x2 fullGradient = diffuseGradient + specularGradient;
 
-            mJTJ += weight * weight * (fullGradient * transpose(fullGradient) + mat2(dampingFactor));
-            vJTb += weight * weight * fullGradient * (actualReflectanceTimesNDotL - reflectanceEstimate * nDotL);
+            mJTJ += weight * (fullGradient * transpose(fullGradient) + mat2(dampingFactor));
+            vJTb += weight * fullGradient * (actualReflectanceTimesNDotL - reflectanceEstimate * nDotL);
 #else
 
-            mATA += weight * weight * dot(reflectanceEstimate, reflectanceEstimate) * outerProduct(light, light);
-            vATb += weight * weight * dot(reflectanceEstimate, actualReflectanceTimesNDotL) * light;
+            mATA += weight * dot(reflectanceEstimate, reflectanceEstimate) * outerProduct(light, light);
+            vATb += weight * dot(reflectanceEstimate, actualReflectanceTimesNDotL) * light;
 #endif
         }
     }

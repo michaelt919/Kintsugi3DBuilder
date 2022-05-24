@@ -112,7 +112,9 @@ final class ReflectanceMatrixBuilder
             {
                 float halfwayIndex = reflectanceData.getHalfwayIndex(p);
                 float geomRatio = reflectanceData.getGeomRatio(p);
-                float addlWeight = reflectanceData.getAdditionalWeight(p);
+
+                // square-root since we're minimizing the sum of w * | y - A x |^2, not w^2 * | y - A x |^2
+                float addlWeight = (float)Math.sqrt(reflectanceData.getAdditionalWeight(p));
 
                 // Calculate which discretized MDF element the current sample belongs to.
                 double mExact = halfwayIndex * settings.microfacetDistributionResolution;

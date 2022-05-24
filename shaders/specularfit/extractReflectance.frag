@@ -66,9 +66,9 @@ void main()
             sqrt(max(0.0, acos(min(1.0, nDotH)) * 3.0 / PI)),
             maskingShadowing / (4 * nDotL * nDotV),
             // n.v accounts for fitting in texture space rather than image space (more samples near grazing angles)
-            // n.l accounts for fitting reflectance rather than radiance
+            // (n.l)^2 accounts for fitting reflectance rather than radiance
             // sin(theta_h) prevents bias towards specular (from Nam et al.)
-            triangleNDotV * nDotL * sqrt(max(0, 1 - nDotH * nDotH)),
+            imgColor.a * triangleNDotV * nDotL * nDotL * sqrt(max(0, 1 - nDotH * nDotH)),
             nDotL);
     }
     else

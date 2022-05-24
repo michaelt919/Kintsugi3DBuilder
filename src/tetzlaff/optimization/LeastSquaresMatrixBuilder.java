@@ -174,7 +174,6 @@ public class LeastSquaresMatrixBuilder
                     sampleValidator.accept(p);
 
                     double weight = leastSquaresModel.getSampleWeight(reflectanceData, p);
-                    double weightSquared = weight * weight;
 
                     // Evaluate sampler (get the ground truth value)
                     T fActual = leastSquaresModel.getSamples(reflectanceData, p);
@@ -195,7 +194,7 @@ public class LeastSquaresMatrixBuilder
                         T f1 = basisEval.get(b1);
 
                         // Store the weighted product of the basis function and the actual sample in the vector.
-                        weightsQTrAugmented[p - rangeStart].set(b1, weightsQTrAugmented[p - rangeStart].get(b1) + weightSquared * leastSquaresModel.innerProduct(f1, fActual));
+                        weightsQTrAugmented[p - rangeStart].set(b1, weightsQTrAugmented[p - rangeStart].get(b1) + weight * leastSquaresModel.innerProduct(f1, fActual));
 
                         for (int b2 = 0; b2 < weightCount; b2++)
                         {
@@ -203,7 +202,7 @@ public class LeastSquaresMatrixBuilder
 
                             // Store the weighted product of the two basis functions in the matrix.
                             weightsQTQAugmented[p - rangeStart].set(b1, b2,
-                                weightsQTQAugmented[p - rangeStart].get(b1, b2) + weightSquared * leastSquaresModel.innerProduct(f1, f2));
+                                weightsQTQAugmented[p - rangeStart].get(b1, b2) + weight * leastSquaresModel.innerProduct(f1, f2));
                         }
                     }
                 }

@@ -169,8 +169,6 @@ public class MatrixBuilder
             sums.clearNonCumulativeSums();
         }
 
-        double sampleWeightSquared = sample.sampleWeight * sample.sampleWeight;
-
         double constantTerm = getConstantTerm(sample.analytic);
         double constantTermSquared = constantTerm * constantTerm;
 
@@ -189,7 +187,7 @@ public class MatrixBuilder
             for (int i = 0; i < observationCount; i++)
             {
                 contribution.addToRHS(b1, i, sample.weightByInstance.applyAsDouble(b1)
-                        * sampleWeightSquared * sample.observed[i] * constantTerm);
+                        * sample.sampleWeight * sample.observed[i] * constantTerm);
             }
 
             for (int b2 = 0; b2 < instanceCount; b2++)
@@ -198,7 +196,7 @@ public class MatrixBuilder
                 // Top left partition of the matrix: row and column both correspond to constant-term coefficients
                 // (i.e. diffuse for reflectance)
                 double weightProduct = sample.weightByInstance.applyAsDouble(b1)
-                        * sample.weightByInstance.applyAsDouble(b2) * sampleWeightSquared;
+                        * sample.weightByInstance.applyAsDouble(b2) * sample.sampleWeight;
                 contribution.addToLHS(b1, b2, weightProduct * constantTermSquared);
             }
         }

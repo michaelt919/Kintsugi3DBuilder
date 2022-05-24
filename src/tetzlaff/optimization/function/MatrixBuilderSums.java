@@ -108,11 +108,9 @@ public class MatrixBuilderSums
     {
         int instanceCount = weightedAnalyticCumulative.numRows();
 
-        double sampleWeightSquared = sample.sampleWeight * sample.sampleWeight;
-
         for (int b1 = 0; b1 < instanceCount; b1++)
         {
-            double singleWeightedAnalyticSample = sample.analytic * sample.weightByInstance.applyAsDouble(b1) * sampleWeightSquared;
+            double singleWeightedAnalyticSample = sample.analytic * sample.weightByInstance.applyAsDouble(b1) * sample.sampleWeight;
 
             for (int i = 0; i < weightedAnalyticTimesObservedCumulative.length; i++)
             {
