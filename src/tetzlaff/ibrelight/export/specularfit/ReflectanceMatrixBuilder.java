@@ -12,6 +12,10 @@
 
 package tetzlaff.ibrelight.export.specularfit;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.stream.IntStream;
 
 import org.ejml.data.DMatrixRMaj;
@@ -30,6 +34,8 @@ final class ReflectanceMatrixBuilder
 {
     // Set to true to validate the MatrixBuilder implementation (should generally be turned off for much better efficiency).
     private static final boolean VALIDATE = false;
+
+    static final boolean DUMP_SAMPLES = false;
 
     /**
      * Reflectance information for all the data.
@@ -79,17 +85,39 @@ final class ReflectanceMatrixBuilder
 
     public void execute()
     {
-        matrixBuilder.build(
-            IntStream.range(0, reflectanceData.size())
-                .filter(p -> reflectanceData.getVisibility(p) > 0) // Eliminate pixels without valid samples
-                .mapToObj(p ->
-                {
-                    return new MatrixBuilderSample(
+        try (PrintStream sampleDump = DUMP_SAMPLES ?
+            new PrintStream(new FileOutputStream(new File(settings.outputDirectory, "sampleDump.txt"), true)) : null)
+        {
+            matrixBuilder.build(
+                IntStream.range(0, reflectanceData.size())
+                    .filter(p -> reflectanceData.getVisibility(p) > 0) // Eliminate pixels without valid samples
+                    .mapToObj(p ->
+                    {
+                        MatrixBuilderSample sample = new MatrixBuilderSample(
                             reflectanceData.getHalfwayIndex(p) * settings.microfacetDistributionResolution,
                             matrixBuilder.getBasisLibrary(), reflectanceData.getGeomRatio(p),
                             reflectanceData.getAdditionalWeight(p), b -> solution.getWeights(p).get(b),
                             reflectanceData.getRed(p), reflectanceData.getGreen(p), reflectanceData.getBlue(p));
-                }));
+
+                        if (DUMP_SAMPLES)
+                        {
+                            sampleDump.print(sample.actual + ": " + sample.weightByInstance.applyAsDouble(0));
+
+                            for (int i = 1; i < settings.basisCount; i++)
+                            {
+                                sampleDump.print(", " + sample.weightByInstance.applyAsDouble(i));
+                            }
+
+                            sampleDump.println(": " + sample.observed[0] + ", " + sample.observed[1] + ", " + sample.observed[2]);
+                        }
+
+                        return sample;
+                    }));
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
 
         if (VALIDATE)
         {

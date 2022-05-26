@@ -193,7 +193,7 @@ public class ShaderBasedOptimization<ContextType extends Context<ContextType>> i
                 unsuccessfulIterations = 0;
             }
         }
-        while (report.getError() <= report.getPreviousError() && unsuccessfulIterations < unsuccessfulIterationsAllowed);
+        while (/*report.getError() <= report.getPreviousError() && */unsuccessfulIterations < unsuccessfulIterationsAllowed);
     }
 
     private void swapFramebuffers()

@@ -12,6 +12,9 @@
 
 package tetzlaff.ibrelight.export.specularfit;
 
+import java.io.File;
+import java.sql.Ref;
+
 import org.ejml.data.DMatrixRMaj;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
@@ -123,7 +126,12 @@ public class BRDFReconstruction
     {
         Counter counter = new Counter();
 
-        MatrixSystem system = viewStream
+        if (ReflectanceMatrixBuilder.DUMP_SAMPLES)
+        {
+            new File(settings.outputDirectory, "sampleDump.txt").delete();
+        }
+
+        MatrixSystem system = (ReflectanceMatrixBuilder.DUMP_SAMPLES ? viewStream.sequential() : viewStream)
             .map(reflectanceData ->
             {
                 // Create scratch space for the thread handling this view.
