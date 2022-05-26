@@ -15,10 +15,14 @@ package tetzlaff.ibrelight.export.specularfit;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Comparator;
+import java.util.stream.IntStream;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.DoubleVector3;
+import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibrelight.core.Projection;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStreamResource;
@@ -124,6 +128,123 @@ public class SpecularOptimization
 
             // Instantiate once so that the memory buffers can be reused.
             GraphicsStream<ColorList[]> reflectanceStreamParallel = reflectanceStream.parallel();
+
+//            reflectanceStream.getProgram().setTexture("normalEstimate", specularFit.getNormalMap());
+//
+//            // First index is basis
+//            // Second index covers the different totals: [0, 3]: diffuse RGB + weight; [4, 7]: specular RGB + weight;
+//            // 8: multiplier used to subtract diffuse from specular
+//            // TODO this could all be moved into a shader for better performance
+//            float[][] finalTotals = reflectanceStreamParallel.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1]))
+//                .collect(() -> IntStream.range(0, settings.basisCount).mapToObj(b -> new float[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 }).toArray(float[][]::new),
+//                    (totals, frame) -> IntStream.range(0, frame.size()) // For each pixel in the frame
+//                        .filter(p -> frame.getVisibility(p) > 0.0)
+//                        .forEach(p -> IntStream.range(0, settings.basisCount).boxed() // For each basis function
+//                            // Determine which basis function a pixel corresponds to in the initial mapping
+//                            .max(Comparator.comparingDouble(b -> solution.getWeights(p).get(b)))
+//                            .ifPresent(b ->
+//                            {
+//                                float weight = frame.getAdditionalWeight(p);
+//                                if (frame.getHalfwayIndex(p) < 1.0)
+//                                {
+//                                    float pseudoBRDF = (1 - frame.getHalfwayIndex(p)) * frame.getGeomRatio(p);
+//                                    totals[b][4] += frame.getRed(p) * pseudoBRDF * weight;
+//                                    totals[b][5] += frame.getGreen(p) * pseudoBRDF * weight;
+//                                    totals[b][6] += frame.getBlue(p) * pseudoBRDF * weight;
+//                                    totals[b][7] += pseudoBRDF * pseudoBRDF * weight;
+//                                    totals[b][8] += pseudoBRDF * weight;
+//                                }
+//                                else
+//                                {
+//                                    totals[b][0] += frame.getRed(p) * weight;
+//                                    totals[b][1] += frame.getGreen(p) * weight;
+//                                    totals[b][2] += frame.getBlue(p) * weight;
+//                                    totals[b][3] += weight;
+//                                }
+//                            })));
+//
+//            for (int b = 0; b < settings.basisCount; b++)
+//            {
+////                DoubleVector3 diffuseReflectance = new DoubleVector3(
+////                    finalTotals[b][0] / finalTotals[b][3], finalTotals[b][1] / finalTotals[b][3], finalTotals[b][2] / finalTotals[b][3]);
+//                DoubleVector3 diffuseReflectance = DoubleVector3.ZERO;
+//                solution.setDiffuseAlbedo(b, diffuseReflectance.times(Math.PI)); // Mutiply times pi to go from reflectance to albedo
+//
+//                // Specular Avg = (Total weighted reflectance - Diffuse color * Total weighted count) / Total weighted pseudo-BRDF
+//                DoubleVector3 specularScale = new DoubleVector3(
+//                    Math.max(0, finalTotals[b][4] - diffuseReflectance.x * finalTotals[b][8]) / finalTotals[b][7],
+//                    Math.max(0, finalTotals[b][5] - diffuseReflectance.y * finalTotals[b][8]) / finalTotals[b][7],
+//                    Math.max(0, finalTotals[b][6] - diffuseReflectance.z * finalTotals[b][8]) / finalTotals[b][7]
+//                );
+//
+//                // Initialize the specular basis functions to in turn generate a better initial guess for the normal map.
+//                for (int m = 0; m < settings.microfacetDistributionResolution; m++)
+//                {
+//                    float psuedoNDF = 1 - (float)m / (float)settings.microfacetDistributionResolution;
+//
+//                    solution.getSpecularRed().set(m, b, psuedoNDF * specularScale.x);
+//                    solution.getSpecularGreen().set(m, b, psuedoNDF * specularScale.y);
+//                    solution.getSpecularBlue().set(m, b, psuedoNDF * specularScale.z);
+//                }
+//            }
+//
+//            // TODO move to a function to eliminate copy-pasted code
+//
+//            // Prepare for error calculation and normal estimation on the GPU.
+//            specularFit.basisResources.updateFromSolution(solution);
+//
+//            // Calculate the error in preparation for normal estimation.
+//            errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
+//
+//            // Log error in debug mode.
+//            if (DEBUG)
+//            {
+//                System.out.println("Calculating error...");
+//                logError(errorCalculator.getReport());
+//
+//                // Save basis image visualization for reference and debugging
+//                try(BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(context, settings))
+//                {
+//                    basisImageCreator.createImages(specularFit);
+//                }
+//
+//                // write out diffuse texture for debugging
+//                solution.saveDiffuseMap(settings.additional.getFloat("gamma"));
+//            }
+//
+//            if (settings.isNormalRefinementEnabled())
+//            {
+//                System.out.println("Optimizing normals...");
+//
+//                specularFit.normalOptimization.execute(normalMap ->
+//                    {
+//                        // Update program to use the new front buffer for error calculation.
+//                        errorCalcProgram.setTexture("normalEstimate", normalMap);
+//
+//                        if (DEBUG)
+//                        {
+//                            System.out.println("Calculating error...");
+//                        }
+//
+//                        // Calculate the error to determine if we should stop.
+//                        errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
+//
+//                        if (DEBUG)
+//                        {
+//                            // Log error in debug mode.
+//                            logError(errorCalculator.getReport());
+//                        }
+//
+//                        return errorCalculator.getReport();
+//                    },
+//                    settings.getConvergenceTolerance());
+//
+//                if (errorCalculator.getReport().getError() > errorCalculator.getReport().getPreviousError())
+//                {
+//                    // Revert error calculations to the last accepted result.
+//                    errorCalculator.reject();
+//                }
+//            }
 
             do
             {
