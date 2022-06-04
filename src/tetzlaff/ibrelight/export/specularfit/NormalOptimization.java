@@ -164,7 +164,8 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
 
     public Texture2D<ContextType> getNormalMap()
     {
-        return smoothNormals.getFrontFramebuffer().getColorAttachmentTexture(0);
+        return (settings.getNormalSmoothingIterations() > 0 ? smoothNormals : estimateNormals)
+            .getFrontFramebuffer().getColorAttachmentTexture(0);
     }
 
     public void saveNormalMapEstimate()
@@ -195,8 +196,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         }
     }
 
-    private <ContextType extends Context<ContextType>>
-    ProgramBuilder<ContextType> getNormalEstimationProgramBuilder(SpecularFitProgramFactory<ContextType> programFactory)
+    private ProgramBuilder<ContextType> getNormalEstimationProgramBuilder(SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(
                 new File("shaders/common/texspace_noscale.vert"),
