@@ -1,6 +1,5 @@
 /*
  *  Copyright (c) Michael Tetzlaff 2022
- *  Copyright (c) The Regents of the University of Minnesota 2019
  *
  *  Licensed under GPLv3
  *  ( http://www.gnu.org/licenses/gpl-3.0.html )

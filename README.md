@@ -7,9 +7,10 @@ Contributors:
 - Michael Ludwig (University of Minnesota) - contributor
 - Sam Steinkamp (University of Minnesota) - contributor
 - Josh Lyu (University of Wisconsin - Stout) - contributor
+- Mey Amor (University of Wisconsin - Stout) - contributor
 - Gary Meyer (University of Minnesota) - designer and advisor
 
-Copyright (c) Seth Berrier, Michael Tetzlaff, Josh Lyu 2022
+Copyright (c) Seth Berrier, Michael Tetzlaff, Zhangchi (Josh) Lyu, Mey Amor 2022
 Copyright (c) The Regents of the University of Minnesota 2019
 
 Licensed under GPLv3 

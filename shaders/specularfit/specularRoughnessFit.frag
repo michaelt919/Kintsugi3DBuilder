@@ -1,7 +1,7 @@
 #version 330
 
 /*
- *  Copyright (c) Michael Tetzlaff 2020
+ *  Copyright (c) Michael Tetzlaff 2022
  *  Copyright (c) The Regents of the University of Minnesota 2019
  *
  *  Licensed under GPLv3
