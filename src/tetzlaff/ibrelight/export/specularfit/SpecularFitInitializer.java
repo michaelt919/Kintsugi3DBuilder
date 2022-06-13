@@ -16,7 +16,9 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
 
 import tetzlaff.gl.core.*;
@@ -76,6 +78,11 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
             float[] averages = framebuffer.readFloatingPointColorBufferRGBA(0);
 
             List<Vector3> centers = new KMeansClustering(new ColorArrayList(averages)).makeClusters(solution.getWeightsList());
+
+            // Initialize weight validity.
+            IntStream.range(0, averages.length / 4)
+                .filter(p -> averages[4 * p + 3] > 0.0)
+                .forEach(p -> solution.setWeightsValidity(p, true));
 
             // Output for debugging
             System.out.println("Refined centers:");

@@ -161,10 +161,15 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         }
     }
 
+    private FramebufferObject<ContextType> getNormalMapFBO()
+    {
+        return (settings.getNormalSmoothingIterations() > 0 ? smoothNormals : estimateNormals).getFrontFramebuffer();
+    }
+
+
     public Texture2D<ContextType> getNormalMap()
     {
-        return (settings.getNormalSmoothingIterations() > 0 ? smoothNormals : estimateNormals)
-            .getFrontFramebuffer().getColorAttachmentTexture(0);
+        return getNormalMapFBO().getColorAttachmentTexture(0);
     }
 
     public void saveNormalMapEstimate()
@@ -185,14 +190,17 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     {
         try
         {
-            (settings.getNormalSmoothingIterations() > 0 ? smoothNormals : estimateNormals)
-                .getFrontFramebuffer().saveColorBufferToFile(0, "PNG",
-                    new File(settings.outputDirectory, "normal.png"));
+            getNormalMapFBO().saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "normal.png"));
         }
         catch (IOException e)
         {
             e.printStackTrace();
         }
+    }
+
+    public float[] readNormalMap()
+    {
+        return getNormalMapFBO().readFloatingPointColorBufferRGBA(0);
     }
 
     private ProgramBuilder<ContextType> getNormalEstimationProgramBuilder(SpecularFitProgramFactory<ContextType> programFactory)

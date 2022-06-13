@@ -13,12 +13,15 @@ package tetzlaff.ibrelight.export.specularfit;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.stream.IntStream;
 
 import tetzlaff.gl.core.*;
+import tetzlaff.gl.vecmath.DoubleVector2;
+import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.optimization.ReadonlyErrorReport;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
@@ -29,6 +32,8 @@ import tetzlaff.optimization.ShaderBasedErrorCalculator;
 public class SpecularFitFinalizer
 {
     private final SpecularFitSettings settings;
+
+    private static final boolean CALCULATE_NORMAL_RMSE = true;
 
     public SpecularFitFinalizer(SpecularFitSettings settings)
     {
@@ -50,6 +55,52 @@ public class SpecularFitFinalizer
             Program<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(programFactory);
         )
         {
+            if (CALCULATE_NORMAL_RMSE && resources.normalTexture != null)
+            {
+                try (Program<ContextType> textureRectProgram = resources.context.getShaderProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File("shaders/common/texture.frag"))
+                    .createProgram();
+                    FramebufferObject<ContextType> textureRectFBO =
+                        resources.context.buildFramebufferObject(settings.width, settings.height).addColorAttachment().createFramebufferObject())
+                {
+                    // Use the real geometry rather than a rectangle so that the normal map is masked properly for the part of the normal map used.
+                    Drawable<ContextType> textureRect = resources.createDrawable(textureRectProgram);
+                    textureRectProgram.setTexture("tex", resources.normalTexture);
+                    textureRectFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+                    textureRect.draw(PrimitiveMode.TRIANGLE_FAN, textureRectFBO);
+                    textureRectFBO.saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "test_normalGT.png"));
+
+                    float[] groundTruth = textureRectFBO.readFloatingPointColorBufferRGBA(0);
+                    float[] estimate = specularFit.normalOptimization.readNormalMap();
+
+                    double rmse = Math.sqrt( // root
+                        IntStream.range(0, groundTruth.length / 4)
+                            .filter(p -> groundTruth[4 * p + 3] > 0.0) // only count texels that had enough samples to generate a solution
+                            .mapToDouble(p ->
+                            {
+                                DoubleVector2 groundTruthXY = new DoubleVector2(groundTruth[4 * p] * 2 - 1, groundTruth[4 * p + 1] * 2 - 1);
+                                // Unpack normal vectors
+                                DoubleVector3 groundTruthDir = groundTruthXY.asVector3(1 - groundTruthXY.dot(groundTruthXY));
+                                DoubleVector3 estimateDir = new DoubleVector3(
+                                    estimate[4 * p] * 2 - 1, estimate[4 * p + 1] * 2 - 1, estimate[4 * p + 2] * 2 - 1).normalized();
+
+                                DoubleVector3 error = groundTruthDir.minus(estimateDir);
+                                return error.dot(error); // sum squared error
+                            })
+                            .average().orElse(0.0)); // mean
+
+                    System.out.println("Normal map ground truth RMSE: " + rmse);
+
+                    // Print out RMSE for normal map ground truth
+                    rmseOut.println("Normal map ground truth RMSE: " + rmse);
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+
             // Print out RMSE from the penultimate iteration (to verify convergence)
             rmseOut.println("Previously calculated RMSE: " + lastErrorReport.getError());
 
