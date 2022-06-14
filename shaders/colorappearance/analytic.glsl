@@ -55,15 +55,15 @@
 #endif // ANALYTIC_SPECULAR_COLOR
 
 #ifndef ANALYTIC_BUMP_HEIGHT
-#define ANALYTIC_BUMP_HEIGHT 4.0
+#define ANALYTIC_BUMP_HEIGHT 1.0
 #endif
 
 #ifndef ANALYTIC_ROUGHNESS
-#define ANALYTIC_ROUGHNESS 0.15
+#define ANALYTIC_ROUGHNESS 0.3
 #endif
 
 #ifndef ANALYTIC_UV_SCALE
-#define ANALYTIC_UV_SCALE 2.0
+#define ANALYTIC_UV_SCALE 1.0
 #endif
 
 vec3 getNormal(vec2 texCoord);

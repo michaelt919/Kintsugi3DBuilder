@@ -69,7 +69,7 @@ public class SpecularFitFinalizer
                     textureRectProgram.setTexture("tex", resources.normalTexture);
                     textureRectFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
                     textureRect.draw(PrimitiveMode.TRIANGLE_FAN, textureRectFBO);
-                    textureRectFBO.saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "test_normalGT.png"));
+//                    textureRectFBO.saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "test_normalGT.png"));
 
                     float[] groundTruth = textureRectFBO.readFloatingPointColorBufferRGBA(0);
                     float[] estimate = specularFit.normalOptimization.readNormalMap();
