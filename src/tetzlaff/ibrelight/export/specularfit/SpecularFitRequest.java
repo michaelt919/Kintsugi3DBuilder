@@ -32,13 +32,17 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
         try
         {
             // Perform the specular fit
-            SpecularFit specularFit = new SpecularOptimization(settings).createFit(renderable.getIBRResources());
+            SpecularFit<ContextType> specularFit = new SpecularOptimization(settings).createFit(renderable.getIBRResources());
 
             // Reconstruct images both from basis functions and from fitted roughness
             SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(renderable.getIBRResources(), settings);
             FinalReconstruction<ContextType> reconstruction = new FinalReconstruction<>(renderable.getIBRResources(), settings);
-            reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(programFactory), "reconstructions");
-            reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(programFactory), "fitted");
+
+            System.out.println("Reconstructing ground truth images from basis representation:");
+            reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(programFactory), "reconstructions", "ground-truth");
+
+            System.out.println("Reconstructing ground truth images from fitted roughness / specular color:");
+            reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(programFactory), "fitted", null);
 
             specularFit.close(); // Close immediately when this is just an export operation.
         }

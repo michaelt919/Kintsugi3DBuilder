@@ -59,7 +59,7 @@ void main()
     float nDotL = max(0.0, dot(normal, light));
     float nDotV = max(0.0, dot(normal, view));
     float hDotV = max(0.0, dot(halfway, view));
-    vec3 incidentRadianceOverPi = reconstructionLightIntensity / dot(lightDisplacement, lightDisplacement);
+    vec3 incidentRadianceOverPi = 1.0 / linearizeColor(vec3(1));
 
     vec3 specular = incidentRadianceOverPi * distTimesPi(nDotH, vec3(roughness))
         * geom(roughness, nDotH, nDotV, nDotL, hDotV)

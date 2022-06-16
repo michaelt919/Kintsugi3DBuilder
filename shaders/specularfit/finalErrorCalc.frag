@@ -48,30 +48,21 @@ void main()
     vec3 light = normalize(lightDisplacement);
     vec3 halfway = normalize(light + view);
     float nDotH = max(0.0, dot(fittedNormal, halfway));
-    float nDotL = max(0.0, dot(fittedNormal, light));
-    float nDotV = max(0.0, dot(fittedNormal, view));
+    float nDotL = max(0.001, dot(fittedNormal, light));
+    float nDotV = max(0.001, dot(fittedNormal, view));
 
     // "Light intensity" is defined in such a way that we need to multiply by pi to be properly normalized.
     vec3 incidentRadiance = PI * lightIntensity / dot(lightDisplacement, lightDisplacement);
 
     vec3 actualReflectanceTimesNDotL = pow(imgColor.rgb / incidentRadiance, vec3(1 / errorGamma));
 
-    float error;
+    float hDotV = max(0.0, dot(halfway, view));
+    float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
+    vec3 specular = getMFDEstimate(nDotH) * maskingShadowing / (4 * nDotV);
+    vec3 reflectanceEstimateTimesNDotL = pow(diffuseColor * nDotL / PI + specular, vec3(1 / errorGamma));
 
-    if (nDotH > 0.0 && nDotL > 0.0 && nDotV > 0.0 && filteredMask > 0.0)
-    {
-        float hDotV = max(0.0, dot(halfway, view));
-        float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-        vec3 specular = getMFDEstimate(nDotH) * maskingShadowing / (4 * nDotV);
-        vec3 reflectanceEstimateTimesNDotL = pow(diffuseColor * nDotL / PI + specular, vec3(1 / errorGamma));
-
-        vec3 diff = actualReflectanceTimesNDotL - reflectanceEstimateTimesNDotL;
-        error = dot(diff, diff);
-    }
-    else
-    {
-        error = dot(actualReflectanceTimesNDotL, actualReflectanceTimesNDotL);
-    }
+    vec3 diff = actualReflectanceTimesNDotL - reflectanceEstimateTimesNDotL;
+    float error = dot(diff, diff);
 
     errorOut = vec4(vec3(imgColor.a * error / 3), imgColor.a);
 }

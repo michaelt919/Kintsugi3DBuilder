@@ -1099,7 +1099,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         return getIBRShaderProgramBuilder(StandardRenderingMode.IMAGE_BASED);
     }
 
-    private static File findImageFile(File requestedFile) throws FileNotFoundException
+    public static File findImageFile(File requestedFile) throws FileNotFoundException
     {
         if (requestedFile.exists())
         {

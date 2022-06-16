@@ -182,22 +182,24 @@ public class SpecularFitRequestUI implements IBRRequestUI
             settings.setUnsuccessfulLMIterationsAllowed(Integer.parseInt(unsuccessfulLMIterationsTextField.getText()));
 
             if (reconstructionViewSetField.getText() != null && !reconstructionViewSetField.getText().equals(""))
-            // Reconstruction view set
-            try
             {
-                settings.setReconstructionViewSet(ViewSet.loadFromVSETFile(
-                    new File(reconstructionViewSetField.getText())));
-            }
-            catch (FileNotFoundException e)
-            {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Invalid view set");
-                alert.setHeaderText("Reconstruction view set is invalid.");
-                alert.setContentText("Please try another view set or leave the field blank to use the view set for the current model.");
-                e.printStackTrace();
+                // Reconstruction view set
+                try
+                {
+                    settings.setReconstructionViewSet(ViewSet.loadFromVSETFile(
+                        new File(reconstructionViewSetField.getText())));
+                }
+                catch (FileNotFoundException e)
+                {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Invalid view set");
+                    alert.setHeaderText("Reconstruction view set is invalid.");
+                    alert.setContentText("Please try another view set or leave the field blank to use the view set for the current model.");
+                    e.printStackTrace();
+                }
             }
 
-            IBRRequest request = new SpecularFitRequest(settings);
+            IBRRequest<ContextType> request = new SpecularFitRequest<>(settings);
 
             requestHandler.accept(request);
         });

@@ -76,7 +76,8 @@ public class SpecularFitFinalizer
 
                     double rmse = Math.sqrt( // root
                         IntStream.range(0, groundTruth.length / 4)
-                            .filter(p -> groundTruth[4 * p + 3] > 0.0) // only count texels that had enough samples to generate a solution
+                            // only count texels that correspond to actual texture coordinates on the model (others will be transparent after rasterizing the ground truth)
+                            .filter(p -> groundTruth[4 * p + 3] > 0.0)
                             .mapToDouble(p ->
                             {
                                 DoubleVector2 groundTruthXY = new DoubleVector2(groundTruth[4 * p] * 2 - 1, groundTruth[4 * p + 1] * 2 - 1);

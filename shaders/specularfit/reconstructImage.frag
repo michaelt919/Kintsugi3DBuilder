@@ -57,7 +57,7 @@ void main()
         geomRatio = 0.5 / (roughness * nDotL); // Limit as n dot v goes to zero.
     }
 
-    vec3 incidentRadiance = PI * reconstructionLightIntensity / dot(lightDisplacement, lightDisplacement);
+    vec3 incidentRadiance = PI / linearizeColor(vec3(1));
 
     if (nDotL > 0.0)
     {
