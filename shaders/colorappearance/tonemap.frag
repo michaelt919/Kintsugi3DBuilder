@@ -39,6 +39,8 @@ void main()
     projTexCoord = projTexCoord * 0.5 + vec4(0.5);
 
     vec3 lightDisplacement = reconstructionLightPos - fPosition;
+
+    // Technically, radiance / pi
     vec3 incidentRadiance = reconstructionLightIntensity / dot(lightDisplacement, lightDisplacement);
 
     // 1. Lookup texture

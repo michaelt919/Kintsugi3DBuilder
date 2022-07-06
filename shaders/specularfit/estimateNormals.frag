@@ -198,7 +198,7 @@ void main()
 
         float newError = calculateError(triangleNormal, tangentToObject * newNormalTS);
 
-        if (newError < prevError)
+        if (!isnan(newNormalTS.x) && !isnan(newNormalTS.y) && !isnan(newNormalTS.z) && newError < prevError)
         {
             // Map to the correct range for a texture.
             normalTS = vec4(newNormalTS * 0.5 + vec3(0.5), 1.0);
