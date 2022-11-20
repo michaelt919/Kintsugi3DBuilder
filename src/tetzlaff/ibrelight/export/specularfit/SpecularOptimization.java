@@ -14,6 +14,10 @@ package tetzlaff.ibrelight.export.specularfit;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.stream.IntStream;
 
@@ -49,6 +53,8 @@ public class SpecularOptimization
     public <ContextType extends Context<ContextType>> SpecularFit<ContextType> createFit(IBRResources<ContextType> resources)
         throws IOException
     {
+        Instant start = Instant.now();
+
         // Get GPU context and disable back face culling since we're rendering in texture space
         ContextType context = resources.context;
         context.getState().disableBackFaceCulling();
@@ -371,15 +377,27 @@ public class SpecularOptimization
                 // Iteration not necessary if basisCount is 1 and normal refinement is off.
                 previousIterationError - errorCalculator.getReport().getError() > settings.getConvergenceTolerance());
 
-            // Save the final basis functions
-            solution.saveBasisFunctions();
-
-            // Save the final normal map
-            specularFit.normalOptimization.saveNormalMap();
-
             // Calculate final diffuse map without the constraint of basis functions.
             specularFit.diffuseOptimization.execute(specularFit);
+
+            Duration duration = Duration.between(start, Instant.now());
+            System.out.println("Total processing time: " + duration);
+
+            try(PrintStream time = new PrintStream(new File(settings.outputDirectory, "time.txt")))
+            {
+                time.println(duration);
+            }
+            catch (FileNotFoundException e)
+            {
+                e.printStackTrace();
+            }
+
+            // Save the final diffuse and normal maps
             specularFit.diffuseOptimization.saveDiffuseMap();
+            specularFit.normalOptimization.saveNormalMap();
+
+            // Save the final basis functions
+            solution.saveBasisFunctions();
 
             // Save basis image visualization for reference and debugging
             try(BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(context, settings))
