@@ -167,6 +167,9 @@ public final class NonNegativeLeastSquares
         // Mapping from the set of free variables to the set of all variables.
         List<Integer> mapping = new ArrayList<>(augmentedATA.numRows());
 
+        int iterations = 0;
+        int maxIterations = p.length * p.length; // Heuristic for how many iterations until timeout.
+
         do
         {
             maxW = -1.0;
@@ -279,9 +282,17 @@ public final class NonNegativeLeastSquares
                 x = s;
                 w = augmentedATb.minus(augmentedATA.mult(x));
             }
+
+            iterations++;
         }
-        while(sizeP < p.length && maxW > epsilon);
+        while(sizeP < p.length && maxW > epsilon && iterations < maxIterations);
         // The second condition makes the loop terminate if the earlier if-statement with the same condition evaluated to false.
+
+        if (sizeP < p.length && maxW > epsilon)
+        {
+            // Loop timed out.
+            System.err.println("Not technically a singular matrix, but NNLS failed to converge.");
+        }
 
         return x;
     }
