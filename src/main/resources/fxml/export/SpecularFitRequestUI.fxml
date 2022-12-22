@@ -21,9 +21,9 @@
       <Button layoutX="428.0" layoutY="10.0" mnemonicParsing="false" onAction="#exportDirectoryButtonAction" text="Choose directory..." />
       <Button fx:id="runButton" layoutX="11.0" layoutY="231.0" mnemonicParsing="false" text="Run" />
       <Label layoutX="14.0" layoutY="47.0" text="Width:" />
-      <TextField fx:id="widthTextField" layoutX="54.0" layoutY="43.0" prefWidth="56.0" text="1024" />
+      <TextField fx:id="widthTextField" layoutX="54.0" layoutY="43.0" prefWidth="56.0" text="2048" />
       <Label layoutX="116.0" layoutY="47.0" text="Height:" />
-      <TextField fx:id="heightTextField" layoutX="161.0" layoutY="43.0" prefHeight="25.0" prefWidth="56.0" text="1024" />
+      <TextField fx:id="heightTextField" layoutX="161.0" layoutY="43.0" prefHeight="25.0" prefWidth="56.0" text="2048" />
       <Button layoutX="58.0" layoutY="231.0" mnemonicParsing="false" onAction="#cancelButtonAction" text="Cancel" />
       <Label layoutX="223.0" layoutY="47.0" text="Specular count:" />
       <TextField fx:id="basisCountTextField" layoutX="310.0" layoutY="43.0" prefHeight="25.0" prefWidth="56.0" text="8" />
@@ -33,7 +33,7 @@
       <Label layoutX="234.0" layoutY="80.0" text="Specular smoothness:" />
       <Label layoutX="422.0" layoutY="80.0" text="Metallicity:" />
       <TextField fx:id="convergenceToleranceTextField" layoutX="147.0" layoutY="76.0" prefHeight="25.0" prefWidth="76.0" text="0.00001" />
-      <TextField fx:id="specularSmoothnessTextField" layoutX="355.0" layoutY="76.0" prefHeight="25.0" prefWidth="56.0" text="0.18" />
+      <TextField fx:id="specularSmoothnessTextField" layoutX="355.0" layoutY="76.0" prefHeight="25.0" prefWidth="56.0" text="1.0" />
       <TextField fx:id="metallicityTextField" layoutX="485.0" layoutY="76.0" prefHeight="25.0" prefWidth="56.0" text="0.0" />
       <Label layoutX="151.0" layoutY="113.0" text="Min. normal damping:" />
       <Label layoutX="341.0" layoutY="113.0" text="Normal smooth iterations:" />
