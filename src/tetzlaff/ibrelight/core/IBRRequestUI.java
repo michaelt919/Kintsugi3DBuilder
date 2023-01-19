@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 
 public interface IBRRequestUI
 {
-    <ContextType extends Context<ContextType>> void prompt(Consumer<IBRRequest<ContextType>> requestHandler);
+    <ContextType extends Context<ContextType>> void prompt(IBRRequestQueue<ContextType> requestQueue);
 
     /**
      * Optional: bind UI elements to settings properties

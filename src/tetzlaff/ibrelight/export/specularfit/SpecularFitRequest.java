@@ -16,8 +16,10 @@ import java.io.*;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.interactive.GraphicsRequest;
 
-public class SpecularFitRequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>
+public class SpecularFitRequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>, GraphicsRequest<ContextType>
 {
     private final SpecularFitSettings settings;
 
@@ -26,24 +28,82 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
         this.settings = settings;
     }
 
+    /**
+     * This version loads a prior solution from file and thus doesn't require IBR resources to be loaded.
+     * @param context The graphics context to be used.
+     * @param callback A callback that can be fired to update the loading bar.
+     *                 If this is unused, an "infinite loading" indicator will be displayed instead.
+     */
+    @Override
+    public void executeRequest(ContextType context, LoadingMonitor callback)
+    {
+        try
+        {
+            // Perform the specular fit using prior basis solution.
+            SpecularResources<ContextType> specularFit;
+
+            // Assume fitting from prior solution
+            System.out.println("No IBRelight project loaded; loading prior solution");
+            specularFit = new SpecularOptimization(settings).loadPriorSolution(context, settings.getPriorSolutionDirectory());
+
+            // Load just geometry, tonemapping, settings.
+            SimpleLoadOptionsModel loadOptions = new SimpleLoadOptionsModel();
+            loadOptions.setColorImagesRequested(false);
+            loadOptions.setDepthImagesRequested(false);
+
+            try(IBRResources<ContextType> resources = IBRResources.getBuilderForContext(context)
+                .setLoadOptions(loadOptions)
+                .useExistingViewSet(settings.getReconstructionViewSet())
+                .create())
+            {
+                // Reconstruct images both from basis functions and from fitted roughness
+                SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources, settings);
+                FinalReconstruction<ContextType> reconstruction = new FinalReconstruction<>(resources, settings);
+
+                System.out.println("Reconstructing ground truth images from basis representation:");
+                double reconstructionRMSE =
+                    reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(programFactory), settings.shouldReconstructAll(),
+                        "reconstructions", "ground-truth");
+
+                System.out.println("Reconstructing ground truth images from fitted roughness / specular color:");
+                double fittedRMSE =
+                    reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(programFactory), settings.shouldReconstructAll(),
+                        "fitted", null);
+
+                if (!settings.shouldReconstructAll()) // Write to just one RMSE file if only doing a single image per reconstruction method
+                {
+                    try (PrintStream rmseOut = new PrintStream(new File(settings.outputDirectory, "rmse.txt")))
+                    // Text file containing error information
+                    {
+                        rmseOut.println("reconstructions, " + reconstructionRMSE);
+                        rmseOut.println("fitted, " + fittedRMSE);
+                    }
+                }
+
+                specularFit.close(); // Close immediately when this is just an export operation.
+            }
+        }
+        catch(IOException e) // thrown by createReflectanceProgram
+        {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * This version optimizes from scratch and requires IBR resources.
+     * @param renderable The implementation of the IBRelight renderer.
+     *                   This can be used to dynamically generate renders of the current view,
+     *                   or just to access the IBRResources and the graphics Context.
+     * @param callback A callback that can be fired to update the loading bar.
+     *                 If this is unused, an "infinite loading" indicator will be displayed instead.
+     */
     @Override
     public void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback)
     {
         try
         {
             // Perform the specular fit
-            SpecularResources<ContextType> specularFit;
-
-            if (settings.shouldFitFromPriorSolution())
-            {
-                specularFit = new SpecularOptimization(settings).loadPriorSolution(
-                    renderable.getIBRResources().context, settings.getPriorSolutionDirectory());
-            }
-            else
-            {
-                // Perform the specular fit
-                specularFit = new SpecularOptimization(settings).createFit(renderable.getIBRResources());
-            }
+            SpecularResources<ContextType> specularFit = new SpecularOptimization(settings).createFit(renderable.getIBRResources());
 
             // Reconstruct images both from basis functions and from fitted roughness
             SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(renderable.getIBRResources(), settings);

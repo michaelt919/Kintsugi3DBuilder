@@ -14,7 +14,6 @@ package tetzlaff.ibrelight.export.resample;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.function.Consumer;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -30,7 +29,7 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import tetzlaff.gl.core.Context;
-import tetzlaff.ibrelight.core.IBRRequest;
+import tetzlaff.ibrelight.core.IBRRequestQueue;
 import tetzlaff.ibrelight.core.IBRRequestUI;
 import tetzlaff.ibrelight.core.IBRelightModels;
 
@@ -126,7 +125,7 @@ public class ResampleRequestUI implements IBRRequestUI
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void prompt(Consumer<IBRRequest<ContextType>> requestHandler)
+    public <ContextType extends Context<ContextType>> void prompt(IBRRequestQueue<ContextType> requestQueue)
     {
         stage.show();
 
@@ -134,7 +133,7 @@ public class ResampleRequestUI implements IBRRequestUI
         {
             //stage.close();
 
-            requestHandler.accept(
+            requestQueue.addIBRRequest(
                 new ResampleRequest<>(
                     Integer.parseInt(widthTextField.getText()),
                     Integer.parseInt(heightTextField.getText()),

@@ -17,6 +17,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.function.IntFunction;
 import java.util.function.IntToDoubleFunction;
@@ -104,45 +106,73 @@ public class SpecularFitSerializer
      * @param priorSolutionDirectory
      * @return An object containing the red, green, and blue basis functions.
      */
-    public static SpecularBasis deserializeBasisFunctions(int basisCount, int microfacetDistributionResolution, File priorSolutionDirectory)
+    public static SpecularBasis deserializeBasisFunctions(File priorSolutionDirectory)
+        throws FileNotFoundException
     {
-        SimpleSpecularBasis specularBasis = new SimpleSpecularBasis(basisCount, microfacetDistributionResolution);
+        File basisFile = new File(priorSolutionDirectory, "basisFunctions.csv");
 
-        // Text file format
-        try (Scanner in = new Scanner(new File(priorSolutionDirectory, "basisFunctions.csv")))
+        // Test to figure out the resolution
+        int numElements; // Technically this is "microfacetDistributionResolution + 1" the way it's defined elsewhere
+        try (Scanner in = new Scanner(basisFile))
         {
+            String testLine = in.nextLine();
+            String[] elements = testLine.split("\\s*,+\\s*");
+            if (elements[elements.length - 1].isBlank()) // detect trailing comma
+            {
+                // Don't count the blank element after the trailing comma, or the leading identifier on each line.
+                numElements = elements.length - 2;
+            }
+            else
+            {
+                // Don't count the leading identifier on each line.
+                numElements = elements.length - 1;
+            }
+        }
+
+        // Now actually parse the file
+        try (Scanner in = new Scanner(basisFile))
+        {
+            List<double[]> redBasis = new ArrayList<>(8);
+            List<double[]> greenBasis = new ArrayList<>(8);
+            List<double[]> blueBasis = new ArrayList<>(8);
+
             in.useDelimiter("\\s*[,\\n\\r]+\\s*"); // CSV
 
-            for (int b = 0; b < basisCount; b++)
+            int b = 0;
+            while (in.hasNext())
             {
+                // Beginning a new basis function for each RGB component.
+                redBasis.add(new double[numElements]);
+                greenBasis.add(new double[numElements]);
+                blueBasis.add(new double[numElements]);
+
                 in.next(); // "Red#{b}"
-                for (int m = 0; m <= microfacetDistributionResolution; m++)
+                for (int m = 0; m < numElements; m++)
                 {
-                    specularBasis.setRed(b, m, in.nextDouble());
+                    redBasis.get(b)[m] = in.nextDouble();
                 }
                 // newline
 
                 in.next(); // "Green#{b}"
-                for (int m = 0; m <= microfacetDistributionResolution; m++)
+                for (int m = 0; m < numElements; m++)
                 {
-                    specularBasis.setGreen(b, m, in.nextDouble());
+                    greenBasis.get(b)[m] = in.nextDouble();
                 }
                 // newline
 
                 in.next(); // "Blue#{b}"
-                for (int m = 0; m <= microfacetDistributionResolution; m++)
+                for (int m = 0; m < numElements; m++)
                 {
-                    specularBasis.setBlue(b, m, in.nextDouble());
+                    blueBasis.get(b)[m] = in.nextDouble();
                 }
                 // newline
+
+                b++;
             }
             // newline
-        }
-        catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-        }
 
-        return specularBasis;
+            return new SimpleSpecularBasis(
+                redBasis.toArray(double[][]::new), greenBasis.toArray(double[][]::new), blueBasis.toArray(double[][]::new));
+        }
     }
 }

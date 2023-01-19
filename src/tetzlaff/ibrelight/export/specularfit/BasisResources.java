@@ -128,8 +128,7 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
         // Set up basis function buffer
         NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3, settings.basisCount * (settings.microfacetDistributionResolution + 1));
 
-        SpecularBasis basis =
-            SpecularFitSerializer.deserializeBasisFunctions(settings.basisCount, settings.microfacetDistributionResolution, priorSolutionDirectory);
+        SpecularBasis basis = SpecularFitSerializer.deserializeBasisFunctions(priorSolutionDirectory);
 
         for (int b = 0; b < settings.basisCount; b++)
         {

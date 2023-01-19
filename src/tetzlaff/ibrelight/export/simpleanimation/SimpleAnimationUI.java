@@ -14,7 +14,6 @@ package tetzlaff.ibrelight.export.simpleanimation;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import javafx.event.ActionEvent;
@@ -29,7 +28,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import tetzlaff.gl.core.Context;
-import tetzlaff.ibrelight.core.IBRRequest;
+import tetzlaff.ibrelight.core.IBRRequestQueue;
 import tetzlaff.ibrelight.core.IBRRequestUI;
 import tetzlaff.ibrelight.core.IBRelightModels;
 import tetzlaff.ibrelight.export.simpleanimation.SimpleAnimationRequestBase.Builder;
@@ -104,7 +103,7 @@ public class SimpleAnimationUI implements IBRRequestUI
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void prompt(Consumer<IBRRequest<ContextType>> requestHandler)
+    public <ContextType extends Context<ContextType>> void prompt(IBRRequestQueue<ContextType> requestQueue)
     {
         stage.show();
 
@@ -113,7 +112,7 @@ public class SimpleAnimationUI implements IBRRequestUI
             //stage.close();
             if (builderSupplier != null)
             {
-                requestHandler.accept(
+                requestQueue.addIBRRequest(
                     builderSupplier.get()
                         .setWidth(Integer.parseInt(widthTextField.getText()))
                         .setHeight(Integer.parseInt(heightTextField.getText()))

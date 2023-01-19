@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2022
+ *  Copyright (c) Michael Tetzlaff 2023
  *
  *  Licensed under GPLv3
  *  ( http://www.gnu.org/licenses/gpl-3.0.html )
@@ -11,77 +11,11 @@
 
 package tetzlaff.ibrelight.core;
 
-import java.util.LinkedList;
-import java.util.Queue;
-
 import tetzlaff.gl.core.Context;
-import tetzlaff.ibrelight.rendering.IBRInstanceManager;
+import tetzlaff.interactive.GraphicsRequest;
 
-public class IBRRequestQueue<ContextType extends Context<ContextType>> 
+public interface IBRRequestQueue<ContextType extends Context<ContextType>>
 {
-    private final Queue<Runnable> requestList;
-    private IBRInstanceManager<ContextType> model;
-    private LoadingMonitor loadingMonitor;
-
-    public IBRRequestQueue()
-    {
-        this.requestList = new LinkedList<>();
-    }
-
-    public boolean isEmpty()
-    {
-        return requestList.isEmpty();
-    }
-
-    public void setModel(IBRInstanceManager<ContextType> model)
-    {
-        this.model = model;
-    }
-
-    public void setLoadingMonitor(LoadingMonitor loadingMonitor)
-    {
-        this.loadingMonitor = loadingMonitor;
-    }
-
-    public void addRequest(IBRRequest<ContextType> request)
-    {
-        this.requestList.add(() ->
-        {
-            // Suppress warning about catching and not rethrowing AssertionError.
-            // The request should effectively be regarded a "sandbox" where a critical logic error should not result in the application terminating.
-            //noinspection ErrorNotRethrown
-            try
-            {
-                request.executeRequest(model.getLoadedInstance(), loadingMonitor);
-            }
-            catch(Exception | AssertionError e)
-            {
-                e.printStackTrace();
-            }
-        });
-    }
-
-    public void executeQueue()
-    {
-        if (model != null && model.getLoadedInstance() != null)
-        {
-            model.getLoadedInstance().getIBRResources().context.makeContextCurrent();
-
-            while (!requestList.isEmpty())
-            {
-                if (loadingMonitor != null)
-                {
-                    loadingMonitor.startLoading();
-                }
-
-                requestList.peek().run(); // Peek first to ensure that isEmpty() returns false when called from other threads.
-                requestList.poll();       // Once the task is done, remove the request from the queue.
-
-                if (loadingMonitor != null)
-                {
-                    loadingMonitor.loadingComplete();
-                }
-            }
-        }
-    }
+    void addIBRRequest(IBRRequest<ContextType> request);
+    void addGraphicsRequest(GraphicsRequest<ContextType> request);
 }

@@ -92,7 +92,7 @@ public class MenubarController
 
 
     public <ContextType extends Context<ContextType>> void init(
-        Window injectedParentWindow, IBRRequestQueue<ContextType> requestQueue, InternalModels injectedInternalModels, SceneModel injectedSceneModel,
+        Window injectedParentWindow, IBRRequestManager<ContextType> requestQueue, InternalModels injectedInternalModels, SceneModel injectedSceneModel,
         Runnable injectedUserDocumentationHandler)
     {
         this.parentWindow = injectedParentWindow;
@@ -179,7 +179,7 @@ public class MenubarController
                                     {
                                         IBRRequestUI requestUI = (IBRRequestUI) createMethod.invoke(null, injectedParentWindow, MultithreadModels.getInstance());
                                         requestUI.bind(internalModels.getSettingsModel());
-                                        requestUI.prompt(requestQueue::addRequest);
+                                        requestUI.prompt(requestQueue);
                                     }
                                     catch (IllegalAccessException | InvocationTargetException e)
                                     {

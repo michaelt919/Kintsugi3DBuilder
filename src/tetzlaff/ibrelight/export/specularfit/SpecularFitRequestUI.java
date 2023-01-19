@@ -15,9 +15,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
-import java.util.function.Consumer;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -32,10 +30,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import tetzlaff.gl.core.Context;
-import tetzlaff.ibrelight.core.IBRRequest;
-import tetzlaff.ibrelight.core.IBRRequestUI;
-import tetzlaff.ibrelight.core.IBRelightModels;
-import tetzlaff.ibrelight.core.ViewSet;
+import tetzlaff.ibrelight.core.*;
 
 public class SpecularFitRequestUI implements IBRRequestUI
 {
@@ -178,7 +173,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void prompt(Consumer<IBRRequest<ContextType>> requestHandler)
+    public <ContextType extends Context<ContextType>> void prompt(IBRRequestQueue<ContextType> requestQueue)
     {
         stage.show();
 
@@ -236,19 +231,20 @@ public class SpecularFitRequestUI implements IBRRequestUI
                 settings.setReconstructAll(false);
             }
 
+            SpecularFitRequest<ContextType> request = new SpecularFitRequest<>(settings);
+
             if (priorSolutionCheckBox.isSelected() && priorSolutionField.getText() != null && !priorSolutionField.getText().isEmpty())
             {
-                settings.setFitFromPriorSolution(true);
+                // Run as a "Graphics request" that doesn't require IBR resources to be loaded (since we're using a prior solution)
                 settings.setPriorSolutionDirectory(new File(priorSolutionField.getText()));
+                requestQueue.addGraphicsRequest(request);
             }
             else
             {
-                settings.setFitFromPriorSolution(false);
+                // Run as an IBR request that optimizes from scratch.
+                requestQueue.addIBRRequest(request);
             }
 
-            IBRRequest<ContextType> request = new SpecularFitRequest<>(settings);
-
-            requestHandler.accept(request);
         });
     }
 }

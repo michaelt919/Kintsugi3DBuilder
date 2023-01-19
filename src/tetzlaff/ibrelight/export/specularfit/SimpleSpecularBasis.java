@@ -26,6 +26,13 @@ public class SimpleSpecularBasis implements SpecularBasis
         blueBasis = IntStream.range(0, basisCount).mapToObj(b -> new double[microfacetDistributionResolution + 1]).toArray(double[][]::new);
     }
 
+    public SimpleSpecularBasis(double[][] redBasis, double[][] greenBasis, double[][] blueBasis)
+    {
+        this.redBasis = redBasis;
+        this.greenBasis = greenBasis;
+        this.blueBasis = blueBasis;
+    }
+
     @Override
     public double evaluateRed(int b, int m)
     {

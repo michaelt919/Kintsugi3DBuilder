@@ -23,16 +23,11 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import tetzlaff.gl.core.Context;
-import tetzlaff.ibrelight.core.IBRRequest;
-import tetzlaff.ibrelight.core.IBRRequestUI;
-import tetzlaff.ibrelight.core.IBRelightModels;
-import tetzlaff.ibrelight.core.TextureFitSettings;
-
+import tetzlaff.ibrelight.core.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.function.Consumer;
 
 public class PTMrequestUI implements IBRRequestUI {
 
@@ -101,7 +96,7 @@ public class PTMrequestUI implements IBRRequestUI {
 
 
     @Override
-    public <ContextType extends Context<ContextType>> void prompt(Consumer<IBRRequest<ContextType>> requestHandler) {
+    public <ContextType extends Context<ContextType>> void prompt(IBRRequestQueue<ContextType> requestQueue) {
         stage.show();
 
         runButton.setOnAction(event ->
@@ -115,7 +110,7 @@ public class PTMrequestUI implements IBRRequestUI {
                     modelAccess.getSettingsModel()
                     ));
 
-            requestHandler.accept(request);
+            requestQueue.addIBRRequest(request);
         });
     }
 }

@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.function.Consumer;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -32,7 +31,7 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import tetzlaff.gl.core.Context;
-import tetzlaff.ibrelight.core.IBRRequest;
+import tetzlaff.ibrelight.core.IBRRequestQueue;
 import tetzlaff.ibrelight.core.IBRRequestUI;
 import tetzlaff.ibrelight.core.IBRelightModels;
 
@@ -126,7 +125,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void prompt(Consumer<IBRRequest<ContextType>> requestHandler)
+    public <ContextType extends Context<ContextType>> void prompt(IBRRequestQueue<ContextType> requestQueue)
     {
         stage.show();
 
@@ -177,7 +176,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
             builder.setWidth(Integer.parseInt(this.widthTextField.getText()));
             builder.setHeight(Integer.parseInt(this.heightTextField.getText()));
 
-            requestHandler.accept(builder.create());
+            requestQueue.addIBRRequest(builder.create());
         });
     }
 

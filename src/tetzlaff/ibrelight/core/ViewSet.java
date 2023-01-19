@@ -1347,7 +1347,7 @@ public final class ViewSet
      */
     public File getGeometryFile()
     {
-        return new File(this.rootDirectory, geometryFileName);
+        return geometryFileName == null ? null : new File(this.rootDirectory, geometryFileName);
     }
 
     public String getResidualTextureFileName()

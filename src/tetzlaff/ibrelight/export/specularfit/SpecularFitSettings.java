@@ -38,7 +38,6 @@ public class SpecularFitSettings extends TextureFitSettings
     private ViewSet reconstructionViewSet = null;
     private boolean reconstructAll = false;
 
-    private boolean fitFromPriorSolution = false;
     private File priorSolutionDirectory = null;
 
     /**
@@ -239,28 +238,6 @@ public class SpecularFitSettings extends TextureFitSettings
     public void setReconstructionViewSet(ViewSet reconstructionViewSet)
     {
         this.reconstructionViewSet = reconstructionViewSet;
-    }
-
-    /**
-     * Gets whether to just fit from a prior solution.
-     * If true, then most of the optimization steps will be skipped, and it will just load the basis functions and weights from file.
-     * This is useful for quickly iterating on the GGX fitting algorithm, or for quickly generating images for validation without re-optimized.
-     * @return true if the optimization steps should be skipped and a prior solution loaded instead; false if the full optimization should run.
-     */
-    public boolean shouldFitFromPriorSolution()
-    {
-        return fitFromPriorSolution;
-    }
-
-    /**
-     * Sets whether to just fit from a prior solution.
-     * If true, then most of the optimization steps will be skipped, and it will just load the basis functions and weights from file.
-     * This is useful for quickly iterating on the GGX fitting algorithm, or for quickly generating images for validation without re-optimized.
-     * @param fitFromPriorSolution true if the optimization steps should be skipped and a prior solution loaded instead; false if the full optimization should run.
-     */
-    public void setFitFromPriorSolution(boolean fitFromPriorSolution)
-    {
-        this.fitFromPriorSolution = fitFromPriorSolution;
     }
 
     /**

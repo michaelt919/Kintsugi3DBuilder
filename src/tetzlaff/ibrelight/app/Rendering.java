@@ -30,7 +30,7 @@ import tetzlaff.gl.window.Key;
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.ModifierKeysBuilder;
 import tetzlaff.gl.window.PollableWindow;
-import tetzlaff.ibrelight.core.IBRRequestQueue;
+import tetzlaff.ibrelight.core.IBRRequestManager;
 import tetzlaff.ibrelight.core.LoadingModel;
 import tetzlaff.ibrelight.core.LoadingMonitor;
 import tetzlaff.ibrelight.javafx.MultithreadModels;
@@ -55,11 +55,11 @@ public final class Rendering
     {
     }
 
-    private static final IBRRequestQueue<OpenGLContext> REQUEST_QUEUE = new IBRRequestQueue<>();
+    private static IBRRequestManager<OpenGLContext> requestQueue = null;
 
-    public static IBRRequestQueue<?> getRequestQueue()
+    public static IBRRequestManager<?> getRequestQueue()
     {
-        return REQUEST_QUEUE;
+        return requestQueue;
     }
 
     public static void runProgram() throws InitializationException
@@ -119,6 +119,9 @@ public final class Rendering
 
 
             OpenGLContext context = window.getContext();
+
+            // Start the request queue as soon as we have a graphics context.
+            requestQueue = new IBRRequestManager<>(context);
 
             context.getState().enableDepthTest();
 
@@ -286,8 +289,8 @@ public final class Rendering
             // of events and the OpenGL context.  The ULFRendererList provides the renderable.
             InteractiveApplication app = InteractiveGraphics.createApplication(window, context, instanceManager);
 
-            REQUEST_QUEUE.setModel(instanceManager);
-            REQUEST_QUEUE.setLoadingMonitor(new LoadingMonitor()
+            requestQueue.setModel(instanceManager);
+            requestQueue.setLoadingMonitor(new LoadingMonitor()
             {
                 @Override
                 public void startLoading()
@@ -330,7 +333,7 @@ public final class Rendering
                 @Override
                 public void refresh()
                 {
-                    REQUEST_QUEUE.executeQueue();
+                    requestQueue.executeQueue();
                 }
 
                 @Override
@@ -347,7 +350,7 @@ public final class Rendering
                 @Override
                 public void pollEvents()
                 {
-                    while (stage != null && stage.isIconified() && REQUEST_QUEUE.isEmpty())
+                    while (stage != null && stage.isIconified() && requestQueue.isEmpty())
                     {
                         try
                         {
@@ -373,7 +376,7 @@ public final class Rendering
 
                 stage.iconifiedProperty().addListener((observable, wasIconified, isIconified) ->
                 {
-                    if (wasIconified && !isIconified && REQUEST_QUEUE.isEmpty())
+                    if (wasIconified && !isIconified && requestQueue.isEmpty())
                     {
                         graphicsThread.interrupt();
                     }
