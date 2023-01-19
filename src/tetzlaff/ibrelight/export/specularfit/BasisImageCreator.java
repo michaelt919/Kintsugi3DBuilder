@@ -53,7 +53,7 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
         this.settings = settings;
     }
 
-    public void createImages(SpecularFit<ContextType> specularFit) throws IOException
+    public void createImages(SpecularFitFromOptimization<ContextType> specularFit) throws IOException
     {
         program.setTexture("basisFunctions", specularFit.basisResources.basisMaps);
 

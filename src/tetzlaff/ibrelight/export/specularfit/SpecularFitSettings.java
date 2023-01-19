@@ -36,6 +36,10 @@ public class SpecularFitSettings extends TextureFitSettings
     private int unsuccessfulLMIterationsAllowed = 8;
 
     private ViewSet reconstructionViewSet = null;
+    private boolean reconstructAll = false;
+
+    private boolean fitFromPriorSolution = false;
+    private File priorSolutionDirectory = null;
 
     /**
      * Constructs an object to hold the settings for specular texture fitting.
@@ -200,6 +204,26 @@ public class SpecularFitSettings extends TextureFitSettings
     }
 
     /**
+     * Should every image in the view set be reconstructed for validation, or just one key view?
+     * Reconstructing all uses a lot more hard drive space.
+     * @return true if all views should be reconstructed; false if only one view should be reconstructed.
+     */
+    public boolean shouldReconstructAll()
+    {
+        return reconstructAll;
+    }
+
+    /**
+     * Sets whether every image in the view set be reconstructed for validation, or just one key view?
+     * Reconstructing all uses a lot more hard drive space.
+     * @param reconstructAll true if all views should be reconstructed; false if only one view should be reconstructed.
+     */
+    public void setReconstructAll(boolean reconstructAll)
+    {
+        this.reconstructAll = reconstructAll;
+    }
+
+    /**
      * Gets the view set used to create the reconstructed images for manually evaluating the effectiveness of the fit.
      * @return
      */
@@ -216,6 +240,47 @@ public class SpecularFitSettings extends TextureFitSettings
     {
         this.reconstructionViewSet = reconstructionViewSet;
     }
+
+    /**
+     * Gets whether to just fit from a prior solution.
+     * If true, then most of the optimization steps will be skipped, and it will just load the basis functions and weights from file.
+     * This is useful for quickly iterating on the GGX fitting algorithm, or for quickly generating images for validation without re-optimized.
+     * @return true if the optimization steps should be skipped and a prior solution loaded instead; false if the full optimization should run.
+     */
+    public boolean shouldFitFromPriorSolution()
+    {
+        return fitFromPriorSolution;
+    }
+
+    /**
+     * Sets whether to just fit from a prior solution.
+     * If true, then most of the optimization steps will be skipped, and it will just load the basis functions and weights from file.
+     * This is useful for quickly iterating on the GGX fitting algorithm, or for quickly generating images for validation without re-optimized.
+     * @param fitFromPriorSolution true if the optimization steps should be skipped and a prior solution loaded instead; false if the full optimization should run.
+     */
+    public void setFitFromPriorSolution(boolean fitFromPriorSolution)
+    {
+        this.fitFromPriorSolution = fitFromPriorSolution;
+    }
+
+    /**
+     * Gets the directory from which to load a prior solution
+     * @return
+     */
+    public File getPriorSolutionDirectory()
+    {
+        return priorSolutionDirectory;
+    }
+
+    /**
+     * Sets the directory from which to load a prior solution
+     * @param priorSolutionDirectory
+     */
+    public void setPriorSolutionDirectory(File priorSolutionDirectory)
+    {
+        this.priorSolutionDirectory = priorSolutionDirectory;
+    }
+
 
     /**
      * Whether or not to use height-correlated Smith for masking / shadowing.  Default is true.

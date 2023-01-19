@@ -14,9 +14,7 @@ package tetzlaff.ibrelight.export.specularfit;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -28,7 +26,7 @@ import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.gl.vecmath.DoubleVector4;
 
-public class SpecularFitSolution
+public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights
 {
     private final DoubleVector3[] diffuseAlbedos;
     private final SimpleMatrix specularRed;
@@ -58,6 +56,36 @@ public class SpecularFitSolution
             .mapToObj(p -> new SimpleMatrix(settings.basisCount, 1, DMatrixRMaj.class))
             .toArray(SimpleMatrix[]::new);
         weightsValidity = new boolean[settings.width * settings.height];
+    }
+
+    @Override
+    public double evaluateRed(int b, int m)
+    {
+        return specularRed.get(m, b);
+    }
+
+    @Override
+    public double evaluateGreen(int b, int m)
+    {
+        return specularGreen.get(m, b);
+    }
+
+    @Override
+    public double evaluateBlue(int b, int m)
+    {
+        return specularBlue.get(m, b);
+    }
+
+    @Override
+    public boolean areWeightsValid(int texelIndex)
+    {
+        return weightsValidity[texelIndex];
+    }
+
+    @Override
+    public double getWeight(int b, int p)
+    {
+        return weightsByTexel[p].get(b);
     }
 
     public DoubleVector3 getDiffuseAlbedo(int basisIndex)
@@ -100,11 +128,6 @@ public class SpecularFitSolution
         return Arrays.asList(weightsByTexel);
     }
 
-    public boolean areWeightsValid(int texelIndex)
-    {
-        return weightsValidity[texelIndex];
-    }
-
     public void invalidateWeights()
     {
         // Quickly invalidate all the weights
@@ -123,71 +146,13 @@ public class SpecularFitSolution
 
     public void saveBasisFunctions()
     {
-        // Text file format
-        try (PrintStream out = new PrintStream(new File(settings.outputDirectory, "basisFunctions.csv")))
-        {
-            for (int b = 0; b < settings.basisCount; b++)
-            {
-                out.print("Red#" + b);
-                for (int m = 0; m <= settings.microfacetDistributionResolution; m++)
-                {
-                    out.print(", ");
-                    out.print(specularRed.get(m, b));
-                }
-                out.println();
-
-                out.print("Green#" + b);
-                for (int m = 0; m <= settings.microfacetDistributionResolution; m++)
-                {
-                    out.print(", ");
-                    out.print(specularGreen.get(m, b));
-                }
-                out.println();
-
-                out.print("Blue#" + b);
-                for (int m = 0; m <= settings.microfacetDistributionResolution; m++)
-                {
-                    out.print(", ");
-                    out.print(specularBlue.get(m, b));
-                }
-                out.println();
-            }
-
-            out.println();
-        }
-        catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-        }
+        SpecularFitSerializer.serializeBasisFunctions(settings.basisCount, settings.microfacetDistributionResolution, this, settings.outputDirectory);
     }
 
     public void saveWeightMaps()
     {
-        for (int b = 0; b < settings.basisCount; b++)
-        {
-            BufferedImage weightImg = new BufferedImage(settings.width, settings.height, BufferedImage.TYPE_INT_ARGB);
-            int[] weightDataPacked = new int[settings.width * settings.height];
-
-            for (int p = 0; p < settings.width * settings.height; p++)
-            {
-                float weight = (float)weightsByTexel[p].get(b);
-
-                // Flip vertically
-                int dataBufferIndex = p % settings.width + settings.width * (settings.height - p / settings.width - 1);
-                weightDataPacked[dataBufferIndex] = new Color(weight, weight, weight).getRGB();
-            }
-
-            weightImg.setRGB(0, 0, weightImg.getWidth(), weightImg.getHeight(), weightDataPacked, 0, weightImg.getWidth());
-
-            try
-            {
-                ImageIO.write(weightImg, "PNG", new File(settings.outputDirectory, String.format("weights%02d.png", b)));
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
+        SpecularFitSerializer.saveWeightImages(
+            settings.basisCount, settings.width, settings.height, this, settings.outputDirectory);
     }
 
     public void saveDiffuseMap(double gamma)

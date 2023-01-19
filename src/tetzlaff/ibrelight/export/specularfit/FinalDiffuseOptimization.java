@@ -47,7 +47,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         this.settings = settings;
     }
 
-    public void execute(SpecularFit<ContextType> specularFit)
+    public void execute(SpecularFitBase<ContextType> specularFit)
     {
         // Set up diffuse estimation shader program
         specularFit.basisResources.useWithShaderProgram(estimationProgram);

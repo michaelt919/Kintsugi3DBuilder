@@ -41,7 +41,7 @@ public class SpecularFitFinalizer
     }
 
     public <ContextType extends Context<ContextType>> void execute(
-        SpecularFitSolution solution, IBRResources<ContextType> resources, SpecularFit<ContextType> specularFit,
+        SpecularFitSolution solution, IBRResources<ContextType> resources, SpecularFitFromOptimization<ContextType> specularFit,
         Framebuffer<ContextType> scratchFramebuffer, ReadonlyErrorReport lastErrorReport, Drawable<ContextType> errorCalcDrawable)
     {
         SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources, settings);
@@ -52,7 +52,6 @@ public class SpecularFitFinalizer
 
             // Error calculation shader programs
             Program<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(programFactory);
-            Program<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(programFactory);
         )
         {
             if (CALCULATE_NORMAL_RMSE && resources.normalTexture != null)
@@ -152,6 +151,31 @@ public class SpecularFitFinalizer
             rmseOut.println("Final RMSE after diffuse estimate (gamma-corrected): " +
                 runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.viewSet.getCameraPoseCount()));
 
+            calculateGGXRMSE(resources, specularFit, scratchFramebuffer, rmseOut);
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Calculates RMSE for GGX.
+     * Can be used standalone (i.e. when loading the optimized specular basis from a file)
+     * @param resources
+     * @param specularFit
+     * @param scratchFramebuffer
+     * @param rmseOut
+     * @param <ContextType>
+     * @throws FileNotFoundException
+     */
+    public <ContextType extends Context<ContextType>> void calculateGGXRMSE(
+        IBRResources<ContextType> resources, SpecularResources<ContextType> specularFit, Framebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
+        throws FileNotFoundException
+    {
+        SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources, settings);
+        try (Program<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(programFactory))
+        {
             Drawable<ContextType> ggxErrorCalcDrawable = resources.createDrawable(ggxErrorCalcProgram);
             ggxErrorCalcProgram.setTexture("normalEstimate", specularFit.getNormalMap());
             ggxErrorCalcProgram.setTexture("specularEstimate", specularFit.getSpecularReflectivityMap());
@@ -165,10 +189,6 @@ public class SpecularFitFinalizer
             ggxErrorCalcProgram.setUniform("errorGamma", 2.2f);
             rmseOut.println("RMSE for GGX fit (gamma-corrected): " +
                 runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, resources.viewSet.getCameraPoseCount()));
-        }
-        catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
         }
     }
 

@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.DoubleAdder;
 
 import tetzlaff.gl.builders.ProgramBuilder;
@@ -55,16 +56,19 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         }
     }
 
-    public void reconstruct(SpecularFit<ContextType> specularFit, ProgramBuilder<ContextType> programBuilder,
-        String directoryName, String groundTruthDirectoryName)
+    public double reconstruct(SpecularResources<ContextType> specularFit, ProgramBuilder<ContextType> programBuilder, boolean reconstructAll,
+        String reconstructName, String groundTruthName)
     {
-        // Create directory for reconstructions from basis functions
-        new File(settings.outputDirectory, directoryName).mkdir();
-
-        if (groundTruthDirectoryName != null)
+        if (reconstructAll)
         {
-            // Create directory for ground truth images with consistent tonemapping
-            new File(settings.outputDirectory, groundTruthDirectoryName).mkdir();
+            // Create directory for reconstructions from basis functions
+            new File(settings.outputDirectory, reconstructName).mkdir();
+
+            if (groundTruthName != null)
+            {
+                // Create directory for ground truth images with consistent tonemapping
+                new File(settings.outputDirectory, groundTruthName).mkdir();
+            }
         }
 
         // Create reconstruction provider
@@ -76,7 +80,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
                 .addDepthAttachment(),
             program ->
             {
-                specularFit.basisResources.useWithShaderProgram(program);
+                specularFit.getBasisResources().useWithShaderProgram(program);
                 program.setTexture("normalEstimate", specularFit.getNormalMap());
                 program.setTexture("specularEstimate", specularFit.getSpecularReflectivityMap());
                 program.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
@@ -86,39 +90,58 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
             // Use the same view set as for fitting if another wasn't specified for reconstruction.
             ViewSet reconstructionViewSet = settings.getReconstructionViewSet() != null ? settings.getReconstructionViewSet() : resources.viewSet;
 
-            try (PrintStream rmseOut = new PrintStream(new File(new File(settings.outputDirectory, directoryName), "rmse.txt"))) // Text file containing error information
+            if (reconstructAll)
             {
-                DoubleAdder totalMSE = new DoubleAdder();
-                DoubleAdder totalPixels = new DoubleAdder();
+                try (PrintStream rmseOut = new PrintStream(new File(new File(settings.outputDirectory, reconstructName), "rmse.txt")))
+                // Text file containing error information
+                {
+                    DoubleAdder totalMSE = new DoubleAdder();
+                    DoubleAdder totalPixels = new DoubleAdder();
 
-                // Run the reconstruction and save the results to file
-                reconstruction.execute(reconstructionViewSet,
-                    (k, framebuffer) -> saveImageToFile(directoryName, k, framebuffer),
-                    (k, framebuffer) ->
-                    {
-                        if (groundTruthDirectoryName != null)
+                    // Run the reconstruction and save the results to file
+                    reconstruction.execute(reconstructionViewSet,
+                        (k, framebuffer) -> saveImageToFile(reconstructName, k, framebuffer),
+                        (k, framebuffer) ->
                         {
-                            saveImageToFile(groundTruthDirectoryName, k, framebuffer);
-                        }
-                    },
-                    (k, rmse) ->
-                    {
-                        // Log RMSE
-                        rmseOut.println(reconstructionViewSet.getImageFileName(k) + ", " + rmse.x);
-                        totalMSE.add(rmse.x * rmse.x * rmse.y /* rmse.y = pixel count after masking */);
-                        //noinspection SuspiciousNameCombination
-                        totalPixels.add(rmse.y /* pixel count after masking */);
-                    });
+                            if (groundTruthName != null)
+                            {
+                                saveImageToFile(groundTruthName, k, framebuffer);
+                            }
+                        },
+                        (k, rmse) ->
+                        {
+                            // Log RMSE
+                            rmseOut.println(reconstructionViewSet.getImageFileName(0) + ", " + rmse.x);
+                            totalMSE.add(rmse.x * rmse.x * rmse.y /* rmse.y = pixel count after masking */);
+                            //noinspection SuspiciousNameCombination
+                            totalPixels.add(rmse.y /* pixel count after masking */);
+                        });
 
-                // Report average RMSE across all views
-                double avgRMSE = Math.sqrt(totalMSE.doubleValue() / totalPixels.doubleValue());
-                System.out.println("Average RMSE across all views: " + avgRMSE);
-                rmseOut.println("Average, " + avgRMSE);
+                    // Report average RMSE across all views
+                    double avgRMSE = Math.sqrt(totalMSE.doubleValue() / totalPixels.doubleValue());
+                    System.out.println("Average RMSE across all views: " + avgRMSE);
+                    rmseOut.println("Average, " + avgRMSE);
+                    return avgRMSE;
+                }
+            }
+            else
+            {
+                // Run the reconstruction and save the results to file
+                return reconstruction.executeOnce(reconstructionViewSet, 0,
+                    framebuffer -> saveImageToFile(reconstructName + ".png", framebuffer),
+                    framebuffer ->
+                    {
+                        if (groundTruthName != null)
+                        {
+                            saveImageToFile(groundTruthName + ".png", framebuffer);
+                        }
+                    }).x /* first component contains the actual RMSE */;
             }
         }
-        catch (FileNotFoundException e)
+        catch (IOException e)
         {
             e.printStackTrace();
+            return Double.NaN;
         }
     }
 
@@ -129,6 +152,19 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
             String filename = String.format("%04d.png", k);
             framebuffer.saveColorBufferToFile(0, "PNG",
                 new File(new File(settings.outputDirectory, directoryName), filename));
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveImageToFile(String filename, Framebuffer<ContextType> framebuffer)
+    {
+        try
+        {
+            framebuffer.saveColorBufferToFile(0, "PNG",
+                new File(settings.outputDirectory, filename));
         }
         catch (IOException e)
         {

@@ -11,6 +11,9 @@
 
 package tetzlaff.ibrelight.export.specularfit;
 
+import java.io.File;
+import java.io.IOException;
+
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
@@ -102,6 +105,41 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
 
         // Send the diffuse albedos to the GPU.
         diffuseUniformBuffer.setData(diffuseNativeBuffer);
+    }
+
+    /**
+     * Loads weight maps and basis functions from a prior solution.
+     * Does not load diffuse basis colors, so a diffuse map should instead be optimized to cover diffuse.
+     * @param priorSolutionDirectory The directory from which to load a prior solution.
+     * @throws IOException If a part of the solution cannot be loaded form file.
+     */
+    public void loadFromPriorSolution(File priorSolutionDirectory) throws IOException
+    {
+        NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
+        NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3, settings.basisCount * (settings.microfacetDistributionResolution + 1));
+
+        SpecularBasis basis =
+            SpecularFitSerializer.deserializeBasisFunctions(settings.basisCount, settings.microfacetDistributionResolution, priorSolutionDirectory);
+
+        for (int b = 0; b < settings.basisCount; b++)
+        {
+            // Load weight maps
+            weightMaps.loadLayer(b, new File(priorSolutionDirectory, SpecularFitSerializer.getWeightFileName(b)), true);
+
+            // Copy basis functions by color channel into the basis map buffer that will eventually be sent to the GPU..
+            for (int m = 0; m <= settings.microfacetDistributionResolution; m++)
+            {
+                // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
+                basisMapBuffer.set(m + (settings.microfacetDistributionResolution + 1) * b, 0, basis.evaluateRed(b, m));
+                basisMapBuffer.set(m + (settings.microfacetDistributionResolution + 1) * b, 1, basis.evaluateGreen(b, m));
+                basisMapBuffer.set(m + (settings.microfacetDistributionResolution + 1) * b, 2, basis.evaluateBlue(b, m));
+            }
+        }
+
+        // Send the basis functions to the GPU.
+        basisMaps.load(basisMapBuffer);
+
+        // Skip diffuse basis colors -- we'll optimize a diffuse map separately, so it shouldn't matter if they're all black.
     }
 
     public void useWithShaderProgram(Program<ContextType> program)

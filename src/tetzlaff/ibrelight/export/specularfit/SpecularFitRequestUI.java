@@ -55,7 +55,11 @@ public class SpecularFitRequestUI implements IBRRequestUI
     @FXML private TextField minNormalDampingTextField;
     @FXML private TextField normalSmoothingIterationsTextField;
 
+    @FXML private CheckBox reconstructAllCheckBox;
     @FXML private TextField reconstructionViewSetField;
+
+    @FXML private CheckBox priorSolutionCheckBox;
+    @FXML private TextField priorSolutionField;
 
     @FXML private Button runButton;
 
@@ -144,6 +148,30 @@ public class SpecularFitRequestUI implements IBRRequestUI
     }
 
     @FXML
+    public void priorSolutionButtonAction()
+    {
+        this.directoryChooser.setTitle("Choose a folder containing the prior solution");
+        if (exportDirectoryField.getText().isEmpty())
+        {
+            if (lastDirectory != null)
+            {
+                this.directoryChooser.setInitialDirectory(lastDirectory);
+            }
+        }
+        else
+        {
+            File currentValue = new File(priorSolutionField.getText());
+            this.directoryChooser.setInitialDirectory(currentValue);
+        }
+        File file = this.directoryChooser.showDialog(stage.getOwner());
+        if (file != null)
+        {
+            priorSolutionField.setText(file.toString());
+            lastDirectory = file;
+        }
+    }
+
+    @FXML
     public void cancelButtonAction()
     {
         stage.close();
@@ -181,22 +209,41 @@ public class SpecularFitRequestUI implements IBRRequestUI
             settings.setLevenbergMarquardtEnabled(levenbergMarquardtCheckBox.isSelected());;
             settings.setUnsuccessfulLMIterationsAllowed(Integer.parseInt(unsuccessfulLMIterationsTextField.getText()));
 
-            if (reconstructionViewSetField.getText() != null && !reconstructionViewSetField.getText().equals(""))
+            if (reconstructAllCheckBox.isSelected())
             {
-                // Reconstruction view set
-                try
+                settings.setReconstructAll(true);
+
+                if (reconstructionViewSetField.getText() != null && !reconstructionViewSetField.getText().isEmpty())
                 {
-                    settings.setReconstructionViewSet(ViewSet.loadFromVSETFile(
-                        new File(reconstructionViewSetField.getText())));
+                    // Reconstruction view set
+                    try
+                    {
+                        settings.setReconstructionViewSet(ViewSet.loadFromVSETFile(
+                            new File(reconstructionViewSetField.getText())));
+                    }
+                    catch (FileNotFoundException e)
+                    {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Invalid view set");
+                        alert.setHeaderText("Reconstruction view set is invalid.");
+                        alert.setContentText("Please try another view set or leave the field blank to use the view set for the current model.");
+                        e.printStackTrace();
+                    }
                 }
-                catch (FileNotFoundException e)
-                {
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Invalid view set");
-                    alert.setHeaderText("Reconstruction view set is invalid.");
-                    alert.setContentText("Please try another view set or leave the field blank to use the view set for the current model.");
-                    e.printStackTrace();
-                }
+            }
+            else
+            {
+                settings.setReconstructAll(false);
+            }
+
+            if (priorSolutionCheckBox.isSelected() && priorSolutionField.getText() != null && !priorSolutionField.getText().isEmpty())
+            {
+                settings.setFitFromPriorSolution(true);
+                settings.setPriorSolutionDirectory(new File(priorSolutionField.getText()));
+            }
+            else
+            {
+                settings.setFitFromPriorSolution(false);
             }
 
             IBRRequest<ContextType> request = new SpecularFitRequest<>(settings);

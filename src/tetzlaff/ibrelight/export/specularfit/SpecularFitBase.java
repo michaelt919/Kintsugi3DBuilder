@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2022
+ *  Copyright (c) Michael Tetzlaff 2023
  *
  *  Licensed under GPLv3
  *  ( http://www.gnu.org/licenses/gpl-3.0.html )
@@ -14,27 +14,15 @@ package tetzlaff.ibrelight.export.specularfit;
 import java.io.FileNotFoundException;
 
 import tetzlaff.gl.core.Context;
-import tetzlaff.gl.core.Drawable;
 import tetzlaff.gl.core.Texture2D;
-import tetzlaff.gl.core.Texture3D;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
-/**
- * A class that bundles all of the GPU resources for representing a final specular fit solution.
- * @param <ContextType>
- */
-@SuppressWarnings("PackageVisibleField")
-public class SpecularFit<ContextType extends Context<ContextType>> implements SpecularResources<ContextType>
+public abstract class SpecularFitBase<ContextType extends Context<ContextType>> implements SpecularResources<ContextType>
 {
     /**
      * Basis functions and weights (originally calculated on the CPU)
      */
     final BasisResources<ContextType> basisResources;
-
-    /**
-     * Estimated surface normals
-     */
-    final NormalOptimization<ContextType> normalOptimization;
 
     /**
      * Estimated specular reflectivity and roughness
@@ -46,24 +34,10 @@ public class SpecularFit<ContextType extends Context<ContextType>> implements Sp
      */
     final FinalDiffuseOptimization<ContextType> diffuseOptimization;
 
-    public SpecularFit(ContextType context, IBRResources<ContextType> resources, SpecularFitSettings settings) throws FileNotFoundException
+    protected SpecularFitBase(ContextType context, IBRResources<ContextType> resources, SpecularFitSettings settings) throws FileNotFoundException
     {
-        SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources, settings);
-
         // Textures calculated on CPU and passed to GPU (not framebuffers): basis functions & weights
         basisResources = new BasisResources<>(context, settings);
-
-        // Normal optimization module that manages its own resources
-        normalOptimization = new NormalOptimization<>(
-            context, programFactory,
-            estimationProgram ->
-            {
-                Drawable<ContextType> drawable = resources.createDrawable(estimationProgram);
-                programFactory.setupShaderProgram(estimationProgram);
-                basisResources.useWithShaderProgram(estimationProgram);
-                return drawable;
-            },
-            settings);
 
         // Specular roughness / reflectivity module that manages its own resources
         roughnessOptimization = new RoughnessOptimization<>(context, basisResources, settings);
@@ -76,7 +50,6 @@ public class SpecularFit<ContextType extends Context<ContextType>> implements Sp
     public void close()
     {
         basisResources.close();
-        normalOptimization.close();
         roughnessOptimization.close();
         diffuseOptimization.close();
     }
@@ -85,12 +58,6 @@ public class SpecularFit<ContextType extends Context<ContextType>> implements Sp
     public Texture2D<ContextType> getDiffuseMap()
     {
         return diffuseOptimization.getDiffuseMap();
-    }
-
-    @Override
-    public Texture2D<ContextType> getNormalMap()
-    {
-        return normalOptimization.getNormalMap();
     }
 
     @Override
@@ -106,14 +73,8 @@ public class SpecularFit<ContextType extends Context<ContextType>> implements Sp
     }
 
     @Override
-    public Texture3D<ContextType> getWeightMaps()
+    public BasisResources<ContextType> getBasisResources()
     {
-        return basisResources.weightMaps;
-    }
-
-    @Override
-    public Texture2D<ContextType> getBasisMaps()
-    {
-        return basisResources.basisMaps;
+        return basisResources;
     }
 }

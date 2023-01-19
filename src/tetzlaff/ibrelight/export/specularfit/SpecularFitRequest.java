@@ -32,17 +32,41 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
         try
         {
             // Perform the specular fit
-            SpecularFit<ContextType> specularFit = new SpecularOptimization(settings).createFit(renderable.getIBRResources());
+            SpecularResources<ContextType> specularFit;
+
+            if (settings.shouldFitFromPriorSolution())
+            {
+                specularFit = new SpecularOptimization(settings).loadPriorSolution(renderable.getIBRResources(), settings.getPriorSolutionDirectory());
+            }
+            else
+            {
+                // Perform the specular fit
+                specularFit = new SpecularOptimization(settings).createFit(renderable.getIBRResources());
+            }
 
             // Reconstruct images both from basis functions and from fitted roughness
             SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(renderable.getIBRResources(), settings);
             FinalReconstruction<ContextType> reconstruction = new FinalReconstruction<>(renderable.getIBRResources(), settings);
 
             System.out.println("Reconstructing ground truth images from basis representation:");
-            reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(programFactory), "reconstructions", "ground-truth");
+            double reconstructionRMSE =
+                reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(programFactory), settings.shouldReconstructAll(),
+                    "reconstructions", "ground-truth");
 
             System.out.println("Reconstructing ground truth images from fitted roughness / specular color:");
-            reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(programFactory), "fitted", null);
+            double fittedRMSE =
+                reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(programFactory), settings.shouldReconstructAll(),
+                    "fitted", null);
+
+            if (!settings.shouldReconstructAll()) // Write to just one RMSE file if only doing a single image per reconstruction method
+            {
+                try (PrintStream rmseOut = new PrintStream(new File(settings.outputDirectory, "rmse.txt")))
+                // Text file containing error information
+                {
+                    rmseOut.println("reconstructions, " + reconstructionRMSE);
+                    rmseOut.println("fitted, " + fittedRMSE);
+                }
+            }
 
             specularFit.close(); // Close immediately when this is just an export operation.
         }

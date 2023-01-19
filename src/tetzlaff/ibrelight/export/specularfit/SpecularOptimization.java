@@ -17,23 +17,17 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalTime;
-import java.util.Comparator;
-import java.util.stream.IntStream;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.vecmath.DoubleVector3;
-import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibrelight.core.Projection;
+import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStreamResource;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.optimization.ReadonlyErrorReport;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
 import tetzlaff.optimization.function.GeneralizedSmoothStepBasis;
-import tetzlaff.optimization.function.StepBasis;
 import tetzlaff.util.ColorList;
 
 /**
@@ -50,7 +44,38 @@ public class SpecularOptimization
         this.settings = settings;
     }
 
-    public <ContextType extends Context<ContextType>> SpecularFit<ContextType> createFit(IBRResources<ContextType> resources)
+    private int determineImageWidth(ViewSet viewSet)
+    {
+        Projection defaultProj = viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(
+            viewSet.getPrimaryViewIndex()));
+
+        if (defaultProj.getAspectRatio() < 1.0)
+        {
+            return settings.width;
+        }
+        else
+        {
+            return Math.round(settings.height * defaultProj.getAspectRatio());
+        }
+    }
+
+    private int determineImageHeight(ViewSet viewSet)
+    {
+        Projection defaultProj = viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(
+            viewSet.getPrimaryViewIndex()));
+
+        if (defaultProj.getAspectRatio() < 1.0)
+        {
+            return Math.round(settings.width / defaultProj.getAspectRatio());
+        }
+        else
+        {
+            return settings.height;
+        }
+    }
+
+
+    public <ContextType extends Context<ContextType>> SpecularResources<ContextType> createFit(IBRResources<ContextType> resources)
         throws IOException
     {
         Instant start = Instant.now();
@@ -61,22 +86,8 @@ public class SpecularOptimization
         SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources, settings);
 
         // Calculate reasonable image resolution for error calculation
-        Projection defaultProj = resources.viewSet.getCameraProjection(resources.viewSet.getCameraProjectionIndex(
-            resources.viewSet.getPrimaryViewIndex()));
-
-        int imageWidth;
-        int imageHeight;
-
-        if (defaultProj.getAspectRatio() < 1.0)
-        {
-            imageWidth = settings.width;
-            imageHeight = Math.round(imageWidth / defaultProj.getAspectRatio());
-        }
-        else
-        {
-            imageHeight = settings.height;
-            imageWidth = Math.round(imageHeight * defaultProj.getAspectRatio());
-        }
+        int imageWidth = determineImageWidth(resources.viewSet);
+        int imageHeight = determineImageHeight(resources.viewSet);
 
         // Create space for the solution.
         SpecularFitSolution solution = new SpecularFitSolution(settings);
@@ -85,7 +96,7 @@ public class SpecularOptimization
         new SpecularFitInitializer<>(resources, settings).initialize(solution);
 
         // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.
-        SpecularFit<ContextType> specularFit = new SpecularFit<>(context, resources, settings);
+        SpecularFitFromOptimization<ContextType> specularFit = new SpecularFitFromOptimization<>(context, resources, settings);
 
         try
         (
@@ -133,123 +144,6 @@ public class SpecularOptimization
 
             // Instantiate once so that the memory buffers can be reused.
             GraphicsStream<ColorList[]> reflectanceStreamParallel = reflectanceStream.parallel();
-
-//            reflectanceStream.getProgram().setTexture("normalEstimate", specularFit.getNormalMap());
-//
-//            // First index is basis
-//            // Second index covers the different totals: [0, 3]: diffuse RGB + weight; [4, 7]: specular RGB + weight;
-//            // 8: multiplier used to subtract diffuse from specular
-//            // TODO this could all be moved into a shader for better performance
-//            float[][] finalTotals = reflectanceStreamParallel.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1]))
-//                .collect(() -> IntStream.range(0, settings.basisCount).mapToObj(b -> new float[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 }).toArray(float[][]::new),
-//                    (totals, frame) -> IntStream.range(0, frame.size()) // For each pixel in the frame
-//                        .filter(p -> frame.getVisibility(p) > 0.0)
-//                        .forEach(p -> IntStream.range(0, settings.basisCount).boxed() // For each basis function
-//                            // Determine which basis function a pixel corresponds to in the initial mapping
-//                            .max(Comparator.comparingDouble(b -> solution.getWeights(p).get(b)))
-//                            .ifPresent(b ->
-//                            {
-//                                float weight = frame.getAdditionalWeight(p);
-//                                if (frame.getHalfwayIndex(p) < 1.0)
-//                                {
-//                                    float pseudoBRDF = (1 - frame.getHalfwayIndex(p)) * frame.getGeomRatio(p);
-//                                    totals[b][4] += frame.getRed(p) * pseudoBRDF * weight;
-//                                    totals[b][5] += frame.getGreen(p) * pseudoBRDF * weight;
-//                                    totals[b][6] += frame.getBlue(p) * pseudoBRDF * weight;
-//                                    totals[b][7] += pseudoBRDF * pseudoBRDF * weight;
-//                                    totals[b][8] += pseudoBRDF * weight;
-//                                }
-//                                else
-//                                {
-//                                    totals[b][0] += frame.getRed(p) * weight;
-//                                    totals[b][1] += frame.getGreen(p) * weight;
-//                                    totals[b][2] += frame.getBlue(p) * weight;
-//                                    totals[b][3] += weight;
-//                                }
-//                            })));
-//
-//            for (int b = 0; b < settings.basisCount; b++)
-//            {
-////                DoubleVector3 diffuseReflectance = new DoubleVector3(
-////                    finalTotals[b][0] / finalTotals[b][3], finalTotals[b][1] / finalTotals[b][3], finalTotals[b][2] / finalTotals[b][3]);
-//                DoubleVector3 diffuseReflectance = DoubleVector3.ZERO;
-//                solution.setDiffuseAlbedo(b, diffuseReflectance.times(Math.PI)); // Mutiply times pi to go from reflectance to albedo
-//
-//                // Specular Avg = (Total weighted reflectance - Diffuse color * Total weighted count) / Total weighted pseudo-BRDF
-//                DoubleVector3 specularScale = new DoubleVector3(
-//                    Math.max(0, finalTotals[b][4] - diffuseReflectance.x * finalTotals[b][8]) / finalTotals[b][7],
-//                    Math.max(0, finalTotals[b][5] - diffuseReflectance.y * finalTotals[b][8]) / finalTotals[b][7],
-//                    Math.max(0, finalTotals[b][6] - diffuseReflectance.z * finalTotals[b][8]) / finalTotals[b][7]
-//                );
-//
-//                // Initialize the specular basis functions to in turn generate a better initial guess for the normal map.
-//                for (int m = 0; m < settings.microfacetDistributionResolution; m++)
-//                {
-//                    float psuedoNDF = 1 - (float)m / (float)settings.microfacetDistributionResolution;
-//
-//                    solution.getSpecularRed().set(m, b, psuedoNDF * specularScale.x);
-//                    solution.getSpecularGreen().set(m, b, psuedoNDF * specularScale.y);
-//                    solution.getSpecularBlue().set(m, b, psuedoNDF * specularScale.z);
-//                }
-//            }
-//
-//            // TODO move to a function to eliminate copy-pasted code
-//
-//            // Prepare for error calculation and normal estimation on the GPU.
-//            specularFit.basisResources.updateFromSolution(solution);
-//
-//            // Calculate the error in preparation for normal estimation.
-//            errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
-//
-//            // Log error in debug mode.
-//            if (DEBUG)
-//            {
-//                System.out.println("Calculating error...");
-//                logError(errorCalculator.getReport());
-//
-//                // Save basis image visualization for reference and debugging
-//                try(BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(context, settings))
-//                {
-//                    basisImageCreator.createImages(specularFit);
-//                }
-//
-//                // write out diffuse texture for debugging
-//                solution.saveDiffuseMap(settings.additional.getFloat("gamma"));
-//            }
-//
-//            if (settings.isNormalRefinementEnabled())
-//            {
-//                System.out.println("Optimizing normals...");
-//
-//                specularFit.normalOptimization.execute(normalMap ->
-//                    {
-//                        // Update program to use the new front buffer for error calculation.
-//                        errorCalcProgram.setTexture("normalEstimate", normalMap);
-//
-//                        if (DEBUG)
-//                        {
-//                            System.out.println("Calculating error...");
-//                        }
-//
-//                        // Calculate the error to determine if we should stop.
-//                        errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
-//
-//                        if (DEBUG)
-//                        {
-//                            // Log error in debug mode.
-//                            logError(errorCalculator.getReport());
-//                        }
-//
-//                        return errorCalculator.getReport();
-//                    },
-//                    settings.getConvergenceTolerance());
-//
-//                if (errorCalculator.getReport().getError() > errorCalculator.getReport().getPreviousError())
-//                {
-//                    // Revert error calculations to the last accepted result.
-//                    errorCalculator.reject();
-//                }
-//            }
 
             do
             {
@@ -411,6 +305,54 @@ public class SpecularOptimization
 
             return specularFit;
         }
+    }
+
+    /**
+     * Skips most optimization steps and just loads from a prior solution.
+     * Does re-run the GGX fitting step.
+     * @param resources GPU resources for image-based rendering
+     * @param priorSolutionDirectory The directory containing the prior solution
+     * @param <ContextType> The type of the graphics context
+     * @return A fit based on the solution loaded from file.
+     * @throws IOException
+     */
+    public <ContextType extends Context<ContextType>> SpecularResources<ContextType> loadPriorSolution(
+        IBRResources<ContextType> resources, File priorSolutionDirectory)
+        throws IOException
+    {
+        // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.
+        // Only basis representation will be loaded from solution.
+        SpecularFitBase<ContextType> solution =
+            new SpecularFitFromPriorSolution<>(resources.context, resources, settings, priorSolutionDirectory);
+
+        // Calculate final diffuse map without the constraint of basis functions.
+        solution.diffuseOptimization.execute(solution);
+        solution.diffuseOptimization.saveDiffuseMap();
+
+        // Fit specular textures
+        solution.roughnessOptimization.execute();
+        solution.roughnessOptimization.saveTextures();
+
+        // Calculate reasonable image resolution for error calculation
+        int imageWidth = determineImageWidth(resources.viewSet);
+        int imageHeight = determineImageHeight(resources.viewSet);
+
+        try (
+            // Framebuffer for calculating error and reconstructing 3D renderings of the object
+            FramebufferObject<ContextType> scratchFramebuffer =
+                resources.context.buildFramebufferObject(imageWidth, imageHeight)
+                    .addColorAttachment(ColorFormat.RGBA32F)
+                    .addDepthAttachment()
+                    .createFramebufferObject();
+
+            // Text file containing error information
+            PrintStream rmseOut = new PrintStream(new File(settings.outputDirectory, "rmse.txt")))
+        {
+            // Calculate some final error statistics.
+            new SpecularFitFinalizer(settings).calculateGGXRMSE(resources, solution, scratchFramebuffer, rmseOut);
+        }
+
+        return solution;
     }
 
     private static void logError(ReadonlyErrorReport report)

@@ -21,6 +21,8 @@ public interface SpecularResources<ContextType extends Context<ContextType>> ext
     Texture2D<ContextType> getNormalMap();
     Texture2D<ContextType> getSpecularReflectivityMap();
     Texture2D<ContextType> getSpecularRoughnessMap();
-    Texture3D<ContextType> getWeightMaps();
-    Texture2D<ContextType> getBasisMaps();
+    BasisResources<ContextType> getBasisResources();
+
+    @Override
+    void close(); // no exception
 }
