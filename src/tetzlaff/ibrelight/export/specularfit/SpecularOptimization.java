@@ -310,47 +310,22 @@ public class SpecularOptimization
     /**
      * Skips most optimization steps and just loads from a prior solution.
      * Does re-run the GGX fitting step.
-     * @param resources GPU resources for image-based rendering
      * @param priorSolutionDirectory The directory containing the prior solution
      * @param <ContextType> The type of the graphics context
      * @return A fit based on the solution loaded from file.
      * @throws IOException
      */
     public <ContextType extends Context<ContextType>> SpecularResources<ContextType> loadPriorSolution(
-        IBRResources<ContextType> resources, File priorSolutionDirectory)
+        ContextType context, File priorSolutionDirectory)
         throws IOException
     {
         // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.
-        // Only basis representation will be loaded from solution.
-        SpecularFitBase<ContextType> solution =
-            new SpecularFitFromPriorSolution<>(resources.context, resources, settings, priorSolutionDirectory);
-
-        // Calculate final diffuse map without the constraint of basis functions.
-        solution.diffuseOptimization.execute(solution);
-        solution.diffuseOptimization.saveDiffuseMap();
+        // Only basis representation and diffuse map will be loaded from solution.
+        SpecularFitBase<ContextType> solution = new SpecularFitFromPriorSolution<>(context, settings, priorSolutionDirectory);
 
         // Fit specular textures
         solution.roughnessOptimization.execute();
         solution.roughnessOptimization.saveTextures();
-
-        // Calculate reasonable image resolution for error calculation
-        int imageWidth = determineImageWidth(resources.viewSet);
-        int imageHeight = determineImageHeight(resources.viewSet);
-
-        try (
-            // Framebuffer for calculating error and reconstructing 3D renderings of the object
-            FramebufferObject<ContextType> scratchFramebuffer =
-                resources.context.buildFramebufferObject(imageWidth, imageHeight)
-                    .addColorAttachment(ColorFormat.RGBA32F)
-                    .addDepthAttachment()
-                    .createFramebufferObject();
-
-            // Text file containing error information
-            PrintStream rmseOut = new PrintStream(new File(settings.outputDirectory, "rmse.txt")))
-        {
-            // Calculate some final error statistics.
-            new SpecularFitFinalizer(settings).calculateGGXRMSE(resources, solution, scratchFramebuffer, rmseOut);
-        }
 
         return solution;
     }

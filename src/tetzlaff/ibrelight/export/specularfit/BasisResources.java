@@ -61,28 +61,28 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
     public void updateFromSolution(SpecularFitSolution solution)
     {
         NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
-        NativeVectorBuffer weightMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 1, settings.width * settings.height);
+        NativeVectorBuffer weightMaskBuffer = factory.createEmpty(NativeDataType.FLOAT, 1, settings.width * settings.height);
         NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3, settings.basisCount * (settings.microfacetDistributionResolution + 1));
         NativeVectorBuffer diffuseNativeBuffer = factory.createEmpty(NativeDataType.FLOAT, 4, settings.basisCount);
 
         // Load weight mask first.
         for (int p = 0; p < settings.width * settings.height; p++)
         {
-            weightMapBuffer.set(p, 0, solution.areWeightsValid(p) ? 1.0 : 0.0);
+            weightMaskBuffer.set(p, 0, solution.areWeightsValid(p) ? 1.0 : 0.0);
         }
 
-        weightMask.load(weightMapBuffer);
+        weightMask.load(weightMaskBuffer);
 
         for (int b = 0; b < settings.basisCount; b++)
         {
             // Copy weights from the individual solutions into the weight buffer laid out in texture space to be sent to the GPU.
             for (int p = 0; p < settings.width * settings.height; p++)
             {
-                weightMapBuffer.set(p, 0, solution.getWeights(p).get(b));
+                weightMaskBuffer.set(p, 0, solution.getWeights(p).get(b));
             }
 
             // Immediately load the weight map so that we can reuse the local memory buffer.
-            weightMaps.loadLayer(b, weightMapBuffer);
+            weightMaps.loadLayer(b, weightMaskBuffer);
 
             // Copy basis functions by color channel into the basis map buffer that will eventually be sent to the GPU..
             for (int m = 0; m <= settings.microfacetDistributionResolution; m++)
@@ -116,6 +116,16 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
     public void loadFromPriorSolution(File priorSolutionDirectory) throws IOException
     {
         NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
+
+        // Fill trivial weight mask.
+        NativeVectorBuffer weightMaskBuffer = factory.createEmpty(NativeDataType.FLOAT, 1, settings.width * settings.height);
+        for (int p = 0; p < settings.width * settings.height; p++)
+        {
+            weightMaskBuffer.set(p, 0, 1.0);
+        }
+        weightMask.load(weightMaskBuffer);
+
+        // Set up basis function buffer
         NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3, settings.basisCount * (settings.microfacetDistributionResolution + 1));
 
         SpecularBasis basis =

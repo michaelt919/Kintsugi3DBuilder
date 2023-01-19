@@ -21,9 +21,9 @@ public class SimpleSpecularBasis implements SpecularBasis
 
     public SimpleSpecularBasis(int basisCount, int microfacetDistributionResolution)
     {
-        redBasis = IntStream.range(0, basisCount).mapToObj(b -> new double[microfacetDistributionResolution]).toArray(double[][]::new);
-        greenBasis = IntStream.range(0, basisCount).mapToObj(b -> new double[microfacetDistributionResolution]).toArray(double[][]::new);
-        blueBasis = IntStream.range(0, basisCount).mapToObj(b -> new double[microfacetDistributionResolution]).toArray(double[][]::new);
+        redBasis = IntStream.range(0, basisCount).mapToObj(b -> new double[microfacetDistributionResolution + 1]).toArray(double[][]::new);
+        greenBasis = IntStream.range(0, basisCount).mapToObj(b -> new double[microfacetDistributionResolution + 1]).toArray(double[][]::new);
+        blueBasis = IntStream.range(0, basisCount).mapToObj(b -> new double[microfacetDistributionResolution + 1]).toArray(double[][]::new);
     }
 
     @Override

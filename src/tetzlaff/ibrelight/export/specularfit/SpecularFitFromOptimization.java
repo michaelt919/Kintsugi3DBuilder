@@ -26,13 +26,21 @@ import tetzlaff.ibrelight.rendering.resources.IBRResources;
 public class SpecularFitFromOptimization<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
 {
     /**
+     * Final diffuse estimate
+     */
+    final FinalDiffuseOptimization<ContextType> diffuseOptimization;
+
+    /**
      * Estimated surface normals
      */
     final NormalOptimization<ContextType> normalOptimization;
 
     public SpecularFitFromOptimization(ContextType context, IBRResources<ContextType> resources, SpecularFitSettings settings) throws FileNotFoundException
     {
-        super(context, resources, settings);
+        super(context, settings);
+
+        // Final diffuse estimation
+        diffuseOptimization = new FinalDiffuseOptimization<>(context, resources, settings);
 
         // Normal optimization module that manages its own resources
         SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources, settings);
@@ -46,6 +54,19 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
                 return drawable;
             },
             settings);
+    }
+
+    @Override
+    public void close()
+    {
+        diffuseOptimization.close();
+        normalOptimization.close();
+    }
+
+    @Override
+    public Texture2D<ContextType> getDiffuseMap()
+    {
+        return diffuseOptimization.getDiffuseMap();
     }
 
     @Override

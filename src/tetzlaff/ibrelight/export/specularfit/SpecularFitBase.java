@@ -29,21 +29,13 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
      */
     final RoughnessOptimization<ContextType> roughnessOptimization;
 
-    /**
-     * Final diffuse estimate
-     */
-    final FinalDiffuseOptimization<ContextType> diffuseOptimization;
-
-    protected SpecularFitBase(ContextType context, IBRResources<ContextType> resources, SpecularFitSettings settings) throws FileNotFoundException
+    protected SpecularFitBase(ContextType context, SpecularFitSettings settings) throws FileNotFoundException
     {
         // Textures calculated on CPU and passed to GPU (not framebuffers): basis functions & weights
         basisResources = new BasisResources<>(context, settings);
 
         // Specular roughness / reflectivity module that manages its own resources
         roughnessOptimization = new RoughnessOptimization<>(context, basisResources, settings);
-
-        // Final diffuse estimation
-        diffuseOptimization = new FinalDiffuseOptimization<>(context, resources, settings);
     }
 
     @Override
@@ -51,13 +43,6 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
     {
         basisResources.close();
         roughnessOptimization.close();
-        diffuseOptimization.close();
-    }
-
-    @Override
-    public Texture2D<ContextType> getDiffuseMap()
-    {
-        return diffuseOptimization.getDiffuseMap();
     }
 
     @Override

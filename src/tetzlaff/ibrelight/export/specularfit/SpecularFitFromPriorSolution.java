@@ -12,25 +12,33 @@
 package tetzlaff.ibrelight.export.specularfit;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import tetzlaff.gl.core.Context;
-import tetzlaff.gl.core.Drawable;
 import tetzlaff.gl.core.Texture2D;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
 public class SpecularFitFromPriorSolution<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
 {
     /**
-     * Estimated surface normals
+     * Diffuse map from file
+     */
+    final Texture2D<ContextType> diffuseMap;
+
+    /**
+     * Normal map from file
      */
     final Texture2D<ContextType> normalMap;
 
-    public SpecularFitFromPriorSolution(ContextType context, IBRResources<ContextType> resources, SpecularFitSettings settings,
-        File priorSolutionDirectory) throws IOException
+    public SpecularFitFromPriorSolution(ContextType context, SpecularFitSettings settings, File priorSolutionDirectory) throws IOException
     {
-        super(context, resources, settings);
+        super(context, settings);
+
+        // Load normal map
+        diffuseMap = context.getTextureFactory()
+            .build2DColorTextureFromFile(new File(priorSolutionDirectory, "diffuse.png"), true)
+            .setLinearFilteringEnabled(true)
+            .createTexture();
 
         // Load normal map
         normalMap = context.getTextureFactory()
@@ -39,6 +47,19 @@ public class SpecularFitFromPriorSolution<ContextType extends Context<ContextTyp
             .createTexture();
 
         basisResources.loadFromPriorSolution(priorSolutionDirectory);
+    }
+
+    @Override
+    public void close()
+    {
+        diffuseMap.close();
+        normalMap.close();
+    }
+
+    @Override
+    public Texture2D<ContextType> getDiffuseMap()
+    {
+        return diffuseMap;
     }
 
     @Override

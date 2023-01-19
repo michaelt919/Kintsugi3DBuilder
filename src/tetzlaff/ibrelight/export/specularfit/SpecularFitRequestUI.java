@@ -151,7 +151,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
     public void priorSolutionButtonAction()
     {
         this.directoryChooser.setTitle("Choose a folder containing the prior solution");
-        if (exportDirectoryField.getText().isEmpty())
+        if (priorSolutionField.getText().isEmpty())
         {
             if (lastDirectory != null)
             {

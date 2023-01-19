@@ -111,25 +111,25 @@ public class SpecularFitSerializer
         // Text file format
         try (Scanner in = new Scanner(new File(priorSolutionDirectory, "basisFunctions.csv")))
         {
-            in.useDelimiter("\\s*,\\s*"); // CSV
+            in.useDelimiter("\\s*[,\\n\\r]+\\s*"); // CSV
 
             for (int b = 0; b < basisCount; b++)
             {
-                // "Red#{b}"
+                in.next(); // "Red#{b}"
                 for (int m = 0; m <= microfacetDistributionResolution; m++)
                 {
                     specularBasis.setRed(b, m, in.nextDouble());
                 }
                 // newline
 
-                // "Green#{b}"
+                in.next(); // "Green#{b}"
                 for (int m = 0; m <= microfacetDistributionResolution; m++)
                 {
                     specularBasis.setGreen(b, m, in.nextDouble());
                 }
                 // newline
 
-                // "Blue#{b}"
+                in.next(); // "Blue#{b}"
                 for (int m = 0; m <= microfacetDistributionResolution; m++)
                 {
                     specularBasis.setBlue(b, m, in.nextDouble());

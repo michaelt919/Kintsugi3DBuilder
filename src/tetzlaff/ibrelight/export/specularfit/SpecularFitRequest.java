@@ -36,7 +36,8 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
 
             if (settings.shouldFitFromPriorSolution())
             {
-                specularFit = new SpecularOptimization(settings).loadPriorSolution(renderable.getIBRResources(), settings.getPriorSolutionDirectory());
+                specularFit = new SpecularOptimization(settings).loadPriorSolution(
+                    renderable.getIBRResources().context, settings.getPriorSolutionDirectory());
             }
             else
             {
