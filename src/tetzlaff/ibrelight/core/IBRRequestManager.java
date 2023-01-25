@@ -22,7 +22,7 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
 {
     private final ContextType context;
     private final Queue<Runnable> requestList;
-    private IBRInstanceManager<ContextType> model;
+    private IBRInstanceManager<ContextType> instanceManager;
     private LoadingMonitor loadingMonitor;
 
     public IBRRequestManager(ContextType context)
@@ -36,9 +36,9 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
         return requestList.isEmpty();
     }
 
-    public void setModel(IBRInstanceManager<ContextType> model)
+    public void setInstanceManager(IBRInstanceManager<ContextType> instanceManager)
     {
-        this.model = model;
+        this.instanceManager = instanceManager;
     }
 
     public void setLoadingMonitor(LoadingMonitor loadingMonitor)
@@ -51,16 +51,41 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
     {
         this.requestList.add(() ->
         {
-            // Suppress warning about catching and not rethrowing AssertionError.
-            // The request should effectively be regarded a "sandbox" where a critical logic error should not result in the application terminating.
-            //noinspection ErrorNotRethrown
-            try
+            if (instanceManager.getLoadedInstance() == null)
             {
-                request.executeRequest(model.getLoadedInstance(), loadingMonitor);
+                // Instance is currently null, wait for a load
+                instanceManager.addInstanceLoadCallback(instance ->
+                {
+                    // Suppress warning about catching and not rethrowing AssertionError.
+                    // The request should effectively be regarded a "sandbox" where a critical logic error should not result in the application terminating.
+                    //noinspection ErrorNotRethrown
+                    try
+                    {
+                        request.executeRequest(instance, loadingMonitor);
+                    }
+                    catch(Exception | AssertionError e)
+                    {
+                        e.printStackTrace();
+                    }
+                });
             }
-            catch(Exception | AssertionError e)
+            else
             {
-                e.printStackTrace();
+                // Instance is not currently null, execute now.
+                instanceManager.addInstanceLoadCallback(instance ->
+                {
+                    // Suppress warning about catching and not rethrowing AssertionError.
+                    // The request should effectively be regarded a "sandbox" where a critical logic error should not result in the application terminating.
+                    //noinspection ErrorNotRethrown
+                    try
+                    {
+                        request.executeRequest(instanceManager.getLoadedInstance(), loadingMonitor);
+                    }
+                    catch(Exception | AssertionError e)
+                    {
+                        e.printStackTrace();
+                    }
+                });
             }
         });
     }

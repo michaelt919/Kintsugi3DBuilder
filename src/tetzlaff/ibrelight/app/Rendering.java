@@ -13,6 +13,9 @@ package tetzlaff.ibrelight.app;//Created by alexk on 7/19/2017.
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -35,9 +38,7 @@ import tetzlaff.gl.window.Key;
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.ModifierKeysBuilder;
 import tetzlaff.gl.window.PollableWindow;
-import tetzlaff.ibrelight.core.IBRRequestManager;
-import tetzlaff.ibrelight.core.LoadingModel;
-import tetzlaff.ibrelight.core.LoadingMonitor;
+import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.javafx.MainApplication;
 import tetzlaff.ibrelight.javafx.MultithreadModels;
 import tetzlaff.ibrelight.rendering.IBRInstanceManager;
@@ -63,7 +64,7 @@ public final class Rendering
 
     private static IBRRequestManager<OpenGLContext> requestQueue = null;
 
-    public static IBRRequestManager<?> getRequestQueue()
+    public static IBRRequestManager<OpenGLContext> getRequestQueue()
     {
         return requestQueue;
     }
@@ -295,7 +296,7 @@ public final class Rendering
             // of events and the OpenGL context.  The ULFRendererList provides the renderable.
             InteractiveApplication app = InteractiveGraphics.createApplication(window, context, instanceManager);
 
-            requestQueue.setModel(instanceManager);
+            requestQueue.setInstanceManager(instanceManager);
             requestQueue.setLoadingMonitor(new LoadingMonitor()
             {
                 @Override
@@ -445,10 +446,25 @@ public final class Rendering
             }
         }
 
-        // Execute command if requested
+        // Execute command if requested, using reflection
         if (args.length >= 2)
         {
-//            Rendering.getRequestQueue().addIBRRequest();
+            try
+            {
+                Class<?> requestClass = Class.forName(args[1]);
+                Method createMethod = requestClass.getDeclaredMethod("create", IBRelightModels.class, String[].class);
+                if (IBRRequest.class.isAssignableFrom(createMethod.getReturnType())
+                    && ((createMethod.getModifiers() & (Modifier.PUBLIC | Modifier.STATIC)) == (Modifier.PUBLIC | Modifier.STATIC)))
+                {
+                    //noinspection unchecked
+                    Rendering.getRequestQueue().addIBRRequest(
+                        (IBRRequest<OpenGLContext>) createMethod.invoke(null, MultithreadModels.getInstance(), args));
+                }
+            }
+            catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e)
+            {
+                e.printStackTrace();
+            }
         }
     }
 

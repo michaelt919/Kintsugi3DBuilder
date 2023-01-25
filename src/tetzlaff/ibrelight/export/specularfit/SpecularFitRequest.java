@@ -23,6 +23,19 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
 {
     private final SpecularFitSettings settings;
 
+    /**
+     * Default constructor for CLI args requests
+     * @param modelAccess
+     * @param args args[0] is the project name; args[1] is the name of this class; args[2] is the output directory
+     * @return the request object
+     */
+    public static <ContextType extends Context<ContextType>> SpecularFitRequest<ContextType> create(
+            IBRelightModels modelAccess, String... args)
+    {
+        return new SpecularFitRequest<>(new SpecularFitSettings(2048, 2048,
+                8, 90, new File(args[2]), modelAccess.getSettingsModel()));
+    }
+
     public SpecularFitRequest(SpecularFitSettings settings)
     {
         this.settings = settings;

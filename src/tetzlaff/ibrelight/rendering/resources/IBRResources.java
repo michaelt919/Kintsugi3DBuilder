@@ -343,12 +343,12 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
             if (img == null)
             {
-                System.out.println("Eigentextures not found.  Loading view images as normal textures.");
                 this.eigentextures = null;
                 svdViewWeightPacking = null;
             }
             else
             {
+                System.out.println("Eigentextures found.");
                 Texture3D<ContextType> eigentexturesTemp = null;
 
                 // TODO don't hardcode

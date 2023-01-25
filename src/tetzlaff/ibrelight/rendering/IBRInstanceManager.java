@@ -12,8 +12,11 @@
 package tetzlaff.ibrelight.rendering;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 import javax.xml.stream.XMLStreamException;
 
@@ -43,6 +46,18 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     private ReadonlyCameraModel cameraModel;
     private ReadonlyLightingModel lightingModel;
     private ReadonlySettingsModel settingsModel;
+
+    private List<Consumer<IBRInstance<ContextType>>> instanceLoadCallbacks = new ArrayList<>();
+
+    /**
+     * Adds callbacks that will be invoked when the instance has finished loading.
+     * The callbacks will be cleared after being invoked.
+     * @param callback to add
+     */
+    public void addInstanceLoadCallback(Consumer<IBRInstance<ContextType>> callback)
+    {
+        instanceLoadCallbacks.add(callback);
+    }
 
     public IBRInstanceManager(ContextType context)
     {
@@ -369,6 +384,15 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             }
 
             newInstance = null;
+
+            // Invoke callbacks
+            for (Consumer<IBRInstance<ContextType>> callback : instanceLoadCallbacks)
+            {
+                callback.accept(ibrInstance);
+            }
+
+            // Clear the list of callbacks for the next load.
+            instanceLoadCallbacks.clear();
         }
 
         if (ibrInstance != null)
