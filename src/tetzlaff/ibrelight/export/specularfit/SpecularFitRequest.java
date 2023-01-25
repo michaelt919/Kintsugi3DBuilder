@@ -69,30 +69,8 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
                 .useExistingViewSet(settings.getReconstructionViewSet())
                 .create())
             {
-                // Reconstruct images both from basis functions and from fitted roughness
-                SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources, settings);
-                FinalReconstruction<ContextType> reconstruction = new FinalReconstruction<>(resources, settings);
-
-                System.out.println("Reconstructing ground truth images from basis representation:");
-                double reconstructionRMSE =
-                    reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(programFactory), settings.shouldReconstructAll(),
-                        "reconstructions", "ground-truth");
-
-                System.out.println("Reconstructing ground truth images from fitted roughness / specular color:");
-                double fittedRMSE =
-                    reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(programFactory), settings.shouldReconstructAll(),
-                        "fitted", null);
-
-                if (!settings.shouldReconstructAll()) // Write to just one RMSE file if only doing a single image per reconstruction method
-                {
-                    try (PrintStream rmseOut = new PrintStream(new File(settings.outputDirectory, "rmse.txt")))
-                    // Text file containing error information
-                    {
-                        rmseOut.println("reconstructions, " + reconstructionRMSE);
-                        rmseOut.println("fitted, " + fittedRMSE);
-                    }
-                }
-
+                // Perform the specular fit
+                executeRequest(resources, specularFit);
                 specularFit.close(); // Close immediately when this is just an export operation.
             }
         }
@@ -117,36 +95,40 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
         {
             // Perform the specular fit
             SpecularResources<ContextType> specularFit = new SpecularOptimization(settings).createFit(renderable.getIBRResources());
-
-            // Reconstruct images both from basis functions and from fitted roughness
-            SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(renderable.getIBRResources(), settings);
-            FinalReconstruction<ContextType> reconstruction = new FinalReconstruction<>(renderable.getIBRResources(), settings);
-
-            System.out.println("Reconstructing ground truth images from basis representation:");
-            double reconstructionRMSE =
-                reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(programFactory), settings.shouldReconstructAll(),
-                    "reconstructions", "ground-truth");
-
-            System.out.println("Reconstructing ground truth images from fitted roughness / specular color:");
-            double fittedRMSE =
-                reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(programFactory), settings.shouldReconstructAll(),
-                    "fitted", null);
-
-            if (!settings.shouldReconstructAll()) // Write to just one RMSE file if only doing a single image per reconstruction method
-            {
-                try (PrintStream rmseOut = new PrintStream(new File(settings.outputDirectory, "rmse.txt")))
-                // Text file containing error information
-                {
-                    rmseOut.println("reconstructions, " + reconstructionRMSE);
-                    rmseOut.println("fitted, " + fittedRMSE);
-                }
-            }
-
+            executeRequest(renderable.getIBRResources(), specularFit);
             specularFit.close(); // Close immediately when this is just an export operation.
         }
         catch(IOException e) // thrown by createReflectanceProgram
         {
             e.printStackTrace();
+        }
+    }
+
+    private void executeRequest(IBRResources<ContextType> resources, SpecularResources<ContextType> specularFit)
+        throws FileNotFoundException
+    {
+        // Reconstruct images both from basis functions and from fitted roughness
+        SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources, settings);
+        FinalReconstruction<ContextType> reconstruction = new FinalReconstruction<>(resources, settings);
+
+        System.out.println("Reconstructing ground truth images from basis representation:");
+        double reconstructionRMSE =
+            reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(programFactory), settings.shouldReconstructAll(),
+                "reconstruction", "ground-truth");
+
+        System.out.println("Reconstructing ground truth images from fitted roughness / specular color:");
+        double fittedRMSE =
+            reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(programFactory), settings.shouldReconstructAll(),
+                "fitted", null);
+
+        if (!settings.shouldReconstructAll()) // Write to just one RMSE file if only doing a single image per reconstruction method
+        {
+            try (PrintStream rmseOut = new PrintStream(new File(settings.outputDirectory, "rmse.txt")))
+            // Text file containing error information
+            {
+                rmseOut.println("reconstruction, " + reconstructionRMSE);
+                rmseOut.println("fitted, " + fittedRMSE);
+            }
         }
     }
 
