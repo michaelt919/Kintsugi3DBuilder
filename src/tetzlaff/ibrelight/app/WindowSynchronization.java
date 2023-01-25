@@ -159,6 +159,14 @@ public final class WindowSynchronization
         .start();
     }
 
+    public void quitWithoutConfirmation()
+    {
+        for (SynchronizedWindow listener : listeners)
+        {
+            listener.quit();
+        }
+    }
+
     private WindowSynchronization()
     {
     }

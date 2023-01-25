@@ -456,9 +456,16 @@ public final class Rendering
                 if (IBRRequest.class.isAssignableFrom(createMethod.getReturnType())
                     && ((createMethod.getModifiers() & (Modifier.PUBLIC | Modifier.STATIC)) == (Modifier.PUBLIC | Modifier.STATIC)))
                 {
+                    // Add request to the queue
                     //noinspection unchecked
                     Rendering.getRequestQueue().addIBRRequest(
                         (IBRRequest<OpenGLContext>) createMethod.invoke(null, MultithreadModels.getInstance(), args));
+
+                    // Quit after the request finishes
+                    // Use IBRRequest (rather than GraphicsRequest) so that it gets queued up after the actual request,
+                    // once the project has finished loading
+                    Rendering.getRequestQueue().addIBRRequest(
+                        (renderable, callback) -> WindowSynchronization.getInstance().quitWithoutConfirmation());
                 }
             }
             catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e)

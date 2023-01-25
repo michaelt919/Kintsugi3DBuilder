@@ -49,30 +49,22 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
     @Override
     public void addIBRRequest(IBRRequest<ContextType> request)
     {
-        this.requestList.add(() ->
+        if (instanceManager.getLoadedInstance() == null)
         {
-            if (instanceManager.getLoadedInstance() == null)
+            // Instance is currently null, wait for a load and then call this function again (recursive-ish)
+            instanceManager.addInstanceLoadCallback(instance -> addIBRRequest(request));
+        }
+        else
+        {
+            this.requestList.add(() ->
             {
-                // Instance is currently null, wait for a load
-                instanceManager.addInstanceLoadCallback(instance ->
+                // Check again for null, just in case
+                if (instanceManager.getLoadedInstance() == null)
                 {
-                    // Suppress warning about catching and not rethrowing AssertionError.
-                    // The request should effectively be regarded a "sandbox" where a critical logic error should not result in the application terminating.
-                    //noinspection ErrorNotRethrown
-                    try
-                    {
-                        request.executeRequest(instance, loadingMonitor);
-                    }
-                    catch(Exception | AssertionError e)
-                    {
-                        e.printStackTrace();
-                    }
-                });
-            }
-            else
-            {
-                // Instance is not currently null, execute now.
-                instanceManager.addInstanceLoadCallback(instance ->
+                    // Instance is currently null, wait for a load and then call this function again (recursive-ish)
+                    instanceManager.addInstanceLoadCallback(instance -> addIBRRequest(request));
+                }
+                else
                 {
                     // Suppress warning about catching and not rethrowing AssertionError.
                     // The request should effectively be regarded a "sandbox" where a critical logic error should not result in the application terminating.
@@ -81,13 +73,13 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
                     {
                         request.executeRequest(instanceManager.getLoadedInstance(), loadingMonitor);
                     }
-                    catch(Exception | AssertionError e)
+                    catch (Exception | AssertionError e)
                     {
                         e.printStackTrace();
                     }
-                });
-            }
-        });
+                }
+            });
+        }
     }
 
     @Override
