@@ -23,7 +23,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.VBox;
-import tetzlaff.ibrelight.javafx.controllers.scene.SceneModel;
+import tetzlaff.ibrelight.javafx.internal.ObservableProjectModel;
 import tetzlaff.ibrelight.javafx.internal.ObjectModelImpl;
 
 public class RootObjectSceneController
@@ -39,13 +39,13 @@ public class RootObjectSceneController
     @FXML
     private Button renameButton;
 
-    private SceneModel sceneModel;
+    private ObservableProjectModel projectModel;
 
-    public void init(ObjectModelImpl objectModel, SceneModel injectedSceneModel)
+    public void init(ObjectModelImpl objectModel, ObservableProjectModel injectedProjectModel)
     {
-        this.sceneModel = injectedSceneModel;
+        this.projectModel = injectedProjectModel;
 
-        objectPoseListView.setItems(sceneModel.getObjectPoseList());
+        objectPoseListView.setItems(projectModel.getObjectPoseList());
         objectPoseListView.getSelectionModel().selectedItemProperty().addListener(settingsController.changeListener);
 
         ObjectPoseSetting defaultPose = new ObjectPoseSetting(
@@ -59,7 +59,7 @@ public class RootObjectSceneController
             "Default Pose"
         );
 
-        ObservableList<ObjectPoseSetting> objectPoseList = sceneModel.getObjectPoseList();
+        ObservableList<ObjectPoseSetting> objectPoseList = projectModel.getObjectPoseList();
 
         objectPoseList.add(defaultPose);
         objectPoseListView.getSelectionModel().select(defaultPose);
@@ -84,9 +84,9 @@ public class RootObjectSceneController
     @FXML
     private void newPoseButton()
     {
-        sceneModel.getObjectPoseList()
+        projectModel.getObjectPoseList()
             .add(getObjectPoseSelectionModel().getSelectedItem().duplicate());
-        getObjectPoseSelectionModel().select(sceneModel.getObjectPoseList().size() - 1);
+        getObjectPoseSelectionModel().select(projectModel.getObjectPoseList().size() - 1);
     }
 
     @FXML
@@ -166,7 +166,7 @@ public class RootObjectSceneController
         int i = getObjectPoseSelectionModel().getSelectedIndex();
         if (i > 1)
         {
-            Collections.swap(sceneModel.getObjectPoseList(), i, i - 1);
+            Collections.swap(projectModel.getObjectPoseList(), i, i - 1);
             getObjectPoseSelectionModel().select(i - 1);
         }
     }
@@ -175,7 +175,7 @@ public class RootObjectSceneController
     void moveDOWNButton()
     {
         int i = getObjectPoseSelectionModel().getSelectedIndex();
-        List<ObjectPoseSetting> objectPoseList = sceneModel.getObjectPoseList();
+        List<ObjectPoseSetting> objectPoseList = projectModel.getObjectPoseList();
         if (i != 0 && i < objectPoseList.size() - 1)
         {
             Collections.swap(objectPoseList, i, i + 1);
@@ -207,12 +207,12 @@ public class RootObjectSceneController
         {
             Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION, "This action cannot be reversed.");
             confirmation.setHeaderText("Are you sure you want to delete the following object pose: "
-                + sceneModel.getObjectPoseList().get(selectedIndex).getName() + '?');
+                + projectModel.getObjectPoseList().get(selectedIndex).getName() + '?');
             confirmation.setTitle("Delete Confirmation");
 
             confirmation.showAndWait()
                 .filter(Predicate.isEqual(ButtonType.OK))
-                .ifPresent(response -> sceneModel.getObjectPoseList().remove(selectedIndex));
+                .ifPresent(response -> projectModel.getObjectPoseList().remove(selectedIndex));
         }
     }
 }

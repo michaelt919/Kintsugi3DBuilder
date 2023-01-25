@@ -18,7 +18,7 @@ import tetzlaff.models.impl.ExtendedLightingModelBase;
 
 public class LightingModelWrapper extends ExtendedLightingModelBase<LightInstanceModelWrapper>
 {
-   private final ExtendedLightingModel baseModel;
+    private final ExtendedLightingModel baseModel;
     private final MultithreadValue<Integer> selectedLightIndex;
 
     public LightingModelWrapper(ExtendedLightingModel baseModel)

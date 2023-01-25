@@ -11,11 +11,17 @@
 
 package tetzlaff.ibrelight.app;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import javafx.application.Platform;
+import org.xml.sax.SAXException;
 import tetzlaff.ibrelight.javafx.MainApplication;
+import tetzlaff.ibrelight.javafx.MultithreadModels;
 import tetzlaff.interactive.InitializationException;
+
+import javax.xml.parsers.ParserConfigurationException;
 
 public final class IBRelight
 {
@@ -46,7 +52,7 @@ public final class IBRelight
             new Thread(() -> MainApplication.launchWrapper("")).start();
 
             System.out.println("Starting Render Window");
-            Rendering.runProgram();
+            Rendering.runProgram(args);
         }
         else
         {
@@ -57,9 +63,9 @@ public final class IBRelight
                 {
                     try
                     {
-                        Rendering.runProgram(stage);
+                        Rendering.runProgram(stage, args);
                     }
-                    catch(InitializationException e)
+                    catch (InitializationException e)
                     {
                         e.printStackTrace();
                     }
@@ -69,8 +75,5 @@ public final class IBRelight
             System.out.println("Starting JavaFX UI");
             MainApplication.launchWrapper("");
         }
-
-        System.out.println("Boot Complete");
-
     }
 }

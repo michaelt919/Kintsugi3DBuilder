@@ -42,7 +42,6 @@ import tetzlaff.ibrelight.app.WindowSynchronization;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
 import tetzlaff.ibrelight.javafx.controllers.menubar.MenubarController;
 import tetzlaff.ibrelight.javafx.controllers.scene.RootSceneController;
-import tetzlaff.ibrelight.javafx.controllers.scene.SceneModel;
 import tetzlaff.ibrelight.javafx.internal.SettingsModelImpl;
 import tetzlaff.ibrelight.javafx.util.StaticUtilities;
 import tetzlaff.util.ShadingParameterMode;
@@ -214,19 +213,16 @@ public class MainApplication extends Application
         settingsModel.createBooleanSetting("buehlerAlgorithm", true);
         settingsModel.createNumericSetting("buehlerViewCount", 5);
 
-        SceneModel sceneModel = new SceneModel();
-
         //distribute to controllers
         sceneController.init(
             InternalModels.getInstance().getCameraModel(),
             InternalModels.getInstance().getLightingModel(),
             InternalModels.getInstance().getEnvironmentModel(),
             InternalModels.getInstance().getObjectModel(),
-            InternalModels.getInstance().getSettingsModel(),
-            sceneModel,
+            InternalModels.getInstance().getProjectModel(),
             MultithreadModels.getInstance().getSceneViewportModel());
 
-        menuBarController.init(primaryStage.getScene().getWindow(), Rendering.getRequestQueue(), InternalModels.getInstance(), sceneModel,
+        menuBarController.init(primaryStage.getScene().getWindow(), Rendering.getRequestQueue(), InternalModels.getInstance(),
             () -> getHostServices().showDocument("https://docs.google.com/document/d/1jM4sr359-oacpom0TrGLYSqCUdHFEprnvsCn5oVwTEI/edit?usp=sharing"));
 
         SynchronizedWindow menuBarWindow = new StageSynchronization(primaryStage);

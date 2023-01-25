@@ -23,7 +23,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.VBox;
-import tetzlaff.ibrelight.javafx.controllers.scene.SceneModel;
+import tetzlaff.ibrelight.javafx.internal.ObservableProjectModel;
 import tetzlaff.ibrelight.javafx.internal.CameraModelImpl;
 
 public class RootCameraSceneController
@@ -39,19 +39,19 @@ public class RootCameraSceneController
     @FXML
     private Button theRenameButton;
 
-    private SceneModel sceneModel;
+    private ObservableProjectModel projectModel;
 
-    public void init(CameraModelImpl cameraModel, SceneModel injectedSceneModel)
+    public void init(CameraModelImpl cameraModel, ObservableProjectModel injectedProjectModel)
     {
-        this.sceneModel = injectedSceneModel;
+        this.projectModel = injectedProjectModel;
 
-        cameraListView.setItems(sceneModel.getCameraList());
+        cameraListView.setItems(projectModel.getCameraList());
         cameraListView.getSelectionModel().selectedItemProperty().addListener(settingsController.changeListener);
 
         CameraSetting freeCam = new CameraSetting();
         freeCam.setName("Free Camera");
 
-        ObservableList<CameraSetting> cameraList = sceneModel.getCameraList();
+        ObservableList<CameraSetting> cameraList = projectModel.getCameraList();
 
         cameraList.add(freeCam);
         cameraListView.getSelectionModel().select(freeCam);
@@ -76,8 +76,8 @@ public class RootCameraSceneController
     @FXML
     private void newCameraButton()
     {
-        sceneModel.getCameraList().add(getCameraSelectionModel().getSelectedItem().duplicate());
-        getCameraSelectionModel().select(sceneModel.getCameraList().size() - 1);
+        projectModel.getCameraList().add(getCameraSelectionModel().getSelectedItem().duplicate());
+        getCameraSelectionModel().select(projectModel.getCameraList().size() - 1);
     }
 
     @FXML
@@ -157,7 +157,7 @@ public class RootCameraSceneController
         int i = getCameraSelectionModel().getSelectedIndex();
         if (i > 1)
         {
-            Collections.swap(sceneModel.getCameraList(), i, i - 1);
+            Collections.swap(projectModel.getCameraList(), i, i - 1);
             getCameraSelectionModel().select(i - 1);
         }
     }
@@ -166,7 +166,7 @@ public class RootCameraSceneController
     void moveDOWNButton()
     {
         int i = getCameraSelectionModel().getSelectedIndex();
-        List<CameraSetting> cameraList = sceneModel.getCameraList();
+        List<CameraSetting> cameraList = projectModel.getCameraList();
         if (i != 0 && i < cameraList.size() - 1)
         {
             Collections.swap(cameraList, i, i + 1);
@@ -198,12 +198,12 @@ public class RootCameraSceneController
         {
             Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION, "This action cannot be reversed.");
             confirmation.setHeaderText("Are you sure you want to delete the following camera: "
-                + sceneModel.getCameraList().get(selectedIndex).getName() + '?');
+                + projectModel.getCameraList().get(selectedIndex).getName() + '?');
             confirmation.setTitle("Delete Confirmation");
 
             confirmation.showAndWait()
                 .filter(Predicate.isEqual(ButtonType.OK))
-                .ifPresent(response -> sceneModel.getCameraList().remove(selectedIndex));
+                .ifPresent(response -> projectModel.getCameraList().remove(selectedIndex));
         }
     }
 }

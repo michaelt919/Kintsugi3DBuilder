@@ -24,7 +24,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.VBox;
-import tetzlaff.ibrelight.javafx.controllers.scene.SceneModel;
+import tetzlaff.ibrelight.javafx.internal.ObservableProjectModel;
 import tetzlaff.ibrelight.javafx.internal.EnvironmentModelImpl;
 
 public class RootEnvironmentSceneController
@@ -42,26 +42,26 @@ public class RootEnvironmentSceneController
 
     private static final boolean USE_STARTING_MAP = false;
 
-    private SceneModel sceneModel;
+    private ObservableProjectModel projectModel;
 
-    public void init(EnvironmentModelImpl environmentMapModel, SceneModel injectedSceneModel)
+    public void init(EnvironmentModelImpl environmentMapModel, ObservableProjectModel injectedProjectModel)
     {
-        this.sceneModel = injectedSceneModel;
+        this.projectModel = injectedProjectModel;
 
-        environmentListView.setItems(sceneModel.getEnvironmentList());
+        environmentListView.setItems(projectModel.getEnvironmentList());
         environmentListView.getSelectionModel().selectedItemProperty().addListener(settingsController.changeListener);
 
         settingsController.setEnvironmentMapModel(environmentMapModel);
 
-        ObservableList<EnvironmentSetting> environmentList = sceneModel.getEnvironmentList();
+        ObservableList<EnvironmentSetting> environmentList = projectModel.getEnvironmentList();
 
-        sceneModel.getEnvironmentList().add(EnvironmentSetting.NO_ENVIRONMENT);
+        projectModel.getEnvironmentList().add(EnvironmentSetting.NO_ENVIRONMENT);
 
         if (USE_STARTING_MAP)
         {
             EnvironmentSetting startingMap = new EnvironmentSetting();
             startingMap.setName("Environment 1");
-            sceneModel.getEnvironmentList().add(startingMap);
+            projectModel.getEnvironmentList().add(startingMap);
             environmentListView.getSelectionModel().select(1);
         }
         else
@@ -89,7 +89,7 @@ public class RootEnvironmentSceneController
     {
         MultipleSelectionModel<EnvironmentSetting> selectionModel = environmentListView.getSelectionModel();
         EnvironmentSetting selectedEnvironment = selectionModel.getSelectedItem();
-        List<EnvironmentSetting> environmentList = sceneModel.getEnvironmentList();
+        List<EnvironmentSetting> environmentList = projectModel.getEnvironmentList();
 
         if (selectedEnvironment == null || Objects.equals(selectedEnvironment, EnvironmentSetting.NO_ENVIRONMENT))
         {
@@ -170,7 +170,7 @@ public class RootEnvironmentSceneController
         int selectedIndex = environmentListView.getSelectionModel().getSelectedIndex();
         if (selectedIndex > 1)
         {
-            Collections.swap(sceneModel.getEnvironmentList(), selectedIndex, selectedIndex - 1);
+            Collections.swap(projectModel.getEnvironmentList(), selectedIndex, selectedIndex - 1);
             environmentListView.getSelectionModel().select(selectedIndex - 1);
         }
     }
@@ -181,7 +181,7 @@ public class RootEnvironmentSceneController
         int selectedIndex = environmentListView.getSelectionModel().getSelectedIndex();
         if (selectedIndex != 0)
         {
-            List<EnvironmentSetting> environmentList = sceneModel.getEnvironmentList();
+            List<EnvironmentSetting> environmentList = projectModel.getEnvironmentList();
             if (selectedIndex < environmentList.size() - 1)
             {
                 Collections.swap(environmentList, selectedIndex, selectedIndex + 1);
@@ -217,7 +217,7 @@ public class RootEnvironmentSceneController
 
             confirmation.showAndWait()
                 .filter(Predicate.isEqual(ButtonType.OK))
-                .ifPresent(response -> sceneModel.getEnvironmentList().remove(selectionModel.getSelectedIndex()));
+                .ifPresent(response -> projectModel.getEnvironmentList().remove(selectionModel.getSelectedIndex()));
         }
     }
 }

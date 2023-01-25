@@ -11,14 +11,19 @@
 
 package tetzlaff.ibrelight.app;//Created by alexk on 7/19/2017.
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
+import javax.xml.parsers.ParserConfigurationException;
 
+import javafx.application.Platform;
 import javafx.stage.Stage;
+import org.xml.sax.SAXException;
 import tetzlaff.gl.glfw.WindowFactory;
 import tetzlaff.gl.glfw.WindowImpl;
 import tetzlaff.gl.interactive.InteractiveGraphics;
@@ -33,6 +38,7 @@ import tetzlaff.gl.window.PollableWindow;
 import tetzlaff.ibrelight.core.IBRRequestManager;
 import tetzlaff.ibrelight.core.LoadingModel;
 import tetzlaff.ibrelight.core.LoadingMonitor;
+import tetzlaff.ibrelight.javafx.MainApplication;
 import tetzlaff.ibrelight.javafx.MultithreadModels;
 import tetzlaff.ibrelight.rendering.IBRInstanceManager;
 import tetzlaff.ibrelight.tools.DragToolType;
@@ -62,12 +68,12 @@ public final class Rendering
         return requestQueue;
     }
 
-    public static void runProgram() throws InitializationException
+    public static void runProgram(String... args) throws InitializationException
     {
-        runProgram(null);
+        runProgram(null, args);
     }
 
-    public static void runProgram(Stage stage) throws InitializationException
+    public static void runProgram(Stage stage, String... args) throws InitializationException
     {
         System.getenv();
         System.setProperty("org.lwjgl.util.DEBUG", "true");
@@ -383,6 +389,9 @@ public final class Rendering
                 });
             }
 
+            // Process CLI args after the main window has loaded.
+            MainApplication.addStartListener(st -> processArgs(args));
+
             try
             {
                 app.run();
@@ -397,6 +406,48 @@ public final class Rendering
         {
             // The event loop has terminated so cleanup the windows and exit with a successful return code.
             WindowImpl.closeAllWindows();
+        }
+    }
+
+    private static void processArgs(String... args)
+    {
+        // Load project if requested
+        if (args.length >= 1)
+        {
+            if (args[0].endsWith(".vset"))
+            {
+                File vsetFile = new File(args[0]);
+                new Thread(() -> MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).run();
+            }
+            else
+            {
+                // Using Platform.runLater since full IBR projects include stuff that's managed by JavaFX (cameras, lights, etc.)
+                Platform.runLater(() ->
+                {
+                    try
+                    {
+                        MultithreadModels.getInstance().getProjectModel().openProjectFile(new File(args[0]));
+                    }
+                    catch (IOException e)
+                    {
+                        e.printStackTrace();
+                    }
+                    catch (ParserConfigurationException e)
+                    {
+                        e.printStackTrace();
+                    }
+                    catch (SAXException e)
+                    {
+                        e.printStackTrace();
+                    }
+                });
+            }
+        }
+
+        // Execute command if requested
+        if (args.length >= 2)
+        {
+//            Rendering.getRequestQueue().addIBRRequest();
         }
     }
 

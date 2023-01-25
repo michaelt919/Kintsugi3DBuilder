@@ -31,11 +31,11 @@ public class RootSceneController
     private RootObjectSceneController objectPosesController;
 
     public void init(CameraModelImpl cameraModel, LightingModelImpl lightingModel, EnvironmentModelImpl environmentMapModel,
-        ObjectModelImpl objectModel, SettingsModelImpl settingsModel, SceneModel sceneModel, SceneViewportModel sceneViewportModel)
+                     ObjectModelImpl objectModel, ObservableProjectModel projectModel, SceneViewportModel sceneViewportModel)
     {
-        cameraController.init(cameraModel, sceneModel);
-        lightsController.init(lightingModel, sceneModel, sceneViewportModel);
-        environmentMapController.init(environmentMapModel, sceneModel);
-        objectPosesController.init(objectModel, sceneModel);
+        cameraController.init(cameraModel, projectModel);
+        lightsController.init(lightingModel, projectModel, sceneViewportModel);
+        environmentMapController.init(environmentMapModel, projectModel);
+        objectPosesController.init(objectModel, projectModel);
     }
 }

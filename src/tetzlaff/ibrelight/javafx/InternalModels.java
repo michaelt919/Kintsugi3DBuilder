@@ -11,6 +11,7 @@
 
 package tetzlaff.ibrelight.javafx;
 
+import tetzlaff.ibrelight.javafx.internal.ObservableProjectModel;
 import tetzlaff.ibrelight.javafx.internal.*;
 
 public final class InternalModels
@@ -28,6 +29,7 @@ public final class InternalModels
     private final ObjectModelImpl objectModel;
     private final LoadOptionsModelImpl loadOptionsModel;
     private final SettingsModelImpl settingsModel;
+    private final ObservableProjectModel projectModel;
 
     private InternalModels()
     {
@@ -37,6 +39,7 @@ public final class InternalModels
         lightingModel = new LightingModelImpl(environmentModel);
         loadOptionsModel = new LoadOptionsModelImpl();
         settingsModel = new SettingsModelImpl();
+        projectModel = new ObservableProjectModel();
     }
 
     public CameraModelImpl getCameraModel()
@@ -67,5 +70,10 @@ public final class InternalModels
     public EnvironmentModelImpl getEnvironmentModel()
     {
         return environmentModel;
+    }
+
+    public ObservableProjectModel getProjectModel()
+    {
+        return projectModel;
     }
 }

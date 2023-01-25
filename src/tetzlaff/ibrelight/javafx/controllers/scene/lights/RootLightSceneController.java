@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.Predicate;
 
-import javafx.scene.control.skin.TableHeaderRow;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
@@ -35,7 +34,7 @@ import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.layout.VBox;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibrelight.javafx.controllers.scene.SceneModel;
+import tetzlaff.ibrelight.javafx.internal.ObservableProjectModel;
 import tetzlaff.ibrelight.javafx.internal.LightingModelImpl;
 import tetzlaff.models.SceneViewport;
 import tetzlaff.models.SceneViewportModel;
@@ -52,7 +51,7 @@ public class RootLightSceneController implements Initializable
     private final Property<LightInstanceSetting> selectedLight = new SimpleObjectProperty<>();
     private int lastSelectedIndex = -1;
 
-    private SceneModel sceneModel;
+    private ObservableProjectModel projectModel;
     private SceneViewportModel sceneViewportModel;
 
     @SuppressWarnings("rawtypes")
@@ -150,12 +149,12 @@ public class RootLightSceneController implements Initializable
         };
     }
 
-    public void init(LightingModelImpl lightingModel, SceneModel injectedSceneModel, SceneViewportModel injectedSceneViewportModel)
+    public void init(LightingModelImpl lightingModel, ObservableProjectModel injectedProjectModel, SceneViewportModel injectedSceneViewportModel)
     {
-        this.sceneModel = injectedSceneModel;
+        this.projectModel = injectedProjectModel;
         this.sceneViewportModel = injectedSceneViewportModel;
 
-        ObservableList<LightGroupSetting> lightGroupList = sceneModel.getLightGroupList();
+        ObservableList<LightGroupSetting> lightGroupList = projectModel.getLightGroupList();
         tableView.setItems(lightGroupList);
 
         //lightGroupList.add(new LightGroupSetting("Free Lights"));
@@ -200,7 +199,7 @@ public class RootLightSceneController implements Initializable
         //for now we will create a blank group
         //in the future we may want to duplicate the previous group instead
         LightGroupSetting newGroup = new LightGroupSetting("New Group");
-        List<LightGroupSetting> lightGroupList = sceneModel.getLightGroupList();
+        List<LightGroupSetting> lightGroupList = projectModel.getLightGroupList();
         lightGroupList.add(newGroup);
 
         int newRowIndex = lightGroupList.size() - 1;
@@ -276,14 +275,14 @@ public class RootLightSceneController implements Initializable
     {
         if (getSelectedLightGroupIndex() > 0)
         {
-            Collections.swap(sceneModel.getLightGroupList(), getSelectedLightGroupIndex(), getSelectedLightGroupIndex() - 1);
+            Collections.swap(projectModel.getLightGroupList(), getSelectedLightGroupIndex(), getSelectedLightGroupIndex() - 1);
         }
     }
 
     @FXML
     private void moveDOWNGroup()
     {
-        List<LightGroupSetting> lightGroupList = sceneModel.getLightGroupList();
+        List<LightGroupSetting> lightGroupList = projectModel.getLightGroupList();
         if (getSelectedLightGroupIndex() < lightGroupList.size() - 1)
         {
             Collections.swap(lightGroupList, getSelectedLightGroupIndex(), getSelectedLightGroupIndex() + 1);
@@ -315,7 +314,7 @@ public class RootLightSceneController implements Initializable
     @FXML
     private void deleteGroup()
     {
-        List<LightGroupSetting> lightGroupList = sceneModel.getLightGroupList();
+        List<LightGroupSetting> lightGroupList = projectModel.getLightGroupList();
         int selectedRow = getSelectedLightGroupIndex();
 
         if (lightGroupList.size() > selectedRow && selectedRow >= 0)

@@ -42,13 +42,11 @@ import tetzlaff.ibrelight.app.WindowSynchronization;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.javafx.InternalModels;
 import tetzlaff.ibrelight.javafx.MultithreadModels;
-import tetzlaff.ibrelight.javafx.controllers.scene.SceneModel;
 import tetzlaff.util.Flag;
 
 public class MenubarController
 {
     private InternalModels internalModels;
-    private SceneModel sceneModel;
 
     //Window open flags
     private final Flag ibrOptionsWindowOpen = new Flag(false);
@@ -92,12 +90,11 @@ public class MenubarController
 
 
     public <ContextType extends Context<ContextType>> void init(
-        Window injectedParentWindow, IBRRequestManager<ContextType> requestQueue, InternalModels injectedInternalModels, SceneModel injectedSceneModel,
+        Window injectedParentWindow, IBRRequestManager<ContextType> requestQueue, InternalModels injectedInternalModels,
         Runnable injectedUserDocumentationHandler)
     {
         this.parentWindow = injectedParentWindow;
         this.internalModels = injectedInternalModels;
-        this.sceneModel = injectedSceneModel;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
 
         projectFileChooser = new FileChooser();
@@ -333,7 +330,7 @@ public class MenubarController
                 {
                     try
                     {
-                        newVsetFile = sceneModel.openProjectFile(projectFile);
+                        newVsetFile = internalModels.getProjectModel().openProjectFile(projectFile);
                     }
                     catch (IOException | ParserConfigurationException | SAXException e)
                     {
@@ -377,7 +374,7 @@ public class MenubarController
                 {
                     this.vsetFile = new File(projectFile + ".vset");
                     MultithreadModels.getInstance().getLoadingModel().saveToVSETFile(vsetFile);
-                    sceneModel.saveProjectFile(projectFile, vsetFile);
+                    internalModels.getProjectModel().saveProjectFile(projectFile, vsetFile);
                 }
             }
             catch(IOException | TransformerException | ParserConfigurationException e)

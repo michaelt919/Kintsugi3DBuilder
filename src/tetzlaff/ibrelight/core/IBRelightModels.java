@@ -29,4 +29,6 @@ public interface IBRelightModels
     SceneViewportModel getSceneViewportModel();
     ReadonlyLoadOptionsModel getLoadOptionsModel();
     LoadingModel getLoadingModel();
+
+    ProjectModel getProjectModel();
 }
