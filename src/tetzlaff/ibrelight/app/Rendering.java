@@ -426,7 +426,8 @@ public final class Rendering
                 {
                     try
                     {
-                        MultithreadModels.getInstance().getProjectModel().openProjectFile(new File(args[0]));
+                        File vsetFile = MultithreadModels.getInstance().getProjectModel().openProjectFile(new File(args[0]));
+                        new Thread(() -> MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).run();
                     }
                     catch (IOException e)
                     {
