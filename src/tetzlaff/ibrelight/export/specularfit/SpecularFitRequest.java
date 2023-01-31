@@ -107,6 +107,9 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
     private void executeRequest(IBRResources<ContextType> resources, SpecularResources<ContextType> specularFit)
         throws FileNotFoundException
     {
+        // Create output directory
+        settings.outputDirectory.mkdirs();
+
         // Reconstruct images both from basis functions and from fitted roughness
         SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources, settings);
         FinalReconstruction<ContextType> reconstruction = new FinalReconstruction<>(resources, settings);
