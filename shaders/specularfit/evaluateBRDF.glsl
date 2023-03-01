@@ -10,6 +10,9 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
+#ifndef EVALUATE_BRDF_GLSL
+#define EVALUATE_BRDF_GLSL
+
 #line 14 4001
 
 uniform sampler2DArray weightMaps;
@@ -24,10 +27,9 @@ layout(std140) uniform DiffuseColors
     vec4 diffuseColors[BASIS_COUNT];
 };
 
-vec3 getMFDEstimate(float nDotH)
+vec3 getMFDEstimateRaw(float w)
 {
     vec3 estimate = vec3(0);
-    float w = sqrt(max(0.0, acos(nDotH) * 3.0 / PI));
 
     for (int b = 0; b < BASIS_COUNT; b++)
     {
@@ -35,6 +37,12 @@ vec3 getMFDEstimate(float nDotH)
     }
 
     return estimate;
+}
+
+vec3 getMFDEstimate(float nDotH)
+{
+    float w = sqrt(max(0.0, acos(nDotH) * 3.0 / PI));
+    return getMFDEstimateRaw(w);
 }
 
 vec3 getDiffuseEstimate()
@@ -61,3 +69,9 @@ vec3 getBRDFEstimate(float nDotH, float geomFactor)
 
     return estimate;
 }
+
+#ifndef MICROFACET_DISTRIBUTION_RESOLUTION
+#define MICROFACET_DISTRIBUTION_RESOLUTION 90
+#endif
+
+#endif // EVALUATE_BRDF_GLSL

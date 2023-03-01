@@ -291,7 +291,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 viewSet.setPrimaryView(primaryViewName);
             }
 
-            if (geometry == null && viewSet.getGeometryFile() != null)
+            if (geometry == null && viewSet != null && viewSet.getGeometryFile() != null)
             {
                 // Load geometry if it wasn't specified but a view set was.
                 geometry = VertexGeometry.createFromOBJFile(viewSet.getGeometryFile());
@@ -488,7 +488,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
 
         // Store the poses in a uniform buffer
-        if (viewSet.getCameraPoseData() != null)
+        if (viewSet != null && viewSet.getCameraPoseData() != null)
         {
             // Create the uniform buffer
             cameraPoseBuffer = context.createUniformBuffer().setData(viewSet.getCameraPoseData());
@@ -499,7 +499,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
 
         // Store the camera projections in a uniform buffer
-        if (viewSet.getCameraProjectionData() != null && this.eigentextures == null)
+        if (viewSet != null && viewSet.getCameraProjectionData() != null && this.eigentextures == null)
         {
             // Create the uniform buffer
             cameraProjectionBuffer = context.createUniformBuffer().setData(viewSet.getCameraProjectionData());
@@ -510,7 +510,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
 
         // Store the camera projection indices in a uniform buffer
-        if (viewSet.getCameraProjectionIndexData() != null && this.eigentextures == null)
+        if (viewSet != null && viewSet.getCameraProjectionIndexData() != null && this.eigentextures == null)
         {
             cameraProjectionIndexBuffer = context.createUniformBuffer().setData(viewSet.getCameraProjectionIndexData());
         }
@@ -520,7 +520,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
 
         // Store the light positions in a uniform buffer
-        if (viewSet.getLightPositionData() != null)
+        if (viewSet != null && viewSet.getLightPositionData() != null)
         {
             // Create the uniform buffer
             lightPositionBuffer = context.createUniformBuffer().setData(viewSet.getLightPositionData());
@@ -531,7 +531,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
 
         // Store the light positions in a uniform buffer
-        if (viewSet.getLightIntensityData() != null)
+        if (viewSet != null && viewSet.getLightIntensityData() != null)
         {
             // Create the uniform buffer
             lightIntensityBuffer = context.createUniformBuffer().setData(viewSet.getLightIntensityData());
@@ -542,7 +542,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
 
         // Store the light indices indices in a uniform buffer
-        if (viewSet.getLightIndexData() != null)
+        if (viewSet != null && viewSet.getLightIndexData() != null)
         {
             lightIndexBuffer = context.createUniformBuffer().setData(viewSet.getLightIndexData());
         }
@@ -552,7 +552,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
 
         // Luminance map texture
-        if (viewSet.hasCustomLuminanceEncoding())
+        if (viewSet != null && viewSet.hasCustomLuminanceEncoding())
         {
             luminanceMap = viewSet.getLuminanceEncoding().createLuminanceMap(context);
             inverseLuminanceMap = viewSet.getLuminanceEncoding().createInverseLuminanceMap(context);
@@ -567,7 +567,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         {
             this.positionBuffer = context.createVertexBuffer().setData(geometry.getVertices());
 
-            if (loadOptions.getDepthImageWidth() != 0 && loadOptions.getDepthImageHeight() != 0)
+            if (viewSet != null && loadOptions.getDepthImageWidth() != 0 && loadOptions.getDepthImageHeight() != 0)
             {
                 try
                 (
@@ -879,7 +879,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             roughnessTexture = null;
         }
 
-        if (viewSet.getResidualTextureFile() != null)
+        if (viewSet != null && viewSet.getResidualTextureFile() != null)
         {
             System.out.println("Residual texture found.");
             ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> residualTextureBuilder =

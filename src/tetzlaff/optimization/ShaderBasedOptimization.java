@@ -14,10 +14,13 @@ package tetzlaff.optimization;
 import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
@@ -55,12 +58,9 @@ public class ShaderBasedOptimization<ContextType extends Context<ContextType>> i
         // Normal estimation program
         estimationProgram = estimationProgramBuilder.createProgram();
 
-        // Framebuffers (double-buffered) for estimating normals on the GPU
+        // Framebuffers (double-buffered) for estimating on the GPU
         framebuffer1 = framebufferObjectBuilder.createFramebufferObject();
         framebuffer2 = framebufferObjectBuilder.createFramebufferObject();
-
-        framebuffer1.clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
-        framebuffer2.clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
 
         // Double buffering since we need the previous normal estimate to generate the next normal estimate.
         frontFramebuffer = framebuffer1;
@@ -119,6 +119,11 @@ public class ShaderBasedOptimization<ContextType extends Context<ContextType>> i
         return frontFramebuffer;
     }
 
+    public FramebufferObject<ContextType> getBackFramebuffer()
+    {
+        return backFramebuffer;
+    }
+
     /**
      * Runs once and swap framebuffers
      */
@@ -137,7 +142,7 @@ public class ShaderBasedOptimization<ContextType extends Context<ContextType>> i
 
         // Estimate a new solution.
         // Run shader program to fill framebuffer with per-pixel information.
-        estimationDrawable.draw(PrimitiveMode.TRIANGLES, backFramebuffer);
+        estimationDrawable.draw(backFramebuffer);
 
         // New estimate becomes the new front framebuffer
         swapFramebuffers();
@@ -155,12 +160,12 @@ public class ShaderBasedOptimization<ContextType extends Context<ContextType>> i
      * @param errorCalculator
      * @return
      */
-    public ReadonlyErrorReport runOnce(Function<Texture<ContextType>, ReadonlyErrorReport> errorCalculator)
+    public ReadonlyErrorReport runOnce(Function<FramebufferObject<ContextType>, ReadonlyErrorReport> errorCalculator)
     {
         runOnce();
 
         // Check error
-        ReadonlyErrorReport report = errorCalculator.apply(frontFramebuffer.getColorAttachmentTexture(0));
+        ReadonlyErrorReport report = errorCalculator.apply(frontFramebuffer);
 
         if (report.getError() > report.getPreviousError())
         {
@@ -172,7 +177,7 @@ public class ShaderBasedOptimization<ContextType extends Context<ContextType>> i
         return report;
     }
 
-    public void runUntilConvergence(Function<Texture<ContextType>, ReadonlyErrorReport> errorCalculator,
+    public void runUntilConvergence(Function<FramebufferObject<ContextType>, ReadonlyErrorReport> errorCalculator,
         double convergenceTolerance, int unsuccessfulIterationsAllowed)
     {
         int unsuccessfulIterations = 0;

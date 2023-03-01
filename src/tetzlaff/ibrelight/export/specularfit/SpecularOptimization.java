@@ -330,7 +330,7 @@ public class SpecularOptimization
         return solution;
     }
 
-    private static void logError(ReadonlyErrorReport report)
+    static void logError(ReadonlyErrorReport report)
     {
         System.out.println("--------------------------------------------------");
         System.out.println("Error: " + report.getError());

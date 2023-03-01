@@ -12,24 +12,46 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-#line 16 0
+in vec2 fTexCoord;
+
+uniform float gamma;
+uniform float gammaInv;
+
+#ifndef PI
+#define PI 3.1415926535897932384626433832795
+#endif
+
+#include "evaluateBRDF.glsl"
+#include "basisToGGXError.glsl"
+
+#line 28 0
+
+#ifndef MIN_DAMPING
+#define MIN_DAMPING 1.0
+#endif
 
 layout(location = 0) out vec4 specularColor;
 layout(location = 1) out vec4 sqrtRoughness;
-layout(location = 2) out vec4 dampingOut;
+layout(location = 2) out vec4 dampingErrorOut;
+
+uniform sampler2D diffuseEstimate;
+uniform sampler2D specularEstimate;
+uniform sampler2D roughnessEstimate;
+uniform sampler2D dampingTex;
 
 void main()
 {
     mat4 mJTJ = mat4(0);
     vec4 vJTb = vec4(0);
 
-    float dampingFactor = texture(dampingTex, fTexCoord)[0];
+    vec2 dampingError = texture(dampingTex, fTexCoord).rg;
+    float dampingFactor = dampingError[0];
     vec3 reflectivityGammaPrev = texture(specularEstimate, fTexCoord).rgb;
     vec3 reflectivity = pow(reflectivityGammaPrev, vec3(gamma));
     float sqrtRoughnessPrev = texture(roughnessEstimate, fTexCoord)[0];
-    float roughness = sqrtRoughnessVal * sqrtRoughnessVal;
+    float roughness = sqrtRoughnessPrev * sqrtRoughnessPrev;
     float roughnessSquared = roughness * roughness;
-    vec3 diffuse = pow(texture(diffuseColor, fTexCoord).rgb, vec3(gamma));
+    vec3 diffuse = pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma));
 
     for (int m = 1; m < MICROFACET_DISTRIBUTION_RESOLUTION; m++)
     {
@@ -48,9 +70,9 @@ void main()
 
         vec3 brdfTimes4Pi = 4 * diffuse + mfdTimesPi * reflectivity; // ignore masking / shadowing
 
-        vec3 gammaDerivative = gammaInv * pow(brdfTimesPi, gammaInv - 1);
+        vec3 gammaDerivative = gammaInv * pow(brdfTimes4Pi, vec3(gammaInv - 1));
 
-        vec3 reflectivityGradients = gammaDerivative * mdfTimesPi;
+        vec3 reflectivityGradients = gammaDerivative * mfdTimesPi;
         vec3 roughnessGradients = gammaDerivative * mfdDerivativeTimesPi * reflectivity;
 
         float weight = nDotH * nDotH; // cosine weighting
@@ -60,44 +82,39 @@ void main()
         vec4 redGradient = vec4(reflectivityGradients.r, 0, 0, roughnessGradients.r);
         vec4 greenGradient = vec4(0, reflectivityGradients.g, 0, roughnessGradients.g);
         vec4 blueGradient = vec4(0, 0, reflectivityGradients.b, roughnessGradients.b);
-        mJTJ += weight * redGradient * transpose(redGradient) + mat2(dampingFactor);
-        mJTJ += weight * greenGradient * transpose(greenGradient) + mat2(dampingFactor);
-        mJTJ += weight * blueGradient * transpose(blueGradient) + mat2(dampingFactor);
+        mJTJ += weight * outerProduct(redGradient,redGradient) + mat4(dampingFactor);
+        mJTJ += weight * outerProduct(greenGradient,greenGradient) + mat4(dampingFactor);
+        mJTJ += weight * outerProduct(blueGradient,blueGradient) + mat4(dampingFactor);
 
         // Calculate RHS
-        vec3 target = vec3(0);
-        for (int b = 0; b < BASIS_COUNT; b++)
-        {
-            target += weights[b] * texelFetch(basisFunctions, ivec2(m, b), 0).rgb;
-        }
+        vec3 target = getMFDEstimateRaw(m); // Use nonlinear encoding of cosine ("m") directly rather than N dot H
 
-        vec3 diff = pow(4 * diffuse.r + PI * target.r, gammaInv) - pow(brdfTimes4Pi.r, gammaInv);
+        vec3 diff = pow(4 * diffuse + PI * target, vec3(gammaInv)) - pow(brdfTimes4Pi, vec3(gammaInv));
 
         vJTb += weight * vec4(reflectivityGradients * diff, dot(roughnessGradients, diff));
     }
 
+    float prevError = dampingError[1];
     if (determinant(mJTJ) > 0)
     {
         vec4 delta = inverse(mJTJ) * vJTb;// gamma corrected RGB reflectivity, sqrt(roughness)
 
-        vec3 newReflectivity = reflectivityGammaPrev + delta.rgb;
+        vec3 newReflectivity = reflectivity + delta.rgb;
         float newSqrtRoughness = sqrtRoughnessPrev + delta.a;
+        float newError = calculateError(diffuse, newReflectivity, newSqrtRoughness * newSqrtRoughness);
 
-        float newError = calculateError(triangleNormal, tangentToObject * newNormalTS);
-
-        if (!isnan(newReflectivity.r) && !isnan(newReflectivity.g) && !isnan(newReflectivity.b)
-        && !isnan(newReflectivity.a) && newError < prevError)
+        if (!isnan(newReflectivity.r) && !isnan(newReflectivity.g) && !isnan(newReflectivity.b) && newError < prevError)
         {
             // Accept iteration
             specularColor = vec4(newReflectivity, 1.0);
             sqrtRoughness = vec4(vec3(newSqrtRoughness), 1.0);
-            dampingOut = vec4(vec3(max(MIN_DAMPING, dampingFactor / 2.0)), 1.0);
+            dampingErrorOut = vec4(max(MIN_DAMPING, dampingFactor / 2.0), newError, 0.0, 1.0);
             return;
         }
     }
 
     // Reject iteration if not accepted
-    specularColor = vec4(reflectivityGamma, 1.0);
+    specularColor = vec4(reflectivityGammaPrev, 1.0);
     sqrtRoughness = vec4(vec3(sqrtRoughnessPrev), 1.0);
-    dampingOut = vec4(vec3(dampingFactor * 2.0), 1.0);
+    dampingErrorOut = vec4(dampingFactor * 2.0, prevError, 0.0, 1.0);
 }

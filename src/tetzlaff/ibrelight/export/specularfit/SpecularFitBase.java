@@ -15,7 +15,6 @@ import java.io.FileNotFoundException;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Texture2D;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
 public abstract class SpecularFitBase<ContextType extends Context<ContextType>> implements SpecularResources<ContextType>
 {
@@ -35,7 +34,10 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
         basisResources = new BasisResources<>(context, settings);
 
         // Specular roughness / reflectivity module that manages its own resources
-        roughnessOptimization = new RoughnessOptimization<>(context, basisResources, settings);
+        roughnessOptimization =
+            new RoughnessOptimizationSimple<>(context, basisResources, settings);
+            //new RoughnessOptimizationIterative<>(context, basisResources, this::getDiffuseMap, settings);
+        roughnessOptimization.clear();
     }
 
     @Override

@@ -203,32 +203,24 @@ public class SpecularFitRequestUI implements IBRRequestUI
             settings.setSmithMaskingShadowingEnabled(smithCheckBox.isSelected());
             settings.setLevenbergMarquardtEnabled(levenbergMarquardtCheckBox.isSelected());;
             settings.setUnsuccessfulLMIterationsAllowed(Integer.parseInt(unsuccessfulLMIterationsTextField.getText()));
+            settings.setReconstructAll(reconstructAllCheckBox.isSelected());
 
-            if (reconstructAllCheckBox.isSelected())
+            if (reconstructionViewSetField.getText() != null && !reconstructionViewSetField.getText().isEmpty())
             {
-                settings.setReconstructAll(true);
-
-                if (reconstructionViewSetField.getText() != null && !reconstructionViewSetField.getText().isEmpty())
+                // Reconstruction view set
+                try
                 {
-                    // Reconstruction view set
-                    try
-                    {
-                        settings.setReconstructionViewSet(ViewSet.loadFromVSETFile(
-                            new File(reconstructionViewSetField.getText())));
-                    }
-                    catch (FileNotFoundException e)
-                    {
-                        Alert alert = new Alert(Alert.AlertType.ERROR);
-                        alert.setTitle("Invalid view set");
-                        alert.setHeaderText("Reconstruction view set is invalid.");
-                        alert.setContentText("Please try another view set or leave the field blank to use the view set for the current model.");
-                        e.printStackTrace();
-                    }
+                    settings.setReconstructionViewSet(ViewSet.loadFromVSETFile(
+                        new File(reconstructionViewSetField.getText())));
                 }
-            }
-            else
-            {
-                settings.setReconstructAll(false);
+                catch (FileNotFoundException e)
+                {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Invalid view set");
+                    alert.setHeaderText("Reconstruction view set is invalid.");
+                    alert.setContentText("Please try another view set or leave the field blank to use the view set for the current model.");
+                    e.printStackTrace();
+                }
             }
 
             SpecularFitRequest<ContextType> request = new SpecularFitRequest<>(settings);

@@ -47,12 +47,18 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
                 .addColorAttachment(ColorFormat.R32F), // Damping factor while fitting,
             drawableFactory);
 
+        estimateNormals.getFrontFramebuffer().clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
+        estimateNormals.getBackFramebuffer().clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
+
         smoothNormals = new ShaderBasedOptimization<>(
             getNormalSmoothProgramBuilder(programFactory),
             context.buildFramebufferObject(settings.width, settings.height)
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F)
                     .setLinearFilteringEnabled(true)),
             drawableFactory);
+
+        smoothNormals.getFrontFramebuffer().clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
+        smoothNormals.getBackFramebuffer().clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
 
         estimateNormals.addSetupCallback((estimationProgram, backFramebuffer) ->
         {
@@ -133,7 +139,8 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
             estimateNormals.getFrontFramebuffer().clearColorBuffer(1, 1.0f, 1.0f, 1.0f, 1.0f);
 
             // Estimate using the Levenberg-Marquardt algorithm.
-            estimateNormals.runUntilConvergence(errorCalculator, convergenceTolerance, settings.getUnsuccessfulLMIterationsAllowed());
+            estimateNormals.runUntilConvergence(framebuffer -> errorCalculator.apply(framebuffer.getColorAttachmentTexture(0)),
+                    convergenceTolerance, settings.getUnsuccessfulLMIterationsAllowed());
         }
         else
         {
