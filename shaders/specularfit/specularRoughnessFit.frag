@@ -16,25 +16,16 @@ in vec2 fTexCoord;
 layout(location = 0) out vec4 specularColor;
 layout(location = 1) out vec4 sqrtRoughness;
 
-uniform sampler2DArray weightMaps;
 uniform sampler2D weightMask;
-uniform sampler1DArray basisFunctions;
 uniform float fittingGamma;
 
 #ifndef PI
 #define PI 3.1415926535897932384626433832795
 #endif
 
-#ifndef BASIS_COUNT
-#define BASIS_COUNT 8
-#endif
-
-#ifndef MICROFACET_DISTRIBUTION_RESOLUTION
-#define MICROFACET_DISTRIBUTION_RESOLUTION 90
-#endif
-
 #include "../colorappearance/linearize.glsl"
-#line 37 0
+#include "evaluateBRDF.glsl"
+#line 29 0
 
 void main()
 {
