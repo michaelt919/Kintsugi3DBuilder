@@ -14,10 +14,7 @@ package tetzlaff.gl.opengl;
 import java.util.Map;
 import java.util.TreeMap;
 
-import tetzlaff.gl.core.Drawable;
-import tetzlaff.gl.core.Framebuffer;
-import tetzlaff.gl.core.PrimitiveMode;
-import tetzlaff.gl.core.VertexBuffer;
+import tetzlaff.gl.core.*;
 import tetzlaff.gl.exceptions.UnrecognizedPrimitiveModeException;
 import tetzlaff.gl.vecmath.*;
 
@@ -26,7 +23,7 @@ import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
 
-class OpenGLDrawable implements Drawable<OpenGLContext>
+class OpenGLDrawable extends DrawableBase<OpenGLContext> implements Drawable<OpenGLContext>
 {
     private interface VertexAttributeSetting
     {

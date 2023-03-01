@@ -32,6 +32,9 @@ public interface Drawable<ContextType extends Context<ContextType>> extends Cont
      */
     Program<ContextType> program();
 
+    PrimitiveMode getDefaultPrimitiveMode();
+    void setDefaultPrimitiveMode(PrimitiveMode primitiveMode);
+
     /**
      * Draws this to a particular framebuffer using the entire framebuffer as the viewport.
      * @param primitiveMode What type of primitives to use when interpreting vertex buffers.
@@ -69,6 +72,15 @@ public interface Drawable<ContextType extends Context<ContextType>> extends Cont
     void draw(PrimitiveMode primitiveMode, ContextType context);
 
     /**
+     * Draws this to the default framebuffer using the entire framebuffer as the viewport.
+     * @param primitiveMode What type of primitives to use when interpreting vertex buffers.
+     */
+    default void draw(PrimitiveMode primitiveMode)
+    {
+        this.draw(primitiveMode, getContext());
+    }
+
+    /**
      *  Draws this to default framebuffer within a specified viewport rectangle.
      * @param primitiveMode What type of primitives to use when interpreting vertex buffers.
      * @param context The context of the default framebuffer to be drawn into.
@@ -87,6 +99,80 @@ public interface Drawable<ContextType extends Context<ContextType>> extends Cont
      * @param height The height of the viewport rectangle in pixels.
      */
     void draw(PrimitiveMode primitiveMode, ContextType context, int width, int height);
+
+    /**
+     * Draws this (using the default primitive mode) to a particular framebuffer using the entire framebuffer as the viewport.
+     * @param framebuffer The framebuffer to render to.
+     */
+    default void draw(Framebuffer<ContextType> framebuffer)
+    {
+        this.draw(getDefaultPrimitiveMode(), framebuffer);
+    }
+
+    /**
+     * Draws this (using the default primitive mode) to a particular framebuffer within a specified viewport rectangle.
+     * @param framebuffer The framebuffer to render to.
+     * @param x The number of pixels to the left edge of the viewport rectangle.
+     * @param y The number of pixels to the bottom edge of the viewport rectangle.
+     * @param width The width of the viewport rectangle in pixels.
+     * @param height The height of the viewport rectangle in pixels.
+     */
+    default void draw(Framebuffer<ContextType> framebuffer, int x, int y, int width, int height)
+    {
+        this.draw(getDefaultPrimitiveMode(), framebuffer, x, y, width, height);
+    }
+
+    /**
+     * Draws this (using the default primitive mode) to a particular framebuffer within a specified viewport rectangle starting at (0, 0).
+     * @param framebuffer The framebuffer to render to.
+     * @param width The width of the viewport rectangle in pixels.
+     * @param height The height of the viewport rectangle in pixels.
+     */
+    default void draw(Framebuffer<ContextType> framebuffer, int width, int height)
+    {
+        this.draw(getDefaultPrimitiveMode(), framebuffer, width, height);
+    }
+
+    /**
+     * Draws this (using the default primitive mode) to the default framebuffer using the entire framebuffer as the viewport.
+     * @param context The context of the default framebuffer to be drawn into.
+     */
+    default void draw(ContextType context)
+    {
+        this.draw(getDefaultPrimitiveMode(), context);
+    }
+
+    /**
+     * Draws this (using the default primitive mode) to the default framebuffer using the entire framebuffer as the viewport.
+     */
+    default void draw()
+    {
+        this.draw(getDefaultPrimitiveMode());
+    }
+
+    /**
+     *  Draws this (using the default primitive mode) to default framebuffer within a specified viewport rectangle.
+     * @param context The context of the default framebuffer to be drawn into.
+     * @param x The number of pixels to the left edge of the viewport rectangle.
+     * @param y The number of pixels to the bottom edge of the viewport rectangle.
+     * @param width The width of the viewport rectangle in pixels.
+     * @param height The height of the viewport rectangle in pixels.
+     */
+    default void draw(ContextType context, int x, int y, int width, int height)
+    {
+        this.draw(getDefaultPrimitiveMode(), context, x, y, width, height);
+    }
+
+    /**
+     *  Draws this (using the default primitive mode) to default framebuffer within a specified viewport rectangle starting at (0, 0).
+     * @param context The context of the default framebuffer to be drawn into.
+     * @param width The width of the viewport rectangle in pixels.
+     * @param height The height of the viewport rectangle in pixels.
+     */
+    default void draw(ContextType context, int width, int height)
+    {
+        this.draw(getDefaultPrimitiveMode(), context, width, height);
+    }
 
     /**
      * Designates a specific value for a vertex attribute that should be used for every vertex when this renderable is drawn.

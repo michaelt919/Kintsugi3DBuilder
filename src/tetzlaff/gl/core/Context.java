@@ -129,7 +129,8 @@ public interface Context<ContextType extends Context<ContextType>> extends AutoC
      */
     default VertexBuffer<ContextType> createRectangle()
     {
-        return this.createVertexBuffer().setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(2, 4, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f), false);
+        return this.createVertexBuffer().setData(NativeVectorBufferFactory.getInstance()
+            .createFromFloatArray(2, 4, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f), false);
     }
 
     /**
