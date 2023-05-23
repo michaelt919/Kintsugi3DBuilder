@@ -34,7 +34,7 @@ void main()
     vec3 fittedNormalTS = vec3(fittedNormalXY, sqrt(1 - dot(fittedNormalXY, fittedNormalXY)));
     vec3 fittedNormal = tangentToObject * fittedNormalTS;
 
-    vec4 diffuseSum;
+    vec4 diffuseSum = vec4(0);
 
     for (int k = 0; k < CAMERA_POSE_COUNT; k++)
     {
