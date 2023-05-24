@@ -34,7 +34,7 @@ void main()
         discard;
     }
 
-    vec3 f0 = vec3(0);
+    vec3 f0 = vec3(0); // peak specular i.e. f(x0), not Fresnel
 
     float weights[BASIS_COUNT];
 

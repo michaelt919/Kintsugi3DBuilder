@@ -22,7 +22,7 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
         // Fit specular parameters from weighted basis functions
         specularRoughnessFitProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/specularRoughnessFit.frag"))
+                .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/specularRoughnessFitNew.frag"))
                 .define("BASIS_COUNT", settings.basisCount)
                 .define("MICROFACET_DISTRIBUTION_RESOLUTION", settings.microfacetDistributionResolution)
                 .createProgram();
