@@ -101,7 +101,7 @@ void main()
     fresnelOverPi += (0.5 - fresnelOverPi.a) * vec4(evalTail.mfd, 1.0);
 
     // Enforce minimum reflectivity for stability
-    fresnelOverPi = max(fresnelOverPi, 0.04 / PI);
+//    fresnelOverPi = max(fresnelOverPi, 0.04 / PI);
 
     vec2 sums = vec2(0.0);
 
@@ -117,7 +117,8 @@ void main()
             sqrt(fresnelOverPi.rgb) - sqrt(max(fresnelOverPi.rgb - 4 * nDotHSq * (1 - nDotHSq) * eval.mfd, 0.0)));
         float denominator = dot(vec3(1.0), 2 * nDotHSq * sqrt(eval.mfd));
 
-        sums += vec2(numerator, denominator) * denominator * /* sin(theta): */ sqrt(1 - nDotHSq);
+        sums += vec2(numerator, denominator) * denominator * /* sin(theta): */ sqrt(1 - nDotHSq)
+            * (dot(eval.mfd - fresnelOverPi.rgb, vec3(1.0))); // Prevent off-specular pixels from predicting false specular peaks
     }
 
 //    // cos(60 deg) = 0.5; sin(60 deg) = sqrt(0.75)
