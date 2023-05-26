@@ -112,13 +112,18 @@ void main()
 
 //        eval.mfd = max(eval.mfd, vec3(0.0));
 
-        // m = [sqrt(fresnel/pi) - sqrt(fresnel/pi - 4 * cos(theta)^2 * sin(theta)^2 * [D*F])] / [2 cos(theta)^2 * sqrt([D*F])]
+        // Solution from quadratic formula
+        // m = [sqrt(fresnel/pi) + sqrt(fresnel/pi - 4 * cos(theta)^2 * sin(theta)^2 * [D*F])] / [2 cos(theta)^2 * sqrt([D*F])]
+        // ^ Two solutions, but only the higher roughness (the + in the +/- of the quadratic formula) is reliable
+        // The second (the - solution) could predict false specular peaks as it tends to assume the sample is in the tail of the MFD.
         float numerator = dot(vec3(1.0), // Treat each color channel as a separate sample
-            sqrt(fresnelOverPi.rgb) - sqrt(max(fresnelOverPi.rgb - 4 * nDotHSq * (1 - nDotHSq) * eval.mfd, 0.0)));
+            sqrt(fresnelOverPi.rgb) + sqrt(max(fresnelOverPi.rgb - 4 * nDotHSq * (1 - nDotHSq) * eval.mfd, 0.0)));
         float denominator = dot(vec3(1.0), 2 * nDotHSq * sqrt(eval.mfd));
 
-        sums += vec2(numerator, denominator) * denominator * /* sin(theta): */ sqrt(1 - nDotHSq)
-            * (dot(eval.mfd - fresnelOverPi.rgb, vec3(1.0))); // Prevent off-specular pixels from predicting false specular peaks
+        sums += vec2(numerator, denominator) * denominator  * /* sin(theta): */ sqrt(1 - nDotHSq)
+            // numerator / denominator <= 1 => numerator <= denominator => denominator - numerator >= 0
+            * max(0.0, denominator - numerator); // Ensure roughness estimates are <= 1.
+            //* (dot(eval.mfd - fresnelOverPi.rgb, vec3(1.0))); // Prevent off-specular pixels from predicting false specular peaks
     }
 
 //    // cos(60 deg) = 0.5; sin(60 deg) = sqrt(0.75)
