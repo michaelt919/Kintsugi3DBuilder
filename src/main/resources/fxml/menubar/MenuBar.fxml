@@ -11,18 +11,37 @@
   ~  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.input.*?>
+<?import javafx.scene.layout.*?>
 <?import tetzlaff.ibrelight.core.*?>
-<VBox xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.MenubarController">
+
+<VBox xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.MenubarController">
 <MenuBar>
       <Menu mnemonicParsing="false" text="File">
-         <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="Create project" />
-         <MenuItem mnemonicParsing="false" onAction="#file_openProject" text="Open project" />
-         <MenuItem mnemonicParsing="false" onAction="#file_saveProject" text="Save project" />
-         <MenuItem mnemonicParsing="false" onAction="#file_saveProjectAs" text="Save project as..." />
-         <MenuItem mnemonicParsing="false" onAction="#file_closeProject" text="Close project" />
+         <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="Create project">
+            <accelerator>
+               <KeyCodeCombination alt="UP" code="W" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+            </accelerator></MenuItem>
+         <MenuItem mnemonicParsing="false" onAction="#file_openProject" text="Open project">
+            <accelerator>
+               <KeyCodeCombination alt="UP" code="O" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+            </accelerator></MenuItem>
+         <MenuItem mnemonicParsing="false" onAction="#file_saveProject" text="Save project">
+            <accelerator>
+               <KeyCodeCombination alt="UP" code="S" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+            </accelerator></MenuItem>
+         <MenuItem mnemonicParsing="false" onAction="#file_saveProjectAs" text="Save project as...">
+            <accelerator>
+               <KeyCodeCombination alt="UP" code="F12" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+            </accelerator></MenuItem>
+          <!-- Trying to move Export Specular Fit outside the export submenu for ease of access, not working yet -->
+         <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Export Specular Fit (UNFINISHED)" visible="false" />
+         <MenuItem mnemonicParsing="false" onAction="#file_closeProject" text="Close project">
+            <accelerator>
+               <KeyCodeCombination alt="UP" code="W" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+            </accelerator></MenuItem>
          <SeparatorMenuItem />
          <Menu fx:id="exportMenu" mnemonicParsing="false" text="Export" />
           <CheckMenuItem fx:id="lightCalibrationCheckMenuItem" mnemonicParsing="false" text="Light Calibration Mode" />
@@ -50,10 +69,13 @@
          <fx:define>
             <ToggleGroup fx:id="renderGroup" />
          </fx:define>
-         <RadioMenuItem mnemonicParsing="false" text="None" userData="None" toggleGroup="$renderGroup" visible="false">
+         <RadioMenuItem mnemonicParsing="false" text="None" userData="None" visible="false">
              <userData>
                  <StandardRenderingMode fx:value="NONE" />
              </userData>
+            <toggleGroup>
+               <ToggleGroup fx:id="renderGroup" />
+            </toggleGroup>
          </RadioMenuItem>
          <RadioMenuItem mnemonicParsing="false" text="Wireframe" toggleGroup="$renderGroup" visible="false">
              <userData>
@@ -111,7 +133,7 @@
          <CheckMenuItem mnemonicParsing="false" text="Full-screen render" />
          <CheckMenuItem mnemonicParsing="false" text="Separate render window" />
       </Menu>
-      <Menu mnemonicParsing="false" text="Help">
+      <Menu text="Help">
           <MenuItem mnemonicParsing="false" onAction="#help_userManual" text="User Manual" />
           <MenuItem mnemonicParsing="false" onAction="#help_about" text="About" />
       </Menu>

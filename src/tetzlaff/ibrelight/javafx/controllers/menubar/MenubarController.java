@@ -40,6 +40,7 @@ import tetzlaff.gl.core.Context;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.ibrelight.app.WindowSynchronization;
 import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.export.specularfit.SpecularFitRequestUI;
 import tetzlaff.ibrelight.javafx.InternalModels;
 import tetzlaff.ibrelight.javafx.MultithreadModels;
 import tetzlaff.util.Flag;
@@ -417,6 +418,18 @@ public class MenubarController
 
             MultithreadModels.getInstance().getLoadingModel().unload();
             projectLoaded = false;
+        }
+    }
+
+    @FXML
+    //TODO: trying to move the export specular fit menu item outside of the export submenu
+    //Does not work yet
+    //Looks like create() is not the only function I need to call? Unsure
+    private void exportSpecularFit(){
+        try {
+            SpecularFitRequestUI.create(this.parentWindow, MultithreadModels.getInstance());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
