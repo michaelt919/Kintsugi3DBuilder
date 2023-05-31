@@ -72,6 +72,11 @@ void main()
     float thetaPrev = 0.0;
     vec4 integrandOver2PiPrev = vec4(0.0);
 
+//    // Do a separate sum that's biased towards samples that are less likely to have been overexposed in the original image
+//    // to avoid the color appearing undersaturated (i.e. biased towards white).
+//    float colorWeightPrev = 0.0;
+//    vec4 colorSum = vec4(0.0);
+
     // start with m=1 since m=0 has an integrand of zero.
     for (int m = 1; m <= MICROFACET_DISTRIBUTION_RESOLUTION; m++)
     {
@@ -90,6 +95,10 @@ void main()
         // old current becomes previous
         thetaPrev = eval.thetaH;
         integrandOver2PiPrev = integrandOver2Pi;
+
+//        float colorWeight = (1.0 - getLuminance(eval.mfd));
+//        colorSum += integrandOver2PiPrev * dH * colorWeightPrev + integrandOver2Pi * dH * colorWeight;
+//        colorWeightPrev = colorWeight;
     }
 
     // Handle the tail (60 to 90 degree range)
@@ -99,6 +108,9 @@ void main()
     // Integral of cos(theta) * sin(theta) from 60 degrees to 90 degrees should be 1/8=0.125 (25% of total)
     // but use 0.5 - [integral from 0 to 60] to ensure exact normalization.
     fresnelOverPi += (0.5 - fresnelOverPi.a) * vec4(evalTail.mfd, 1.0);
+
+//    // Use the luminance from the integral but the RGB from the weighted average
+//    fresnelOverPi.rgb = vec3(getLuminance(colorSum.rgb)) ;//* colorSum.rgb / getLuminance(colorSum.rgb);
 
     // Enforce minimum reflectivity for stability
 //    fresnelOverPi = max(fresnelOverPi, 0.04 / PI);
