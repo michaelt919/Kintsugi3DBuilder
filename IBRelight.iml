@@ -28,5 +28,14 @@
     <orderEntry type="library" name="Maven: org.lwjgl:lwjgl:3.0.0b" level="project" />
     <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-platform:natives-windows:3.0.0b" level="project" />
     <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-platform:natives-osx:3.0.0b" level="project" />
+    <orderEntry type="library" name="Maven: de.javagl:jgltf-model:2.0.3" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.13.2.1" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.13.2" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.13.1" level="project" />
+    <orderEntry type="library" name="Maven: de.javagl:jgltf-impl-v1:2.0.3" level="project" />
+    <orderEntry type="library" name="Maven: de.javagl:jgltf-impl-v2:2.0.3" level="project" />
+    <orderEntry type="library" name="Maven: de.javagl:jgltf-obj:2.0.3" level="project" />
+    <orderEntry type="library" name="Maven: de.javagl:jgltf-model-builder:2.0.3" level="project" />
+    <orderEntry type="library" name="Maven: de.javagl:obj:0.3.0" level="project" />
   </component>
 </module>
