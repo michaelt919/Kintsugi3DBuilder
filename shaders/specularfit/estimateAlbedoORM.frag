@@ -28,8 +28,23 @@ void main()
 {
     float sqrtRoughness = texture(roughnessEstimate, fTexCoord)[0];
 
-    vec3 diffuseLinear = pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma));
-    vec3 diffusePlusSpecular = diffuseLinear + pow(texture(specularEstimate, fTexCoord).rgb, vec3(gamma));
+    vec3 diffuseGamma = texture(diffuseEstimate, fTexCoord).rgb;
+    vec3 specularGamma = texture(specularEstimate, fTexCoord).rgb;
+    vec3 diffuseLinear = pow(diffuseGamma, vec3(gamma));
+    vec3 specularLinear = pow(specularGamma, vec3(gamma));
+
+    // Weight RGB more towards diffuse for shiny materials; weight more equally for rough materials.
+    // Just a heuristic; may need to be tweaked
+    float m = sqrtRoughness * sqrtRoughness;
+//    float mSq = m*m; // m seems to work better than m^2 here (at least testing on Guan Yu)
+    vec3 combinedRGB = diffuseLinear + m * specularLinear;
+
+    // Total reflectivity
+    vec3 diffusePlusSpecular = diffuseLinear + specularLinear;
+
+    // Adjust the RGB of the reflectivity based on the weighted RGB estimate above
+    diffusePlusSpecular = getLuminance(diffusePlusSpecular) * combinedRGB / getLuminance(combinedRGB);
+
 
 //    d = (1 - m) * a
 //    d / a = 1 - m
