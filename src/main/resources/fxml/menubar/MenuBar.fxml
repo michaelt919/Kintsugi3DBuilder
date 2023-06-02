@@ -36,8 +36,10 @@
             <accelerator>
                <KeyCodeCombination alt="UP" code="F12" control="ANY" meta="UP" shift="UP" shortcut="UP" />
             </accelerator></MenuItem>
-          <!-- Trying to move Export Specular Fit outside the export submenu for ease of access, not working yet -->
-         <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Export Specular Fit (UNFINISHED)" visible="false" />
+         <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Export Specular Fit">
+            <accelerator>
+               <KeyCodeCombination alt="UP" code="P" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+            </accelerator></MenuItem>
          <MenuItem mnemonicParsing="false" onAction="#file_closeProject" text="Close project">
             <accelerator>
                <KeyCodeCombination alt="UP" code="W" control="ANY" meta="UP" shift="UP" shortcut="UP" />
@@ -73,9 +75,6 @@
              <userData>
                  <StandardRenderingMode fx:value="NONE" />
              </userData>
-            <toggleGroup>
-               <ToggleGroup fx:id="renderGroup" />
-            </toggleGroup>
          </RadioMenuItem>
          <RadioMenuItem mnemonicParsing="false" text="Wireframe" toggleGroup="$renderGroup" visible="false">
              <userData>
