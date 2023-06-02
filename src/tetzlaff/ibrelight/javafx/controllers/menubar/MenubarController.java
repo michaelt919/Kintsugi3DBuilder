@@ -89,6 +89,8 @@ public class MenubarController
 
     private Runnable userDocumentationHandler;
 
+    private IBRRequestManager<?> requestQueue;
+
 
     public <ContextType extends Context<ContextType>> void init(
         Window injectedParentWindow, IBRRequestManager<ContextType> requestQueue, InternalModels injectedInternalModels,
@@ -99,6 +101,8 @@ public class MenubarController
         this.userDocumentationHandler = injectedUserDocumentationHandler;
 
         projectFileChooser = new FileChooser();
+
+        this.requestQueue = requestQueue;
 
         projectFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
         projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Full projects", "*.ibr"));
@@ -427,7 +431,10 @@ public class MenubarController
     //Looks like create() is not the only function I need to call? Unsure
     private void exportSpecularFit(){
         try {
-            SpecularFitRequestUI.create(this.parentWindow, MultithreadModels.getInstance());
+            IBRRequestUI requestUI = SpecularFitRequestUI.create(this.parentWindow, MultithreadModels.getInstance());
+            requestUI.bind(internalModels.getSettingsModel());
+            requestUI.prompt(requestQueue);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -562,6 +569,26 @@ public class MenubarController
         {
             ColorCheckerController colorCheckerController =
                 makeWindow("Color Checker", colorCheckerWindowOpen, "fxml/menubar/ColorChecker.fxml");
+            colorCheckerController.init(MultithreadModels.getInstance().getLoadingModel());
+
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void eyedropperColorChecker()
+    {
+        if (colorCheckerWindowOpen.get())
+        {
+            return;
+        }
+
+        try
+        {
+            ColorCheckerController colorCheckerController =
+                    makeWindow("Color Checker", colorCheckerWindowOpen, "fxml/menubar/NewEyedropperColorChecker.fxml");
             colorCheckerController.init(MultithreadModels.getInstance().getLoadingModel());
 
         }

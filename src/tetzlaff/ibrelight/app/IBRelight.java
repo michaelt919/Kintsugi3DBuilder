@@ -23,6 +23,8 @@ import tetzlaff.interactive.InitializationException;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import static java.lang.System.exit;
+
 public final class IBRelight
 {
     private static final boolean DEBUG = true;

@@ -36,8 +36,10 @@
             <accelerator>
                <KeyCodeCombination alt="UP" code="F12" control="ANY" meta="UP" shift="UP" shortcut="UP" />
             </accelerator></MenuItem>
-          <!-- Trying to move Export Specular Fit outside the export submenu for ease of access, not working yet -->
-         <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Export Specular Fit (UNFINISHED)" visible="false" />
+         <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Export Specular Fit">
+            <accelerator>
+               <KeyCodeCombination alt="UP" code="P" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+            </accelerator></MenuItem>
          <MenuItem mnemonicParsing="false" onAction="#file_closeProject" text="Close project">
             <accelerator>
                <KeyCodeCombination alt="UP" code="W" control="ANY" meta="UP" shift="UP" shortcut="UP" />
@@ -46,6 +48,7 @@
          <Menu fx:id="exportMenu" mnemonicParsing="false" text="Export" />
           <CheckMenuItem fx:id="lightCalibrationCheckMenuItem" mnemonicParsing="false" text="Light Calibration Mode" />
           <MenuItem mnemonicParsing="false" onAction="#file_colorChecker" text="Enter Color Checker Values..." />
+         <MenuItem mnemonicParsing="false" onAction="#eyedropperColorChecker" text="EXPERIMENTAL COLOR CHECKER (UNFINISHED)" />
          <MenuItem mnemonicParsing="false" onAction="#file_loadOptions" text="Load Options..." />
           <SeparatorMenuItem />
          <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
@@ -73,14 +76,14 @@
              <userData>
                  <StandardRenderingMode fx:value="NONE" />
              </userData>
-            <toggleGroup>
-               <ToggleGroup fx:id="renderGroup" />
-            </toggleGroup>
          </RadioMenuItem>
-         <RadioMenuItem mnemonicParsing="false" text="Wireframe" toggleGroup="$renderGroup" visible="false">
+         <RadioMenuItem mnemonicParsing="false" text="Wireframe" visible="false">
              <userData>
                  <StandardRenderingMode fx:value="WIREFRAME" />
              </userData>
+            <toggleGroup>
+               <ToggleGroup fx:id="renderGroup" />
+            </toggleGroup>
          </RadioMenuItem>
          <RadioMenuItem mnemonicParsing="false" text="Simple Lambertian" toggleGroup="$renderGroup" visible="false">
              <userData>
