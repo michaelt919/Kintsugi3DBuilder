@@ -83,7 +83,6 @@ public class SpecularFitRequestUI implements IBRRequestUI
         svdRequestUI.stage.setTitle("Specular fit request");
         svdRequestUI.stage.setScene(new Scene(parent));
         svdRequestUI.stage.initOwner(window);
-
         return svdRequestUI;
     }
 
@@ -201,7 +200,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
 
             // Settings which shouldn't usually need to be changed
             settings.setSmithMaskingShadowingEnabled(smithCheckBox.isSelected());
-            settings.setLevenbergMarquardtEnabled(levenbergMarquardtCheckBox.isSelected());;
+            settings.setLevenbergMarquardtEnabled(levenbergMarquardtCheckBox.isSelected());
             settings.setUnsuccessfulLMIterationsAllowed(Integer.parseInt(unsuccessfulLMIterationsTextField.getText()));
             settings.setReconstructAll(reconstructAllCheckBox.isSelected());
 

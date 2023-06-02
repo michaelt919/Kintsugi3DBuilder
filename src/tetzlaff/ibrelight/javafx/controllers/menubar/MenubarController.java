@@ -40,6 +40,7 @@ import tetzlaff.gl.core.Context;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.ibrelight.app.WindowSynchronization;
 import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.export.specularfit.SpecularFitRequestUI;
 import tetzlaff.ibrelight.javafx.InternalModels;
 import tetzlaff.ibrelight.javafx.MultithreadModels;
 import tetzlaff.util.Flag;
@@ -88,6 +89,8 @@ public class MenubarController
 
     private Runnable userDocumentationHandler;
 
+    private IBRRequestManager<?> requestQueue;
+
 
     public <ContextType extends Context<ContextType>> void init(
         Window injectedParentWindow, IBRRequestManager<ContextType> requestQueue, InternalModels injectedInternalModels,
@@ -98,6 +101,8 @@ public class MenubarController
         this.userDocumentationHandler = injectedUserDocumentationHandler;
 
         projectFileChooser = new FileChooser();
+
+        this.requestQueue = requestQueue;
 
         projectFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
         projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Full projects", "*.ibr"));
@@ -417,6 +422,21 @@ public class MenubarController
 
             MultithreadModels.getInstance().getLoadingModel().unload();
             projectLoaded = false;
+        }
+    }
+
+    @FXML
+    //TODO: trying to move the export specular fit menu item outside of the export submenu
+    //Does not work yet
+    //Looks like create() is not the only function I need to call? Unsure
+    private void exportSpecularFit(){
+        try {
+            IBRRequestUI requestUI = SpecularFitRequestUI.create(this.parentWindow, MultithreadModels.getInstance());
+            requestUI.bind(internalModels.getSettingsModel());
+            requestUI.prompt(requestQueue);
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
