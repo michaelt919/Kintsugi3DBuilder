@@ -98,6 +98,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
         return roughnessOptimization.getFrontFramebuffer();
     }
 
+    @Override
     public void execute()
     {
         // Generate initial estimate

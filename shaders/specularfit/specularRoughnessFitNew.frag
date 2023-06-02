@@ -110,7 +110,7 @@ void main()
     fresnelOverPi += (0.5 - fresnelOverPi.a) * vec4(evalTail.mfd, 1.0);
 
 //    // Use the luminance from the integral but the RGB from the weighted average
-//    fresnelOverPi.rgb = vec3(getLuminance(colorSum.rgb)) ;//* colorSum.rgb / getLuminance(colorSum.rgb);
+//    fresnelOverPi.rgb = vec3(getLuminance(fresnelOverPi.rgb)) * colorSum.rgb / getLuminance(colorSum.rgb);
 
     // Enforce minimum reflectivity for stability
 //    fresnelOverPi = max(fresnelOverPi, 0.04 / PI);
