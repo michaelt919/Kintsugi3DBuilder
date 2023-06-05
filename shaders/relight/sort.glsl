@@ -29,7 +29,7 @@ float getSortingWeight(int virtualIndex, vec3 targetDirection)
 {
     mat4 cameraPose = getCameraPose(virtualIndex);
 
-#if !SVD_MODE && !MATERIAL_EXPLORATION_MODE
+#if !MATERIAL_EXPLORATION_MODE
     vec4 projTexCoord = cameraProjections[getCameraProjectionIndex(virtualIndex)] * cameraPose * vec4(fPosition, 1.0);
 
     if (projTexCoord.x < -projTexCoord.w || projTexCoord.x > projTexCoord.w

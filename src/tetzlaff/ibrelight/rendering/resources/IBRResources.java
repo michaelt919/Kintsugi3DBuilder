@@ -99,12 +99,6 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
      */
     public final Texture3D<ContextType> colorTextures;
 
-    @Deprecated
-    public final Texture3D<ContextType> eigentextures;
-
-    @Deprecated
-    public final Texture2D<ContextType> residualTexture;
-
     /**
      * A 1D texture defining how encoded RGB values should be converted to linear luminance.
      */
@@ -175,14 +169,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
      */
     public final UniformBuffer<ContextType> cameraWeightBuffer;
 
-    @Deprecated
-    public final Texture2D<ContextType> blockPositionTexture;
-
-    @Deprecated
-    public final Texture2D<ContextType> blockNormalTexture;
-
     private final double primaryViewDistance;
-    private final IntVector2 svdViewWeightPacking;
 
     private final float[] cameraWeights;
 
@@ -328,67 +315,10 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         {
             Date timestamp = new Date();
 
-            // Try to read the eigentextures
-            BufferedImage img = null;
-
-            File firstEigentexture = new File(viewSet.getImageFilePath(), "sv_0000_00_00.png");
-            if (firstEigentexture.exists())
-            {
-                // Read a single image to get the dimensions for the texture array
-                try (InputStream input = new FileInputStream(firstEigentexture)) // myZip.retrieveFile(imageFile);
-                {
-                    img = ImageIO.read(input);
-                }
-            }
-
-            if (img == null)
-            {
-                this.eigentextures = null;
-                svdViewWeightPacking = null;
-            }
-            else
-            {
-                System.out.println("Eigentextures found.");
-                Texture3D<ContextType> eigentexturesTemp = null;
-
-                // TODO don't hardcode
-                svdViewWeightPacking = new IntVector2(4, 4);
-
-                try
-                {
-                    eigentexturesTemp = context.getTextureFactory()
-                        .build2DColorTextureArray(img.getWidth(), img.getHeight(), svdViewWeightPacking.x * svdViewWeightPacking.y)
-                        .setInternalFormat(CompressionFormat.RED_4BPP)
-                        .setMipmapsEnabled(true)
-                        .setMaxMipmapLevel(6) // = log2(blockSize) = log2(64)  TODO: make this configurable
-                        //.setLinearFilteringEnabled(true)
-                        //.setMaxAnisotropy(16.0f)
-                        .createTexture();
-
-                    int eigentextureIndex = 0;
-                    for (int i = 0; i < svdViewWeightPacking.x; i++)
-                    {
-                        for (int j = 0; j < svdViewWeightPacking.y; j++)
-                        {
-                            eigentexturesTemp.loadLayer(
-                                eigentextureIndex,
-                                new File(viewSet.getImageFilePath(), String.format("sv_%04d_%02d_%02d.png", eigentextureIndex, i, j)),
-                                true);
-                            eigentextureIndex++;
-                        }
-                    }
-                }
-                catch (IOException e)
-                {
-                    e.printStackTrace();
-                }
-
-                this.eigentextures = eigentexturesTemp;
-            }
-
             File imageFile = findImageFile(viewSet.getPrimaryViewIndex());
 
             // Read a single image to get the dimensions for the texture array
+            BufferedImage img = null;
             try(InputStream input = new FileInputStream(imageFile)) // myZip.retrieveFile(imageFile);
             {
                 img = ImageIO.read(input);
@@ -403,42 +333,33 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> textureArrayBuilder =
                     context.getTextureFactory().build2DColorTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount());
 
-            if (this.eigentextures == null)
+            if (loadOptions.isCompressionRequested())
             {
-                if (loadOptions.isCompressionRequested())
+                if (loadOptions.isAlphaRequested())
                 {
-                    if (loadOptions.isAlphaRequested())
-                    {
-                        textureArrayBuilder.setInternalFormat(CompressionFormat.RGB_4BPP_ALPHA_4BPP);
-                    }
-                    else
-                    {
-                        textureArrayBuilder.setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP);
-                    }
+                    textureArrayBuilder.setInternalFormat(CompressionFormat.RGB_4BPP_ALPHA_4BPP);
                 }
                 else
                 {
-                    textureArrayBuilder.setInternalFormat(ColorFormat.RGBA8);
+                    textureArrayBuilder.setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP);
                 }
-
-                if (loadOptions.areMipmapsRequested())
-                {
-                    textureArrayBuilder.setMipmapsEnabled(true);
-                }
-                else
-                {
-                    textureArrayBuilder.setMipmapsEnabled(false);
-                }
-
-                textureArrayBuilder.setLinearFilteringEnabled(true);
-                textureArrayBuilder.setMaxAnisotropy(16.0f);
             }
             else
             {
-                textureArrayBuilder.setInternalFormat(ColorFormat.RGB8);
-                textureArrayBuilder.setMipmapsEnabled(false);
-                textureArrayBuilder.setLinearFilteringEnabled(false);
+                textureArrayBuilder.setInternalFormat(ColorFormat.RGBA8);
             }
+
+            if (loadOptions.areMipmapsRequested())
+            {
+                textureArrayBuilder.setMipmapsEnabled(true);
+            }
+            else
+            {
+                textureArrayBuilder.setMipmapsEnabled(false);
+            }
+
+            textureArrayBuilder.setLinearFilteringEnabled(true);
+            textureArrayBuilder.setMaxAnisotropy(16.0f);
 
             colorTextures = textureArrayBuilder.createTexture();
 
@@ -454,18 +375,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 System.out.println();
                 imageFile = findImageFile(i);
 
-                if (this.eigentextures == null)
-                {
-                    this.colorTextures.loadLayer(i, imageFile, true);
-                }
-                else
-                {
-                    this.colorTextures.loadLayer(i, imageFile, true );// ,
-//                        AbstractDataTypeFactory.getInstance().getSingleComponentDataType(NativeDataType.UNSIGNED_SHORT),
-//                        color -> ((0x7F & (Math.max(-63, Math.min(63, Math.round((color.getGreen() - 128) * 63.0 / 127.0))) + 64)) << 9)
-//                            | ((0x1F & (Math.max(-15, Math.min(15, Math.round((color.getBlue() - color.getGreen()) * 31.5 / 127.0))) + 16)) << 4)
-//                            | (0x0F & (Math.max(-7, Math.min(7, Math.round((color.getRed() - color.getGreen()) * 31.5 / 127.0))) + 8)));
-                }
+                this.colorTextures.loadLayer(i, imageFile, true);
 
                 if(loadingMonitor != null)
                 {
@@ -478,8 +388,6 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         else
         {
             this.colorTextures = null;
-            this.eigentextures = null;
-            this.svdViewWeightPacking = null;
         }
 
         if (loadingMonitor != null)
@@ -499,7 +407,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
 
         // Store the camera projections in a uniform buffer
-        if (viewSet != null && viewSet.getCameraProjectionData() != null && this.eigentextures == null)
+        if (viewSet != null && viewSet.getCameraProjectionData() != null)
         {
             // Create the uniform buffer
             cameraProjectionBuffer = context.createUniformBuffer().setData(viewSet.getCameraProjectionData());
@@ -510,7 +418,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
 
         // Store the camera projection indices in a uniform buffer
-        if (viewSet != null && viewSet.getCameraProjectionIndexData() != null && this.eigentextures == null)
+        if (viewSet != null && viewSet.getCameraProjectionIndexData() != null)
         {
             cameraProjectionIndexBuffer = context.createUniformBuffer().setData(viewSet.getCameraProjectionIndexData());
         }
@@ -588,7 +496,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
                     double minDepth = viewSet.getRecommendedFarPlane();
 
-                    if (loadOptions.areDepthImagesRequested() && this.eigentextures == null)
+                    if (loadOptions.areDepthImagesRequested())
                     {
                         // Build depth textures for each view
                         this.depthTextures =
@@ -879,30 +787,6 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             roughnessTexture = null;
         }
 
-        if (viewSet != null && viewSet.getResidualTextureFile() != null)
-        {
-            System.out.println("Residual texture found.");
-            ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> residualTextureBuilder =
-                context.getTextureFactory().build2DColorTextureFromFile(viewSet.getResidualTextureFile(), true);
-            if (loadOptions.isCompressionRequested())
-            {
-                residualTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
-            }
-            else
-            {
-                residualTextureBuilder.setInternalFormat(ColorFormat.RGB8);
-            }
-
-            residualTexture = residualTextureBuilder
-                .setMipmapsEnabled(loadOptions.areMipmapsRequested())
-                .setLinearFilteringEnabled(true)
-                .createTexture();
-        }
-        else
-        {
-            residualTexture = null;
-        }
-
         if (this.depthTextures != null)
         {
             shadowTextures =
@@ -917,119 +801,6 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         {
             shadowTextures = null;
             shadowMatrixBuffer = null;
-        }
-
-        if (this.eigentextures != null && this.positionBuffer != null && this.texCoordBuffer != null
-            && this.normalBuffer != null && this.tangentBuffer != null)
-        {
-            try(Program<ContextType> deferredProgram =
-                context.getShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File("shaders/common/deferred.frag"))
-                    .createProgram();
-                FramebufferObject<ContextType> geometryFramebuffer =
-                    context.buildFramebufferObject(eigentextures.getWidth(), eigentextures.getHeight())
-                        .addColorAttachment(ColorFormat.RGBA32F)
-                        .addColorAttachment(ColorFormat.RGB32F)
-                        .createFramebufferObject())
-            {
-                Drawable<ContextType> deferredDrawable = context.createDrawable(deferredProgram);
-
-                deferredDrawable.addVertexBuffer("position", this.positionBuffer);
-                deferredDrawable.addVertexBuffer("texCoord", this.texCoordBuffer);
-                deferredDrawable.addVertexBuffer("normal", this.normalBuffer);
-                deferredDrawable.addVertexBuffer("tangent", this.tangentBuffer);
-
-//                deferredProgram.setUniform("useNormalMap", this.normalTexture != null);
-//                deferredProgram.setTexture("normalMap", this.normalTexture);
-
-                geometryFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-                geometryFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-
-                context.getState().disableDepthTest();
-                context.getState().disableBackFaceCulling();
-
-                deferredDrawable.draw(PrimitiveMode.TRIANGLES, geometryFramebuffer);
-
-                context.getState().enableDepthTest();
-                context.getState().enableBackFaceCulling();
-
-                IntVector2 viewWeightResolution = this.getSVDViewWeightResolution();
-                IntVector2 blockResolution = viewWeightResolution.plus(new IntVector2(1,1));
-                IntVector2 blockSize = new IntVector2(
-                    this.eigentextures.getWidth() / viewWeightResolution.x,
-                    this.eigentextures.getHeight() / viewWeightResolution.y);
-
-                NativeVectorBuffer blockPositionBuffer = NativeVectorBufferFactory.getInstance()
-                    .createEmpty(NativeDataType.FLOAT, 3, blockResolution.x * blockResolution.y);
-
-                NativeVectorBuffer blockNormalBuffer = NativeVectorBufferFactory.getInstance()
-                    .createEmpty(NativeDataType.FLOAT, 3, blockResolution.x * blockResolution.y);
-
-                float[] positions = geometryFramebuffer.readFloatingPointColorBufferRGBA(0);
-                float[] normals = geometryFramebuffer.readFloatingPointColorBufferRGBA(1);
-
-                int k = 0;
-                for (int y = 0; y < blockResolution.y; y++)
-                {
-                    for (int x = 0; x < blockResolution.x; x++)
-                    {
-                        int iStart = x * blockSize.x - blockSize.x / 2;
-                        int jStart = y * blockSize.y - blockSize.y / 2;
-
-                        float[] positionSum = new float[4];
-                        float[] normalSum = new float[4];
-
-                        for (int j = Math.max(0, jStart); j < Math.min(jStart + blockSize.y, eigentextures.getHeight()); j++)
-                        {
-                            for (int i = Math.max(0, iStart); i < Math.min(iStart + blockSize.x, eigentextures.getWidth()); i++)
-                            {
-                                float alpha = positions[4 * (eigentextures.getWidth() * j + i) + 3];
-                                if (alpha > 0.0)
-                                {
-                                    positionSum[0] += positions[4 * (eigentextures.getWidth() * j + i)];
-                                    positionSum[1] += positions[4 * (eigentextures.getWidth() * j + i) + 1];
-                                    positionSum[2] += positions[4 * (eigentextures.getWidth() * j + i) + 2];
-                                    positionSum[3] += alpha;
-
-                                    normalSum[0] += normals[4 * (eigentextures.getWidth() * j + i)];
-                                    normalSum[1] += normals[4 * (eigentextures.getWidth() * j + i) + 1];
-                                    normalSum[2] += normals[4 * (eigentextures.getWidth() * j + i) + 2];
-                                }
-                            }
-                        }
-
-                        if (positionSum[3] > 0.0)
-                        {
-                            blockPositionBuffer.set(k, 0, positionSum[0] / positionSum[3]);
-                            blockPositionBuffer.set(k, 1, positionSum[1] / positionSum[3]);
-                            blockPositionBuffer.set(k, 2, positionSum[2] / positionSum[3]);
-
-                            Vector3 normal = new Vector3(normalSum[0], normalSum[1], normalSum[2]).normalized();
-                            blockNormalBuffer.set(k, 0, normal.x);
-                            blockNormalBuffer.set(k, 1, normal.y);
-                            blockNormalBuffer.set(k, 2, normal.z);
-                        }
-
-                        k++;
-                    }
-                }
-
-                blockPositionTexture = context.getTextureFactory()
-                    .build2DColorTextureFromBuffer(blockResolution.x, blockResolution.y, blockPositionBuffer)
-                    .setInternalFormat(ColorFormat.RGB16F)
-                    .createTexture();
-
-                blockNormalTexture = context.getTextureFactory()
-                    .build2DColorTextureFromBuffer(blockResolution.x, blockResolution.y, blockNormalBuffer)
-                    .setInternalFormat(ColorFormat.RGB8_SNORM)
-                    .createTexture();
-            }
-        }
-        else
-        {
-            blockPositionTexture = null;
-            blockNormalTexture = null;
         }
     }
 
@@ -1050,7 +821,6 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
      *     <li>SPECULAR_TEXTURE_ENABLED</li>
      *     <li>ROUGHNESS_TEXTURE_ENABLED</li>
      *     <li>NORMAL_TEXTURE_ENABLED</li>
-     *     <li>SVD_MODE</li>
      * </ul>
      *
      * @param renderingMode The rendering mode to use, which may change some of the preprocessor defines.
@@ -1072,15 +842,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             .define("DIFFUSE_TEXTURE_ENABLED", this.diffuseTexture != null && renderingMode.useDiffuseTexture())
             .define("SPECULAR_TEXTURE_ENABLED", this.specularTexture != null && renderingMode.useSpecularTextures())
             .define("ROUGHNESS_TEXTURE_ENABLED", this.roughnessTexture != null && renderingMode.useSpecularTextures())
-            .define("NORMAL_TEXTURE_ENABLED", this.normalTexture != null && renderingMode.useNormalTexture())
-            .define("SVD_MODE", this.eigentextures != null);
-
-        if (this.eigentextures != null)
-        {
-            builder.define("EIGENTEXTURE_COUNT", this.eigentextures.getDepth());
-            builder.define("VIEW_WEIGHT_PACKING_X", this.svdViewWeightPacking.x);
-            builder.define("VIEW_WEIGHT_PACKING_Y", this.svdViewWeightPacking.y);
-        }
+            .define("NORMAL_TEXTURE_ENABLED", this.normalTexture != null && renderingMode.useNormalTexture());
 
         return builder;
     }
@@ -1102,7 +864,6 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
      *     <li>SPECULAR_TEXTURE_ENABLED</li>
      *     <li>ROUGHNESS_TEXTURE_ENABLED</li>
      *     <li>NORMAL_TEXTURE_ENABLED</li>
-     *     <li>SVD_MODE</li>
      * </ul>
      * This overload uses the default mode of RenderingMode.IMAGE_BASED.
      * @return A program builder with all of the above preprocessor defines specified, ready to have the
@@ -1316,12 +1077,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
     private void setupCommon(Program<ContextType> program)
     {
-        if (this.eigentextures != null)
-        {
-            program.setTexture("eigentextures", this.eigentextures);
-            program.setTexture("viewWeightTextures", this.colorTextures);
-        }
-        else if (this.colorTextures != null)
+        if (this.colorTextures != null)
         {
             program.setTexture("viewImages", this.colorTextures);
         }
@@ -1436,15 +1192,6 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         else
         {
             program.setTexture("roughnessMap", this.roughnessTexture);
-        }
-
-        if (this.residualTexture == null)
-        {
-            program.setTexture("residualMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
-        }
-        else
-        {
-            program.setTexture("residualMap", this.residualTexture);
         }
     }
 
@@ -1627,23 +1374,6 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
     }
 
     /**
-     * Consider this method deprecated; will be deleted as soon as there's time for some cleanup efforts.
-     * @return
-     */
-    @Deprecated
-    public IntVector2 getSVDViewWeightResolution()
-    {
-        if (this.eigentextures == null)
-        {
-            throw new IllegalStateException("The IBR data is not in an SVD representation.");
-        }
-        else
-        {
-            return new IntVector2(this.colorTextures.getWidth() / svdViewWeightPacking.x, this.colorTextures.getHeight() / svdViewWeightPacking.y);
-        }
-    }
-
-    /**
      * Gets the weight associated with a given view/camera (determined by the distance from other views).
      * @param index The index of the view for which to retrieve its weight.
      * @return The weight for the specified view.
@@ -1800,11 +1530,6 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         if (this.colorTextures != null)
         {
             this.colorTextures.close();
-        }
-
-        if (this.eigentextures != null)
-        {
-            this.eigentextures.close();
         }
 
         if (depthTextures != null)

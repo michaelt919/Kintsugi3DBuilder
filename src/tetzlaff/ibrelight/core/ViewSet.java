@@ -105,11 +105,6 @@ public final class ViewSet
     private String geometryFileName;
 
     /**
-     * The name of an (optional) texture containing an estimate of residual specularity
-     */
-    private final String residualTextureFileName;
-
-    /**
      * Used to decode pixel colors according to a gamma curve if reference values are unavailable, otherwise, affects the absolute brightness of the decoded colors.
      */
     private float gamma;
@@ -146,7 +141,6 @@ public final class ViewSet
         final List<String> imageFileNames = new ArrayList<>(128);
         String relativeImagePath;
         String geometryFileName;
-        String residualTextureFileName;
         File directory;
         float gamma = 2.2f;
         boolean infiniteLightSources;
@@ -179,7 +173,6 @@ public final class ViewSet
         this.encodedLuminanceValues = params.encodedLuminanceValues;
         this.rootDirectory = params.directory;
         this.relativeImagePath = params.relativeImagePath;
-        this.residualTextureFileName = params.residualTextureFileName;
     }
 
     public NativeVectorBuffer getCameraPoseData()
@@ -424,12 +417,6 @@ public final class ViewSet
                     case "i":
                     {
                         params.relativeImagePath = scanner.nextLine().trim();
-                        break;
-                    }
-                    case "r":
-                    {
-                        // Residual texture
-                        params.residualTextureFileName = scanner.nextLine().trim();
                         break;
                     }
                     case "p":
@@ -1348,16 +1335,6 @@ public final class ViewSet
     public File getGeometryFile()
     {
         return geometryFileName == null ? null : new File(this.rootDirectory, geometryFileName);
-    }
-
-    public String getResidualTextureFileName()
-    {
-        return residualTextureFileName;
-    }
-
-    public File getResidualTextureFile()
-    {
-        return residualTextureFileName == null ? null : new File(this.rootDirectory, residualTextureFileName);
     }
 
     /**

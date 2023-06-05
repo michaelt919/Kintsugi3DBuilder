@@ -11,20 +11,11 @@
 
 package tetzlaff.ibrelight.app;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import javafx.application.Platform;
-import org.xml.sax.SAXException;
-import tetzlaff.gl.util.OBJtoGLTFConversion;
 import tetzlaff.ibrelight.javafx.MainApplication;
-import tetzlaff.ibrelight.javafx.MultithreadModels;
 import tetzlaff.interactive.InitializationException;
-
-import javax.xml.parsers.ParserConfigurationException;
-
-import static java.lang.System.exit;
 
 public final class IBRelight
 {
