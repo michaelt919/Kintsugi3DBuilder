@@ -100,23 +100,7 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
 
     private void refreshDrawable()
     {
-        this.drawable = context.createDrawable(standardShader.getProgram());
-        this.drawable.addVertexBuffer("position", this.resources.positionBuffer);
-
-        if (this.resources.normalBuffer != null)
-        {
-            this.drawable.addVertexBuffer("normal", this.resources.normalBuffer);
-        }
-
-        if (this.resources.texCoordBuffer != null)
-        {
-            this.drawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
-        }
-
-        if (this.resources.tangentBuffer != null)
-        {
-            this.drawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
-        }
+        this.drawable = resources.createDrawable(standardShader.getProgram());
     }
 
     private StandardRenderingMode getExpectedRenderingMode()

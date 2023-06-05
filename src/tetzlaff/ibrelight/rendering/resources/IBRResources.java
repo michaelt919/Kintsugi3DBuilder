@@ -29,6 +29,7 @@ import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.types.AbstractDataTypeFactory;
+import tetzlaff.gl.util.GeometryResources;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.IntVector2;
 import tetzlaff.gl.vecmath.IntVector3;
@@ -99,6 +100,8 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
      */
     public final Texture3D<ContextType> colorTextures;
 
+    // TODO: Everything related to luminance maps should maybe be encapsulated in its own class
+
     /**
      * A 1D texture defining how encoded RGB values should be converted to linear luminance.
      */
@@ -110,24 +113,11 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
     private Texture1D<ContextType> inverseLuminanceMap;
 
     /**
-     * A vertex buffer containing vertex positions.
+     * Contains the VBOs for positions, tex-coords, normals, and tangents
      */
-    public final VertexBuffer<ContextType> positionBuffer;
+    public GeometryResources<ContextType> geometryResources;
 
-    /**
-     * A vertex buffer containing texture coordinates.
-     */
-    public final VertexBuffer<ContextType> texCoordBuffer;
-
-    /**
-     * A vertex buffer containing surface normals.
-     */
-    public final VertexBuffer<ContextType> normalBuffer;
-
-    /**
-     * A vertex buffer containing tangent vectors.
-     */
-    public final VertexBuffer<ContextType> tangentBuffer;
+    // TODO: Everything related to standard texture maps should maybe be encapsulated in its own class
 
     /**
      * A depth texture array containing a depth image for every view.
@@ -332,35 +322,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
             ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> textureArrayBuilder =
                     context.getTextureFactory().build2DColorTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount());
-
-            if (loadOptions.isCompressionRequested())
-            {
-                if (loadOptions.isAlphaRequested())
-                {
-                    textureArrayBuilder.setInternalFormat(CompressionFormat.RGB_4BPP_ALPHA_4BPP);
-                }
-                else
-                {
-                    textureArrayBuilder.setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP);
-                }
-            }
-            else
-            {
-                textureArrayBuilder.setInternalFormat(ColorFormat.RGBA8);
-            }
-
-            if (loadOptions.areMipmapsRequested())
-            {
-                textureArrayBuilder.setMipmapsEnabled(true);
-            }
-            else
-            {
-                textureArrayBuilder.setMipmapsEnabled(false);
-            }
-
-            textureArrayBuilder.setLinearFilteringEnabled(true);
-            textureArrayBuilder.setMaxAnisotropy(16.0f);
-
+            loadOptions.configureColorTextureBuilder(textureArrayBuilder);
             colorTextures = textureArrayBuilder.createTexture();
 
             if(loadingMonitor != null)
@@ -449,7 +411,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             lightIntensityBuffer = null;
         }
 
-        // Store the light indices indices in a uniform buffer
+        // Store the light indices in a uniform buffer
         if (viewSet != null && viewSet.getLightIndexData() != null)
         {
             lightIndexBuffer = context.createUniformBuffer().setData(viewSet.getLightIndexData());
@@ -473,7 +435,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
         if (geometry != null)
         {
-            this.positionBuffer = context.createVertexBuffer().setData(geometry.getVertices());
+            geometryResources = geometry.createGraphicsResources(context);
 
             if (viewSet != null && loadOptions.getDepthImageWidth() != 0 && loadOptions.getDepthImageHeight() != 0)
             {
@@ -484,16 +446,10 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                         context.buildFramebufferObject(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight())
                             .createFramebufferObject();
 
-                    // Load the program
-                    Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
-                        .addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
-                        .addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
-                        .createProgram()
+                    // Create a depth map generator -- includes the depth map program and drawable
+                    DepthMapGenerator<ContextType> depthMapGenerator = DepthMapGenerator.createFromGeometryResources(geometryResources);
                 )
                 {
-                    Drawable<ContextType> depthDrawable = context.createDrawable(depthRenderingProgram);
-                    depthDrawable.addVertexBuffer("position", positionBuffer);
-
                     double minDepth = viewSet.getRecommendedFarPlane();
 
                     if (loadOptions.areDepthImagesRequested())
@@ -508,28 +464,11 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                         for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
                         {
                             depthRenderingFBO.setDepthAttachment(depthTextures.getLayerAsFramebufferAttachment(i));
-                            depthRenderingFBO.clearDepthBuffer();
-
-                            depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(i));
-                            depthRenderingProgram.setUniform("projection",
-                                viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
-                                    .getProjectionMatrix(
-                                        viewSet.getRecommendedNearPlane(),
-                                        viewSet.getRecommendedFarPlane()
-                                    )
-                            );
-
-                            depthDrawable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
+                            depthMapGenerator.generateDepthMap(viewSet, i, depthRenderingFBO);
 
                             if (i == viewSet.getPrimaryViewIndex())
                             {
-                                short[] depthBufferData = depthRenderingFBO.readDepthBuffer();
-                                for (short encodedDepth : depthBufferData)
-                                {
-                                    int nonlinearDepth = 0xFFFF & (int) encodedDepth;
-                                    minDepth = Math.min(minDepth, getLinearDepth((2.0 * nonlinearDepth) / 0xFFFF - 1.0,
-                                        viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
-                                }
+                                minDepth = getMinDepthFromFBO(depthRenderingFBO, viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane());
                             }
                         }
                     }
@@ -542,27 +481,8 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                             .createTexture())
                         {
                             depthRenderingFBO.setDepthAttachment(depthAttachment);
-
-                            depthRenderingFBO.clearDepthBuffer();
-
-                            depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(viewSet.getPrimaryViewIndex()));
-                            depthRenderingProgram.setUniform("projection",
-                                viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewSet.getPrimaryViewIndex()))
-                                    .getProjectionMatrix(
-                                        viewSet.getRecommendedNearPlane(),
-                                        viewSet.getRecommendedFarPlane()
-                                    )
-                            );
-
-                            depthDrawable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
-
-                            short[] depthBufferData = depthRenderingFBO.readDepthBuffer();
-                            for (short encodedDepth : depthBufferData)
-                            {
-                                int nonlinearDepth = 0xFFFF & (int) encodedDepth;
-                                minDepth = Math.min(minDepth, getLinearDepth((2.0 * nonlinearDepth) / 0xFFFF - 1.0,
-                                    viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
-                            }
+                            depthMapGenerator.generateDepthMap(viewSet, viewSet.getPrimaryViewIndex(), depthRenderingFBO);
+                            minDepth = getMinDepthFromFBO(depthRenderingFBO, viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane());
                         }
                     }
 
@@ -577,36 +497,9 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
         else
         {
-            this.positionBuffer = null;
+            this.geometryResources = GeometryResources.createNullResources();
             this.depthTextures = null;
             primaryViewDistance = 0.0;
-        }
-
-        if (geometry != null && geometry.hasTexCoords())
-        {
-            this.texCoordBuffer = context.createVertexBuffer().setData(geometry.getTexCoords());
-        }
-        else
-        {
-            this.texCoordBuffer = null;
-        }
-
-        if (geometry != null && geometry.hasNormals())
-        {
-            this.normalBuffer = context.createVertexBuffer().setData(geometry.getNormals());
-        }
-        else
-        {
-            this.normalBuffer = null;
-        }
-
-        if (geometry != null && geometry.hasTexCoords() && geometry.hasNormals())
-        {
-            this.tangentBuffer = context.createVertexBuffer().setData(geometry.getTangents());
-        }
-        else
-        {
-            this.tangentBuffer = null;
         }
 
         // TODO Use more information from the material.  Currently just pulling texture names.
@@ -804,6 +697,26 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
     }
 
+    private static <ContextType extends Context<ContextType>> double getMinDepthFromFBO(Framebuffer<ContextType> depthFramebuffer, double nearPlane, double farPlane)
+    {
+        double minDepth = farPlane;
+
+        short[] depthBufferData = depthFramebuffer.readDepthBuffer();
+        for (short encodedDepth : depthBufferData)
+        {
+            int nonlinearDepth = 0xFFFF & (int) encodedDepth;
+            minDepth = Math.min(minDepth, getLinearDepth((2.0 * nonlinearDepth) / 0xFFFF - 1.0, nearPlane, farPlane));
+        }
+        return minDepth;
+    }
+
+    static <ContextType extends Context<ContextType>> ProgramBuilder<ContextType> getDepthMapProgramBuilder(ContextType context)
+    {
+        return context.getShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"));
+    }
+
     /**
      * Gets a shader program builder with the following preprocessor defines automatically injected based on the
      * characteristics of this instance:
@@ -928,25 +841,19 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
     private void updateShadowTextures() throws FileNotFoundException
     {
-        if (this.depthTextures != null)
+        if (this.shadowTextures != null)
         {
             try
             (
                 // Don't automatically generate any texture attachments for this framebuffer object
                 FramebufferObject<ContextType> depthRenderingFBO =
-                    context.buildFramebufferObject(this.depthTextures.getWidth(), this.depthTextures.getHeight())
+                    context.buildFramebufferObject(this.shadowTextures.getWidth(), this.shadowTextures.getHeight())
                         .createFramebufferObject();
 
                 // Load the program
-                Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
-                        .addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
-                        .addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
-                        .createProgram()
+                DepthMapGenerator<ContextType> depthMapGenerator = DepthMapGenerator.createFromGeometryResources(geometryResources)
             )
             {
-                Drawable<ContextType> depthDrawable = context.createDrawable(depthRenderingProgram);
-                depthDrawable.addVertexBuffer("position", this.positionBuffer);
-
                 // Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
                 NativeVectorBuffer flattenedShadowMatrices = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 16, this.viewSet.getCameraPoseCount());
 
@@ -954,40 +861,14 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 for (int i = 0; i < this.viewSet.getCameraPoseCount(); i++)
                 {
                     depthRenderingFBO.setDepthAttachment(shadowTextures.getLayerAsFramebufferAttachment(i));
-                    depthRenderingFBO.clearDepthBuffer();
-
-                    depthRenderingProgram.setUniform("model_view", this.viewSet.getCameraPose(i));
-                    depthRenderingProgram.setUniform("projection",
-                        this.viewSet.getCameraProjection(this.viewSet.getCameraProjectionIndex(i))
-                            .getProjectionMatrix(
-                                this.viewSet.getRecommendedNearPlane(),
-                                this.viewSet.getRecommendedFarPlane()
-                            )
-                    );
-
-                    Matrix4 modelView = Matrix4.lookAt(
-                            this.viewSet.getCameraPoseInverse(i).times(this.viewSet.getLightPosition(0).asPosition()).getXYZ(),
-                            this.geometry.getCentroid(),
-                            new Vector3(0, 1, 0));
-                    depthRenderingProgram.setUniform("model_view", modelView);
-
-                    Matrix4 projection = this.viewSet.getCameraProjection(this.viewSet.getCameraProjectionIndex(i))
-                            .getProjectionMatrix(
-                                this.viewSet.getRecommendedNearPlane(),
-                                this.viewSet.getRecommendedFarPlane() * 2 // double it for good measure
-                            );
-                    depthRenderingProgram.setUniform("projection", projection);
-
-                    depthDrawable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
-
-                    Matrix4 fullTransform = projection.times(modelView);
+                    Matrix4 shadowMatrix = depthMapGenerator.generateShadowMap(viewSet, i, depthRenderingFBO);
 
                     int d = 0;
                     for (int col = 0; col < 4; col++) // column
                     {
                         for (int row = 0; row < 4; row++) // row
                         {
-                            flattenedShadowMatrices.set(i, d, fullTransform.get(row, col));
+                            flattenedShadowMatrices.set(i, d, shadowMatrix.get(row, col));
                             d++;
                         }
                     }
@@ -1202,12 +1083,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
      */
     public Drawable<ContextType> createDrawable(Program<ContextType> program)
     {
-        Drawable<ContextType> drawable = program.getContext().createDrawable(program);
-        drawable.addVertexBuffer("position", positionBuffer);
-        drawable.addVertexBuffer("texCoord", texCoordBuffer);
-        drawable.addVertexBuffer("normal", normalBuffer);
-        drawable.addVertexBuffer("tangent", tangentBuffer);
-        return drawable;
+        return geometryResources.createDrawable(program);
     }
 
     /**
@@ -1507,24 +1383,9 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             this.lightIndexBuffer.close();
         }
 
-        if (this.positionBuffer != null)
+        if (this.geometryResources != null)
         {
-            this.positionBuffer.close();
-        }
-
-        if (this.texCoordBuffer != null)
-        {
-            this.texCoordBuffer.close();
-        }
-
-        if (this.normalBuffer != null)
-        {
-            this.normalBuffer.close();
-        }
-
-        if (this.tangentBuffer != null)
-        {
-            this.tangentBuffer.close();
+            this.geometryResources.close();
         }
 
         if (this.colorTextures != null)

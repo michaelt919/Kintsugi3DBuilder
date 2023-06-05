@@ -110,7 +110,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             litRoot = new LitRoot<>(context, sceneModel);
             litRoot.takeLitContentRoot(new StandardScene<>(resources, sceneModel, sceneViewportModel));
             litRoot.initialize();
-            litRoot.setShadowCaster(resources.positionBuffer);
+            litRoot.setShadowCaster(resources.geometryResources.positionBuffer);
 
             this.dynamicResourceLoader = new DynamicResourceLoader<>(loadingMonitor, resources, litRoot.getLightingResources());
 

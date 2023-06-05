@@ -177,12 +177,7 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
     protected static <ContextType extends Context<ContextType>> Drawable<ContextType>
         createDrawable(Program<ContextType> program, IBRResources<ContextType> resources)
     {
-        Drawable<ContextType> drawable = program.getContext().createDrawable(program);
-        drawable.addVertexBuffer("position", resources.positionBuffer);
-        drawable.addVertexBuffer("texCoord", resources.texCoordBuffer);
-        drawable.addVertexBuffer("normal", resources.normalBuffer);
-        drawable.addVertexBuffer("tangent", resources.tangentBuffer);
-        return drawable;
+        return resources.createDrawable(program);
     }
 
     protected void render(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
