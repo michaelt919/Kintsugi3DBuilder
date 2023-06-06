@@ -5,9 +5,11 @@ import de.javagl.jgltf.model.MeshModel;
 import de.javagl.jgltf.model.MeshPrimitiveModel;
 import de.javagl.jgltf.model.creation.GltfModelBuilder;
 import de.javagl.jgltf.model.impl.DefaultMeshModel;
+import de.javagl.jgltf.model.impl.DefaultMeshPrimitiveModel;
 import de.javagl.jgltf.model.impl.DefaultNodeModel;
 import de.javagl.jgltf.model.impl.DefaultSceneModel;
 import de.javagl.jgltf.model.io.GltfModelWriter;
+import de.javagl.jgltf.model.v2.MaterialModelV2;
 import de.javagl.jgltf.obj.model.ObjGltfModelCreator;
 
 import java.io.IOException;
@@ -37,12 +39,17 @@ public class GLTFConvertWithTextures {
         GltfModelBuilder builder = GltfModelBuilder.create();
         DefaultSceneModel scene = new DefaultSceneModel();
 
+        MaterialModelV2 material = new MaterialModelV2();
+        material.setBaseColorFactor(new float[]{1.0f, 0.0f, 0.0f, 1.0f});
+
         for (MeshModel mesh : gltfModel.getMeshModels()) {
 
             DefaultMeshModel meshModel = new DefaultMeshModel();
             for (MeshPrimitiveModel meshPrimitive : mesh.getMeshPrimitiveModels()) {
 
-                meshModel.addMeshPrimitiveModel(meshPrimitive);
+                DefaultMeshPrimitiveModel primModel = (DefaultMeshPrimitiveModel) meshPrimitive;
+                primModel.setMaterialModel(material);
+                meshModel.addMeshPrimitiveModel(primModel);
 
             }
 
@@ -56,7 +63,7 @@ public class GLTFConvertWithTextures {
         GltfModel newModel = builder.build();
         System.out.println("Built converted glTF");
 
-
+        // Write glb file from converted model
         GltfModelWriter gltfModelWriter = new GltfModelWriter();
         Path glbPath = basePath.resolve("output/out.glb");
         gltfModelWriter.writeBinary(newModel, glbPath.toFile());
