@@ -25,6 +25,7 @@ import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStreamResource;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.ImageCache;
 import tetzlaff.optimization.ReadonlyErrorReport;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
 import tetzlaff.optimization.function.GeneralizedSmoothStepBasis;
@@ -80,8 +81,15 @@ public class SpecularOptimization
     {
         Instant start = Instant.now();
 
-        // Get GPU context and disable back face culling since we're rendering in texture space
+        // Get GPU context
         ContextType context = resources.context;
+
+        // Generate cache
+        ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings());
+        cache.initialize();
+
+        // Disable back face culling since we're rendering in texture space
+        // (should be the case already from generating the cache, but good to do just in case)
         context.getState().disableBackFaceCulling();
         SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources, settings);
 

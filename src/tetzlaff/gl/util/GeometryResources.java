@@ -108,6 +108,11 @@ public class GeometryResources<ContextType extends Context<ContextType>> impleme
         return drawable;
     }
 
+    public boolean isNull()
+    {
+        return this.positionBuffer == null;
+    }
+
     @Override
     public void close()
     {

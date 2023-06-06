@@ -222,6 +222,13 @@ public class SpecularFitRequestUI implements IBRRequestUI
                 }
             }
 
+            // Image cache settings
+            settings.getImageCacheSettings().setCacheDirectory(new File(settings.outputDirectory, "cache"));
+            settings.getImageCacheSettings().setTextureWidth(settings.width);
+            settings.getImageCacheSettings().setTextureHeight(settings.height);
+            settings.getImageCacheSettings().setTextureSubdiv(8); // TODO expose this in the interface
+            settings.getImageCacheSettings().setSampledSize(256); // TODO expose this in the interface
+
             SpecularFitRequest<ContextType> request = new SpecularFitRequest<>(settings);
 
             if (priorSolutionCheckBox.isSelected() && priorSolutionField.getText() != null && !priorSolutionField.getText().isEmpty())

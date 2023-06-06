@@ -15,6 +15,7 @@ import java.io.File;
 
 import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.core.ViewSet;
+import tetzlaff.ibrelight.rendering.resources.ImageCacheSettings;
 import tetzlaff.models.ReadonlySettingsModel;
 
 public class SpecularFitSettings extends TextureFitSettings
@@ -39,6 +40,8 @@ public class SpecularFitSettings extends TextureFitSettings
     private boolean reconstructAll = false;
 
     private File priorSolutionDirectory = null;
+
+    private final ImageCacheSettings imageCacheSettings = new ImageCacheSettings();
 
     /**
      * Constructs an object to hold the settings for specular texture fitting.
@@ -326,4 +329,14 @@ public class SpecularFitSettings extends TextureFitSettings
     {
         this.weightBlockSize = weightBlockSize;
     }
+
+    /**
+     * Gets a modifiable reference to the image cache settings for the specular fit
+     * @return
+     */
+    public ImageCacheSettings getImageCacheSettings()
+    {
+        return imageCacheSettings;
+    }
+
 }

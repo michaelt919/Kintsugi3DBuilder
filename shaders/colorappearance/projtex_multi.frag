@@ -1,3 +1,5 @@
+#version 330
+
 /*
  *  Copyright (c) Michael Tetzlaff 2022
  *  Copyright (c) The Regents of the University of Minnesota 2019
@@ -9,8 +11,6 @@
  *
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
-
-#version 330
 
 in vec3 fPosition;
 in vec2 fTexCoord;

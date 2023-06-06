@@ -1345,6 +1345,38 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         return cameraWeights;
     }
 
+    /**
+     * Creates a resource for just a single view, using the default image for that view but with custom load options
+     * @param viewIndex
+     * @param loadOptions
+     * @return
+     * @throws IOException
+     */
+    public SingleCalibratedImageResource<ContextType> createSingleImageResource(int viewIndex, ReadonlyLoadOptionsModel loadOptions)
+        throws IOException
+    {
+        return createSingleImageResource(viewIndex, viewSet.getImageFile(viewIndex), loadOptions);
+    }
+
+    /**
+     * Creates a resource for just a single view, using a specified image file with custom load options
+     * @param viewIndex
+     * @param imageFile
+     * @param loadOptions
+     * @return
+     * @throws IOException
+     */
+    public SingleCalibratedImageResource<ContextType> createSingleImageResource(int viewIndex, File imageFile, ReadonlyLoadOptionsModel loadOptions)
+        throws IOException
+    {
+        return new SingleCalibratedImageResource<ContextType>(context, viewSet, viewIndex, imageFile, geometry, loadOptions);
+    }
+
+    public ImageCache<ContextType> cache(ImageCacheSettings settings)
+    {
+        return new ImageCache<>(this, /* TODO: implement high-res image directory */ viewSet.getImageFilePath(), settings);
+    }
+
     @Override
     public void close()
     {
