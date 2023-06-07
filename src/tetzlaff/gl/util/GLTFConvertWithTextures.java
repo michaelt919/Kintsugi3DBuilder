@@ -52,6 +52,15 @@ public class GLTFConvertWithTextures {
         material.setNormalTexture(normalTexture);
         material.setMetallicRoughnessTexture(roughnessTexture);
 
+        // Can arbitrary textures be added to the glTF? Yes! It's not part of the material, but it is included in the output file
+        // However is this a good idea? Doing this would make the client load a single huge file instead of several smaller files.
+        // Same goes for textures. Would it be better to force the embedded uri to images be a relative url to png hosted on the server?
+        // Maybe this could let the client choose a quality setting by appending '-lowres' to filenames or something and hosting
+        // 'modelname-albedo-lowres.png', 'modelname-albedo-medres.png', etc on the server.
+        DefaultTextureModel weights00Texture = loadTextureFromDisk(Paths.get("src/tetzlaff/gl/util/weights00.png"));
+        weights00Texture.setName("weights00");
+        builder.addTextureModel(weights00Texture);
+
         for (MeshModel mesh : gltfModel.getMeshModels()) {
 
             DefaultMeshModel meshModel = new DefaultMeshModel();
