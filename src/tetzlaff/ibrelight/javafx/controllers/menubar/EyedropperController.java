@@ -1,7 +1,9 @@
 package tetzlaff.ibrelight.javafx.controllers.menubar;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -27,6 +29,12 @@ public class EyedropperController implements Initializable {
     private Pane rootPane;
     @FXML
     private Rectangle selectionRectangle;
+
+    @FXML
+    private Rectangle selectedColor0, selectedColor1, selectedColor2, selectedColor3, selectedColor4, selectedColor5, selectedColor6,
+            selectedColor7, selectedColor8, selectedColor9, selectedColor10, selectedColor11, selectedColor12, selectedColor13, selectedColor14;
+    private List<Rectangle> selectedColorRectangles;
+
     @FXML
     private Label colorLabel;
 
@@ -39,11 +47,27 @@ public class EyedropperController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        selectedColors = new ArrayList<>();
-
         //TODO: REMOVE HARD CODING OF THIS IMAGE
         selectedFile = new File("C:\\Users\\DenneyLuke\\Downloads\\colorGrid2.png");
         colorPickerImgView.setImage(new Image(selectedFile.toURI().toString()));
+
+        selectedColors = new ArrayList<>();
+        selectedColorRectangles = new ArrayList<>();
+        selectedColorRectangles.add(selectedColor0);
+        selectedColorRectangles.add(selectedColor1);
+        selectedColorRectangles.add(selectedColor2);
+        selectedColorRectangles.add(selectedColor3);
+        selectedColorRectangles.add(selectedColor4);
+        selectedColorRectangles.add(selectedColor5);
+        selectedColorRectangles.add(selectedColor6);
+        selectedColorRectangles.add(selectedColor7);
+        selectedColorRectangles.add(selectedColor8);
+        selectedColorRectangles.add(selectedColor9);
+        selectedColorRectangles.add(selectedColor10);
+        selectedColorRectangles.add(selectedColor11);
+        selectedColorRectangles.add(selectedColor12);
+        selectedColorRectangles.add(selectedColor13);
+        selectedColorRectangles.add(selectedColor14);
     }
 
     @FXML
@@ -78,6 +102,7 @@ public class EyedropperController implements Initializable {
         Color prevColor = (Color) averageColorDisplay.getFill();
         if(!prevColor.equals(averageColor))//change the stroke of the box to the previous color, if color changes
             averageColorDisplay.setStroke(prevColor);
+
         averageColorDisplay.setFill(averageColor);
     }
 
@@ -89,14 +114,25 @@ public class EyedropperController implements Initializable {
 
         javafx.scene.image.PixelReader pixelReader = colorPickerImgView.getImage().getPixelReader();
 
-        double trueStartX = (x - colorPickerImgView.getX()) / colorPickerImgView.getFitWidth() * (int) colorPickerImgView.getImage().getWidth();
-        double trueStartY = (y - colorPickerImgView.getY()) / colorPickerImgView.getFitHeight() * (int) colorPickerImgView.getImage().getHeight();
+
+        double scaleFactor;
+
+        if(colorPickerImgView.getImage().getWidth() > colorPickerImgView.getImage().getHeight()) {
+            scaleFactor = colorPickerImgView.getImage().getWidth() / colorPickerImgView.getFitWidth();
+        }
+        else {
+            scaleFactor = colorPickerImgView.getImage().getHeight() / colorPickerImgView.getFitHeight();
+        }
+
+
+        double trueStartX = (x - colorPickerImgView.getLayoutX()) * scaleFactor;
+        double trueStartY = (y - colorPickerImgView.getLayoutY()) * scaleFactor;
 
 //        double trueEndX = colorPickerImgView.getX() / (colorPickerImgView.getFitWidth() * (int) colorPickerImgView.getImage().getWidth());
 //        double trueEndY = colorPickerImgView.getY() / (colorPickerImgView.getFitHeight() * (int) colorPickerImgView.getImage().getHeight());
 
-        double trueEndX = trueStartX + width;
-        double trueEndY = trueStartY + height;
+        double trueEndX = trueStartX + width * scaleFactor;
+        double trueEndY = trueStartY + height * scaleFactor;
 
         System.out.println("X: " + trueStartX + " and " + trueEndX);
         System.out.println("Y: " + trueStartY + " and " + trueEndY);
@@ -131,10 +167,11 @@ public class EyedropperController implements Initializable {
 //        }
 
         //print selectedColors
-        System.out.println("---------------------------------------------------------------------");
-        for(Color color: selectedColors)
-            System.out.println(getRGBString(color));
-        System.out.println("---------------------------------------------------------------------");
+         //print all selected colors
+//        System.out.println("---------------------------------------------------------------------");
+//        for(Color color: selectedColors)
+//            System.out.println(getRGBString(color));
+//        System.out.println("---------------------------------------------------------------------");
 
         return calculateAverageColor(selectedColors);
     }
@@ -163,6 +200,42 @@ public class EyedropperController implements Initializable {
         int g = (int) (color.getGreen() * 255);
         int b = (int) (color.getBlue() * 255);
         return r + ", " + g + ", " + b;
+    }
+
+    //returns false if the color is null or has already been added
+    public boolean addColor(ActionEvent actionEvent) {
+        //get color of selected color
+        //if color is null or the same or has already been selected, return false
+        //else, find the highest rectangle which does not have a color and change that rectangle's color to the selected color
+        Color newColor = (Color) averageColorDisplay.getFill();
+
+
+        if(newColor.equals(Color.WHITE)) {
+            return false;
+        }
+        else{
+            int i = 1;
+            for(Rectangle rect : selectedColorRectangles){
+                if (rect.getFill().equals(Color.WHITE) && !colorInList(newColor)) {//only add color if it is not a duplicate
+                    rect.setFill(newColor);
+                    return true;
+                }
+                ++i;
+            }
+            return false;
+        }
+    }
+
+    private boolean colorInList(Color newColor) {
+        for (Rectangle rect : selectedColorRectangles) {
+            if (rect.getFill().equals(newColor))
+                return true;
+        }
+        return false;
+    }
+
+    public void applyButtonPressed(ActionEvent actionEvent) {
+        //TODO: NEED TO BRING OVER CODE FROM THE OLD COLOR CHECKER
     }
 }
 
