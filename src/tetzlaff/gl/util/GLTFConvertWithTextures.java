@@ -20,7 +20,7 @@ import java.nio.file.Paths;
  */
 public class GLTFConvertWithTextures {
 
-    static String OBJ_FILENAME = "ding.obj";
+    static String OBJ_FILENAME = "kuan-yu.obj";
 
     public static void main(String[] args) throws IOException {
         // Convert the obj
@@ -38,16 +38,19 @@ public class GLTFConvertWithTextures {
         DefaultSceneModel scene = new DefaultSceneModel();
 
         MaterialModelV2 material = new MaterialModelV2();
-        DefaultTextureModel textureModel = new DefaultTextureModel();
-        DefaultImageModel imageModel = new DefaultImageModel();
 
-        Path path = Paths.get("X:\\repos\\IBRelight\\src\\tetzlaff\\gl\\util\\diffuse.png");
-        byte[] data = Files.readAllBytes(path);
+        // Load the diffuse texture to glTF model
+        DefaultTextureModel diffuseTexture = loadTextureFromDisk(Paths.get("src/tetzlaff/gl/util/diffuse.png"));
+        DefaultTextureModel normalTexture = loadTextureFromDisk(Paths.get("src/tetzlaff/gl/util/normal.png"));
+        DefaultTextureModel roughnessTexture = loadTextureFromDisk(Paths.get("src/tetzlaff/gl/util/roughness.png"));
 
-        ByteBuffer bufferData = ByteBuffer.wrap(data);
-        imageModel.setImageData(bufferData);
-        textureModel.setImageModel(imageModel);
-        material.setBaseColorTexture(textureModel);
+        // For some reason, normal maps are not added from the material to the glTFModel during serialization,
+        // so it needs to be added manually here.
+        builder.addTextureModel(normalTexture);
+
+        material.setBaseColorTexture(diffuseTexture);
+        material.setNormalTexture(normalTexture);
+        material.setMetallicRoughnessTexture(roughnessTexture);
 
         for (MeshModel mesh : gltfModel.getMeshModels()) {
 
@@ -74,6 +77,21 @@ public class GLTFConvertWithTextures {
         GltfModelWriter gltfModelWriter = new GltfModelWriter();
         Path glbPath = basePath.resolve("output/out.glb");
         gltfModelWriter.writeBinary(newModel, glbPath.toFile());
+    }
+
+    private static DefaultTextureModel loadTextureFromDisk(Path path) throws IOException {
+
+        DefaultTextureModel textureModel = new DefaultTextureModel();
+        DefaultImageModel imageModel = new DefaultImageModel();
+
+        byte[] normalData = Files.readAllBytes(path);
+        ByteBuffer normalImageData = ByteBuffer.wrap(normalData);
+
+        imageModel.setImageData(normalImageData);
+        textureModel.setImageModel(imageModel);
+
+        return textureModel;
+
     }
 
 }
