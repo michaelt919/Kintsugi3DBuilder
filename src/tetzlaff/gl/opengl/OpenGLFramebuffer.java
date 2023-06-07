@@ -23,6 +23,7 @@ import javax.imageio.ImageIO;
 import org.lwjgl.*;
 import tetzlaff.gl.core.Framebuffer;
 import tetzlaff.gl.core.FramebufferSize;
+import tetzlaff.util.BufferedImageBuilder;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
@@ -265,22 +266,11 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     public void saveColorBufferToFile(int attachmentIndex, String fileFormat, File file) throws IOException
     {
         int[] pixels = this.readColorBufferARGB(attachmentIndex);
-        
-        // Flip the array vertically
         FramebufferSize size = this.getSize();
-        for (int y = 0; y < size.height / 2; y++)
-        {
-            int limit = (y + 1) * size.width;
-            for (int i1 = y * size.width, i2 = (size.height - y - 1) * size.width; i1 < limit; i1++, i2++)
-            {
-                int tmp = pixels[i1];
-                pixels[i1] = pixels[i2];
-                pixels[i2] = tmp;
-            }
-        }
-        
-        BufferedImage outImg = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_ARGB);
-        outImg.setRGB(0, 0, size.width, size.height, pixels, 0, size.width);
+        BufferedImage outImg = BufferedImageBuilder.build()
+            .setDataFromArray(pixels, size.width, size.height)
+            .flipVertical()
+            .create();
         ImageIO.write(outImg, fileFormat, file);
     }
 
@@ -288,21 +278,10 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     public void saveColorBufferToFile(int attachmentIndex, int x, int y, int width, int height, String fileFormat, File file) throws IOException
     {
         int[] pixels = this.readColorBufferARGB(attachmentIndex, x, y, width, height);
-        
-        // Flip the array vertically
-        for (int row = 0; row < height / 2; row++)
-        {
-            int limit = (row + 1) * width;
-            for (int i1 = row * width, i2 = (height - row - 1) * width; i1 < limit; i1++, i2++)
-            {
-                int tmp = pixels[i1];
-                pixels[i1] = pixels[i2];
-                pixels[i2] = tmp;
-            }
-        }
-        
-        BufferedImage outImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        outImg.setRGB(0, 0, width, height, pixels, 0, width);
+        BufferedImage outImg = BufferedImageBuilder.build()
+            .setDataFromArray(pixels, width, height)
+            .flipVertical()
+            .create();
         ImageIO.write(outImg, fileFormat, file);
     }
 
