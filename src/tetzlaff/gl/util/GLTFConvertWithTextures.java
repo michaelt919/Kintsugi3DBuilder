@@ -4,15 +4,13 @@ import de.javagl.jgltf.model.GltfModel;
 import de.javagl.jgltf.model.MeshModel;
 import de.javagl.jgltf.model.MeshPrimitiveModel;
 import de.javagl.jgltf.model.creation.GltfModelBuilder;
-import de.javagl.jgltf.model.impl.DefaultMeshModel;
-import de.javagl.jgltf.model.impl.DefaultMeshPrimitiveModel;
-import de.javagl.jgltf.model.impl.DefaultNodeModel;
-import de.javagl.jgltf.model.impl.DefaultSceneModel;
+import de.javagl.jgltf.model.impl.*;
 import de.javagl.jgltf.model.io.GltfModelWriter;
 import de.javagl.jgltf.model.v2.MaterialModelV2;
 import de.javagl.jgltf.obj.model.ObjGltfModelCreator;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,7 +38,16 @@ public class GLTFConvertWithTextures {
         DefaultSceneModel scene = new DefaultSceneModel();
 
         MaterialModelV2 material = new MaterialModelV2();
-        material.setBaseColorFactor(new float[]{1.0f, 0.0f, 0.0f, 1.0f});
+        DefaultTextureModel textureModel = new DefaultTextureModel();
+        DefaultImageModel imageModel = new DefaultImageModel();
+
+        Path path = Paths.get("X:\\repos\\IBRelight\\src\\tetzlaff\\gl\\util\\diffuse.png");
+        byte[] data = Files.readAllBytes(path);
+
+        ByteBuffer bufferData = ByteBuffer.wrap(data);
+        imageModel.setImageData(bufferData);
+        textureModel.setImageModel(imageModel);
+        material.setBaseColorTexture(textureModel);
 
         for (MeshModel mesh : gltfModel.getMeshModels()) {
 
