@@ -195,9 +195,15 @@ public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights
 
     public <ContextType extends Context<ContextType>> void saveGlTF(IBRResources<ContextType> resources)
     {
-        SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(resources.geometry);
-        exporter.setDefaultNames();
-        exporter.addWeightImages(settings.basisCount);
-        exporter.tryWrite(new File(settings.outputDirectory, "model.glb"));
+        try
+        {
+            SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(resources.geometry);
+            exporter.setDefaultNames();
+            exporter.addWeightImages(settings.basisCount);
+            exporter.write(new File(settings.outputDirectory, "model.glb"));
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 }

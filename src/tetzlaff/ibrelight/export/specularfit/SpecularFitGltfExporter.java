@@ -1,8 +1,11 @@
 package tetzlaff.ibrelight.export.specularfit;
 
 import de.javagl.jgltf.impl.v2.*;
+import de.javagl.jgltf.model.GltfModel;
 import de.javagl.jgltf.model.io.v2.GltfAssetV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetWriterV2;
+import de.javagl.jgltf.model.io.v2.GltfAssetsV2;
+import de.javagl.jgltf.obj.model.ObjGltfModelCreator;
 import tetzlaff.gl.util.VertexGeometry;
 
 import java.io.File;
@@ -119,8 +122,11 @@ public class SpecularFitGltfExporter {
         return createRelativeTexture(uri, null);
     }
 
-    public static SpecularFitGltfExporter fromVertexGeometry(VertexGeometry geometry)
+    public static SpecularFitGltfExporter fromVertexGeometry(VertexGeometry geometry) throws IOException
     {
-        return null; //TODO: Load vertex geometry into a GltfAsset and instantiate SpecularFitGltfExporter from there
+        ObjGltfModelCreator gltfModelCreator = new ObjGltfModelCreator();
+        GltfModel gltfModel = gltfModelCreator.create(geometry.getFilename().toURI());
+        GltfAssetV2 gltfAsset = GltfAssetsV2.createEmbedded(gltfModel);
+        return new SpecularFitGltfExporter(gltfAsset);
     }
 }
