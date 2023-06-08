@@ -23,8 +23,10 @@ import javax.imageio.ImageIO;
 
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
+import tetzlaff.gl.core.Context;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.gl.vecmath.DoubleVector4;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
 public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights
 {
@@ -189,5 +191,13 @@ public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights
         {
             e.printStackTrace();
         }
+    }
+
+    public <ContextType extends Context<ContextType>> void saveGlTF(IBRResources<ContextType> resources)
+    {
+        SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(resources.geometry);
+        exporter.setDefaultNames();
+        exporter.addWeightImages(settings.basisCount);
+        exporter.tryWrite(new File(settings.outputDirectory, "model.glb"));
     }
 }

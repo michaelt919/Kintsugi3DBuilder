@@ -56,6 +56,8 @@ public class SpecularFitRequestUI implements IBRRequestUI
     @FXML private CheckBox priorSolutionCheckBox;
     @FXML private TextField priorSolutionField;
 
+    @FXML private CheckBox exportGLTFCheckbox;
+
     @FXML private Button runButton;
 
     private final DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -203,6 +205,9 @@ public class SpecularFitRequestUI implements IBRRequestUI
             settings.setLevenbergMarquardtEnabled(levenbergMarquardtCheckBox.isSelected());
             settings.setUnsuccessfulLMIterationsAllowed(Integer.parseInt(unsuccessfulLMIterationsTextField.getText()));
             settings.setReconstructAll(reconstructAllCheckBox.isSelected());
+
+            // glTF export settings
+            settings.setExportGLTF(exportGLTFCheckbox.isSelected());
 
             if (reconstructionViewSetField.getText() != null && !reconstructionViewSetField.getText().isEmpty())
             {

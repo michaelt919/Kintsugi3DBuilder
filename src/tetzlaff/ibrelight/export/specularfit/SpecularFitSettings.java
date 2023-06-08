@@ -40,6 +40,8 @@ public class SpecularFitSettings extends TextureFitSettings
 
     private File priorSolutionDirectory = null;
 
+    private boolean exportGLTF = false;
+
     /**
      * Constructs an object to hold the settings for specular texture fitting.
      * @param width The width of the textures
@@ -325,5 +327,13 @@ public class SpecularFitSettings extends TextureFitSettings
     public void setWeightBlockSize(int weightBlockSize)
     {
         this.weightBlockSize = weightBlockSize;
+    }
+
+    public boolean isExportGLTF() {
+        return exportGLTF;
+    }
+
+    public void setExportGLTF(boolean exportGLTF) {
+        this.exportGLTF = exportGLTF;
     }
 }
