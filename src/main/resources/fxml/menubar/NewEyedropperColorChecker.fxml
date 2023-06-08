@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
 
-<HBox xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.EyedropperController">
+<HBox prefHeight="420.0" prefWidth="907.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.EyedropperController">
    <children>
       <BorderPane prefHeight="421.0" prefWidth="467.0">
          <center>
@@ -20,7 +20,7 @@
          <top>
             <HBox prefHeight="21.0" prefWidth="565.0" BorderPane.alignment="CENTER">
                <children>
-                    <Label fx:id="colorLabel" alignment="CENTER" prefWidth="400.0" text="No Color Selected" />
+                    <Label fx:id="colorLabel" alignment="CENTER" prefWidth="400.0" text="No Color Selected" HBox.hgrow="ALWAYS" />
                     <Rectangle fx:id="averageColorDisplay" fill="WHITE" height="20.0" stroke="BLACK" width="20.0" />
                </children>
             </HBox>
@@ -59,14 +59,9 @@
                         </VBox>
                     </children>
                 </VBox>
-                <Button mnemonicParsing="false" text="Remove Color">
-               <VBox.margin>
-                  <Insets top="10.0" />
-               </VBox.margin>
-            </Button>
             </children>
         </VBox>
-        <GridPane prefHeight="225.0" prefWidth="165.0">
+        <GridPane prefHeight="225.0" prefWidth="400.0" vgap="3.0">
             <children>
                 <Label layoutX="183.0" layoutY="160.0" text="3.1 (Black)" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
                 <Label layoutX="8.0" layoutY="6.0" text="CIE-Y" GridPane.halignment="RIGHT">
@@ -88,46 +83,56 @@
                         <Insets left="10.0" />
                     </GridPane.margin>
             </Label>
-                <TextField fx:id="encoded031" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="29.0" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
+                <TextField fx:id="txtField1" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="29.0" onKeyTyped="#updateFinalSelectRect" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
                     <GridPane.margin>
                         <Insets left="5.0" />
                     </GridPane.margin>
                 </TextField>
-                <TextField fx:id="encoded090" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="60.0" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="2">
+                <TextField fx:id="txtField2" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="60.0" onKeyTyped="#updateFinalSelectRect" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="2">
                     <GridPane.margin>
                         <Insets left="5.0" />
                     </GridPane.margin>
                 </TextField>
-                <TextField fx:id="encoded198" alignment="CENTER_RIGHT" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="3">
+                <TextField fx:id="txtField3" alignment="CENTER_RIGHT" onKeyTyped="#updateFinalSelectRect" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="3">
                     <GridPane.margin>
                         <Insets left="5.0" />
                     </GridPane.margin>
                 </TextField>
-                <TextField fx:id="encoded362" alignment="CENTER_RIGHT" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="4">
+                <TextField fx:id="txtField4" alignment="CENTER_RIGHT" onKeyTyped="#updateFinalSelectRect" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="4">
                     <GridPane.margin>
                         <Insets left="5.0" />
                     </GridPane.margin>
                 </TextField>
-                <TextField fx:id="encoded591" alignment="CENTER_RIGHT" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="5">
+                <TextField fx:id="txtField5" alignment="CENTER_RIGHT" onKeyTyped="#updateFinalSelectRect" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="5">
                     <GridPane.margin>
                         <Insets left="5.0" />
                     </GridPane.margin>
                 </TextField>
-                <TextField fx:id="encoded900" alignment="CENTER_RIGHT" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="6">
+                <TextField fx:id="txtField6" alignment="CENTER_RIGHT" onKeyTyped="#updateFinalSelectRect" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="6">
                     <GridPane.margin>
                         <Insets left="5.0" />
                     </GridPane.margin>
                 </TextField>
+            <Button fx:id="button1" mnemonicParsing="false" onAction="#triggerSelection" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
+            <Button fx:id="button2" mnemonicParsing="false" onAction="#triggerSelection" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
+            <Button fx:id="button3" mnemonicParsing="false" onAction="#triggerSelection" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
+            <Button fx:id="button4" mnemonicParsing="false" onAction="#triggerSelection" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
+            <Button fx:id="button5" mnemonicParsing="false" onAction="#triggerSelection" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="5" />
+            <Button fx:id="button6" mnemonicParsing="false" onAction="#triggerSelection" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6" />
+            <Rectangle fx:id="finalSelectRect1" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="26.0" stroke="BLACK" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+            <Rectangle fx:id="finalSelectRect2" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="26.0" stroke="BLACK" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+            <Rectangle fx:id="finalSelectRect3" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="26.0" stroke="BLACK" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+            <Rectangle fx:id="finalSelectRect4" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="26.0" stroke="BLACK" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="4" />
+            <Rectangle fx:id="finalSelectRect5" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="26.0" stroke="BLACK" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="5" />
+            <Rectangle fx:id="finalSelectRect6" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="26.0" stroke="BLACK" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="6" />
                 <Button mnemonicParsing="false" onAction="#applyButtonPressed" text="Apply" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="7">
-                    <GridPane.margin>
-                        <Insets left="5.0" top="5.0" />
-                    </GridPane.margin>
-                </Button>
+            </Button>
             </children>
             <columnConstraints>
-                <ColumnConstraints />
-                <ColumnConstraints />
-                <ColumnConstraints />
+                <ColumnConstraints maxWidth="114.0" minWidth="64.0" prefWidth="84.0" />
+                <ColumnConstraints maxWidth="118.66666666666669" minWidth="45.333333333333314" prefWidth="94.33333333333331" />
+                <ColumnConstraints maxWidth="300.0" minWidth="12.0" prefWidth="130.0" />
+            <ColumnConstraints maxWidth="300.0" minWidth="12.0" prefWidth="50.0" />
                 <ColumnConstraints />
                 <ColumnConstraints maxWidth="0.0" minWidth="0.0" prefWidth="0.0" />
                 <ColumnConstraints maxWidth="0.0" minWidth="0.0" prefWidth="0.0" />
@@ -144,8 +149,8 @@
                 <RowConstraints />
                 <RowConstraints />
                 <RowConstraints />
-                <RowConstraints />
-                <RowConstraints />
+                <RowConstraints maxHeight="0.0" minHeight="0.0" prefHeight="0.0" />
+                <RowConstraints maxHeight="0.0" minHeight="0.0" prefHeight="0.0" />
             </rowConstraints>
         </GridPane>
    </children>
