@@ -349,48 +349,59 @@ public class ImageCache<ContextType extends Context<ContextType>>
             .setInternalFormat(ColorFormat.RGBA32F)
             .createTexture();
 
-        // Framebuffer to calculate incident radiance at full resolution
         try
         (
             Program<ContextType> radianceProgram = resources.getIBRShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, "shaders/common/texspace_noscale.vert")
                 .addShader(ShaderType.FRAGMENT, "shaders/specularfit/incidentRadiance.frag")
                 .createProgram();
+
+            // Framebuffer to calculate incident radiance at full resolution
             FramebufferObject<ContextType> highResFBO = context.buildFramebufferObject(settings.getTextureWidth(), settings.getTextureHeight())
                 .addColorAttachment(ColorFormat.RGB32F)
                 .createFramebufferObject();
-            FramebufferObject<ContextType> sampledResFBO = context.buildFramebufferObject(settings.getTextureWidth(), settings.getTextureHeight())
-                // No attachments as we'll just attach the layers of the texture array.
-                .createFramebufferObject()
         )
         {
             Drawable<ContextType> radianceDrawable = resources.createDrawable(radianceProgram);
+
+            // Iterate over the layers to load in the texture array
             for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
             {
+                // Get incident radiance from the shader (at high-resolution
                 radianceProgram.setUniform("viewIndex", k);
                 highResFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
                 radianceDrawable.draw(highResFBO);
                 float[] radiance = highResFBO.readFloatingPointColorBufferRGBA(0);
 
+                // Load the sampled image from the hard drive
                 BufferedImage sampledImg = BufferedImageBuilder.build()
                     .loadDataFromFile(new File(sampledDir, getPNGFilename(k)))
                     .flipVertical()
                     .create();
                 int[] sampledImgData = sampledImg.getRGB(0, 0, sampledImg.getWidth(), sampledImg.getHeight(), null, 0, sampledImg.getWidth());
-                NativeVectorBuffer finalData = NativeVectorBufferFactory.getInstance()
+
+                // Initialize a buffer for the final result
+                NativeVectorBuffer reflectanceData = NativeVectorBufferFactory.getInstance()
                     .createEmpty(NativeDataType.FLOAT, 4, settings.getSampledSize() * settings.getSampledSize());
-                for (int i = 0; i < finalData.getCount(); i++)
+
+                for (int i = 0; i < reflectanceData.getCount(); i++)
                 {
                     Color sampledImgPixel = new Color(sampledImgData[i], true);
+
+                    // Figure out which pixels in the high-res image are being used in the sampled image
                     IntVector2 highResCoords = sampledPixelCoords[i % settings.getSampledSize()][i / settings.getSampledSize()];
                     int highResIndex = highResCoords.x + highResCoords.y * settings.getTextureWidth();
-                    finalData.set(i, 0, sampledImgPixel.getRed() / (255.0f * radiance[4 * highResIndex]));
-                    finalData.set(i, 1, sampledImgPixel.getGreen() / (255.0f * radiance[4 * highResIndex + 1]));
-                    finalData.set(i, 2, sampledImgPixel.getBlue() / (255.0f * radiance[4 * highResIndex + 2]));
-                    finalData.set(i, 3, sampledImgPixel.getAlpha() / 255.0f);
+
+                    // We want the texture array to store cosine-weighted reflectance: exitant radiance / incident radiance
+                    // sampled pixels are low dynamic range (0-255); radiance is floating point (0.0-1.0); result should also be floating-point (0.0-1.0)
+                    reflectanceData.set(i, 0, sampledImgPixel.getRed() / (255.0f * radiance[4 * highResIndex]));
+                    reflectanceData.set(i, 1, sampledImgPixel.getGreen() / (255.0f * radiance[4 * highResIndex + 1]));
+                    reflectanceData.set(i, 2, sampledImgPixel.getBlue() / (255.0f * radiance[4 * highResIndex + 2]));
+                    reflectanceData.set(i, 3, sampledImgPixel.getAlpha() / 255.0f);
                 }
 
-                textureArray.loadLayer(k, finalData);
+                // Pass the buffer to the texture array on the GPU
+                textureArray.loadLayer(k, reflectanceData);
             }
 
             return textureArray;
