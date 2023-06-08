@@ -15,7 +15,7 @@ import java.io.File;
 
 public class ImageCacheSettings
 {
-    private File cacheDirectory;
+    private File cacheParentDirectory;
     private int textureWidth;
     private int textureHeight;
     private int textureSubdiv;
@@ -23,7 +23,12 @@ public class ImageCacheSettings
 
     public File getCacheDirectory()
     {
-        return cacheDirectory;
+        return new File(cacheParentDirectory, getFolderNameFromSettings());
+    }
+
+    public File getCacheParentDirectory()
+    {
+        return cacheParentDirectory;
     }
 
     public int getTextureWidth()
@@ -46,9 +51,9 @@ public class ImageCacheSettings
         return sampledSize;
     }
 
-    public void setCacheDirectory(File cacheDirectory)
+    public void setCacheParentDirectory(File cacheParentDirectory)
     {
-        this.cacheDirectory = cacheDirectory;
+        this.cacheParentDirectory = cacheParentDirectory;
     }
 
     public void setTextureWidth(int textureWidth)
@@ -69,5 +74,10 @@ public class ImageCacheSettings
     public void setSampledSize(int sampledSize)
     {
         this.sampledSize = sampledSize;
+    }
+
+    public String getFolderNameFromSettings()
+    {
+        return String.format("%d-%d-%d-%d", textureWidth, textureHeight, textureSubdiv, sampledSize);
     }
 }

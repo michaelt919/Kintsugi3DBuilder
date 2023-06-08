@@ -1372,9 +1372,11 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         return new SingleCalibratedImageResource<ContextType>(context, viewSet, viewIndex, imageFile, geometry, loadOptions);
     }
 
-    public ImageCache<ContextType> cache(ImageCacheSettings settings)
+    public ImageCache<ContextType> cache(ImageCacheSettings settings) throws IOException
     {
-        return new ImageCache<>(this, /* TODO: implement high-res image directory */ viewSet.getImageFilePath(), settings);
+        ImageCache<ContextType> cache = new ImageCache<>(this, settings);
+        cache.initialize(/* TODO: implement high-res image directory */ viewSet.getImageFilePath());
+        return cache;
     }
 
     @Override
