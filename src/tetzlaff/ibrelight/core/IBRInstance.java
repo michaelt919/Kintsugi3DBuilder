@@ -15,7 +15,7 @@ import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Framebuffer;
 import tetzlaff.gl.core.FramebufferSize;
 import tetzlaff.gl.interactive.InteractiveRenderable;
-import tetzlaff.gl.util.VertexGeometry;
+import tetzlaff.gl.geometry.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.models.*;

@@ -17,7 +17,7 @@ import java.util.*;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.util.VertexGeometry;
+import tetzlaff.gl.geometry.VertexGeometry;
 import tetzlaff.gl.vecmath.*;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.rendering.resources.DynamicResourceLoader;

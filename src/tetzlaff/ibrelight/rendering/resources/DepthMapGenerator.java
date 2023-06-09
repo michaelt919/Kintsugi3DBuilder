@@ -14,8 +14,7 @@ package tetzlaff.ibrelight.rendering.resources;
 import java.io.FileNotFoundException;
 
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.util.GeometryResources;
-import tetzlaff.gl.util.VertexGeometry;
+import tetzlaff.gl.geometry.GeometryResources;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.ViewSet;

@@ -16,8 +16,8 @@ import java.io.IOException;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.util.GeometryResources;
-import tetzlaff.gl.util.VertexGeometry;
+import tetzlaff.gl.geometry.GeometryResources;
+import tetzlaff.gl.geometry.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.ibrelight.core.ReadonlyLoadOptionsModel;
 import tetzlaff.ibrelight.core.ViewSet;

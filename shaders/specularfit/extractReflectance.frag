@@ -37,7 +37,6 @@ vec3 getNormalEstimate()
 
 void main()
 {
-
     vec4 imgColor = getLinearColor();
     vec3 lightDisplacement = getLightVector();
     vec3 light = normalize(lightDisplacement);

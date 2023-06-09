@@ -9,12 +9,16 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.gl.util;
+package tetzlaff.gl.geometry;
+
+import java.io.FileNotFoundException;
 
 import tetzlaff.gl.core.*;
 
 public class GeometryResources<ContextType extends Context<ContextType>> implements Resource
 {
+    public final ContextType context;
+
     /**
      * The geometry for this instance that the vertex buffers were loaded from.
      */
@@ -45,6 +49,7 @@ public class GeometryResources<ContextType extends Context<ContextType>> impleme
      */
     private GeometryResources()
     {
+        this.context = null;
         this.geometry = null;
         this.positionBuffer = null;
         this.texCoordBuffer = null;
@@ -62,6 +67,7 @@ public class GeometryResources<ContextType extends Context<ContextType>> impleme
      */
     GeometryResources(ContextType context, VertexGeometry geometry)
     {
+        this.context = context;
         this.geometry = geometry;
         this.positionBuffer = context.createVertexBuffer().setData(geometry.getVertices());
 
@@ -106,6 +112,19 @@ public class GeometryResources<ContextType extends Context<ContextType>> impleme
         drawable.addVertexBuffer("normal", normalBuffer);
         drawable.addVertexBuffer("tangent", tangentBuffer);
         return drawable;
+    }
+
+    public GeometryFramebuffer<ContextType> createGeometryFramebuffer(int width, int height)
+    {
+        try
+        {
+            return new GeometryFramebuffer<>(this, width, height);
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+            throw new UnsupportedOperationException(e);
+        }
     }
 
     public boolean isNull()
