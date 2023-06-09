@@ -1,8 +1,6 @@
 package tetzlaff.ibrelight.export.specularfit;
 
 import de.javagl.jgltf.impl.v2.*;
-import de.javagl.jgltf.model.GltfModel;
-import de.javagl.jgltf.model.MeshPrimitiveModel;
 import de.javagl.jgltf.model.creation.GltfModelBuilder;
 import de.javagl.jgltf.model.creation.MeshPrimitiveBuilder;
 import de.javagl.jgltf.model.impl.DefaultMeshModel;
@@ -13,7 +11,6 @@ import de.javagl.jgltf.model.io.v2.GltfAssetV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetWriterV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetsV2;
 import de.javagl.jgltf.model.v2.MaterialModelV2;
-import de.javagl.jgltf.obj.model.ObjGltfModelCreator;
 import tetzlaff.gl.util.VertexGeometry;
 
 import java.io.File;
