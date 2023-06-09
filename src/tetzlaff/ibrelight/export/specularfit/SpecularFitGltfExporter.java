@@ -2,15 +2,24 @@ package tetzlaff.ibrelight.export.specularfit;
 
 import de.javagl.jgltf.impl.v2.*;
 import de.javagl.jgltf.model.GltfModel;
+import de.javagl.jgltf.model.MeshPrimitiveModel;
+import de.javagl.jgltf.model.creation.GltfModelBuilder;
+import de.javagl.jgltf.model.creation.MeshPrimitiveBuilder;
+import de.javagl.jgltf.model.impl.DefaultMeshModel;
+import de.javagl.jgltf.model.impl.DefaultMeshPrimitiveModel;
+import de.javagl.jgltf.model.impl.DefaultNodeModel;
+import de.javagl.jgltf.model.impl.DefaultSceneModel;
 import de.javagl.jgltf.model.io.v2.GltfAssetV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetWriterV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetsV2;
+import de.javagl.jgltf.model.v2.MaterialModelV2;
 import de.javagl.jgltf.obj.model.ObjGltfModelCreator;
 import tetzlaff.gl.util.VertexGeometry;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.FloatBuffer;
 
 public class SpecularFitGltfExporter {
 
@@ -124,9 +133,58 @@ public class SpecularFitGltfExporter {
 
     public static SpecularFitGltfExporter fromVertexGeometry(VertexGeometry geometry) throws IOException
     {
-        ObjGltfModelCreator gltfModelCreator = new ObjGltfModelCreator();
-        GltfModel gltfModel = gltfModelCreator.create(geometry.getFilename().toURI());
-        GltfAssetV2 gltfAsset = GltfAssetsV2.createEmbedded(gltfModel);
+        GltfModelBuilder builder = GltfModelBuilder.create();
+
+        DefaultSceneModel scene = new DefaultSceneModel();
+        DefaultNodeModel node = new DefaultNodeModel();
+        DefaultMeshModel mesh = new DefaultMeshModel();
+        MeshPrimitiveBuilder primitiveBuilder = MeshPrimitiveBuilder.create();
+
+        // Add positions, normals and texcords by buffer
+        primitiveBuilder.addPositions3D(geometry.getVertices().getBuffer().asFloatBuffer());
+
+        if (geometry.hasNormals())
+        {
+            primitiveBuilder.addNormals3D(geometry.getNormals().getBuffer().asFloatBuffer());
+        }
+
+        if (geometry.hasTexCoords())
+        {
+            // Copy to a new buffer while flipping vertically
+            FloatBuffer inBuffer = geometry.getTexCoords().getBuffer().asFloatBuffer();
+            FloatBuffer outBuffer = FloatBuffer.allocate(inBuffer.capacity());
+
+            for (int i = 1; i < inBuffer.capacity(); i++) {
+                float texCoord = inBuffer.get(i);
+
+                // Flip Y coordinates, leave X
+                if (i % 2 != 0)
+                {
+                    texCoord = 1.0f - texCoord;
+                }
+
+                outBuffer.put(i, texCoord);
+            }
+
+            primitiveBuilder.addTexCoords02D(outBuffer);
+        }
+
+        // Build the primitive
+        DefaultMeshPrimitiveModel primitive = primitiveBuilder.build();
+
+        // Create the material for the mesh
+        MaterialModelV2 material = new MaterialModelV2();
+        primitive.setMaterialModel(material);
+
+        // Add the primitive to the mesh, to the node, to the scene
+        mesh.addMeshPrimitiveModel(primitive);
+        node.addMeshModel(mesh);
+        scene.addNode(node);
+        builder.addSceneModel(scene);
+
+        // Build model and convert to embedded asset
+        GltfAssetV2 gltfAsset = GltfAssetsV2.createEmbedded(builder.build());
+
         return new SpecularFitGltfExporter(gltfAsset);
     }
 }
