@@ -59,9 +59,10 @@ public class EyedropperController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        //TODO: REMOVE HARD CODING OF THIS IMAGE
-        selectedFile = new File("C:\\Users\\DenneyLuke\\Downloads\\colorGrid2.png");
+        SharedDataModel sharedDataModel = SharedDataModel.getInstance();
+        selectedFile = sharedDataModel.getSelectedImage();
         colorPickerImgView.setImage(new Image(selectedFile.toURI().toString()));
+
         selectionAllowed = false;
 
         selectedColors = new ArrayList<>();
@@ -139,16 +140,26 @@ public class EyedropperController implements Initializable {
             Color averageColor = screenshotAndFindAvgColor();
 
             // Set the color label text
-            colorLabel.setText("RGB: " + getRGBString(averageColor)
-            + "\tGreyScale: " + Math.round(getGreyScaleDouble(averageColor)));//TODO: ADD PRECISION TO GREYSCALE ROUNDING?
+            colorLabel.setText(/*"RGB: " + getRGBString(averageColor)
+            + */"Greyscale: " + getGreyScaleDouble(averageColor));//TODO: ADD PRECISION TO GREYSCALE ROUNDING?
 
             //display average color to user
-            Color prevColor = (Color) averageColorDisplay.getFill();
-            if (!prevColor.equals(averageColor))//change the stroke of the box to the previous color, if color changes
-                averageColorDisplay.setStroke(prevColor);
-
-            averageColorDisplay.setFill(averageColor);
+            updateAverageColorDisplay(averageColor);
         }
+    }
+
+    private void updateAverageColorDisplay(Color newColor) {
+        Color prevColor = (Color) averageColorDisplay.getFill();
+        if (!prevColor.equals(newColor))//change the stroke of the box to the previous color, if color changes
+            averageColorDisplay.setStroke(prevColor);
+        averageColorDisplay.setFill(newColor);
+    }
+
+    @FXML//used so the rectangles in color palette can update the average color display
+    public void updateAverageColorDisplay(MouseEvent mouseEvent){
+        Rectangle sourceRect = (Rectangle) mouseEvent.getSource();
+        Color rectColor = (Color) sourceRect.getFill();
+        updateAverageColorDisplay(rectColor);
     }
 
     private Color screenshotAndFindAvgColor(){
@@ -248,7 +259,7 @@ public class EyedropperController implements Initializable {
                     Button sourceButton = resetButtonsText();
 
                     //modify appropriate text field to average greyscale value
-                    TextField partnerTxtField = getButtonPartnerTxtField(sourceButton);
+                    TextField partnerTxtField = getButtonPartnerTxtField(sourceButton);//TODO: IMPLEMENT NULL SAFETY
                     Double greyScale = getGreyScaleDouble(newColor);//TODO: USE BETTER (weighted) GREYSCALE CONVERSION
                     partnerTxtField.setText(String.valueOf(greyScale));
 
@@ -410,4 +421,5 @@ public class EyedropperController implements Initializable {
 
         return sourceButton;
     }
+
 }
