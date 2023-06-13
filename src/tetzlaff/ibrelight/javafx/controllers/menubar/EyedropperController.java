@@ -1,6 +1,5 @@
 package tetzlaff.ibrelight.javafx.controllers.menubar;
 
-import javafx.beans.InvalidationListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -9,18 +8,20 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.InputMethodEvent;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import tetzlaff.ibrelight.core.LoadingModel;
 
+import java.awt.*;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.function.DoubleUnaryOperator;
 
 public class EyedropperController implements Initializable {
 
@@ -40,7 +41,7 @@ public class EyedropperController implements Initializable {
 
     @FXML Button button1, button2, button3, button4, button5, button6;
     private List<Button> colorSelectButtons;
-    final String defaultButtonText = "Select Color";
+    final static String defaultButtonText = "Select Color";
 
     @FXML
     private TextField txtField1, txtField2, txtField3, txtField4, txtField5, txtField6;
@@ -56,6 +57,7 @@ public class EyedropperController implements Initializable {
 
     private boolean selectionAllowed;//enabled by "Select Color" buttons and disabled when selection is finished
 
+    private LoadingModel loadingModel = new LoadingModel();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -140,8 +142,7 @@ public class EyedropperController implements Initializable {
             Color averageColor = screenshotAndFindAvgColor();
 
             // Set the color label text
-            colorLabel.setText(/*"RGB: " + getRGBString(averageColor)
-            + */"Greyscale: " + getGreyScaleDouble(averageColor));//TODO: ADD PRECISION TO GREYSCALE ROUNDING?
+            colorLabel.setText("Greyscale: " + Math.round(getGreyScaleDouble(averageColor)));
 
             //display average color to user
             updateAverageColorDisplay(averageColor);
@@ -196,13 +197,6 @@ public class EyedropperController implements Initializable {
             }
         }
 
-        //print selectedColors
-         //print all selected colors
-//        System.out.println("---------------------------------------------------------------------");
-//        for(Color color: selectedColors)
-//            System.out.println(getRGBString(color));
-//        System.out.println("---------------------------------------------------------------------");
-
         return calculateAverageColor(selectedColors);
     }
 
@@ -247,35 +241,39 @@ public class EyedropperController implements Initializable {
         //else, find the highest rectangle which does not have a color and change that rectangle's color to the selected color
         Color newColor = (Color) averageColorDisplay.getFill();
 
-        if(newColor.equals(Color.WHITE)) {
-            return false;
-        }
-        else{
-            for(Rectangle rect : selectedColorRectangles){
+        if (!newColor.equals(Color.WHITE)) {
+            for (Rectangle rect : selectedColorRectangles) {//add color to color palette in appropriate spot
                 if (rect.getFill().equals(Color.WHITE)) {
-                    if (!colorInList(newColor)){
-                        rect.setFill(newColor);//only add color to palette if it is not a duplicate. Still update everything else
+                    if (!colorInList(newColor)) {
+                        rect.setFill(newColor);//only add color to palette if it is not a duplicate
                     }
                     Button sourceButton = resetButtonsText();
+                    if (sourceButton != null) {
+                        //modify appropriate text field to average greyscale value
+                        TextField partnerTxtField = getButtonPartnerTxtField(sourceButton);
+                        Integer greyScale = Math.toIntExact((long) getGreyScaleDouble(newColor));//TODO: USE BETTER (weighted) GREYSCALE CONVERSION
+                        partnerTxtField.setText(String.valueOf(greyScale));
 
-                    //modify appropriate text field to average greyscale value
-                    TextField partnerTxtField = getButtonPartnerTxtField(sourceButton);//TODO: IMPLEMENT NULL SAFETY
-                    Double greyScale = getGreyScaleDouble(newColor);//TODO: USE BETTER (weighted) GREYSCALE CONVERSION
-                    partnerTxtField.setText(String.valueOf(greyScale));
+                        partnerTxtField.positionCaret(partnerTxtField.getText().length());//without these two lines, text field would not update properly
+                        partnerTxtField.positionCaret(0);
 
-                    partnerTxtField.positionCaret(partnerTxtField.getText().length());//without these two lines, text field would not update properly
-                    partnerTxtField.positionCaret(0);
-
-                    Rectangle partnerRectangle = getButtonPartnerRect(sourceButton);
-                    updateFinalSelectRect(partnerRectangle);
+                        Rectangle partnerRectangle = getButtonPartnerRect(sourceButton);
+                        updateFinalSelectRect(partnerRectangle);
+                    }
+                    else{
+                        Toolkit.getDefaultToolkit().beep();
+                        return false; //source button is null
+                    }
 
                     selectionAllowed = false;
                     selectionRectangle.setVisible(false);
-                    return true;
+                    return true;//color changed successfully
                 }
             }
-            return false;
         }
+        Toolkit.getDefaultToolkit().beep();
+        return false;//averageColorDisplay is completely white
+        //TODO: NEED TO CONSIDER IF USER SELECTS A COMPLETELY WHITE PATCH?
     }
 
     private void updateFinalSelectRect(Rectangle rect) {
@@ -396,8 +394,34 @@ public class EyedropperController implements Initializable {
         return false;
     }
 
-    public void applyButtonPressed(ActionEvent actionEvent) {
-        //TODO: NEED TO BRING OVER CODE FROM THE OLD COLOR CHECKER
+    public void applyButtonPressed()
+    {
+        //only apply if all buttons are filled
+        boolean allFieldsFull = true;
+        for (TextField field : colorSelectTxtFields){
+            if(field.getText().equals("") || field.getText() == null){
+                allFieldsFull = false;
+                break;
+            }
+        }
+
+        if(allFieldsFull && goodLoadingModel()) {
+            loadingModel.setTonemapping(
+                    new double[]{0.031, 0.090, 0.198, 0.362, 0.591, 0.900},
+                    new byte[]
+                            {
+                                    (byte) Integer.parseInt(txtField1.getText()),
+                                    (byte) Integer.parseInt(txtField2.getText()),
+                                    (byte) Integer.parseInt(txtField3.getText()),
+                                    (byte) Integer.parseInt(txtField4.getText()),
+                                    (byte) Integer.parseInt(txtField5.getText()),
+                                    (byte) Integer.parseInt(txtField6.getText())
+                            });
+        }
+        else{
+            Toolkit.getDefaultToolkit().beep();
+            System.out.println("Please fill all fields and load a model before performing color calibration");//TODO: PROBABLY CHANGE THIS VERIFICATION METHOD
+        }
     }
 
     public void triggerSelection(ActionEvent actionEvent) {
@@ -422,4 +446,38 @@ public class EyedropperController implements Initializable {
         return sourceButton;
     }
 
+    public void setLoadingModel(LoadingModel loadingModel){//TODO: THIS FUNCTION IS NOT CALLED IF THE COLOR CHECKER IS OPENED BEFORE THE MODEL IS LOADED
+        this.loadingModel = loadingModel;
+
+        //initialize txtFields with their respective values
+        if (goodLoadingModel()){
+            DoubleUnaryOperator luminanceEncoding = loadingModel.getLuminanceEncodingFunction();
+            txtField1.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.031))));
+            txtField2.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.090))));
+            txtField3.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.198))));
+            txtField4.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.362))));
+            txtField5.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.591))));
+            txtField6.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.900))));
+
+            for(Rectangle rect : finalSelectRectangles){
+                rect.setVisible(true);
+                updateFinalSelectRect(rect);
+            }
+        }
+        else{
+            System.out.println("Could not bring in luminance encodings: no model found");//TODO: WHAT TO DO IF NO MODEL FOUND?
+        }
+    }
+
+    private boolean goodLoadingModel(){//treat this function as a replacement for (loadingModel == null) b/c that statement doesn't work
+        //TODO: REMOVE JANKY WORKAROUND
+        try{
+            DoubleUnaryOperator luminanceEncoding = loadingModel.getLuminanceEncodingFunction();
+        }
+        catch(Exception e){
+            return false;
+        }
+
+        return true;
+    }
 }

@@ -584,7 +584,7 @@ public class MenubarController
 
         try
         {
-            ColorCheckerController colorCheckerController =
+            ColorCheckerImgSelectionController colorCheckerController =
                     makeWindow("Color Checker", colorCheckerWindowOpen, "fxml/menubar/ColorCheckerImgSelection.fxml");
             colorCheckerController.init(MultithreadModels.getInstance().getLoadingModel());
 

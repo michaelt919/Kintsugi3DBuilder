@@ -9,7 +9,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import tetzlaff.ibrelight.core.LoadingModel;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 
@@ -23,13 +25,22 @@ public class ColorCheckerImgSelectionController {
     private Scene scene;
     private Parent root;
 
-    public void openEyedropper(ActionEvent actionEvent) throws IOException {
-        root = FXMLLoader.load(getClass().getClassLoader().getResource("fxml/menubar/EyedropperColorChecker.fxml"));
-        stage = (Stage)((Node)actionEvent.getSource()).getScene().getWindow();
-        scene = new Scene(root);
-        stage.setScene(scene);
-        stage.show();
+    private LoadingModel loadingModel;
 
+    public void openEyedropper(ActionEvent actionEvent) throws IOException {
+        if(SharedDataModel.getInstance().getSelectedImage()!= null) {//only move on if image is selected
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/menubar/EyedropperColorChecker.fxml"));
+            root = fxmlLoader.load();
+            EyedropperController eyedropperController = fxmlLoader.getController();
+            eyedropperController.setLoadingModel(loadingModel);
+            stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
+            scene = new Scene(root);
+            stage.setScene(scene);
+            stage.show();
+        }
+        else{
+            Toolkit.getDefaultToolkit().beep();//default error noise
+        }
     }
 
     public void selectImage(ActionEvent actionEvent) {
@@ -45,5 +56,9 @@ public class ColorCheckerImgSelectionController {
             SharedDataModel.getInstance().setSelectedImage(selectedFile);
 
         }
+    }
+
+    public void init(LoadingModel loadingModel) {
+        this.loadingModel = loadingModel;
     }
 }
