@@ -17,7 +17,7 @@ import java.io.IOException;
 
 public class ColorCheckerImgSelectionController {
     public Button runButton;
-    public TextField colorPickerSetField;
+    public TextField imgPathTxtField;
 
     private File selectedFile;
 
@@ -28,7 +28,9 @@ public class ColorCheckerImgSelectionController {
     private LoadingModel loadingModel;
 
     public void openEyedropper(ActionEvent actionEvent) throws IOException {
-        if(SharedDataModel.getInstance().getSelectedImage()!= null) {//only move on if image is selected
+        if(SharedDataModel.getInstance().getSelectedImage()!= null || loadImgFromTxtField()) {//only move on if image is selected.
+                                                                                            // Also, if no image selected, check to see if
+                                                                                            //path was put into text field manually
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/menubar/EyedropperColorChecker.fxml"));
             root = fxmlLoader.load();
             EyedropperController eyedropperController = fxmlLoader.getController();
@@ -43,6 +45,18 @@ public class ColorCheckerImgSelectionController {
         }
     }
 
+    private boolean loadImgFromTxtField() {//TODO: TELL USER THAT FILE IS NOT FOUND?
+        String path = imgPathTxtField.getText();
+        selectedFile = new File(path);
+        if (selectedFile.exists()){
+            SharedDataModel.getInstance().setSelectedImage(selectedFile);
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
     public void selectImage(ActionEvent actionEvent) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose Image File");
@@ -52,9 +66,8 @@ public class ColorCheckerImgSelectionController {
         selectedFile = fileChooser.showOpenDialog(stage);
 
         if (selectedFile != null) {
-            colorPickerSetField.setText(selectedFile.getAbsolutePath());
+            imgPathTxtField.setText(selectedFile.getAbsolutePath());
             SharedDataModel.getInstance().setSelectedImage(selectedFile);
-
         }
     }
 

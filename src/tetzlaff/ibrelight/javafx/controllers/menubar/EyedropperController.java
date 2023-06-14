@@ -3,6 +3,7 @@ package tetzlaff.ibrelight.javafx.controllers.menubar;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -131,6 +132,25 @@ public class EyedropperController implements Initializable {
             double y = event.getY();
             double width = x - selectionRectangle.getX();
             double height = y - selectionRectangle.getY();
+
+            //attempt at detecting when the mouse has left the imageView
+//            Point2D selectionRectangleRelativeCoords = colorPickerImgView.localToScene(new Point2D
+//                    (colorPickerImgView.getX() + colorPickerImgView.getImage().getRequestedWidth(),
+//                            colorPickerImgView.getY() + colorPickerImgView.getImage().getRequestedHeight()));
+//
+//            double relativeX = selectionRectangleRelativeCoords.getX();
+//            double relativeY = selectionRectangleRelativeCoords.getY();
+//
+//            System.out.println("x is " + x + ", relativeX is " + relativeX);
+//            System.out.println("y is " + y + ", relativeY is " + relativeY);
+//
+//            if (x > relativeX) {
+//                System.out.println("X TOO BIG");
+//            }
+//            if (y > relativeY) {
+//                System.out.println("Y TOO BIG");
+//            }
+
             selectionRectangle.setWidth(width);
             selectionRectangle.setHeight(height);
         }
@@ -190,11 +210,21 @@ public class EyedropperController implements Initializable {
 
         //read pixels from selected crop
         selectedColors.clear();
+        boolean badColorDetected = false;
         for (int posX = (int) trueStartX; posX < trueEndX; posX++) {
             for (int posY = (int) trueStartY; posY < trueEndY; posY++) {
-                Color color = pixelReader.getColor(posX, posY);
-                selectedColors.add(color);
+                try{
+                    Color color = pixelReader.getColor(posX, posY);
+                    selectedColors.add(color);
+                }
+                catch (IndexOutOfBoundsException e){
+                    badColorDetected = true;
+                }
             }
+        }
+
+        if(badColorDetected){//TODO: CHANGE SOLUTION TO THIS PROBLEM?
+            System.out.println("Some colors could not be added. Please confirm that your selection contains the desired colors.");
         }
 
         return calculateAverageColor(selectedColors);
@@ -212,9 +242,9 @@ public class EyedropperController implements Initializable {
         }
 
         int size = colors.size();
-        double averageRed = redSum / (double) size;
-        double averageGreen = greenSum / (double) size;
-        double averageBlue = blueSum / (double) size;
+        double averageRed = redSum / size;
+        double averageGreen = greenSum / size;
+        double averageBlue = blueSum / size;
 
         return Color.color(averageRed, averageGreen, averageBlue);
     }
