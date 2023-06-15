@@ -52,6 +52,11 @@ public class SpecularFitGltfExporter {
         }));
     }
 
+    public void setSpecularName(String uri)
+    {
+        TextureInfo texture = createRelativeTexture(uri, "specular");
+    }
+
     public void addWeightImages(int basisCount)
     {
         for (int b = 0; b < basisCount; b++)
@@ -82,6 +87,7 @@ public class SpecularFitGltfExporter {
         setDiffuseName("diffuse.png");
         setNormalName("normal.png");
         setRoughnessName("roughness.png");
+        setSpecularName("specular.png");
     }
 
     private static MaterialNormalTextureInfo convertTexInfoToNormal(TextureInfo normalTextureInfo, float scale)
