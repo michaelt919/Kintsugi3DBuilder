@@ -4,6 +4,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Point2D;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -40,8 +41,14 @@ public class EyedropperController implements Initializable {
     private Rectangle finalSelectRect1, finalSelectRect2, finalSelectRect3, finalSelectRect4, finalSelectRect5, finalSelectRect6;
     private List<Rectangle> finalSelectRectangles;
 
-    @FXML Button button1, button2, button3, button4, button5, button6;
+    @FXML
+    private Button button1, button2, button3, button4, button5, button6;
     private List<Button> colorSelectButtons;
+
+    @FXML
+    private Button cropButton;
+    private boolean isCropping;
+
     final static String defaultButtonText = "Select Color";
 
     @FXML
@@ -56,7 +63,7 @@ public class EyedropperController implements Initializable {
     private File selectedFile;
     @FXML private Rectangle averageColorDisplay = new Rectangle(); //displays the average color of selection
 
-    private boolean selectionAllowed;//enabled by "Select Color" buttons and disabled when selection is finished
+    private boolean isSelecting;//enabled by "Select Color" buttons and disabled when selection is finished
 
     private LoadingModel loadingModel = new LoadingModel();
 
@@ -65,8 +72,11 @@ public class EyedropperController implements Initializable {
         SharedDataModel sharedDataModel = SharedDataModel.getInstance();
         selectedFile = sharedDataModel.getSelectedImage();
         colorPickerImgView.setImage(new Image(selectedFile.toURI().toString()));
+        colorPickerImgView.setPreserveRatio(true);
+        colorPickerImgView.setSmooth(true);
 
-        selectionAllowed = false;
+        isSelecting = false;
+        isCropping = false;
 
         selectedColors = new ArrayList<>();
         selectedColorRectangles = new ArrayList<>();
@@ -113,7 +123,7 @@ public class EyedropperController implements Initializable {
 
     @FXML
     private void handleMousePressed(MouseEvent event) {//TODO: IF USER SELECTS AREA OUTSIDE OF IMAGE, SHIFT SELECTION BOX INSIDE IMAGE
-        if(selectionAllowed) {
+        if(isSelecting || isCropping) {
             selectionRectangle.setVisible(true);
             double x = event.getX();
             double y = event.getY();
@@ -127,7 +137,7 @@ public class EyedropperController implements Initializable {
 
     @FXML
     private void handleMouseDragged(MouseEvent event) {
-        if(selectionAllowed) {
+        if(isSelecting || isCropping) {
             double x = event.getX();
             double y = event.getY();
             double width = x - selectionRectangle.getX();
@@ -158,7 +168,7 @@ public class EyedropperController implements Initializable {
 
     @FXML
     private void handleMouseReleased(MouseEvent event) {
-        if(selectionAllowed) {
+        if(isSelecting) {
             Color averageColor = screenshotAndFindAvgColor();
 
             // Set the color label text
@@ -167,6 +177,42 @@ public class EyedropperController implements Initializable {
             //display average color to user
             updateAverageColorDisplay(averageColor);
         }
+
+        if(isCropping){
+            cropImage(event);
+        }
+    }
+
+    public void triggerCropping(ActionEvent actionEvent) {
+        if(cropButton.getText().equals("Reset Crop")){//reset viewport
+            Image origImage = colorPickerImgView.getImage();
+            colorPickerImgView.setViewport(new Rectangle2D(0, 0,
+                    origImage.getRequestedWidth(), origImage.getRequestedHeight()));
+            cropButton.setText("Crop");
+        }
+        else{
+            //TODO: IMPLEMENT IMAGE CROPPING FOR EASE OF COLOR SELECTION
+            cropButton.setText("Cropping...");
+            isCropping = true;
+        }
+
+        isSelecting = false;
+    }
+
+    private void cropImage(MouseEvent event) {//might be a better way to access this information
+        //get bounds of selection rectangle
+        //crop imageView accordingly
+        double x = event.getX();
+        double y = event.getY();
+        double width = x - selectionRectangle.getX();
+        double height = y - selectionRectangle.getY();
+
+        Rectangle2D view = new Rectangle2D(x, y, width, height);
+        colorPickerImgView.setViewport(view);
+        isCropping = false;
+        cropButton.setText("Reset Crop");
+
+        selectionRectangle.setVisible(false);
     }
 
     private void updateAverageColorDisplay(Color newColor) {
@@ -191,9 +237,7 @@ public class EyedropperController implements Initializable {
 
         javafx.scene.image.PixelReader pixelReader = colorPickerImgView.getImage().getPixelReader();
 
-
         double scaleFactor;
-
         if(colorPickerImgView.getImage().getWidth() > colorPickerImgView.getImage().getHeight()) {
             scaleFactor = colorPickerImgView.getImage().getWidth() / colorPickerImgView.getFitWidth();
         }
@@ -257,11 +301,22 @@ public class EyedropperController implements Initializable {
     }
 
     private double getGreyScaleDouble(Color color){
-        double redVal = color.getRed() / 3;
-        double greenVal = color.getGreen() / 3;
-        double blueVal = color.getBlue() / 3;
+        //new calculation uses weighted scaling
+        double redVal = color.getRed();
+        double greenVal = color.getGreen();
+        double blueVal = color.getBlue();
 
-        return (redVal + greenVal + blueVal) * 255;
+        redVal = Math.pow(redVal, 2.2);
+        greenVal = Math.pow(greenVal, 2.2);
+        blueVal = Math.pow(blueVal, 2.2);
+
+        redVal *= 0.2126729;
+        greenVal *= 0.71522;
+        blueVal *= 0.0721750;
+
+        double weightedAverageColor = redVal + greenVal + blueVal;
+        weightedAverageColor = Math.pow(weightedAverageColor, 1/2.2);
+        return weightedAverageColor * 255;
     }
 
     //returns false if the color is null or has already been added
@@ -295,7 +350,7 @@ public class EyedropperController implements Initializable {
                         return false; //source button is null
                     }
 
-                    selectionAllowed = false;
+                    isSelecting = false;
                     selectionRectangle.setVisible(false);
                     return true;//color changed successfully
                 }
@@ -450,7 +505,7 @@ public class EyedropperController implements Initializable {
         }
         else{
             Toolkit.getDefaultToolkit().beep();
-            System.out.println("Please fill all fields and load a model before performing color calibration");//TODO: PROBABLY CHANGE THIS VERIFICATION METHOD
+            System.err.println("Please fill all fields and load a model before performing color calibration");//TODO: PROBABLY CHANGE THIS VERIFICATION METHOD
         }
     }
 
@@ -461,7 +516,8 @@ public class EyedropperController implements Initializable {
 
         sourceButton.setText("Draw to select...");
 
-        selectionAllowed = true;
+        isSelecting = true;
+        isCropping = false;
     }
 
     private Button resetButtonsText(){
@@ -477,6 +533,7 @@ public class EyedropperController implements Initializable {
     }
 
     public void setLoadingModel(LoadingModel loadingModel){//TODO: THIS FUNCTION IS NOT CALLED IF THE COLOR CHECKER IS OPENED BEFORE THE MODEL IS LOADED
+                                                            //close color checker when new model is loaded?
         this.loadingModel = loadingModel;
 
         //initialize txtFields with their respective values
@@ -495,7 +552,7 @@ public class EyedropperController implements Initializable {
             }
         }
         else{
-            System.out.println("Could not bring in luminance encodings: no model found");//TODO: WHAT TO DO IF NO MODEL FOUND?
+            System.err.println("Could not bring in luminance encodings: no model found");//TODO: WHAT TO DO IF NO MODEL FOUND?
         }
     }
 
