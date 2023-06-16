@@ -13,7 +13,6 @@ package tetzlaff.ibrelight.export.specularfit;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collection;
 import java.util.HashSet;
@@ -23,11 +22,13 @@ import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.DoubleVector2;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.optimization.ReadonlyErrorReport;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
 
 /**
  * A module that performs some final steps to finish a specular fit: filling holes in the weight maps, and calculating some final error statistics.
+ * TODO this class doesn't have a well defined identity; should probably be refactored.
  */
 public class SpecularFitFinalizer
 {
@@ -40,67 +41,29 @@ public class SpecularFitFinalizer
         this.settings = settings;
     }
 
-    public <ContextType extends Context<ContextType>> void execute(
+    /**
+     *
+     * @param solution
+     * @param resources
+     * @param specularFit
+     * @param scratchFramebuffer
+     * @param lastErrorReport
+     * @param errorCalcDrawable
+     * @param rmseOut Text file containing error information
+     * @param <ContextType>
+     */
+    public <ContextType extends Context<ContextType>> void finishAndCalculateError(
         SpecularFitSolution solution, IBRResources<ContextType> resources, SpecularFitFromOptimization<ContextType> specularFit,
-        Framebuffer<ContextType> scratchFramebuffer, ReadonlyErrorReport lastErrorReport, Drawable<ContextType> errorCalcDrawable)
+        Framebuffer<ContextType> scratchFramebuffer, ReadonlyErrorReport lastErrorReport, Drawable<ContextType> errorCalcDrawable, PrintStream rmseOut)
     {
         SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources, settings);
 
         try (
-            // Text file containing error information
-            PrintStream rmseOut = new PrintStream(new File(settings.outputDirectory, "rmse.txt"));
 
             // Error calculation shader programs
             Program<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(programFactory);
         )
         {
-            if (CALCULATE_NORMAL_RMSE && resources.normalTexture != null)
-            {
-                try (Program<ContextType> textureRectProgram = resources.context.getShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File("shaders/common/texture.frag"))
-                    .createProgram();
-                    FramebufferObject<ContextType> textureRectFBO =
-                        resources.context.buildFramebufferObject(settings.width, settings.height).addColorAttachment().createFramebufferObject())
-                {
-                    // Use the real geometry rather than a rectangle so that the normal map is masked properly for the part of the normal map used.
-                    Drawable<ContextType> textureRect = resources.createDrawable(textureRectProgram);
-                    textureRectProgram.setTexture("tex", resources.normalTexture);
-                    textureRectFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-                    textureRect.draw(PrimitiveMode.TRIANGLE_FAN, textureRectFBO);
-//                    textureRectFBO.saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "test_normalGT.png"));
-
-                    float[] groundTruth = textureRectFBO.readFloatingPointColorBufferRGBA(0);
-                    float[] estimate = specularFit.normalOptimization.readNormalMap();
-
-                    double rmse = Math.sqrt( // root
-                        IntStream.range(0, groundTruth.length / 4)
-                            // only count texels that correspond to actual texture coordinates on the model (others will be transparent after rasterizing the ground truth)
-                            .filter(p -> groundTruth[4 * p + 3] > 0.0)
-                            .mapToDouble(p ->
-                            {
-                                DoubleVector2 groundTruthXY = new DoubleVector2(groundTruth[4 * p] * 2 - 1, groundTruth[4 * p + 1] * 2 - 1);
-                                // Unpack normal vectors
-                                DoubleVector3 groundTruthDir = groundTruthXY.asVector3(1 - groundTruthXY.dot(groundTruthXY));
-                                DoubleVector3 estimateDir = new DoubleVector3(
-                                    estimate[4 * p] * 2 - 1, estimate[4 * p + 1] * 2 - 1, estimate[4 * p + 2] * 2 - 1).normalized();
-
-                                DoubleVector3 error = groundTruthDir.minus(estimateDir);
-                                return error.dot(error); // sum squared error
-                            })
-                            .average().orElse(0.0)); // mean
-
-                    System.out.println("Normal map ground truth RMSE: " + rmse);
-
-                    // Print out RMSE for normal map ground truth
-                    rmseOut.println("Normal map ground truth RMSE: " + rmse);
-                }
-                catch (IOException e)
-                {
-                    e.printStackTrace();
-                }
-            }
-
             // Print out RMSE from the penultimate iteration (to verify convergence)
             rmseOut.println("Previously calculated RMSE: " + lastErrorReport.getError());
 
@@ -145,17 +108,75 @@ public class SpecularFitFinalizer
             finalErrorCalcProgram.setUniform("errorGamma", 1.0f);
 
             rmseOut.println("Final RMSE after diffuse estimate: " +
-                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.viewSet.getCameraPoseCount()));
+                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCameraPoseCount()));
 
             finalErrorCalcProgram.setUniform("errorGamma", 2.2f);
             rmseOut.println("Final RMSE after diffuse estimate (gamma-corrected): " +
-                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.viewSet.getCameraPoseCount()));
+                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCameraPoseCount()));
 
             calculateGGXRMSE(resources, specularFit, scratchFramebuffer, rmseOut);
         }
         catch (FileNotFoundException e)
         {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     *
+     * @param resources
+     * @param specularFit
+     * @param rmseOut Text file containing error information
+     * @param <ContextType>
+     */
+    public <ContextType extends Context<ContextType>> void validateNormalMap(
+        IBRResourcesImageSpace<ContextType> resources, SpecularFitFromOptimization<ContextType> specularFit, PrintStream rmseOut)
+    {
+        if (CALCULATE_NORMAL_RMSE && resources.normalTexture != null)
+        {
+            try (Program<ContextType> textureRectProgram = resources.getContext().getShaderProgramBuilder()
+                .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+                .addShader(ShaderType.FRAGMENT, new File("shaders/common/texture.frag"))
+                .createProgram();
+                FramebufferObject<ContextType> textureRectFBO =
+                    resources.getContext().buildFramebufferObject(settings.width, settings.height).addColorAttachment().createFramebufferObject())
+            {
+                // Use the real geometry rather than a rectangle so that the normal map is masked properly for the part of the normal map used.
+                Drawable<ContextType> textureRect = resources.createDrawable(textureRectProgram);
+                textureRectProgram.setTexture("tex", resources.normalTexture);
+                textureRectFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+                textureRect.draw(PrimitiveMode.TRIANGLE_FAN, textureRectFBO);
+//                    textureRectFBO.saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "test_normalGT.png"));
+
+                float[] groundTruth = textureRectFBO.readFloatingPointColorBufferRGBA(0);
+                float[] estimate = specularFit.normalOptimization.readNormalMap();
+
+                double rmse = Math.sqrt( // root
+                    IntStream.range(0, groundTruth.length / 4)
+                        // only count texels that correspond to actual texture coordinates on the model (others will be transparent after rasterizing the ground truth)
+                        .filter(p -> groundTruth[4 * p + 3] > 0.0)
+                        .mapToDouble(p ->
+                        {
+                            DoubleVector2 groundTruthXY = new DoubleVector2(groundTruth[4 * p] * 2 - 1, groundTruth[4 * p + 1] * 2 - 1);
+                            // Unpack normal vectors
+                            DoubleVector3 groundTruthDir = groundTruthXY.asVector3(1 - groundTruthXY.dot(groundTruthXY));
+                            DoubleVector3 estimateDir = new DoubleVector3(
+                                estimate[4 * p] * 2 - 1, estimate[4 * p + 1] * 2 - 1, estimate[4 * p + 2] * 2 - 1).normalized();
+
+                            DoubleVector3 error = groundTruthDir.minus(estimateDir);
+                            return error.dot(error); // sum squared error
+                        })
+                        .average().orElse(0.0)); // mean
+
+                System.out.println("Normal map ground truth RMSE: " + rmse);
+
+                // Print out RMSE for normal map ground truth
+                rmseOut.println("Normal map ground truth RMSE: " + rmse);
+            }
+            catch (FileNotFoundException e)
+            {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -184,11 +205,11 @@ public class SpecularFitFinalizer
             ggxErrorCalcProgram.setUniform("errorGamma", 1.0f);
 
             rmseOut.println("RMSE for GGX fit: " +
-                runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, resources.viewSet.getCameraPoseCount()));
+                runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCameraPoseCount()));
 
             ggxErrorCalcProgram.setUniform("errorGamma", 2.2f);
             rmseOut.println("RMSE for GGX fit (gamma-corrected): " +
-                runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, resources.viewSet.getCameraPoseCount()));
+                runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCameraPoseCount()));
         }
     }
 

@@ -22,10 +22,7 @@ import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.Projection;
 import tetzlaff.ibrelight.core.ViewSet;
-import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
-import tetzlaff.ibrelight.rendering.resources.GraphicsStreamResource;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
-import tetzlaff.ibrelight.rendering.resources.ImageCache;
+import tetzlaff.ibrelight.rendering.resources.*;
 import tetzlaff.optimization.ReadonlyErrorReport;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
 import tetzlaff.optimization.function.GeneralizedSmoothStepBasis;
@@ -76,17 +73,17 @@ public class SpecularOptimization
     }
 
 
-    public <ContextType extends Context<ContextType>> SpecularResources<ContextType> createFit(IBRResources<ContextType> resources)
+    public <ContextType extends Context<ContextType>> SpecularResources<ContextType> createFit(IBRResourcesImageSpace<ContextType> resources)
         throws IOException
     {
         Instant start = Instant.now();
 
         // Get GPU context
-        ContextType context = resources.context;
+        ContextType context = resources.getContext();
 
         // Generate cache
         ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings());
-        cache.initialize(resources.viewSet.getImageFilePath() /* TODO: Add support for high-res directory */);
+        cache.initialize(resources.getViewSet().getImageFilePath() /* TODO: Add support for high-res directory */);
 
         // Disable back face culling since we're rendering in texture space
         // (should be the case already from generating the cache, but good to do just in case)
@@ -94,8 +91,8 @@ public class SpecularOptimization
         SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources, settings);
 
         // Calculate reasonable image resolution for error calculation
-        int imageWidth = determineImageWidth(resources.viewSet);
-        int imageHeight = determineImageHeight(resources.viewSet);
+        int imageWidth = determineImageWidth(resources.getViewSet());
+        int imageHeight = determineImageHeight(resources.getViewSet());
 
         // Create space for the solution.
         SpecularFitSolution solution = new SpecularFitSolution(settings);
@@ -307,9 +304,15 @@ public class SpecularOptimization
                 basisImageCreator.createImages(specularFit);
             }
 
-            // Fill holes in weight maps and calculate some final error statistics.
-            new SpecularFitFinalizer(settings)
-                .execute(solution, resources, specularFit, scratchFramebuffer, errorCalculator.getReport(), errorCalcDrawable);
+            try(PrintStream rmseOut = new PrintStream(new File(settings.outputDirectory, "rmse.txt")))
+            {
+                SpecularFitFinalizer finalizer = new SpecularFitFinalizer(settings);
+                // Validate normals using input normal map (mainly for testing / experiment validation, not typical applications)
+                finalizer.validateNormalMap(resources, specularFit, rmseOut);
+
+                // Fill holes in weight maps and calculate some final error statistics.
+                finalizer.finishAndCalculateError(solution, resources, specularFit, scratchFramebuffer, errorCalculator.getReport(), errorCalcDrawable, rmseOut);
+            }
 
             // Generate albedo / ORM maps
             try(AlbedoORMOptimization<ContextType> albedoORM = new AlbedoORMOptimization<>(context, settings))

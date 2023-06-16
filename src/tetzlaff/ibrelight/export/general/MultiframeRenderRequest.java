@@ -22,7 +22,7 @@ import tetzlaff.gl.core.Program;
 import tetzlaff.ibrelight.core.IBRInstance;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.models.ReadonlySettingsModel;
 
 class MultiframeRenderRequest<ContextType extends Context<ContextType>> extends RenderRequestBase<ContextType>
@@ -57,12 +57,12 @@ class MultiframeRenderRequest<ContextType extends Context<ContextType>> extends 
     @Override
     public void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
     {
-        IBRResources<ContextType> resources = renderable.getIBRResources();
+        IBRResourcesImageSpace<ContextType> resources = renderable.getIBRResources();
 
         try
         (
             Program<ContextType> program = createProgram(resources);
-            FramebufferObject<ContextType> framebuffer = createFramebuffer(resources.context)
+            FramebufferObject<ContextType> framebuffer = createFramebuffer(resources.getContext())
         )
         {
             Drawable<ContextType> drawable = createDrawable(program, resources);

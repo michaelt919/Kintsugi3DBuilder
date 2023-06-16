@@ -14,11 +14,8 @@ package tetzlaff.ibrelight.rendering;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.IntToDoubleFunction;
-import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
 
 import tetzlaff.gl.builders.ProgramBuilder;
@@ -26,9 +23,9 @@ import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.DoubleVector2;
 import tetzlaff.gl.vecmath.DoubleVector3;
-import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 
 public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -110,7 +107,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         // Tonemap ground truth image
         try (Texture2D<ContextType> groundTruthTex =
             groundTruthProgram.getContext().getTextureFactory()
-                .build2DColorTextureFromFile(IBRResources.findImageFile(viewSet.getImageFile(viewIndex)), true)
+                .build2DColorTextureFromFile(IBRResourcesImageSpace.findImageFile(viewSet.getImageFile(viewIndex)), true)
                 .setLinearFilteringEnabled(true)
                 .setMipmapsEnabled(true)
                 .createTexture())

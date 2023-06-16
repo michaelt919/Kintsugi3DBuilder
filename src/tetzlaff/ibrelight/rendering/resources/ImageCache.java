@@ -11,7 +11,6 @@
 
 package tetzlaff.ibrelight.rendering.resources;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.Arrays;
@@ -37,15 +36,15 @@ import tetzlaff.util.BufferedImageBuilder;
 public class ImageCache<ContextType extends Context<ContextType>>
 {
     private final ContextType context;
-    private final IBRResources<ContextType> resources;
+    private final IBRResourcesImageSpace<ContextType> resources;
     private final ImageCacheSettings settings;
 
     private final File sampledDir;
     private final IntVector2[][] sampledPixelCoords;
 
-    ImageCache(IBRResources<ContextType> resources, ImageCacheSettings settings)
+    ImageCache(IBRResourcesImageSpace<ContextType> resources, ImageCacheSettings settings)
     {
-        this.context = resources.context;
+        this.context = resources.getContext();
         this.resources = resources;
         this.settings = settings;
 
@@ -223,7 +222,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
     private String getPNGFilename(int viewIndex)
     {
         // Change file extension to .png
-        String[] filenameParts = resources.viewSet.getImageFileName(viewIndex).split("\\.");
+        String[] filenameParts = resources.getViewSet().getImageFileName(viewIndex).split("\\.");
         filenameParts[filenameParts.length - 1] = "png";
         return String.join(".", filenameParts);
     }
@@ -238,7 +237,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         loadOptions.setMipmapsRequested(false);
         loadOptions.setDepthImagesRequested(true);
 
-        try(Program<ContextType> texSpaceProgram = SingleCalibratedImageResource.getShaderProgramBuilder(context, resources.viewSet, loadOptions)
+        try(Program<ContextType> texSpaceProgram = SingleCalibratedImageResource.getShaderProgramBuilder(context, resources.getViewSet(), loadOptions)
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/colorappearance/projtex_single.frag"))
             .createProgram())
@@ -246,7 +245,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
             Drawable<ContextType> texSpaceDrawable = resources.createDrawable(texSpaceProgram);
 
             // Loop over the images, processing each one at a time
-            for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
+            for (int k = 0; k < resources.getViewSet().getCameraPoseCount(); k++)
             {
                 try (SingleCalibratedImageResource<ContextType> image =
                     resources.createSingleImageResource(k,
@@ -353,7 +352,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
     public Texture3D<ContextType> createSampledTextureArray() throws IOException
     {
         Texture3D<ContextType> textureArray = context.getTextureFactory()
-            .build2DColorTextureArray(settings.getSampledSize(), settings.getSampledSize(), resources.viewSet.getCameraPoseCount())
+            .build2DColorTextureArray(settings.getSampledSize(), settings.getSampledSize(), resources.getViewSet().getCameraPoseCount())
             .setLinearFilteringEnabled(false)
             .setMipmapsEnabled(false)
 //            .setInternalFormat(ColorFormat.RGBA32F)
@@ -377,7 +376,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
 //            Drawable<ContextType> radianceDrawable = resources.createDrawable(radianceProgram);
 
             // Iterate over the layers to load in the texture array
-            for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
+            for (int k = 0; k < resources.getViewSet().getCameraPoseCount(); k++)
             {
                 textureArray.loadLayer(k, new File(sampledDir, getPNGFilename(k)), true);
 

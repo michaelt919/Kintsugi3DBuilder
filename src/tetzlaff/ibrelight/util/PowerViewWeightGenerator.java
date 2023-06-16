@@ -13,7 +13,7 @@ package tetzlaff.ibrelight.util;
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 
 public class PowerViewWeightGenerator implements ViewWeightGenerator
 {
@@ -25,18 +25,18 @@ public class PowerViewWeightGenerator implements ViewWeightGenerator
     }
 
     @Override
-    public float[] generateWeights(IBRResources<?> resources, Iterable<Integer> activeViewIndexList, Matrix4 targetView)
+    public float[] generateWeights(IBRResourcesImageSpace<?> resources, Iterable<Integer> activeViewIndexList, Matrix4 targetView)
     {
-        float[] viewWeights = new float[resources.viewSet.getCameraPoseCount()];
+        float[] viewWeights = new float[resources.getViewSet().getCameraPoseCount()];
         float viewWeightSum = 0.0f;
 
         for (int viewIndex : activeViewIndexList)
         {
-            Vector3 viewDir = resources.viewSet.getCameraPose(viewIndex).times(
+            Vector3 viewDir = resources.getViewSet().getCameraPose(viewIndex).times(
                     resources.geometry.getCentroid().asPosition())
                 .getXYZ().negated().normalized();
 
-            Vector3 targetDir = resources.viewSet.getCameraPose(viewIndex).times(
+            Vector3 targetDir = resources.getViewSet().getCameraPose(viewIndex).times(
                     targetView.quickInverse(0.01f).getColumn(3).minus(resources.geometry.getCentroid().asPosition()))
                 .getXYZ().normalized();
 

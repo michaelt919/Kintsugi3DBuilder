@@ -15,7 +15,7 @@ import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.ibrelight.core.TextureFitSettings;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -23,19 +23,21 @@ import java.io.IOException;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.ibrelight.core.Projection;
 import tetzlaff.ibrelight.rendering.ImageReconstruction;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
+
 public class PTMReconstruction <ContextType extends Context<ContextType>> implements AutoCloseable {
-    private final IBRResources<ContextType> resources;
+    private final IBRResourcesImageSpace<ContextType> resources;
     private final TextureFitSettings settings;
     private final int imageWidth;
     private final int imageHeight;
     public final Texture3D<ContextType> weightMaps;
 
 
-    public PTMReconstruction(IBRResources<ContextType> resources,TextureFitSettings settings) {
+    public PTMReconstruction(IBRResourcesImageSpace<ContextType> resources,TextureFitSettings settings) {
         this.settings = settings;
         this.resources=resources;
-        Projection defaultProj = resources.viewSet.getCameraProjection(resources.viewSet.getCameraProjectionIndex(
-                resources.viewSet.getPrimaryViewIndex()));
+        Projection defaultProj = resources.getViewSet().getCameraProjection(resources.getViewSet().getCameraProjectionIndex(
+                resources.getViewSet().getPrimaryViewIndex()));
 
         if (defaultProj.getAspectRatio() < 1.0)
         {
@@ -47,7 +49,7 @@ public class PTMReconstruction <ContextType extends Context<ContextType>> implem
             imageHeight = settings.height;
             imageWidth = Math.round(imageHeight * defaultProj.getAspectRatio());
         }
-        ContextType context=resources.context;
+        ContextType context= resources.getContext();
         weightMaps = context.getTextureFactory().build2DColorTextureArray(settings.width, settings.height, 10)
                 .setInternalFormat(ColorFormat.RGB32F)
                 .setLinearFilteringEnabled(true)
@@ -61,7 +63,7 @@ public class PTMReconstruction <ContextType extends Context<ContextType>> implem
             ImageReconstruction<ContextType> reconstruction = new ImageReconstruction<>(
                 resources,
                 programBuilder,
-                resources.context.buildFramebufferObject(imageWidth, imageHeight)
+                resources.getContext().buildFramebufferObject(imageWidth, imageHeight)
                         .addColorAttachment(ColorFormat.RGBA32F)
                         .addDepthAttachment(),
                 program ->
@@ -112,7 +114,7 @@ public class PTMReconstruction <ContextType extends Context<ContextType>> implem
 
             }
 
-            reconstruction.execute(resources.viewSet,
+            reconstruction.execute(resources.getViewSet(),
                 (k, framebuffer) -> saveReconstructionToFile(directoryName, k, framebuffer),
                 null, null /* do something with these later */);
         }

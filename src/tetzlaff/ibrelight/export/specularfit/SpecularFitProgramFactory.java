@@ -22,6 +22,7 @@ import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Program;
 import tetzlaff.gl.core.ShaderType;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 
 public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
 {
@@ -36,14 +37,24 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
 
     public ProgramBuilder<ContextType> getShaderProgramBuilder(File vertexShader, File fragmentShader, boolean visibilityAndShadowTests)
     {
+        ProgramBuilder<ContextType> builder = resources.getIBRShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, vertexShader)
+            .addShader(ShaderType.FRAGMENT, fragmentShader);
+
+        // Disable occlusion / shadow culling if requested (may do nothing if already operating in texture space)
+        // getIBRShaderProgramBuilder() will enable by default if depth / shadow maps are available
+        if (!visibilityAndShadowTests || !settings.additional.getBoolean("occlusionEnabled"))
+        {
+            builder.define("VISIBILITY_TEST_ENABLED", false);
+        }
+
+        if (!visibilityAndShadowTests || !settings.additional.getBoolean("shadowsEnabled"))
+        {
+            builder.define("SHADOW_TEST_ENABLED", false);
+        }
+
         // Common definitions for all specular fitting related shaders.
-        return resources.getIBRShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, vertexShader)
-                .addShader(ShaderType.FRAGMENT, fragmentShader)
-                .define("VISIBILITY_TEST_ENABLED",
-                    visibilityAndShadowTests && resources.depthTextures != null && settings.additional.getBoolean("occlusionEnabled"))
-                .define("SHADOW_TEST_ENABLED",
-                    visibilityAndShadowTests && resources.shadowTextures != null && settings.additional.getBoolean("shadowsEnabled"))
+        return builder
                 .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
                 .define("SMITH_MASKING_SHADOWING", settings.isSmithMaskingShadowingEnabled())
                 .define("BASIS_COUNT", settings.basisCount)

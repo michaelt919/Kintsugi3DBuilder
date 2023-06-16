@@ -32,7 +32,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
 {
     private final LoadingMonitor loadingMonitor;
     private final ContextType context;
-    private final IBRResources<ContextType> resources;
+    private final IBRResourcesImageSpace<ContextType> resources;
     private final LightingResources<ContextType> lightingResources;
 
     private boolean newEnvironmentDataAvailable;
@@ -64,11 +64,11 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
 
     private AbstractImage currentEnvironmentMap;
 
-    public DynamicResourceLoader(LoadingMonitor loadingMonitor, IBRResources<ContextType> resources,
+    public DynamicResourceLoader(LoadingMonitor loadingMonitor, IBRResourcesImageSpace<ContextType> resources,
                                  LightingResources<ContextType> lightingResources)
     {
         this.loadingMonitor = loadingMonitor;
-        this.context = resources.context;
+        this.context = resources.getContext();
         this.resources = resources;
         this.lightingResources = lightingResources;
     }
@@ -178,8 +178,8 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
 
         if (this.newLuminanceEncodingDataAvailable)
         {
-            this.resources.viewSet.setTonemapping(
-                this.resources.viewSet.getGamma(),
+            this.resources.getViewSet().setTonemapping(
+                this.resources.getViewSet().getGamma(),
                 this.newLinearLuminanceValues,
                 this.newEncodedLuminanceValues);
 
@@ -190,9 +190,9 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
 
         if (this.newLightCalibrationAvailable)
         {
-            for (int i = 0; i < resources.viewSet.getLightCount(); i++)
+            for (int i = 0; i < resources.getViewSet().getLightCount(); i++)
             {
-                this.resources.viewSet.setLightPosition(i, newLightCalibration);
+                this.resources.getViewSet().setLightPosition(i, newLightCalibration);
             }
 
             this.resources.updateLightData();

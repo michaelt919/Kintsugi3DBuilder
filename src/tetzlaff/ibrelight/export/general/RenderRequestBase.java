@@ -19,7 +19,7 @@ import java.util.function.Consumer;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.models.ReadonlySettingsModel;
 
 abstract class RenderRequestBase<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>
@@ -144,7 +144,7 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
     }
 
     protected
-    Program<ContextType> createProgram(IBRResources<ContextType> resources) throws FileNotFoundException
+    Program<ContextType> createProgram(IBRResourcesImageSpace<ContextType> resources) throws FileNotFoundException
     {
         Program<ContextType> program =
             resources.getIBRShaderProgramBuilder(this.settingsModel.get("renderingMode", StandardRenderingMode.class))
@@ -175,7 +175,7 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
     }
 
     protected static <ContextType extends Context<ContextType>> Drawable<ContextType>
-        createDrawable(Program<ContextType> program, IBRResources<ContextType> resources)
+        createDrawable(Program<ContextType> program, IBRResourcesImageSpace<ContextType> resources)
     {
         return resources.createDrawable(program);
     }

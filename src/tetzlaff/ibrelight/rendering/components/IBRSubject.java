@@ -20,7 +20,7 @@ import tetzlaff.ibrelight.core.CameraViewport;
 import tetzlaff.ibrelight.core.RenderedComponent;
 import tetzlaff.ibrelight.core.SceneModel;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.ibrelight.rendering.resources.LightingResources;
 import tetzlaff.ibrelight.rendering.SceneViewportModel;
 import tetzlaff.ibrelight.rendering.StandardShader;
@@ -38,7 +38,7 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
     private final ContextType context;
     private final SceneModel sceneModel;
     private final SceneViewportModel<ContextType> sceneViewportModel;
-    private final IBRResources<ContextType> resources;
+    private final IBRResourcesImageSpace<ContextType> resources;
 
     private StandardShader<ContextType> standardShader;
     private Drawable<ContextType> drawable;
@@ -47,11 +47,11 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
 
     private StandardRenderingMode lastCompiledRenderingMode = StandardRenderingMode.IMAGE_BASED;
 
-    public IBRSubject(IBRResources<ContextType> resources, LightingResources<ContextType> lightingResources,
+    public IBRSubject(IBRResourcesImageSpace<ContextType> resources, LightingResources<ContextType> lightingResources,
                       SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
     {
         this.resources = resources;
-        this.context = resources.context;
+        this.context = resources.getContext();
         this.sceneModel = sceneModel;
         this.sceneViewportModel = sceneViewportModel;
         this.sceneViewportModel.addSceneObjectType("IBRObject");
@@ -142,7 +142,7 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
                         @Override
                         public int size()
                         {
-                            return resources.viewSet.getCameraPoseCount();
+                            return resources.getViewSet().getCameraPoseCount();
                         }
                     },
                     targetView);

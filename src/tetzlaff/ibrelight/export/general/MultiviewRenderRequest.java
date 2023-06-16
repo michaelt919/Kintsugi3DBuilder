@@ -22,7 +22,7 @@ import tetzlaff.gl.core.Program;
 import tetzlaff.ibrelight.core.IBRInstance;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.models.ReadonlySettingsModel;
 
 class MultiviewRenderRequest<ContextType extends Context<ContextType>> extends RenderRequestBase<ContextType>
@@ -50,17 +50,17 @@ class MultiviewRenderRequest<ContextType extends Context<ContextType>> extends R
 
     public void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
     {
-        IBRResources<ContextType> resources = renderable.getIBRResources();
+        IBRResourcesImageSpace<ContextType> resources = renderable.getIBRResources();
 
         try
         (
             Program<ContextType> program = createProgram(resources);
-            FramebufferObject<ContextType> framebuffer = createFramebuffer(resources.context)
+            FramebufferObject<ContextType> framebuffer = createFramebuffer(resources.getContext())
         )
         {
             Drawable<ContextType> drawable = createDrawable(program, resources);
 
-            for (int i = 0; i < resources.viewSet.getCameraPoseCount(); i++)
+            for (int i = 0; i < resources.getViewSet().getCameraPoseCount(); i++)
             {
                 program.setUniform("viewIndex", i);
                 program.setUniform("model_view", renderable.getActiveViewSet().getCameraPose(i));
@@ -87,7 +87,7 @@ class MultiviewRenderRequest<ContextType extends Context<ContextType>> extends R
 
                 if (callback != null)
                 {
-                    callback.setProgress((double) i / (double) resources.viewSet.getCameraPoseCount());
+                    callback.setProgress((double) i / (double) resources.getViewSet().getCameraPoseCount());
                 }
             }
         }

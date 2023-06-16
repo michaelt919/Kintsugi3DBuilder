@@ -113,7 +113,7 @@ public abstract class SimpleAnimationRequestBase<ContextType extends Context<Con
     {
         try
         (
-            FramebufferObject<ContextType> framebuffer = renderable.getIBRResources().context.buildFramebufferObject(width, height)
+            FramebufferObject<ContextType> framebuffer = renderable.getIBRResources().getContext().buildFramebufferObject(width, height)
                 .addColorAttachment()
                 .addDepthAttachment()
                 .createFramebufferObject()

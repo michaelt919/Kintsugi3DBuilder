@@ -44,7 +44,7 @@ public class DepthMapGenerator<ContextType extends Context<ContextType>> impleme
     private DepthMapGenerator(GeometryResources<ContextType> geometryResources) throws FileNotFoundException
     {
         this.geometryResources = geometryResources;
-        depthRenderingProgram = IBRResources.getDepthMapProgramBuilder(geometryResources.positionBuffer.getContext()).createProgram();
+        depthRenderingProgram = IBRResourcesImageSpace.getDepthMapProgramBuilder(geometryResources.positionBuffer.getContext()).createProgram();
         depthDrawable = depthRenderingProgram.getContext().createDrawable(depthRenderingProgram);
         depthDrawable.addVertexBuffer("position", geometryResources.positionBuffer);
     }

@@ -17,6 +17,7 @@ import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.interactive.GraphicsRequest;
 
 public class SpecularFitRequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>, GraphicsRequest<ContextType>
@@ -64,7 +65,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
             loadOptions.setColorImagesRequested(false);
             loadOptions.setDepthImagesRequested(false);
 
-            try(IBRResources<ContextType> resources = IBRResources.getBuilderForContext(context)
+            try(IBRResources<ContextType> resources = IBRResourcesImageSpace.getBuilderForContext(context)
                 .setLoadOptions(loadOptions)
                 .useExistingViewSet(settings.getReconstructionViewSet())
                 .create())
@@ -74,7 +75,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
                 specularFit.close(); // Close immediately when this is just an export operation.
             }
         }
-        catch(IOException e) // thrown by createReflectanceProgram
+        catch(IOException e)
         {
             e.printStackTrace();
         }
@@ -111,7 +112,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
         // Create output directory
         settings.outputDirectory.mkdirs();
 
-        if (resources.viewSet != null)
+        if (resources.getViewSet() != null)
         {
             // Reconstruct images both from basis functions and from fitted roughness
             SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources, settings);

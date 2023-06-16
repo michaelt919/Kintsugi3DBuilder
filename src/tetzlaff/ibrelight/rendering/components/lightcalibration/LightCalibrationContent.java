@@ -20,26 +20,26 @@ import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.CameraViewport;
 import tetzlaff.ibrelight.core.SceneModel;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.ibrelight.rendering.SceneViewportModel;
 import tetzlaff.ibrelight.rendering.components.IBRSubject;
 import tetzlaff.ibrelight.rendering.components.snap.ViewSnapContent;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 
 import java.io.FileNotFoundException;
 
 public class LightCalibrationContent <ContextType extends Context<ContextType>> extends ViewSnapContent<ContextType>
 {
     private final ContextType context;
-    private final IBRResources<ContextType> resources;
+    private final IBRResourcesImageSpace<ContextType> resources;
     private final SceneModel sceneModel;
     private final SceneViewportModel<ContextType> sceneViewportModel;
 
     private IBRSubject<ContextType> ibrSubject;
 
-    public LightCalibrationContent(IBRResources<ContextType> resources, SceneModel sceneModel,
+    public LightCalibrationContent(IBRResourcesImageSpace<ContextType> resources, SceneModel sceneModel,
                                    SceneViewportModel<ContextType> sceneViewportModel)
     {
-        this.context = resources.context;
+        this.context = resources.getContext();
         this.resources = resources;
         this.sceneModel = sceneModel;
         this.sceneViewportModel = sceneViewportModel;
@@ -75,10 +75,10 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
     @Override
     public void drawInSubdivisions(FramebufferObject<ContextType> framebuffer, int subdivWidth, int subdivHeight, CameraViewport cameraViewport)
     {
-        int primaryLightIndex = this.resources.viewSet.getLightIndex(this.resources.viewSet.getPrimaryViewIndex());
+        int primaryLightIndex = this.resources.getViewSet().getLightIndex(this.resources.getViewSet().getPrimaryViewIndex());
 
         Vector3 lightPosition = sceneModel.getSettingsModel().get("currentLightCalibration", Vector2.class).asVector3()
-                .plus(resources.viewSet.getLightPosition(primaryLightIndex));
+                .plus(resources.getViewSet().getLightPosition(primaryLightIndex));
         Matrix4 lightTransform = Matrix4.translate(lightPosition.negated());
 
         // Only draw the IBR subject for light calibration, no other components like backplate, grid, ground plane, etc.

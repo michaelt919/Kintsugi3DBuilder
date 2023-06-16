@@ -21,11 +21,11 @@ import tetzlaff.gl.geometry.VertexGeometry;
 import tetzlaff.gl.vecmath.*;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.rendering.resources.DynamicResourceLoader;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
-import tetzlaff.ibrelight.rendering.resources.IBRResources.Builder;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace.Builder;
 import tetzlaff.ibrelight.rendering.components.*;
 import tetzlaff.ibrelight.rendering.components.lightcalibration.LightCalibrationRoot;
 import tetzlaff.ibrelight.rendering.components.lit.LitRoot;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.interactive.InitializationException;
 import tetzlaff.models.*;
 
@@ -37,7 +37,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     private boolean suppressErrors = false;
 
     private final Builder<ContextType> resourceBuilder;
-    private IBRResources<ContextType> resources;
+    private IBRResourcesImageSpace<ContextType> resources;
 
     private VertexBuffer<ContextType> rectangleVertices;
 
@@ -70,7 +70,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     }
 
     @Override
-    public IBRResources<ContextType> getIBRResources()
+    public IBRResourcesImageSpace<ContextType> getIBRResources()
     {
         return this.resources;
     }
@@ -171,7 +171,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     private void updateWorldSpaceDefinition()
     {
         sceneModel.setScale(resources.geometry.getBoundingRadius() * 2);
-        sceneModel.setOrientation(resources.viewSet.getCameraPose(resources.viewSet.getPrimaryViewIndex()).getUpperLeft3x3());
+        sceneModel.setOrientation(resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex()).getUpperLeft3x3());
         sceneModel.setCentroid(resources.geometry.getCentroid());
     }
 
@@ -186,7 +186,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
     private Vector3 calculateClearColor()
     {
-        float maxLuminance = (float)resources.viewSet.getLuminanceEncoding().decodeFunction.applyAsDouble(255.0);
+        float maxLuminance = (float) resources.getViewSet().getLuminanceEncoding().decodeFunction.applyAsDouble(255.0);
         float gamma = this.sceneModel.getSettingsModel().getFloat("gamma");
         return new Vector3(
                 (float) Math.pow(sceneModel.getLightingModel().getBackgroundColor().x / maxLuminance, 1.0 / gamma),
@@ -336,7 +336,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     @Override
     public ViewSet getActiveViewSet()
     {
-        return this.resources.viewSet;
+        return this.resources.getViewSet();
     }
 
     @Override

@@ -18,7 +18,7 @@ import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 
 import tetzlaff.ibrelight.rendering.resources.GraphicsStreamResource;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.optimization.LeastSquaresMatrixBuilder;
 
 import java.io.File;
@@ -43,10 +43,10 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
         mapBuilder = new PolynomialTextureMapBuilder(settings.width,settings.height);
     }
 
-    public void createFit(IBRResources<ContextType> resources)
+    public void createFit(IBRResourcesImageSpace<ContextType> resources)
             throws IOException
     {
-        ContextType context = resources.context;
+        ContextType context = resources.getContext();
         context.getState().disableBackFaceCulling();
 
         PTMProgramFactory<ContextType> programFactory = new PTMProgramFactory<>(resources);

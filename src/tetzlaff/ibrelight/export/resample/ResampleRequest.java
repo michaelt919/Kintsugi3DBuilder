@@ -48,7 +48,7 @@ public class ResampleRequest<ContextType extends Context<ContextType>> implement
 
         try
         (
-            FramebufferObject<ContextType> framebuffer = renderable.getIBRResources().context.buildFramebufferObject(resampleWidth, resampleHeight)
+            FramebufferObject<ContextType> framebuffer = renderable.getIBRResources().getContext().buildFramebufferObject(resampleWidth, resampleHeight)
                 .addColorAttachment()
                 .addDepthAttachment()
                 .createFramebufferObject()

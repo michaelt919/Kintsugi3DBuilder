@@ -16,7 +16,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
@@ -24,6 +23,7 @@ import javax.imageio.ImageIO;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.util.ColorArrayList;
 import tetzlaff.optimization.KMeansClustering;
 
@@ -49,7 +49,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
     {
         try (Program<ContextType> averageProgram = createAverageProgram();
             FramebufferObject<ContextType> framebuffer =
-                resources.context.buildFramebufferObject(settings.width, settings.height)
+                resources.getContext().buildFramebufferObject(settings.width, settings.height)
                     .addColorAttachment(ColorFormat.RGBA32F)
                     .createFramebufferObject())
         {

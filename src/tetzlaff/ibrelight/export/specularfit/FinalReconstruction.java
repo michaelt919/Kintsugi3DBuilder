@@ -12,10 +12,8 @@
 package tetzlaff.ibrelight.export.specularfit;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.DoubleAdder;
 
 import tetzlaff.gl.builders.ProgramBuilder;
@@ -24,8 +22,9 @@ import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Framebuffer;
 import tetzlaff.ibrelight.core.Projection;
 import tetzlaff.ibrelight.core.ViewSet;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.ibrelight.rendering.ImageReconstruction;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 
 public class FinalReconstruction<ContextType extends Context<ContextType>>
 {
@@ -41,8 +40,8 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         this.settings = settings;
 
         // Calculate reasonable image resolution for reconstructed images (supplemental output)
-        Projection defaultProj = resources.viewSet.getCameraProjection(resources.viewSet.getCameraProjectionIndex(
-            resources.viewSet.getPrimaryViewIndex()));
+        Projection defaultProj = resources.getViewSet().getCameraProjection(resources.getViewSet().getCameraProjectionIndex(
+            resources.getViewSet().getPrimaryViewIndex()));
 
         if (defaultProj.getAspectRatio() < 1.0)
         {
@@ -75,7 +74,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         try (ImageReconstruction<ContextType> reconstruction = new ImageReconstruction<>(
             resources,
             programBuilder,
-            resources.context.buildFramebufferObject(imageWidth, imageHeight)
+            resources.getContext().buildFramebufferObject(imageWidth, imageHeight)
                 .addColorAttachment(ColorFormat.RGBA32F)
                 .addDepthAttachment(),
             program ->
@@ -88,7 +87,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
             }))
         {
             // Use the same view set as for fitting if another wasn't specified for reconstruction.
-            ViewSet reconstructionViewSet = settings.getReconstructionViewSet() != null ? settings.getReconstructionViewSet() : resources.viewSet;
+            ViewSet reconstructionViewSet = settings.getReconstructionViewSet() != null ? settings.getReconstructionViewSet() : resources.getViewSet();
 
             if (reconstructAll)
             {

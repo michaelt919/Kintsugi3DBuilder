@@ -21,7 +21,7 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibrelight.core.SceneModel;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.ibrelight.rendering.resources.LightingResources;
 import tetzlaff.util.ShadingParameterMode;
 
@@ -34,13 +34,13 @@ import java.util.Optional;
 
 public class StandardShader<ContextType extends Context<ContextType>> implements AutoCloseable
 {
-    private final IBRResources<ContextType> resources;
+    private final IBRResourcesImageSpace<ContextType> resources;
     private final LightingResources<ContextType> lightingResources;
     private final SceneModel sceneModel;
 
     private Program<ContextType> program;
 
-    public StandardShader(IBRResources<ContextType> resources, LightingResources<ContextType> lightingResources,
+    public StandardShader(IBRResourcesImageSpace<ContextType> resources, LightingResources<ContextType> lightingResources,
                           SceneModel sceneModel)
     {
         this.resources = resources;
@@ -117,7 +117,7 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
         defineMap.put("VIRTUAL_LIGHT_COUNT", Optional.empty());
         defineMap.put("ENVIRONMENT_ILLUMINATION_ENABLED", Optional.empty());
 
-        defineMap.put("LUMINANCE_MAP_ENABLED", Optional.of(this.resources.viewSet.hasCustomLuminanceEncoding()));
+        defineMap.put("LUMINANCE_MAP_ENABLED", Optional.of(this.resources.getViewSet().hasCustomLuminanceEncoding()));
         defineMap.put("INVERSE_LUMINANCE_MAP_ENABLED", Optional.of(false/*this.resources.viewSet.hasCustomLuminanceEncoding()*/));
 
         defineMap.put("RAY_DEPTH_GRADIENT", Optional.of(0.1 * sceneModel.getScale()));
@@ -185,12 +185,12 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
             // Light intensity depends on distance to centroid using the subject's model matrix (regardless of what we're drawing right now)
             float lightDistance = sceneModel.getLightModelViewMatrix(lightIndex).times(sceneModel.getCentroid().asPosition()).getXYZ().length();
 
-            float lightScale = resources.viewSet.areLightSourcesInfinite() ? 1.0f :
-                resources.viewSet.getCameraPose(resources.viewSet.getPrimaryViewIndex())
+            float lightScale = resources.getViewSet().areLightSourcesInfinite() ? 1.0f :
+                resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex())
                     .times(resources.geometry.getCentroid().asPosition())
                     .getXYZ().length();
             program.setUniform("lightIntensityVirtual[" + lightIndex + ']',
-                controllerLightIntensity.times(lightDistance * lightDistance * resources.viewSet.getLightIntensity(0).y / (lightScale * lightScale)));
+                controllerLightIntensity.times(lightDistance * lightDistance * resources.getViewSet().getLightIntensity(0).y / (lightScale * lightScale)));
 
 
             setupLight(program, lightIndex, lightViewMatrix.times(model));
@@ -235,7 +235,7 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
         if (lightingResources == null || lightingResources.getEnvironmentMap() == null
             || !sceneModel.getLightingModel().isEnvironmentMappingEnabled())
         {
-            program.setTexture("environmentMap", resources.context.getTextureFactory().getNullTexture(SamplerType.FLOAT_CUBE_MAP));
+            program.setTexture("environmentMap", resources.getContext().getTextureFactory().getNullTexture(SamplerType.FLOAT_CUBE_MAP));
         }
         else
         {
@@ -246,7 +246,7 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
                     this.sceneModel.getLightingModel().getEnvironmentMapFilteringBias()
                         + (float)(0.5 *
                         Math.log(6 * (double)lightingResources.getEnvironmentMap().getFaceSize() * (double)lightingResources.getEnvironmentMap().getFaceSize()
-                            / (double)resources.viewSet.getCameraPoseCount() )
+                            / (double) resources.getViewSet().getCameraPoseCount() )
                         / Math.log(2.0)))));
             program.setUniform("diffuseEnvironmentMipMapLevel", lightingResources.getEnvironmentMap().getMipmapLevelCount() - 1);
 
