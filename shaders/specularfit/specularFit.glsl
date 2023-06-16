@@ -10,11 +10,11 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
+#if !GEOMETRY_TEXTURES_ENABLED // position not needed if geometry textures are being used
 in vec3 fPosition;
+#endif
 in vec2 fTexCoord;
-in vec3 fNormal;
-in vec3 fTangent;
-in vec3 fBitangent;
+// normal and tagnent will be declared by constructTBN.glsl
 
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
@@ -43,3 +43,4 @@ uniform sampler2D roughnessEstimate;
 #endif
 
 #include "evaluateBRDF.glsl"
+#include "../common/constructTBN.glsl"

@@ -86,7 +86,7 @@ public class SpecularOptimization
 
         // Generate cache
         ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings());
-        cache.initialize();
+        cache.initialize(resources.viewSet.getImageFilePath() /* TODO: Add support for high-res directory */);
 
         // Disable back face culling since we're rendering in texture space
         // (should be the case already from generating the cache, but good to do just in case)

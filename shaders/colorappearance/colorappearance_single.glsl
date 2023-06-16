@@ -13,9 +13,10 @@
 #ifndef COLOR_APPEARANCE_SINGLE_GLSL
 #define COLOR_APPEARANCE_SINGLE_GLSL
 
+#include "../common/usegeom.glsl"
 #include "linearize.glsl"
 
-#line 19 1001
+#line 20 1001
 
 #ifndef PI
 #define PI 3.1415926535897932384626433832795 // For convenience
@@ -29,14 +30,24 @@ uniform mat4 cameraPose;
 uniform vec3 lightPosition;
 uniform vec3 lightIntensity;
 
+vec3 getViewVector(vec3 position)
+{
+    return transpose(mat3(cameraPose)) * -cameraPose[3].xyz - position;
+}
+
+vec3 getLightVector(vec3 position)
+{
+    return transpose(mat3(cameraPose)) * (lightPosition.xyz - cameraPose[3].xyz) - position;
+}
+
 vec3 getViewVector()
 {
-    return transpose(mat3(cameraPose)) * -cameraPose[3].xyz - fPosition;
+    return getViewVector(getPosition());
 }
 
 vec3 getLightVector()
 {
-    return transpose(mat3(cameraPose)) * (lightPosition.xyz - cameraPose[3].xyz) - fPosition;
+    return getLightVector(getPosition());
 }
 
 vec4 getColor(); // Defined by imgspace_single.glsl or texspace_single.glsl

@@ -13,10 +13,11 @@
 #ifndef COLOR_APPEARANCE_GLSL
 #define COLOR_APPEARANCE_GLSL
 
+#include "../common/usegeom.glsl"
 #include "linearize.glsl"
 #include "../common/extractcomponent.glsl"
 
-#line 20 1000
+#line 21 1000
 
 #ifndef PI
 #define PI 3.1415926535897932384626433832795 // For convenience
@@ -110,17 +111,27 @@ float getCameraWeight(int virtualIndex)
     return extractComponentByIndex(cameraWeights[viewIndex/4], viewIndex%4);
 }
 
-vec3 getViewVector(int virtualIndex)
+vec3 getViewVector(int virtualIndex, vec3 position)
 {
     int viewIndex = getViewIndex(virtualIndex);
-    return transpose(mat3(cameraPoses[viewIndex])) * -cameraPoses[viewIndex][3].xyz - fPosition;
+    return transpose(mat3(cameraPoses[viewIndex])) * -cameraPoses[viewIndex][3].xyz - position;
+}
+
+vec3 getLightVector(int virtualIndex, vec3 position)
+{
+    int viewIndex = getViewIndex(virtualIndex);
+    return transpose(mat3(cameraPoses[viewIndex])) *
+        (lightPositions[getLightIndex(virtualIndex)].xyz - cameraPoses[viewIndex][3].xyz) - position;
+}
+
+vec3 getViewVector(int virtualIndex)
+{
+    return getViewVector(virtualIndex, getPosition());
 }
 
 vec3 getLightVector(int virtualIndex)
 {
-    int viewIndex = getViewIndex(virtualIndex);
-    return transpose(mat3(cameraPoses[viewIndex])) *
-        (lightPositions[getLightIndex(virtualIndex)].xyz - cameraPoses[viewIndex][3].xyz) - fPosition;
+    return getLightVector(virtualIndex, getPosition());
 }
 
 vec3 getLightIntensity(int virtualIndex)

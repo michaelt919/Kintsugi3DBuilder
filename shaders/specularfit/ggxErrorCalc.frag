@@ -32,23 +32,20 @@ void main()
     vec3 diffuseColor = pow(clamp(texture(diffuseEstimate, fTexCoord).rgb, 0, 1), vec3(gamma));
     vec3 specularColor = pow(texture(specularEstimate, fTexCoord).rgb, vec3(gamma));
 
-    vec3 triangleNormal = normalize(fNormal);
+    vec3 position = getPosition();
 
-    vec3 tangent = normalize(fTangent - dot(triangleNormal, fTangent) * triangleNormal);
-    vec3 bitangent = normalize(fBitangent
-        - dot(triangleNormal, fBitangent) * triangleNormal
-        - dot(tangent, fBitangent) * tangent);
-    mat3 tangentToObject = mat3(tangent, bitangent, triangleNormal);
+    mat3 tangentToObject = constructTBNExact();
+    vec3 triangleNormal = tangentToObject[2];
 
     vec2 fittedNormalXY = texture(normalEstimate, fTexCoord).xy * 2 - vec2(1.0);
     vec3 fittedNormalTS = vec3(fittedNormalXY, sqrt(1 - dot(fittedNormalXY, fittedNormalXY)));
     vec3 fittedNormal = tangentToObject * fittedNormalTS;
 
     vec4 imgColor = getLinearColor();
-    vec3 view = normalize(getViewVector());
+    vec3 view = normalize(getViewVector(position));
     float triangleNDotV = max(0.0, dot(triangleNormal, view));
 
-    vec3 lightDisplacement = getLightVector();
+    vec3 lightDisplacement = getLightVector(position);
     vec3 light = normalize(lightDisplacement);
     vec3 halfway = normalize(light + view);
     float nDotH = max(0.0, dot(fittedNormal, halfway));

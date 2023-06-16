@@ -34,6 +34,16 @@ vec3 getLightVector()
     return getLightVector(viewIndex);
 }
 
+vec3 getViewVector(vec3 position)
+{
+    return getViewVector(viewIndex, position);
+}
+
+vec3 getLightVector(vec3 position)
+{
+    return getLightVector(viewIndex, position);
+}
+
 vec4 getColor()
 {
     return getColor(viewIndex);
