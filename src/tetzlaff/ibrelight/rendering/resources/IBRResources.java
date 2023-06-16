@@ -22,8 +22,23 @@ import tetzlaff.util.ColorList;
 
 public interface IBRResources<ContextType extends Context<ContextType>> extends Resource
 {
+    /**
+     * The graphics context associated with this instance.
+     */
     ContextType getContext();
+
+    /**
+     * The view set that these resources were loaded from.
+     */
     ViewSet getViewSet();
+
+    /**
+     * Gets the weight associated with a given view/camera (determined by the distance from other views).
+     * @param index The index of the view for which to retrieve its weight.
+     * @return The weight for the specified view.
+     */
+    float getCameraWeight(int index);
+
     ProgramBuilder<ContextType> getIBRShaderProgramBuilder(StandardRenderingMode renderingMode);
     ProgramBuilder<ContextType> getIBRShaderProgramBuilder();
     void setupShaderProgram(Program<ContextType> program);
