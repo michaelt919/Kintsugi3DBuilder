@@ -73,7 +73,7 @@ abstract class IBRResourcesBase<ContextType extends Context<ContextType>> implem
     private final ContextType context;
     private final ViewSet viewSet;
 
-    protected final float[] cameraWeights;
+    private final float[] cameraWeights;
 
     protected IBRResourcesBase(ContextType context, ViewSet viewSet, float[] cameraWeights, Material material,
         ReadonlyLoadOptionsModel loadOptions, LoadingMonitor loadingMonitor)
