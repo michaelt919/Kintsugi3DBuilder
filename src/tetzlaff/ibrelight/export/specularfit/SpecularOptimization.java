@@ -303,6 +303,13 @@ public class SpecularOptimization
             new SpecularFitFinalizer(settings)
                 .execute(solution, resources, specularFit, scratchFramebuffer, errorCalculator.getReport(), errorCalcDrawable);
 
+            // Generate albedo / ORM maps
+            try(AlbedoORMOptimization<ContextType> albedoORM = new AlbedoORMOptimization<>(context, settings))
+            {
+                albedoORM.execute(specularFit);
+                albedoORM.saveTextures();
+            }
+
             return specularFit;
         }
     }
@@ -326,6 +333,13 @@ public class SpecularOptimization
         // Fit specular textures
         solution.roughnessOptimization.execute();
         solution.roughnessOptimization.saveTextures();
+
+        // Generate albedo / ORM maps
+        try(AlbedoORMOptimization<ContextType> albedoORM = new AlbedoORMOptimization<>(context, settings))
+        {
+            albedoORM.execute(solution);
+            albedoORM.saveTextures();
+        }
 
         return solution;
     }
