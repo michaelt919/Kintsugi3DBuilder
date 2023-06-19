@@ -17,47 +17,82 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
 
-public class SpecularFitGltfExporter {
+public class SpecularFitGltfExporter
+{
 
     private GltfAssetV2 asset;
+
+    private TextureInfo diffuseTexture, normalTexture, roughnessMetallicTexture;
+
+    private TextureInfo specularTexture, roughnessTexture;
+
+    private ArrayList<TextureInfo> weightTextures;
 
     public SpecularFitGltfExporter(GltfAssetV2 glTfAsset)
     {
         this.asset = glTfAsset;
     }
 
-    public void setDiffuseName(String uri)
+    public void setDiffuseUri(String uri)
     {
-        TextureInfo texture = createRelativeTexture(uri, "diffuse");
-        asset.getGltf().getMaterials().forEach((material -> {
-            material.getPbrMetallicRoughness().setBaseColorTexture(texture);
-        }));
+        if (diffuseTexture == null)
+        {
+            diffuseTexture = createRelativeTexture(uri, "diffuse");
+            asset.getGltf().getMaterials().forEach((material -> {
+                material.getPbrMetallicRoughness().setBaseColorTexture(diffuseTexture);
+            }));
+        }
+        else
+        {
+            setTextureUri(diffuseTexture, uri);
+        }
     }
 
-    public void setNormalName(String uri)
+    public void setNormalUri(String uri)
     {
-        TextureInfo texInfo = createRelativeTexture(uri, "normal");
-        MaterialNormalTextureInfo matNormInfo = convertTexInfoToNormal(texInfo);
-        asset.getGltf().getMaterials().forEach((material -> {
-            material.setNormalTexture(matNormInfo);
-        }));
+        if (normalTexture == null) {
+            normalTexture = createRelativeTexture(uri, "normal");
+            MaterialNormalTextureInfo matNormInfo = convertTexInfoToNormal(normalTexture);
+            asset.getGltf().getMaterials().forEach((material -> {
+                material.setNormalTexture(matNormInfo);
+            }));
+        }
+        else
+        {
+            setTextureUri(normalTexture, uri);
+        }
     }
 
-    public void setRoughnessMetallicName(String uri)
+    public void setRoughnessMetallicUri(String uri)
     {
-        TextureInfo texture = createRelativeTexture(uri, "roughness");
-        asset.getGltf().getMaterials().forEach((material -> {
-            material.getPbrMetallicRoughness().setMetallicRoughnessTexture(texture);
-        }));
+        if (roughnessMetallicTexture == null)
+        {
+            roughnessMetallicTexture = createRelativeTexture(uri, "roughnessMetallic");
+            asset.getGltf().getMaterials().forEach((material -> {
+                material.getPbrMetallicRoughness().setMetallicRoughnessTexture(roughnessMetallicTexture);
+            }));
+        }
+        else
+        {
+            setTextureUri(roughnessMetallicTexture, uri);
+        }
     }
 
-    public void setSpecularName(String uri)
+    public void setSpecularUri(String uri)
     {
-        createRelativeTexture(uri, "specular");
+        if (specularTexture == null)
+        {
+            specularTexture = createRelativeTexture(uri, "specular");
+        }
+        else
+        {
+            setTextureUri(specularTexture, uri);
+        }
     }
 
-    public void setBasisFunctionName(String uri)
+    public void setBasisFunctionsUri(String uri)
     {
         createRelativeTexture(uri, "basisFunctions");
     }
@@ -89,11 +124,11 @@ public class SpecularFitGltfExporter {
 
     public void setDefaultNames()
     {
-        setDiffuseName("diffuse.png");
-        setNormalName("normal.png");
-        setRoughnessMetallicName("orm.png");
-        setSpecularName("specular.png");
-        setBasisFunctionName("basisFunctions.csv");
+        setDiffuseUri("diffuse.png");
+        setNormalUri("normal.png");
+        setRoughnessMetallicUri("orm.png");
+        setSpecularUri("specular.png");
+        setBasisFunctionsUri("basisFunctions.csv");
     }
 
     private static MaterialNormalTextureInfo convertTexInfoToNormal(TextureInfo normalTextureInfo, float scale)
@@ -133,6 +168,22 @@ public class SpecularFitGltfExporter {
         info.setIndex(textureIndex);
 
         return info;
+    }
+
+    private void setTextureUri(TextureInfo textureInfo, String newUri)
+    {
+        GlTF gltf = asset.getGltf();
+
+        if (gltf.getTextures().size() <= textureInfo.getIndex())
+            return;
+
+        Texture texture = gltf.getTextures().get(textureInfo.getIndex());
+
+        if (gltf.getImages().size() <= texture.getSource())
+            return;
+
+        Image image = gltf.getImages().get(texture.getSource());
+        image.setUri(newUri);
     }
 
     private TextureInfo createRelativeTexture(String uri)
