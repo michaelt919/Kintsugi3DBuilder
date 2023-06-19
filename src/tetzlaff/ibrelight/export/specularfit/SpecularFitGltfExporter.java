@@ -30,6 +30,8 @@ public class SpecularFitGltfExporter
 
     private ArrayList<TextureInfo> weightTextures;
 
+    GltfMaterialExtras extraData = new GltfMaterialExtras();
+
     public SpecularFitGltfExporter(GltfAssetV2 glTfAsset)
     {
         this.asset = glTfAsset;
@@ -80,11 +82,21 @@ public class SpecularFitGltfExporter
         }
     }
 
+    private void setRoughnessUri(String uri)
+    {
+        if (roughnessTexture == null)
+        {
+            roughnessTexture = createRelativeTexture(uri, "roughness");
+            extraData.setRoughnessTexture(roughnessTexture);
+        }
+    }
+
     public void setSpecularUri(String uri)
     {
         if (specularTexture == null)
         {
             specularTexture = createRelativeTexture(uri, "specular");
+            extraData.setSpecularTexture(specularTexture);
         }
         else
         {
@@ -94,21 +106,29 @@ public class SpecularFitGltfExporter
 
     public void setBasisFunctionsUri(String uri)
     {
-        createRelativeTexture(uri, "basisFunctions");
+        extraData.setBasisFunctionsUri(uri);
     }
 
     public void addWeightImages(int basisCount)
     {
+        GltfMaterialSpecularWeights weights = new GltfMaterialSpecularWeights();
+        weights.setStride(1);
         for (int b = 0; b < basisCount; b++)
         {
             String weightsFilename = SpecularFitSerializer.getWeightFileName(b);
             String weightName = weightsFilename.split("\\.")[0];
-            createRelativeTexture(weightsFilename, weightName);
+            TextureInfo weightTexInfo = createRelativeTexture(weightsFilename, weightName);
+            weights.addTexture(weightTexInfo);
         }
+        extraData.setSpecularWeights(weights);
     }
 
     public void write(File file) throws IOException
     {
+        asset.getGltf().getMaterials().forEach((material -> {
+            material.setExtras(extraData);
+        }));
+
         GltfAssetWriterV2 writer = new GltfAssetWriterV2();
         writer.writeBinary(asset, new FileOutputStream(file));
     }
@@ -128,6 +148,7 @@ public class SpecularFitGltfExporter
         setNormalUri("normal.png");
         setRoughnessMetallicUri("orm.png");
         setSpecularUri("specular.png");
+        setRoughnessUri("roughness.png");
         setBasisFunctionsUri("basisFunctions.csv");
     }
 
