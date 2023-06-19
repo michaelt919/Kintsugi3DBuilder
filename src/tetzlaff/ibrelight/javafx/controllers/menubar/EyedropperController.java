@@ -121,6 +121,20 @@ public class EyedropperController implements Initializable {
         finalSelectRectangles.add(finalSelectRect6);
     }
 
+    private Rectangle2D resetViewport(ImageView imageView) {
+        //reset the viewport to default value (view entire image)
+        Rectangle2D defaultViewport = getDefaultViewport(imageView);
+
+        System.out.println("Resetting viewport to " + defaultViewport);
+        imageView.setViewport(defaultViewport);
+        return defaultViewport;
+    }
+
+    private Rectangle2D getDefaultViewport(ImageView imageView){
+        Image image = imageView.getImage();
+        return new Rectangle2D(0, 0, image.getWidth(), image.getHeight());
+    }
+
     @FXML
     private void handleMousePressed(MouseEvent event) {//TODO: IF USER SELECTS AREA OUTSIDE OF IMAGE, SHIFT SELECTION BOX INSIDE IMAGE
         if(isSelecting || isCropping) {
@@ -184,10 +198,8 @@ public class EyedropperController implements Initializable {
     }
 
     public void triggerCropping(ActionEvent actionEvent) {
-        if(cropButton.getText().equals("Reset Crop")){//reset viewport
-            Image origImage = colorPickerImgView.getImage();
-            colorPickerImgView.setViewport(new Rectangle2D(0, 0,
-                    origImage.getRequestedWidth(), origImage.getRequestedHeight()));
+        if(cropButton.getText().equals("Reset Crop")){
+            resetViewport(colorPickerImgView);//TODO: USE BOOLEANS INSTEAD OF MAGIC VALUES
             cropButton.setText("Crop");
         }
         else{
@@ -195,19 +207,22 @@ public class EyedropperController implements Initializable {
             cropButton.setText("Cropping...");
             isCropping = true;
         }
-
+        resetButtonsText();
         isSelecting = false;
     }
 
     private void cropImage(MouseEvent event) {//might be a better way to access this information
+        //this function receives the event from MOUSE RELEASED, so x and y are the bottom right corner, not the top left
         //get bounds of selection rectangle
         //crop imageView accordingly
-        double x = event.getX();
-        double y = event.getY();
-        double width = x - selectionRectangle.getX();
-        double height = y - selectionRectangle.getY();
+        double scaleFactor = calculateImgViewScaleFactor(colorPickerImgView);
+        double width = selectionRectangle.getWidth() * scaleFactor;
+        double height = selectionRectangle.getHeight() * scaleFactor;
+        double x = (selectionRectangle.getX() - colorPickerImgView.getLayoutX()) * scaleFactor;
+        double y = (selectionRectangle.getY() - colorPickerImgView.getLayoutY()) * scaleFactor;
 
         Rectangle2D view = new Rectangle2D(x, y, width, height);
+        System.out.println("Setting crop to " + view);
         colorPickerImgView.setViewport(view);
         isCropping = false;
         cropButton.setText("Reset Crop");
@@ -237,16 +252,14 @@ public class EyedropperController implements Initializable {
 
         javafx.scene.image.PixelReader pixelReader = colorPickerImgView.getImage().getPixelReader();
 
-        double scaleFactor;
-        if(colorPickerImgView.getImage().getWidth() > colorPickerImgView.getImage().getHeight()) {
-            scaleFactor = colorPickerImgView.getImage().getWidth() / colorPickerImgView.getFitWidth();
-        }
-        else {
-            scaleFactor = colorPickerImgView.getImage().getHeight() / colorPickerImgView.getFitHeight();
+        Rectangle2D viewport = colorPickerImgView.getViewport();
+        if(viewport == null){
+            viewport = resetViewport(colorPickerImgView);
         }
 
+        double scaleFactor = calculateImgViewScaleFactor(colorPickerImgView);
 
-        double trueStartX = (x - colorPickerImgView.getLayoutX()) * scaleFactor;
+        double trueStartX = (x - colorPickerImgView.getLayoutX()) * scaleFactor;//use viewport.getMinX()?
         double trueStartY = (y - colorPickerImgView.getLayoutY()) * scaleFactor;
 
         double trueEndX = trueStartX + width * scaleFactor;
@@ -272,6 +285,15 @@ public class EyedropperController implements Initializable {
         }
 
         return calculateAverageColor(selectedColors);
+    }
+
+    private double calculateImgViewScaleFactor(ImageView imgView) {
+        if(imgView.getImage().getWidth() > imgView.getImage().getHeight()) {
+            return imgView.getImage().getWidth() / imgView.getFitWidth();
+        }
+        else {
+            return imgView.getImage().getHeight() / imgView.getFitHeight();
+        }
     }
 
     private Color calculateAverageColor(List<Color> colors) {
@@ -336,7 +358,7 @@ public class EyedropperController implements Initializable {
                     if (sourceButton != null) {
                         //modify appropriate text field to average greyscale value
                         TextField partnerTxtField = getButtonPartnerTxtField(sourceButton);
-                        Integer greyScale = Math.toIntExact((long) getGreyScaleDouble(newColor));//TODO: USE BETTER (weighted) GREYSCALE CONVERSION
+                        Integer greyScale = Math.toIntExact((long) getGreyScaleDouble(newColor));
                         partnerTxtField.setText(String.valueOf(greyScale));
 
                         partnerTxtField.positionCaret(partnerTxtField.getText().length());//without these two lines, text field would not update properly
