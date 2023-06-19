@@ -44,7 +44,7 @@ public class SpecularFitGltfExporter {
         }));
     }
 
-    public void setRoughnessName(String uri)
+    public void setRoughnessMetallicName(String uri)
     {
         TextureInfo texture = createRelativeTexture(uri, "roughness");
         asset.getGltf().getMaterials().forEach((material -> {
@@ -91,7 +91,7 @@ public class SpecularFitGltfExporter {
     {
         setDiffuseName("diffuse.png");
         setNormalName("normal.png");
-        setRoughnessName("roughness.png");
+        setRoughnessMetallicName("orm.png");
         setSpecularName("specular.png");
         setBasisFunctionName("basisFunctions.csv");
     }
