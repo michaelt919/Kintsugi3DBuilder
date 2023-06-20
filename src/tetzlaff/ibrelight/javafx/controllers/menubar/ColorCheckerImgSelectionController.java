@@ -7,6 +7,8 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import tetzlaff.ibrelight.core.LoadingModel;
@@ -73,5 +75,11 @@ public class ColorCheckerImgSelectionController {
 
     public void init(LoadingModel loadingModel) {
         this.loadingModel = loadingModel;
+    }
+
+    public void enterToRun(KeyEvent keyEvent) {//press the enter button while in the text field to hit the run button
+        if (keyEvent.getCode() == KeyCode.ENTER) {
+            runButton.fire();
+        }
     }
 }

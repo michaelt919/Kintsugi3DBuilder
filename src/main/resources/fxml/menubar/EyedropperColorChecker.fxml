@@ -6,11 +6,12 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
 
+
 <HBox prefHeight="420.0" prefWidth="907.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.EyedropperController">
    <children>
       <BorderPane prefHeight="421.0" prefWidth="467.0">
          <center>
-            <Pane fx:id="rootPane" onMouseDragged="#handleMouseDragged" onMousePressed="#handleMousePressed" onMouseReleased="#handleMouseReleased" prefHeight="400.0" prefWidth="399.0">
+            <Pane fx:id="colorPickerPane" onMouseDragged="#handleMouseDragged" onMousePressed="#handleMousePressed" onMouseReleased="#handleMouseReleased" prefHeight="400.0" prefWidth="399.0">
                 <children>
                     <ImageView fx:id="colorPickerImgView" fitHeight="350.0" fitWidth="350.0" layoutX="25.0" layoutY="30.0" pickOnBounds="true" preserveRatio="true" />
                     <Rectangle fx:id="selectionRectangle" fill="TRANSPARENT" stroke="#9c00ff" />
@@ -23,7 +24,8 @@
                     <Label fx:id="colorLabel" alignment="CENTER" prefWidth="400.0" text="No Color Selected" HBox.hgrow="ALWAYS">
                      <padding>
                         <Insets top="10.0" />
-                     </padding></Label>
+                     </padding>
+                  </Label>
                </children>
             </HBox>
          </top>
@@ -42,7 +44,7 @@
                   <RowConstraints minHeight="10.0" valignment="CENTER" vgrow="SOMETIMES" />
                </rowConstraints>
                <children>
-                      <Button fx:id="addSelectedColor" mnemonicParsing="false" onAction="#addColor" text="Add Selected Color" />
+                      <Button fx:id="addSelectedColor" mnemonicParsing="false" onAction="#addSelectedColor" text="Add Selected Color" />
                     <Rectangle fx:id="averageColorDisplay" fill="WHITE" height="20.0" stroke="BLACK" width="20.0" GridPane.columnIndex="1" />
                </children>
                <VBox.margin>
@@ -134,7 +136,7 @@
                     </GridPane.margin>
                 </TextField>
             <Button fx:id="button1" mnemonicParsing="false" onAction="#triggerSelection" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
-            <Button fx:id="button2" mnemonicParsing="false" onAction="#triggerSelection" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
+             <Button fx:id="button2" mnemonicParsing="false" onAction="#triggerSelection" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
             <Button fx:id="button3" mnemonicParsing="false" onAction="#triggerSelection" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
             <Button fx:id="button4" mnemonicParsing="false" onAction="#triggerSelection" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
             <Button fx:id="button5" mnemonicParsing="false" onAction="#triggerSelection" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="5" />
