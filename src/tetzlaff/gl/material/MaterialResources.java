@@ -1,3 +1,15 @@
+/*
+ * Copyright (c) 2023 Seth Berrier, Michael Tetzlaff, Josh Lyu, Luke Denney, Jacob Buelow
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ *
+ */
+
 package tetzlaff.gl.material;
 
 import tetzlaff.gl.builders.ColorTextureBuilder;
@@ -53,32 +65,6 @@ public class MaterialResources<ContextType extends Context<ContextType>> impleme
         return roughnessTexture;
     }
 
-    public static class MaterialLoadOptions
-    {
-        private boolean mipmapsRequested;
-        private boolean compressionRequested;
-
-        public boolean areMipmapsRequested()
-        {
-            return mipmapsRequested;
-        }
-
-        public void setMipmapsRequested(boolean mipmapsRequested)
-        {
-            this.mipmapsRequested = mipmapsRequested;
-        }
-
-        public boolean isCompressionRequested()
-        {
-            return compressionRequested;
-        }
-
-        public void setCompressionRequested(boolean compressionRequested)
-        {
-            this.compressionRequested = compressionRequested;
-        }
-    }
-
     public static <ContextType extends Context<ContextType>>  MaterialResources<ContextType> createNull()
     {
         return new MaterialResources<>();
@@ -92,7 +78,7 @@ public class MaterialResources<ContextType extends Context<ContextType>> impleme
         roughnessTexture = null;
     }
 
-    MaterialResources(ContextType context, Material material, File textureDirectory, MaterialLoadOptions loadOptions) throws IOException
+    MaterialResources(ContextType context, Material material, File textureDirectory, TextureLoadOptions loadOptions) throws IOException
     {
         File diffuseFile = new File(textureDirectory, material.getDiffuseMap().getMapName());
         if (diffuseFile.exists())
