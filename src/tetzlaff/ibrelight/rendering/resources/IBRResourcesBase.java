@@ -16,7 +16,8 @@ import java.io.IOException;
 
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.material.Material;
+import tetzlaff.gl.material.*;
+import tetzlaff.gl.material.MaterialResources.MaterialLoadOptions;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.types.AbstractDataTypeFactory;
@@ -27,6 +28,12 @@ import tetzlaff.ibrelight.core.ViewSet;
 
 abstract class IBRResourcesBase<ContextType extends Context<ContextType>> implements IBRResources<ContextType>
 {
+    /**
+     * A GPU buffer containing the camera poses defining the transformation from object space to camera space for each view.
+     * These are necessary to determine view vectors, and for performing projective texture mapping with an image-space implementation.
+     */
+    public final UniformBuffer<ContextType> cameraPoseBuffer;
+
     /**
      * A GPU buffer containing light source positions, used only for reflectance fields and illumination-dependent rendering (ignored for light
      * fields).
@@ -46,31 +53,16 @@ abstract class IBRResourcesBase<ContextType extends Context<ContextType>> implem
     public final UniformBuffer<ContextType> lightIndexBuffer;
 
     /**
-     * A diffuse texture map, if one exists.
-     */
-    public final Texture2D<ContextType> diffuseTexture;
-
-    /**
-     * A normal map, if one exists.
-     */
-    public final Texture2D<ContextType> normalTexture;
-
-    /**
-     * A specular reflectivity map, if one exists.
-     */
-    public final Texture2D<ContextType> specularTexture;
-
-    /**
-     * A specular roughness map, if one exists.
-     */
-    public final Texture2D<ContextType> roughnessTexture;
-
-    /**
      * A GPU buffer containing the weights associated with all the views (determined by the distance from other views).
      */
     public final UniformBuffer<ContextType> cameraWeightBuffer;
 
+    private LuminanceMapResources<ContextType> luminanceMapResources;
+
+    private MaterialResources<ContextType> materialResources;
+
     private final ContextType context;
+
     private final ViewSet viewSet;
 
     private final float[] cameraWeights;
@@ -91,6 +83,17 @@ abstract class IBRResourcesBase<ContextType extends Context<ContextType>> implem
         else
         {
             this.cameraWeightBuffer = null;
+        }
+
+        // Store the poses in a uniform buffer
+        if (viewSet != null && viewSet.getCameraPoseData() != null)
+        {
+            // Create the uniform buffer
+            cameraPoseBuffer = context.createUniformBuffer().setData(viewSet.getCameraPoseData());
+        }
+        else
+        {
+            cameraPoseBuffer = null;
         }
 
         // Store the light positions in a uniform buffer
@@ -125,154 +128,64 @@ abstract class IBRResourcesBase<ContextType extends Context<ContextType>> implem
             lightIndexBuffer = null;
         }
 
-        String diffuseTextureName = null;
-        String normalTextureName = null;
-        String specularTextureName = null;
-        String roughnessTextureName = null;
-
-        if (material != null)
+        // Luminance map texture
+        if (viewSet != null && viewSet.hasCustomLuminanceEncoding())
         {
-            if (material.getDiffuseMap() != null)
-            {
-                diffuseTextureName = material.getDiffuseMap().getMapName();
-            }
-
-            if (material.getNormalMap() != null)
-            {
-                normalTextureName = material.getNormalMap().getMapName();
-            }
-
-            if (material.getSpecularMap() != null)
-            {
-                specularTextureName = material.getSpecularMap().getMapName();
-            }
-
-            if (material.getRoughnessMap() != null)
-            {
-                roughnessTextureName = material.getRoughnessMap().getMapName();
-            }
+            luminanceMapResources = viewSet.getLuminanceEncoding().createResources(context);
+        }
+        else
+        {
+            luminanceMapResources = null;
         }
 
-        // TODO Use more information from the material.  Currently just pulling texture names.
         if (viewSet != null && viewSet.getGeometryFile() != null)
         {
-            String prefix = viewSet.getGeometryFileName().split("\\.")[0];
-            diffuseTextureName = diffuseTextureName != null ? diffuseTextureName : prefix + "_Kd.png";
-            normalTextureName = normalTextureName != null ? normalTextureName : prefix + "_norm.png";
-            specularTextureName = specularTextureName != null ? specularTextureName : prefix + "_Ks.png";
-            roughnessTextureName = roughnessTextureName != null ? roughnessTextureName : prefix + "_Pr.png";
-
-            File diffuseFile = new File(viewSet.getGeometryFile().getParentFile(), diffuseTextureName);
-            File normalFile = new File(viewSet.getGeometryFile().getParentFile(), normalTextureName);
-            File specularFile = new File(viewSet.getGeometryFile().getParentFile(), specularTextureName);
-            File roughnessFile = new File(viewSet.getGeometryFile().getParentFile(), roughnessTextureName);
-
-            if (diffuseFile.exists())
+            if (material != null)
             {
-                System.out.println("Diffuse texture found.");
-                ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> diffuseTextureBuilder =
-                    context.getTextureFactory().build2DColorTextureFromFile(diffuseFile, true);
+                // Default texture names if not specified by the material
+                String prefix = viewSet.getGeometryFileName().split("\\.")[0];
 
-                if (loadOptions.isCompressionRequested())
+                if (material.getDiffuseMap() == null || material.getDiffuseMap().getMapName() == null)
                 {
-                    diffuseTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
-                }
-                else
-                {
-                    diffuseTextureBuilder.setInternalFormat(ColorFormat.RGB8);
+                    MaterialColorMap diffuseMap = new MaterialColorMap();
+                    diffuseMap.setMapName(prefix + "_Kd.png");
+                    material.setDiffuseMap(diffuseMap);
                 }
 
-                diffuseTexture = diffuseTextureBuilder
-                    .setMipmapsEnabled(loadOptions.areMipmapsRequested())
-                    .setLinearFilteringEnabled(true)
-                    .createTexture();
+                if (material.getNormalMap() == null || material.getNormalMap().getMapName() == null)
+                {
+                    MaterialTextureMap normalMap = new MaterialTextureMap();
+                    normalMap.setMapName(prefix + "_norm.png");
+                    material.setNormalMap(normalMap);
+                }
+
+                if (material.getSpecularMap() == null || material.getSpecularMap().getMapName() == null)
+                {
+                    MaterialColorMap specularMap = new MaterialColorMap();
+                    specularMap.setMapName(prefix + "_Ks.png");
+                    material.setSpecularMap(specularMap);
+                }
+
+                if (material.getRoughnessMap() == null || material.getRoughnessMap().getMapName() == null)
+                {
+                    MaterialScalarMap roughnessMap = new MaterialScalarMap();
+                    roughnessMap.setMapName(prefix + "_Pr.png");
+                    material.setRoughnessMap(roughnessMap);
+                }
+
+                MaterialLoadOptions mtlLoadOptions = new MaterialLoadOptions();
+                mtlLoadOptions.setCompressionRequested(loadOptions.isCompressionRequested());
+                mtlLoadOptions.setMipmapsRequested(loadOptions.areMipmapsRequested());
+                materialResources = material.createResources(context, viewSet.getGeometryFile().getParentFile(), mtlLoadOptions);
             }
             else
             {
-                diffuseTexture = null;
-            }
-
-            if (normalFile.exists())
-            {
-                System.out.println("Normal texture found.");
-                ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> normalTextureBuilder =
-                    context.getTextureFactory().build2DColorTextureFromFile(normalFile, true);
-
-                if (loadOptions.isCompressionRequested())
-                {
-                    normalTextureBuilder.setInternalFormat(CompressionFormat.RED_4BPP_GREEN_4BPP);
-                }
-                else
-                {
-                    normalTextureBuilder.setInternalFormat(ColorFormat.RG8);
-                }
-
-                normalTexture = normalTextureBuilder
-                    .setMipmapsEnabled(loadOptions.areMipmapsRequested())
-                    .setLinearFilteringEnabled(true)
-                    .createTexture();
-            }
-            else
-            {
-                normalTexture = null;
-            }
-
-            if (specularFile.exists())
-            {
-                System.out.println("Specular texture found.");
-                ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> specularTextureBuilder =
-                    context.getTextureFactory().build2DColorTextureFromFile(specularFile, true);
-                if (loadOptions.isCompressionRequested())
-                {
-                    specularTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
-                }
-                else
-                {
-                    specularTextureBuilder.setInternalFormat(ColorFormat.RGB8);
-                }
-
-                specularTexture = specularTextureBuilder
-                    .setMipmapsEnabled(loadOptions.areMipmapsRequested())
-                    .setLinearFilteringEnabled(true)
-                    .createTexture();
-            }
-            else
-            {
-                specularTexture = null;
-            }
-
-            if (roughnessFile.exists())
-            {
-                System.out.println("Roughness texture found.");
-                ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> roughnessTextureBuilder;
-
-                roughnessTextureBuilder =
-                    context.getTextureFactory().build2DColorTextureFromFile(roughnessFile, true,
-                        AbstractDataTypeFactory.getInstance().getMultiComponentDataType(NativeDataType.UNSIGNED_BYTE, 3),
-                        color -> new IntVector3(
-                            (int) Math.max(0, Math.min(255, Math.round(
-                                (Math.max(-15.0, Math.min(15.0, (color.getRed() - color.getGreen()) * 30.0 / 255.0)) + 16.0) * 255.0 / 31.0))),
-                            color.getGreen(),
-                            (int) Math.max(0, Math.min(255, Math.round(
-                                (Math.max(-15.0, Math.min(15.0, (color.getBlue() - color.getGreen()) * 30.0 / 255.0)) + 16.0) * 255.0 / 31.0)))));
-                roughnessTextureBuilder.setInternalFormat(ColorFormat.RGB8);
-
-                roughnessTexture = roughnessTextureBuilder
-                    .setMipmapsEnabled(loadOptions.areMipmapsRequested())
-                    .setLinearFilteringEnabled(true)
-                    .createTexture();
-            }
-            else
-            {
-                roughnessTexture = null;
+                materialResources = MaterialResources.createNull();
             }
         }
         else
         {
-            diffuseTexture = null;
-            normalTexture = null;
-            specularTexture = null;
-            roughnessTexture = null;
+            materialResources = MaterialResources.createNull();
         }
     }
 
@@ -301,12 +214,38 @@ abstract class IBRResourcesBase<ContextType extends Context<ContextType>> implem
         }
     }
 
+    public LuminanceMapResources<ContextType> getLuminanceMapResources()
+    {
+        return luminanceMapResources;
+    }
+
+    /**
+     * Diffuse, normal, specular, roughness maps
+     */
+    public MaterialResources<ContextType> getMaterialResources()
+    {
+        return materialResources;
+    }
+
+    /**
+     * Refresh the luminance map textures using the current values in the view set.
+     */
+    public void updateLuminanceMap()
+    {
+        luminanceMapResources.update(viewSet.hasCustomLuminanceEncoding() ? viewSet.getLuminanceEncoding() : null);
+    }
+
     @Override
     public void close()
     {
         if (this.cameraWeightBuffer != null)
         {
             this.cameraWeightBuffer.close();
+        }
+
+        if (this.cameraPoseBuffer != null)
+        {
+            this.cameraPoseBuffer.close();
         }
 
         if (this.lightPositionBuffer != null)
@@ -324,24 +263,16 @@ abstract class IBRResourcesBase<ContextType extends Context<ContextType>> implem
             this.lightIndexBuffer.close();
         }
 
-        if (this.diffuseTexture != null)
+        if (this.materialResources != null)
         {
-            this.diffuseTexture.close();
+            this.materialResources.close();
+            this.materialResources = null;
         }
 
-        if (this.normalTexture != null)
+        if (this.luminanceMapResources != null)
         {
-            this.normalTexture.close();
-        }
-
-        if (this.specularTexture != null)
-        {
-            this.specularTexture.close();
-        }
-
-        if (this.roughnessTexture != null)
-        {
-            this.roughnessTexture.close();
+            this.luminanceMapResources.close();
+            this.luminanceMapResources = null;
         }
     }
 }

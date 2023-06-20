@@ -49,12 +49,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     public final VertexGeometry geometry;
 
     /**
-     * A GPU buffer containing the camera poses defining the transformation from object space to camera space for each view.
-     * These are necessary to perform projective texture mapping.
-     */
-    public final UniformBuffer<ContextType> cameraPoseBuffer;
-
-    /**
      * A GPU buffer containing projection transformations defining the intrinsic properties of each camera.
      */
     public final UniformBuffer<ContextType> cameraProjectionBuffer;
@@ -69,24 +63,10 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
      */
     public final Texture3D<ContextType> colorTextures;
 
-    // TODO: Everything related to luminance maps should maybe be encapsulated in its own class
-
-    /**
-     * A 1D texture defining how encoded RGB values should be converted to linear luminance.
-     */
-    private Texture1D<ContextType> luminanceMap;
-
-    /**
-     * A 1D texture defining how encoded RGB values should be converted to linear luminance.
-     */
-    private Texture1D<ContextType> inverseLuminanceMap;
-
     /**
      * Contains the VBOs for positions, tex-coords, normals, and tangents
      */
-    public GeometryResources<ContextType> geometryResources;
-
-    // TODO: Everything related to standard texture maps should maybe be encapsulated in its own class
+    public final GeometryResources<ContextType> geometryResources;
 
     /**
      * A depth texture array containing a depth image for every view.
@@ -239,7 +219,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         {
             Date timestamp = new Date();
 
-            File imageFile = findImageFile(viewSet.getPrimaryViewIndex());
+            File imageFile = viewSet.findPrimaryImageFile();
 
             // Read a single image to get the dimensions for the texture array
             BufferedImage img = null;
@@ -269,7 +249,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             {
                 System.out.printf("%d/%d", i, m);
                 System.out.println();
-                imageFile = findImageFile(i);
+                imageFile = viewSet.findImageFile(i);
 
                 this.colorTextures.loadLayer(i, imageFile, true);
 
@@ -291,17 +271,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             loadingMonitor.setMaximum(0.0);
         }
 
-        // Store the poses in a uniform buffer
-        if (viewSet != null && viewSet.getCameraPoseData() != null)
-        {
-            // Create the uniform buffer
-            cameraPoseBuffer = context.createUniformBuffer().setData(viewSet.getCameraPoseData());
-        }
-        else
-        {
-            cameraPoseBuffer = null;
-        }
-
         // Store the camera projections in a uniform buffer
         if (viewSet != null && viewSet.getCameraProjectionData() != null)
         {
@@ -321,18 +290,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         else
         {
             cameraProjectionIndexBuffer = null;
-        }
-
-        // Luminance map texture
-        if (viewSet != null && viewSet.hasCustomLuminanceEncoding())
-        {
-            luminanceMap = viewSet.getLuminanceEncoding().createLuminanceMap(context);
-            inverseLuminanceMap = viewSet.getLuminanceEncoding().createInverseLuminanceMap(context);
-        }
-        else
-        {
-            luminanceMap = null;
-            inverseLuminanceMap = null;
         }
 
         if (geometry != null)
@@ -471,16 +428,16 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             .define("CAMERA_POSE_COUNT", this.getViewSet().getCameraPoseCount())
             .define("LIGHT_COUNT", this.getViewSet().getLightCount())
             .define("CAMERA_PROJECTION_COUNT", this.getViewSet().getCameraProjectionCount())
-            .define("LUMINANCE_MAP_ENABLED", this.luminanceMap != null)
-            .define("INVERSE_LUMINANCE_MAP_ENABLED", this.inverseLuminanceMap != null)
+            .define("LUMINANCE_MAP_ENABLED", this.getLuminanceMapResources().getLuminanceMap() != null)
+            .define("INVERSE_LUMINANCE_MAP_ENABLED", this.getLuminanceMapResources().getInverseLuminanceMap() != null)
             .define("INFINITE_LIGHT_SOURCES", this.getViewSet().areLightSourcesInfinite())
             .define("VISIBILITY_TEST_ENABLED", this.depthTextures != null)
             .define("SHADOW_TEST_ENABLED", this.shadowTextures != null)
             .define("IMAGE_BASED_RENDERING_ENABLED", renderingMode.isImageBased())
-            .define("DIFFUSE_TEXTURE_ENABLED", this.diffuseTexture != null && renderingMode.useDiffuseTexture())
-            .define("SPECULAR_TEXTURE_ENABLED", this.specularTexture != null && renderingMode.useSpecularTextures())
-            .define("ROUGHNESS_TEXTURE_ENABLED", this.roughnessTexture != null && renderingMode.useSpecularTextures())
-            .define("NORMAL_TEXTURE_ENABLED", this.normalTexture != null && renderingMode.useNormalTexture());
+            .define("DIFFUSE_TEXTURE_ENABLED", this.getMaterialResources().getDiffuseTexture() != null && renderingMode.useDiffuseTexture())
+            .define("SPECULAR_TEXTURE_ENABLED", this.getMaterialResources().getSpecularTexture() != null && renderingMode.useSpecularTextures())
+            .define("ROUGHNESS_TEXTURE_ENABLED", this.getMaterialResources().getRoughnessTexture() != null && renderingMode.useSpecularTextures())
+            .define("NORMAL_TEXTURE_ENABLED", this.getMaterialResources().getNormalTexture() != null && renderingMode.useNormalTexture());
 
         return builder;
     }
@@ -511,60 +468,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     public ProgramBuilder<ContextType> getIBRShaderProgramBuilder()
     {
         return getIBRShaderProgramBuilder(StandardRenderingMode.IMAGE_BASED);
-    }
-
-    // TODO move outside this class
-    public static File findImageFile(File requestedFile) throws FileNotFoundException
-    {
-        if (requestedFile.exists())
-        {
-            return requestedFile;
-        }
-        else
-        {
-            // Try some alternate file formats/extensions
-            String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG" };
-            for(String extension : altFormats)
-            {
-                String[] filenameParts = requestedFile.getName().split("\\.");
-
-                String altFileName;
-                if (filenameParts.length > 1)
-                {
-                    filenameParts[filenameParts.length - 1] = extension;
-                    altFileName = String.join(".", filenameParts);
-                }
-                else
-                {
-                    altFileName = String.join(".", filenameParts[0], extension);
-                }
-
-                File imageFileGuess = new File(requestedFile.getParentFile(), altFileName);
-
-                System.out.printf("Trying '%s'\n", imageFileGuess.getAbsolutePath());
-                if (imageFileGuess.exists())
-                {
-                    System.out.printf("Found!!\n");
-                    return imageFileGuess;
-                }
-            }
-
-            // Is it still not there?
-            throw new FileNotFoundException(
-                String.format("'%s' not found.", requestedFile.getName()));
-        }
-    }
-
-    // TODO move to ViewSet?
-    /**
-     * Finds the image file for a particular view index.
-     * @param index The index of the view to find.
-     * @return The image file at the specified view index.
-     * @throws FileNotFoundException if the image file cannot be found.
-     */
-    public File findImageFile(int index) throws FileNotFoundException
-    {
-        return findImageFile(getViewSet().getImageFile(index));
     }
 
     private void updateShadowTextures() throws FileNotFoundException
@@ -614,30 +517,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     }
 
     /**
-     * Refresh the luminance map textures using the current values in the view set.
-     */
-    public void updateLuminanceMap()
-    {
-        if (luminanceMap != null)
-        {
-            luminanceMap.close();
-            luminanceMap = null;
-        }
-
-        if (inverseLuminanceMap != null)
-        {
-            inverseLuminanceMap.close();
-            inverseLuminanceMap = null;
-        }
-
-        if (getViewSet().hasCustomLuminanceEncoding())
-        {
-            luminanceMap = getViewSet().getLuminanceEncoding().createLuminanceMap(getContext());
-            inverseLuminanceMap = getViewSet().getLuminanceEncoding().createInverseLuminanceMap(getContext());
-        }
-    }
-
-    /**
      * Refresh the light data in the uniform buffers using the current values in the view set.
      */
     public void updateLightData()
@@ -664,24 +543,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * Gets the luminance map (the gamma decoding function) as a 1D texture.
-     * @return The 1D luminance map texture.
-     */
-    public Texture1D<ContextType> getLuminanceMap()
-    {
-        return luminanceMap;
-    }
-
-    /**
-     * Gets the inverse luminance map (the gamma encoding function) as a 1D texture.
-     * @return The 1D inverse luminance map texture.
-     */
-    public Texture1D<ContextType> getInverseLuminanceMap()
-    {
-        return inverseLuminanceMap;
     }
 
     private void setupCommon(Program<ContextType> program)
@@ -716,24 +577,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         program.setUniform("gamma", this.getViewSet().getGamma());
 
-        if (this.luminanceMap == null)
-        {
-            program.setTexture("luminanceMap", getContext().getTextureFactory().getNullTexture(SamplerType.FLOAT_1D));
-        }
-        else
-        {
-            program.setTexture("luminanceMap", this.luminanceMap);
-        }
-
-        if (this.inverseLuminanceMap == null)
-        {
-            program.setTexture("inverseLuminanceMap", getContext().getTextureFactory().getNullTexture(SamplerType.FLOAT_1D));
-        }
-        else
-        {
-            program.setTexture("inverseLuminanceMap", this.inverseLuminanceMap);
-        }
-
         if (this.depthTextures == null)
         {
             program.setTexture("depthImages", getContext().getTextureFactory().getNullTexture(SamplerType.FLOAT_2D_ARRAY));
@@ -767,42 +610,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     public void setupShaderProgram(Program<ContextType> program)
     {
         setupCommon(program);
-
-        if (this.normalTexture == null)
-        {
-            program.setTexture("normalMap", getContext().getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
-        }
-        else
-        {
-            program.setTexture("normalMap", this.normalTexture);
-        }
-
-        if (this.diffuseTexture == null)
-        {
-            program.setTexture("diffuseMap", getContext().getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
-        }
-        else
-        {
-            program.setTexture("diffuseMap", this.diffuseTexture);
-        }
-
-        if (this.specularTexture == null)
-        {
-            program.setTexture("specularMap", getContext().getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
-        }
-        else
-        {
-            program.setTexture("specularMap", this.specularTexture);
-        }
-
-        if (this.roughnessTexture == null)
-        {
-            program.setTexture("roughnessMap", getContext().getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
-        }
-        else
-        {
-            program.setTexture("roughnessMap", this.roughnessTexture);
-        }
+        getLuminanceMapResources().setupShaderProgram(program);
+        getMaterialResources().setupShaderProgram(program);
     }
 
     /**
@@ -1090,7 +899,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     public SingleCalibratedImageResource<ContextType> createSingleImageResource(int viewIndex, File imageFile, ReadonlyLoadOptionsModel loadOptions)
         throws IOException
     {
-        return new SingleCalibratedImageResource<ContextType>(getContext(), getViewSet(), viewIndex, imageFile, geometry, loadOptions);
+        return new SingleCalibratedImageResource<>(getContext(), getViewSet(), viewIndex, imageFile, geometry, loadOptions);
     }
 
     public ImageCache<ContextType> cache(ImageCacheSettings settings) throws IOException
@@ -1104,11 +913,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     public void close()
     {
         super.close();
-
-        if (this.cameraPoseBuffer != null)
-        {
-            this.cameraPoseBuffer.close();
-        }
 
         if (this.cameraProjectionBuffer != null)
         {
@@ -1130,29 +934,19 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             this.colorTextures.close();
         }
 
-        if (depthTextures != null)
+        if (this.depthTextures != null)
         {
-            depthTextures.close();
+            this.depthTextures.close();
         }
 
-        if (shadowTextures != null)
+        if (this.shadowTextures != null)
         {
-            shadowTextures.close();
+            this.shadowTextures.close();
         }
 
-        if (shadowMatrixBuffer != null)
+        if (this.shadowMatrixBuffer != null)
         {
-            shadowMatrixBuffer.close();
-        }
-
-        if (luminanceMap != null)
-        {
-            luminanceMap.close();
-        }
-
-        if (inverseLuminanceMap != null)
-        {
-            inverseLuminanceMap.close();
+            this.shadowMatrixBuffer.close();
         }
     }
 }

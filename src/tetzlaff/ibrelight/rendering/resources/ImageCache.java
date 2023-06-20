@@ -250,7 +250,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
                 try (SingleCalibratedImageResource<ContextType> image =
                     resources.createSingleImageResource(k,
                         // TODO: use specified originalImageDirectory; need to handle search for different file extensions; jpg/png/tiff/etc.
-                        resources.findImageFile(k), // new File(originalImageDirectory, resources.viewSet.getImageFileName(k)),
+                        resources.getViewSet().findImageFile(k), // new File(originalImageDirectory, resources.viewSet.getImageFileName(k)),
                         loadOptions))
                 {
                     fbo.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);

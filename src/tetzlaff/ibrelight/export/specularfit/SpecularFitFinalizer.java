@@ -132,7 +132,7 @@ public class SpecularFitFinalizer
     public <ContextType extends Context<ContextType>> void validateNormalMap(
         IBRResourcesImageSpace<ContextType> resources, SpecularFitFromOptimization<ContextType> specularFit, PrintStream rmseOut)
     {
-        if (CALCULATE_NORMAL_RMSE && resources.normalTexture != null)
+        if (CALCULATE_NORMAL_RMSE && resources.getMaterialResources().getNormalTexture() != null)
         {
             try (Program<ContextType> textureRectProgram = resources.getContext().getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
@@ -143,7 +143,7 @@ public class SpecularFitFinalizer
             {
                 // Use the real geometry rather than a rectangle so that the normal map is masked properly for the part of the normal map used.
                 Drawable<ContextType> textureRect = resources.createDrawable(textureRectProgram);
-                textureRectProgram.setTexture("tex", resources.normalTexture);
+                textureRectProgram.setTexture("tex", resources.getMaterialResources().getNormalTexture());
                 textureRectFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
                 textureRect.draw(PrimitiveMode.TRIANGLE_FAN, textureRectFBO);
 //                    textureRectFBO.saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "test_normalGT.png"));

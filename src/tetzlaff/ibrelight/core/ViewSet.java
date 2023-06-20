@@ -26,6 +26,7 @@ import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
+import tetzlaff.util.ImageFinder;
 
 /**
  * A class representing a collection of photographs, or views.
@@ -1555,5 +1556,26 @@ public final class ViewSet
     public void setInfiniteLightSources(boolean infiniteLightSources)
     {
         this.infiniteLightSources = infiniteLightSources;
+    }
+
+    /**
+     * Finds the image file for a particular view index.
+     * @param index The index of the view to find.
+     * @return The image file at the specified view index.
+     * @throws FileNotFoundException if the image file cannot be found.
+     */
+    public File findImageFile(int index) throws FileNotFoundException
+    {
+        return ImageFinder.getInstance().findImageFile(getImageFile(index));
+    }
+
+    /**
+     * Finds the image file for the primary view index.
+     * @return The image file at the primary view index.
+     * @throws FileNotFoundException if the image file cannot be found.
+     */
+    public File findPrimaryImageFile() throws FileNotFoundException
+    {
+        return findImageFile(getPrimaryViewIndex());
     }
 }

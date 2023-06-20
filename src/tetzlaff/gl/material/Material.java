@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import tetzlaff.gl.core.Context;
 import tetzlaff.gl.vecmath.Vector3;
 
 public class Material 
@@ -173,7 +174,7 @@ public class Material
                                     {
                                         translucencyMap.setChannel(MaterialTextureChannel.Luminance);
                                     }
-                                    currentMaterial.setTransparencyMap(translucencyMap);
+                                    currentMaterial.setTranslucencyMap(translucencyMap);
                                     currentMaterial.setOpacityMap(null);
                                     break;
                                 case "map_ns":
@@ -849,5 +850,11 @@ public class Material
     public void setDisplacementMap(MaterialScalarMap displacmentMap)
     {
         this.displacementMap = displacmentMap;
+    }
+
+    public <ContextType extends Context<ContextType>> MaterialResources<ContextType> createResources(
+            ContextType context, File textureDirectory, MaterialResources.MaterialLoadOptions loadOptions) throws IOException
+    {
+        return new MaterialResources<>(context, this, textureDirectory, loadOptions);
     }
 }

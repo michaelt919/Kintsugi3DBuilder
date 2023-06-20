@@ -26,6 +26,7 @@ import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
+import tetzlaff.util.ImageFinder;
 
 public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -107,7 +108,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         // Tonemap ground truth image
         try (Texture2D<ContextType> groundTruthTex =
             groundTruthProgram.getContext().getTextureFactory()
-                .build2DColorTextureFromFile(IBRResourcesImageSpace.findImageFile(viewSet.getImageFile(viewIndex)), true)
+                .build2DColorTextureFromFile(viewSet.findImageFile(viewIndex), true)
                 .setLinearFilteringEnabled(true)
                 .setMipmapsEnabled(true)
                 .createTexture())
