@@ -11,19 +11,16 @@
 
 package tetzlaff.ibrelight.rendering.resources;
 
-import java.io.File;
 import java.io.IOException;
 
-import tetzlaff.gl.builders.ColorTextureBuilder;
+import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.material.*;
-import tetzlaff.gl.material.MaterialResources.MaterialLoadOptions;
-import tetzlaff.gl.nativebuffer.NativeDataType;
+import tetzlaff.gl.material.TextureLoadOptions;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
-import tetzlaff.gl.types.AbstractDataTypeFactory;
-import tetzlaff.gl.vecmath.IntVector3;
 import tetzlaff.ibrelight.core.LoadingMonitor;
 import tetzlaff.ibrelight.core.ReadonlyLoadOptionsModel;
+import tetzlaff.ibrelight.core.StandardRenderingMode;
 import tetzlaff.ibrelight.core.ViewSet;
 
 abstract class IBRResourcesBase<ContextType extends Context<ContextType>> implements IBRResources<ContextType>
@@ -67,8 +64,7 @@ abstract class IBRResourcesBase<ContextType extends Context<ContextType>> implem
 
     private final float[] cameraWeights;
 
-    protected IBRResourcesBase(ContextType context, ViewSet viewSet, float[] cameraWeights, Material material,
-        ReadonlyLoadOptionsModel loadOptions, LoadingMonitor loadingMonitor)
+    protected IBRResourcesBase(ContextType context, ViewSet viewSet, float[] cameraWeights, Material material, TextureLoadOptions loadOptions)
         throws IOException
     {
         this.context = context;
@@ -173,7 +169,7 @@ abstract class IBRResourcesBase<ContextType extends Context<ContextType>> implem
                     material.setRoughnessMap(roughnessMap);
                 }
 
-                MaterialLoadOptions mtlLoadOptions = new MaterialLoadOptions();
+                TextureLoadOptions mtlLoadOptions = new TextureLoadOptions();
                 mtlLoadOptions.setCompressionRequested(loadOptions.isCompressionRequested());
                 mtlLoadOptions.setMipmapsRequested(loadOptions.areMipmapsRequested());
                 materialResources = material.createResources(context, viewSet.getGeometryFile().getParentFile(), mtlLoadOptions);
@@ -233,6 +229,68 @@ abstract class IBRResourcesBase<ContextType extends Context<ContextType>> implem
     public void updateLuminanceMap()
     {
         luminanceMapResources.update(viewSet.hasCustomLuminanceEncoding() ? viewSet.getLuminanceEncoding() : null);
+    }
+
+    /**
+     * Gets a shader program builder with the following preprocessor defines automatically injected based on the
+     * characteristics of this instance:
+     * <ul>
+     *     <li>CAMERA_POSE_COUNT</li>
+     *     <li>LIGHT_COUNT</li>
+     *     <li>LUMINANCE_MAP_ENABLED</li>
+     *     <li>INVERSE_LUMINANCE_MAP_ENABLED</li>
+     *     <li>INFINITE_LIGHT_SOURCES</li>
+     *     <li>IMAGE_BASED_RENDERING_ENABLED</li>
+     *     <li>DIFFUSE_TEXTURE_ENABLED</li>
+     *     <li>SPECULAR_TEXTURE_ENABLED</li>
+     *     <li>ROUGHNESS_TEXTURE_ENABLED</li>
+     *     <li>NORMAL_TEXTURE_ENABLED</li>
+     * </ul>
+     *
+     * @param renderingMode The rendering mode to use, which may change some of the preprocessor defines.
+     * @return A program builder with all of the above preprocessor defines specified, ready to have the
+     * vertex and fragment shaders added as well as any additional application-specific preprocessor definitions.
+     */
+    @Override
+    public ProgramBuilder<ContextType> getShaderProgramBuilder(StandardRenderingMode renderingMode)
+    {
+        return context.getShaderProgramBuilder()
+            .define("CAMERA_POSE_COUNT", viewSet.getCameraPoseCount())
+            .define("LIGHT_COUNT", viewSet.getLightCount())
+            .define("INFINITE_LIGHT_SOURCES", viewSet.areLightSourcesInfinite())
+            .define("LUMINANCE_MAP_ENABLED", luminanceMapResources.getLuminanceMap() != null)
+            .define("INVERSE_LUMINANCE_MAP_ENABLED", luminanceMapResources.getInverseLuminanceMap() != null)
+            .define("IMAGE_BASED_RENDERING_ENABLED", renderingMode.isImageBased())
+            .define("DIFFUSE_TEXTURE_ENABLED", materialResources.getDiffuseTexture() != null && renderingMode.useDiffuseTexture())
+            .define("SPECULAR_TEXTURE_ENABLED", materialResources.getSpecularTexture() != null && renderingMode.useSpecularTextures())
+            .define("ROUGHNESS_TEXTURE_ENABLED", materialResources.getRoughnessTexture() != null && renderingMode.useSpecularTextures())
+            .define("NORMAL_TEXTURE_ENABLED", materialResources.getNormalTexture() != null && renderingMode.useNormalTexture());
+    }
+
+    @Override
+    public void setupShaderProgram(Program<ContextType> program)
+    {
+        if (this.cameraWeightBuffer != null)
+        {
+            program.setUniformBuffer("CameraWeights", this.cameraWeightBuffer);
+        }
+
+        if (this.cameraPoseBuffer != null)
+        {
+            program.setUniformBuffer("CameraPoses", this.cameraPoseBuffer);
+        }
+
+        if (this.lightPositionBuffer != null && this.lightIntensityBuffer != null && this.lightIndexBuffer != null)
+        {
+            program.setUniformBuffer("LightPositions", this.lightPositionBuffer);
+            program.setUniformBuffer("LightIntensities", this.lightIntensityBuffer);
+            program.setUniformBuffer("LightIndices", this.lightIndexBuffer);
+        }
+
+        program.setUniform("gamma", this.getViewSet().getGamma());
+
+        getLuminanceMapResources().setupShaderProgram(program);
+        getMaterialResources().setupShaderProgram(program);
     }
 
     @Override

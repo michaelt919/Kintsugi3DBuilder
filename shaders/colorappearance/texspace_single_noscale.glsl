@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2022
+ *  Copyright (c) Michael Tetzlaff 2023
  *  Copyright (c) The Regents of the University of Minnesota 2019
  *
  *  Licensed under GPLv3
@@ -10,31 +10,18 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-#ifndef USE_DEFERRED_GLSL
-#define USE_DEFERRED_GLSL
+#ifndef TEXSPACE_SINGLE_GLSL
+#define TEXSPACE_SINGLE_GLSL
 
-#line 17 9901
+#include "colorappearance_single.glsl"
 
-uniform sampler2D positionMap;
-uniform sampler2D normalMap;
+#line 19 1112
 
-vec3 getPosition(vec2 texCoord)
+uniform sampler2D viewImage;
+
+vec4 getColor()
 {
-    return texture(positionMap, texCoord).xyz;
+    return texture(viewImage, fTexCoord);
 }
 
-vec3 getNormal(vec2 texCoord)
-{
-    vec3 normal = texture(normalMap, texCoord).xyz;
-
-    if (normal == vec3(0))
-    {
-        return vec3(0);
-    }
-    else
-    {
-        return normalize(normal);
-    }
-}
-
-#endif // USE_DEFERRED_GLSL
+#endif // TEXSPACE_SINGLE_GLSL

@@ -14,6 +14,7 @@ package tetzlaff.ibrelight.core;//Created by alexk on 7/31/2017.
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.core.ColorFormat;
 import tetzlaff.gl.core.CompressionFormat;
+import tetzlaff.gl.material.TextureLoadOptions;
 
 public interface ReadonlyLoadOptionsModel
 {
@@ -24,6 +25,14 @@ public interface ReadonlyLoadOptionsModel
     boolean areDepthImagesRequested();
     int getDepthImageWidth();
     int getDepthImageHeight();
+
+    default TextureLoadOptions getTextureLoadOptions()
+    {
+        TextureLoadOptions options = new TextureLoadOptions();
+        options.setMipmapsRequested(areMipmapsRequested());
+        options.setCompressionRequested(isCompressionRequested());
+        return options;
+    }
 
     default <BuilderType extends ColorTextureBuilder<?,?>> void configureColorTextureBuilder(BuilderType colorTextureBuilder)
     {

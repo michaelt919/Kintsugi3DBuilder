@@ -22,7 +22,6 @@ import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Program;
 import tetzlaff.gl.core.ShaderType;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
-import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 
 public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
 {
@@ -37,7 +36,7 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
 
     public ProgramBuilder<ContextType> getShaderProgramBuilder(File vertexShader, File fragmentShader, boolean visibilityAndShadowTests)
     {
-        ProgramBuilder<ContextType> builder = resources.getIBRShaderProgramBuilder()
+        ProgramBuilder<ContextType> builder = resources.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, vertexShader)
             .addShader(ShaderType.FRAGMENT, fragmentShader);
 

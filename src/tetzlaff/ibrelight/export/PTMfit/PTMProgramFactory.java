@@ -31,7 +31,7 @@ public class PTMProgramFactory <ContextType extends Context<ContextType>>
     }
     public ProgramBuilder<ContextType> getShaderProgramBuilder(File vertexShader, File fragmentShader, boolean visibilityAndShadowTests)
     {
-        return resources.getIBRShaderProgramBuilder()
+        return resources.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, vertexShader)
                 .addShader(ShaderType.FRAGMENT, fragmentShader)
                 .define("VISIBILITY_TEST_ENABLED",

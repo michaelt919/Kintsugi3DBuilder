@@ -853,7 +853,7 @@ public class Material
     }
 
     public <ContextType extends Context<ContextType>> MaterialResources<ContextType> createResources(
-            ContextType context, File textureDirectory, MaterialResources.MaterialLoadOptions loadOptions) throws IOException
+            ContextType context, File textureDirectory, TextureLoadOptions loadOptions) throws IOException
     {
         return new MaterialResources<>(context, this, textureDirectory, loadOptions);
     }

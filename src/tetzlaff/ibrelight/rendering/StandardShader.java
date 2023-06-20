@@ -75,7 +75,7 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
 
     private ProgramBuilder<ContextType> getProgramBuilder(Map<String, Optional<Object>> defineMap, StandardRenderingMode renderingMode)
     {
-        ProgramBuilder<ContextType> programBuilder = resources.getIBRShaderProgramBuilder(renderingMode);
+        ProgramBuilder<ContextType> programBuilder = resources.getShaderProgramBuilder(renderingMode);
 
         for (Map.Entry<String, Optional<Object>> defineEntry : defineMap.entrySet())
         {

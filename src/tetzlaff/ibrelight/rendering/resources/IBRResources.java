@@ -39,28 +39,47 @@ public interface IBRResources<ContextType extends Context<ContextType>> extends 
      */
     float getCameraWeight(int index);
 
-    ProgramBuilder<ContextType> getIBRShaderProgramBuilder(StandardRenderingMode renderingMode);
-    ProgramBuilder<ContextType> getIBRShaderProgramBuilder();
+
+    /**
+     * Gets a shader program builder with any required preprocessor defines automatically injected based on the
+     * characteristics of this instance.
+     * @param renderingMode The rendering mode to use, which may change some of the preprocessor defines.
+     * @return A program builder with preprocessor defines specified, ready to have the vertex and fragment shaders
+     * added as well as any additional application-specific preprocessor definitions.
+     */
+    ProgramBuilder<ContextType> getShaderProgramBuilder(StandardRenderingMode renderingMode);
+
+
+    /**
+     * Gets a shader program builder with preprocessor defines automatically injected based on the
+     * characteristics of this instance.
+     * This overload uses the default mode of RenderingMode.IMAGE_BASED.
+     * @return A program builder with preprocessor defines specified, ready to have the vertex and fragment shaders
+     * added as well as any additional application-specific preprocessor definitions.
+     */
+    default ProgramBuilder<ContextType> getShaderProgramBuilder()
+    {
+        return getShaderProgramBuilder(StandardRenderingMode.IMAGE_BASED);
+    }
+
+    /**
+     * Sets up a shader program to use this instance's IBR resources.
+     * While the geometry is generally associated with a Drawable using the createDrawable function,
+     * this method binds all of the textures and associated data like camera poses, light positions, etc.
+     * to the shader program's uniform variables.
+     * @param program The shader program to set up using this instance's resources.
+     */
     void setupShaderProgram(Program<ContextType> program);
+
+    /**
+     * Creates a Drawable using this instance's geometry resources, and the specified shader program.
+     * @param program The program to use to construct the Drawable.
+     * @return A Drawable for rendering this instance using the specified shader program.
+     */
     Drawable<ContextType> createDrawable(Program<ContextType> program);
-    GraphicsStream<ColorList[]> stream(
-        Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int attachmentCount);
-    GraphicsStream<ColorList> stream(
-        Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer);
-    GraphicsStreamResource<ContextType> streamAsResource(
-        ProgramBuilder<ContextType> programBuilder,
-        FramebufferObjectBuilder<ContextType> framebufferBuilder) throws FileNotFoundException;
-    GraphicsStream<ColorList[]> parallelStream(
-        Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int attachmentCount, int maxRunningThreads);
-    GraphicsStream<ColorList[]> parallelStream(
-        Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int attachmentCount);
-    GraphicsStream<ColorList> parallelStream(
-        Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer);
-    GraphicsStreamResource<ContextType> parallelStreamAsResource(
-        ProgramBuilder<ContextType> programBuilder,
-        FramebufferObjectBuilder<ContextType> framebufferBuilder,
-        int maxRunningThreads) throws FileNotFoundException;
-    GraphicsStreamResource<ContextType> parallelStreamAsResource(
-        ProgramBuilder<ContextType> programBuilder,
-        FramebufferObjectBuilder<ContextType> framebufferBuilder) throws FileNotFoundException;
+
+    default GraphicsStreamFactory<ContextType> streamFactory()
+    {
+        return new GraphicsStreamFactory<>(this);
+    }
 }

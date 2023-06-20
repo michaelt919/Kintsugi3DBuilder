@@ -14,6 +14,7 @@ package tetzlaff.ibrelight.export.PTMfit;
 import org.ejml.data.SingularMatrixException;
 import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.builders.ProgramBuilder;
+import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 
@@ -51,7 +52,7 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
 
         PTMProgramFactory<ContextType> programFactory = new PTMProgramFactory<>(resources);
         try(
-            GraphicsStreamResource<ContextType> luminanceStream = resources.streamAsResource(
+            GraphicsStreamResource<ContextType> luminanceStream = resources.streamFactory().streamAsResource(
                 getLuminanceProgramBuilder(programFactory),
                 context.buildFramebufferObject(settings.width, settings.height)
                     .addColorAttachment(ColorFormat.RGBA32F)

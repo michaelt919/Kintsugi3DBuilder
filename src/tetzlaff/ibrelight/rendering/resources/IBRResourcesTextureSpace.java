@@ -11,8 +11,84 @@
 
 package tetzlaff.ibrelight.rendering.resources;
 
-import tetzlaff.gl.core.Context;
+import tetzlaff.gl.builders.ProgramBuilder;
+import tetzlaff.gl.core.*;
+import tetzlaff.gl.geometry.GeometryResources;
+import tetzlaff.gl.geometry.GeometryTextures;
+import tetzlaff.gl.material.TextureLoadOptions;
+import tetzlaff.ibrelight.core.LoadingMonitor;
+import tetzlaff.ibrelight.core.StandardRenderingMode;
+import tetzlaff.ibrelight.core.ViewSet;
+
+import java.io.IOException;
 
 public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> extends IBRResourcesBase<ContextType>
 {
+    /**
+     * Array of image data pre-projected into texture space
+     */
+    private Texture3D<ContextType> textureArray;
+
+    /**
+     * Simple rectangle for draw calls
+     */
+    private VertexBuffer<ContextType> rectangle;
+
+    /**
+     * Textures storing pre-computed geometry information per-texel
+     */
+    private GeometryTextures<ContextType> geometryTextures;
+
+    protected IBRResourcesTextureSpace(
+            ContextType context, ViewSet viewSet, float[] cameraWeights, GeometryResources<ContextType> geometryResources,
+            TextureLoadOptions loadOptions, int texWidth, int texHeight, LoadingMonitor loadingMonitor) throws IOException
+    {
+        super(context, viewSet, cameraWeights, geometryResources.geometry.getMaterial(), loadOptions);
+
+        // Deferred rendering: draw to geometry textures initially and then just draw using a rectangle and
+        // the geometry info cached in the textures
+        geometryTextures = geometryResources.createGeometryFramebuffer(texWidth, texHeight);
+        rectangle = context.createRectangle();
+    }
+
+    @Override
+    public ProgramBuilder<ContextType> getShaderProgramBuilder(StandardRenderingMode renderingMode)
+    {
+        return super.getShaderProgramBuilder(renderingMode)
+            .define("GEOMETRY_TEXTURES_ENABLED", true);
+    }
+
+    @Override
+    public void setupShaderProgram(Program<ContextType> program)
+    {
+        super.setupShaderProgram(program);
+        program.setTexture("positionTex", geometryTextures.getPositionTexture());
+        program.setTexture("normalTex", geometryTextures.getNormalTexture());
+        program.setTexture("tangentTex", geometryTextures.getTangentTexture());
+        program.setTexture("viewImages", textureArray);
+    }
+
+    @Override
+    public Drawable<ContextType> createDrawable(Program<ContextType> program)
+    {
+        Drawable<ContextType> drawable = getContext().createDrawable(program);
+        drawable.addVertexBuffer("position", rectangle);
+        return drawable;
+    }
+
+    @Override
+    public void close()
+    {
+        if (this.geometryTextures != null)
+        {
+            this.geometryTextures.close();
+            this.geometryTextures = null;
+        }
+
+        if (this.rectangle != null)
+        {
+            this.rectangle.close();
+            this.rectangle = null;
+        }
+    }
 }

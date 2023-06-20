@@ -19,6 +19,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 import tetzlaff.gl.builders.ProgramBuilder;
+import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.Projection;
 import tetzlaff.ibrelight.core.ViewSet;
@@ -106,7 +107,7 @@ public class SpecularOptimization
         try
         (
             // Reflectance stream: includes a shader program and a framebuffer object for extracting reflectance data from images.
-            GraphicsStreamResource<ContextType> reflectanceStream = resources.streamAsResource(
+            GraphicsStreamResource<ContextType> reflectanceStream = resources.streamFactory().streamAsResource(
                 getReflectanceProgramBuilder(programFactory),
                 context.buildFramebufferObject(settings.width, settings.height)
                     .addColorAttachment(ColorFormat.RGBA32F)
@@ -117,10 +118,10 @@ public class SpecularOptimization
 
             // Framebuffer for calculating error and reconstructing 3D renderings of the object
             FramebufferObject<ContextType> scratchFramebuffer =
-                context.buildFramebufferObject(imageWidth, imageHeight)
-                    .addColorAttachment(ColorFormat.RGBA32F)
-                    .addDepthAttachment()
-                    .createFramebufferObject()
+            context.buildFramebufferObject(imageWidth, imageHeight)
+                .addColorAttachment(ColorFormat.RGBA32F)
+                .addDepthAttachment()
+                .createFramebufferObject()
         )
         {
             // Setup reflectance extraction program

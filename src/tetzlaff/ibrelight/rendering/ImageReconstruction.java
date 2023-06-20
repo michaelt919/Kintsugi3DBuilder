@@ -25,8 +25,6 @@ import tetzlaff.gl.vecmath.DoubleVector2;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
-import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
-import tetzlaff.util.ImageFinder;
 
 public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -47,7 +45,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         programSetup.accept(program);
         this.drawable = resources.createDrawable(program);
 
-        this.groundTruthProgram = resources.getIBRShaderProgramBuilder()
+        this.groundTruthProgram = resources.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/colorappearance/tonemap.frag"))
             .createProgram();

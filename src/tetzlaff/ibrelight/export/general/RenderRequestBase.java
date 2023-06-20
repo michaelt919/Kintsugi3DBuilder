@@ -147,7 +147,7 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
     Program<ContextType> createProgram(IBRResourcesImageSpace<ContextType> resources) throws FileNotFoundException
     {
         Program<ContextType> program =
-            resources.getIBRShaderProgramBuilder(this.settingsModel.get("renderingMode", StandardRenderingMode.class))
+            resources.getShaderProgramBuilder(this.settingsModel.get("renderingMode", StandardRenderingMode.class))
                 .define("VISIBILITY_TEST_ENABLED", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"))
                 .define("SHADOW_TEST_ENABLED", resources.shadowTextures != null && this.settingsModel.getBoolean("occlusionEnabled"))
                 .define("PHYSICALLY_BASED_MASKING_SHADOWING", this.settingsModel.getBoolean("pbrGeometricAttenuationEnabled"))
