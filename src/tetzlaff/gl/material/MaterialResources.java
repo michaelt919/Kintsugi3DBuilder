@@ -98,7 +98,7 @@ public class MaterialResources<ContextType extends Context<ContextType>> impleme
 
             diffuseTexture = diffuseTextureBuilder
                     .setMipmapsEnabled(loadOptions.areMipmapsRequested())
-                    .setLinearFilteringEnabled(true)
+                    .setLinearFilteringEnabled(loadOptions.isLinearFilteringRequested())
                     .createTexture();
         }
         else
@@ -124,7 +124,7 @@ public class MaterialResources<ContextType extends Context<ContextType>> impleme
 
             normalTexture = normalTextureBuilder
                     .setMipmapsEnabled(loadOptions.areMipmapsRequested())
-                    .setLinearFilteringEnabled(true)
+                    .setLinearFilteringEnabled(loadOptions.isLinearFilteringRequested())
                     .createTexture();
         }
         else
@@ -149,7 +149,7 @@ public class MaterialResources<ContextType extends Context<ContextType>> impleme
 
             specularTexture = specularTextureBuilder
                     .setMipmapsEnabled(loadOptions.areMipmapsRequested())
-                    .setLinearFilteringEnabled(true)
+                    .setLinearFilteringEnabled(loadOptions.isLinearFilteringRequested())
                     .createTexture();
         }
         else
@@ -161,22 +161,20 @@ public class MaterialResources<ContextType extends Context<ContextType>> impleme
         if (roughnessFile.exists())
         {
             System.out.println("Roughness texture found.");
-            ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> roughnessTextureBuilder;
-
-            roughnessTextureBuilder =
-                context.getTextureFactory().build2DColorTextureFromFile(roughnessFile, true,
-                    AbstractDataTypeFactory.getInstance().getMultiComponentDataType(NativeDataType.UNSIGNED_BYTE, 3),
-                    color -> new IntVector3(
-                        (int) Math.max(0, Math.min(255, Math.round(
-                            (Math.max(-15.0, Math.min(15.0, (color.getRed() - color.getGreen()) * 30.0 / 255.0)) + 16.0) * 255.0 / 31.0))),
-                        color.getGreen(),
-                        (int) Math.max(0, Math.min(255, Math.round(
-                            (Math.max(-15.0, Math.min(15.0, (color.getBlue() - color.getGreen()) * 30.0 / 255.0)) + 16.0) * 255.0 / 31.0)))));
-            roughnessTextureBuilder.setInternalFormat(ColorFormat.RGB8);
+            ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> roughnessTextureBuilder
+                = context.getTextureFactory().build2DColorTextureFromFile(roughnessFile, true);
+            if (loadOptions.isCompressionRequested())
+            {
+                roughnessTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
+            }
+            else
+            {
+                roughnessTextureBuilder.setInternalFormat(ColorFormat.RGB8);
+            }
 
             roughnessTexture = roughnessTextureBuilder
                     .setMipmapsEnabled(loadOptions.areMipmapsRequested())
-                    .setLinearFilteringEnabled(true)
+                    .setLinearFilteringEnabled(loadOptions.isLinearFilteringRequested())
                     .createTexture();
         }
         else

@@ -110,7 +110,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             litRoot = new LitRoot<>(context, sceneModel);
             litRoot.takeLitContentRoot(new StandardScene<>(resources, sceneModel, sceneViewportModel));
             litRoot.initialize();
-            litRoot.setShadowCaster(resources.geometryResources.positionBuffer);
+            litRoot.setShadowCaster(resources.getGeometryResources().positionBuffer);
 
             this.dynamicResourceLoader = new DynamicResourceLoader<>(loadingMonitor, resources, litRoot.getLightingResources());
 
@@ -170,9 +170,12 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
     private void updateWorldSpaceDefinition()
     {
-        sceneModel.setScale(resources.geometry.getBoundingRadius() * 2);
-        sceneModel.setOrientation(resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex()).getUpperLeft3x3());
-        sceneModel.setCentroid(resources.geometry.getCentroid());
+        if (resources.getGeometryResources().geometry != null)
+        {
+            sceneModel.setScale(resources.getGeometryResources().geometry.getBoundingRadius() * 2);
+            sceneModel.setOrientation(resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex()).getUpperLeft3x3());
+            sceneModel.setCentroid(resources.getGeometryResources().geometry.getCentroid());
+        }
     }
 
     private Matrix4 getProjectionMatrix(FramebufferSize size)
@@ -330,7 +333,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     @Override
     public VertexGeometry getActiveGeometry()
     {
-        return this.resources.geometry;
+        return this.resources.getGeometryResources().geometry;
     }
 
     @Override

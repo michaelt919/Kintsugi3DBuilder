@@ -25,6 +25,7 @@ import tetzlaff.gl.core.*;
 import tetzlaff.gl.geometry.GeometryFramebuffer;
 import tetzlaff.gl.geometry.GeometryTextures;
 import tetzlaff.gl.geometry.GeometryTexturesNonRendered;
+import tetzlaff.gl.material.TextureLoadOptions;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
@@ -72,13 +73,13 @@ public class ImageCache<ContextType extends Context<ContextType>>
         }
     }
 
-    private File getChunkDir(int i, int j)
+    private File getBlockDir(int i, int j)
     {
         return new File(settings.getCacheDirectory(), String.format("%d_%d", i, j));
     }
 
     /**
-     * Initializes the cache by loading each image one at a time and writing out texture space chunks as well as a "sampled" low-res texture for each image
+     * Initializes the cache by loading each image one at a time and writing out texture space blocks as well as a "sampled" low-res texture for each image
      * As a side effect of this method, the context's state will have back face culling enabled,
      * @throws IOException
      */
@@ -94,7 +95,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         {
             for (int j = 0; j < settings.getTextureSubdiv(); j++)
             {
-                getChunkDir(i, j).mkdirs();
+                getBlockDir(i, j).mkdirs();
             }
         }
 
@@ -265,7 +266,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
                     int x = 0;
                     int y = 0;
 
-                    // Generate chunk images
+                    // Generate block images
                     // Loop over "columns"
                     for (int i = 0; i < settings.getTextureSubdiv(); i++)
                     {
@@ -295,22 +296,22 @@ public class ImageCache<ContextType extends Context<ContextType>>
                             int height = yNext - y;
 
                             // Read pixels from the framebuffer
-                            int[] chunk = fbo.readColorBufferARGB(0, x, y, width, height);
-                            BufferedImage chunkImage = BufferedImageBuilder.build()
-                                .setDataFromArray(chunk, width, height)
+                            int[] block = fbo.readColorBufferARGB(0, x, y, width, height);
+                            BufferedImage blockImage = BufferedImageBuilder.build()
+                                .setDataFromArray(block, width, height)
                                 .flipVertical()
                                 .create();
-                            chunkImage.setRGB(0, 0, width, height, chunk, 0, width);
+                            blockImage.setRGB(0, 0, width, height, block, 0, width);
 
-                            // Write the chunk image out to disk
-                            ImageIO.write(chunkImage, "PNG",
+                            // Write the block image out to disk
+                            ImageIO.write(blockImage, "PNG",
                                 new File(new File(settings.getCacheDirectory(), String.format("%d_%d", i, j)), pngFilename));
 
                             // See derivations for x above
                             int ySampleStart = (int) Math.ceil((double) (y + 0.5) * (double) settings.getSampledSize() / (double) settings.getTextureHeight()) - 1;
                             int ySampleEnd = (int) Math.ceil((double) (yNext - 0.5) * (double) settings.getSampledSize() / (double) settings.getTextureHeight());
 
-                            // Fill in any pixels in the "sampled" image that come from this chunk, using the pixel coordinates selected randomly earlier.
+                            // Fill in any pixels in the "sampled" image that come from this block, using the pixel coordinates selected randomly earlier.
                             for (int xSample = xSampleStart; xSample < xSampleEnd; xSample++)
                             {
                                 for (int ySample = ySampleStart; ySample < ySampleEnd; ySample++)
@@ -318,11 +319,11 @@ public class ImageCache<ContextType extends Context<ContextType>>
                                     // Copy the randomly selected pixel into the sampled image.
                                     IntVector2 coords = sampledPixelCoords[xSample][ySample];
 
-                                    // due to randomness, no guarantee that all coords are in this chunk
+                                    // due to randomness, no guarantee that all coords are in this block
                                     if (coords.x >= x && coords.x < xNext && coords.y >= y && coords.y < yNext)
                                     {
-                                        // Make sure to account for the start of the chunk to avoid out-of-bounds indices after the first chunk
-                                        sampled.setRGB(xSample, ySample, chunkImage.getRGB(coords.x - x, coords.y - y));
+                                        // Make sure to account for the start of the block to avoid out-of-bounds indices after the first block
+                                        sampled.setRGB(xSample, ySample, blockImage.getRGB(coords.x - x, coords.y - y));
                                     }
                                 }
                             }
@@ -342,81 +343,42 @@ public class ImageCache<ContextType extends Context<ContextType>>
         }
     }
 
+    public IBRResources<ContextType> createSampledResources() throws IOException
+    {
+        TextureLoadOptions loadOptions = new TextureLoadOptions();
+        loadOptions.setLinearFilteringRequested(false);
+        loadOptions.setMipmapsRequested(false);
+        loadOptions.setCompressionRequested(false);
+
+        return new IBRResourcesTextureSpace<>(resources.getSharedResources(), this::createSampledGeometryTextures,
+            sampledDir, loadOptions, settings.getSampledSize(), settings.getSampledSize(), null);
+    }
+
+    /**
+     *
+     * @param i The first coordinate of the block
+     * @param j The second coordinate of the block
+     * @return
+     * @throws IOException
+     */
+    public IBRResources<ContextType> createBlockResources(int i, int j) throws IOException
+    {
+        TextureLoadOptions loadOptions = new TextureLoadOptions();
+        loadOptions.setLinearFilteringRequested(false);
+        loadOptions.setMipmapsRequested(false);
+        loadOptions.setCompressionRequested(false);
+
+
+        // TODO: Not done; will also need to only use a part of the geometry textures
+        return new IBRResourcesTextureSpace<>(resources.getSharedResources(), getBlockDir(i, j),
+                loadOptions, settings.getSampledSize(), settings.getSampledSize(), null);
+    }
+
     private int getHighResIndexForSample(int sampleIndex)
     {
         // Figure out which pixels in the high-res image are being used in the sampled image
         IntVector2 highResCoords = sampledPixelCoords[sampleIndex % settings.getSampledSize()][sampleIndex / settings.getSampledSize()];
         return highResCoords.x + highResCoords.y * settings.getTextureWidth();
-    }
-
-    public Texture3D<ContextType> createSampledTextureArray() throws IOException
-    {
-        Texture3D<ContextType> textureArray = context.getTextureFactory()
-            .build2DColorTextureArray(settings.getSampledSize(), settings.getSampledSize(), resources.getViewSet().getCameraPoseCount())
-            .setLinearFilteringEnabled(false)
-            .setMipmapsEnabled(false)
-//            .setInternalFormat(ColorFormat.RGBA32F)
-            .setInternalFormat(ColorFormat.RGBA8)
-            .createTexture();
-
-        // TODO: If the radiance stuff in here is really not needed, delete incidentRadiance.frag
-//        try
-//        (
-//            Program<ContextType> radianceProgram = resources.getIBRShaderProgramBuilder()
-//                .addShader(ShaderType.VERTEX, "shaders/common/texspace_noscale.vert")
-//                .addShader(ShaderType.FRAGMENT, "shaders/specularfit/incidentRadiance.frag")
-//                .createProgram();
-//
-//            // Framebuffer to calculate incident radiance at full resolution
-//            FramebufferObject<ContextType> highResFBO = context.buildFramebufferObject(settings.getTextureWidth(), settings.getTextureHeight())
-//                .addColorAttachment(ColorFormat.RGB32F)
-//                .createFramebufferObject();
-//        )
-//        {
-//            Drawable<ContextType> radianceDrawable = resources.createDrawable(radianceProgram);
-
-            // Iterate over the layers to load in the texture array
-            for (int k = 0; k < resources.getViewSet().getCameraPoseCount(); k++)
-            {
-                textureArray.loadLayer(k, new File(sampledDir, getPNGFilename(k)), true);
-
-//                // Get incident radiance from the shader (at high-resolution
-//                radianceProgram.setUniform("viewIndex", k);
-//                highResFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-//                radianceDrawable.draw(highResFBO);
-//                float[] radiance = highResFBO.readFloatingPointColorBufferRGBA(0);
-//
-//                // Load the sampled image from the hard drive
-//                BufferedImage sampledImg = BufferedImageBuilder.build()
-//                    .loadDataFromFile(new File(sampledDir, getPNGFilename(k)))
-//                    .flipVertical()
-//                    .create();
-//                int[] sampledImgData = sampledImg.getRGB(0, 0, sampledImg.getWidth(), sampledImg.getHeight(), null, 0, sampledImg.getWidth());
-//
-//                // Initialize a buffer for the final result
-//                NativeVectorBuffer reflectanceData = NativeVectorBufferFactory.getInstance()
-//                    .createEmpty(NativeDataType.FLOAT, 4, settings.getSampledSize() * settings.getSampledSize());
-//
-//                for (int i = 0; i < reflectanceData.getCount(); i++)
-//                {
-//                    Color sampledImgPixel = new Color(sampledImgData[i], true);
-//
-//                    int highResIndex = getHighResIndexForSample(i);
-//
-//                    // We want the texture array to store cosine-weighted reflectance: exitant radiance / incident radiance
-//                    // sampled pixels are low dynamic range (0-255); radiance is floating point (0.0-1.0); result should also be floating-point (0.0-1.0)
-//                    reflectanceData.set(i, 0, sampledImgPixel.getRed() / (255.0f * radiance[4 * highResIndex]));
-//                    reflectanceData.set(i, 1, sampledImgPixel.getGreen() / (255.0f * radiance[4 * highResIndex + 1]));
-//                    reflectanceData.set(i, 2, sampledImgPixel.getBlue() / (255.0f * radiance[4 * highResIndex + 2]));
-//                    reflectanceData.set(i, 3, sampledImgPixel.getAlpha() / 255.0f);
-//                }
-//
-//                // Pass the buffer to the texture array on the GPU
-//                textureArray.loadLayer(k, reflectanceData);
-            }
-
-            return textureArray;
-//        }
     }
 
     private NativeVectorBuffer sampleHighResBuffer(NativeVectorBuffer highResBuffer)
@@ -433,10 +395,10 @@ public class ImageCache<ContextType extends Context<ContextType>>
         return sampledBuffer;
     }
 
-    public GeometryTextures<ContextType> createSampledGeometryTextures() throws IOException
+    private GeometryTextures<ContextType> createSampledGeometryTextures()
     {
         try(GeometryFramebuffer<ContextType> geomTexturesFullRes =
-            this.resources.geometryResources.createGeometryFramebuffer(settings.getTextureWidth(), settings.getTextureHeight()))
+            this.resources.getGeometryResources().createGeometryFramebuffer(settings.getTextureWidth(), settings.getTextureHeight()))
         {
             // Use non-rendered since we need to sample on the CPU (where the sample coordinates live) and then pass the data back to the GPU.
             GeometryTexturesNonRendered<ContextType> sampledGeometryTextures =

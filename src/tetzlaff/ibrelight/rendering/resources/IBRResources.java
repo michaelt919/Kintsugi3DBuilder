@@ -17,6 +17,7 @@ import java.util.List;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
+import tetzlaff.gl.geometry.GeometryResources;
 import tetzlaff.gl.material.MaterialResources;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
 import tetzlaff.ibrelight.core.ViewSet;
@@ -47,6 +48,8 @@ public interface IBRResources<ContextType extends Context<ContextType>> extends 
      * @return
      */
     List<Float> getCameraWeights();
+
+    GeometryResources<ContextType> getGeometryResources();
 
     /**
      * Diffuse, normal, specular, roughness maps

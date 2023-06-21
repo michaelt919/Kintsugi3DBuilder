@@ -14,8 +14,19 @@ package tetzlaff.gl.material;
 
 public class TextureLoadOptions
 {
-    private boolean mipmapsRequested;
-    private boolean compressionRequested;
+    private boolean linearFilteringRequested = true;
+    private boolean mipmapsRequested = false;
+    private boolean compressionRequested = false;
+
+    public boolean isLinearFilteringRequested()
+    {
+        return linearFilteringRequested;
+    }
+
+    public void setLinearFilteringRequested(boolean linearFilteringRequested)
+    {
+        this.linearFilteringRequested = linearFilteringRequested;
+    }
 
     public boolean areMipmapsRequested()
     {

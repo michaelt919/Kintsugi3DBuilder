@@ -12,10 +12,10 @@
 package tetzlaff.ibrelight.util;
 
 import tetzlaff.gl.vecmath.Matrix4;
-import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
 @FunctionalInterface
 public interface ViewWeightGenerator
 {
-    float[] generateWeights(IBRResourcesImageSpace<?> resources, Iterable<Integer> activeViewIndexList, Matrix4 targetView);
+    float[] generateWeights(IBRResources<?> resources, Iterable<Integer> activeViewIndexList, Matrix4 targetView);
 }

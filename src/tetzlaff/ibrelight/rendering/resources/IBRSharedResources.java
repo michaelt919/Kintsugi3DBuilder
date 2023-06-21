@@ -19,6 +19,7 @@ import java.util.stream.IntStream;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
+import tetzlaff.gl.geometry.GeometryResources;
 import tetzlaff.gl.geometry.VertexGeometry;
 import tetzlaff.gl.material.*;
 import tetzlaff.gl.material.TextureLoadOptions;
@@ -58,9 +59,14 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
      */
     public final UniformBuffer<ContextType> cameraWeightBuffer;
 
-    private LuminanceMapResources<ContextType> luminanceMapResources;
+    /**
+     * Contains the VBOs for positions, tex-coords, normals, and tangents
+     */
+    private GeometryResources<ContextType> geometryResources;
 
     private MaterialResources<ContextType> materialResources;
+
+    private LuminanceMapResources<ContextType> luminanceMapResources;
 
     private final ContextType context;
 
@@ -127,61 +133,73 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
             luminanceMapResources = null;
         }
 
-        if (viewSet != null && geometry != null)
+        if (geometry != null)
         {
-            this.cameraWeights = computeCameraWeights(viewSet, geometry);
+            geometryResources = geometry.createGraphicsResources(context);
 
-            this.cameraWeightBuffer = context.createUniformBuffer()
-                .setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(
-                    1, viewSet.getCameraPoseCount(), this.cameraWeights));
-
-            Material material = geometry.getMaterial();
-
-            if (material != null && viewSet.getGeometryFile() != null /* need an actual file path to load the textures */)
+            if (viewSet != null)
             {
-                // Default texture names if not specified by the material
-                String prefix = viewSet.getGeometryFileName().split("\\.")[0];
+                this.cameraWeights = computeCameraWeights(viewSet, geometry);
 
-                if (material.getDiffuseMap() == null || material.getDiffuseMap().getMapName() == null)
+                this.cameraWeightBuffer = context.createUniformBuffer()
+                        .setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(
+                                1, viewSet.getCameraPoseCount(), this.cameraWeights));
+
+                Material material = geometry.getMaterial();
+
+                if (material != null && viewSet.getGeometryFile() != null /* need an actual file path to load the textures */)
                 {
-                    MaterialColorMap diffuseMap = new MaterialColorMap();
-                    diffuseMap.setMapName(prefix + "_Kd.png");
-                    material.setDiffuseMap(diffuseMap);
-                }
+                    // Default texture names if not specified by the material
+                    String prefix = viewSet.getGeometryFileName().split("\\.")[0];
 
-                if (material.getNormalMap() == null || material.getNormalMap().getMapName() == null)
+                    if (material.getDiffuseMap() == null || material.getDiffuseMap().getMapName() == null)
+                    {
+                        MaterialColorMap diffuseMap = new MaterialColorMap();
+                        diffuseMap.setMapName(prefix + "_Kd.png");
+                        material.setDiffuseMap(diffuseMap);
+                    }
+
+                    if (material.getNormalMap() == null || material.getNormalMap().getMapName() == null)
+                    {
+                        MaterialTextureMap normalMap = new MaterialTextureMap();
+                        normalMap.setMapName(prefix + "_norm.png");
+                        material.setNormalMap(normalMap);
+                    }
+
+                    if (material.getSpecularMap() == null || material.getSpecularMap().getMapName() == null)
+                    {
+                        MaterialColorMap specularMap = new MaterialColorMap();
+                        specularMap.setMapName(prefix + "_Ks.png");
+                        material.setSpecularMap(specularMap);
+                    }
+
+                    if (material.getRoughnessMap() == null || material.getRoughnessMap().getMapName() == null)
+                    {
+                        MaterialScalarMap roughnessMap = new MaterialScalarMap();
+                        roughnessMap.setMapName(prefix + "_Pr.png");
+                        material.setRoughnessMap(roughnessMap);
+                    }
+
+                    TextureLoadOptions mtlLoadOptions = new TextureLoadOptions();
+                    mtlLoadOptions.setCompressionRequested(loadOptions.isCompressionRequested());
+                    mtlLoadOptions.setMipmapsRequested(loadOptions.areMipmapsRequested());
+                    this.materialResources = material.createResources(context, viewSet.getGeometryFile().getParentFile(), mtlLoadOptions);
+                }
+                else
                 {
-                    MaterialTextureMap normalMap = new MaterialTextureMap();
-                    normalMap.setMapName(prefix + "_norm.png");
-                    material.setNormalMap(normalMap);
+                    this.materialResources = MaterialResources.createNull();
                 }
-
-                if (material.getSpecularMap() == null || material.getSpecularMap().getMapName() == null)
-                {
-                    MaterialColorMap specularMap = new MaterialColorMap();
-                    specularMap.setMapName(prefix + "_Ks.png");
-                    material.setSpecularMap(specularMap);
-                }
-
-                if (material.getRoughnessMap() == null || material.getRoughnessMap().getMapName() == null)
-                {
-                    MaterialScalarMap roughnessMap = new MaterialScalarMap();
-                    roughnessMap.setMapName(prefix + "_Pr.png");
-                    material.setRoughnessMap(roughnessMap);
-                }
-
-                TextureLoadOptions mtlLoadOptions = new TextureLoadOptions();
-                mtlLoadOptions.setCompressionRequested(loadOptions.isCompressionRequested());
-                mtlLoadOptions.setMipmapsRequested(loadOptions.areMipmapsRequested());
-                this.materialResources = material.createResources(context, viewSet.getGeometryFile().getParentFile(), mtlLoadOptions);
             }
             else
             {
+                this.cameraWeights = null;
+                this.cameraWeightBuffer = null;
                 this.materialResources = MaterialResources.createNull();
             }
         }
         else
         {
+            this.geometryResources = GeometryResources.createNullResources();
             this.cameraWeights = null;
             this.cameraWeightBuffer = null;
             this.materialResources = MaterialResources.createNull();
@@ -314,9 +332,13 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
         }
     }
 
-    public LuminanceMapResources<ContextType> getLuminanceMapResources()
+    /**
+     *
+     * @return Vertex buffers for positions, tex coords, normals, tangents
+     */
+    public GeometryResources<ContextType> getGeometryResources()
     {
-        return luminanceMapResources;
+        return geometryResources;
     }
 
     /**
@@ -325,6 +347,11 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
     public MaterialResources<ContextType> getMaterialResources()
     {
         return materialResources;
+    }
+
+    public LuminanceMapResources<ContextType> getLuminanceMapResources()
+    {
+        return luminanceMapResources;
     }
 
     /**
@@ -440,6 +467,11 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
         if (this.lightIndexBuffer != null)
         {
             this.lightIndexBuffer.close();
+        }
+
+        if (this.geometryResources != null)
+        {
+            this.geometryResources.close();
         }
 
         if (this.materialResources != null)

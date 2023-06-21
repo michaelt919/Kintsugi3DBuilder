@@ -13,6 +13,7 @@
 package tetzlaff.ibrelight.rendering.resources;
 
 import tetzlaff.gl.core.Context;
+import tetzlaff.gl.geometry.GeometryResources;
 import tetzlaff.gl.material.MaterialResources;
 import tetzlaff.ibrelight.core.ViewSet;
 
@@ -61,6 +62,13 @@ public abstract class IBRResourcesBase<ContextType extends Context<ContextType>>
     {
         return sharedResources.getCameraWeights();
     }
+
+    @Override
+    public GeometryResources<ContextType> getGeometryResources()
+    {
+        return sharedResources.getGeometryResources();
+    }
+
 
     @Override
     public MaterialResources<ContextType> getMaterialResources()

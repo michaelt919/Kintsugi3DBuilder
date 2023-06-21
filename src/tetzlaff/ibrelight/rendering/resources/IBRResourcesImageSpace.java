@@ -15,7 +15,6 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import javax.imageio.ImageIO;
 import javax.xml.stream.XMLStreamException;
 
@@ -26,7 +25,6 @@ import tetzlaff.gl.material.TextureLoadOptions;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
-import tetzlaff.gl.geometry.GeometryResources;
 import tetzlaff.gl.geometry.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.ibrelight.core.*;
@@ -38,11 +36,6 @@ import tetzlaff.ibrelight.core.*;
  */
 public final class IBRResourcesImageSpace<ContextType extends Context<ContextType>> extends IBRResourcesBase<ContextType>
 {
-    /**
-     * The geometry for this instance that the vertex buffers were loaded from.
-     */
-    public final VertexGeometry geometry;
-
     /**
      * A GPU buffer containing projection transformations defining the intrinsic properties of each camera.
      */
@@ -57,11 +50,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
      * A texture array instantiated on the GPU containing the image corresponding to each view in this dataset.
      */
     public final Texture3D<ContextType> colorTextures;
-
-    /**
-     * Contains the VBOs for positions, tex-coords, normals, and tangents
-     */
-    public final GeometryResources<ContextType> geometryResources;
 
     /**
      * A depth texture array containing a depth image for every view.
@@ -209,8 +197,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                     loadOptions != null ? loadOptions.getTextureLoadOptions() : new TextureLoadOptions()),
                 true);
 
-        this.geometry = geometry;
-
         // Read the images from a file
         if (loadOptions != null && loadOptions.areColorImagesRequested() && viewSet.getImageFilePath() != null && viewSet.getCameraPoseCount() > 0)
         {
@@ -289,10 +275,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             cameraProjectionIndexBuffer = null;
         }
 
-        if (geometry != null)
+        if (getGeometryResources() != null)
         {
-            geometryResources = geometry.createGraphicsResources(context);
-
             if (viewSet != null && loadOptions != null && loadOptions.getDepthImageWidth() != 0 && loadOptions.getDepthImageHeight() != 0)
             {
                 try
@@ -303,7 +287,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                             .createFramebufferObject();
 
                     // Create a depth map generator -- includes the depth map program and drawable
-                    DepthMapGenerator<ContextType> depthMapGenerator = DepthMapGenerator.createFromGeometryResources(geometryResources);
+                    DepthMapGenerator<ContextType> depthMapGenerator =
+                        DepthMapGenerator.createFromGeometryResources(getGeometryResources());
                 )
                 {
                     double minDepth = viewSet.getRecommendedFarPlane();
@@ -353,7 +338,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         }
         else
         {
-            this.geometryResources = GeometryResources.createNullResources();
             this.depthTextures = null;
             primaryViewDistance = 0.0;
         }
@@ -408,7 +392,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                         .createFramebufferObject();
 
                 // Load the program
-                DepthMapGenerator<ContextType> depthMapGenerator = DepthMapGenerator.createFromGeometryResources(geometryResources)
+                DepthMapGenerator<ContextType> depthMapGenerator = DepthMapGenerator.createFromGeometryResources(getGeometryResources())
             )
             {
                 // Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
@@ -535,7 +519,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     @Override
     public Drawable<ContextType> createDrawable(Program<ContextType> program)
     {
-        return geometryResources.createDrawable(program);
+        return getGeometryResources().createDrawable(program);
     }
 
     /**
@@ -572,7 +556,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     public SingleCalibratedImageResource<ContextType> createSingleImageResource(int viewIndex, File imageFile, ReadonlyLoadOptionsModel loadOptions)
         throws IOException
     {
-        return new SingleCalibratedImageResource<>(getContext(), getViewSet(), viewIndex, imageFile, geometry, loadOptions);
+        return new SingleCalibratedImageResource<>(getContext(), getViewSet(), viewIndex, imageFile, getGeometryResources().geometry, loadOptions);
     }
 
     public ImageCache<ContextType> cache(ImageCacheSettings settings) throws IOException
@@ -595,11 +579,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         if (this.cameraProjectionIndexBuffer != null)
         {
             this.cameraProjectionIndexBuffer.close();
-        }
-
-        if (this.geometryResources != null)
-        {
-            this.geometryResources.close();
         }
 
         if (this.colorTextures != null)
