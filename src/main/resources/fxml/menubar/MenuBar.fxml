@@ -44,6 +44,7 @@
             <accelerator>
                <KeyCodeCombination alt="UP" code="W" control="ANY" meta="UP" shift="UP" shortcut="UP" />
             </accelerator></MenuItem>
+         <MenuItem mnemonicParsing="false" onAction="#unzip" text="UNZIPPER (UNFINISHED)" />
          <SeparatorMenuItem />
          <Menu fx:id="exportMenu" mnemonicParsing="false" text="Export" />
           <CheckMenuItem fx:id="lightCalibrationCheckMenuItem" mnemonicParsing="false" text="Light Calibration Mode" />
@@ -76,10 +77,13 @@
                  <StandardRenderingMode fx:value="NONE" />
              </userData>
          </RadioMenuItem>
-         <RadioMenuItem mnemonicParsing="false" text="Wireframe" toggleGroup="$renderGroup" visible="false">
+         <RadioMenuItem mnemonicParsing="false" text="Wireframe" visible="false">
              <userData>
                  <StandardRenderingMode fx:value="WIREFRAME" />
              </userData>
+            <toggleGroup>
+               <ToggleGroup fx:id="renderGroup" />
+            </toggleGroup>
          </RadioMenuItem>
          <RadioMenuItem mnemonicParsing="false" text="Simple Lambertian" toggleGroup="$renderGroup" visible="false">
              <userData>

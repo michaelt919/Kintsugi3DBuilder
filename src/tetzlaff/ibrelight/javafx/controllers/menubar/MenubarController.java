@@ -26,6 +26,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -54,6 +55,7 @@ public class MenubarController
     private final Flag loadOptionsWindowOpen = new Flag(false);
     private final Flag loaderWindowOpen = new Flag(false);
     private final Flag colorCheckerWindowOpen = new Flag(false);
+    private final Flag unzipperOpen = new Flag(false);
 
     @FXML private ProgressBar progressBar;
 
@@ -570,6 +572,20 @@ public class MenubarController
             ColorCheckerController colorCheckerController =
                 makeWindow("Color Checker", colorCheckerWindowOpen, "fxml/menubar/ColorChecker.fxml");
             colorCheckerController.init(MultithreadModels.getInstance().getLoadingModel());
+
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void unzip() {
+        try
+        {
+            UnzipFileSelectionController unzipFileSelectionController =
+                    makeWindow(".psx Unzipper", unzipperOpen, "fxml/menubar/UnzipFileSelection.fxml");
+            unzipFileSelectionController.init();
 
         }
         catch(IOException e)
