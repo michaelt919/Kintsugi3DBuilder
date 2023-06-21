@@ -293,12 +293,16 @@ public class EyedropperController implements Initializable {
         //read pixels from selected crop
         selectedColors.clear();
         boolean badColorDetected = false;
-        selectedColors.add(pixelReader.getColor((int)trueStartX, (int) trueStartY));
         for (int posX = (int) trueStartX; posX < trueEndX; posX++) {
             for (int posY = (int) trueStartY; posY < trueEndY; posY++) {
                 try{
-                    Color color = pixelReader.getColor(posX, posY);
-                    selectedColors.add(color);
+                    if(viewport.contains(posX, posY)){//only add color if it is inside the viewport (visible to user)
+                        Color color = pixelReader.getColor(posX, posY);
+                        selectedColors.add(color);
+                    }
+                    else{
+                        badColorDetected = true;
+                    }
                 }
                 catch (IndexOutOfBoundsException e){
                     badColorDetected = true;
