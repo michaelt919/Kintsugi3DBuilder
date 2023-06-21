@@ -31,6 +31,8 @@ public class SpecularFitSettings extends TextureFitSettings
 
     private int weightBlockSize = 512 * 512;
 
+    private boolean combineWeights = false;
+
     private boolean smithMaskingShadowingEnabled = true;
     private boolean levenbergMarquardtEnabled = true;
     private int unsuccessfulLMIterationsAllowed = 8;
@@ -40,7 +42,8 @@ public class SpecularFitSettings extends TextureFitSettings
 
     private File priorSolutionDirectory = null;
 
-    private boolean exportGLTF = false;
+    private boolean glTFEnabled = false;
+    private boolean glTFPackTextures = false;
 
     /**
      * Constructs an object to hold the settings for specular texture fitting.
@@ -329,11 +332,33 @@ public class SpecularFitSettings extends TextureFitSettings
         this.weightBlockSize = weightBlockSize;
     }
 
-    public boolean isExportGLTF() {
-        return exportGLTF;
+    public boolean isGlTFEnabled()
+    {
+        return glTFEnabled;
     }
 
-    public void setExportGLTF(boolean exportGLTF) {
-        this.exportGLTF = exportGLTF;
+    public void setGlTFEnabled(boolean glTFEnabled)
+    {
+        this.glTFEnabled = glTFEnabled;
+    }
+
+    public boolean isGlTFPackTextures()
+    {
+        return glTFPackTextures;
+    }
+
+    public void setGlTFPackTextures(boolean glTFPackTextures)
+    {
+        this.glTFPackTextures = glTFPackTextures;
+    }
+
+    public boolean isCombineWeights()
+    {
+        return combineWeights;
+    }
+
+    public void setCombineWeights(boolean combineWeights)
+    {
+        this.combineWeights = combineWeights;
     }
 }

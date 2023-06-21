@@ -20,8 +20,6 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import java.util.function.IntFunction;
-import java.util.function.IntToDoubleFunction;
 import javax.imageio.ImageIO;
 
 public class SpecularFitSerializer
@@ -55,6 +53,54 @@ public class SpecularFitSerializer
         }
     }
 
+    public static void saveCombinedWeightImages(int basisCount, int width, int height, SpecularBasisWeights basisWeights, File outputDirectory)
+    {
+        // Loop over the index of each final image to export
+        for (int i = 0; i < (basisCount + 3) / 4; i++)
+        {
+            System.out.println(String.format("Building image index %d", i));
+            BufferedImage weightImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            int[] weightDataPacked = new int[width * height];
+
+            // Loop over the channels that will be included in this image
+            // i.e. 0,1,2,3 for image 0 and 4,5,6,7 for image 1
+            for (int j = i * 4; j < (i + 1) * 4; j++)
+            {
+                System.out.println(String.format("Building channel index %d", j));
+                int targetChannel = j % 4;
+
+                for (int p = 0; p < width * height; p++)
+                {
+                    // Flip vertically
+                    int dataBufferIndex = p % width + width * (height - p / width - 1);
+
+                    int weight = (int)((float)basisWeights.getWeight(j, p) * 255.0f);
+                    // Calculate bit shift for given target channel: (0,1,2,3) -> (16,8,0,24)
+                    int shift = targetChannel == 3 ? 24 : ((targetChannel * -1) + 2) * 8;
+                    // Get the lowest 8 bits of the int weight, shift to correct color channel and bitwise or with existing color
+                    weightDataPacked[dataBufferIndex] = weightDataPacked[dataBufferIndex] | ((weight & 0xFF) << shift);
+                }
+            }
+
+            weightImg.setRGB(0, 0, weightImg.getWidth(), weightImg.getHeight(), weightDataPacked, 0, weightImg.getWidth());
+
+            try
+            {
+                ImageIO.write(weightImg, "PNG", new File(outputDirectory, getCombinedWeightFilename(i)));
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static String getCombinedWeightFilename(int imageIndex)
+    {
+        imageIndex *= 4;
+        return String.format("weights%02d%02d.png", imageIndex, imageIndex + 3);
+    }
+
     public static String getWeightFileName(int weightMapIndex)
     {
         return String.format("weights%02d.png", weightMapIndex);
@@ -63,7 +109,7 @@ public class SpecularFitSerializer
     public static void serializeBasisFunctions(int basisCount, int microfacetDistributionResolution, SpecularBasis basis, File outputDirectory)
     {
         // Text file format
-        try (PrintStream out = new PrintStream(new File(outputDirectory, "basisFunctions.csv")))
+        try (PrintStream out = new PrintStream(new File(outputDirectory, getBasisFunctionsFilename())))
         {
             for (int b = 0; b < basisCount; b++)
             {
@@ -100,6 +146,11 @@ public class SpecularFitSerializer
         }
     }
 
+    public static String getBasisFunctionsFilename()
+    {
+        return "basisFunctions.csv";
+    }
+
     /**
      * Deserializes basis functions only.
      * Does not deserialize weights (which can be loaded as images) or diffuse basis colors (which should be re-fit, or a diffuse texture can be used instead).
@@ -109,7 +160,7 @@ public class SpecularFitSerializer
     public static SpecularBasis deserializeBasisFunctions(File priorSolutionDirectory)
         throws FileNotFoundException
     {
-        File basisFile = new File(priorSolutionDirectory, "basisFunctions.csv");
+        File basisFile = new File(priorSolutionDirectory, getBasisFunctionsFilename());
 
         // Test to figure out the resolution
         int numElements; // Technically this is "microfacetDistributionResolution + 1" the way it's defined elsewhere

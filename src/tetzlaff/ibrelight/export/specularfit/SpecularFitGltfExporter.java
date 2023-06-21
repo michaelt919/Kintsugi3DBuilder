@@ -17,18 +17,15 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.FloatBuffer;
-import java.util.ArrayList;
 
 public class SpecularFitGltfExporter
 {
 
-    private GltfAssetV2 asset;
+    private final GltfAssetV2 asset;
 
     private TextureInfo diffuseTexture, normalTexture, roughnessMetallicTexture;
 
     private TextureInfo specularTexture, roughnessTexture;
-
-    private ArrayList<TextureInfo> weightTextures;
 
     GltfMaterialExtras extraData = new GltfMaterialExtras();
 
@@ -42,9 +39,7 @@ public class SpecularFitGltfExporter
         if (diffuseTexture == null)
         {
             diffuseTexture = createRelativeTexture(uri, "diffuse");
-            asset.getGltf().getMaterials().forEach((material -> {
-                material.getPbrMetallicRoughness().setBaseColorTexture(diffuseTexture);
-            }));
+            asset.getGltf().getMaterials().forEach((material -> material.getPbrMetallicRoughness().setBaseColorTexture(diffuseTexture)));
         }
         else
         {
@@ -57,9 +52,7 @@ public class SpecularFitGltfExporter
         if (normalTexture == null) {
             normalTexture = createRelativeTexture(uri, "normal");
             MaterialNormalTextureInfo matNormInfo = convertTexInfoToNormal(normalTexture);
-            asset.getGltf().getMaterials().forEach((material -> {
-                material.setNormalTexture(matNormInfo);
-            }));
+            asset.getGltf().getMaterials().forEach((material -> material.setNormalTexture(matNormInfo)));
         }
         else
         {
@@ -72,9 +65,7 @@ public class SpecularFitGltfExporter
         if (roughnessMetallicTexture == null)
         {
             roughnessMetallicTexture = createRelativeTexture(uri, "roughnessMetallic");
-            asset.getGltf().getMaterials().forEach((material -> {
-                material.getPbrMetallicRoughness().setMetallicRoughnessTexture(roughnessMetallicTexture);
-            }));
+            asset.getGltf().getMaterials().forEach((material -> material.getPbrMetallicRoughness().setMetallicRoughnessTexture(roughnessMetallicTexture)));
         }
         else
         {
@@ -111,11 +102,16 @@ public class SpecularFitGltfExporter
 
     public void addWeightImages(int basisCount)
     {
+        addWeightImages(basisCount, false);
+    }
+
+    public void addWeightImages(int basisCount, boolean combined)
+    {
         GltfMaterialSpecularWeights weights = new GltfMaterialSpecularWeights();
-        weights.setStride(1);
-        for (int b = 0; b < basisCount; b++)
+        weights.setStride(combined ? 4 : 1);
+        for (int b = 0; b < basisCount / weights.getStride(); b++)
         {
-            String weightsFilename = SpecularFitSerializer.getWeightFileName(b);
+            String weightsFilename = SpecularFitSerializer.getCombinedWeightFilename(b);
             String weightName = weightsFilename.split("\\.")[0];
             TextureInfo weightTexInfo = createRelativeTexture(weightsFilename, weightName);
             weights.addTexture(weightTexInfo);
@@ -125,9 +121,7 @@ public class SpecularFitGltfExporter
 
     public void write(File file) throws IOException
     {
-        asset.getGltf().getMaterials().forEach((material -> {
-            material.setExtras(extraData);
-        }));
+        asset.getGltf().getMaterials().forEach((material -> material.setExtras(extraData)));
 
         GltfAssetWriterV2 writer = new GltfAssetWriterV2();
         writer.writeBinary(asset, new FileOutputStream(file));

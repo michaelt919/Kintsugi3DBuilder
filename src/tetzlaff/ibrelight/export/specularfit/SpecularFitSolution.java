@@ -153,8 +153,16 @@ public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights
 
     public void saveWeightMaps()
     {
-        SpecularFitSerializer.saveWeightImages(
-            settings.basisCount, settings.width, settings.height, this, settings.outputDirectory);
+        if (settings.isCombineWeights())
+        {
+            SpecularFitSerializer.saveCombinedWeightImages(
+                    settings.basisCount, settings.width, settings.height, this, settings.outputDirectory);
+        }
+        else
+        {
+            SpecularFitSerializer.saveWeightImages(
+                    settings.basisCount, settings.width, settings.height, this, settings.outputDirectory);
+        }
     }
 
     public void saveDiffuseMap(double gamma)
@@ -200,7 +208,7 @@ public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights
         {
             SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(resources.geometry);
             exporter.setDefaultNames();
-            exporter.addWeightImages(settings.basisCount);
+            exporter.addWeightImages(settings.basisCount, settings.isCombineWeights());
             exporter.write(new File(settings.outputDirectory, "model.glb"));
             System.out.println("DONE!");
         } catch (IOException e)
