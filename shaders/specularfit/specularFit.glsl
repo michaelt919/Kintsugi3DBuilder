@@ -20,18 +20,12 @@ uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
 uniform sampler2D roughnessEstimate;
 
-#ifndef MATERIAL_EXPLORATION_MODE
-#define MATERIAL_EXPLORATION_MODE 0
-#endif
+#include <shaders/colorappearance/colorappearance_dynamic.glsl>
 
-#if MATERIAL_EXPLORATION_MODE
+#if COLOR_APPEARANCE_MODE == COLOR_APPEARANCE_MODE_ANALYTIC
 // For debugging or generating comparisons and figures.
 #undef NORMAL_TEXTURE_ENABLED
 #define NORMAL_TEXTURE_ENABLED 1
-#include <shaders/colorappearance/textures.glsl>
-#include <shaders/colorappearance/analytic.glsl>
-#else
-#include <shaders/colorappearance/imgspace.glsl>
 #endif
 
 #include <shaders/relight/reflectanceequations.glsl>

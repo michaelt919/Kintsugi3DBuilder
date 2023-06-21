@@ -15,26 +15,21 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.stream.IntStream;
+import java.util.List;
 import javax.imageio.ImageIO;
 import javax.xml.stream.XMLStreamException;
 
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.ProgramBuilder;
-import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
+import tetzlaff.gl.material.TextureLoadOptions;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.geometry.GeometryResources;
 import tetzlaff.gl.geometry.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
-import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibrelight.core.LoadingMonitor;
-import tetzlaff.ibrelight.core.ReadonlyLoadOptionsModel;
-import tetzlaff.ibrelight.core.StandardRenderingMode;
-import tetzlaff.ibrelight.core.ViewSet;
-import tetzlaff.util.ColorList;
+import tetzlaff.ibrelight.core.*;
 
 /**
  * A class that encapsulates all of the GPU resources like vertex buffers, uniform buffers, and textures for a given
@@ -207,10 +202,12 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         return new Builder<>(context);
     }
 
-    private IBRResourcesImageSpace(ContextType context, ViewSet viewSet, VertexGeometry geometry, ReadonlyLoadOptionsModel loadOptions, LoadingMonitor loadingMonitor) throws IOException
+    private IBRResourcesImageSpace(ContextType context, ViewSet viewSet, VertexGeometry geometry,
+        ReadonlyLoadOptionsModel loadOptions, LoadingMonitor loadingMonitor) throws IOException
     {
-        super(context, viewSet, geometry != null ? computeCameraWeights(viewSet, geometry) : null,
-            geometry != null ? geometry.getMaterial() : null, loadOptions.getTextureLoadOptions());
+        super(new IBRSharedResources<>(context, viewSet, geometry,
+                    loadOptions != null ? loadOptions.getTextureLoadOptions() : new TextureLoadOptions()),
+                true);
 
         this.geometry = geometry;
 
@@ -296,7 +293,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         {
             geometryResources = geometry.createGraphicsResources(context);
 
-            if (viewSet != null && loadOptions.getDepthImageWidth() != 0 && loadOptions.getDepthImageHeight() != 0)
+            if (viewSet != null && loadOptions != null && loadOptions.getDepthImageWidth() != 0 && loadOptions.getDepthImageHeight() != 0)
             {
                 try
                 (
@@ -446,23 +443,12 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     }
 
     /**
-     * Refresh the light data in the uniform buffers using the current values in the view set.
+     * Refresh the light data in the uniform buffers using the current values in the view set,
+     * and also update the shadow textures.
      */
     public void updateLightData()
     {
-        // Store the light positions in a uniform buffer
-        if (lightPositionBuffer != null && getViewSet().getLightPositionData() != null)
-        {
-            // Create the uniform buffer
-            lightPositionBuffer.setData(getViewSet().getLightPositionData());
-        }
-
-        // Store the light positions in a uniform buffer
-        if (lightIntensityBuffer != null && getViewSet().getLightIntensityData() != null)
-        {
-            // Create the uniform buffer
-            lightIntensityBuffer.setData(getViewSet().getLightIntensityData());
-        }
+        getSharedResources().updateLightData();
 
         try
         {
@@ -500,8 +486,9 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     @Override
     public ProgramBuilder<ContextType> getShaderProgramBuilder(StandardRenderingMode renderingMode)
     {
-        return super.getShaderProgramBuilder(renderingMode)
+        return getSharedResources().getShaderProgramBuilder(renderingMode)
                 .define("GEOMETRY_TEXTURES_ENABLED", false) // should default to this, but just in case
+                .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.IMAGE_SPACE) // should default to this, but just in case
                 .define("CAMERA_PROJECTION_COUNT", getViewSet().getCameraProjectionCount())
                 .define("VISIBILITY_TEST_ENABLED", this.depthTextures != null)
                 .define("SHADOW_TEST_ENABLED", this.shadowTextures != null);
@@ -510,7 +497,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     @Override
     public void setupShaderProgram(Program<ContextType> program)
     {
-        super.setupShaderProgram(program);
+        getSharedResources().setupShaderProgram(program);
 
         if (this.colorTextures != null)
         {
@@ -559,85 +546,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     public double getPrimaryViewDistance()
     {
         return primaryViewDistance;
-    }
-
-    private static float[] computeCameraWeights(ViewSet viewSet, VertexGeometry geometry)
-    {
-        float[] cameraWeights = new float[viewSet.getCameraPoseCount()];
-        
-        Vector3[] viewDirections = IntStream.range(0, viewSet.getCameraPoseCount())
-            .mapToObj(i -> viewSet.getCameraPoseInverse(i).getColumn(3).getXYZ()
-                            .minus(geometry.getCentroid()).normalized())
-            .toArray(Vector3[]::new);
-
-        int[] totals = new int[viewSet.getCameraPoseCount()];
-        int targetSampleCount = viewSet.getCameraPoseCount() * 256;
-        double densityFactor = Math.sqrt(Math.PI * targetSampleCount);
-        int sampleRows = (int)Math.ceil(densityFactor / 2) + 1;
-
-        // Find the view with the greatest distance from any other view.
-        // Directions that are further from any view than distance will be ignored in the view weight calculation.
-        double maxMinDistance = 0.0;
-        for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
-        {
-            double minDistance = Double.MAX_VALUE;
-            for (int j = 0; j < viewSet.getCameraPoseCount(); j++)
-            {
-                if (i != j)
-                {
-                    minDistance = Math.min(minDistance, Math.acos(Math.max(-1.0, Math.min(1.0f, viewDirections[i].dot(viewDirections[j])))));
-                }
-            }
-            maxMinDistance = Math.max(maxMinDistance, minDistance);
-        }
-
-        int actualSampleCount = 0;
-
-        for (int i = 0; i < sampleRows; i++)
-        {
-            double r = Math.sin(Math.PI * (double)i / (double)(sampleRows-1));
-            int sampleColumns = Math.max(1, (int)Math.ceil(densityFactor * r));
-
-            for (int j = 0; j < sampleColumns; j++)
-            {
-                Vector3 sampleDirection = new Vector3(
-                        (float)(r * Math.cos(2 * Math.PI * (double)j / (double)sampleColumns)),
-                        (float) Math.cos(Math.PI * (double)i / (double)(sampleRows-1)),
-                        (float)(r * Math.sin(2 * Math.PI * (double)j / (double)sampleColumns)));
-
-                double minDistance = maxMinDistance;
-                int minIndex = -1;
-                for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
-                {
-                    double distance = Math.acos(Math.max(-1.0, Math.min(1.0f, sampleDirection.dot(viewDirections[k]))));
-                    if (distance < minDistance)
-                    {
-                        minDistance = distance;
-                        minIndex = k;
-                    }
-                }
-
-                if (minIndex >= 0)
-                {
-                    totals[minIndex]++;
-                }
-
-                actualSampleCount++;
-            }
-        }
-
-        System.out.println("---");
-        System.out.println("View weights:");
-
-        for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
-        {
-            cameraWeights[k] = (float)totals[k] / (float)actualSampleCount;
-            System.out.println(viewSet.getImageFileName(k) + '\t' + cameraWeights[k]);
-        }
-
-        System.out.println("---");
-
-        return cameraWeights;
     }
 
     /**

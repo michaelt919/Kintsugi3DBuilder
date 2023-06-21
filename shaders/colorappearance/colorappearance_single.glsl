@@ -50,7 +50,7 @@ vec3 getLightVector()
     return getLightVector(getPosition());
 }
 
-vec4 getColor(); // Defined by imgspace_single.glsl or texspace_single.glsl
+vec4 getColor(); // Defined by imgspace_single.glsl or texspace_single_crop.glsl
 
 vec4 getLinearColor()
 {

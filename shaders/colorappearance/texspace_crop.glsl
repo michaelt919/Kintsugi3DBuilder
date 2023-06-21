@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2023
+ *  Copyright (c) Michael Tetzlaff 2022
  *  Copyright (c) The Regents of the University of Minnesota 2019
  *
  *  Licensed under GPLv3
@@ -15,14 +15,16 @@
 
 #include "colorappearance.glsl"
 
-#line 19 1102
+#line 19 1100
 
 uniform sampler2DArray viewImages;
+uniform vec2 minTexCoord;
+uniform vec2 maxTexCoord;
 
 vec4 getColor(int virtualIndex)
 {
     int viewIndex = getViewIndex(virtualIndex);
-    return texture(viewImages, vec3(fTexCoord, viewIndex));
+    return texture(viewImages, vec3((fTexCoord - minTexCoord) / (maxTexCoord - minTexCoord), viewIndex));
 }
 
 #endif // TEXSPACE_GLSL

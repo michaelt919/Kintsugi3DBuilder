@@ -12,10 +12,12 @@
 package tetzlaff.ibrelight.rendering.resources;
 
 import java.io.FileNotFoundException;
+import java.util.List;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
+import tetzlaff.gl.material.MaterialResources;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
 import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.util.ColorList;
@@ -39,6 +41,29 @@ public interface IBRResources<ContextType extends Context<ContextType>> extends 
      */
     float getCameraWeight(int index);
 
+
+    /**
+     * Gets a read-only view of the whole list of camera weights
+     * @return
+     */
+    List<Float> getCameraWeights();
+
+    /**
+     * Diffuse, normal, specular, roughness maps
+     * @return
+     */
+    MaterialResources<ContextType> getMaterialResources();
+
+    /**
+     * 1D textures for encoding and decoding
+     * @return
+     */
+    LuminanceMapResources<ContextType> getLuminanceMapResources();
+
+    /**
+     * Refresh the luminance map textures using the current values in the view set.
+     */
+    void updateLuminanceMap();
 
     /**
      * Gets a shader program builder with any required preprocessor defines automatically injected based on the

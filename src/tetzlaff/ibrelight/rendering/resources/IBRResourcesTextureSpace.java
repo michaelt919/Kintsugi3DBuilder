@@ -15,12 +15,12 @@ import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.geometry.GeometryResources;
 import tetzlaff.gl.geometry.GeometryTextures;
+import tetzlaff.gl.geometry.VertexGeometry;
 import tetzlaff.gl.material.TextureLoadOptions;
-import tetzlaff.ibrelight.core.LoadingMonitor;
-import tetzlaff.ibrelight.core.StandardRenderingMode;
-import tetzlaff.ibrelight.core.ViewSet;
+import tetzlaff.ibrelight.core.*;
 
 import java.io.IOException;
+import java.util.List;
 
 public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> extends IBRResourcesBase<ContextType>
 {
@@ -39,29 +39,37 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
      */
     private GeometryTextures<ContextType> geometryTextures;
 
-    protected IBRResourcesTextureSpace(
-            ContextType context, ViewSet viewSet, float[] cameraWeights, GeometryResources<ContextType> geometryResources,
-            TextureLoadOptions loadOptions, int texWidth, int texHeight, LoadingMonitor loadingMonitor) throws IOException
+    IBRResourcesTextureSpace(
+            ContextType context, ViewSet viewSet, VertexGeometry geometry, TextureLoadOptions loadOptions,
+            int texWidth, int texHeight, LoadingMonitor loadingMonitor) throws IOException
     {
-        super(context, viewSet, cameraWeights, geometryResources.geometry.getMaterial(), loadOptions);
+        super(new IBRSharedResources<>(context, viewSet, geometry, loadOptions), true);
 
-        // Deferred rendering: draw to geometry textures initially and then just draw using a rectangle and
-        // the geometry info cached in the textures
-        geometryTextures = geometryResources.createGeometryFramebuffer(texWidth, texHeight);
+        // Geometry resources are only need in the constructor
+        try (GeometryResources<ContextType> geometryResources = geometry.createGraphicsResources(context))
+        {
+            // Deferred rendering: draw to geometry textures initially and then just draw using a rectangle and
+            // the geometry info cached in the textures
+            geometryTextures = geometryResources.createGeometryFramebuffer(texWidth, texHeight);
+        }
+
         rectangle = context.createRectangle();
+
+        // TODO load images in texture space
     }
 
     @Override
     public ProgramBuilder<ContextType> getShaderProgramBuilder(StandardRenderingMode renderingMode)
     {
-        return super.getShaderProgramBuilder(renderingMode)
-            .define("GEOMETRY_TEXTURES_ENABLED", true);
+        return getSharedResources().getShaderProgramBuilder(renderingMode)
+            .define("GEOMETRY_TEXTURES_ENABLED", true)
+            .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.TEXTURE_SPACE);
     }
 
     @Override
     public void setupShaderProgram(Program<ContextType> program)
     {
-        super.setupShaderProgram(program);
+        getSharedResources().setupShaderProgram(program);
         program.setTexture("positionTex", geometryTextures.getPositionTexture());
         program.setTexture("normalTex", geometryTextures.getNormalTexture());
         program.setTexture("tangentTex", geometryTextures.getTangentTexture());
@@ -71,7 +79,7 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
     @Override
     public Drawable<ContextType> createDrawable(Program<ContextType> program)
     {
-        Drawable<ContextType> drawable = getContext().createDrawable(program);
+        Drawable<ContextType> drawable = getSharedResources().getContext().createDrawable(program);
         drawable.addVertexBuffer("position", rectangle);
         return drawable;
     }
@@ -79,6 +87,8 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
     @Override
     public void close()
     {
+        super.close();
+
         if (this.geometryTextures != null)
         {
             this.geometryTextures.close();

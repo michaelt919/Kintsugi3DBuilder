@@ -155,7 +155,7 @@ LightInfo getLightInfo(int virtualIndex)
     return result;
 }
 
-vec4 getColor(int virtualIndex); // Defined by imgspace.glsl or texspace.glsl
+vec4 getColor(int virtualIndex); // Defined by imgspace.glsl or texspace_crop.glsl
 
 vec4 getLinearColor(int virtualIndex)
 {
