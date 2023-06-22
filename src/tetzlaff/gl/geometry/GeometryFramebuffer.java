@@ -11,6 +11,7 @@
 
 package tetzlaff.gl.geometry;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 
 import tetzlaff.gl.core.*;
@@ -30,8 +31,8 @@ public class GeometryFramebuffer<ContextType extends Context<ContextType>> imple
     {
         // Use a shader program to initialize the framebuffer once
         try(Program<ContextType> program = geometry.context.getShaderProgramBuilder()
-            .addShader(ShaderType.VERTEX, "shaders/common/texspace_noscale.vert")
-            .addShader(ShaderType.FRAGMENT, "shaders/common/geomBuffers.frag")
+            .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/common/geomBuffers.frag"))
             .createProgram())
         {
             Drawable<ContextType> drawable = geometry.createDrawable(program);

@@ -17,7 +17,7 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.window.CursorPosition;
 import tetzlaff.gl.window.WindowSize;
 import tetzlaff.models.ExtendedCameraModel;
-import tetzlaff.models.SettingsModel;
+import tetzlaff.models.IBRSettingsModel;
 
 /*
 not this work as intended at a zoom of 0.5
@@ -34,7 +34,7 @@ final class PanTool implements DragTool
     private CursorPosition mouseStart;
 
     private final ExtendedCameraModel cameraModel;
-    private final SettingsModel settingsModel;
+    private final IBRSettingsModel settingsModel;
 
     private static class Builder extends ToolBuilderBase<PanTool>
     {
@@ -50,7 +50,7 @@ final class PanTool implements DragTool
         return new Builder();
     }
 
-    private PanTool(ExtendedCameraModel cameraModel, SettingsModel settingsModel)
+    private PanTool(ExtendedCameraModel cameraModel, IBRSettingsModel settingsModel)
     {
         this.cameraModel = cameraModel;
         this.settingsModel = settingsModel;

@@ -18,6 +18,7 @@ import tetzlaff.gl.core.*;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
+import tetzlaff.ibrelight.core.TextureFitSettings;
 
 @SuppressWarnings("PublicField")
 public class BasisResources<ContextType extends Context<ContextType>> implements AutoCloseable
@@ -26,26 +27,28 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
     public final Texture2D<ContextType> weightMask;
     public final Texture2D<ContextType> basisMaps;
     public final UniformBuffer<ContextType> diffuseUniformBuffer;
-    public final SpecularFitSettings settings;
+    private final TextureFitSettings textureFitSettings;
 
-    public BasisResources(ContextType context, SpecularFitSettings settings)
+    private final SpecularBasisSettings specularBasisSettings;
+
+    public BasisResources(ContextType context, TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings)
     {
-        this.settings = settings;
-
-        weightMaps = context.getTextureFactory().build2DColorTextureArray(settings.width, settings.height, settings.basisCount)
+        this.textureFitSettings = textureFitSettings;
+        this.specularBasisSettings = specularBasisSettings;
+        weightMaps = context.getTextureFactory().build2DColorTextureArray(textureFitSettings.width, textureFitSettings.height, specularBasisSettings.getBasisCount())
             .setInternalFormat(ColorFormat.R32F)
             .setLinearFilteringEnabled(true)
             .setMipmapsEnabled(false)
             .createTexture();
 
-        weightMask = context.getTextureFactory().build2DColorTexture(settings.width, settings.height)
+        weightMask = context.getTextureFactory().build2DColorTexture(textureFitSettings.width, textureFitSettings.height)
             .setInternalFormat(ColorFormat.R8)
             .setLinearFilteringEnabled(true)
             .setMipmapsEnabled(false)
             .createTexture();
 
         basisMaps = context.getTextureFactory().build1DColorTextureArray(
-            settings.microfacetDistributionResolution + 1, settings.basisCount)
+                specularBasisSettings.getMicrofacetDistributionResolution() + 1, specularBasisSettings.getBasisCount())
             .setInternalFormat(ColorFormat.RGB32F)
             .setLinearFilteringEnabled(true)
             .setMipmapsEnabled(false)
@@ -58,25 +61,37 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
 
     }
 
-    public void updateFromSolution(SpecularFitSolution solution)
+    public TextureFitSettings getTextureFitSettings()
+    {
+        return textureFitSettings;
+    }
+
+    public SpecularBasisSettings getSpecularBasisSettings()
+    {
+        return specularBasisSettings;
+    }
+
+    public void updateFromSolution(SpecularDecomposition solution)
     {
         NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
-        NativeVectorBuffer weightMaskBuffer = factory.createEmpty(NativeDataType.FLOAT, 1, settings.width * settings.height);
-        NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3, settings.basisCount * (settings.microfacetDistributionResolution + 1));
-        NativeVectorBuffer diffuseNativeBuffer = factory.createEmpty(NativeDataType.FLOAT, 4, settings.basisCount);
+        NativeVectorBuffer weightMaskBuffer = factory.createEmpty(NativeDataType.FLOAT, 1,
+            textureFitSettings.width * textureFitSettings.height);
+        NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3,
+            specularBasisSettings.getBasisCount() * (specularBasisSettings.getMicrofacetDistributionResolution() + 1));
+        NativeVectorBuffer diffuseNativeBuffer = factory.createEmpty(NativeDataType.FLOAT, 4, specularBasisSettings.getBasisCount());
 
         // Load weight mask first.
-        for (int p = 0; p < settings.width * settings.height; p++)
+        for (int p = 0; p < textureFitSettings.width * textureFitSettings.height; p++)
         {
             weightMaskBuffer.set(p, 0, solution.areWeightsValid(p) ? 1.0 : 0.0);
         }
 
         weightMask.load(weightMaskBuffer);
 
-        for (int b = 0; b < settings.basisCount; b++)
+        for (int b = 0; b < specularBasisSettings.getBasisCount(); b++)
         {
             // Copy weights from the individual solutions into the weight buffer laid out in texture space to be sent to the GPU.
-            for (int p = 0; p < settings.width * settings.height; p++)
+            for (int p = 0; p < textureFitSettings.width * textureFitSettings.height; p++)
             {
                 weightMaskBuffer.set(p, 0, solution.getWeights(p).get(b));
             }
@@ -85,12 +100,12 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
             weightMaps.loadLayer(b, weightMaskBuffer);
 
             // Copy basis functions by color channel into the basis map buffer that will eventually be sent to the GPU..
-            for (int m = 0; m <= settings.microfacetDistributionResolution; m++)
+            for (int m = 0; m <= specularBasisSettings.getMicrofacetDistributionResolution(); m++)
             {
                 // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
-                basisMapBuffer.set(m + (settings.microfacetDistributionResolution + 1) * b, 0, solution.getSpecularRed().get(m, b));
-                basisMapBuffer.set(m + (settings.microfacetDistributionResolution + 1) * b, 1, solution.getSpecularGreen().get(m, b));
-                basisMapBuffer.set(m + (settings.microfacetDistributionResolution + 1) * b, 2, solution.getSpecularBlue().get(m, b));
+                basisMapBuffer.set(m + (specularBasisSettings.getMicrofacetDistributionResolution() + 1) * b, 0, solution.getSpecularRed().get(m, b));
+                basisMapBuffer.set(m + (specularBasisSettings.getMicrofacetDistributionResolution() + 1) * b, 1, solution.getSpecularGreen().get(m, b));
+                basisMapBuffer.set(m + (specularBasisSettings.getMicrofacetDistributionResolution() + 1) * b, 2, solution.getSpecularBlue().get(m, b));
             }
 
             // Store each channel of the diffuse albedo in the local buffer.
@@ -118,30 +133,32 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
         NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
 
         // Fill trivial weight mask.
-        NativeVectorBuffer weightMaskBuffer = factory.createEmpty(NativeDataType.FLOAT, 1, settings.width * settings.height);
-        for (int p = 0; p < settings.width * settings.height; p++)
+        NativeVectorBuffer weightMaskBuffer = factory.createEmpty(NativeDataType.FLOAT, 1,
+            textureFitSettings.width * textureFitSettings.height);
+        for (int p = 0; p < textureFitSettings.width * textureFitSettings.height; p++)
         {
             weightMaskBuffer.set(p, 0, 1.0);
         }
         weightMask.load(weightMaskBuffer);
 
         // Set up basis function buffer
-        NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3, settings.basisCount * (settings.microfacetDistributionResolution + 1));
+        NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3,
+            specularBasisSettings.getBasisCount() * (specularBasisSettings.getMicrofacetDistributionResolution() + 1));
 
         SpecularBasis basis = SpecularFitSerializer.deserializeBasisFunctions(priorSolutionDirectory);
 
-        for (int b = 0; b < settings.basisCount; b++)
+        for (int b = 0; b < specularBasisSettings.getBasisCount(); b++)
         {
             // Load weight maps
             weightMaps.loadLayer(b, new File(priorSolutionDirectory, SpecularFitSerializer.getWeightFileName(b)), true);
 
             // Copy basis functions by color channel into the basis map buffer that will eventually be sent to the GPU..
-            for (int m = 0; m <= settings.microfacetDistributionResolution; m++)
+            for (int m = 0; m <= specularBasisSettings.getMicrofacetDistributionResolution(); m++)
             {
                 // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
-                basisMapBuffer.set(m + (settings.microfacetDistributionResolution + 1) * b, 0, basis.evaluateRed(b, m));
-                basisMapBuffer.set(m + (settings.microfacetDistributionResolution + 1) * b, 1, basis.evaluateGreen(b, m));
-                basisMapBuffer.set(m + (settings.microfacetDistributionResolution + 1) * b, 2, basis.evaluateBlue(b, m));
+                basisMapBuffer.set(m + (specularBasisSettings.getMicrofacetDistributionResolution() + 1) * b, 0, basis.evaluateRed(b, m));
+                basisMapBuffer.set(m + (specularBasisSettings.getMicrofacetDistributionResolution() + 1) * b, 1, basis.evaluateGreen(b, m));
+                basisMapBuffer.set(m + (specularBasisSettings.getMicrofacetDistributionResolution() + 1) * b, 2, basis.evaluateBlue(b, m));
             }
         }
 

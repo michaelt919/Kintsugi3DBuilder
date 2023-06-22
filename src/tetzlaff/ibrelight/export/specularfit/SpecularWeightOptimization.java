@@ -12,34 +12,38 @@
 package tetzlaff.ibrelight.export.specularfit;
 
 import java.util.Collections;
-import java.util.stream.IntStream;
 
+import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.optimization.NonNegativeWeightOptimization;
 
 public class SpecularWeightOptimization
 {
-    private final SpecularFitSettings settings;
 
     private final NonNegativeWeightOptimization base;
+    private final TextureFitSettings textureFitSettings;
+    private final SpecularBasisSettings specularBasisSettings;
+    private final int weightBlockSize;
 
-    public SpecularWeightOptimization(SpecularFitSettings settings)
+    public SpecularWeightOptimization(TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings,
+          int weightBlockSize)
     {
-        this.settings = settings;
-
-        base = new NonNegativeWeightOptimization(settings.getWeightBlockSize(), settings.basisCount,
+        this.textureFitSettings = textureFitSettings;
+        this.specularBasisSettings = specularBasisSettings;
+        this.weightBlockSize = weightBlockSize;
+        base = new NonNegativeWeightOptimization(weightBlockSize, this.specularBasisSettings.getBasisCount(),
             Collections.singletonList(b -> 1.0), Collections.singletonList(1.0)); // Equality constraint to ensure that the weights sum up to 1.0.
     }
 
-    public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularFitSolution solution, int pStart)
+    public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularDecomposition solution, int pStart)
     {
         System.out.println("Building weight fitting matrices...");
 
         // Setup all the matrices for fitting weights (one per texel)
-        base.buildMatrices(viewStream, new SpecularWeightModel(solution, settings),
+        base.buildMatrices(viewStream, new SpecularWeightModel(solution, this.specularBasisSettings),
             // If a pixel is valid in some view, mark it as such in the solution.
             p -> solution.setWeightsValidity(p, true),
-            pStart, Math.min(pStart + settings.getWeightBlockSize(), settings.width * settings.height));
+            pStart, Math.min(pStart + weightBlockSize, textureFitSettings.width * textureFitSettings.height));
 
         // Dampen so that it doesn't "snap" to the optimal solution right away.
         // TODO expose the damping factor as a setting.
@@ -48,7 +52,7 @@ public class SpecularWeightOptimization
         System.out.println("Finished building matrices; solving now...");
 
         // Optimize the weights and store the result in the SpecularFitSolution.
-        if (pStart + settings.getWeightBlockSize() > settings.width * settings.height)
+        if (pStart + weightBlockSize > textureFitSettings.width * textureFitSettings.height)
         {
             base.optimizeWeights(p -> solution.areWeightsValid(pStart + p),
                 (p, weights) ->
@@ -58,7 +62,7 @@ public class SpecularWeightOptimization
 //                        weights.extractMatrix(0, weights.numRows() - 1, 0, 1).scale(0.5)
 //                            .plus(solution.getWeights(pStart + p).scale(0.5)));
                 },
-                NonNegativeWeightOptimization.DEFAULT_TOLERANCE_SCALE, settings.width * settings.height - pStart);
+                NonNegativeWeightOptimization.DEFAULT_TOLERANCE_SCALE, textureFitSettings.width * textureFitSettings.height - pStart);
         }
         else
         {
@@ -73,14 +77,5 @@ public class SpecularWeightOptimization
         }
 
         System.out.println("DONE!");
-
-        if (SpecularOptimization.DEBUG)
-        {
-            // write out weight textures for debugging
-            solution.saveWeightMaps();
-
-            // write out diffuse texture for debugging
-            solution.saveDiffuseMap(settings.additional.getFloat("gamma"));
-        }
     }
 }

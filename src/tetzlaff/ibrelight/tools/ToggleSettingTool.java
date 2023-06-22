@@ -11,7 +11,7 @@
 
 package tetzlaff.ibrelight.tools;
 
-import tetzlaff.models.SettingsModel;
+import tetzlaff.models.IBRSettingsModel;
 
 public class ToggleSettingTool implements KeyPressTool
 {
@@ -37,9 +37,9 @@ public class ToggleSettingTool implements KeyPressTool
     }
 
     private final String settingName;
-    private final SettingsModel settingsModel;
+    private final IBRSettingsModel settingsModel;
 
-    public ToggleSettingTool(String settingName, SettingsModel settingsModel)
+    public ToggleSettingTool(String settingName, IBRSettingsModel settingsModel)
     {
         this.settingName = settingName;
         this.settingsModel = settingsModel;

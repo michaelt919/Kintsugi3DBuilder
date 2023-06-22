@@ -17,13 +17,24 @@ import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 
+import java.io.File;
 import java.io.IOException;
 
 public class PTMrequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType> {
 
-    private TextureFitSettings setting;
-    public PTMrequest(TextureFitSettings settings){
+    private final TextureFitSettings setting;
+    private final File outputDirectory;
+    public PTMrequest(TextureFitSettings settings, File outputDirectory){
         setting = settings;
+
+        if (outputDirectory == null)
+        {
+            throw new IllegalArgumentException("Output directory cannot be null.");
+        }
+        else
+        {
+            this.outputDirectory = outputDirectory;
+        }
     }
 
     @Override
@@ -31,7 +42,7 @@ public class PTMrequest<ContextType extends Context<ContextType>> implements IBR
     {
         try
         {
-            new PTMOptimization<ContextType>(setting).createFit(renderable.getIBRResources());
+            new PTMOptimization<ContextType>(setting).createFit(renderable.getIBRResources(), outputDirectory);
         }
         catch(IOException e) // thrown by createReflectanceProgram
         {

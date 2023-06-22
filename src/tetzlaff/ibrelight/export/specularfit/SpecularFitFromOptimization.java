@@ -16,6 +16,7 @@ import java.io.FileNotFoundException;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Drawable;
 import tetzlaff.gl.core.Texture2D;
+import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
 /**
@@ -35,25 +36,26 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
      */
     final NormalOptimization<ContextType> normalOptimization;
 
-    public SpecularFitFromOptimization(ContextType context, IBRResources<ContextType> resources, SpecularFitSettings settings) throws FileNotFoundException
+    public SpecularFitFromOptimization(IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
+        TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings, NormalOptimizationSettings normalOptimizationSettings)
+        throws FileNotFoundException
     {
-        super(context, settings);
+        super(resources.getContext(), textureFitSettings, specularBasisSettings);
 
         // Final diffuse estimation
-        diffuseOptimization = new FinalDiffuseOptimization<>(context, resources, settings);
+        diffuseOptimization = new FinalDiffuseOptimization<>(programFactory, textureFitSettings);
 
         // Normal optimization module that manages its own resources
-        SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources, settings);
-        normalOptimization = new NormalOptimization<>(
-            context, programFactory,
+        normalOptimization = new NormalOptimization<ContextType>(
+            programFactory,
             estimationProgram ->
             {
-                Drawable<ContextType> drawable = resources.createDrawable(estimationProgram);
+                Drawable<ContextType> drawable = programFactory.createDrawable(estimationProgram);
                 programFactory.setupShaderProgram(estimationProgram);
                 basisResources.useWithShaderProgram(estimationProgram);
                 return drawable;
             },
-            settings);
+            textureFitSettings, normalOptimizationSettings);
     }
 
     @Override

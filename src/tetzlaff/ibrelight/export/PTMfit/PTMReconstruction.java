@@ -57,8 +57,8 @@ public class PTMReconstruction <ContextType extends Context<ContextType>> implem
                 .createTexture();
     }
 
-    public void reconstruct(PTMsolution solutions,ProgramBuilder<ContextType> programBuilder, String directoryName){
-        new File(settings.outputDirectory, directoryName).mkdir();
+    public void reconstruct(PTMsolution solutions,ProgramBuilder<ContextType> programBuilder, File outputParentDirectory, String directoryName){
+        new File(outputParentDirectory, directoryName).mkdir();
         try (
             ImageReconstruction<ContextType> reconstruction = new ImageReconstruction<>(
                 resources,
@@ -115,7 +115,7 @@ public class PTMReconstruction <ContextType extends Context<ContextType>> implem
             }
 
             reconstruction.execute(resources.getViewSet(),
-                (k, framebuffer) -> saveReconstructionToFile(directoryName, k, framebuffer),
+                (k, framebuffer) -> saveReconstructionToFile(outputParentDirectory, directoryName, k, framebuffer),
                 null, null /* do something with these later */);
         }
 
@@ -132,13 +132,13 @@ public class PTMReconstruction <ContextType extends Context<ContextType>> implem
         weightMaps.close();
     }
 
-    private void saveReconstructionToFile(String directoryName, int k, Framebuffer<ContextType> framebuffer)
+    private void saveReconstructionToFile( File outputParentDirectory, String directoryName, int k, Framebuffer<ContextType> framebuffer)
     {
         try
         {
             String filename = String.format("%04d.png", k);
             framebuffer.saveColorBufferToFile(0, "PNG",
-                    new File(new File(settings.outputDirectory, directoryName), filename));
+                    new File(new File(outputParentDirectory, directoryName), filename));
         }
         catch (IOException e)
         {

@@ -16,6 +16,7 @@ import java.io.IOException;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Texture2D;
+import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
 public class SpecularFitFromPriorSolution<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
@@ -30,9 +31,10 @@ public class SpecularFitFromPriorSolution<ContextType extends Context<ContextTyp
      */
     final Texture2D<ContextType> normalMap;
 
-    public SpecularFitFromPriorSolution(ContextType context, SpecularFitSettings settings, File priorSolutionDirectory) throws IOException
+    public SpecularFitFromPriorSolution(ContextType context, TextureFitSettings textureFitSettings,
+        SpecularBasisSettings specularBasisSettings, File priorSolutionDirectory) throws IOException
     {
-        super(context, settings);
+        super(context, textureFitSettings, specularBasisSettings);
 
         // Load normal map
         diffuseMap = context.getTextureFactory()

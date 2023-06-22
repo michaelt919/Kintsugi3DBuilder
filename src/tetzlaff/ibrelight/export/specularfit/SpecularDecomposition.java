@@ -25,8 +25,9 @@ import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.gl.vecmath.DoubleVector4;
+import tetzlaff.ibrelight.core.TextureFitSettings;
 
-public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights
+public class SpecularDecomposition implements SpecularBasis, SpecularBasisWeights
 {
     private final DoubleVector3[] diffuseAlbedos;
     private final SimpleMatrix specularRed;
@@ -35,27 +36,35 @@ public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights
     private final SimpleMatrix[] weightsByTexel;
     private final boolean[] weightsValidity;
 
-    private final SpecularFitSettings settings;
+    private final TextureFitSettings textureFitSettings;
+    private final SpecularBasisSettings specularBasisSettings;
 
-    public SpecularFitSolution(SpecularFitSettings settings)
+    public SpecularDecomposition(TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings)
     {
-        this.settings = settings;
+        this.textureFitSettings = textureFitSettings;
+        this.specularBasisSettings = specularBasisSettings;
 
-        diffuseAlbedos = new DoubleVector3[settings.basisCount];
+        diffuseAlbedos = new DoubleVector3[this.specularBasisSettings.getBasisCount()];
 
-        for (int i = 0; i < settings.basisCount; i++)
+        for (int i = 0; i < this.specularBasisSettings.getBasisCount(); i++)
         {
             diffuseAlbedos[i] = DoubleVector3.ZERO;
         }
 
-        specularRed = new SimpleMatrix(settings.microfacetDistributionResolution + 1, settings.basisCount, DMatrixRMaj.class);
-        specularGreen = new SimpleMatrix(settings.microfacetDistributionResolution + 1, settings.basisCount, DMatrixRMaj.class);
-        specularBlue = new SimpleMatrix(settings.microfacetDistributionResolution + 1, settings.basisCount, DMatrixRMaj.class);
+        specularRed = new SimpleMatrix(
+            this.specularBasisSettings.getMicrofacetDistributionResolution() + 1,
+            this.specularBasisSettings.getBasisCount(), DMatrixRMaj.class);
+        specularGreen = new SimpleMatrix(
+            this.specularBasisSettings.getMicrofacetDistributionResolution() + 1,
+            this.specularBasisSettings.getBasisCount(), DMatrixRMaj.class);
+        specularBlue = new SimpleMatrix(
+            this.specularBasisSettings.getMicrofacetDistributionResolution() + 1,
+            this.specularBasisSettings.getBasisCount(), DMatrixRMaj.class);
 
-        weightsByTexel = IntStream.range(0, settings.width * settings.height)
-            .mapToObj(p -> new SimpleMatrix(settings.basisCount, 1, DMatrixRMaj.class))
+        weightsByTexel = IntStream.range(0, this.textureFitSettings.width * this.textureFitSettings.height)
+            .mapToObj(p -> new SimpleMatrix(this.specularBasisSettings.getBasisCount(), 1, DMatrixRMaj.class))
             .toArray(SimpleMatrix[]::new);
-        weightsValidity = new boolean[settings.width * settings.height];
+        weightsValidity = new boolean[this.textureFitSettings.width * this.textureFitSettings.height];
     }
 
     @Override
@@ -139,31 +148,27 @@ public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights
         weightsValidity[texelIndex] = validity;
     }
 
-    public SpecularFitSettings getSettings()
+    public void saveBasisFunctions(File outputDirectory)
     {
-        return settings;
+        SpecularFitSerializer.serializeBasisFunctions(specularBasisSettings.getBasisCount(),
+            specularBasisSettings.getMicrofacetDistributionResolution(), this, outputDirectory);
     }
 
-    public void saveBasisFunctions()
-    {
-        SpecularFitSerializer.serializeBasisFunctions(settings.basisCount, settings.microfacetDistributionResolution, this, settings.outputDirectory);
-    }
-
-    public void saveWeightMaps()
+    public void saveWeightMaps(File outputDirectory)
     {
         SpecularFitSerializer.saveWeightImages(
-            settings.basisCount, settings.width, settings.height, this, settings.outputDirectory);
+            specularBasisSettings.getBasisCount(), textureFitSettings.width, textureFitSettings.height, this, outputDirectory);
     }
 
-    public void saveDiffuseMap(double gamma)
+    public void saveDiffuseMap(double gamma, File outputDirectory)
     {
-        BufferedImage diffuseImg = new BufferedImage(settings.width, settings.height, BufferedImage.TYPE_INT_ARGB);
-        int[] diffuseDataPacked = new int[settings.width * settings.height];
-        for (int p = 0; p < settings.width * settings.height; p++)
+        BufferedImage diffuseImg = new BufferedImage(textureFitSettings.width, textureFitSettings.height, BufferedImage.TYPE_INT_ARGB);
+        int[] diffuseDataPacked = new int[textureFitSettings.width * textureFitSettings.height];
+        for (int p = 0; p < textureFitSettings.width * textureFitSettings.height; p++)
         {
             DoubleVector4 diffuseSum = DoubleVector4.ZERO;
 
-            for (int b = 0; b < settings.basisCount; b++)
+            for (int b = 0; b < specularBasisSettings.getBasisCount(); b++)
             {
                 diffuseSum = diffuseSum.plus(diffuseAlbedos[b].asVector4(1.0)
                     .times(weightsByTexel[p].get(b)));
@@ -174,7 +179,7 @@ public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights
                 DoubleVector3 diffuseAvgGamma = diffuseSum.getXYZ().dividedBy(diffuseSum.w).applyOperator(x -> Math.min(1.0, Math.pow(x, 1.0 / gamma)));
 
                 // Flip vertically
-                int dataBufferIndex = p % settings.width + settings.width * (settings.height - p / settings.width - 1);
+                int dataBufferIndex = p % textureFitSettings.width + textureFitSettings.width * (textureFitSettings.height - p / textureFitSettings.width - 1);
                 diffuseDataPacked[dataBufferIndex] = new Color((float) diffuseAvgGamma.x, (float) diffuseAvgGamma.y, (float) diffuseAvgGamma.z).getRGB();
             }
         }
@@ -183,11 +188,16 @@ public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights
 
         try
         {
-            ImageIO.write(diffuseImg, "PNG", new File(settings.outputDirectory, "diffuse_frombasis.png"));
+            ImageIO.write(diffuseImg, "PNG", new File(outputDirectory, "diffuse_frombasis.png"));
         }
         catch (IOException e)
         {
             e.printStackTrace();
         }
+    }
+
+    public SpecularBasisSettings getSpecularBasisSettings()
+    {
+        return specularBasisSettings;
     }
 }

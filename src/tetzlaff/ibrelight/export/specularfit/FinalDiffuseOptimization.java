@@ -17,8 +17,8 @@ import java.io.IOException;
 import java.util.Objects;
 
 import tetzlaff.gl.core.*;
+import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
-import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.util.ShaderHoleFill;
 
 public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
@@ -28,24 +28,23 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
 
     // Final diffuse estimation program
     private final Program<ContextType> estimationProgram;
+    private final TextureFitSettings textureFitSettings;
 
     // Framebuffer for storing the diffuse solution
     private FramebufferObject<ContextType> framebuffer;
 
     private final Drawable<ContextType> drawable;
 
-    private final SpecularFitSettings settings;
-
-    public FinalDiffuseOptimization(ContextType context, IBRResources<ContextType> resources, SpecularFitSettings settings)
+    public FinalDiffuseOptimization(SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings settings)
         throws FileNotFoundException
     {
-        this.context = context;
-        estimationProgram = createDiffuseEstimationProgram(new SpecularFitProgramFactory<>(resources, settings));
-        framebuffer = context.buildFramebufferObject(settings.width, settings.height)
+        this.context = programFactory.getContext();
+        estimationProgram = createDiffuseEstimationProgram(programFactory);
+        textureFitSettings = settings;
+        framebuffer = context.buildFramebufferObject(textureFitSettings.width, textureFitSettings.height)
             .addColorAttachment(ColorFormat.RGBA32F)
             .createFramebufferObject();
-        drawable = resources.createDrawable(estimationProgram);
-        this.settings = settings;
+        drawable = programFactory.createDrawable(estimationProgram);
     }
 
     public void execute(SpecularFitBase<ContextType> specularFit)
@@ -57,7 +56,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
 
         // Second framebuffer for filling holes (used to double-buffer the first framebuffer)
         // Placed outside of try-with-resources since it might end up being the primary framebuffer after filling holes.
-        FramebufferObject<ContextType> framebuffer2 = context.buildFramebufferObject(settings.width, settings.height)
+        FramebufferObject<ContextType> framebuffer2 = context.buildFramebufferObject(textureFitSettings.width, textureFitSettings.height)
             .addColorAttachment(ColorFormat.RGBA32F)
             .createFramebufferObject();
 
@@ -107,11 +106,11 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         return framebuffer.getColorAttachmentTexture(0);
     }
 
-    public void saveDiffuseMap()
+    public void saveDiffuseMap(File outputDirectory)
     {
         try
         {
-            framebuffer.saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "diffuse.png"));
+            framebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, "diffuse.png"));
         }
         catch (IOException e)
         {

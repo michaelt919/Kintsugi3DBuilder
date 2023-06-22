@@ -17,15 +17,15 @@ import java.util.Map;
 
 import javafx.beans.value.WritableValue;
 import tetzlaff.ibrelight.javafx.util.MultithreadValue;
-import tetzlaff.models.SettingsModel;
-import tetzlaff.models.impl.SettingsModelBase;
+import tetzlaff.models.IBRSettingsModel;
+import tetzlaff.models.impl.IBRSettingsModelBase;
 
-public class SettingsModelWrapper extends SettingsModelBase
+public class IBRSettingsModelWrapper extends IBRSettingsModelBase
 {
     private final Map<String, MultithreadValue<Object>> settings = new HashMap<>(32);
-    private final SettingsModel baseModel;
+    private final IBRSettingsModel baseModel;
 
-    public SettingsModelWrapper(SettingsModel baseModel)
+    public IBRSettingsModelWrapper(IBRSettingsModel baseModel)
     {
         this.baseModel = baseModel;
     }
@@ -89,7 +89,7 @@ public class SettingsModelWrapper extends SettingsModelBase
             @Override
             public Class<?> getType()
             {
-                return SettingsModelWrapper.this.getType(settingName);
+                return IBRSettingsModelWrapper.this.getType(settingName);
             }
 
             @Override

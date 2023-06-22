@@ -136,7 +136,7 @@ public final class Rendering
             EnvironmentModel environmentModel = MultithreadModels.getInstance().getEnvironmentModel();
             ExtendedCameraModel cameraModel = MultithreadModels.getInstance().getCameraModel();
             ExtendedObjectModel objectModel = MultithreadModels.getInstance().getObjectModel();
-            SettingsModel settingsModel = MultithreadModels.getInstance().getSettingsModel();
+            IBRSettingsModel settingsModel = MultithreadModels.getInstance().getSettingsModel();
             LoadingModel loadingModel = MultithreadModels.getInstance().getLoadingModel();
 
             // Bind tools
@@ -418,7 +418,7 @@ public final class Rendering
             if (args[0].endsWith(".vset"))
             {
                 File vsetFile = new File(args[0]);
-                new Thread(() -> MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).run();
+                new Thread(() -> MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).start();
             }
             else
             {
@@ -428,17 +428,9 @@ public final class Rendering
                     try
                     {
                         File vsetFile = MultithreadModels.getInstance().getProjectModel().openProjectFile(new File(args[0]));
-                        new Thread(() -> MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).run();
+                        new Thread(() -> MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).start();
                     }
-                    catch (IOException e)
-                    {
-                        e.printStackTrace();
-                    }
-                    catch (ParserConfigurationException e)
-                    {
-                        e.printStackTrace();
-                    }
-                    catch (SAXException e)
+                    catch (IOException | ParserConfigurationException | SAXException e)
                     {
                         e.printStackTrace();
                     }

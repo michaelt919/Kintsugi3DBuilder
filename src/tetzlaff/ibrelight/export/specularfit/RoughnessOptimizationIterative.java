@@ -3,14 +3,12 @@ package tetzlaff.ibrelight.export.specularfit;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.core.*;
+import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.optimization.ErrorReport;
-import tetzlaff.optimization.ReadonlyErrorReport;
-import tetzlaff.optimization.ShaderBasedErrorCalculator;
 import tetzlaff.optimization.ShaderBasedOptimization;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
@@ -19,6 +17,11 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
 {
     private final ShaderBasedOptimization<ContextType> roughnessOptimization;
 //    private Program<ContextType> errorCalcProgram;
+
+    private final TextureFitSettings settings;
+
+    private final double convergenceTolerance;
+    private final int unsuccessfulLMIterationsAllowed;
 
     /**
      *
@@ -31,11 +34,15 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
         ContextType context,
         BasisResources<ContextType> basisResources,
         Supplier<Texture2D<ContextType>> getDiffuseTexture,
-        SpecularFitSettings settings)
+        TextureFitSettings settings,
+        double convergenceTolerance, int unsuccessfulLMIterationsAllowed)
             throws FileNotFoundException
     {
         // Inherit from base class to facilitate initial fit.
         super(context, basisResources, settings);
+        this.settings = settings;
+        this.convergenceTolerance = convergenceTolerance;
+        this.unsuccessfulLMIterationsAllowed = unsuccessfulLMIterationsAllowed;
 
         roughnessOptimization = new ShaderBasedOptimization<>(
             getRoughnessEstimationProgramBuilder(context),
@@ -69,7 +76,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
             estimationProgram.setTexture("dampingTex", roughnessOptimization.getFrontFramebuffer().getColorAttachmentTexture(2));
 
             // Gamma correction constants
-            float gamma = settings.additional.getFloat("gamma");
+            float gamma = settings.gamma;
             estimationProgram.setUniform("gamma", gamma);
             estimationProgram.setUniform("gammaInv", 1.0f / gamma);
 
@@ -121,12 +128,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
                     .sum());
                 return errorReport;
             },
-            settings.getConvergenceTolerance(), settings.getUnsuccessfulLMIterationsAllowed());
-
-        if (SpecularOptimization.DEBUG)
-        {
-            saveTextures();
-        }
+            convergenceTolerance, unsuccessfulLMIterationsAllowed);
     }
 
     private static <ContextType extends Context<ContextType>>

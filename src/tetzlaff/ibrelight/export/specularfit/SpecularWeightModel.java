@@ -20,18 +20,18 @@ import static java.lang.Math.PI;
 
 public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, DoubleVector3>
 {
-    private final SpecularFitSolution solution;
-    private final SpecularFitSettings settings;
+    private final SpecularDecomposition solution;
+    private final SpecularBasisSettings specularBasisSettings;
 
     /**
      *
      * @param solution
      * @param settings
      */
-    public SpecularWeightModel(SpecularFitSolution solution, SpecularFitSettings settings)
+    public SpecularWeightModel(SpecularDecomposition solution, SpecularBasisSettings settings)
     {
         this.solution = solution;
-        this.settings = settings;
+        specularBasisSettings = settings;
     }
 
     @Override
@@ -63,7 +63,7 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
         float geomRatio = sampleData.getGeomRatio(systemIndex);
 
         // Precalculate frequently used values.
-        double mExact = halfwayIndex * settings.microfacetDistributionResolution;
+        double mExact = halfwayIndex * specularBasisSettings.getMicrofacetDistributionResolution();
 
         int m1 = (int)Math.floor(mExact);
         int m2 = m1 + 1;
@@ -74,7 +74,7 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
             // Evaluate the basis BRDF.
             // This will run a lot of times so write out vector math operations
             // to avoid unnecessary allocation of Vector objects
-            if (m1 < settings.microfacetDistributionResolution)
+            if (m1 < specularBasisSettings.getMicrofacetDistributionResolution())
             {
                 return new DoubleVector3(
                     solution.getDiffuseAlbedo(b).x / PI +
@@ -87,15 +87,15 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
                         (solution.getSpecularBlue().get(m1, b) * (1 - t)
                             + solution.getSpecularBlue().get(m2, b) * t) * geomRatio);
             }
-            else if (settings.getMetallicity() > 0.0f)
+            else if (specularBasisSettings.getMetallicity() > 0.0f)
             {
                 return new DoubleVector3(
                     solution.getDiffuseAlbedo(b).x / PI +
-                        solution.getSpecularRed().get(settings.microfacetDistributionResolution, b) * geomRatio,
+                        solution.getSpecularRed().get(specularBasisSettings.getMicrofacetDistributionResolution(), b) * geomRatio,
                     solution.getDiffuseAlbedo(b).y / PI +
-                        solution.getSpecularGreen().get(settings.microfacetDistributionResolution, b) * geomRatio,
+                        solution.getSpecularGreen().get(specularBasisSettings.getMicrofacetDistributionResolution(), b) * geomRatio,
                     solution.getDiffuseAlbedo(b).z / PI +
-                        solution.getSpecularBlue().get(settings.microfacetDistributionResolution, b) * geomRatio);
+                        solution.getSpecularBlue().get(specularBasisSettings.getMicrofacetDistributionResolution(), b) * geomRatio);
             }
             else // if metallicity == 0, then the MDF should be 0 here
             {
@@ -107,7 +107,7 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
     @Override
     public int getBasisFunctionCount()
     {
-        return settings.basisCount;
+        return specularBasisSettings.getBasisCount();
     }
 
     @Override

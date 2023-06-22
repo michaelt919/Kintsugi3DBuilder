@@ -33,8 +33,9 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
     public static <ContextType extends Context<ContextType>> SpecularFitRequest<ContextType> create(
             IBRelightModels modelAccess, String... args)
     {
-        return new SpecularFitRequest<>(new SpecularFitSettings(2048, 2048,
-                8, 90, new File(args[2]), modelAccess.getSettingsModel()));
+        return new SpecularFitRequest<>(new SpecularFitSettings(
+            new TextureFitSettings(2048, 2048, modelAccess.getSettingsModel().getFloat("gamma")),
+            modelAccess.getSettingsModel(), new File(args[2])));
     }
 
     public SpecularFitRequest(SpecularFitSettings settings)
@@ -67,7 +68,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
 
             try(IBRResources<ContextType> resources = IBRResourcesImageSpace.getBuilderForContext(context)
                 .setLoadOptions(loadOptions)
-                .useExistingViewSet(settings.getReconstructionViewSet())
+                .useExistingViewSet(settings.getReconstructionSettings().getReconstructionViewSet())
                 .create())
             {
                 // Perform the specular fit
@@ -110,27 +111,28 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
         throws FileNotFoundException
     {
         // Create output directory
-        settings.outputDirectory.mkdirs();
+        settings.getOutputDirectory().mkdirs();
 
         if (resources.getViewSet() != null)
         {
             // Reconstruct images both from basis functions and from fitted roughness
-            SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources, settings);
-            FinalReconstruction<ContextType> reconstruction = new FinalReconstruction<>(resources, settings);
+            SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources,
+                settings.getTextureFitSettings(), settings.getIbrSettings(), settings.getSpecularBasisSettings());
+            FinalReconstruction<ContextType> reconstruction = new FinalReconstruction<>(resources, settings.getTextureFitSettings(), settings.getReconstructionSettings());
 
             System.out.println("Reconstructing ground truth images from basis representation:");
             double reconstructionRMSE =
-                reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(programFactory), settings.shouldReconstructAll(),
-                    "reconstruction", "ground-truth");
+                reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(programFactory), settings.getReconstructionSettings().shouldReconstructAll(),
+                    "reconstruction", "ground-truth", settings.getOutputDirectory());
 
             System.out.println("Reconstructing ground truth images from fitted roughness / specular color:");
             double fittedRMSE =
-                reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(programFactory), settings.shouldReconstructAll(),
-                    "fitted", null);
+                reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(programFactory), settings.getReconstructionSettings().shouldReconstructAll(),
+                    "fitted", null, settings.getOutputDirectory());
 
-            if (!settings.shouldReconstructAll()) // Write to just one RMSE file if only doing a single image per reconstruction method
+            if (!settings.getReconstructionSettings().shouldReconstructAll()) // Write to just one RMSE file if only doing a single image per reconstruction method
             {
-                try (PrintStream rmseOut = new PrintStream(new File(settings.outputDirectory, "rmse.txt")))
+                try (PrintStream rmseOut = new PrintStream(new File(settings.getOutputDirectory(), "rmse.txt")))
                 // Text file containing error information
                 {
                     rmseOut.println("reconstruction, " + reconstructionRMSE);

@@ -1,6 +1,7 @@
 package tetzlaff.ibrelight.export.specularfit;
 
 import tetzlaff.gl.core.*;
+import tetzlaff.ibrelight.core.TextureFitSettings;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -9,22 +10,19 @@ import java.io.IOException;
 public abstract class RoughnessOptimizationBase<ContextType extends Context<ContextType>>
         implements RoughnessOptimization<ContextType>
 {
-    protected final SpecularFitSettings settings;
     protected final Program<ContextType> specularRoughnessFitProgram;
     protected final VertexBuffer<ContextType> rect;
     protected final Drawable<ContextType> specularRoughnessFitDrawable;
 
-    protected RoughnessOptimizationBase(ContextType context, BasisResources<ContextType> resources, SpecularFitSettings settings)
+    protected RoughnessOptimizationBase(ContextType context, BasisResources<ContextType> resources, TextureFitSettings settings)
         throws FileNotFoundException
     {
-        this.settings = settings;
-
         // Fit specular parameters from weighted basis functions
         specularRoughnessFitProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/specularRoughnessFitNew.frag"))
-                .define("BASIS_COUNT", settings.basisCount)
-                .define("MICROFACET_DISTRIBUTION_RESOLUTION", settings.microfacetDistributionResolution)
+                .define("BASIS_COUNT", resources.getSpecularBasisSettings().getBasisCount())
+                .define("MICROFACET_DISTRIBUTION_RESOLUTION", resources.getSpecularBasisSettings().getMicrofacetDistributionResolution())
                 .createProgram();
 
         // Create basic rectangle vertex buffer
@@ -35,7 +33,7 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
         // Set up shader program
         specularRoughnessFitDrawable.addVertexBuffer("position", rect);
         resources.useWithShaderProgram(specularRoughnessFitProgram);
-        specularRoughnessFitProgram.setUniform("gamma", settings.additional.getFloat("gamma"));
+        specularRoughnessFitProgram.setUniform("gamma", settings.gamma);
         specularRoughnessFitProgram.setUniform("fittingGamma", 1.0f);
 
     }
@@ -72,12 +70,12 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
     }
 
     @Override
-    public void saveTextures()
+    public void saveTextures(File outputDirectory)
     {
         try
         {
-            getFramebuffer().saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "specular.png"));
-            getFramebuffer().saveColorBufferToFile(1, "PNG", new File(settings.outputDirectory, "roughness.png"));
+            getFramebuffer().saveColorBufferToFile(0, "PNG", new File(outputDirectory, "specular.png"));
+            getFramebuffer().saveColorBufferToFile(1, "PNG", new File(outputDirectory, "roughness.png"));
         }
         catch (IOException e)
         {

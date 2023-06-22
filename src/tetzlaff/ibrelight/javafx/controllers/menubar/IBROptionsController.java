@@ -22,7 +22,7 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
-import tetzlaff.ibrelight.javafx.internal.SettingsModelImpl;
+import tetzlaff.ibrelight.javafx.internal.IBRSettingsModelImpl;
 import tetzlaff.ibrelight.javafx.util.SafeDecimalNumberStringConverter;
 import tetzlaff.ibrelight.javafx.util.SafeNumberStringConverter;
 import tetzlaff.ibrelight.javafx.util.StaticUtilities;
@@ -44,7 +44,7 @@ public class IBROptionsController implements Initializable
     @FXML private ChoiceBox<ShadingParameterMode> weightModeChoiceBox;
     @FXML private GridPane root;
 
-    private SettingsModelImpl settingsModel;
+    private IBRSettingsModelImpl settingsModel;
 
     @Override
     public void initialize(URL location, ResourceBundle resources)
@@ -71,7 +71,7 @@ public class IBROptionsController implements Initializable
         StaticUtilities.makeClampedNumeric(0, 0.1, occlusionBiasTextField);
     }
 
-    public void bind(SettingsModelImpl injectedSettingsModel)
+    public void bind(IBRSettingsModelImpl injectedSettingsModel)
     {
         buehlerCheckBox.selectedProperty().bindBidirectional(injectedSettingsModel.getBooleanProperty("buehlerAlgorithm"));
 

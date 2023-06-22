@@ -11,10 +11,6 @@
 
 package tetzlaff.ibrelight.export.specularfit;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
 import java.util.stream.IntStream;
 
 import org.ejml.data.DMatrixRMaj;
@@ -34,8 +30,6 @@ final class ReflectanceMatrixBuilder
     // Set to true to validate the MatrixBuilder implementation (should generally be turned off for much better efficiency).
     private static final boolean VALIDATE = false;
 
-    static final boolean DUMP_SAMPLES = false;
-
     /**
      * Reflectance information for all the data.
      */
@@ -44,17 +38,13 @@ final class ReflectanceMatrixBuilder
     /**
      * Weight solution from the previous iteration.
      */
-    private final SpecularFitSolution solution;
-
-    /**
-     * Settings to be used for the specular fit; associated with the SpecularFitSolution.
-     */
-    private final SpecularFitSettings settings;
+    private final SpecularDecomposition solution;
 
     /**
      * Underlying matrix builder utility.
      */
     private final MatrixBuilder matrixBuilder;
+    private final SpecularBasisSettings specularBasisSettings;
 
     /**
      * Stores both the LHS and RHS of the system to be solved.
@@ -66,58 +56,36 @@ final class ReflectanceMatrixBuilder
     /**
      * Construct by accepting matrices where the final results will be stored.
      */
-    ReflectanceMatrixBuilder(ReflectanceData reflectanceData, SpecularFitSolution solution,
+    ReflectanceMatrixBuilder(ReflectanceData reflectanceData, SpecularDecomposition solution,
                              double metallicity, BasisFunctions stepBasis, MatrixSystem contribution)
     {
         this.solution = solution;
 
         //noinspection AssignmentOrReturnOfFieldWithMutableType
         this.reflectanceData = reflectanceData;
+        this.specularBasisSettings = solution.getSpecularBasisSettings();
 
         this.contribution = contribution;
 
-        settings = solution.getSettings();
-
         // Initialize running totals
-        matrixBuilder = new MatrixBuilder(settings.basisCount, 3, metallicity, stepBasis, contribution);
+        matrixBuilder = new MatrixBuilder(this.specularBasisSettings.getBasisCount(), 3, metallicity, stepBasis, contribution);
     }
 
     public void execute()
     {
-        try (PrintStream sampleDump = DUMP_SAMPLES ?
-            new PrintStream(new FileOutputStream(new File(settings.outputDirectory, "sampleDump.txt"), true)) : null)
-        {
-            matrixBuilder.build(
-                IntStream.range(0, reflectanceData.size())
-                    .filter(p -> reflectanceData.getVisibility(p) > 0) // Eliminate pixels without valid samples
-                    .mapToObj(p ->
-                    {
-                        MatrixBuilderSample sample = new MatrixBuilderSample(
-                            reflectanceData.getHalfwayIndex(p) * settings.microfacetDistributionResolution,
-                            matrixBuilder.getBasisLibrary(), reflectanceData.getGeomRatio(p),
-                            reflectanceData.getAdditionalWeight(p), b -> solution.getWeights(p).get(b),
-                            reflectanceData.getRed(p), reflectanceData.getGreen(p), reflectanceData.getBlue(p));
+        matrixBuilder.build(
+            IntStream.range(0, reflectanceData.size())
+                .filter(p -> reflectanceData.getVisibility(p) > 0) // Eliminate pixels without valid samples
+                .mapToObj(p ->
+                {
+                    MatrixBuilderSample sample = new MatrixBuilderSample(
+                        reflectanceData.getHalfwayIndex(p) * specularBasisSettings.getMicrofacetDistributionResolution(),
+                        matrixBuilder.getBasisLibrary(), reflectanceData.getGeomRatio(p),
+                        reflectanceData.getAdditionalWeight(p), b -> solution.getWeights(p).get(b),
+                        reflectanceData.getRed(p), reflectanceData.getGreen(p), reflectanceData.getBlue(p));
 
-                        if (DUMP_SAMPLES)
-                        {
-                            sampleDump.print(sample.actual + ": " + sample.weightByInstance.applyAsDouble(0));
-
-                            for (int i = 1; i < settings.basisCount; i++)
-                            {
-                                sampleDump.print(", " + sample.weightByInstance.applyAsDouble(i));
-                            }
-
-                            sampleDump.println(": " + sample.observed[0] + ", " + sample.observed[1] + ", " + sample.observed[2]);
-                        }
-
-                        return sample;
-                    }));
-        }
-        catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-        }
-
+                    return sample;
+                }));
         if (VALIDATE)
         {
             validate();
@@ -128,7 +96,7 @@ final class ReflectanceMatrixBuilder
     {
         // Calculate the matrix products the slow way to make sure that the implementation is correct.
         SimpleMatrix mA = new SimpleMatrix(reflectanceData.size(),
-                settings.basisCount * (settings.microfacetDistributionResolution + 1), DMatrixRMaj.class);
+                specularBasisSettings.getBasisCount() * (specularBasisSettings.getMicrofacetDistributionResolution() + 1), DMatrixRMaj.class);
         SimpleMatrix yRed = new SimpleMatrix(reflectanceData.size(), 1);
         SimpleMatrix yGreen = new SimpleMatrix(reflectanceData.size(), 1);
         SimpleMatrix yBlue = new SimpleMatrix(reflectanceData.size(), 1);
@@ -144,8 +112,8 @@ final class ReflectanceMatrixBuilder
                 float addlWeight = (float)Math.sqrt(reflectanceData.getAdditionalWeight(p));
 
                 // Calculate which discretized MDF element the current sample belongs to.
-                double mExact = halfwayIndex * settings.microfacetDistributionResolution;
-                int mFloor = Math.min(settings.microfacetDistributionResolution - 1, (int) Math.floor(mExact));
+                double mExact = halfwayIndex * specularBasisSettings.getMicrofacetDistributionResolution();
+                int mFloor = Math.min(specularBasisSettings.getMicrofacetDistributionResolution() - 1, (int) Math.floor(mExact));
 
                 yRed.set(p, addlWeight * reflectanceData.getRed(p));
                 yGreen.set(p, addlWeight * reflectanceData.getGreen(p));
@@ -157,16 +125,16 @@ final class ReflectanceMatrixBuilder
 
                 double diffuseFactor = matrixBuilder.getMetallicity() * geomRatio + (1 - matrixBuilder.getMetallicity());
 
-                for (int b = 0; b < settings.basisCount; b++)
+                for (int b = 0; b < specularBasisSettings.getBasisCount(); b++)
                 {
                     // diffuse
                     mA.set(p, b, addlWeight * solution.getWeights(p).get(b) * diffuseFactor);
 
                     // specular
-                    if (mExact < settings.microfacetDistributionResolution)
+                    if (mExact < specularBasisSettings.getMicrofacetDistributionResolution())
                     {
                         // Iterate over the available step functions in the basis.
-                        for (int s = 0; s < settings.microfacetDistributionResolution; s++)
+                        for (int s = 0; s < specularBasisSettings.getMicrofacetDistributionResolution(); s++)
                         {
                             // Evaluate each step function twice, to the left and right of the current sample.
                             double fFloor = matrixBuilder.getBasisLibrary().evaluate(s, mFloor);
@@ -178,7 +146,7 @@ final class ReflectanceMatrixBuilder
                             double fInterp = fFloor * t + fCeil * (1 - t);
 
                             // Index of the column where the coefficient will be stored in the big matrix.
-                            int j = settings.basisCount * (s + 1) + b;
+                            int j = specularBasisSettings.getBasisCount() * (s + 1) + b;
 
                             // specular with blending between the two sampled locations.
                             mA.set(p, j, addlWeight * geomRatio * solution.getWeights(p).get(b) * fInterp);

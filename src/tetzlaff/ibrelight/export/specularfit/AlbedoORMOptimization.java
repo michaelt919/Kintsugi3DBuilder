@@ -16,6 +16,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import tetzlaff.gl.core.*;
+import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.util.ShaderHoleFill;
 
 public class AlbedoORMOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
@@ -25,6 +26,7 @@ public class AlbedoORMOptimization<ContextType extends Context<ContextType>> imp
 
     // Estimation program
     private final Program<ContextType> estimationProgram;
+    private final TextureFitSettings settings;
 
     // Framebuffer for storing the diffuse solution
     private FramebufferObject<ContextType> framebuffer;
@@ -32,14 +34,13 @@ public class AlbedoORMOptimization<ContextType extends Context<ContextType>> imp
     private final VertexBuffer<ContextType> rect;
     private final Drawable<ContextType> drawable;
 
-    private final SpecularFitSettings settings;
-
-    public AlbedoORMOptimization(ContextType context, SpecularFitSettings settings)
+    public AlbedoORMOptimization(ContextType context, TextureFitSettings settings)
         throws FileNotFoundException
     {
         this.context = context;
         estimationProgram = createProgram(context);
-        framebuffer = context.buildFramebufferObject(settings.width, settings.height)
+        this.settings = settings;
+        framebuffer = context.buildFramebufferObject(this.settings.width, this.settings.height)
             .addColorAttachment(ColorFormat.RGBA32F) // total albedo
             .addColorAttachment(ColorFormat.RGBA32F) // ORM
             .createFramebufferObject();
@@ -50,9 +51,7 @@ public class AlbedoORMOptimization<ContextType extends Context<ContextType>> imp
         drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
         drawable.addVertexBuffer("position", rect);
 
-        estimationProgram.setUniform("gamma", settings.additional.getFloat("gamma"));
-
-        this.settings = settings;
+        estimationProgram.setUniform("gamma", this.settings.gamma);
     }
 
     public void execute(SpecularResources<ContextType> specularFit)
@@ -122,12 +121,12 @@ public class AlbedoORMOptimization<ContextType extends Context<ContextType>> imp
         return framebuffer.getColorAttachmentTexture(1);
     }
 
-    public void saveTextures()
+    public void saveTextures(File outputDirectory)
     {
         try
         {
-            framebuffer.saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "albedo.png"));
-            framebuffer.saveColorBufferToFile(1, "PNG", new File(settings.outputDirectory, "orm.png"));
+            framebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, "albedo.png"));
+            framebuffer.saveColorBufferToFile(1, "PNG", new File(outputDirectory, "orm.png"));
         }
         catch (IOException e)
         {

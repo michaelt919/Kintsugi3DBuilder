@@ -19,19 +19,27 @@ import java.util.Map.Entry;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Drawable;
 import tetzlaff.gl.core.Program;
 import tetzlaff.gl.core.ShaderType;
+import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.models.ReadonlyIBRSettingsModel;
 
 public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
 {
     private final IBRResources<ContextType> resources;
-    private final SpecularFitSettings settings;
+    private final TextureFitSettings textureFitSettings;
+    private final ReadonlyIBRSettingsModel ibrSettings;
+    private final SpecularBasisSettings specularBasisSettings;
 
-    public SpecularFitProgramFactory(IBRResources<ContextType> resources, SpecularFitSettings settings)
+    public SpecularFitProgramFactory(IBRResources<ContextType> resources,  TextureFitSettings textureFitSettings,
+        ReadonlyIBRSettingsModel ibrSettings, SpecularBasisSettings specularBasisSettings)
     {
         this.resources = resources;
-        this.settings = settings;
+        this.textureFitSettings = textureFitSettings;
+        this.ibrSettings = ibrSettings;
+        this.specularBasisSettings = specularBasisSettings;
     }
 
     public ProgramBuilder<ContextType> getShaderProgramBuilder(File vertexShader, File fragmentShader, boolean visibilityAndShadowTests)
@@ -42,12 +50,12 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
 
         // Disable occlusion / shadow culling if requested (may do nothing if already operating in texture space)
         // getIBRShaderProgramBuilder() will enable by default if depth / shadow maps are available
-        if (!visibilityAndShadowTests || !settings.additional.getBoolean("occlusionEnabled"))
+        if (!visibilityAndShadowTests || !ibrSettings.getBoolean("occlusionEnabled"))
         {
             builder.define("VISIBILITY_TEST_ENABLED", false);
         }
 
-        if (!visibilityAndShadowTests || !settings.additional.getBoolean("shadowsEnabled"))
+        if (!visibilityAndShadowTests || !ibrSettings.getBoolean("shadowsEnabled"))
         {
             builder.define("SHADOW_TEST_ENABLED", false);
         }
@@ -55,9 +63,9 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
         // Common definitions for all specular fitting related shaders.
         return builder
                 .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
-                .define("SMITH_MASKING_SHADOWING", settings.isSmithMaskingShadowingEnabled())
-                .define("BASIS_COUNT", settings.basisCount)
-                .define("MICROFACET_DISTRIBUTION_RESOLUTION", settings.microfacetDistributionResolution);
+                .define("SMITH_MASKING_SHADOWING", specularBasisSettings.isSmithMaskingShadowingEnabled())
+                .define("BASIS_COUNT", specularBasisSettings.getBasisCount())
+                .define("MICROFACET_DISTRIBUTION_RESOLUTION", specularBasisSettings.getMicrofacetDistributionResolution());
     }
 
     public ProgramBuilder<ContextType> getShaderProgramBuilder(File vertexShader, File fragmentShader)
@@ -68,7 +76,7 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
     public void setupShaderProgram(Program<ContextType> program)
     {
         resources.setupShaderProgram(program);
-        program.setUniform("occlusionBias", settings.additional.getFloat("occlusionBias"));
+        program.setUniform("occlusionBias", ibrSettings.getFloat("occlusionBias"));
     }
 
     public Program<ContextType> createProgram(File vertexShader, File fragmentShader, boolean visibilityAndShadowTests, Map<String, Object> additionalDefines)
@@ -100,5 +108,15 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
     public Program<ContextType> createProgram(File vertexShader, File fragmentShader) throws FileNotFoundException
     {
         return createProgram(vertexShader, fragmentShader, true);
+    }
+
+    public ContextType getContext()
+    {
+        return resources.getContext();
+    }
+
+    public Drawable<ContextType> createDrawable(Program<ContextType> program)
+    {
+        return resources.createDrawable(program);
     }
 }

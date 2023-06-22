@@ -23,13 +23,13 @@ import tetzlaff.ibrelight.core.IBRInstance;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
 import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
-import tetzlaff.models.ReadonlySettingsModel;
+import tetzlaff.models.ReadonlyIBRSettingsModel;
 
 class SingleFrameRenderRequest<ContextType extends Context<ContextType>> extends RenderRequestBase<ContextType>
 {
     private final String outputImageName;
 
-    SingleFrameRenderRequest(int width, int height, String outputImageName, ReadonlySettingsModel settingsModel,
+    SingleFrameRenderRequest(int width, int height, String outputImageName, ReadonlyIBRSettingsModel settingsModel,
         Consumer<Program<ContextType>> shaderSetupCallback, File vertexShader, File fragmentShader, File outputDirectory)
     {
         super(width, height, settingsModel, shaderSetupCallback, vertexShader, fragmentShader, outputDirectory);
@@ -40,7 +40,7 @@ class SingleFrameRenderRequest<ContextType extends Context<ContextType>> extends
     {
         private final String outputImageName;
 
-        Builder(String outputImageName, ReadonlySettingsModel settingsModel, File fragmentShader, File outputDirectory)
+        Builder(String outputImageName, ReadonlyIBRSettingsModel settingsModel, File fragmentShader, File outputDirectory)
         {
             super(settingsModel, fragmentShader, outputDirectory);
             this.outputImageName = outputImageName;

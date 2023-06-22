@@ -19,6 +19,7 @@ import java.util.function.Function;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.core.*;
+import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.optimization.ReadonlyErrorReport;
 import tetzlaff.optimization.ShaderBasedOptimization;
 
@@ -26,22 +27,23 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
 {
     private final ShaderBasedOptimization<ContextType> estimateNormals;
     private final ShaderBasedOptimization<ContextType> smoothNormals;
-    private final SpecularFitSettings settings;
+    private final TextureFitSettings textureFitSettings;
+    private final NormalOptimizationSettings normalOptimizationSettings;
 
     private boolean firstSmooth = true;
 
     public NormalOptimization(
-        ContextType context,
         SpecularFitProgramFactory<ContextType> programFactory,
         Function<Program<ContextType>, Drawable<ContextType>> drawableFactory,
-        SpecularFitSettings settings)
+        TextureFitSettings textureFitSettings, NormalOptimizationSettings normalOptimizationSettings)
         throws FileNotFoundException
     {
-        this.settings = settings;
+        this.textureFitSettings = textureFitSettings;
+        this.normalOptimizationSettings = normalOptimizationSettings;
 
         estimateNormals = new ShaderBasedOptimization<>(
             getNormalEstimationProgramBuilder(programFactory),
-            context.buildFramebufferObject(settings.width, settings.height)
+            programFactory.getContext().buildFramebufferObject(textureFitSettings.width, textureFitSettings.height)
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F)
                     .setLinearFilteringEnabled(true))
                 .addColorAttachment(ColorFormat.R32F), // Damping factor while fitting,
@@ -52,7 +54,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
 
         smoothNormals = new ShaderBasedOptimization<>(
             getNormalSmoothProgramBuilder(programFactory),
-            context.buildFramebufferObject(settings.width, settings.height)
+            programFactory.getContext().buildFramebufferObject(textureFitSettings.width, textureFitSettings.height)
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F)
                     .setLinearFilteringEnabled(true)),
             drawableFactory);
@@ -133,14 +135,14 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
 
     public void execute(Function<Texture<ContextType>, ReadonlyErrorReport> errorCalculator, double convergenceTolerance)
     {
-        if (settings.isLevenbergMarquardtEnabled())
+        if (normalOptimizationSettings.isLevenbergMarquardtEnabled())
         {
             // Set damping factor to 1.0 initially at each position.
             estimateNormals.getFrontFramebuffer().clearColorBuffer(1, 1.0f, 1.0f, 1.0f, 1.0f);
 
             // Estimate using the Levenberg-Marquardt algorithm.
             estimateNormals.runUntilConvergence(framebuffer -> errorCalculator.apply(framebuffer.getColorAttachmentTexture(0)),
-                    convergenceTolerance, settings.getUnsuccessfulLMIterationsAllowed());
+                    convergenceTolerance, normalOptimizationSettings.getUnsuccessfulLMIterationsAllowed());
         }
         else
         {
@@ -150,27 +152,22 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
             estimateNormals.runOnce();
         }
 
-        if (SpecularOptimization.DEBUG)
-        {
-            saveNormalMapEstimate();
-        }
+//        if (SpecularOptimization.DEBUG)
+//        {
+//            saveNormalMapEstimate();
+//        }
 
         firstSmooth = true;
-        for (int i = 0; i < settings.getNormalSmoothingIterations(); i++)
+        for (int i = 0; i < normalOptimizationSettings.getNormalSmoothingIterations(); i++)
         {
             smoothNormals.runOnce();
             firstSmooth = false;
-        }
-
-        if (SpecularOptimization.DEBUG)
-        {
-            saveNormalMap();
         }
     }
 
     private FramebufferObject<ContextType> getNormalMapFBO()
     {
-        return (settings.getNormalSmoothingIterations() > 0 ? smoothNormals : estimateNormals).getFrontFramebuffer();
+        return (normalOptimizationSettings.getNormalSmoothingIterations() > 0 ? smoothNormals : estimateNormals).getFrontFramebuffer();
     }
 
 
@@ -179,12 +176,12 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         return getNormalMapFBO().getColorAttachmentTexture(0);
     }
 
-    public void saveNormalMapEstimate()
+    public void saveNormalMapEstimate(File outputDirectory)
     {
         try
         {
             estimateNormals.getFrontFramebuffer().saveColorBufferToFile(0, "PNG",
-                new File(settings.outputDirectory, settings.getNormalSmoothingIterations() > 0 ?
+                new File(outputDirectory, normalOptimizationSettings.getNormalSmoothingIterations() > 0 ?
                         "normalPreSmooth.png" : "normal.png"));
         }
         catch (IOException e)
@@ -193,11 +190,11 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         }
     }
 
-    public void saveNormalMap()
+    public void saveNormalMap(File outputDirectory)
     {
         try
         {
-            getNormalMapFBO().saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "normal.png"));
+            getNormalMapFBO().saveColorBufferToFile(0, "PNG", new File(outputDirectory, "normal.png"));
         }
         catch (IOException e)
         {
@@ -216,8 +213,8 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
                 new File("shaders/common/texspace_noscale.vert"),
                 new File("shaders/specularfit/estimateNormals.frag"),
                 true)
-            .define("USE_LEVENBERG_MARQUARDT", settings.isLevenbergMarquardtEnabled())
-            .define("MIN_DAMPING", settings.getMinNormalDamping());
+            .define("USE_LEVENBERG_MARQUARDT", normalOptimizationSettings.isLevenbergMarquardtEnabled())
+            .define("MIN_DAMPING", normalOptimizationSettings.getMinNormalDamping());
     }
 
     private static <ContextType extends Context<ContextType>>

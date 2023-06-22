@@ -19,7 +19,6 @@ import java.time.Duration;
 import java.time.Instant;
 
 import tetzlaff.gl.builders.ProgramBuilder;
-import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.Projection;
 import tetzlaff.ibrelight.core.ViewSet;
@@ -50,11 +49,11 @@ public class SpecularOptimization
 
         if (defaultProj.getAspectRatio() < 1.0)
         {
-            return settings.width;
+            return settings.getTextureFitSettings().width;
         }
         else
         {
-            return Math.round(settings.height * defaultProj.getAspectRatio());
+            return Math.round(settings.getTextureFitSettings().height * defaultProj.getAspectRatio());
         }
     }
 
@@ -65,11 +64,11 @@ public class SpecularOptimization
 
         if (defaultProj.getAspectRatio() < 1.0)
         {
-            return Math.round(settings.width / defaultProj.getAspectRatio());
+            return Math.round(settings.getTextureFitSettings().width / defaultProj.getAspectRatio());
         }
         else
         {
-            return settings.height;
+            return settings.getTextureFitSettings().height;
         }
     }
 
@@ -89,241 +88,287 @@ public class SpecularOptimization
         // Disable back face culling since we're rendering in texture space
         // (should be the case already from generating the cache, but good to do just in case)
         context.getState().disableBackFaceCulling();
-        SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources, settings);
+        SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources,
+            settings.getTextureFitSettings(), settings.getIbrSettings(), settings.getSpecularBasisSettings());
 
         // Calculate reasonable image resolution for error calculation
         int imageWidth = determineImageWidth(resources.getViewSet());
         int imageHeight = determineImageHeight(resources.getViewSet());
 
-        // Create space for the solution.
-        SpecularFitSolution solution = new SpecularFitSolution(settings);
-
-        // Initialize weights using K-means.
-        new SpecularFitInitializer<>(resources, settings).initialize(solution);
-
-        // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.
-        SpecularFitFromOptimization<ContextType> specularFit = new SpecularFitFromOptimization<>(context, resources, settings);
-
-        try
-        (
-            // Reflectance stream: includes a shader program and a framebuffer object for extracting reflectance data from images.
-            GraphicsStreamResource<ContextType> reflectanceStream = resources.streamFactory().streamAsResource(
-                getReflectanceProgramBuilder(programFactory),
-                context.buildFramebufferObject(settings.width, settings.height)
-                    .addColorAttachment(ColorFormat.RGBA32F)
-                    .addColorAttachment(ColorFormat.RGBA32F));
-
-            // Compare fitted models against actual photographs
-            Program<ContextType> errorCalcProgram = createErrorCalcProgram(programFactory);
-
-            // Framebuffer for calculating error and reconstructing 3D renderings of the object
-            FramebufferObject<ContextType> scratchFramebuffer =
-            context.buildFramebufferObject(imageWidth, imageHeight)
-                .addColorAttachment(ColorFormat.RGBA32F)
-                .addDepthAttachment()
-                .createFramebufferObject()
-        )
+        try (IBRResources<ContextType> sampled = cache.createSampledResources())
         {
-            // Setup reflectance extraction program
-            programFactory.setupShaderProgram(reflectanceStream.getProgram());
-            reflectanceStream.getProgram().setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
+            // Create space for the solution.
+            SpecularDecomposition specularDecomposition = new SpecularDecomposition(settings.getTextureFitSettings(), settings.getSpecularBasisSettings());
 
-            Drawable<ContextType> errorCalcDrawable = resources.createDrawable(errorCalcProgram);
-            specularFit.basisResources.useWithShaderProgram(errorCalcProgram);
-            errorCalcProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
-            errorCalcProgram.setUniform("errorGamma", 1.0f);
+            // Initialize weights using K-means.
+            SpecularFitInitializer<ContextType> initializer = new SpecularFitInitializer<>(resources, settings.getTextureFitSettings(), settings.getSpecularBasisSettings());
+            initializer.initialize(programFactory, specularDecomposition);
 
-            // Track how the error improves over iterations of the whole algorithm.
-            double previousIterationError;
-
-            BRDFReconstruction brdfReconstruction = new BRDFReconstruction(
-                settings,
-                new GeneralizedSmoothStepBasis(
-                    settings.microfacetDistributionResolution,
-                    settings.getMetallicity(),
-                    (int)Math.round(settings.getSpecularSmoothness() * settings.microfacetDistributionResolution),
-                    x -> 3*x*x-2*x*x*x)
-//                new StepBasis(settings.microfacetDistributionResolution, settings.getMetallicity())
-            );
-            SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(settings);
-            ShaderBasedErrorCalculator errorCalculator = new ShaderBasedErrorCalculator(settings.width * settings.height);
-
-            // Instantiate once so that the memory buffers can be reused.
-            GraphicsStream<ColorList[]> reflectanceStreamParallel = reflectanceStream.parallel();
-
-            do
+            if (SpecularOptimization.DEBUG)
             {
-                previousIterationError = errorCalculator.getReport().getError();
+                initializer.saveDebugImage(specularDecomposition, settings.getOutputDirectory());
+            }
 
-                // Use the current front normal buffer for extracting reflectance information.
-                reflectanceStream.getProgram().setTexture("normalEstimate", specularFit.getNormalMap());
+            // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.
+            SpecularFitFromOptimization<ContextType> specularFit = new SpecularFitFromOptimization<>(resources, programFactory,
+                settings.getTextureFitSettings(), settings.getSpecularBasisSettings(), settings.getNormalOptimizationSettings());
 
-                // Reconstruct the basis BRDFs.
-                // Set up a stream and pass it to the BRDF reconstruction module to give it access to the reflectance information.
-                // Operate in parallel for optimal performance.
-                brdfReconstruction.execute(
-                    reflectanceStreamParallel.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
-                    solution);
+            try
+            (
+                // Reflectance stream: includes a shader program and a framebuffer object for extracting reflectance data from images.
+                GraphicsStreamResource<ContextType> reflectanceStream = resources.streamFactory().streamAsResource(
+                    getReflectanceProgramBuilder(programFactory),
+                    context.buildFramebufferObject(settings.getTextureFitSettings().width, settings.getTextureFitSettings().height)
+                        .addColorAttachment(ColorFormat.RGBA32F)
+                        .addColorAttachment(ColorFormat.RGBA32F));
 
-                // Use the current front normal buffer for calculating error.
-                errorCalcProgram.setTexture("normalEstimate", specularFit.getNormalMap());
+                // Compare fitted models against actual photographs
+                Program<ContextType> errorCalcProgram = createErrorCalcProgram(programFactory);
 
-                // Log error in debug mode.
-                if (DEBUG)
+                // Framebuffer for calculating error and reconstructing 3D renderings of the object
+                FramebufferObject<ContextType> scratchFramebuffer =
+                    context.buildFramebufferObject(imageWidth, imageHeight)
+                        .addColorAttachment(ColorFormat.RGBA32F)
+                        .addDepthAttachment()
+                        .createFramebufferObject()
+            )
+            {
+                // Setup reflectance extraction program
+                programFactory.setupShaderProgram(reflectanceStream.getProgram());
+
+                Drawable<ContextType> errorCalcDrawable = createErrorCalcDrawable(resources, specularFit, errorCalcProgram);
+
+                ShaderBasedErrorCalculator errorCalculator = iterativeFit(
+                    context, settings, specularDecomposition, specularFit, reflectanceStream, errorCalcDrawable, scratchFramebuffer);
+
+                // Calculate final diffuse map without the constraint of basis functions.
+                specularFit.diffuseOptimization.execute(specularFit);
+
+                Duration duration = Duration.between(start, Instant.now());
+                System.out.println("Total processing time: " + duration);
+
+                try (PrintStream time = new PrintStream(new File(settings.getOutputDirectory(), "time.txt")))
                 {
-                    // Prepare for error calculation on the GPU.
-                    // Basis functions will have changed.
-                    specularFit.basisResources.updateFromSolution(solution);
-
-                    System.out.println("Calculating error...");
-                    errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
-                    logError(errorCalculator.getReport());
-
-                    // Save basis image visualization for reference and debugging
-                    try(BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(context, settings))
-                    {
-                        basisImageCreator.createImages(specularFit);
-                    }
-
-                    // write out diffuse texture for debugging
-                    solution.saveDiffuseMap(settings.additional.getFloat("gamma"));
+                    time.println(duration);
+                }
+                catch (FileNotFoundException e)
+                {
+                    e.printStackTrace();
                 }
 
-                if (settings.basisCount > 1)
+                // Save the final diffuse and normal maps
+                specularFit.diffuseOptimization.saveDiffuseMap(settings.getOutputDirectory());
+                specularFit.normalOptimization.saveNormalMap(settings.getOutputDirectory());
+
+                // Save the final basis functions
+                specularDecomposition.saveBasisFunctions(settings.getOutputDirectory());
+
+                // Save basis image visualization for reference and debugging
+                try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(context, settings.getSpecularBasisSettings()))
                 {
-                    // Make sure there are enough blocks for any pixels that don't go into the weight blocks evenly.
-                    int blockCount = (settings.width * settings.height + settings.getWeightBlockSize() - 1) / settings.getWeightBlockSize();
-
-                    // Initially assume that all texels are invalid.
-                    solution.invalidateWeights();
-
-                    for (int i = 0; i < blockCount; i++) // TODO: this was done quickly; may need to be refactored
-                    {
-                        System.out.println("Starting block " + i + "...");
-                        weightOptimization.execute(
-                            reflectanceStream.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
-                            solution, i * settings.getWeightBlockSize());
-                    }
+                    basisImageCreator.createImages(specularFit, settings.getOutputDirectory());
                 }
 
-                if (DEBUG)
+                try (PrintStream rmseOut = new PrintStream(new File(settings.getOutputDirectory(), "rmse.txt")))
                 {
-                    System.out.println("Calculating error...");
+                    SpecularFitFinalizer finalizer = new SpecularFitFinalizer(settings.getTextureFitSettings(), settings.getSpecularBasisSettings());
+                    // Validate normals using input normal map (mainly for testing / experiment validation, not typical applications)
+                    finalizer.validateNormalMap(resources, specularFit, rmseOut);
+
+                    // Fill holes in weight maps and calculate some final error statistics.
+                    finalizer.finishAndCalculateError(specularDecomposition, resources, programFactory, specularFit, scratchFramebuffer,
+                        errorCalculator.getReport(), errorCalcDrawable, rmseOut, settings.getOutputDirectory());
                 }
 
-                // Prepare for error calculation and then normal optimization on the GPU.
-                // Weight maps will have changed.
-                specularFit.basisResources.updateFromSolution(solution);
+                // Generate albedo / ORM maps
+                try (AlbedoORMOptimization<ContextType> albedoORM = new AlbedoORMOptimization<>(context, settings.getTextureFitSettings()))
+                {
+                    albedoORM.execute(specularFit);
+                    albedoORM.saveTextures(settings.getOutputDirectory());
+                }
 
-                // Calculate the error in preparation for normal estimation.
+                return specularFit;
+            }
+        }
+    }
+
+    private static <ContextType extends Context<ContextType>> ShaderBasedErrorCalculator iterativeFit(
+        ContextType context, SpecularFitSettings settings, SpecularDecomposition specularDecomposition,
+        SpecularFitFromOptimization<ContextType> specularFit, GraphicsStreamResource<ContextType> reflectanceStream,
+        Drawable<ContextType> errorCalcDrawable, FramebufferObject<ContextType> scratchFramebuffer) throws IOException
+    {
+        reflectanceStream.getProgram().setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
+
+        // Track how the error improves over iterations of the whole algorithm.
+        double previousIterationError;
+
+        BRDFReconstruction brdfReconstruction = new BRDFReconstruction(
+            settings.getSpecularBasisSettings(),
+            new GeneralizedSmoothStepBasis(
+                settings.getSpecularBasisSettings().getMicrofacetDistributionResolution(),
+                settings.getSpecularBasisSettings().getMetallicity(),
+                (int) Math.round(settings.getSpecularBasisSettings().getSpecularSmoothness() * settings.getSpecularBasisSettings().getMicrofacetDistributionResolution()),
+                x -> 3 * x * x - 2 * x * x * x)
+//                new StepBasis(settings.microfacetDistributionResolution, settings.getMetallicity())
+        );
+        SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(
+            settings.getTextureFitSettings(), settings.getSpecularBasisSettings(), settings.getWeightBlockSize());
+        ShaderBasedErrorCalculator errorCalculator = new ShaderBasedErrorCalculator(settings.getTextureFitSettings().width * settings.getTextureFitSettings().height);
+
+        // Instantiate once so that the memory buffers can be reused.
+        GraphicsStream<ColorList[]> reflectanceStreamParallel = reflectanceStream.parallel();
+
+        do
+        {
+            previousIterationError = errorCalculator.getReport().getError();
+
+            // Use the current front normal buffer for extracting reflectance information.
+            reflectanceStream.getProgram().setTexture("normalEstimate", specularFit.getNormalMap());
+
+            // Reconstruct the basis BRDFs.
+            // Set up a stream and pass it to the BRDF reconstruction module to give it access to the reflectance information.
+            // Operate in parallel for optimal performance.
+            brdfReconstruction.execute(
+                reflectanceStreamParallel.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
+                specularDecomposition);
+
+            // Use the current front normal buffer for calculating error.
+            errorCalcDrawable.program().setTexture("normalEstimate", specularFit.getNormalMap());
+
+            // Log error in debug mode.
+            if (DEBUG)
+            {
+                // Prepare for error calculation on the GPU.
+                // Basis functions will have changed.
+                specularFit.basisResources.updateFromSolution(specularDecomposition);
+
+                System.out.println("Calculating error...");
                 errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
+                logError(errorCalculator.getReport());
 
-                if (DEBUG)
+                // Save basis image visualization for reference and debugging
+                try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(context, settings.getSpecularBasisSettings()))
                 {
-                    // Log error in debug mode.
-                    logError(errorCalculator.getReport());
+                    basisImageCreator.createImages(specularFit, settings.getOutputDirectory());
                 }
 
-                if (settings.isNormalRefinementEnabled())
+                // write out diffuse texture for debugging
+                specularDecomposition.saveDiffuseMap(settings.getTextureFitSettings().gamma, settings.getOutputDirectory());
+            }
+
+            if (settings.getSpecularBasisSettings().getBasisCount() > 1)
+            {
+                // Make sure there are enough blocks for any pixels that don't go into the weight blocks evenly.
+                int blockCount = (settings.getTextureFitSettings().width * settings.getTextureFitSettings().height + settings.getWeightBlockSize() - 1) / settings.getWeightBlockSize();
+
+                // Initially assume that all texels are invalid.
+                specularDecomposition.invalidateWeights();
+
+                for (int i = 0; i < blockCount; i++) // TODO: this was done quickly; may need to be refactored
                 {
-                    System.out.println("Optimizing normals...");
+                    System.out.println("Starting block " + i + "...");
+                    weightOptimization.execute(
+                        reflectanceStream.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
+                        specularDecomposition, i * settings.getWeightBlockSize());
 
-                    specularFit.normalOptimization.execute(normalMap ->
+                    if (SpecularOptimization.DEBUG)
                     {
-                        // Update program to use the new front buffer for error calculation.
-                        errorCalcProgram.setTexture("normalEstimate", normalMap);
+                        // write out weight textures for debugging
+                        specularDecomposition.saveWeightMaps(settings.getOutputDirectory());
 
-                        if (DEBUG)
-                        {
-                            System.out.println("Calculating error...");
-                        }
+                        // write out diffuse texture for debugging
+                        specularDecomposition.saveDiffuseMap(
+                            settings.getTextureFitSettings().gamma, settings.getOutputDirectory());
+                    }
+                }
+            }
 
-                        // Calculate the error to determine if we should stop.
-                        errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
+            if (DEBUG)
+            {
+                System.out.println("Calculating error...");
+            }
 
-                        if (DEBUG)
-                        {
-                            // Log error in debug mode.
-                            logError(errorCalculator.getReport());
-                        }
+            // Prepare for error calculation and then normal optimization on the GPU.
+            // Weight maps will have changed.
+            specularFit.basisResources.updateFromSolution(specularDecomposition);
 
-                        return errorCalculator.getReport();
-                    },
+            // Calculate the error in preparation for normal estimation.
+            errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
+
+            if (DEBUG)
+            {
+                // Log error in debug mode.
+                logError(errorCalculator.getReport());
+            }
+
+            if (settings.getNormalOptimizationSettings().isNormalRefinementEnabled())
+            {
+                System.out.println("Optimizing normals...");
+
+                specularFit.normalOptimization.execute(normalMap ->
+                {
+                    // Update program to use the new front buffer for error calculation.
+                    errorCalcDrawable.program().setTexture("normalEstimate", normalMap);
+
+                    if (DEBUG)
+                    {
+                        System.out.println("Calculating error...");
+                    }
+
+                    // Calculate the error to determine if we should stop.
+                    errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
+
+                    if (DEBUG)
+                    {
+                        // Log error in debug mode.
+                        logError(errorCalculator.getReport());
+                    }
+
+                    return errorCalculator.getReport();
+                },
                     settings.getConvergenceTolerance());
 
-                    if (errorCalculator.getReport().getError() > errorCalculator.getReport().getPreviousError())
-                    {
-                        // Revert error calculations to the last accepted result.
-                        errorCalculator.reject();
-                    }
-                }
-
-                // Estimate specular roughness and reflectivity.
-                // This can cause error to increase but it's unclear if that poses a problem for convergence.
-                specularFit.roughnessOptimization.execute();
-
-                if (DEBUG)
+                if (SpecularOptimization.DEBUG)
                 {
-                    specularFit.roughnessOptimization.saveTextures();
+                    specularFit.normalOptimization.saveNormalMap(settings.getOutputDirectory());
+                }
 
-                    // Log error in debug mode.
-                    specularFit.basisResources.updateFromSolution(solution);
-                    System.out.println("Calculating error...");
-                    errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
-                    logError(errorCalculator.getReport());
+                if (errorCalculator.getReport().getError() > errorCalculator.getReport().getPreviousError())
+                {
+                    // Revert error calculations to the last accepted result.
+                    errorCalculator.reject();
                 }
             }
-            while ((settings.basisCount > 1 || settings.isNormalRefinementEnabled()) &&
-                // Iteration not necessary if basisCount is 1 and normal refinement is off.
-                previousIterationError - errorCalculator.getReport().getError() > settings.getConvergenceTolerance());
 
-            // Calculate final diffuse map without the constraint of basis functions.
-            specularFit.diffuseOptimization.execute(specularFit);
+            // Estimate specular roughness and reflectivity.
+            // This can cause error to increase but it's unclear if that poses a problem for convergence.
+            specularFit.roughnessOptimization.execute();
 
-            Duration duration = Duration.between(start, Instant.now());
-            System.out.println("Total processing time: " + duration);
-
-            try(PrintStream time = new PrintStream(new File(settings.outputDirectory, "time.txt")))
+            if (DEBUG)
             {
-                time.println(duration);
+                specularFit.roughnessOptimization.saveTextures(settings.getOutputDirectory());
+
+                // Log error in debug mode.
+                specularFit.basisResources.updateFromSolution(specularDecomposition);
+                System.out.println("Calculating error...");
+                errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
+                logError(errorCalculator.getReport());
             }
-            catch (FileNotFoundException e)
-            {
-                e.printStackTrace();
-            }
-
-            // Save the final diffuse and normal maps
-            specularFit.diffuseOptimization.saveDiffuseMap();
-            specularFit.normalOptimization.saveNormalMap();
-
-            // Save the final basis functions
-            solution.saveBasisFunctions();
-
-            // Save basis image visualization for reference and debugging
-            try(BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(context, settings))
-            {
-                basisImageCreator.createImages(specularFit);
-            }
-
-            try(PrintStream rmseOut = new PrintStream(new File(settings.outputDirectory, "rmse.txt")))
-            {
-                SpecularFitFinalizer finalizer = new SpecularFitFinalizer(settings);
-                // Validate normals using input normal map (mainly for testing / experiment validation, not typical applications)
-                finalizer.validateNormalMap(resources, specularFit, rmseOut);
-
-                // Fill holes in weight maps and calculate some final error statistics.
-                finalizer.finishAndCalculateError(solution, resources, specularFit, scratchFramebuffer, errorCalculator.getReport(), errorCalcDrawable, rmseOut);
-            }
-
-            // Generate albedo / ORM maps
-            try(AlbedoORMOptimization<ContextType> albedoORM = new AlbedoORMOptimization<>(context, settings))
-            {
-                albedoORM.execute(specularFit);
-                albedoORM.saveTextures();
-            }
-
-            return specularFit;
         }
+        while ((settings.getSpecularBasisSettings().getBasisCount() > 1 || settings.getNormalOptimizationSettings().isNormalRefinementEnabled()) &&
+            // Iteration not necessary if basisCount is 1 and normal refinement is off.
+            previousIterationError - errorCalculator.getReport().getError() > settings.getConvergenceTolerance());
+
+        return errorCalculator;
+    }
+
+    private static <ContextType extends Context<ContextType>> Drawable<ContextType> createErrorCalcDrawable(IBRResourcesImageSpace<ContextType> resources, SpecularFitFromOptimization<ContextType> specularFit, Program<ContextType> errorCalcProgram)
+    {
+        Drawable<ContextType> errorCalcDrawable = resources.createDrawable(errorCalcProgram);
+        specularFit.basisResources.useWithShaderProgram(errorCalcProgram);
+        errorCalcProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
+        errorCalcProgram.setUniform("errorGamma", 1.0f);
+        return errorCalcDrawable;
     }
 
     /**
@@ -340,17 +385,18 @@ public class SpecularOptimization
     {
         // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.
         // Only basis representation and diffuse map will be loaded from solution.
-        SpecularFitBase<ContextType> solution = new SpecularFitFromPriorSolution<>(context, settings, priorSolutionDirectory);
+        SpecularFitBase<ContextType> solution = new SpecularFitFromPriorSolution<>(context,
+            settings.getTextureFitSettings(), settings.getSpecularBasisSettings(), priorSolutionDirectory);
 
         // Fit specular textures
         solution.roughnessOptimization.execute();
-        solution.roughnessOptimization.saveTextures();
+        solution.roughnessOptimization.saveTextures(settings.getOutputDirectory());
 
         // Generate albedo / ORM maps
-        try(AlbedoORMOptimization<ContextType> albedoORM = new AlbedoORMOptimization<>(context, settings))
+        try(AlbedoORMOptimization<ContextType> albedoORM = new AlbedoORMOptimization<>(context, settings.getTextureFitSettings()))
         {
             albedoORM.execute(solution);
-            albedoORM.saveTextures();
+            albedoORM.saveTextures(settings.getOutputDirectory());
         }
 
         return solution;
@@ -378,7 +424,6 @@ public class SpecularOptimization
     {
         return programFactory.createProgram(
             new File("shaders/common/texspace_noscale.vert"),
-            new File("shaders/specularfit/errorCalc.frag"),
-            false); // Disable visibility and shadow tests for error calculation.
+            new File("shaders/specularfit/errorCalc.frag"));
     }
 }

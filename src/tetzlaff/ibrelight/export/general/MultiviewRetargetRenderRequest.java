@@ -24,14 +24,14 @@ import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
 import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
-import tetzlaff.models.ReadonlySettingsModel;
+import tetzlaff.models.ReadonlyIBRSettingsModel;
 
 class MultiviewRetargetRenderRequest<ContextType extends Context<ContextType>> extends RenderRequestBase<ContextType>
 {
     private final File targetViewSetFile;
 
-    MultiviewRetargetRenderRequest(int width, int height, ReadonlySettingsModel settingsModel, Consumer<Program<ContextType>> shaderSetupCallback,
-        File targetViewSet, File vertexShader, File fragmentShader, File outputDirectory)
+    MultiviewRetargetRenderRequest(int width, int height, ReadonlyIBRSettingsModel settingsModel, Consumer<Program<ContextType>> shaderSetupCallback,
+                                   File targetViewSet, File vertexShader, File fragmentShader, File outputDirectory)
     {
         super(width, height, settingsModel, shaderSetupCallback, vertexShader, fragmentShader, outputDirectory);
         this.targetViewSetFile = targetViewSet;
@@ -41,7 +41,7 @@ class MultiviewRetargetRenderRequest<ContextType extends Context<ContextType>> e
     {
         private final File targetViewSet;
 
-        Builder(File targetViewSet, ReadonlySettingsModel settingsModel, File fragmentShader, File outputDirectory)
+        Builder(File targetViewSet, ReadonlyIBRSettingsModel settingsModel, File fragmentShader, File outputDirectory)
         {
             super(settingsModel, fragmentShader, outputDirectory);
             this.targetViewSet = targetViewSet;

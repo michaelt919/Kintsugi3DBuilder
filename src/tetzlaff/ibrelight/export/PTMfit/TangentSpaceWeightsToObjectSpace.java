@@ -35,7 +35,7 @@ public class TangentSpaceWeightsToObjectSpace <ContextType extends Context<Conte
         this.settings = settings;
     }
 
-    public void run(PTMsolution solutions, ProgramBuilder<ContextType> programBuilder, int weightStart, int weightCount)
+    public void run(PTMsolution solutions, ProgramBuilder<ContextType> programBuilder, int weightStart, int weightCount, File outputDirectory)
     {
         try (Program<ContextType> program = programBuilder.createProgram();
              FramebufferObject<ContextType> fbo = resources.getContext().buildFramebufferObject(settings.width, settings.height)
@@ -88,7 +88,7 @@ public class TangentSpaceWeightsToObjectSpace <ContextType extends Context<Conte
             }
             drawable.draw(PrimitiveMode.TRIANGLES, fbo);
             FramebufferObject<ContextType> finalFBO = new ShaderHoleFill<>(resources.getContext()).execute(fbo, fbo2);
-            saveToFile(finalFBO, weightStart, weightCount);
+            saveToFile(finalFBO, weightStart, weightCount, outputDirectory);
         }
 
         catch (FileNotFoundException e)
@@ -97,7 +97,7 @@ public class TangentSpaceWeightsToObjectSpace <ContextType extends Context<Conte
         }
 
     }
-    private void saveToFile(Framebuffer<ContextType> framebuffer, int weightStart, int weightCount)
+    private void saveToFile(Framebuffer<ContextType> framebuffer, int weightStart, int weightCount, File outputDirectory)
     {
         try
         {
@@ -105,7 +105,7 @@ public class TangentSpaceWeightsToObjectSpace <ContextType extends Context<Conte
             {
                 String filename = String.format("objWeights%02d.png", weightStart + i);
                 framebuffer.saveColorBufferToFile(i, "PNG",
-                        new File(settings.outputDirectory, filename));
+                        new File(outputDirectory, filename));
             }
         }
         catch (IOException e)

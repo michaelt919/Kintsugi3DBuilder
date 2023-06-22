@@ -23,19 +23,19 @@ import tetzlaff.ibrelight.core.IBRInstance;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
 import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
-import tetzlaff.models.ReadonlySettingsModel;
+import tetzlaff.models.ReadonlyIBRSettingsModel;
 
 class MultiviewRenderRequest<ContextType extends Context<ContextType>> extends RenderRequestBase<ContextType>
 {
-    MultiviewRenderRequest(int width, int height, ReadonlySettingsModel settingsModel, Consumer<Program<ContextType>> shaderSetupCallback,
-        File vertexShader, File fragmentShader, File outputDirectory)
+    MultiviewRenderRequest(int width, int height, ReadonlyIBRSettingsModel settingsModel, Consumer<Program<ContextType>> shaderSetupCallback,
+                           File vertexShader, File fragmentShader, File outputDirectory)
     {
         super(width, height, settingsModel, shaderSetupCallback, vertexShader, fragmentShader, outputDirectory);
     }
 
     static class Builder<ContextType extends Context<ContextType>> extends BuilderBase<ContextType>
     {
-        Builder(ReadonlySettingsModel settingsModel, File fragmentShader, File outputDirectory)
+        Builder(ReadonlyIBRSettingsModel settingsModel, File fragmentShader, File outputDirectory)
         {
             super(settingsModel, fragmentShader, outputDirectory);
         }

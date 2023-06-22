@@ -87,7 +87,7 @@ public class SceneModel
         this.lightingModel = lightingModel;
     }
 
-    public void setSettingsModel(ReadonlySettingsModel settingsModel)
+    public void setSettingsModel(ReadonlyIBRSettingsModel settingsModel)
     {
         this.settingsModel = SafeSettingsModelWrapperFactory.getInstance().wrapUnsafeModel(settingsModel);
     }

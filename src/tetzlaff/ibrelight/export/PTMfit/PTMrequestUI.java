@@ -106,9 +106,8 @@ public class PTMrequestUI implements IBRRequestUI {
             IBRRequest<ContextType> request = new PTMrequest<>(new TextureFitSettings(
                     Integer.parseInt(widthTextField.getText()),
                     Integer.parseInt(heightTextField.getText()),
-                    new File(exportDirectoryField.getText()),
-                    modelAccess.getSettingsModel()
-                    ));
+                    modelAccess.getSettingsModel().getFloat("gamma")),
+                new File(exportDirectoryField.getText()));
 
             requestQueue.addIBRRequest(request);
         });

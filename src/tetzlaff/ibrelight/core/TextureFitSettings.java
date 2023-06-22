@@ -11,17 +11,15 @@
 
 package tetzlaff.ibrelight.core;
 
-import java.io.File;
-import tetzlaff.models.ReadonlySettingsModel;
+import tetzlaff.models.ReadonlyIBRSettingsModel;
 
 public class TextureFitSettings
 {
     public final int width;
     public final int height;
-    public final File outputDirectory;
-    public final ReadonlySettingsModel additional;
+    public final float gamma;
 
-    public TextureFitSettings(int width, int height, File outputDirectory, ReadonlySettingsModel additional)
+    public TextureFitSettings(int width, int height, float gamma)
     {
         if (width <= 0)
         {
@@ -31,18 +29,13 @@ public class TextureFitSettings
         {
             throw new IllegalArgumentException("Texture height must be greater than zero.");
         }
-        else if (outputDirectory == null)
+        else if (gamma <= 0)
         {
-            throw new IllegalArgumentException("Output directory cannot be null.");
-        }
-        else if (additional == null)
-        {
-            throw new IllegalArgumentException("Additional settings cannot be null.");
+            throw new IllegalArgumentException("Gamma must be greater than zero.");
         }
 
         this.width = width;
         this.height = height;
-        this.outputDirectory = outputDirectory;
-        this.additional = additional;
+        this.gamma = gamma;
     }
 }

@@ -1,14 +1,13 @@
 package tetzlaff.ibrelight.export.specularfit;
 
 import tetzlaff.gl.core.Context;
-import tetzlaff.gl.core.FramebufferObject;
-import tetzlaff.gl.core.Texture2D;
+import java.io.File;
 
 public interface RoughnessOptimization<ContextType extends Context<ContextType>> extends SpecularTextures<ContextType>, AutoCloseable
 {
     void clear();
     void execute();
-    void saveTextures();
+    void saveTextures(File outputDirectory);
 
     @Override
     void close();

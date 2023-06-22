@@ -87,7 +87,7 @@ public final class MultiplierTool implements KeyPressTool
         }
 
         @Override
-        public ToolBuilder<MultiplierTool> setSettingsModel(SettingsModel settingsModel)
+        public ToolBuilder<MultiplierTool> setSettingsModel(IBRSettingsModel settingsModel)
         {
             return this;
         }

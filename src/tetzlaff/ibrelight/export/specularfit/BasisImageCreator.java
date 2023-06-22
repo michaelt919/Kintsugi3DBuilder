@@ -31,9 +31,9 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
     // Framebuffer for the basis images
     private final FramebufferObject<ContextType> framebuffer;
 
-    private final SpecularFitSettings settings;
+    private final SpecularBasisSettings settings;
 
-    public BasisImageCreator(ContextType context, SpecularFitSettings settings) throws FileNotFoundException
+    public BasisImageCreator(ContextType context, SpecularBasisSettings settings) throws FileNotFoundException
     {
         program = context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
@@ -45,24 +45,24 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
         drawable = context.createDrawable(program);
         drawable.addVertexBuffer("position", rect);
 
+        this.settings = settings;
+
         framebuffer = context.buildFramebufferObject(
-            2 * settings.microfacetDistributionResolution + 1, 2 * settings.microfacetDistributionResolution + 1)
+            2 * this.settings.getMicrofacetDistributionResolution() + 1, 2 * this.settings.getMicrofacetDistributionResolution() + 1)
             .addColorAttachment(ColorFormat.RGBA8)
             .createFramebufferObject();
-
-        this.settings = settings;
     }
 
-    public void createImages(SpecularFitFromOptimization<ContextType> specularFit) throws IOException
+    public void createImages(SpecularFitFromOptimization<ContextType> specularFit, File outputDirectory) throws IOException
     {
         program.setTexture("basisFunctions", specularFit.basisResources.basisMaps);
 
         // Save basis functions in image format.
-        for (int i = 0; i < settings.basisCount; i++)
+        for (int i = 0; i < settings.getBasisCount(); i++)
         {
             drawable.program().setUniform("basisIndex", i);
             drawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
-            framebuffer.saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, String.format("basis_%02d.png", i)));
+            framebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, String.format("basis_%02d.png", i)));
         }
     }
 

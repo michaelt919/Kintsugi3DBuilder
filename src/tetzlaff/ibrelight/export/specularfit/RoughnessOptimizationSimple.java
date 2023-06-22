@@ -15,12 +15,13 @@ import java.io.FileNotFoundException;
 
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.core.*;
+import tetzlaff.ibrelight.core.TextureFitSettings;
 
 public class RoughnessOptimizationSimple<ContextType extends Context<ContextType>> extends RoughnessOptimizationBase<ContextType>
 {
     private final FramebufferObject<ContextType> specularTexFramebuffer;
 
-    public RoughnessOptimizationSimple(ContextType context, BasisResources<ContextType> resources, SpecularFitSettings settings)
+    public RoughnessOptimizationSimple(ContextType context, BasisResources<ContextType> resources, TextureFitSettings settings)
         throws FileNotFoundException
     {
         super(context, resources, settings);

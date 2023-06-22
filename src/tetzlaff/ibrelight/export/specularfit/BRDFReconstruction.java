@@ -11,9 +11,6 @@
 
 package tetzlaff.ibrelight.export.specularfit;
 
-import java.io.File;
-import java.sql.Ref;
-
 import org.ejml.data.DMatrixRMaj;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
@@ -25,19 +22,18 @@ import tetzlaff.util.Counter;
 public class BRDFReconstruction
 {
     private static final double NNLS_TOLERANCE_SCALE = 0.000000000001;
-
-    private final SpecularFitSettings settings;
     private final BasisFunctions stepBasis;
     private final int matrixSize;
+    private final SpecularBasisSettings settings;
 
-    public BRDFReconstruction(SpecularFitSettings settings, BasisFunctions stepBasis)
+    public BRDFReconstruction(SpecularBasisSettings settings, BasisFunctions stepBasis)
     {
-        this.settings = settings;
         this.stepBasis = stepBasis;
-        matrixSize = settings.basisCount * (settings.microfacetDistributionResolution + 1);
+        this.settings = settings;
+        matrixSize = this.settings.getBasisCount() * (this.settings.getMicrofacetDistributionResolution() + 1);
     }
 
-    public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularFitSolution solution)
+    public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularDecomposition solution)
     {
         System.out.println("Building reflectance fitting matrix...");
         MatrixSystem system = buildReflectanceMatrix(viewStream, solution);
@@ -48,7 +44,7 @@ public class BRDFReconstruction
 
         System.out.println("DONE!");
 
-        for (int b = 0; b < settings.basisCount; b++)
+        for (int b = 0; b < settings.getBasisCount(); b++)
         {
             int bCopy = b;
 
@@ -121,17 +117,11 @@ public class BRDFReconstruction
 //        }
     }
 
-    private MatrixSystem buildReflectanceMatrix(GraphicsStream<ReflectanceData> viewStream, SpecularFitSolution solution)
+    private MatrixSystem buildReflectanceMatrix(GraphicsStream<ReflectanceData> viewStream, SpecularDecomposition solution)
     {
         Counter counter = new Counter();
-
-        if (ReflectanceMatrixBuilder.DUMP_SAMPLES)
-        {
-            new File(settings.outputDirectory, "sampleDump.txt").delete();
-        }
-
-        MatrixSystem system = (ReflectanceMatrixBuilder.DUMP_SAMPLES ? viewStream.sequential() : viewStream)
-            .map(reflectanceData ->
+        MatrixSystem system =
+            viewStream.map(reflectanceData ->
             {
                 // Create scratch space for the thread handling this view.
                 MatrixSystem contribution = new MatrixSystem(matrixSize, 3, DMatrixRMaj.class);
@@ -153,35 +143,35 @@ public class BRDFReconstruction
         {
             System.out.println();
 
-            for (int b = 0; b < settings.basisCount; b++)
+            for (int b = 0; b < settings.getBasisCount(); b++)
             {
                 System.out.print("RHS, red for BRDF #" + b + ": ");
 
                 System.out.print(system.rhs[0].get(b));
-                for (int m = 0; m < settings.microfacetDistributionResolution; m++)
+                for (int m = 0; m < settings.getMicrofacetDistributionResolution(); m++)
                 {
                     System.out.print(", ");
-                    System.out.print(system.rhs[0].get((m + 1) * settings.basisCount + b));
+                    System.out.print(system.rhs[0].get((m + 1) * settings.getBasisCount() + b));
                 }
                 System.out.println();
 
                 System.out.print("RHS, green for BRDF #" + b + ": ");
 
                 System.out.print(system.rhs[1].get(b));
-                for (int m = 0; m < settings.microfacetDistributionResolution; m++)
+                for (int m = 0; m < settings.getMicrofacetDistributionResolution(); m++)
                 {
                     System.out.print(", ");
-                    System.out.print(system.rhs[1].get((m + 1) * settings.basisCount + b));
+                    System.out.print(system.rhs[1].get((m + 1) * settings.getBasisCount() + b));
                 }
                 System.out.println();
 
                 System.out.print("RHS, blue for BRDF #" + b + ": ");
 
                 System.out.print(system.rhs[2].get(b));
-                for (int m = 0; m < settings.microfacetDistributionResolution; m++)
+                for (int m = 0; m < settings.getMicrofacetDistributionResolution(); m++)
                 {
                     System.out.print(", ");
-                    System.out.print(system.rhs[2].get((m + 1) * settings.basisCount + b));
+                    System.out.print(system.rhs[2].get((m + 1) * settings.getBasisCount() + b));
                 }
                 System.out.println();
 

@@ -14,60 +14,93 @@ package tetzlaff.ibrelight.export.specularfit;
 import java.io.File;
 
 import tetzlaff.ibrelight.core.TextureFitSettings;
-import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.rendering.resources.ImageCacheSettings;
-import tetzlaff.models.ReadonlySettingsModel;
+import tetzlaff.models.IBRSettingsModel;
+import tetzlaff.models.ReadonlyIBRSettingsModel;
 
-public class SpecularFitSettings extends TextureFitSettings
+public class SpecularFitSettings
 {
-    public final int basisCount;
-    public final int microfacetDistributionResolution;
+    private final TextureFitSettings textureFitSettings;
+    private final ReadonlyIBRSettingsModel ibrSettings;
+    private final NormalOptimizationSettings normalOptimizationSettings = new NormalOptimizationSettings();
+    private final SpecularBasisSettings specularBasisSettings = new SpecularBasisSettings();
+    private final ReconstructionSettings reconstructionSettings = new ReconstructionSettings();
+    private final ImageCacheSettings imageCacheSettings = new ImageCacheSettings();
 
     private double convergenceTolerance = 0.00001;
-    private double specularSmoothness = 0.0;
-    private double metallicity = 0.0;
-    private boolean normalRefinementEnabled = true;
-    private double minNormalDamping = 1.0;
-    private int normalSmoothingIterations = 0;
 
     private int weightBlockSize = 512 * 512;
 
-    private boolean smithMaskingShadowingEnabled = true;
-    private boolean levenbergMarquardtEnabled = true;
-    private int unsuccessfulLMIterationsAllowed = 8;
-
-    private ViewSet reconstructionViewSet = null;
-    private boolean reconstructAll = false;
-
     private File priorSolutionDirectory = null;
+    private File outputDirectory;
 
-    private final ImageCacheSettings imageCacheSettings = new ImageCacheSettings();
 
     /**
      * Constructs an object to hold the settings for specular texture fitting.
-     * @param width The width of the textures
-     * @param height The height of the textures
-     * @param basisCount The number of basis functions to use for the specular lobe.
-     * @param microfacetDistributionResolution The number of discrete values in the definition of the specular lobe.
-     * @param outputDirectory The directory where the results should be saved.
-     * @param additional Other settings from the IBRelight interface
+     * @param textureFitSettings General settings for texture fitting (resolution, output directory)
      */
-    public SpecularFitSettings(int width, int height, int basisCount, int microfacetDistributionResolution,
-                               File outputDirectory, ReadonlySettingsModel additional)
+    public SpecularFitSettings(TextureFitSettings textureFitSettings, IBRSettingsModel ibrSettings, File outputDirectory)
     {
-        super(width, height, outputDirectory, additional);
-
-        if (basisCount <= 0)
+        if (textureFitSettings == null)
         {
-            throw new IllegalArgumentException("Basis count must be greater than zero.");
+            throw new IllegalArgumentException("Texture fit settings cannot be null.");
         }
-        else if (microfacetDistributionResolution <= 0)
+        else
         {
-            throw new IllegalArgumentException("Microfacet distribution resolution must be greater than zero.");
+            this.textureFitSettings = textureFitSettings;
         }
 
-        this.basisCount = basisCount;
-        this.microfacetDistributionResolution = microfacetDistributionResolution;
+        if (ibrSettings == null)
+        {
+            throw new IllegalArgumentException("IBR settings cannot be null.");
+        }
+        else
+        {
+            this.ibrSettings = ibrSettings;
+        }
+
+        if (outputDirectory == null)
+        {
+            throw new IllegalArgumentException("Output directory cannot be null.");
+        }
+        else
+        {
+            this.outputDirectory = outputDirectory;
+        }
+    }
+
+    public TextureFitSettings getTextureFitSettings()
+    {
+        return textureFitSettings;
+    }
+
+    public ReadonlyIBRSettingsModel getIbrSettings()
+    {
+        return ibrSettings;
+    }
+
+    public SpecularBasisSettings getSpecularBasisSettings()
+    {
+        return specularBasisSettings;
+    }
+
+    public NormalOptimizationSettings getNormalOptimizationSettings()
+    {
+        return normalOptimizationSettings;
+    }
+
+    /**
+     * Gets a modifiable reference to the image cache settings for the specular fit
+     * @return
+     */
+    public ImageCacheSettings getImageCacheSettings()
+    {
+        return imageCacheSettings;
+    }
+
+    public ReconstructionSettings getReconstructionSettings()
+    {
+        return reconstructionSettings;
     }
 
     /**
@@ -77,7 +110,7 @@ public class SpecularFitSettings extends TextureFitSettings
      */
     public double getConvergenceTolerance()
     {
-        return convergenceTolerance;
+        return this.convergenceTolerance;
     }
 
     /**
@@ -93,154 +126,6 @@ public class SpecularFitSettings extends TextureFitSettings
         }
 
         this.convergenceTolerance = convergenceTolerance;
-    }
-
-    /**
-     * Gets the required smoothness for the specular lobe (the width of the smoothstep function used to optimize it).
-     * @return
-     */
-    public double getSpecularSmoothness()
-    {
-        return specularSmoothness;
-    }
-
-    /**
-     * Sets the required smoothness for the specular lobe (the width of the smoothstep function used to optimize it).
-     * @param specularSmoothness
-     */
-    public void setSpecularSmoothness(double specularSmoothness)
-    {
-        if (specularSmoothness < 0)
-        {
-            throw new IllegalArgumentException("Specular smoothness must not be less than zero.");
-        }
-
-        this.specularSmoothness = specularSmoothness;
-    }
-
-    /**
-     * Gets the assumed metallicity of the material (metallic meaning that the diffuse reflectance exhibits specular characteristics
-     * like the Fresnel effect and is scattered by first-surface microfacet geometry, not subsurface scattering)
-     * @return
-     */
-    public double getMetallicity()
-    {
-        return metallicity;
-    }
-
-    /**
-     * Sets the assumed metallicity of the material (metallic meaning that the diffuse reflectance exhibits specular characteristics
-     * like the Fresnel effect and is scattered by first-surface microfacet geometry, not subsurface scattering)
-     * @return
-     */
-    public void setMetallicity(double metallicity)
-    {
-        if (metallicity < 0 || metallicity > 1)
-        {
-            throw new IllegalArgumentException("Metallicity must be between 0 and 1.");
-        }
-
-        this.metallicity = metallicity;
-    }
-
-    /**
-     * Gets whether normal refinement is enabled (if not, the vertex normals will be assumed to be accurate enough)
-     * @return
-     */
-    public boolean isNormalRefinementEnabled()
-    {
-        return normalRefinementEnabled;
-    }
-
-    /**
-     * Sets whether normal refinement is enabled (if not, the vertex normals will be assumed to be accurate enough)
-     * @param normalRefinementEnabled
-     */
-    public void setNormalRefinementEnabled(boolean normalRefinementEnabled)
-    {
-        this.normalRefinementEnabled = normalRefinementEnabled;
-    }
-
-    /**
-     * Gets the minimum allowed damping factor for the the Levenberg-Marquardt algorithm for optimizing the normal map.
-     * Default is 1.0.
-     * Negative values will have the same effect as 0.0.
-     * @return
-     */
-    public double getMinNormalDamping()
-    {
-        return minNormalDamping;
-    }
-
-    /**
-     * Sets the minimum allowed damping factor for the the Levenberg-Marquardt algorithm for optimizing the normal map.
-     * Default is 1.0.
-     * Negative values will have the same effect as 0.0.
-     * @param minNormalDamping
-     */
-    public void setMinNormalDamping(double minNormalDamping)
-    {
-        // Negative values shouldn't break anything here.
-        this.minNormalDamping = minNormalDamping;
-    }
-
-    /**
-     * Gets the number of smoothing iterations for the normal map.  Default is zero (no smoothing).
-     * Negative values will have the same effect as 0.
-     * @return
-     */
-    public int getNormalSmoothingIterations()
-    {
-        return normalSmoothingIterations;
-    }
-
-    /**
-     * Sets the number of smoothing iterations for the normal map.  Default is zero (no smoothing).
-     * Negative values will have the same effect as 0.
-     * @param normalSmoothingIterations
-     */
-    public void setNormalSmoothingIterations(int normalSmoothingIterations)
-    {
-        // Negative values shouldn't break anything here.
-        this.normalSmoothingIterations = normalSmoothingIterations;
-    }
-
-    /**
-     * Should every image in the view set be reconstructed for validation, or just one key view?
-     * Reconstructing all uses a lot more hard drive space.
-     * @return true if all views should be reconstructed; false if only one view should be reconstructed.
-     */
-    public boolean shouldReconstructAll()
-    {
-        return reconstructAll;
-    }
-
-    /**
-     * Sets whether every image in the view set be reconstructed for validation, or just one key view?
-     * Reconstructing all uses a lot more hard drive space.
-     * @param reconstructAll true if all views should be reconstructed; false if only one view should be reconstructed.
-     */
-    public void setReconstructAll(boolean reconstructAll)
-    {
-        this.reconstructAll = reconstructAll;
-    }
-
-    /**
-     * Gets the view set used to create the reconstructed images for manually evaluating the effectiveness of the fit.
-     * @return
-     */
-    public ViewSet getReconstructionViewSet()
-    {
-        return reconstructionViewSet;
-    }
-
-    /**
-     * Sets the view set used to create the reconstructed images for manually evaluating the effectiveness of the fit.
-     * @return
-     */
-    public void setReconstructionViewSet(ViewSet reconstructionViewSet)
-    {
-        this.reconstructionViewSet = reconstructionViewSet;
     }
 
     /**
@@ -261,65 +146,6 @@ public class SpecularFitSettings extends TextureFitSettings
         this.priorSolutionDirectory = priorSolutionDirectory;
     }
 
-
-    /**
-     * Whether or not to use height-correlated Smith for masking / shadowing.  Default is true.
-     * @return
-     */
-    public boolean isSmithMaskingShadowingEnabled()
-    {
-        return smithMaskingShadowingEnabled;
-    }
-
-    /**
-     * Whether or not to use height-correlated Smith for masking / shadowing.  Default is true.
-     * @param smithMaskingShadowingEnabled
-     */
-    public void setSmithMaskingShadowingEnabled(boolean smithMaskingShadowingEnabled)
-    {
-        this.smithMaskingShadowingEnabled = smithMaskingShadowingEnabled;
-    }
-
-    /**
-     * Whether or not to use Levenberg-Marquardt for normal optimization.
-     * Default is true.  Highly recommended unless attempting to reproduce Nam et al. 2018.
-     * @return
-     */
-    public boolean isLevenbergMarquardtEnabled()
-    {
-        return levenbergMarquardtEnabled;
-    }
-
-    /**
-     * Whether or not to use Levenberg-Marquardt for normal optimization.
-     * Highly recommended unless attempting to reproduce Nam et al. 2018.
-     * @param levenbergMarquardtEnabled
-     */
-    public void setLevenbergMarquardtEnabled(boolean levenbergMarquardtEnabled)
-    {
-        this.levenbergMarquardtEnabled = levenbergMarquardtEnabled;
-    }
-
-    /**
-     * The number of unsuccessful iterations of Levenberg-Marquardt (iterations which fail to decrease the error
-     * by the required threshold) before the algorithm will be considered terminated.
-     * @return
-     */
-    public int getUnsuccessfulLMIterationsAllowed()
-    {
-        return unsuccessfulLMIterationsAllowed;
-    }
-
-    /**
-     * The number of unsuccessful iterations of Levenberg-Marquardt (iterations which fail to decrease the error
-     * by the required threshold) before the algorithm will be considered terminated.
-     * @param unsuccessfulLMIterationsAllowed
-     */
-    public void setUnsuccessfulLMIterationsAllowed(int unsuccessfulLMIterationsAllowed)
-    {
-        this.unsuccessfulLMIterationsAllowed = unsuccessfulLMIterationsAllowed;
-    }
-
     public int getWeightBlockSize()
     {
         return weightBlockSize;
@@ -330,13 +156,13 @@ public class SpecularFitSettings extends TextureFitSettings
         this.weightBlockSize = weightBlockSize;
     }
 
-    /**
-     * Gets a modifiable reference to the image cache settings for the specular fit
-     * @return
-     */
-    public ImageCacheSettings getImageCacheSettings()
+    public File getOutputDirectory()
     {
-        return imageCacheSettings;
+        return outputDirectory;
     }
 
+    public void setOutputDirectory(File outputDirectory)
+    {
+        this.outputDirectory = outputDirectory;
+    }
 }

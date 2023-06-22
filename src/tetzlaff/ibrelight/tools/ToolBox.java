@@ -167,7 +167,7 @@ public final class ToolBox
 
     //builder
     private ToolBox(ExtendedCameraModel cameraModel, EnvironmentModel environmentModel, ExtendedLightingModel lightingModel,
-        ExtendedObjectModel objectModel, SettingsModel settingsModel, ToolBindingModel toolBindingModel, SceneViewportModel sceneViewportModel)
+                    ExtendedObjectModel objectModel, IBRSettingsModel settingsModel, ToolBindingModel toolBindingModel, SceneViewportModel sceneViewportModel)
     {
         this.toolBindingModel = toolBindingModel;
 
@@ -269,7 +269,7 @@ public final class ToolBox
         private ToolBindingModel toolBindingModel;
         private ExtendedCameraModel cameraModel;
         private EnvironmentModel environmentModel;
-        private SettingsModel settingsModel;
+        private IBRSettingsModel settingsModel;
         private ExtendedLightingModel lightingModel;
         private ExtendedObjectModel objectModel;
         private SceneViewportModel sceneViewportModel;
@@ -307,7 +307,7 @@ public final class ToolBox
             return this;
         }
 
-        public Builder setSettingsModel(SettingsModel settingsModel)
+        public Builder setSettingsModel(IBRSettingsModel settingsModel)
         {
             this.settingsModel = settingsModel;
             return this;

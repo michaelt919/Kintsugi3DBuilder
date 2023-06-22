@@ -11,7 +11,7 @@
 
 package tetzlaff.models;//Created by alexk on 7/31/2017.
 
-public interface SettingsModel extends ReadonlySettingsModel
+public interface IBRSettingsModel extends ReadonlyIBRSettingsModel
 {
     <T> void set(String name, T value);
 }

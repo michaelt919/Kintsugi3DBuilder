@@ -28,7 +28,7 @@ public final class InternalModels
     private final LightingModelImpl lightingModel;
     private final ObjectModelImpl objectModel;
     private final LoadOptionsModelImpl loadOptionsModel;
-    private final SettingsModelImpl settingsModel;
+    private final IBRSettingsModelImpl settingsModel;
     private final ObservableProjectModel projectModel;
 
     private InternalModels()
@@ -38,7 +38,7 @@ public final class InternalModels
         objectModel = new ObjectModelImpl();
         lightingModel = new LightingModelImpl(environmentModel);
         loadOptionsModel = new LoadOptionsModelImpl();
-        settingsModel = new SettingsModelImpl();
+        settingsModel = new IBRSettingsModelImpl();
         projectModel = new ObservableProjectModel();
     }
 
@@ -62,7 +62,7 @@ public final class InternalModels
         return loadOptionsModel;
     }
 
-    public SettingsModelImpl getSettingsModel()
+    public IBRSettingsModelImpl getSettingsModel()
     {
         return settingsModel;
     }

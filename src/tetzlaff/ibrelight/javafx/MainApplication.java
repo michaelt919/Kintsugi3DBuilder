@@ -42,7 +42,7 @@ import tetzlaff.ibrelight.app.WindowSynchronization;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
 import tetzlaff.ibrelight.javafx.controllers.menubar.MenubarController;
 import tetzlaff.ibrelight.javafx.controllers.scene.RootSceneController;
-import tetzlaff.ibrelight.javafx.internal.SettingsModelImpl;
+import tetzlaff.ibrelight.javafx.internal.IBRSettingsModelImpl;
 import tetzlaff.ibrelight.javafx.util.StaticUtilities;
 import tetzlaff.util.ShadingParameterMode;
 
@@ -184,7 +184,7 @@ public class MainApplication extends Application
 
         primaryStage.requestFocus();
 
-        SettingsModelImpl settingsModel = InternalModels.getInstance().getSettingsModel();
+        IBRSettingsModelImpl settingsModel = InternalModels.getInstance().getSettingsModel();
         settingsModel.createBooleanSetting("lightCalibrationMode", false);
         settingsModel.createObjectSetting("currentLightCalibration", Vector2.ZERO);
         settingsModel.createBooleanSetting("occlusionEnabled", true);
