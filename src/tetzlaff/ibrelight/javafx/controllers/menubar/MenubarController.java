@@ -426,9 +426,6 @@ public class MenubarController
     }
 
     @FXML
-    //TODO: trying to move the export specular fit menu item outside of the export submenu
-    //Does not work yet
-    //Looks like create() is not the only function I need to call? Unsure
     private void exportSpecularFit(){
         try {
             IBRRequestUI requestUI = SpecularFitRequestUI.create(this.parentWindow, MultithreadModels.getInstance());
@@ -569,6 +566,26 @@ public class MenubarController
         {
             ColorCheckerController colorCheckerController =
                 makeWindow("Color Checker", colorCheckerWindowOpen, "fxml/menubar/ColorChecker.fxml");
+            colorCheckerController.init(MultithreadModels.getInstance().getLoadingModel());
+
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void eyedropperColorChecker()
+    {
+        if (colorCheckerWindowOpen.get())
+        {
+            return;
+        }
+
+        try
+        {
+            ColorCheckerImgSelectionController colorCheckerController =
+                    makeWindow("Color Checker", colorCheckerWindowOpen, "fxml/menubar/ColorCheckerImgSelection.fxml");
             colorCheckerController.init(MultithreadModels.getInstance().getLoadingModel());
 
         }
