@@ -402,7 +402,9 @@ public class EyedropperController implements Initializable {
                     if (sourceButton != null) {
                         //modify appropriate text field to average greyscale value
                         TextField partnerTxtField = getButtonPartnerTxtField(sourceButton);
-                        Integer greyScale = Math.toIntExact((long) getGreyScaleDouble(newColor));
+
+                        //java would use the wrong overload of round() if it used a double
+                        Integer greyScale = Math.round((float)getGreyScaleDouble(newColor));
                         partnerTxtField.setText(String.valueOf(greyScale));
 
                         //without these two lines, text field would not update properly
@@ -432,7 +434,7 @@ public class EyedropperController implements Initializable {
 
         double greyScale;
         try{
-            greyScale = Double.valueOf(txtField.getText());
+            greyScale = Integer.valueOf(txtField.getText());
         }
         catch(NumberFormatException e){
             greyScale = 0;

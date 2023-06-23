@@ -1,32 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
-  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_11">
-    <output url="file://$MODULE_DIR$/target/classes" />
-    <output-test url="file://$MODULE_DIR$/target/test-classes" />
-    <content url="file://$MODULE_DIR$">
+  <component name="AdditionalModuleElements">
+    <content url="file://$MODULE_DIR$" dumb="true">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
-    <orderEntry type="inheritedJdk" />
-    <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-fxml:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-fxml:win:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:win:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:win:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:win:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.ejml:ejml-all:0.31" level="project" />
-    <orderEntry type="library" name="Maven: org.ejml:ejml-core:0.31" level="project" />
-    <orderEntry type="library" name="Maven: org.ejml:ejml-fdense:0.31" level="project" />
-    <orderEntry type="library" name="Maven: org.ejml:ejml-ddense:0.31" level="project" />
-    <orderEntry type="library" name="Maven: org.ejml:ejml-cdense:0.31" level="project" />
-    <orderEntry type="library" name="Maven: org.ejml:ejml-zdense:0.31" level="project" />
-    <orderEntry type="library" name="Maven: org.ejml:ejml-dsparse:0.31" level="project" />
-    <orderEntry type="library" name="Maven: org.ejml:ejml-simple:0.31" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl:3.0.0b" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-platform:natives-windows:3.0.0b" level="project" />
-    <orderEntry type="library" name="Maven: org.lwjgl:lwjgl-platform:natives-osx:3.0.0b" level="project" />
   </component>
 </module>
