@@ -13,10 +13,9 @@ package tetzlaff.gl.geometry;
 
 import tetzlaff.gl.core.ColorFormat;
 import tetzlaff.gl.core.Context;
-import tetzlaff.gl.core.Texture;
 import tetzlaff.gl.core.Texture2D;
 
-public class GeometryTexturesNonRendered<ContextType extends Context<ContextType>> implements GeometryTextures<ContextType>
+public class GeometryTexturesNonRendered<ContextType extends Context<ContextType>> extends GeometryTexturesBase<ContextType>
 {
     private final Texture2D<ContextType> positionTexture;
     private final Texture2D<ContextType> normalTexture;
@@ -24,6 +23,7 @@ public class GeometryTexturesNonRendered<ContextType extends Context<ContextType
 
     public GeometryTexturesNonRendered(ContextType context, int width, int height)
     {
+        super(context);
         positionTexture = context.getTextureFactory()
             .build2DColorTexture(width, height)
             .setInternalFormat(ColorFormat.RGB32F)

@@ -11,14 +11,13 @@
 
 package tetzlaff.gl.geometry;
 
-import tetzlaff.gl.core.Context;
-import tetzlaff.gl.core.Resource;
-import tetzlaff.gl.core.Texture;
-import tetzlaff.gl.core.Texture2D;
+import tetzlaff.gl.core.*;
 
-public interface GeometryTextures<ContextType extends Context<ContextType>> extends Resource
+public interface GeometryTextures<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
 {
     Texture2D<ContextType> getPositionTexture();
     Texture2D<ContextType> getNormalTexture();
     Texture2D<ContextType> getTangentTexture();
+
+    void setupShaderProgram(Program<ContextType> program);
 }

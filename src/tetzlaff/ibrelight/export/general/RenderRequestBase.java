@@ -24,7 +24,7 @@ import tetzlaff.models.ReadonlySettingsModel;
 
 abstract class RenderRequestBase<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>
 {
-    private static final File TEX_SPACE_VERTEX_SHADER = Paths.get("shaders", "common", "texspace_noscale.vert").toFile();
+    private static final File TEX_SPACE_VERTEX_SHADER = Paths.get("shaders", "common", "texspace.vert").toFile();
     private static final File IMG_SPACE_VERTEX_SHADER = Paths.get("shaders", "common", "imgspace.vert").toFile();
 
     private final int width;

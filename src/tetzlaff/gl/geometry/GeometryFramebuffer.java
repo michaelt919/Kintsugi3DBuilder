@@ -16,9 +16,21 @@ import java.io.FileNotFoundException;
 
 import tetzlaff.gl.core.*;
 
-public class GeometryFramebuffer<ContextType extends Context<ContextType>> implements GeometryTextures<ContextType>
+public class GeometryFramebuffer<ContextType extends Context<ContextType>> extends GeometryTexturesBase<ContextType>
 {
     private final FramebufferObject<ContextType> fbo;
+
+    GeometryFramebuffer(Drawable<ContextType> drawable, int width, int height)
+    {
+        super(drawable.getContext());
+        fbo = drawable.getContext().buildFramebufferObject(width, height)
+            .addColorAttachment(ColorFormat.RGB32F) // position
+            .addColorAttachment(ColorFormat.RGB32F) // normal
+            .addColorAttachment(ColorFormat.RGB32F) // tangent
+            .createFramebufferObject();
+
+        drawable.draw(fbo);
+    }
 
     /**
      *
@@ -30,8 +42,9 @@ public class GeometryFramebuffer<ContextType extends Context<ContextType>> imple
     GeometryFramebuffer(GeometryResources<ContextType> geometry, int width, int height) throws FileNotFoundException
     {
         // Use a shader program to initialize the framebuffer once
+        super(geometry.context);
         try(Program<ContextType> program = geometry.context.getShaderProgramBuilder()
-            .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+            .addShader(ShaderType.VERTEX, new File("shaders/common/texspace.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/common/geomBuffers.frag"))
             .createProgram())
         {

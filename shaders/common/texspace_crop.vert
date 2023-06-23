@@ -12,6 +12,9 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
+uniform vec2 minTexCoord;
+uniform vec2 maxTexCoord;
+
 in vec3 position;
 in vec2 texCoord;
 in vec3 normal;
@@ -25,7 +28,7 @@ out vec3 fBitangent;
 
 void main(void)
 {
-    gl_Position = vec4(2.0 * texCoord - vec2(1.0), 0.0, 1.0);
+    gl_Position = vec4(2 * (texCoord - minTexCoord) / (maxTexCoord - minTexCoord) - vec2(1), 0.0, 1.0);
     fPosition = position;
     fTexCoord = texCoord;
     fNormal = normal;

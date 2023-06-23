@@ -200,9 +200,7 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
     public void setupShaderProgram(Program<ContextType> program)
     {
         getSharedResources().setupShaderProgram(program);
-        program.setTexture("positionTex", geometryTextures.getPositionTexture());
-        program.setTexture("normalTex", geometryTextures.getNormalTexture());
-        program.setTexture("tangentTex", geometryTextures.getTangentTexture());
+        geometryTextures.setupShaderProgram(program);
         program.setTexture("viewImages", textureArray);
     }
 
@@ -213,16 +211,6 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
         drawable.addVertexBuffer("position", rectangle);
         drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
         return drawable;
-    }
-
-    public int getTexWidth()
-    {
-        return texWidth;
-    }
-
-    public int getTexHeight()
-    {
-        return texHeight;
     }
 
     public TextureFitSettings getTextureFitSettings(float gamma)
