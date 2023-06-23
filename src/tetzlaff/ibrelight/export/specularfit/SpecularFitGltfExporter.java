@@ -23,9 +23,9 @@ public class SpecularFitGltfExporter
 
     private final GltfAssetV2 asset;
 
-    private TextureInfo diffuseTexture, normalTexture, roughnessMetallicTexture;
+    private TextureInfo baseColorTexture, normalTexture, roughnessMetallicTexture;
 
-    private TextureInfo specularTexture, roughnessTexture;
+    private TextureInfo diffuseTexture, specularTexture, roughnessTexture;
 
     GltfMaterialExtras extraData = new GltfMaterialExtras();
 
@@ -34,16 +34,25 @@ public class SpecularFitGltfExporter
         this.asset = glTfAsset;
     }
 
+    public void setBaseColorUri(String uri)
+    {
+        if (baseColorTexture == null)
+        {
+            baseColorTexture = createRelativeTexture(uri, "baseColor");
+            asset.getGltf().getMaterials().forEach((material -> material.getPbrMetallicRoughness().setBaseColorTexture(baseColorTexture)));
+        }
+        else
+        {
+            setTextureUri(baseColorTexture, uri);
+        }
+    }
+
     public void setDiffuseUri(String uri)
     {
         if (diffuseTexture == null)
         {
             diffuseTexture = createRelativeTexture(uri, "diffuse");
-            asset.getGltf().getMaterials().forEach((material -> material.getPbrMetallicRoughness().setBaseColorTexture(diffuseTexture)));
-        }
-        else
-        {
-            setTextureUri(diffuseTexture, uri);
+            extraData.setDiffuseTexture(diffuseTexture);
         }
     }
 
@@ -138,6 +147,7 @@ public class SpecularFitGltfExporter
 
     public void setDefaultNames()
     {
+        setBaseColorUri("albedo.png");
         setDiffuseUri("diffuse.png");
         setNormalUri("normal.png");
         setRoughnessMetallicUri("orm.png");

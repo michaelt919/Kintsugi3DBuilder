@@ -8,6 +8,8 @@ import java.util.List;
 public class GltfMaterialExtras
 {
 
+    private TextureInfo diffuseTexture = null;
+
     private TextureInfo roughnessTexture = null;
 
     private TextureInfo specularTexture = null;
@@ -56,4 +58,13 @@ public class GltfMaterialExtras
         this.specularWeights = specularWeights;
     }
 
+    public TextureInfo getDiffuseTexture()
+    {
+        return diffuseTexture;
+    }
+
+    public void setDiffuseTexture(TextureInfo diffuseTexture)
+    {
+        this.diffuseTexture = diffuseTexture;
+    }
 }
