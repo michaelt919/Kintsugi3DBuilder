@@ -44,13 +44,7 @@ class OpenGLDefaultFramebuffer extends OpenGLFramebuffer implements DoubleFrameb
     }
 
     @Override
-    public ContentsImpl getContentsForRead()
-    {
-        return contentsImpl;
-    }
-
-    @Override
-    public ContentsImpl getContentsForWrite()
+    public ContentsImpl getContents()
     {
         return contentsImpl;
     }

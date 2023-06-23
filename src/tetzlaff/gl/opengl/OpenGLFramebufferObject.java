@@ -175,13 +175,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
     }
 
     @Override
-    public Contents getContentsForRead()
-    {
-        return this.contents;
-    }
-
-    @Override
-    public Contents getContentsForWrite()
+    public Contents getContents()
     {
         return this.contents;
     }

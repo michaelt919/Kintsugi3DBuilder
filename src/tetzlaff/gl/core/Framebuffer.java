@@ -11,6 +11,8 @@
 
 package tetzlaff.gl.core;
 
+import tetzlaff.gl.vecmath.IntVector2;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -28,16 +30,10 @@ import java.nio.ShortBuffer;
 public interface Framebuffer<ContextType extends Context<ContextType>> extends Contextual<ContextType>
 {
     /**
-     * Gets a representation of the contents of this framebuffer that is read-only.
-     * @return A handle that can be used to perform operations that retrieve the contents of this framebuffer.
+     * Gets a representation of the contents of this framebuffer .
+     * @return A handle that can be used to perform operations that retrieve or modify the contents of this framebuffer.
      */
-    Object getContentsForRead();
-
-    /**
-     * Gets a representation of the contents of this framebuffer that is write-only.
-     * @return A handle that can be used to perform operations that modify the contents of this framebuffer.
-     */
-    Object getContentsForWrite();
+    FramebufferContents<ContextType> getContents();
 
     /**
      * Gets the dimensions of the framebuffer (width and height)
@@ -105,7 +101,11 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
      * @param destination The buffer into which to copy the framebuffer data.
      * Each entry is encoded as a 32-bit integer using 8-bytes each for the alpha, red, green, and blue channels, respectively, from highest order byte to lowest.
      */
-    void readColorBufferARGB(int attachmentIndex, ByteBuffer destination);
+    default void readColorBufferARGB(int attachmentIndex, ByteBuffer destination)
+    {
+        FramebufferSize size = this.getSize();
+        this.readColorBufferARGB(attachmentIndex, destination, 0, 0, size.width, size.height);
+    }
 
     /**
      * Reads the pixels currently in one of the framebuffer's attachments as floating point numbers.
@@ -113,7 +113,11 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
      * @param attachmentIndex The index of the framebuffer attachment to be read.
      * @param destination The buffer into which to copy the framebuffer data.
      */
-    void readFloatingPointColorBufferRGBA(int attachmentIndex, FloatBuffer destination);
+    default void readFloatingPointColorBufferRGBA(int attachmentIndex, FloatBuffer destination)
+    {
+        FramebufferSize size = this.getSize();
+        this.readFloatingPointColorBufferRGBA(attachmentIndex, destination, 0, 0, size.width, size.height);
+    }
 
     /**
      * Reads the pixels currently in one of the framebuffer's attachments as 32-bit integers.
@@ -121,14 +125,22 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
      * @param attachmentIndex The index of the framebuffer attachment to be read.
      * @param destination The buffer into which to copy the framebuffer data.
      */
-    void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination);
+    default void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination)
+    {
+        FramebufferSize size = this.getSize();
+        this.readIntegerColorBufferRGBA(attachmentIndex, destination, 0, 0, size.width, size.height);
+    }
 
     /**
      * Reads the pixels currently in the framebuffer's depth attachment.
      * The entire framebuffer will be read.
      * @param destination The buffer into which to copy the framebuffer data.
      */
-    void readDepthBuffer(ShortBuffer destination);
+    default void readDepthBuffer(ShortBuffer destination)
+    {
+        FramebufferSize size = this.getSize();
+        this.readDepthBuffer(destination, 0, 0, size.width, size.height);
+    }
 
     /**
      * Reads the pixels currently in one of the framebuffer's attachments.
@@ -137,7 +149,11 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
      * @return An array containing the pixels.
      * Each entry is encoded as a 32-bit integer using 8-bytes each for the alpha, red, green, and blue channels, respectively, from highest order byte to lowest.
      */
-    int[] readColorBufferARGB(int attachmentIndex);
+    default int[] readColorBufferARGB(int attachmentIndex)
+    {
+        FramebufferSize size = this.getSize();
+        return this.readColorBufferARGB(attachmentIndex, 0, 0, size.width, size.height);
+    }
 
     /**
      * Reads the pixels currently in one of the framebuffer's attachments.
@@ -170,7 +186,11 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
      * @param attachmentIndex The index of the framebuffer attachment to be read.
      * @return An array containing the pixels as floating point numbers.
      */
-    float[] readFloatingPointColorBufferRGBA(int attachmentIndex);
+    default float[] readFloatingPointColorBufferRGBA(int attachmentIndex)
+    {
+        FramebufferSize size = this.getSize();
+        return this.readFloatingPointColorBufferRGBA(attachmentIndex, 0, 0, size.width, size.height);
+    }
 
     /**
      * Reads the pixels currently in one of the framebuffer's attachments as 32-bit integers.
@@ -190,7 +210,11 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
      * @param attachmentIndex The index of the framebuffer attachment to be read.
      * @return An array containing the pixels as floating point numbers.
      */
-    int[] readIntegerColorBufferRGBA(int attachmentIndex);
+    default int[] readIntegerColorBufferRGBA(int attachmentIndex)
+    {
+        FramebufferSize size = this.getSize();
+        return this.readIntegerColorBufferRGBA(attachmentIndex, 0, 0, size.width, size.height);
+    }
 
     /**
      * Reads the pixels currently in the framebuffer's depth attachment.
@@ -208,7 +232,11 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
      * The entire framebuffer will be read.
      * @return An array containing the depth values.
      */
-    short[] readDepthBuffer();
+    default short[] readDepthBuffer()
+    {
+        FramebufferSize size = this.getSize();
+        return this.readDepthBuffer(0, 0, size.width, size.height);
+    }
 
     /**
      * Saves the the pixels currently in one of the framebuffer's attachments to a file.
@@ -242,7 +270,11 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
      * @param b The blue component of the clear color.
      * @param a The alpha component of the clear color.
      */
-    void clearColorBuffer(int attachmentIndex, float r, float g, float b, float a);
+    default void clearColorBuffer(int attachmentIndex, float r, float g, float b, float a)
+    {
+        FramebufferSize size = this.getSize();
+        clearColorBuffer(attachmentIndex, r, g, b, a, 0, 0, size.width, size.height);
+    }
 
     /**
      * Clears one of the framebuffer's color attachments.
@@ -252,22 +284,74 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
      * @param b The blue component of the clear color.
      * @param a The alpha component of the clear color.
      */
-    void clearIntegerColorBuffer(int attachmentIndex, int r, int g, int b, int a);
+    default void clearIntegerColorBuffer(int attachmentIndex, int r, int g, int b, int a)
+    {
+        FramebufferSize size = this.getSize();
+        clearIntegerColorBuffer(attachmentIndex, r, g, b, a, 0, 0, size.width, size.height);
+    }
 
     /**
      * Clears the framebuffer's depth attachment.
      * @param depth The depth to assign to the entire framebuffer.
      */
-    void clearDepthBuffer(float depth);
+    default void clearDepthBuffer(float depth)
+    {
+        FramebufferSize size = this.getSize();
+        clearDepthBuffer(depth, 0, 0, size.width, size.height);
+    }
 
     /**
      * Clears the framebuffer's depth attachment to the far plane distance.
      */
-    void clearDepthBuffer();
+    default void clearDepthBuffer()
+    {
+        this.clearDepthBuffer(1.0f);
+    }
 
     /**
      * Clears the framebuffer's stencil buffer.
      * @param stencilIndex The stencil index with which to clear.
      */
-    void clearStencilBuffer(int stencilIndex);
+    default void clearStencilBuffer(int stencilIndex)
+    {
+        FramebufferSize size = this.getSize();
+        clearStencilBuffer(stencilIndex, 0, 0, size.width, size.height);
+    }
+
+    /**
+     * Clears a rectangle within one of the framebuffer's color attachments.
+     * @param attachmentIndex The index of the framebuffer attachment to be cleared.
+     * @param r The red component of the clear color.
+     * @param g The green component of the clear color.
+     * @param b The blue component of the clear color.
+     * @param a The alpha component of the clear color.
+     */
+    void clearColorBuffer(int attachmentIndex, float r, float g, float b, float a, int x, int y, int width, int height);
+
+    /**
+     * Clears a rectangle within one of the framebuffer's color attachments.
+     * @param attachmentIndex The index of the framebuffer attachment to be cleared.
+     * @param r The red component of the clear color.
+     * @param g The green component of the clear color.
+     * @param b The blue component of the clear color.
+     * @param a The alpha component of the clear color.
+     */
+    void clearIntegerColorBuffer(int attachmentIndex, int r, int g, int b, int a, int x, int y, int width, int height);
+
+    /**
+     * Clears a rectangle within the framebuffer's depth attachment.
+     * @param depth The depth to assign to the entire framebuffer.
+     */
+    void clearDepthBuffer(float depth, int x, int y, int width, int height);
+
+    /**
+     * Clears a rectangle within the framebuffer's stencil buffer.
+     * @param stencilIndex The stencil index with which to clear.
+     */
+    void clearStencilBuffer(int stencilIndex, int x, int y, int width, int height);
+
+    default Framebuffer<ContextType> getViewport(int x, int y, int width, int height)
+    {
+        return new FramebufferViewport<>(this, new IntVector2(x, y), new FramebufferSize(width, height));
+    }
 }

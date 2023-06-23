@@ -11,8 +11,6 @@
 
 package tetzlaff.gl.builders.framebuffer;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -36,6 +34,7 @@ public final class DefaultFramebufferFactory
     }
 
     private static class DefaultFramebufferObjectImpl<ContextType extends Context<ContextType>>
+        extends FramebufferBase<ContextType>
         implements DoubleFramebufferObject<ContextType>
     {
         private final ContextType context;
@@ -51,7 +50,7 @@ public final class DefaultFramebufferFactory
         private int newWidth;
         private int newHeight;
 
-        private List<Consumer<Framebuffer<ContextType>>> swapListeners = new ArrayList<>(1);
+        private final List<Consumer<Framebuffer<ContextType>>> swapListeners = new ArrayList<>(1);
 
         DefaultFramebufferObjectImpl(ContextType context, int initWidth, int initHeight)
         {
@@ -107,15 +106,9 @@ public final class DefaultFramebufferFactory
         }
 
         @Override
-        public Object getContentsForRead()
+        public FramebufferContents<ContextType> getContents()
         {
-            return this.frontFBO.getContentsForRead();
-        }
-
-        @Override
-        public Object getContentsForWrite()
-        {
-            return this.backFBO.getContentsForWrite();
+            return this.frontFBO.getContents();
         }
 
         @Override
@@ -161,87 +154,27 @@ public final class DefaultFramebufferFactory
         }
 
         @Override
-        public void readColorBufferARGB(int attachmentIndex, ByteBuffer destination)
+        public void clearColorBuffer(int attachmentIndex, float r, float g, float b, float a, int x, int y, int width, int height)
         {
-            frontFBO.readColorBufferARGB(attachmentIndex, destination);
+            backFBO.clearColorBuffer(attachmentIndex, r, g, b, a, x, y, width, height);
         }
 
         @Override
-        public void readFloatingPointColorBufferRGBA(int attachmentIndex, FloatBuffer destination)
+        public void clearIntegerColorBuffer(int attachmentIndex, int r, int g, int b, int a, int x, int y, int width, int height)
         {
-            frontFBO.readFloatingPointColorBufferRGBA(attachmentIndex, destination);
+            backFBO.clearIntegerColorBuffer(attachmentIndex, r, g, b, a, x, y, width, height);
         }
 
         @Override
-        public void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination)
+        public void clearDepthBuffer(float depth, int x, int y, int width, int height)
         {
-            frontFBO.readIntegerColorBufferRGBA(attachmentIndex, destination);
+            backFBO.clearDepthBuffer(depth, x, y, width, height);
         }
 
         @Override
-        public void readDepthBuffer(ShortBuffer destination)
+        public void clearStencilBuffer(int stencilIndex, int x, int y, int width, int height)
         {
-            frontFBO.readDepthBuffer(destination);
-        }
-
-        @Override
-        public int[] readColorBufferARGB(int attachmentIndex)
-        {
-            return frontFBO.readColorBufferARGB(attachmentIndex);
-        }
-
-        @Override
-        public int[] readColorBufferARGB(int attachmentIndex, int x, int y, int width, int height)
-        {
-            return frontFBO.readColorBufferARGB(attachmentIndex, x, y, width, height);
-        }
-
-        @Override
-        public float[] readFloatingPointColorBufferRGBA(int attachmentIndex, int x, int y, int width, int height)
-        {
-            return frontFBO.readFloatingPointColorBufferRGBA(attachmentIndex, x, y, width, height);
-        }
-
-        @Override
-        public float[] readFloatingPointColorBufferRGBA(int attachmentIndex)
-        {
-            return frontFBO.readFloatingPointColorBufferRGBA(attachmentIndex);
-        }
-
-        @Override
-        public int[] readIntegerColorBufferRGBA(int attachmentIndex, int x, int y, int width, int height)
-        {
-            return frontFBO.readIntegerColorBufferRGBA(attachmentIndex, x, y, width, height);
-        }
-
-        @Override
-        public int[] readIntegerColorBufferRGBA(int attachmentIndex)
-        {
-            return frontFBO.readIntegerColorBufferRGBA(attachmentIndex);
-        }
-
-        @Override
-        public short[] readDepthBuffer(int x, int y, int width, int height)
-        {
-            return frontFBO.readDepthBuffer(x, y, width, height);
-        }
-
-        @Override
-        public short[] readDepthBuffer()
-        {
-            return frontFBO.readDepthBuffer();
-        }
-
-        @Override
-        public void saveColorBufferToFile(int attachmentIndex, String fileFormat, File file) throws IOException
-        {
-            frontFBO.saveColorBufferToFile(attachmentIndex, fileFormat, file);
-        }
-
-        @Override
-        public void saveColorBufferToFile(int attachmentIndex, int x, int y, int width, int height, String fileFormat, File file) throws IOException
-        {
-            frontFBO.saveColorBufferToFile(attachmentIndex, x, y, width, height, fileFormat, file);
+            backFBO.clearStencilBuffer(stencilIndex, x, y, width, height);
         }
 
         @Override
@@ -260,12 +193,6 @@ public final class DefaultFramebufferFactory
         public void clearDepthBuffer(float depth)
         {
             backFBO.clearDepthBuffer(depth);
-        }
-
-        @Override
-        public void clearDepthBuffer()
-        {
-            backFBO.clearDepthBuffer();
         }
 
         @Override
