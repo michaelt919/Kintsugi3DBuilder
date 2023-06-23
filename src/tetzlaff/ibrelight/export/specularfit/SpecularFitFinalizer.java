@@ -23,8 +23,6 @@ import tetzlaff.gl.vecmath.DoubleVector2;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
-import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
-import tetzlaff.optimization.ReadonlyErrorReport;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
 
 /**
@@ -48,17 +46,17 @@ public class SpecularFitFinalizer
      * TODO: Yikes, this function has gotten to be a mess!
      * @param solution
      * @param resources
+     * @param programFactory
      * @param specularFit
-     * @param scratchFramebuffer
-     * @param lastErrorReport
-     * @param errorCalcDrawable
-     * @param rmseOut Text file containing error information
+     * @param errorCalculator
+     * @param rmseOut
+     * @param outputDirectory
      * @param <ContextType>
      */
     public <ContextType extends Context<ContextType>> void finishAndCalculateError(
         SpecularDecomposition solution, IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
-        SpecularFitFromOptimization<ContextType> specularFit, Framebuffer<ContextType> scratchFramebuffer,
-        ReadonlyErrorReport lastErrorReport, Drawable<ContextType> errorCalcDrawable, PrintStream rmseOut, File outputDirectory)
+        SpecularFitFromOptimization<ContextType> specularFit, ShaderBasedErrorCalculator<ContextType> errorCalculator,
+        PrintStream rmseOut, File outputDirectory)
     {
         try (
 
@@ -67,16 +65,13 @@ public class SpecularFitFinalizer
         )
         {
             // Print out RMSE from the penultimate iteration (to verify convergence)
-            rmseOut.println("Previously calculated RMSE: " + lastErrorReport.getError());
-
-            // Create an error calculator that will be reused for different computations.
-            ShaderBasedErrorCalculator errorCalculator = new ShaderBasedErrorCalculator(textureFitSettings.width * textureFitSettings.height);
+            rmseOut.println("Previously calculated RMSE: " + errorCalculator.getReport().getError());
 
             // Calculate the final RMSE from the raw result
             specularFit.basisResources.updateFromSolution(solution);
-            errorCalcDrawable.program().setTexture("normalEstimate", specularFit.getNormalMap());
+            errorCalculator.getProgram().setTexture("normalEstimate", specularFit.getNormalMap());
 
-            errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
+            errorCalculator.update();
             rmseOut.println("RMSE before hole fill: " + errorCalculator.getReport().getError());
 
             // Fill holes in the weight map
@@ -95,12 +90,12 @@ public class SpecularFitFinalizer
             specularFit.roughnessOptimization.saveTextures(outputDirectory);
 
             // Calculate RMSE after filling holes
-            errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
+            errorCalculator.update();
             rmseOut.println("RMSE after hole fill: " + errorCalculator.getReport().getError());
 
             // Calculate gamma-corrected RMSE
-            errorCalcDrawable.program().setUniform("errorGamma", 2.2f);
-            errorCalculator.update(errorCalcDrawable, scratchFramebuffer);
+            errorCalculator.getProgram().setUniform("errorGamma", 2.2f);
+            errorCalculator.update();
             rmseOut.println("RMSE after hole fill (gamma-corrected): " + errorCalculator.getReport().getError());
 
             Drawable<ContextType> finalErrorCalcDrawable = resources.createDrawable(finalErrorCalcProgram);
@@ -109,6 +104,9 @@ public class SpecularFitFinalizer
             finalErrorCalcProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
             finalErrorCalcProgram.setTexture("diffuseEstimate", specularFit.getDiffuseMap());
             finalErrorCalcProgram.setUniform("errorGamma", 1.0f);
+
+            // Reuse errorCalculator's framebuffer as a scratch framebuffer (for efficiency)
+            Framebuffer<ContextType> scratchFramebuffer = errorCalculator.getFramebuffer();
 
             rmseOut.println("Final RMSE after diffuse estimate: " +
                 runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCameraPoseCount()));
@@ -133,7 +131,7 @@ public class SpecularFitFinalizer
      * @param <ContextType>
      */
     public <ContextType extends Context<ContextType>> void validateNormalMap(
-        IBRResourcesImageSpace<ContextType> resources, SpecularFitFromOptimization<ContextType> specularFit, PrintStream rmseOut)
+            IBRResources<ContextType> resources, SpecularFitFromOptimization<ContextType> specularFit, PrintStream rmseOut)
     {
         if (CALCULATE_NORMAL_RMSE && resources.getMaterialResources().getNormalTexture() != null)
         {
@@ -193,9 +191,9 @@ public class SpecularFitFinalizer
      * @param <ContextType>
      * @throws FileNotFoundException
      */
-    public <ContextType extends Context<ContextType>> void calculateGGXRMSE(
-        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
-        SpecularResources<ContextType> specularFit, Framebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
+    public static <ContextType extends Context<ContextType>> void calculateGGXRMSE(
+            IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
+            SpecularResources<ContextType> specularFit, Framebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
         throws FileNotFoundException
     {
         try (Program<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(programFactory))

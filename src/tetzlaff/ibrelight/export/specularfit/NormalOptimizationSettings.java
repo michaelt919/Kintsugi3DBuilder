@@ -14,11 +14,11 @@ package tetzlaff.ibrelight.export.specularfit;
 
 public class NormalOptimizationSettings
 {
-    boolean normalRefinementEnabled = true;
-    double minNormalDamping = 1.0;
-    int normalSmoothingIterations = 0;
-    boolean levenbergMarquardtEnabled = true;
-    int unsuccessfulLMIterationsAllowed = 8;
+    private boolean normalRefinementEnabled = true;
+    private double minNormalDamping = 1.0;
+    private int normalSmoothingIterations = 0;
+    private boolean levenbergMarquardtEnabled = true;
+    private int unsuccessfulLMIterationsAllowed = 8;
 
     public NormalOptimizationSettings()
     {

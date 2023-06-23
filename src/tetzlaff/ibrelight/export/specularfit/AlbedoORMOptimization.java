@@ -25,13 +25,12 @@ public class AlbedoORMOptimization<ContextType extends Context<ContextType>> imp
     private final ContextType context;
 
     // Estimation program
-    private final Program<ContextType> estimationProgram;
-    private final TextureFitSettings settings;
+    private Program<ContextType> estimationProgram;
 
     // Framebuffer for storing the diffuse solution
     private FramebufferObject<ContextType> framebuffer;
 
-    private final VertexBuffer<ContextType> rect;
+    private VertexBuffer<ContextType> rect;
     private final Drawable<ContextType> drawable;
 
     public AlbedoORMOptimization(ContextType context, TextureFitSettings settings)
@@ -39,8 +38,7 @@ public class AlbedoORMOptimization<ContextType extends Context<ContextType>> imp
     {
         this.context = context;
         estimationProgram = createProgram(context);
-        this.settings = settings;
-        framebuffer = context.buildFramebufferObject(this.settings.width, this.settings.height)
+        framebuffer = context.buildFramebufferObject(settings.width, settings.height)
             .addColorAttachment(ColorFormat.RGBA32F) // total albedo
             .addColorAttachment(ColorFormat.RGBA32F) // ORM
             .createFramebufferObject();
@@ -51,7 +49,7 @@ public class AlbedoORMOptimization<ContextType extends Context<ContextType>> imp
         drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
         drawable.addVertexBuffer("position", rect);
 
-        estimationProgram.setUniform("gamma", this.settings.gamma);
+        estimationProgram.setUniform("gamma", settings.gamma);
     }
 
     public void execute(SpecularResources<ContextType> specularFit)
@@ -106,9 +104,23 @@ public class AlbedoORMOptimization<ContextType extends Context<ContextType>> imp
     @Override
     public void close()
     {
-        estimationProgram.close();
-        framebuffer.close();
-        rect.close();
+        if (estimationProgram != null)
+        {
+            estimationProgram.close();
+            estimationProgram = null;
+        }
+
+        if (framebuffer != null)
+        {
+            framebuffer.close();
+            framebuffer = null;
+        }
+
+        if (rect != null)
+        {
+            rect.close();
+            rect = null;
+        }
     }
 
     public Texture2D<ContextType> getAlbedoMap()

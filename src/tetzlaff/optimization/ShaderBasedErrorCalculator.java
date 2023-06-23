@@ -11,20 +11,56 @@
 
 package tetzlaff.optimization;
 
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
-import tetzlaff.gl.core.Context;
-import tetzlaff.gl.core.Drawable;
-import tetzlaff.gl.core.Framebuffer;
-import tetzlaff.gl.core.PrimitiveMode;
+import tetzlaff.gl.core.*;
 
-public class ShaderBasedErrorCalculator
+public class ShaderBasedErrorCalculator<ContextType extends Context<ContextType>> implements Resource
 {
+    // Compare fitted models against actual photographs
+    private Program<ContextType> program;
+    private Drawable<ContextType> drawable;
+
+    // Framebuffer for calculating error and reconstructing 3D renderings of the object
+    private FramebufferObject<ContextType> framebuffer;
+
     private final ErrorReport report;
 
     public ShaderBasedErrorCalculator(int sampleCount)
     {
         this.report = new ErrorReport(sampleCount);
+    }
+
+    public static <ContextType extends Context<ContextType>> ShaderBasedErrorCalculator<ContextType> create(
+            ContextType context, Supplier<Program<ContextType>> programFactory,
+            Function<Program<ContextType>, Drawable<ContextType>> drawableFactory, int imageWidth, int imageHeight)
+    {
+        return new ShaderBasedErrorCalculator<>(context, programFactory, drawableFactory, imageWidth, imageHeight);
+    }
+
+    private ShaderBasedErrorCalculator(ContextType context, Supplier<Program<ContextType>> programFactory,
+        Function<Program<ContextType>, Drawable<ContextType>> drawableFactory, int imageWidth, int imageHeight)
+    {
+        this.program = programFactory.get();
+        this.drawable = drawableFactory.apply(program);
+
+        this.framebuffer = context.buildFramebufferObject(imageWidth, imageHeight)
+                .addColorAttachment(ColorFormat.RGBA32F)
+                .addDepthAttachment()
+                .createFramebufferObject();
+        this.report = new ErrorReport(imageWidth * imageHeight);
+    }
+
+    public Program<ContextType> getProgram()
+    {
+        return program;
+    }
+
+    public Framebuffer<ContextType> getFramebuffer()
+    {
+        return framebuffer;
     }
 
     public ReadonlyErrorReport getReport()
@@ -45,7 +81,7 @@ public class ShaderBasedErrorCalculator
         }
     }
 
-    public <ContextType extends Context<ContextType>> void update(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
+    public void update()
     {
         // Clear framebuffer
         framebuffer.clearDepthBuffer();
@@ -80,5 +116,21 @@ public class ShaderBasedErrorCalculator
     {
         // Roll back to previous error calculation.
         report.reject();
+    }
+
+    @Override
+    public void close()
+    {
+        if (program != null)
+        {
+            program.close();
+            program = null;
+        }
+
+        if (framebuffer != null)
+        {
+            framebuffer.close();
+            framebuffer = null;
+        }
     }
 }

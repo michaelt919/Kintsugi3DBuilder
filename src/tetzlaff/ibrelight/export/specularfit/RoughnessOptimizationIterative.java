@@ -12,41 +12,41 @@ import java.io.FileNotFoundException;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
+/**
+ * TODO: sketched out but not fully functional; may not be needed
+ * @param <ContextType>
+ */
 public class RoughnessOptimizationIterative<ContextType extends Context<ContextType>>
         extends RoughnessOptimizationBase<ContextType>
 {
+    private final TextureFitSettings settings;
+
     private final ShaderBasedOptimization<ContextType> roughnessOptimization;
 //    private Program<ContextType> errorCalcProgram;
-
-    private final TextureFitSettings settings;
 
     private final double convergenceTolerance;
     private final int unsuccessfulLMIterationsAllowed;
 
     /**
      *
-     * @param context The graphics context
      * @param basisResources Used for the initial estimate
-     * @param settings the global settings for the specular fit
      * @throws FileNotFoundException
      */
     public RoughnessOptimizationIterative(
-        ContextType context,
-        BasisResources<ContextType> basisResources,
-        Supplier<Texture2D<ContextType>> getDiffuseTexture,
-        TextureFitSettings settings,
+        BasisResources<ContextType> basisResources, Supplier<Texture2D<ContextType>> getDiffuseTexture,
         double convergenceTolerance, int unsuccessfulLMIterationsAllowed)
             throws FileNotFoundException
     {
         // Inherit from base class to facilitate initial fit.
-        super(context, basisResources, settings);
-        this.settings = settings;
+        super(basisResources);
+        this.settings = basisResources.getTextureFitSettings();
         this.convergenceTolerance = convergenceTolerance;
         this.unsuccessfulLMIterationsAllowed = unsuccessfulLMIterationsAllowed;
 
         roughnessOptimization = new ShaderBasedOptimization<>(
-            getRoughnessEstimationProgramBuilder(context),
-            context.buildFramebufferObject(settings.width, settings.height)
+            getRoughnessEstimationProgramBuilder(basisResources.context),
+                basisResources.context.buildFramebufferObject(
+                    basisResources.getTextureFitSettings().width, basisResources.getTextureFitSettings().height)
                 // Reflectivity map
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F)
                     .setLinearFilteringEnabled(true))
@@ -57,7 +57,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
                 .addColorAttachment(ColorFormat.RG32F),
             program -> // Just use the rectangle as geometry
             {
-                Drawable<ContextType> drawable = context.createDrawable(program);
+                Drawable<ContextType> drawable = basisResources.context.createDrawable(program);
                 drawable.addVertexBuffer("position", rect);
                 drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
                 return drawable;
@@ -76,7 +76,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
             estimationProgram.setTexture("dampingTex", roughnessOptimization.getFrontFramebuffer().getColorAttachmentTexture(2));
 
             // Gamma correction constants
-            float gamma = settings.gamma;
+            float gamma = basisResources.getTextureFitSettings().gamma;
             estimationProgram.setUniform("gamma", gamma);
             estimationProgram.setUniform("gammaInv", 1.0f / gamma);
 

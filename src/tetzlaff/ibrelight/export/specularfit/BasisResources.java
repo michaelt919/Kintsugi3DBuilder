@@ -23,16 +23,18 @@ import tetzlaff.ibrelight.core.TextureFitSettings;
 @SuppressWarnings("PublicField")
 public class BasisResources<ContextType extends Context<ContextType>> implements AutoCloseable
 {
+    public final ContextType context;
+
     public final Texture3D<ContextType> weightMaps;
     public final Texture2D<ContextType> weightMask;
     public final Texture2D<ContextType> basisMaps;
     public final UniformBuffer<ContextType> diffuseUniformBuffer;
     private final TextureFitSettings textureFitSettings;
-
     private final SpecularBasisSettings specularBasisSettings;
 
     public BasisResources(ContextType context, TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings)
     {
+        this.context = context;
         this.textureFitSettings = textureFitSettings;
         this.specularBasisSettings = specularBasisSettings;
         weightMaps = context.getTextureFactory().build2DColorTextureArray(textureFitSettings.width, textureFitSettings.height, specularBasisSettings.getBasisCount())

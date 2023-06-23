@@ -180,7 +180,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
         {
             //stage.close();
 
-            SpecularFitSettings settings = new SpecularFitSettings(new TextureFitSettings(
+            SpecularFitRequestParams settings = new SpecularFitRequestParams(new TextureFitSettings(
                     Integer.parseInt(widthTextField.getText()),
                     Integer.parseInt(heightTextField.getText()),
                     modelAccess.getSettingsModel().getFloat("gamma")),

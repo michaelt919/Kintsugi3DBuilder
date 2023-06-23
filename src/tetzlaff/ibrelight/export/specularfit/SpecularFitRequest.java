@@ -22,7 +22,7 @@ import tetzlaff.interactive.GraphicsRequest;
 
 public class SpecularFitRequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>, GraphicsRequest<ContextType>
 {
-    private final SpecularFitSettings settings;
+    private final SpecularFitRequestParams settings;
 
     /**
      * Default constructor for CLI args requests
@@ -33,12 +33,12 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
     public static <ContextType extends Context<ContextType>> SpecularFitRequest<ContextType> create(
             IBRelightModels modelAccess, String... args)
     {
-        return new SpecularFitRequest<>(new SpecularFitSettings(
+        return new SpecularFitRequest<>(new SpecularFitRequestParams(
             new TextureFitSettings(2048, 2048, modelAccess.getSettingsModel().getFloat("gamma")),
             modelAccess.getSettingsModel(), new File(args[2])));
     }
 
-    public SpecularFitRequest(SpecularFitSettings settings)
+    public SpecularFitRequest(SpecularFitRequestParams settings)
     {
         this.settings = settings;
     }
@@ -117,7 +117,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
         {
             // Reconstruct images both from basis functions and from fitted roughness
             SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources,
-                settings.getTextureFitSettings(), settings.getIbrSettings(), settings.getSpecularBasisSettings());
+               settings.getIbrSettings(), settings.getSpecularBasisSettings());
             FinalReconstruction<ContextType> reconstruction = new FinalReconstruction<>(resources, settings.getTextureFitSettings(), settings.getReconstructionSettings());
 
             System.out.println("Reconstructing ground truth images from basis representation:");

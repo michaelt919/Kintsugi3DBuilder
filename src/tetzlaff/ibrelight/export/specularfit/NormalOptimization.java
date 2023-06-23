@@ -27,7 +27,6 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
 {
     private final ShaderBasedOptimization<ContextType> estimateNormals;
     private final ShaderBasedOptimization<ContextType> smoothNormals;
-    private final TextureFitSettings textureFitSettings;
     private final NormalOptimizationSettings normalOptimizationSettings;
 
     private boolean firstSmooth = true;
@@ -38,7 +37,6 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         TextureFitSettings textureFitSettings, NormalOptimizationSettings normalOptimizationSettings)
         throws FileNotFoundException
     {
-        this.textureFitSettings = textureFitSettings;
         this.normalOptimizationSettings = normalOptimizationSettings;
 
         estimateNormals = new ShaderBasedOptimization<>(
@@ -131,6 +129,11 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     {
         estimateNormals.close();
         smoothNormals.finish();
+    }
+
+    public boolean isNormalRefinementEnabled()
+    {
+        return normalOptimizationSettings.isNormalRefinementEnabled();
     }
 
     public void execute(Function<Texture<ContextType>, ReadonlyErrorReport> errorCalculator, double convergenceTolerance)

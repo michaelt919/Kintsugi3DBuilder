@@ -36,7 +36,7 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
 
         // Specular roughness / reflectivity module that manages its own resources
         roughnessOptimization =
-            new RoughnessOptimizationSimple<>(context, basisResources, textureFitSettings);
+            new RoughnessOptimizationSimple<>(basisResources);
             //new RoughnessOptimizationIterative<>(context, basisResources, this::getDiffuseMap, settings);
         roughnessOptimization.clear();
     }

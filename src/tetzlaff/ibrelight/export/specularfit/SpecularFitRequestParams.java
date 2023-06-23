@@ -15,10 +15,9 @@ import java.io.File;
 
 import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.rendering.resources.ImageCacheSettings;
-import tetzlaff.models.SettingsModel;
 import tetzlaff.models.ReadonlySettingsModel;
 
-public class SpecularFitSettings
+public class SpecularFitRequestParams
 {
     private final TextureFitSettings textureFitSettings;
     private final ReadonlySettingsModel ibrSettings;
@@ -39,7 +38,7 @@ public class SpecularFitSettings
      * Constructs an object to hold the settings for specular texture fitting.
      * @param textureFitSettings General settings for texture fitting (resolution, output directory)
      */
-    public SpecularFitSettings(TextureFitSettings textureFitSettings, SettingsModel ibrSettings, File outputDirectory)
+    public SpecularFitRequestParams(TextureFitSettings textureFitSettings, ReadonlySettingsModel ibrSettings, File outputDirectory)
     {
         if (textureFitSettings == null)
         {

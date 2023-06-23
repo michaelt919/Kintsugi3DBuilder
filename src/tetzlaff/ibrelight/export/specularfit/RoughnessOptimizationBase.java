@@ -14,11 +14,11 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
     protected final VertexBuffer<ContextType> rect;
     protected final Drawable<ContextType> specularRoughnessFitDrawable;
 
-    protected RoughnessOptimizationBase(ContextType context, BasisResources<ContextType> resources, TextureFitSettings settings)
+    protected RoughnessOptimizationBase(BasisResources<ContextType> resources)
         throws FileNotFoundException
     {
         // Fit specular parameters from weighted basis functions
-        specularRoughnessFitProgram = context.getShaderProgramBuilder()
+        specularRoughnessFitProgram = resources.context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/specularRoughnessFitNew.frag"))
                 .define("BASIS_COUNT", resources.getSpecularBasisSettings().getBasisCount())
@@ -26,14 +26,14 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
                 .createProgram();
 
         // Create basic rectangle vertex buffer
-        rect = context.createRectangle();
-        specularRoughnessFitDrawable = context.createDrawable(specularRoughnessFitProgram);
+        rect = resources.context.createRectangle();
+        specularRoughnessFitDrawable = resources.context.createDrawable(specularRoughnessFitProgram);
         specularRoughnessFitDrawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
 
         // Set up shader program
         specularRoughnessFitDrawable.addVertexBuffer("position", rect);
         resources.useWithShaderProgram(specularRoughnessFitProgram);
-        specularRoughnessFitProgram.setUniform("gamma", settings.gamma);
+        specularRoughnessFitProgram.setUniform("gamma", resources.getTextureFitSettings().gamma);
         specularRoughnessFitProgram.setUniform("fittingGamma", 1.0f);
 
     }
