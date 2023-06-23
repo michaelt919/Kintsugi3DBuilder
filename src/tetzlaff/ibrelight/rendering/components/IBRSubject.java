@@ -168,7 +168,7 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
         drawable.program().setUniform("projection", cameraViewport.getViewportProjection());
         drawable.program().setUniform("fullProjection", cameraViewport.getFullProjection());
 
-        drawable.draw(PrimitiveMode.TRIANGLES, framebuffer, cameraViewport.getX(), cameraViewport.getY(), cameraViewport.getWidth(), cameraViewport.getHeight());
+        drawable.draw(framebuffer, cameraViewport.getX(), cameraViewport.getY(), cameraViewport.getWidth(), cameraViewport.getHeight());
 
         context.getState().enableBackFaceCulling();
     }

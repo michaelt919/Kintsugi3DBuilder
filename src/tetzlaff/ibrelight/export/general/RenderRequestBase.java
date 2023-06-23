@@ -186,7 +186,7 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
         framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
         framebuffer.clearDepthBuffer();
         shaderSetupCallback.accept(drawable.program());
-        drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+        drawable.draw(framebuffer);
     }
 
     protected File getOutputDirectory()

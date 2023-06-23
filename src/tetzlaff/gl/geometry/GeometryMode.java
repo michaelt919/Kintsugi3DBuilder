@@ -11,14 +11,36 @@
 
 package tetzlaff.gl.geometry;
 
-import tetzlaff.gl.core.Context;
-import tetzlaff.gl.core.Resource;
-import tetzlaff.gl.core.Texture;
-import tetzlaff.gl.core.Texture2D;
+import tetzlaff.gl.core.IntLike;
 
-public interface GeometryTextures<ContextType extends Context<ContextType>> extends Resource
+public enum GeometryMode implements IntLike
 {
-    Texture2D<ContextType> getPositionTexture();
-    Texture2D<ContextType> getNormalTexture();
-    Texture2D<ContextType> getTangentTexture();
+    PROJECT_3D_TO_2D(0),
+    RECTANGLE(1);
+
+    private final int intValue;
+
+    GeometryMode(int intValue)
+    {
+        this.intValue = intValue;
+    }
+
+    /**
+     * For uniforms and vertex attributes
+     * @return the integer encoding of this instance
+     */
+    @Override
+    public int getIntValue()
+    {
+        return intValue;
+    }
+
+    /**
+     * For preprocessor defines
+     * @return the String form of the integer encoding of this instance
+     */
+    public String toString()
+    {
+        return Integer.toString(intValue);
+    }
 }

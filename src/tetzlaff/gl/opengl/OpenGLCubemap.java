@@ -89,6 +89,13 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
         @Override
         public ColorBuilder loadFace(CubemapFace face, NativeVectorBuffer data)
         {
+            if (data.getCount() != faceSize * faceSize)
+            {
+                throw new IllegalArgumentException(
+                    String.format("Native vector buffer does not have the required number of elements for this texture.  Expected: %d (%dx%d)  Actual: %d",
+                        faceSize * faceSize, faceSize, faceSize, data.getCount()));
+            }
+
             int index = cubemapFaceToIndex(face);
             faces[index].buffer = data.getBuffer();
             faces[index].dataType = data.getDataType();

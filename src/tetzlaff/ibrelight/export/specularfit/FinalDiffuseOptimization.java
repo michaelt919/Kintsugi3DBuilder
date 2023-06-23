@@ -35,16 +35,17 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
 
     private final Drawable<ContextType> drawable;
 
-    public FinalDiffuseOptimization(SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings settings)
+    public FinalDiffuseOptimization(IBRResources<ContextType> resources,
+        SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings settings)
         throws FileNotFoundException
     {
-        this.context = programFactory.getContext();
-        estimationProgram = createDiffuseEstimationProgram(programFactory);
+        this.context = resources.getContext();
+        estimationProgram = createDiffuseEstimationProgram(resources, programFactory);
         textureFitSettings = settings;
         framebuffer = context.buildFramebufferObject(textureFitSettings.width, textureFitSettings.height)
             .addColorAttachment(ColorFormat.RGBA32F)
             .createFramebufferObject();
-        drawable = programFactory.createDrawable(estimationProgram);
+        drawable = resources.createDrawable(estimationProgram);
     }
 
     public void execute(SpecularFitBase<ContextType> specularFit)
@@ -63,12 +64,12 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         // Will reference the framebuffer that is in front after hole filling if everything is successful.
         FramebufferObject<ContextType> finalDiffuse = null;
 
+        // Perform diffuse fit
+        framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+        drawable.draw(framebuffer);
+
         try (ShaderHoleFill<ContextType> holeFill = new ShaderHoleFill<>(context))
         {
-            // Perform diffuse fit
-            framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-            drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
-
             // Fill holes
             finalDiffuse = holeFill.execute(framebuffer, framebuffer2);
         }
@@ -119,10 +120,11 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
     }
 
     private static <ContextType extends Context<ContextType>>
-        Program<ContextType> createDiffuseEstimationProgram(SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
+        Program<ContextType> createDiffuseEstimationProgram(
+            IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {
-        return programFactory.createProgram(
-            new File("shaders/common/texspace_noscale.vert"),
+        return programFactory.createProgram(resources,
+            new File("shaders/common/texspace_dynamic.vert"),
             new File("shaders/specularfit/estimateDiffuse.frag"));
     }
 }

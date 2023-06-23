@@ -20,6 +20,7 @@ import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.TextureFitSettings;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.optimization.ReadonlyErrorReport;
 import tetzlaff.optimization.ShaderBasedOptimization;
 
@@ -32,6 +33,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     private boolean firstSmooth = true;
 
     public NormalOptimization(
+        IBRResources<ContextType> resources,
         SpecularFitProgramFactory<ContextType> programFactory,
         Function<Program<ContextType>, Drawable<ContextType>> drawableFactory,
         TextureFitSettings textureFitSettings, NormalOptimizationSettings normalOptimizationSettings)
@@ -40,8 +42,8 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         this.normalOptimizationSettings = normalOptimizationSettings;
 
         estimateNormals = new ShaderBasedOptimization<>(
-            getNormalEstimationProgramBuilder(programFactory),
-            programFactory.getContext().buildFramebufferObject(textureFitSettings.width, textureFitSettings.height)
+            getNormalEstimationProgramBuilder(resources, programFactory),
+            resources.getContext().buildFramebufferObject(textureFitSettings.width, textureFitSettings.height)
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F)
                     .setLinearFilteringEnabled(true))
                 .addColorAttachment(ColorFormat.R32F), // Damping factor while fitting,
@@ -51,8 +53,8 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         estimateNormals.getBackFramebuffer().clearColorBuffer(0, 0.5f, 0.5f, 1.0f, 1.0f);
 
         smoothNormals = new ShaderBasedOptimization<>(
-            getNormalSmoothProgramBuilder(programFactory),
-            programFactory.getContext().buildFramebufferObject(textureFitSettings.width, textureFitSettings.height)
+            getNormalSmoothProgramBuilder(resources, programFactory),
+            resources.getContext().buildFramebufferObject(textureFitSettings.width, textureFitSettings.height)
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F)
                     .setLinearFilteringEnabled(true)),
             drawableFactory);
@@ -210,10 +212,11 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         return getNormalMapFBO().readFloatingPointColorBufferRGBA(0);
     }
 
-    private ProgramBuilder<ContextType> getNormalEstimationProgramBuilder(SpecularFitProgramFactory<ContextType> programFactory)
+    private ProgramBuilder<ContextType> getNormalEstimationProgramBuilder(
+        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
-        return programFactory.getShaderProgramBuilder(
-                new File("shaders/common/texspace_noscale.vert"),
+        return programFactory.getShaderProgramBuilder(resources,
+                new File("shaders/common/texspace_dynamic.vert"),
                 new File("shaders/specularfit/estimateNormals.frag"),
                 true)
             .define("USE_LEVENBERG_MARQUARDT", normalOptimizationSettings.isLevenbergMarquardtEnabled())
@@ -221,10 +224,11 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     }
 
     private static <ContextType extends Context<ContextType>>
-    ProgramBuilder<ContextType> getNormalSmoothProgramBuilder(SpecularFitProgramFactory<ContextType> programFactory)
+    ProgramBuilder<ContextType> getNormalSmoothProgramBuilder(
+        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
-        return programFactory.getShaderProgramBuilder(
-                new File("shaders/common/texspace_noscale.vert"),
+        return programFactory.getShaderProgramBuilder(resources,
+                new File("shaders/common/texspace_dynamic.vert"),
                 new File("shaders/specularfit/smoothNormals.frag"),
                 true);
     }

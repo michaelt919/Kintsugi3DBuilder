@@ -86,7 +86,7 @@ public class TangentSpaceWeightsToObjectSpace <ContextType extends Context<Conte
             {
                 fbo.clearColorBuffer(i, 0, 0, 0, 0);
             }
-            drawable.draw(PrimitiveMode.TRIANGLES, fbo);
+            drawable.draw(fbo);
             FramebufferObject<ContextType> finalFBO = new ShaderHoleFill<>(resources.getContext()).execute(fbo, fbo2);
             saveToFile(finalFBO, weightStart, weightCount, outputDirectory);
         }

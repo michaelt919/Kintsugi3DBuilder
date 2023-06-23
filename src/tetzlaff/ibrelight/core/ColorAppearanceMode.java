@@ -32,6 +32,7 @@ public enum ColorAppearanceMode implements IntLike
      * For uniforms and vertex attributes
      * @return the integer encoding of this instance
      */
+    @Override
     public int getIntValue()
     {
         return intValue;

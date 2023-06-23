@@ -116,18 +116,21 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
         if (resources.getViewSet() != null)
         {
             // Reconstruct images both from basis functions and from fitted roughness
-            SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources,
+            SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(
                settings.getIbrSettings(), settings.getSpecularBasisSettings());
-            FinalReconstruction<ContextType> reconstruction = new FinalReconstruction<>(resources, settings.getTextureFitSettings(), settings.getReconstructionSettings());
+            FinalReconstruction<ContextType> reconstruction =
+                new FinalReconstruction<>(resources, settings.getTextureFitSettings(), settings.getReconstructionSettings());
 
             System.out.println("Reconstructing ground truth images from basis representation:");
             double reconstructionRMSE =
-                reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(programFactory), settings.getReconstructionSettings().shouldReconstructAll(),
+                reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(resources, programFactory),
+                    settings.getReconstructionSettings().shouldReconstructAll(),
                     "reconstruction", "ground-truth", settings.getOutputDirectory());
 
             System.out.println("Reconstructing ground truth images from fitted roughness / specular color:");
             double fittedRMSE =
-                reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(programFactory), settings.getReconstructionSettings().shouldReconstructAll(),
+                reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(resources, programFactory),
+                    settings.getReconstructionSettings().shouldReconstructAll(),
                     "fitted", null, settings.getOutputDirectory());
 
             if (!settings.getReconstructionSettings().shouldReconstructAll()) // Write to just one RMSE file if only doing a single image per reconstruction method
@@ -143,17 +146,19 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
     }
 
     private static <ContextType extends Context<ContextType>>
-    ProgramBuilder<ContextType> getImageReconstructionProgramBuilder(SpecularFitProgramFactory<ContextType> programFactory)
+    ProgramBuilder<ContextType> getImageReconstructionProgramBuilder(
+        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
-        return programFactory.getShaderProgramBuilder(
+        return programFactory.getShaderProgramBuilder(resources,
                 new File("shaders/common/imgspace.vert"),
                 new File("shaders/specularfit/reconstructImage.frag"));
     }
 
     private static <ContextType extends Context<ContextType>>
-    ProgramBuilder<ContextType> getFittedImageReconstructionProgramBuilder(SpecularFitProgramFactory<ContextType> programFactory)
+    ProgramBuilder<ContextType> getFittedImageReconstructionProgramBuilder(
+        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
-        return programFactory.getShaderProgramBuilder(
+        return programFactory.getShaderProgramBuilder(resources,
                 new File("shaders/common/imgspace.vert"),
                 new File("shaders/specularfit/renderFit.frag"));
     }

@@ -38,6 +38,7 @@ public class ShaderHoleFill<ContextType extends Context<ContextType>> implements
 
         drawable = context.createDrawable(program);
         drawable.addVertexBuffer("position", rect);
+        drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
     }
 
     @Override
@@ -63,7 +64,7 @@ public class ShaderHoleFill<ContextType extends Context<ContextType>> implements
                 program.setTexture("input" + j, frontFramebuffer.getColorAttachmentTexture(j));
             }
 
-            drawable.draw(PrimitiveMode.TRIANGLE_FAN, backFramebuffer);
+            drawable.draw(backFramebuffer);
 
             FramebufferObject<ContextType> tmp = frontFramebuffer;
             frontFramebuffer = backFramebuffer;

@@ -40,13 +40,13 @@ public abstract class IBRResourcesBase<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public ContextType getContext()
+    public final ContextType getContext()
     {
         return sharedResources.getContext();
     }
 
     @Override
-    public ViewSet getViewSet()
+    public final ViewSet getViewSet()
     {
         return sharedResources.getViewSet();
     }
@@ -64,20 +64,20 @@ public abstract class IBRResourcesBase<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public GeometryResources<ContextType> getGeometryResources()
+    public final GeometryResources<ContextType> getGeometryResources()
     {
         return sharedResources.getGeometryResources();
     }
 
 
     @Override
-    public MaterialResources<ContextType> getMaterialResources()
+    public final MaterialResources<ContextType> getMaterialResources()
     {
         return sharedResources.getMaterialResources();
     }
 
     @Override
-    public LuminanceMapResources<ContextType> getLuminanceMapResources()
+    public final LuminanceMapResources<ContextType> getLuminanceMapResources()
     {
         return sharedResources.getLuminanceMapResources();
     }

@@ -22,7 +22,6 @@ import javax.imageio.ImageIO;
 
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.util.ColorArrayList;
 import tetzlaff.optimization.KMeansClustering;
@@ -30,20 +29,18 @@ import tetzlaff.optimization.KMeansClustering;
 public class SpecularFitInitializer<ContextType extends Context<ContextType>>
 {
     private final IBRResources<ContextType> resources;
-    private final TextureFitSettings textureFitSettings;
     private final SpecularBasisSettings specularBasisSettings;
 
-    public SpecularFitInitializer(IBRResources<ContextType> resources, TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings)
+    public SpecularFitInitializer(IBRResources<ContextType> resources, SpecularBasisSettings specularBasisSettings)
     {
         this.resources = resources;
-        this.textureFitSettings = textureFitSettings;
         this.specularBasisSettings = specularBasisSettings;
     }
 
     private Program<ContextType> createAverageProgram(SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {
-        return programFactory.createProgram(
-            new File("shaders/common/texspace_noscale.vert"),
+        return programFactory.createProgram(resources,
+            new File("shaders/common/texspace_dynamic.vert"),
             new File("shaders/specularfit/average.frag"));
     }
 
@@ -51,7 +48,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
     {
         try (Program<ContextType> averageProgram = createAverageProgram(programFactory);
             FramebufferObject<ContextType> framebuffer =
-                resources.getContext().buildFramebufferObject(textureFitSettings.width, textureFitSettings.height)
+                resources.getContext().buildFramebufferObject(solution.getTextureFitSettings().width, solution.getTextureFitSettings().height)
                     .addColorAttachment(ColorFormat.RGBA32F)
                     .createFramebufferObject())
         {
@@ -63,7 +60,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
             framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 
             // Run shader program to fill framebuffer with per-pixel information.
-            drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+            drawable.draw(framebuffer);
 
 //            if (SpecularOptimization.DEBUG)
 //            {
@@ -101,9 +98,12 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
 
     public void saveDebugImage(SpecularDecomposition solution, File outputDirectory)
     {
-        BufferedImage weightImg = new BufferedImage(textureFitSettings.width, textureFitSettings.height, BufferedImage.TYPE_INT_ARGB);
-        int[] weightDataPacked = new int[textureFitSettings.width * textureFitSettings.height];
-        for (int p = 0; p < textureFitSettings.width * textureFitSettings.height; p++)
+        int width = solution.getTextureFitSettings().width;
+        int height = solution.getTextureFitSettings().height;
+
+        BufferedImage weightImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        int[] weightDataPacked = new int[width * height];
+        for (int p = 0; p < width * height; p++)
         {
             if (solution.areWeightsValid(p))
             {
@@ -118,7 +118,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
                 }
 
                 // Flip vertically
-                int weightDataIndex = p % textureFitSettings.width + textureFitSettings.width * (textureFitSettings.height - p / textureFitSettings.width - 1);
+                int weightDataIndex = p % width + width * (height - p / width - 1);
 
                 switch (bSelect)
                 {

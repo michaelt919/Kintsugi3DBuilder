@@ -27,15 +27,15 @@ vec3 getNormal()
 {
     // Assume fTexCoord to be declared previously
     // Assume the texture is set to store floating-point elements that are in the [-1, 1] range.
-    return normalize(texture(normalTex, fTexCoord));
+    return normalize(texture(normalTex, fTexCoord).xyz);
 }
 
 mat3 constructTBNApprox()
 {
     // Assume fTexCoord to be declared previously
     // Assume the texture is set to store floating-point elements that are in the [-1, 1] range.
-    vec3 normal = texture(normalTex, fTexCoord);
-    vec3 tangent = texture(tangentTex, fTexCoord); // No re-orthogonalization
+    vec3 normal = texture(normalTex, fTexCoord).xyz;
+    vec3 tangent = texture(tangentTex, fTexCoord).xyz; // No re-orthogonalization
 
     // Don't think we really need multiplication by tangent.w
     vec3 bitangent = normalize(cross(normal, tangent.xyz));
@@ -48,8 +48,8 @@ mat3 constructTBNExact()
 {
     // Assume fTexCoord to be declared previously
     // Assume the texture is set to store floating-point elements that are in the [-1, 1] range.
-    vec3 normal = texture(normalTex, fTexCoord);
-    vec3 tangent = texture(tangentTex, fTexCoord);
+    vec3 normal = texture(normalTex, fTexCoord).xyz;
+    vec3 tangent = texture(tangentTex, fTexCoord).xyz;
     tangent = normalize(tangent - dot(normal, tangent) * normal); // Re-orthogonalize
 
     // Don't think we really need multiplication by tangent.w

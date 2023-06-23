@@ -445,6 +445,13 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
     @Override
     public void loadLayer(int layerIndex, NativeVectorBuffer data)
     {
+        if (data.getCount() != width * height)
+        {
+            throw new IllegalArgumentException(
+                String.format("Native vector buffer does not have the required number of elements for this texture.  Expected: %d (%dx%d)  Actual: %d",
+                    width * height, width, height, data.getCount()));
+        }
+
         AbstractDataTypeFactory adtFactory = AbstractDataTypeFactory.getInstance();
 
         loadLayer(layerIndex,

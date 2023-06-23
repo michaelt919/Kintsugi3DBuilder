@@ -14,6 +14,7 @@ package tetzlaff.ibrelight.rendering.resources;
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
+import tetzlaff.gl.geometry.GeometryMode;
 import tetzlaff.gl.geometry.GeometryResources;
 import tetzlaff.gl.geometry.GeometryTextures;
 import tetzlaff.gl.geometry.VertexGeometry;
@@ -47,6 +48,10 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
      */
     private GeometryTextures<ContextType> geometryTextures;
 
+    private final int texWidth;
+    private final int texHeight;
+
+
     IBRResourcesTextureSpace(
         ContextType context, ViewSet viewSet, VertexGeometry geometry, TextureLoadOptions loadOptions,
         int texWidth, int texHeight, LoadingMonitor loadingMonitor) throws IOException
@@ -58,6 +63,9 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
         geometryTextures = getGeometryResources().createGeometryFramebuffer(texWidth, texHeight);
 
         rectangle = context.createRectangle();
+
+        this.texWidth = texWidth;
+        this.texHeight = texHeight;
 
         // TODO load images in texture space
         throw new UnsupportedOperationException();
@@ -78,6 +86,9 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
          File textureDirectory, TextureLoadOptions loadOptions, int texWidth, int texHeight, LoadingMonitor loadingMonitor) throws IOException
     {
         super(sharedResources, false);
+
+        this.texWidth = texWidth;
+        this.texHeight = texHeight;
 
         Date timestamp = new Date();
 
@@ -181,6 +192,7 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
     {
         return getSharedResources().getShaderProgramBuilder(renderingMode)
             .define("GEOMETRY_TEXTURES_ENABLED", true)
+            .define("GEOMETRY_MODE", GeometryMode.RECTANGLE)
             .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.TEXTURE_SPACE);
     }
 
@@ -199,7 +211,23 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
     {
         Drawable<ContextType> drawable = getSharedResources().getContext().createDrawable(program);
         drawable.addVertexBuffer("position", rectangle);
+        drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
         return drawable;
+    }
+
+    public int getTexWidth()
+    {
+        return texWidth;
+    }
+
+    public int getTexHeight()
+    {
+        return texHeight;
+    }
+
+    public TextureFitSettings getTextureFitSettings(float gamma)
+    {
+        return new TextureFitSettings(texWidth, texHeight, gamma);
     }
 
     @Override
@@ -217,6 +245,12 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
         {
             this.rectangle.close();
             this.rectangle = null;
+        }
+
+        if (this.textureArray != null)
+        {
+            this.textureArray.close();
+            this.textureArray = null;
         }
     }
 }

@@ -701,6 +701,13 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
     @Override
     public void load(NativeVectorBuffer data)
     {
+        if (data.getCount() != width * height)
+        {
+            throw new IllegalArgumentException(
+                String.format("Native vector buffer does not have the required number of elements for this texture.  Expected: %d (%dx%d)  Actual: %d",
+                    width * height, width, height, data.getCount()));
+        }
+
         this.bind();
 
         int format = OpenGLContext.getPixelDataFormatFromDimensions(

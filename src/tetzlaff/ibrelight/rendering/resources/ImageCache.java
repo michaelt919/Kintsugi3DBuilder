@@ -21,6 +21,7 @@ import java.util.stream.IntStream;
 
 import javax.imageio.ImageIO;
 
+import org.w3c.dom.Text;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.geometry.GeometryFramebuffer;
 import tetzlaff.gl.geometry.GeometryTextures;
@@ -32,6 +33,7 @@ import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.vecmath.IntVector2;
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibrelight.core.SimpleLoadOptionsModel;
+import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.util.BufferedImageBuilder;
 
 public class ImageCache<ContextType extends Context<ContextType>>
@@ -42,6 +44,8 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
     private final File sampledDir;
     private final IntVector2[][] sampledPixelCoords;
+
+    private boolean initialized = false;
 
     ImageCache(IBRResourcesImageSpace<ContextType> resources, ImageCacheSettings settings)
     {
@@ -62,6 +66,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
             try
             {
                 readSampleLocationsFromFile();
+                initialized = true; // reading sample locations succeeded; assume that we already have a valid cache
             }
             catch (IOException | RuntimeException e)
             {
@@ -72,10 +77,20 @@ public class ImageCache<ContextType extends Context<ContextType>>
             }
         }
     }
+    public ContextType getContext()
+    {
+        return context;
+    }
+
 
     private File getBlockDir(int i, int j)
     {
         return new File(settings.getCacheDirectory(), String.format("%d_%d", i, j));
+    }
+
+    public boolean isInitialized()
+    {
+        return initialized;
     }
 
     /**
@@ -112,7 +127,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
     {
 
         try (Program<ContextType> maskProgram = context.getShaderProgramBuilder()
-            .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+            .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_dynamic.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/common/solid.frag"))
             .createProgram())
         {
@@ -170,7 +185,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
     private File getSampleLocationsFile()
     {
-        return new File(settings.getCacheDirectory(), "sampleLocations.csv");
+        return new File(settings.getCacheDirectory(), "sampleLocations.txt");
     }
 
     private void writeSampleLocationsToFile() throws FileNotFoundException
@@ -200,7 +215,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
                     for (int j = 0; j < coords.length; j++)
                     {
                         // Parse coordinates
-                        String[] elements = coords[i].split(",");
+                        String[] elements = coords[j].split(",");
                         if (elements.length == 2)
                         {
                             sampledPixelCoords[i][j] = new IntVector2(Integer.parseInt(elements[0]), Integer.parseInt(elements[1]));
@@ -239,7 +254,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         loadOptions.setDepthImagesRequested(true);
 
         try(Program<ContextType> texSpaceProgram = SingleCalibratedImageResource.getShaderProgramBuilder(context, resources.getViewSet(), loadOptions)
-            .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+            .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_dynamic.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/colorappearance/projtex_single.frag"))
             .createProgram())
         {
@@ -301,7 +316,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
                                 .setDataFromArray(block, width, height)
                                 .flipVertical()
                                 .create();
-                            blockImage.setRGB(0, 0, width, height, block, 0, width);
+//                            blockImage.setRGB(0, 0, width, height, block, 0, width);
 
                             // Write the block image out to disk
                             ImageIO.write(blockImage, "PNG",
@@ -323,7 +338,10 @@ public class ImageCache<ContextType extends Context<ContextType>>
                                     if (coords.x >= x && coords.x < xNext && coords.y >= y && coords.y < yNext)
                                     {
                                         // Make sure to account for the start of the block to avoid out-of-bounds indices after the first block
-                                        sampled.setRGB(xSample, ySample, blockImage.getRGB(coords.x - x, coords.y - y));
+                                        // Need to flip both the source and destination y-components (since the block image is already flipped,
+                                        // our coordinates are in non-flipped space, but we ultimately do want the sampled image to also be flipped).
+                                        sampled.setRGB(xSample, settings.getSampledSize() - ySample - 1,
+                                            blockImage.getRGB(coords.x - x, height - (coords.y - y) - 1));
                                     }
                                 }
                             }
@@ -343,7 +361,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         }
     }
 
-    public IBRResources<ContextType> createSampledResources() throws IOException
+    public IBRResourcesTextureSpace<ContextType> createSampledResources() throws IOException
     {
         TextureLoadOptions loadOptions = new TextureLoadOptions();
         loadOptions.setLinearFilteringRequested(false);
@@ -361,7 +379,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
      * @return
      * @throws IOException
      */
-    public IBRResources<ContextType> createBlockResources(int i, int j) throws IOException
+    public IBRResourcesTextureSpace<ContextType> createBlockResources(int i, int j) throws IOException
     {
         TextureLoadOptions loadOptions = new TextureLoadOptions();
         loadOptions.setLinearFilteringRequested(false);
@@ -379,6 +397,12 @@ public class ImageCache<ContextType extends Context<ContextType>>
         // Figure out which pixels in the high-res image are being used in the sampled image
         IntVector2 highResCoords = sampledPixelCoords[sampleIndex % settings.getSampledSize()][sampleIndex / settings.getSampledSize()];
         return highResCoords.x + highResCoords.y * settings.getTextureWidth();
+
+//        int x = sampleIndex % settings.getSampledSize();
+//        int y = sampleIndex / settings.getSampledSize();
+//        int highResX = Math.min(settings.getTextureWidth() - 1, Math.round((float)x * settings.getTextureWidth() / settings.getSampledSize()));
+//        int highResY = Math.min(settings.getTextureHeight() - 1, Math.round((float)y * settings.getTextureHeight() / settings.getSampledSize()));
+//        return highResX + highResY * settings.getTextureWidth();
     }
 
     private NativeVectorBuffer sampleHighResBuffer(NativeVectorBuffer highResBuffer)
@@ -401,8 +425,8 @@ public class ImageCache<ContextType extends Context<ContextType>>
             this.resources.getGeometryResources().createGeometryFramebuffer(settings.getTextureWidth(), settings.getTextureHeight()))
         {
             // Use non-rendered since we need to sample on the CPU (where the sample coordinates live) and then pass the data back to the GPU.
-            GeometryTexturesNonRendered<ContextType> sampledGeometryTextures =
-                new GeometryTexturesNonRendered<>(context, settings.getTextureWidth(), settings.getTextureHeight());
+            GeometryTextures<ContextType> sampledGeometryTextures =
+                new GeometryTexturesNonRendered<>(context, settings.getSampledSize(), settings.getSampledSize());
 
             // Sample position buffer
             sampledGeometryTextures.getPositionTexture().load(

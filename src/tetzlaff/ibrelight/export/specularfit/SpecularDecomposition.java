@@ -196,6 +196,11 @@ public class SpecularDecomposition implements SpecularBasis, SpecularBasisWeight
         }
     }
 
+    public TextureFitSettings getTextureFitSettings()
+    {
+        return textureFitSettings;
+    }
+
     public SpecularBasisSettings getSpecularBasisSettings()
     {
         return specularBasisSettings;

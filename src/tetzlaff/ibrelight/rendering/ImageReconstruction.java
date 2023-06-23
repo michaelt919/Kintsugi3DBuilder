@@ -91,7 +91,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         framebuffer.clearDepthBuffer();
 
         // Draw the view into the framebuffer.
-        drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+        drawable.draw(framebuffer);
 
         // Give the callback an opportunity to do something with the view.
         if (reconstructionAction != null)

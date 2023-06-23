@@ -262,7 +262,7 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getLuminanceProgramBuilder(PTMProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(
-                new File("shaders/common/texspace_noscale.vert"),
+                new File("shaders/common/texspace_dynamic.vert"),
                 new File("shaders/PTMfit/PTMShader.frag"));
     }
 
@@ -276,14 +276,14 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getTangentToObjectSpaceProgram1Builder(PTMProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(
-                new File("shaders/common/texspace_noscale.vert"),
+                new File("shaders/common/texspace_dynamic.vert"),
                 new File("shaders/PTMfit/ptm_objectspace1.frag"));
     }
 
     ProgramBuilder<ContextType> getTangentToObjectSpaceProgram2Builder(PTMProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(
-                new File("shaders/common/texspace_noscale.vert"),
+                new File("shaders/common/texspace_dynamic.vert"),
                 new File("shaders/PTMfit/ptm_objectspace2.frag"));
     }
 
@@ -291,7 +291,7 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getColorAverageProgramBuilder(PTMProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(
-            new File("shaders/common/texspace_noscale.vert"),
+            new File("shaders/common/texspace_dynamic.vert"),
             new File("shaders/PTMfit/colorAverage.frag"));
     }
 

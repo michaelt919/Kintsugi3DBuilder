@@ -14,16 +14,8 @@
 #define COLOR_APPEARANCE_DYNAMIC_GLSL
 
 #include "colorappearance.glsl"
-#line 18 1003
-
-#define COLOR_APPEARANCE_MODE_ANALYTIC 0
-#define COLOR_APPEARANCE_MODE_IMAGE_SPACE 1
-#define COLOR_APPEARANCE_MODE_TEXTURE_SPACE 2
-#define COLOR_APPEARANCE_MODE_TEXTURE_SPACE_CROP 3
-
-#ifndef COLOR_APPEARANCE_MODE
-#define COLOR_APPEARANCE_MODE COLOR_APPEARANCE_MODE_IMAGE_SPACE
-#endif
+#include "colorappearancemode.glsl"
+#line 19 1003
 
 #if COLOR_APPEARANCE_MODE == COLOR_APPEARANCE_MODE_ANALYTIC
 #include "analytic.glsl"
@@ -37,7 +29,7 @@
 #elif COLOR_APPEARANCE_MODE == COLOR_APPEARANCE_MODE_TEXTURE_SPACE_CROP
 #include "texspace_crop.glsl"
 #else
-vec4 getColor()
+vec4 getColor(int index)
 {
     // Unrecognized mode; use magenta to indicate an error
     return vec4(1, 0, 1, 1);

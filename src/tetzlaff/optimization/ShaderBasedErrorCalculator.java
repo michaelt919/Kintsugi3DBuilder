@@ -88,7 +88,7 @@ public class ShaderBasedErrorCalculator<ContextType extends Context<ContextType>
         framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 
         // Run shader program to fill framebuffer with per-pixel error.
-        drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+        drawable.draw(framebuffer);
 
         // Copy framebuffer from GPU to main memory.
         float[] pixelErrors = framebuffer.readFloatingPointColorBufferRGBA(0);

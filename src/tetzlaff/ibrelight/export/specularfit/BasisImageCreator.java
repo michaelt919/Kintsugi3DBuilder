@@ -44,6 +44,7 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
 
         drawable = context.createDrawable(program);
         drawable.addVertexBuffer("position", rect);
+        drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
 
         this.settings = settings;
 
@@ -61,7 +62,7 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
         for (int i = 0; i < settings.getBasisCount(); i++)
         {
             drawable.program().setUniform("basisIndex", i);
-            drawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+            drawable.draw(framebuffer);
             framebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, String.format("basis_%02d.png", i)));
         }
     }

@@ -10,31 +10,18 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-#ifndef USE_GEOM_GLSL
-#define USE_GEOM_GLSL
+#line 14 1004
 
-#line 17 9903
+#ifndef COLOR_APPEARANCE_MODE_GLSL
+#define COLOR_APPEARANCE_MODE_GLSL
 
-#ifndef GEOMETRY_TEXTURES_ENABLED
-#define GEOMETRY_TEXTURES_ENABLED 0
+#define COLOR_APPEARANCE_MODE_ANALYTIC 0
+#define COLOR_APPEARANCE_MODE_IMAGE_SPACE 1
+#define COLOR_APPEARANCE_MODE_TEXTURE_SPACE 2
+#define COLOR_APPEARANCE_MODE_TEXTURE_SPACE_CROP 3
+
+#ifndef COLOR_APPEARANCE_MODE
+#define COLOR_APPEARANCE_MODE COLOR_APPEARANCE_MODE_IMAGE_SPACE
 #endif
 
-#if GEOMETRY_TEXTURES_ENABLED
-uniform sampler2D positionTex;
-
-vec3 getPosition()
-{
-    // Assume fTexCoord to be declared previously
-    // Assume the texture is set to store floating-point elements.
-    return texture(positionTex, fTexCoord).xyz;
-}
-
-#else
-// Assume fPosition is defined previously
-vec3 getPosition()
-{
-    return fPosition;
-}
-#endif
-
-#endif // USE_GEOM_GLSL
+#endif // COLOR_APPEARANCE_MODE_GLSL

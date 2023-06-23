@@ -14,10 +14,12 @@ package tetzlaff.ibrelight.export.specularfit;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.nio.FloatBuffer;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.stream.IntStream;
 
+import org.lwjgl.BufferUtils;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.DoubleVector2;
 import tetzlaff.gl.vecmath.DoubleVector3;
@@ -29,17 +31,19 @@ import tetzlaff.optimization.ShaderBasedErrorCalculator;
  * A module that performs some final steps to finish a specular fit: filling holes in the weight maps, and calculating some final error statistics.
  * TODO this class doesn't have a well defined identity; should probably be refactored.
  */
-public class SpecularFitFinalizer
+public final class SpecularFitFinalizer
 {
+    private static final SpecularFitFinalizer INSTANCE = new SpecularFitFinalizer();
+
+    public static SpecularFitFinalizer getInstance()
+    {
+        return INSTANCE;
+    }
 
     private static final boolean CALCULATE_NORMAL_RMSE = true;
-    private final TextureFitSettings textureFitSettings;
-    private final SpecularBasisSettings specularBasisSettings;
 
-    public SpecularFitFinalizer(TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings)
+    private SpecularFitFinalizer()
     {
-        this.textureFitSettings = textureFitSettings;
-        this.specularBasisSettings = specularBasisSettings;
     }
 
     /**
@@ -58,12 +62,10 @@ public class SpecularFitFinalizer
         SpecularFitFromOptimization<ContextType> specularFit, ShaderBasedErrorCalculator<ContextType> errorCalculator,
         PrintStream rmseOut, File outputDirectory)
     {
-        try (
-
-            // Error calculation shader programs
-            Program<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(programFactory);
-        )
+        try (Program<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(resources, programFactory))
         {
+            TextureFitSettings textureFitSettings = specularFit.getTextureFitSettings();
+
             // Print out RMSE from the penultimate iteration (to verify convergence)
             rmseOut.println("Previously calculated RMSE: " + errorCalculator.getReport().getError());
 
@@ -131,12 +133,14 @@ public class SpecularFitFinalizer
      * @param <ContextType>
      */
     public <ContextType extends Context<ContextType>> void validateNormalMap(
-            IBRResources<ContextType> resources, SpecularFitFromOptimization<ContextType> specularFit, PrintStream rmseOut)
+        IBRResources<ContextType> resources, SpecularFitFromOptimization<ContextType> specularFit, PrintStream rmseOut)
     {
         if (CALCULATE_NORMAL_RMSE && resources.getMaterialResources().getNormalTexture() != null)
         {
+            TextureFitSettings textureFitSettings = specularFit.getTextureFitSettings();
+
             try (Program<ContextType> textureRectProgram = resources.getContext().getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+                .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_dynamic.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/common/texture.frag"))
                 .createProgram();
                 FramebufferObject<ContextType> textureRectFBO =
@@ -191,12 +195,12 @@ public class SpecularFitFinalizer
      * @param <ContextType>
      * @throws FileNotFoundException
      */
-    public static <ContextType extends Context<ContextType>> void calculateGGXRMSE(
+    public <ContextType extends Context<ContextType>> void calculateGGXRMSE(
             IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
             SpecularResources<ContextType> specularFit, Framebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
         throws FileNotFoundException
     {
-        try (Program<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(programFactory))
+        try (Program<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(resources, programFactory))
         {
             Drawable<ContextType> ggxErrorCalcDrawable = resources.createDrawable(ggxErrorCalcProgram);
             ggxErrorCalcProgram.setTexture("normalEstimate", specularFit.getNormalMap());
@@ -214,7 +218,6 @@ public class SpecularFitFinalizer
         }
     }
 
-    @SuppressWarnings("PackageVisibleField")
     private static class WeightedError
     {
         double error;
@@ -232,6 +235,9 @@ public class SpecularFitFinalizer
     {
         WeightedError errorTotal = new WeightedError(0, 0);
 
+        FramebufferSize size = framebuffer.getSize();
+        FloatBuffer pixelErrors = BufferUtils.createFloatBuffer(size.width * size.height * 4);
+
         for (int k = 0; k < viewCount; k++)
         {
             drawable.program().setUniform("viewIndex", k);
@@ -241,20 +247,21 @@ public class SpecularFitFinalizer
             framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 
             // Run shader program to fill framebuffer with per-pixel error.
-            drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+            drawable.draw(framebuffer);
 
             // Copy framebuffer from GPU to main memory.
-            float[] pixelErrors = framebuffer.readFloatingPointColorBufferRGBA(0);
+            framebuffer.readFloatingPointColorBufferRGBA(0, pixelErrors);
+//            float[] pixelErrors = framebuffer.readFloatingPointColorBufferRGBA(0);
 
             // Add up per-pixel error.
-            WeightedError errorViewTotal = IntStream.range(0, pixelErrors.length / 4)
+            WeightedError errorViewTotal = IntStream.range(0, pixelErrors.limit() / 4)
                 .parallel()
-                .filter(p -> pixelErrors[4 * p + 3] > 0)
+                .filter(p -> pixelErrors.get(4 * p + 3) > 0)
                 .collect(() -> new WeightedError(0, 0),
                     (total, p) ->
                     {
-                        total.error += pixelErrors[4 * p];
-                        total.weight += pixelErrors[4 * p + 3];
+                        total.error += pixelErrors.get(4 * p);
+                        total.weight += pixelErrors.get(4 * p + 3);
                     },
                     (total1, total2) ->
                     {
@@ -271,25 +278,29 @@ public class SpecularFitFinalizer
     }
 
     private static <ContextType extends Context<ContextType>>
-    Program<ContextType> createFinalErrorCalcProgram(SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
+    Program<ContextType> createFinalErrorCalcProgram(
+        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {
-        return programFactory.createProgram(
+        return programFactory.createProgram(resources,
             new File("shaders/colorappearance/imgspace_multi_as_single.vert"),
             new File("shaders/specularfit/finalErrorCalc.frag"),
             false); // Disable visibility and shadow tests for error calculation.
     }
 
     private static <ContextType extends Context<ContextType>>
-    Program<ContextType> createGGXErrorCalcProgram(SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
+    Program<ContextType> createGGXErrorCalcProgram(
+        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {
-        return programFactory.createProgram(
+        return programFactory.createProgram(resources,
             new File("shaders/colorappearance/imgspace_multi_as_single.vert"),
             new File("shaders/specularfit/ggxErrorCalc.frag"),
             false); // Disable visibility and shadow tests for error calculation.
     }
 
-    private void fillHoles(SpecularDecomposition solution)
+    private static void fillHoles(SpecularDecomposition solution)
     {
+        TextureFitSettings textureFitSettings = solution.getTextureFitSettings();
+
         // Fill holes
         // TODO Quick hack; should be replaced with something more robust.
         System.out.println("Filling holes...");
@@ -310,7 +321,7 @@ public class SpecularFitFinalizer
 
                     int count = 0;
 
-                    for (int b = 0; b < specularBasisSettings.getBasisCount(); b++)
+                    for (int b = 0; b < solution.getSpecularBasisSettings().getBasisCount(); b++)
                     {
                         count = 0;
                         double sum = 0.0;

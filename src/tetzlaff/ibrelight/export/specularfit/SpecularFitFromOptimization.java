@@ -14,13 +14,17 @@ package tetzlaff.ibrelight.export.specularfit;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.function.Consumer;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Drawable;
+import tetzlaff.gl.core.Program;
 import tetzlaff.gl.core.Texture2D;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStreamResource;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.optimization.ReadonlyErrorReport;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
 import tetzlaff.optimization.function.GeneralizedSmoothStepBasis;
 import tetzlaff.util.ColorList;
@@ -33,8 +37,13 @@ import tetzlaff.util.ColorList;
 public class SpecularFitFromOptimization<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
 {
     private final ContextType context;
+
+    private final IBRResources<ContextType> resources;
     private final TextureFitSettings textureFitSettings;
+
     private final SpecularBasisSettings specularBasisSettings;
+
+    private final Consumer<Program<ContextType>> setupShaderProgram;
 
     /**
      * Final diffuse estimate
@@ -46,35 +55,56 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
      */
     final NormalOptimization<ContextType> normalOptimization;
 
-    public SpecularFitFromOptimization(ContextType context, SpecularFitProgramFactory<ContextType> programFactory,
+    public SpecularFitFromOptimization(IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
         TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings, NormalOptimizationSettings normalOptimizationSettings)
         throws FileNotFoundException
     {
-        super(context, textureFitSettings, specularBasisSettings);
-        this.context = context;
+        super(resources.getContext(), textureFitSettings, specularBasisSettings);
+        this.context = resources.getContext();
+        this.resources = resources;
         this.textureFitSettings = textureFitSettings;
         this.specularBasisSettings = specularBasisSettings;
+        this.setupShaderProgram = program -> programFactory.setupShaderProgram(resources, program);
 
         // Final diffuse estimation
-        diffuseOptimization = new FinalDiffuseOptimization<>(programFactory, textureFitSettings);
+        diffuseOptimization = new FinalDiffuseOptimization<>(resources, programFactory, textureFitSettings);
 
         // Normal optimization module that manages its own resources
         normalOptimization = new NormalOptimization<>(
+            resources,
             programFactory,
             estimationProgram ->
             {
-                Drawable<ContextType> drawable = programFactory.createDrawable(estimationProgram);
-                programFactory.setupShaderProgram(estimationProgram);
+                Drawable<ContextType> drawable = resources.createDrawable(estimationProgram);
+                programFactory.setupShaderProgram(resources, estimationProgram);
                 basisResources.useWithShaderProgram(estimationProgram);
                 return drawable;
             },
             textureFitSettings, normalOptimizationSettings);
     }
 
+    public IBRResources<ContextType> getResources()
+    {
+        return resources;
+    }
+
+    public TextureFitSettings getTextureFitSettings()
+    {
+        return textureFitSettings;
+    }
+
+    public SpecularBasisSettings getSpecularBasisSettings()
+    {
+        return specularBasisSettings;
+    }
+
     void optimize(SpecularDecomposition specularDecomposition,
         GraphicsStreamResource<ContextType> reflectanceStream, int weightBlockSize, double convergenceTolerance,
         ShaderBasedErrorCalculator<ContextType> errorCalculator, File debugDirectory) throws IOException
     {
+        // Setup reflectance extraction program
+        setupShaderProgram.accept(reflectanceStream.getProgram());
+
         reflectanceStream.getProgram().setTexture("roughnessEstimate", getSpecularRoughnessMap());
 
         // Track how the error improves over iterations of the whole algorithm.
@@ -121,7 +151,7 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
 
                 System.out.println("Calculating error...");
                 errorCalculator.update();
-                SpecularOptimization.logError(errorCalculator.getReport());
+                logError(errorCalculator.getReport());
 
                 // Save basis image visualization for reference and debugging
                 try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(context, specularBasisSettings))
@@ -175,7 +205,7 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
             if (SpecularOptimization.DEBUG)
             {
                 // Log error in debug mode.
-                SpecularOptimization.logError(errorCalculator.getReport());
+                logError(errorCalculator.getReport());
             }
 
             if (normalOptimization.isNormalRefinementEnabled())
@@ -198,7 +228,7 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
                         if (SpecularOptimization.DEBUG)
                         {
                             // Log error in debug mode.
-                            SpecularOptimization.logError(errorCalculator.getReport());
+                            logError(errorCalculator.getReport());
                         }
 
                         return errorCalculator.getReport();
@@ -229,12 +259,21 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
                 basisResources.updateFromSolution(specularDecomposition);
                 System.out.println("Calculating error...");
                 errorCalculator.update();
-                SpecularOptimization.logError(errorCalculator.getReport());
+                logError(errorCalculator.getReport());
             }
         }
         while ((specularBasisSettings.getBasisCount() > 1 || normalOptimization.isNormalRefinementEnabled()) &&
             // Iteration not necessary if basisCount is 1 and normal refinement is off.
             previousIterationError - errorCalculator.getReport().getError() > convergenceTolerance);
+    }
+
+    private static void logError(ReadonlyErrorReport report)
+    {
+        System.out.println("--------------------------------------------------");
+        System.out.println("Error: " + report.getError());
+        System.out.println("(Previous error: " + report.getPreviousError() + ')');
+        System.out.println("--------------------------------------------------");
+        System.out.println();
     }
 
     @Override

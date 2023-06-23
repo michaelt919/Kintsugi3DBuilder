@@ -21,6 +21,7 @@ import javax.xml.stream.XMLStreamException;
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
+import tetzlaff.gl.geometry.GeometryMode;
 import tetzlaff.gl.material.TextureLoadOptions;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
@@ -471,11 +472,12 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     public ProgramBuilder<ContextType> getShaderProgramBuilder(StandardRenderingMode renderingMode)
     {
         return getSharedResources().getShaderProgramBuilder(renderingMode)
-                .define("GEOMETRY_TEXTURES_ENABLED", false) // should default to this, but just in case
-                .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.IMAGE_SPACE) // should default to this, but just in case
-                .define("CAMERA_PROJECTION_COUNT", getViewSet().getCameraProjectionCount())
-                .define("VISIBILITY_TEST_ENABLED", this.depthTextures != null)
-                .define("SHADOW_TEST_ENABLED", this.shadowTextures != null);
+            .define("GEOMETRY_MODE", GeometryMode.PROJECT_3D_TO_2D) // should default to this, but just in case
+            .define("GEOMETRY_TEXTURES_ENABLED", false) // should default to this, but just in case
+            .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.IMAGE_SPACE) // should default to this, but just in case
+            .define("CAMERA_PROJECTION_COUNT", getViewSet().getCameraProjectionCount())
+            .define("VISIBILITY_TEST_ENABLED", this.depthTextures != null)
+            .define("SHADOW_TEST_ENABLED", this.shadowTextures != null);
     }
 
     @Override
@@ -562,7 +564,12 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     public ImageCache<ContextType> cache(ImageCacheSettings settings) throws IOException
     {
         ImageCache<ContextType> cache = new ImageCache<>(this, settings);
-        cache.initialize(/* TODO: implement high-res image directory */ getViewSet().getImageFilePath());
+
+        if (!cache.isInitialized())
+        {
+            cache.initialize(/* TODO: implement high-res image directory */ getViewSet().getImageFilePath());
+        }
+
         return cache;
     }
 

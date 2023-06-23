@@ -53,19 +53,19 @@ public class GeometryFramebuffer<ContextType extends Context<ContextType>> imple
     }
 
     @Override
-    public Texture<ContextType> getPositionTexture()
+    public Texture2D<ContextType> getPositionTexture()
     {
         return fbo.getColorAttachmentTexture(0);
     }
 
     @Override
-    public Texture<ContextType> getNormalTexture()
+    public Texture2D<ContextType> getNormalTexture()
     {
         return fbo.getColorAttachmentTexture(1);
     }
 
     @Override
-    public Texture<ContextType> getTangentTexture()
+    public Texture2D<ContextType> getTangentTexture()
     {
         return fbo.getColorAttachmentTexture(2);
     }
