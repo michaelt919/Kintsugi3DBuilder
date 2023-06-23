@@ -11,7 +11,7 @@
 
 package tetzlaff.models.impl;
 
-import tetzlaff.models.ReadonlyIBRSettingsModel;
+import tetzlaff.models.ReadonlySettingsModel;
 import tetzlaff.models.SafeReadonlySettingsModel;
 
 public class SafeSettingsModelWrapperFactory
@@ -29,9 +29,9 @@ public class SafeSettingsModelWrapperFactory
 
     private static class Implementation implements SafeReadonlySettingsModel
     {
-        private final ReadonlyIBRSettingsModel base;
+        private final ReadonlySettingsModel base;
 
-        Implementation(ReadonlyIBRSettingsModel base)
+        Implementation(ReadonlySettingsModel base)
         {
             this.base = base;
         }
@@ -51,7 +51,7 @@ public class SafeSettingsModelWrapperFactory
         }
     }
 
-    public SafeReadonlySettingsModel wrapUnsafeModel(ReadonlyIBRSettingsModel base)
+    public SafeReadonlySettingsModel wrapUnsafeModel(ReadonlySettingsModel base)
     {
         return new Implementation(base);
     }

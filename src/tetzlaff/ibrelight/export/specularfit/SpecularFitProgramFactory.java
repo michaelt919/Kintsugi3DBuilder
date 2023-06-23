@@ -24,17 +24,17 @@ import tetzlaff.gl.core.Program;
 import tetzlaff.gl.core.ShaderType;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
-import tetzlaff.models.ReadonlyIBRSettingsModel;
+import tetzlaff.models.ReadonlySettingsModel;
 
 public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
 {
     private final IBRResources<ContextType> resources;
     private final TextureFitSettings textureFitSettings;
-    private final ReadonlyIBRSettingsModel ibrSettings;
+    private final ReadonlySettingsModel ibrSettings;
     private final SpecularBasisSettings specularBasisSettings;
 
-    public SpecularFitProgramFactory(IBRResources<ContextType> resources,  TextureFitSettings textureFitSettings,
-        ReadonlyIBRSettingsModel ibrSettings, SpecularBasisSettings specularBasisSettings)
+    public SpecularFitProgramFactory(IBRResources<ContextType> resources, TextureFitSettings textureFitSettings,
+                                     ReadonlySettingsModel ibrSettings, SpecularBasisSettings specularBasisSettings)
     {
         this.resources = resources;
         this.textureFitSettings = textureFitSettings;

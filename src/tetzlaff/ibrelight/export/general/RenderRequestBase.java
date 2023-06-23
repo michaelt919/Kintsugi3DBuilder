@@ -20,7 +20,7 @@ import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
 import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
-import tetzlaff.models.ReadonlyIBRSettingsModel;
+import tetzlaff.models.ReadonlySettingsModel;
 
 abstract class RenderRequestBase<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>
 {
@@ -31,11 +31,11 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
     private final int height;
     private final File vertexShader;
     private final File fragmentShader;
-    private final ReadonlyIBRSettingsModel settingsModel;
+    private final ReadonlySettingsModel settingsModel;
     private final Consumer<Program<ContextType>> shaderSetupCallback;
     private final File outputDirectory;
 
-    RenderRequestBase(int width, int height, ReadonlyIBRSettingsModel settingsModel, Consumer<Program<ContextType>> shaderSetupCallback,
+    RenderRequestBase(int width, int height, ReadonlySettingsModel settingsModel, Consumer<Program<ContextType>> shaderSetupCallback,
                       File vertexShader, File fragmentShader, File outputDirectory)
     {
         this.width = width;
@@ -49,7 +49,7 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
 
     abstract static class BuilderBase<ContextType extends Context<ContextType>> implements RenderRequestBuilder<ContextType>
     {
-        private final ReadonlyIBRSettingsModel settingsModel;
+        private final ReadonlySettingsModel settingsModel;
         private final File fragmentShader;
         private final File outputDirectory;
 
@@ -58,7 +58,7 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
         private File vertexShader = TEX_SPACE_VERTEX_SHADER;
         private Consumer<Program<ContextType>> shaderSetupCallback = null;
 
-        BuilderBase(ReadonlyIBRSettingsModel settingsModel, File fragmentShader, File outputDirectory)
+        BuilderBase(ReadonlySettingsModel settingsModel, File fragmentShader, File outputDirectory)
         {
             this.settingsModel = settingsModel;
             this.fragmentShader = fragmentShader;
@@ -75,7 +75,7 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
             return height;
         }
 
-        protected ReadonlyIBRSettingsModel getSettingsModel()
+        protected ReadonlySettingsModel getSettingsModel()
         {
             return settingsModel;
         }

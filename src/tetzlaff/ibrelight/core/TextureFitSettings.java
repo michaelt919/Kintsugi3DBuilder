@@ -11,8 +11,6 @@
 
 package tetzlaff.ibrelight.core;
 
-import tetzlaff.models.ReadonlyIBRSettingsModel;
-
 public class TextureFitSettings
 {
     public final int width;

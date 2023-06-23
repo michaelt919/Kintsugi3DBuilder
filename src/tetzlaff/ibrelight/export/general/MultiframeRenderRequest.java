@@ -23,13 +23,13 @@ import tetzlaff.ibrelight.core.IBRInstance;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
 import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
-import tetzlaff.models.ReadonlyIBRSettingsModel;
+import tetzlaff.models.ReadonlySettingsModel;
 
 class MultiframeRenderRequest<ContextType extends Context<ContextType>> extends RenderRequestBase<ContextType>
 {
     private final int frameCount;
 
-    MultiframeRenderRequest(int width, int height, int frameCount, ReadonlyIBRSettingsModel settingsModel,
+    MultiframeRenderRequest(int width, int height, int frameCount, ReadonlySettingsModel settingsModel,
         Consumer<Program<ContextType>> shaderSetupCallback, File vertexShader, File fragmentShader, File outputDirectory)
     {
         super(width, height, settingsModel, shaderSetupCallback, vertexShader, fragmentShader, outputDirectory);
@@ -40,7 +40,7 @@ class MultiframeRenderRequest<ContextType extends Context<ContextType>> extends 
     {
         private final int frameCount;
 
-        Builder(int frameCount, ReadonlyIBRSettingsModel settingsModel, File fragmentShader, File outputDirectory)
+        Builder(int frameCount, ReadonlySettingsModel settingsModel, File fragmentShader, File outputDirectory)
         {
             super(settingsModel, fragmentShader, outputDirectory);
             this.frameCount = frameCount;

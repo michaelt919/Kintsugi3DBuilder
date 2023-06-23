@@ -14,18 +14,18 @@ package tetzlaff.ibrelight.export.general;
 import java.io.File;
 
 import tetzlaff.gl.core.Context;
-import tetzlaff.models.ReadonlyIBRSettingsModel;
+import tetzlaff.models.ReadonlySettingsModel;
 
 public final class RequestFactoryImplementation implements RequestFactory
 {
-    private final ReadonlyIBRSettingsModel settingsModel;
+    private final ReadonlySettingsModel settingsModel;
 
-    private RequestFactoryImplementation(ReadonlyIBRSettingsModel settingsModel)
+    private RequestFactoryImplementation(ReadonlySettingsModel settingsModel)
     {
         this.settingsModel = settingsModel;
     }
 
-    public static RequestFactoryImplementation create(ReadonlyIBRSettingsModel settingsModel)
+    public static RequestFactoryImplementation create(ReadonlySettingsModel settingsModel)
     {
         return new RequestFactoryImplementation(settingsModel);
     }

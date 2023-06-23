@@ -28,7 +28,7 @@ import tetzlaff.interactive.InitializationException;
 import tetzlaff.models.ReadonlyCameraModel;
 import tetzlaff.models.ReadonlyLightingModel;
 import tetzlaff.models.ReadonlyObjectModel;
-import tetzlaff.models.ReadonlyIBRSettingsModel;
+import tetzlaff.models.ReadonlySettingsModel;
 import tetzlaff.util.AbstractImage;
 
 public class IBRInstanceManager<ContextType extends Context<ContextType>> implements LoadingHandler, InteractiveRenderable<ContextType>
@@ -42,7 +42,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     private ReadonlyObjectModel objectModel;
     private ReadonlyCameraModel cameraModel;
     private ReadonlyLightingModel lightingModel;
-    private ReadonlyIBRSettingsModel settingsModel;
+    private ReadonlySettingsModel settingsModel;
 
     private final List<Consumer<IBRInstance<ContextType>>> instanceLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>());
@@ -311,7 +311,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         }
     }
 
-    public void setSettingsModel(ReadonlyIBRSettingsModel settingsModel)
+    public void setSettingsModel(ReadonlySettingsModel settingsModel)
     {
         this.settingsModel = settingsModel;
         if (ibrInstance != null)

@@ -13,7 +13,7 @@ package tetzlaff.models;
 
 import java.util.Iterator;
 
-public interface ReadonlyIBRSettingsModel
+public interface ReadonlySettingsModel
 {
     interface Setting
     {

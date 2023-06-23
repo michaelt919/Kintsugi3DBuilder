@@ -16,12 +16,12 @@ import java.io.File;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.rendering.resources.ImageCacheSettings;
 import tetzlaff.models.SettingsModel;
-import tetzlaff.models.ReadonlyIBRSettingsModel;
+import tetzlaff.models.ReadonlySettingsModel;
 
 public class SpecularFitSettings
 {
     private final TextureFitSettings textureFitSettings;
-    private final ReadonlyIBRSettingsModel ibrSettings;
+    private final ReadonlySettingsModel ibrSettings;
     private final NormalOptimizationSettings normalOptimizationSettings = new NormalOptimizationSettings();
     private final SpecularBasisSettings specularBasisSettings = new SpecularBasisSettings();
     private final ReconstructionSettings reconstructionSettings = new ReconstructionSettings();
@@ -74,7 +74,7 @@ public class SpecularFitSettings
         return textureFitSettings;
     }
 
-    public ReadonlyIBRSettingsModel getIbrSettings()
+    public ReadonlySettingsModel getIbrSettings()
     {
         return ibrSettings;
     }
