@@ -26,7 +26,7 @@ public final class MultithreadModels implements IBRelightModels
     private final ExtendedObjectModel objectModel;
     private final ProjectModel projectModel;
 
-    private final IBRSettingsModel settingsModel;
+    private final SettingsModel settingsModel;
     private final ReadonlyLoadOptionsModel loadOptionsModel;
     private final SceneViewportModel sceneViewportModel;
     private final LoadingModel loadingModel;
@@ -45,7 +45,7 @@ public final class MultithreadModels implements IBRelightModels
         lightingModel = new LightingModelWrapper(InternalModels.getInstance().getLightingModel());
         environmentModel = new EnvironmentModelWrapper(InternalModels.getInstance().getEnvironmentModel());
         projectModel = InternalModels.getInstance().getProjectModel();
-        settingsModel = new IBRSettingsModelWrapper(InternalModels.getInstance().getSettingsModel());
+        settingsModel = new SettingsModelWrapper(InternalModels.getInstance().getSettingsModel());
         sceneViewportModel = new SceneViewportModelImpl();
         loadOptionsModel = InternalModels.getInstance().getLoadOptionsModel();
         loadingModel = new LoadingModel();
@@ -77,7 +77,7 @@ public final class MultithreadModels implements IBRelightModels
     }
 
     @Override
-    public IBRSettingsModel getSettingsModel()
+    public SettingsModel getSettingsModel()
     {
         return settingsModel;
     }

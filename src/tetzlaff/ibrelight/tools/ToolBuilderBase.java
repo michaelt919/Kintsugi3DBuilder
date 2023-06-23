@@ -21,7 +21,7 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
     private ExtendedLightingModel lightingModel;
     private ExtendedObjectModel objectModel;
     private SceneViewportModel sceneViewportModel;
-    private IBRSettingsModel settingsModel;
+    private SettingsModel settingsModel;
 
     protected ToolBuilderBase()
     {
@@ -70,7 +70,7 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
     }
 
     @Override
-    public ToolBuilder<ToolType> setSettingsModel(IBRSettingsModel settingsModel)
+    public ToolBuilder<ToolType> setSettingsModel(SettingsModel settingsModel)
     {
         this.settingsModel = settingsModel;
         return this;
@@ -106,7 +106,7 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
         return sceneViewportModel;
     }
 
-    IBRSettingsModel getSettingsModel()
+    SettingsModel getSettingsModel()
     {
         return settingsModel;
     }

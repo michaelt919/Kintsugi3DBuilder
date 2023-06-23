@@ -12,7 +12,7 @@
 package tetzlaff.ibrelight.core;
 
 import tetzlaff.gl.core.Context;
-import tetzlaff.ibrelight.javafx.internal.IBRSettingsModelImpl;
+import tetzlaff.ibrelight.javafx.internal.SettingsModelImpl;
 
 public interface IBRRequestUI
 {
@@ -22,7 +22,7 @@ public interface IBRRequestUI
      * Optional: bind UI elements to settings properties
      * @param injectedSettingsModel
      */
-    default void bind(IBRSettingsModelImpl injectedSettingsModel)
+    default void bind(SettingsModelImpl injectedSettingsModel)
     {
     }
 }

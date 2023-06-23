@@ -20,9 +20,9 @@ import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import tetzlaff.models.impl.IBRSettingsModelBase;
+import tetzlaff.models.impl.SettingsModelBase;
 
-public class IBRSettingsModelImpl extends IBRSettingsModelBase
+public class SettingsModelImpl extends SettingsModelBase
 {
     private interface TypedProperty<T> extends Property<T>
     {

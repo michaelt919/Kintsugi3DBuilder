@@ -24,7 +24,7 @@ public interface IBRelightModels
      * Not read-only to allow export functions to change rendering mode (i.e. focus calibration)
      * @return
      */
-    IBRSettingsModel getSettingsModel();
+    SettingsModel getSettingsModel();
 
     SceneViewportModel getSceneViewportModel();
     ReadonlyLoadOptionsModel getLoadOptionsModel();

@@ -136,7 +136,7 @@ public final class Rendering
             EnvironmentModel environmentModel = MultithreadModels.getInstance().getEnvironmentModel();
             ExtendedCameraModel cameraModel = MultithreadModels.getInstance().getCameraModel();
             ExtendedObjectModel objectModel = MultithreadModels.getInstance().getObjectModel();
-            IBRSettingsModel settingsModel = MultithreadModels.getInstance().getSettingsModel();
+            SettingsModel settingsModel = MultithreadModels.getInstance().getSettingsModel();
             LoadingModel loadingModel = MultithreadModels.getInstance().getLoadingModel();
 
             // Bind tools

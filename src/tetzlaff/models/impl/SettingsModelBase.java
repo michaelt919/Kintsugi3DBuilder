@@ -13,9 +13,9 @@ package tetzlaff.models.impl;
 
 import java.util.NoSuchElementException;
 
-import tetzlaff.models.IBRSettingsModel;
+import tetzlaff.models.SettingsModel;
 
-public abstract class IBRSettingsModelBase implements IBRSettingsModel
+public abstract class SettingsModelBase implements SettingsModel
 {
     protected abstract Object getUnchecked(String name);
     protected abstract void setUnchecked(String name, Object value);
