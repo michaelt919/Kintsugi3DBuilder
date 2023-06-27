@@ -3,10 +3,7 @@ package tetzlaff.ibrelight.javafx.controllers.menubar;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import tetzlaff.ibrelight.util.Launch4jConfiguration;
 
@@ -64,6 +61,12 @@ public class JvmSettingsController implements Initializable
         {
             e.printStackTrace();
         }
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("IBRelight");
+        alert.setHeaderText("Restart Required");
+        alert.setContentText("A restart of IBRelight is needed for changes to take effect.");
+        alert.show();
     }
 
     public void button_Close(ActionEvent actionEvent)
