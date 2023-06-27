@@ -6,7 +6,6 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
 
-
 <HBox prefHeight="420.0" prefWidth="907.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.EyedropperController">
    <children>
       <BorderPane prefHeight="421.0" prefWidth="467.0">
@@ -30,7 +29,7 @@
             </HBox>
          </top>
          <bottom>
-            <Button fx:id="cropButton" mnemonicParsing="false" onAction="#triggerCropping" text="Crop" BorderPane.alignment="BOTTOM_CENTER" />
+            <Button fx:id="cropButton" mnemonicParsing="false" onAction="#enterCropMode" text="Crop" BorderPane.alignment="BOTTOM_CENTER" />
          </bottom>
       </BorderPane>
         <VBox>
@@ -45,7 +44,7 @@
                </rowConstraints>
                <children>
                       <Button fx:id="addSelectedColor" mnemonicParsing="false" onAction="#addSelectedColor" text="Add Selected Color" />
-                    <Rectangle fx:id="averageColorDisplay" fill="WHITE" height="20.0" stroke="BLACK" width="20.0" GridPane.columnIndex="1" />
+                    <Rectangle fx:id="averageColorPreview" fill="WHITE" height="20.0" stroke="BLACK" width="20.0" GridPane.columnIndex="1" />
                </children>
                <VBox.margin>
                   <Insets top="10.0" />
@@ -60,21 +59,21 @@
                   </Label>
                         <VBox minHeight="-Infinity" minWidth="-Infinity" prefHeight="274.0" prefWidth="200.0" style="-fx-border-color: black;">
                             <children>
-                                <Rectangle fx:id="selectedColor0" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorDisplay" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
-                                <Rectangle fx:id="selectedColor1" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorDisplay" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
-                                <Rectangle fx:id="selectedColor2" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorDisplay" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
-                                <Rectangle fx:id="selectedColor3" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorDisplay" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
-                                <Rectangle fx:id="selectedColor4" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorDisplay" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
-                                <Rectangle fx:id="selectedColor5" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorDisplay" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
-                                <Rectangle fx:id="selectedColor6" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorDisplay" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
-                                <Rectangle fx:id="selectedColor7" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorDisplay" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
-                                <Rectangle fx:id="selectedColor8" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorDisplay" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
-                                <Rectangle fx:id="selectedColor9" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorDisplay" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
-                                <Rectangle fx:id="selectedColor10" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorDisplay" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
-                                <Rectangle fx:id="selectedColor11" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorDisplay" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
-                                <Rectangle fx:id="selectedColor12" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorDisplay" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
-                                <Rectangle fx:id="selectedColor13" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorDisplay" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
-                                <Rectangle fx:id="selectedColor14" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
+                                <Rectangle fx:id="paletteColor0" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorPreview" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
+                                <Rectangle fx:id="paletteColor1" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorPreview" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
+                                <Rectangle fx:id="paletteColor2" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorPreview" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
+                                <Rectangle fx:id="paletteColor3" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorPreview" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
+                                <Rectangle fx:id="paletteColor4" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorPreview" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
+                                <Rectangle fx:id="paletteColor5" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorPreview" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
+                                <Rectangle fx:id="paletteColor6" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorPreview" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
+                                <Rectangle fx:id="paletteColor7" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorPreview" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
+                                <Rectangle fx:id="paletteColor8" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorPreview" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
+                                <Rectangle fx:id="paletteColor9" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorPreview" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
+                                <Rectangle fx:id="paletteColor10" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorPreview" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
+                                <Rectangle fx:id="paletteColor11" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorPreview" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
+                                <Rectangle fx:id="paletteColor12" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorPreview" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
+                                <Rectangle fx:id="paletteColor13" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" onMouseClicked="#updateAverageColorPreview" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
+                                <Rectangle fx:id="paletteColor14" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="18.0" layoutX="11.0" layoutY="11.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="198.0" />
 
 
                                   </children>
@@ -105,49 +104,49 @@
                         <Insets left="10.0" />
                     </GridPane.margin>
             </Label>
-                <TextField fx:id="txtField1" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="29.0" onKeyTyped="#updateFinalSelectRect" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
+                <TextField fx:id="txtField1" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="29.0" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
                     <GridPane.margin>
                         <Insets left="5.0" />
                     </GridPane.margin>
                 </TextField>
-                <TextField fx:id="txtField2" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="60.0" onKeyTyped="#updateFinalSelectRect" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="2">
+                <TextField fx:id="txtField2" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="60.0" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="2">
                     <GridPane.margin>
                         <Insets left="5.0" />
                     </GridPane.margin>
                 </TextField>
-                <TextField fx:id="txtField3" alignment="CENTER_RIGHT" onKeyTyped="#updateFinalSelectRect" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="3">
+                <TextField fx:id="txtField3" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="3">
                     <GridPane.margin>
                         <Insets left="5.0" />
                     </GridPane.margin>
                 </TextField>
-                <TextField fx:id="txtField4" alignment="CENTER_RIGHT" onKeyTyped="#updateFinalSelectRect" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="4">
+                <TextField fx:id="txtField4" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="4">
                     <GridPane.margin>
                         <Insets left="5.0" />
                     </GridPane.margin>
                 </TextField>
-                <TextField fx:id="txtField5" alignment="CENTER_RIGHT" onKeyTyped="#updateFinalSelectRect" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="5">
+                <TextField fx:id="txtField5" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="5">
                     <GridPane.margin>
                         <Insets left="5.0" />
                     </GridPane.margin>
                 </TextField>
-                <TextField fx:id="txtField6" alignment="CENTER_RIGHT" onKeyTyped="#updateFinalSelectRect" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="6">
+                <TextField fx:id="txtField6" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="6">
                     <GridPane.margin>
                         <Insets left="5.0" />
                     </GridPane.margin>
                 </TextField>
-            <Button fx:id="button1" mnemonicParsing="false" onAction="#triggerSelection" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
-             <Button fx:id="button2" mnemonicParsing="false" onAction="#triggerSelection" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
-            <Button fx:id="button3" mnemonicParsing="false" onAction="#triggerSelection" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
-            <Button fx:id="button4" mnemonicParsing="false" onAction="#triggerSelection" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
-            <Button fx:id="button5" mnemonicParsing="false" onAction="#triggerSelection" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="5" />
-            <Button fx:id="button6" mnemonicParsing="false" onAction="#triggerSelection" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6" />
+            <Button fx:id="button1" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
+             <Button fx:id="button2" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
+            <Button fx:id="button3" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
+            <Button fx:id="button4" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
+            <Button fx:id="button5" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="5" />
+            <Button fx:id="button6" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6" />
             <Rectangle fx:id="finalSelectRect1" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="26.0" stroke="BLACK" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="1" />
             <Rectangle fx:id="finalSelectRect2" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="26.0" stroke="BLACK" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="2" />
             <Rectangle fx:id="finalSelectRect3" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="26.0" stroke="BLACK" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="3" />
             <Rectangle fx:id="finalSelectRect4" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="26.0" stroke="BLACK" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="4" />
             <Rectangle fx:id="finalSelectRect5" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="26.0" stroke="BLACK" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="5" />
             <Rectangle fx:id="finalSelectRect6" arcHeight="5.0" arcWidth="5.0" fill="WHITE" height="26.0" stroke="BLACK" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="6" />
-                <Button mnemonicParsing="false" onAction="#applyButtonPressed" text="Apply" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="7">
+                <Button fx:id="applyButton" mnemonicParsing="false" onAction="#applyButtonPressed" text="Apply" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="7">
             </Button>
             </children>
             <columnConstraints>
