@@ -10,23 +10,11 @@ public class GltfMaterialExtras
 
     private TextureInfo diffuseTexture = null;
 
-    private TextureInfo roughnessTexture = null;
-
     private TextureInfo specularTexture = null;
 
     private String basisFunctionsUri = null;
 
     private GltfMaterialSpecularWeights specularWeights = null;
-
-    public TextureInfo getRoughnessTexture()
-    {
-        return roughnessTexture;
-    }
-
-    public void setRoughnessTexture(TextureInfo roughnessTexture)
-    {
-        this.roughnessTexture = roughnessTexture;
-    }
 
     public TextureInfo getSpecularTexture()
     {

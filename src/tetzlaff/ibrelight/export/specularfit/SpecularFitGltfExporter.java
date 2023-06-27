@@ -25,7 +25,7 @@ public class SpecularFitGltfExporter
 
     private TextureInfo baseColorTexture, normalTexture, roughnessMetallicTexture;
 
-    private TextureInfo diffuseTexture, specularTexture, roughnessTexture;
+    private TextureInfo diffuseTexture, specularTexture;
 
     GltfMaterialExtras extraData = new GltfMaterialExtras();
 
@@ -79,15 +79,6 @@ public class SpecularFitGltfExporter
         else
         {
             setTextureUri(roughnessMetallicTexture, uri);
-        }
-    }
-
-    private void setRoughnessUri(String uri)
-    {
-        if (roughnessTexture == null)
-        {
-            roughnessTexture = createRelativeTexture(uri, "roughness");
-            extraData.setRoughnessTexture(roughnessTexture);
         }
     }
 
@@ -152,7 +143,6 @@ public class SpecularFitGltfExporter
         setNormalUri("normal.png");
         setRoughnessMetallicUri("orm.png");
         setSpecularUri("specular.png");
-        setRoughnessUri("roughness.png");
         setBasisFunctionsUri("basisFunctions.csv");
     }
 
