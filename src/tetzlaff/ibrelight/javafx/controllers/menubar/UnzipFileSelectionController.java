@@ -56,7 +56,7 @@ public class UnzipFileSelectionController {
         //TODO: NEED TO ADD NULL SAFETY AND GENERAL CLEANUP/USER INPUT PROTECTION
         //open .psx as an XML file and grab the path attribute from the document tag
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        //TODO: SONARLIST IS COMPLAINING ABOUT XXE ATTACKS
+        //TODO: MAY BE PRONE TO XXE ATTACKS
 
         try{
             DocumentBuilder builder = factory.newDocumentBuilder();
