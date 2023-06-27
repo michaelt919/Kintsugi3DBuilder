@@ -9,6 +9,7 @@
       <ColumnConstraints hgrow="SOMETIMES" maxWidth="202.66665903727215" minWidth="10.0" prefWidth="111.99999237060547" />
       <ColumnConstraints hgrow="SOMETIMES" maxWidth="360.00000762939453" minWidth="10.0" prefWidth="360.00000762939453" />
       <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="5.9999847412109375" prefWidth="170.0" />
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="10.0" prefWidth="170.0" />
    </columnConstraints>
    <rowConstraints>
       <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
@@ -18,12 +19,14 @@
    </rowConstraints>
    <children>
        <Label text="Metashape File: " />
-       <TextField fx:id="psxPathTxtField" prefHeight="25.0" prefWidth="310.0" GridPane.columnIndex="1" />
+       <TextField fx:id="psxPathTxtField" onKeyPressed="#enterToRun" prefHeight="25.0" prefWidth="310.0" GridPane.columnIndex="1" />
        <Button mnemonicParsing="false" onAction="#selectOutputDirectory" text="Choose output directory..." visible="false" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-       <Button fx:id="runButton" mnemonicParsing="false" onAction="#parseXML" text="Run" GridPane.rowIndex="3" />
+       <Button fx:id="unzipPSXButton" mnemonicParsing="false" onAction="#parseXML" text="Unzip .psx file..." GridPane.rowIndex="3" />
       <Label text="Output Directory" visible="false" GridPane.rowIndex="1" />
       <TextField fx:id="outputDirectoryPathTxtField" prefHeight="25.0" prefWidth="310.0" visible="false" GridPane.columnIndex="1" GridPane.rowIndex="1" />
       <Button mnemonicParsing="false" onAction="#selectPSX" text="Choose .psx file..." GridPane.columnIndex="2" />
+      <ChoiceBox fx:id="chunkSelectionChoiceBox" disable="true" prefWidth="150.0" GridPane.columnIndex="3" />
+      <Button fx:id="selectChunkButton" mnemonicParsing="false" onAction="#selectChunk" text="Select Chunk" GridPane.columnIndex="3" GridPane.rowIndex="3" />
    </children>
    <padding>
       <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
