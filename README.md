@@ -14,6 +14,7 @@ Contributors:
 - Gary Meyer (University of Minnesota) - designer and advisor
 
 Copyright (c) Seth Berrier, Michael Tetzlaff, Zhangchi (Josh) Lyu, Mey Amor, Jacob Buelow, Luke Denney 2023
+
 Copyright (c) The Regents of the University of Minnesota 2019
 
 Licensed under GPLv3 
