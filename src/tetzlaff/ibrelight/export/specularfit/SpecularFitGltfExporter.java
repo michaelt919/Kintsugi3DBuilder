@@ -12,6 +12,7 @@ import de.javagl.jgltf.model.io.v2.GltfAssetWriterV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetsV2;
 import de.javagl.jgltf.model.v2.MaterialModelV2;
 import tetzlaff.gl.util.VertexGeometry;
+import tetzlaff.gl.vecmath.Vector3;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -214,6 +215,10 @@ public class SpecularFitGltfExporter
         DefaultNodeModel node = new DefaultNodeModel();
         DefaultMeshModel mesh = new DefaultMeshModel();
         MeshPrimitiveBuilder primitiveBuilder = MeshPrimitiveBuilder.create();
+
+        // Set the translation of the glTF node to the inverse of the centroid, centering the model
+        Vector3 ctr = geometry.getCentroid().times(-1.f);
+        node.setTranslation(new float[]{ctr.x, ctr.y, ctr.z});
 
         // Add positions, normals and texcords by buffer
         primitiveBuilder.addPositions3D(geometry.getVertices().getBuffer().asFloatBuffer());
