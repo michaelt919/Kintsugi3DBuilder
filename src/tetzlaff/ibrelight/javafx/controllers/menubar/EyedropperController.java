@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.DoubleUnaryOperator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class EyedropperController implements Initializable {
 
@@ -52,7 +54,7 @@ public class EyedropperController implements Initializable {
     private boolean canResetCrop; //enabled when cropping is finished and disabled when crop is reset to default viewport
     private boolean firstColorSelected;
 
-    static final String defaultButtonText = "Select Color";
+    static final String DEFAULT_BUTTON_TEXT = "Select Color";
 
     @FXML
     private TextField txtField1, txtField2, txtField3, txtField4, txtField5, txtField6;
@@ -81,8 +83,6 @@ public class EyedropperController implements Initializable {
         isCropping = false;
         canResetCrop = false;
         firstColorSelected = false;
-
-        applyButton.setDisable(true);
 
         selectedColorInsertIndex = 0;
 
@@ -127,6 +127,8 @@ public class EyedropperController implements Initializable {
         finalSelectRectangles.add(finalSelectRect4);
         finalSelectRectangles.add(finalSelectRect5);
         finalSelectRectangles.add(finalSelectRect6);
+
+        updateApplyButton();
     }
 
     private static Rectangle2D resetViewport(ImageView imageView) {
@@ -187,7 +189,7 @@ public class EyedropperController implements Initializable {
 
         if(isCropping){
             canResetCrop = true;
-            cropImage(event);
+            cropImage();
         }
     }
 
@@ -208,8 +210,7 @@ public class EyedropperController implements Initializable {
         selectionRectangle.setVisible(false);
     }
 
-    private void cropImage(MouseEvent event) {//might be a better way to access this information
-        //this function receives the event from MOUSE RELEASED, so x and y are the bottom right corner, not the top left
+    private void cropImage() {
         //get bounds of selection rectangle
         //crop imageView accordingly
         double scaleFactor = calculateImgViewScaleFactor(colorPickerImgView);
@@ -230,6 +231,7 @@ public class EyedropperController implements Initializable {
         Color prevColor = (Color) averageColorPreview.getFill();
         if (!prevColor.equals(newColor))//change the stroke of the box to the previous color, if color changes
             averageColorPreview.setStroke(prevColor);
+
         averageColorPreview.setFill(newColor);
     }
 
@@ -372,7 +374,7 @@ public class EyedropperController implements Initializable {
         //add selected color to palette
         //if color is null, or has already been selected, return false
         //else, find the highest rectangle in the palette which does not have a color
-        //      and change that rectangle's color to the selected color
+        //      and change that rectangle's color to the selected color (kept track of using selectedColorInsertIndex)
         //also, update the text field (to int. greyscale value) and its corresponding color square
         Color newColor = (Color) averageColorPreview.getFill();
 
@@ -399,18 +401,64 @@ public class EyedropperController implements Initializable {
                 //update square which contains the average color visual for the button
                 Rectangle partnerRectangle = getRectangleForButton(sourceButton);
                 updateFinalSelectRect(partnerRectangle);
+
+                //disable/enable apply button as needed
+                updateApplyButton();
             }
             else{
                 Toolkit.getDefaultToolkit().beep();
                 return false; //source button is null
             }
 
-            ++selectedColorInsertIndex;//TODO: DECREMENT THIS INDEX IF A COLOR IS REMOVED
+            ++selectedColorInsertIndex;
             isSelecting = false;
             return true;//color changed successfully
         }
         Toolkit.getDefaultToolkit().beep();
         return false;//no color has been selected yet
+    }
+
+    public void removeColor() {
+        if(selectedColorInsertIndex > 0){
+            Rectangle removeRect = null;
+            //find the rectangle which needs to be removed
+            //currently, program finds the rectangle which has the same color as the averageColorPreview
+            //averageColorPreview takes the color of the last selected rectangle
+            //TODO: SHOW HIGHLIGHTING AROUND RECTANGLE WHEN IT IS SELECTED?
+
+            for(Rectangle rect : paletteColorRectangles){
+                if(rect.getFill().equals(averageColorPreview.getFill())){
+                    removeRect = rect;
+                    break;
+                }
+            }
+
+            if (removeRect == null){//no rectangle matches the color of the average color preview
+                Toolkit.getDefaultToolkit().beep();
+                return;
+            }
+
+            //find removeRect's location in palette by getting the number at the end of its name
+            String rectID = removeRect.getId();
+            Pattern pattern = Pattern.compile("\\D*(\\d+)$");
+            Matcher matcher = pattern.matcher(rectID);
+            int startingIndex;
+            if (matcher.find()) {
+                String numberString = matcher.group(1);
+                startingIndex = Integer.parseInt(numberString);
+            }
+            else{
+                Toolkit.getDefaultToolkit().beep();
+                return;//TODO: PROPER SOLUTION?
+                //pretty sure this would only be reached if a rectangle was improperly named
+            }
+
+            //rect 3 color goes to rect 2, rect 2 color goes to rect 1, etc
+            for (int i = startingIndex; i < selectedColorInsertIndex; ++i){//from removed rectangle to last rect w/ assigned color
+                paletteColorRectangles.get(i).setFill(paletteColorRectangles.get(i + 1).getFill());
+            }
+            --selectedColorInsertIndex;
+        }
     }
 
     private void updateFinalSelectRect(Rectangle rect) {//when a text field is updated, update the rectangle beside it
@@ -444,6 +492,11 @@ public class EyedropperController implements Initializable {
         TextField sourceTxtField = (TextField) event.getSource();
         updateFinalSelectRect(getRectangleForTextField(sourceTxtField));
 
+        updateApplyButton();
+    }
+
+    private void updateApplyButton() {
+        //only enable apply button if all fields contain good data (integers) and model is loaded
         if(areAllFieldsValid() && isGoodLoadingModel()){//TODO: KEEPS BUTTON DISABLED IF NEW MODEL IS LOADED IN
                                                         //only updates setDisable() when text field is modified
             applyButton.setDisable(false);
@@ -585,10 +638,10 @@ public class EyedropperController implements Initializable {
     private Button resetButtonsText(){
         Button sourceButton = null;
         for (Button button: colorSelectButtons){
-            if (!button.getText().equals(defaultButtonText)) {
+            if (!button.getText().equals(DEFAULT_BUTTON_TEXT)) {
                 sourceButton = button;
             }
-            button.setText(defaultButtonText);
+            button.setText(DEFAULT_BUTTON_TEXT);
         }
 
         return sourceButton;
@@ -614,6 +667,8 @@ public class EyedropperController implements Initializable {
                 rect.setVisible(true);
                 updateFinalSelectRect(rect);
             }
+
+            updateApplyButton();
         }
         else{
             //TODO: WHAT TO DO IF NO MODEL FOUND?

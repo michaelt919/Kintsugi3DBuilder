@@ -78,6 +78,11 @@
 
                                   </children>
                         </VBox>
+                  <Button fx:id="removeColorButton" mnemonicParsing="false" onAction="#removeColor" text="Remove Color">
+                     <VBox.margin>
+                        <Insets top="10.0" />
+                     </VBox.margin>
+                  </Button>
                     </children>
                 </VBox>
             </children>
