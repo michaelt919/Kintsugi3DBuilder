@@ -106,9 +106,15 @@ public final class DefaultFramebufferFactory
         }
 
         @Override
-        public FramebufferContents<ContextType> getContents()
+        public FramebufferReadContents<ContextType> getReadContents()
         {
-            return this.frontFBO.getContents();
+            return this.frontFBO.getReadContents();
+        }
+
+        @Override
+        public FramebufferDrawContents<ContextType> getDrawContents()
+        {
+            return this.backFBO.getDrawContents();
         }
 
         @Override
@@ -175,6 +181,28 @@ public final class DefaultFramebufferFactory
         public void clearStencilBuffer(int stencilIndex, int x, int y, int width, int height)
         {
             backFBO.clearStencilBuffer(stencilIndex, x, y, width, height);
+        }
+
+        @Override
+        public void blitColorAttachmentFromFramebufferViewport(int drawAttachmentIndex, int destX, int destY, int destWidth, int destHeight,
+            FramebufferViewport<ContextType> readFramebuffer, int readAttachmentIndex, boolean linearFiltering)
+        {
+            backFBO.blitColorAttachmentFromFramebufferViewport(drawAttachmentIndex, destX, destY, destWidth, destHeight,
+                readFramebuffer, readAttachmentIndex, linearFiltering);
+        }
+
+        @Override
+        public void blitDepthAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
+            FramebufferViewport<ContextType> readFramebuffer)
+        {
+            backFBO.blitDepthAttachmentFromFramebufferViewport(destX, destY, destWidth, destHeight, readFramebuffer);
+        }
+
+        @Override
+        public void blitStencilAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
+            FramebufferViewport<ContextType> readFramebuffer)
+        {
+            backFBO.blitStencilAttachmentFromFramebufferViewport(destX, destY, destWidth, destHeight, readFramebuffer);
         }
 
         @Override

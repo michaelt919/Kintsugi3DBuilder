@@ -19,15 +19,15 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 
-public class FramebufferViewport<ContextType extends Context<ContextType>> extends FramebufferBase<ContextType>
+public final class FramebufferViewport<ContextType extends Context<ContextType>> extends FramebufferBase<ContextType>
 {
-    private static class Contents<ContextType extends Context<ContextType>> implements FramebufferContents<ContextType>
+    private static class DrawContents<ContextType extends Context<ContextType>> implements FramebufferDrawContents<ContextType>
     {
         private final FramebufferViewport<ContextType> framebufferViewport;
 
-        private final FramebufferContents<ContextType> fullFramebufferContents;
+        private final FramebufferDrawContents<ContextType> fullFramebufferContents;
 
-        public Contents(FramebufferViewport<ContextType> framebufferViewport, FramebufferContents<ContextType> fullFramebufferContents)
+        public DrawContents(FramebufferViewport<ContextType> framebufferViewport, FramebufferDrawContents<ContextType> fullFramebufferContents)
         {
             this.framebufferViewport = framebufferViewport;
             this.fullFramebufferContents = fullFramebufferContents;
@@ -46,16 +46,58 @@ public class FramebufferViewport<ContextType extends Context<ContextType>> exten
         }
 
         @Override
-        public void bindForDraw(int x, int y, int width, int height)
+        public void bindViewportForDraw(int x, int y, int width, int height)
         {
             IntVector2 offset = framebufferViewport.getOffset();
-            fullFramebufferContents.bindForDraw(x + offset.x, y + offset.y, width, height);
+            fullFramebufferContents.bindViewportForDraw(x + offset.x, y + offset.y, width, height);
+        }
+
+        @Override
+        public void bindSingleAttachmentForDraw(int attachmentIndex)
+        {
+            fullFramebufferContents.bindSingleAttachmentForDraw(attachmentIndex);
+        }
+
+        @Override
+        public void bindNonColorAttachmentsForDraw()
+        {
+            fullFramebufferContents.bindNonColorAttachmentsForDraw();
+        }
+    }
+    private static class ReadContents<ContextType extends Context<ContextType>> implements FramebufferReadContents<ContextType>
+    {
+        private final FramebufferViewport<ContextType> framebufferViewport;
+
+        private final FramebufferReadContents<ContextType> fullFramebufferContents;
+
+        public ReadContents(FramebufferViewport<ContextType> framebufferViewport, FramebufferReadContents<ContextType> fullFramebufferContents)
+        {
+            this.framebufferViewport = framebufferViewport;
+            this.fullFramebufferContents = fullFramebufferContents;
+        }
+
+        @Override
+        public ContextType getContext()
+        {
+            return framebufferViewport.getContext();
+        }
+
+        @Override
+        public FramebufferSize getSize()
+        {
+            return framebufferViewport.getSize();
         }
 
         @Override
         public void bindForRead(int attachmentIndex)
         {
             fullFramebufferContents.bindForRead(attachmentIndex);
+        }
+
+        @Override
+        public void bindNonColorAttachmentForRead()
+        {
+            fullFramebufferContents.bindNonColorAttachmentForRead();
         }
     }
 
@@ -78,9 +120,15 @@ public class FramebufferViewport<ContextType extends Context<ContextType>> exten
     }
 
     @Override
-    public FramebufferContents<ContextType> getContents()
+    public FramebufferReadContents<ContextType> getReadContents()
     {
-        return new Contents<>(this, fullFramebuffer.getContents());
+        return new ReadContents<>(this, fullFramebuffer.getReadContents());
+    }
+
+    @Override
+    public FramebufferDrawContents<ContextType> getDrawContents()
+    {
+        return new DrawContents<>(this, fullFramebuffer.getDrawContents());
     }
 
     @Override
@@ -89,7 +137,7 @@ public class FramebufferViewport<ContextType extends Context<ContextType>> exten
         return viewportSize;
     }
 
-    private IntVector2 getOffset()
+    public IntVector2 getOffset()
     {
         return viewportOffset;
     }
@@ -146,5 +194,38 @@ public class FramebufferViewport<ContextType extends Context<ContextType>> exten
     public void clearStencilBuffer(int stencilIndex, int x, int y, int width, int height)
     {
         fullFramebuffer.clearStencilBuffer(stencilIndex, x + viewportOffset.x, y + viewportOffset.y, width, height);
+    }
+
+    @Override
+    public FramebufferViewport<ContextType> getViewport(int x, int y, int width, int height)
+    {
+        // Make sure that a FramebufferViewport never has another FramebufferViewport as its "full framebuffer"
+        return new FramebufferViewport<>(fullFramebuffer,
+            new IntVector2(x + this.viewportOffset.x, y + this.viewportOffset.y), new FramebufferSize(width, height));
+    }
+
+    @Override
+    public void blitColorAttachmentFromFramebufferViewport(int drawAttachmentIndex, int destX, int destY, int destWidth, int destHeight,
+        FramebufferViewport<ContextType> readFramebuffer, int readAttachmentIndex, boolean linearFiltering)
+    {
+        fullFramebuffer.blitColorAttachmentFromFramebufferViewport(
+            drawAttachmentIndex, destX + viewportOffset.x, destY + viewportOffset.y, destWidth, destHeight,
+            readFramebuffer, readAttachmentIndex, linearFiltering);
+    }
+
+    @Override
+    public void blitDepthAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
+        FramebufferViewport<ContextType> readFramebuffer)
+    {
+        fullFramebuffer.blitDepthAttachmentFromFramebufferViewport(
+            destX + viewportOffset.x, destY + viewportOffset.y, destWidth, destHeight, readFramebuffer);
+    }
+
+    @Override
+    public void blitStencilAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
+        FramebufferViewport<ContextType> readFramebuffer)
+    {
+        fullFramebuffer.blitStencilAttachmentFromFramebufferViewport(
+            destX + viewportOffset.x, destY + viewportOffset.y, destWidth, destHeight, readFramebuffer);
     }
 }

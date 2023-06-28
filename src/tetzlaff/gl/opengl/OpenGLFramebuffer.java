@@ -17,8 +17,8 @@ import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 
 import org.lwjgl.*;
-import tetzlaff.gl.core.Framebuffer;
-import tetzlaff.gl.core.FramebufferSize;
+import tetzlaff.gl.core.*;
+import tetzlaff.gl.vecmath.IntVector2;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
@@ -39,7 +39,7 @@ abstract class OpenGLFramebuffer extends tetzlaff.gl.core.FramebufferBase<OpenGL
         return this.context;
     }
 
-    abstract class ContentsBase implements tetzlaff.gl.core.FramebufferContents<OpenGLContext>
+    abstract class ContentsBase implements FramebufferDrawContents<OpenGLContext>, FramebufferReadContents<OpenGLContext>
     {
         private final OpenGLContext context;
 
@@ -62,13 +62,12 @@ abstract class OpenGLFramebuffer extends tetzlaff.gl.core.FramebufferBase<OpenGL
             return OpenGLFramebuffer.this.getSize();
         }
 
-        @Override
-        public void bindForDraw(int x, int y, int width, int height)
+        private void bindForDrawCommon(int x, int y, int width, int height)
         {
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
             OpenGLContext.errorCheck();
 
-            if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
                 OpenGLContext.throwInvalidFramebufferOperationException();
             }
@@ -79,16 +78,49 @@ abstract class OpenGLFramebuffer extends tetzlaff.gl.core.FramebufferBase<OpenGL
         }
 
         @Override
+        public void bindViewportForDraw(int x, int y, int width, int height)
+        {
+            bindForDrawCommon(x, y, width, height);
+            useAllColorDestinationsForDraw();
+        }
+
+        @Override
         public void bindForDraw()
         {
             FramebufferSize size = OpenGLFramebuffer.this.getSize();
-            this.bindForDraw(0, 0, size.width, size.height);
+            this.bindViewportForDraw(0, 0, size.width, size.height);
+        }
+
+        /**
+         * Select just a single color attachment for draw - used primarily for blit operations
+         * @param index
+         */
+        abstract void selectColorDestinationForDraw(int index);
+
+        /**
+         * Use all color attachments for draw - as would typically be the case when doing normal drawing.
+         */
+        abstract void useAllColorDestinationsForDraw();
+
+        @Override
+        public void bindSingleAttachmentForDraw(int attachmentIndex)
+        {
+            FramebufferSize size = OpenGLFramebuffer.this.getSize();
+            this.bindForDrawCommon(0, 0, size.width, size.height);
+
+            selectColorDestinationForDraw(attachmentIndex);
+        }
+
+        @Override
+        public void bindNonColorAttachmentsForDraw()
+        {
+            FramebufferSize size = OpenGLFramebuffer.this.getSize();
+            this.bindForDrawCommon(0, 0, size.width, size.height);
         }
 
         abstract void selectColorSourceForRead(int index);
 
-        @Override
-        public void bindForRead(int attachmentIndex)
+        private void bindForReadCommon()
         {
             glBindFramebuffer(GL_READ_FRAMEBUFFER, this.getId());
             OpenGLContext.errorCheck();
@@ -98,13 +130,35 @@ abstract class OpenGLFramebuffer extends tetzlaff.gl.core.FramebufferBase<OpenGL
                 OpenGLContext.throwInvalidFramebufferOperationException();
             }
             OpenGLContext.errorCheck();
+        }
 
+        @Override
+        public void bindForRead(int attachmentIndex)
+        {
+            bindForReadCommon();
             selectColorSourceForRead(attachmentIndex);
+        }
+
+        @Override
+        public void bindNonColorAttachmentForRead()
+        {
+            bindForReadCommon();
         }
     }
 
     @Override
-    public abstract ContentsBase getContents();
+    public FramebufferReadContents<OpenGLContext> getReadContents()
+    {
+        return getContents();
+    }
+
+    @Override
+    public FramebufferDrawContents<OpenGLContext> getDrawContents()
+    {
+        return getContents();
+    }
+
+    protected abstract ContentsBase getContents();
 
     @Override
     public void readColorBufferARGB(int attachmentIndex, ByteBuffer destination, int x, int y, int width, int height)
@@ -114,7 +168,7 @@ abstract class OpenGLFramebuffer extends tetzlaff.gl.core.FramebufferBase<OpenGL
             throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
         }
 
-        this.getContents().bindForRead(attachmentIndex);
+        this.getReadContents().bindForRead(attachmentIndex);
 
         glPixelStorei(GL_PACK_ALIGNMENT, 4);
         OpenGLContext.errorCheck();
@@ -132,7 +186,7 @@ abstract class OpenGLFramebuffer extends tetzlaff.gl.core.FramebufferBase<OpenGL
             throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
         }
 
-        this.getContents().bindForRead(attachmentIndex);
+        this.getReadContents().bindForRead(attachmentIndex);
 
         glPixelStorei(GL_PACK_ALIGNMENT, 4);
         OpenGLContext.errorCheck();
@@ -149,7 +203,7 @@ abstract class OpenGLFramebuffer extends tetzlaff.gl.core.FramebufferBase<OpenGL
             throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
         }
 
-        this.getContents().bindForRead(attachmentIndex);
+        this.getReadContents().bindForRead(attachmentIndex);
 
         glPixelStorei(GL_PACK_ALIGNMENT, 4);
         OpenGLContext.errorCheck();
@@ -166,7 +220,7 @@ abstract class OpenGLFramebuffer extends tetzlaff.gl.core.FramebufferBase<OpenGL
             throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
         }
 
-        this.getContents().bindForRead(0);
+        this.getReadContents().bindForRead(0);
 
         glPixelStorei(GL_PACK_ALIGNMENT, 2);
         OpenGLContext.errorCheck();
@@ -315,5 +369,48 @@ abstract class OpenGLFramebuffer extends tetzlaff.gl.core.FramebufferBase<OpenGL
         clearStencilBuffer(stencilIndex);
 
         glDisable(GL_SCISSOR_TEST);
+    }
+
+    @Override
+    public void blitColorAttachmentFromFramebufferViewport(
+        int drawAttachmentIndex, int destX, int destY, int destWidth, int destHeight,
+        FramebufferViewport<OpenGLContext> readFramebuffer, int readAttachmentIndex, boolean linearFiltering)
+    {
+        this.getDrawContents().bindSingleAttachmentForDraw(drawAttachmentIndex);
+        readFramebuffer.getReadContents().bindForRead(readAttachmentIndex);
+
+        IntVector2 srcOffset = readFramebuffer.getOffset();
+        FramebufferSize srcSize = readFramebuffer.getSize();
+        glBlitFramebuffer(srcOffset.x, srcOffset.y, srcOffset.x + srcSize.width, srcOffset.y + srcSize.height,
+            destX, destY, destX + destWidth, destY + destHeight,
+            GL_COLOR_BUFFER_BIT, linearFiltering ? GL_LINEAR : GL_NEAREST);
+    }
+
+    @Override
+    public void blitDepthAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
+        FramebufferViewport<OpenGLContext> readFramebuffer)
+    {
+        this.getDrawContents().bindNonColorAttachmentsForDraw();
+        readFramebuffer.getReadContents().bindNonColorAttachmentForRead();
+
+        IntVector2 srcOffset = readFramebuffer.getOffset();
+        FramebufferSize srcSize = readFramebuffer.getSize();
+        glBlitFramebuffer(srcOffset.x, srcOffset.y, srcOffset.x + srcSize.width, srcOffset.y + srcSize.height,
+            destX, destY, destX + destWidth, destY + destHeight,
+            GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+    }
+
+    @Override
+    public void blitStencilAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
+        FramebufferViewport<OpenGLContext> readFramebuffer)
+    {
+        this.getDrawContents().bindNonColorAttachmentsForDraw();
+        readFramebuffer.getReadContents().bindNonColorAttachmentForRead();
+
+        IntVector2 srcOffset = readFramebuffer.getOffset();
+        FramebufferSize srcSize = readFramebuffer.getSize();
+        glBlitFramebuffer(srcOffset.x, srcOffset.y, srcOffset.x + srcSize.width, srcOffset.y + srcSize.height,
+            destX, destY, destX + destWidth, destY + destHeight,
+            GL_STENCIL_BUFFER_BIT, GL_NEAREST);
     }
 }

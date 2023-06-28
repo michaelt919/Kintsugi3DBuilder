@@ -30,10 +30,16 @@ import java.nio.ShortBuffer;
 public interface Framebuffer<ContextType extends Context<ContextType>> extends Contextual<ContextType>
 {
     /**
-     * Gets a representation of the contents of this framebuffer .
-     * @return A handle that can be used to perform operations that retrieve or modify the contents of this framebuffer.
+     * Gets a representation of the contents of this framebuffer fr reading.
+     * @return A handle that can be used to perform operations that retrieve the contents of this framebuffer.
      */
-    FramebufferContents<ContextType> getContents();
+    FramebufferReadContents<ContextType> getReadContents();
+
+    /**
+     * Gets a representation of the contents of this framebuffer .
+     * @return A handle that can be used to perform operations that modify the contents of this framebuffer.
+     */
+    FramebufferDrawContents<ContextType> getDrawContents();
 
     /**
      * Gets the dimensions of the framebuffer (width and height)
@@ -350,8 +356,178 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
      */
     void clearStencilBuffer(int stencilIndex, int x, int y, int width, int height);
 
-    default Framebuffer<ContextType> getViewport(int x, int y, int width, int height)
+    /**
+     * Gets an object that encapsulates a viewport within this framebuffer that can be drawn to.
+     * @param x The left edge of the viewport
+     * @param y The bottom edge of the viewport
+     * @param width The width of the viewport
+     * @param height The height of the viewport
+     * @return
+     */
+    default FramebufferViewport<ContextType> getViewport(int x, int y, int width, int height)
     {
         return new FramebufferViewport<>(this, new IntVector2(x, y), new FramebufferSize(width, height));
+    }
+
+    /**
+     * Copies pixels from a viewport within one framebuffer to another framebuffer.
+     * @param drawAttachmentIndex The index of the color attachment of this framebuffer to copy into.
+     * @param destX The left edge of the rectangle to copy into within this framebuffer.
+     * @param destY The bottom edge of the rectangle to copy into within this framebuffer.
+     * @param destWidth The width of the rectangle to copy into within this framebuffer.
+     * @param destHeight The height of the rectangle to copy into within this framebuffer.
+     * @param readFramebuffer A viewport into the framebuffer to copy from.
+     * @param readAttachmentIndex The index of the attachment within the read framebuffer to copy from.
+     * @param linearFiltering Whether or not to use linear filtering if the dimensions of the source and destination are not the same.
+     */
+    void blitColorAttachmentFromFramebufferViewport(int drawAttachmentIndex, int destX, int destY, int destWidth, int destHeight,
+        FramebufferViewport<ContextType> readFramebuffer, int readAttachmentIndex, boolean linearFiltering);
+
+    /**
+     * Copies pixels from one framebuffer to another.
+     * The copying operation will be start at the lower left corner of this framebuffer, and will preserve the resolution of the read framebuffer
+     * @param drawAttachmentIndex The index of the color attachment of this framebuffer to copy into.
+     * @param readFramebuffer The framebuffer to copy from.
+     * @param readAttachmentIndex The index of the attachment within the read framebuffer to copy from.
+     */
+    default void blitColorAttachmentFromFramebuffer(int drawAttachmentIndex, Framebuffer<ContextType> readFramebuffer, int readAttachmentIndex)
+    {
+        FramebufferSize size = readFramebuffer.getSize();
+        blitColorAttachmentFromFramebuffer(drawAttachmentIndex, 0, 0, readFramebuffer, readAttachmentIndex);
+    }
+
+    /**
+     * Copies pixels from one framebuffer to another.
+     * The copying operation will be start at (x, y) within this framebuffer, and will preserve the resolution of the read framebuffer
+     * @param drawAttachmentIndex The index of the color attachment of this framebuffer to copy into.
+     * @param x The left edge of the rectangle to copy into within this framebuffer.
+     * @param y The bottom edge of the rectangle to copy into within this framebuffer.
+     * @param readFramebuffer The framebuffer to copy from.
+     * @param readAttachmentIndex The index of the attachment within the read framebuffer to copy from.
+     */
+    default void blitColorAttachmentFromFramebuffer(int drawAttachmentIndex, int x, int y, Framebuffer<ContextType> readFramebuffer, int readAttachmentIndex)
+    {
+        FramebufferSize size = readFramebuffer.getSize();
+        blitColorAttachmentFromFramebufferViewport(drawAttachmentIndex, x, y, size.width, size.height,
+            readFramebuffer.getViewport(0, 0, size.width, size.height), readAttachmentIndex, false);
+    }
+
+    /**
+     * Copies pixels from one framebuffer to another.
+     * The copying operation will span the entirety of both framebuffers, resizing it the framebuffer resolutions are not the same.
+     * @param drawAttachmentIndex The index of the color attachment of this framebuffer to copy into.
+     * @param readFramebuffer The framebuffer to copy from.
+     * @param readAttachmentIndex The index of the attachment within the read framebuffer to copy from.
+     * @param linearFiltering Whether or not to use linear filtering if the dimensions of the source and destination are not the same.
+     */
+    default void blitScaledColorAttachmentFromFramebuffer(
+        int drawAttachmentIndex, Framebuffer<ContextType> readFramebuffer, int readAttachmentIndex, boolean linearFiltering)
+    {
+        FramebufferSize readSize = readFramebuffer.getSize();
+        FramebufferSize drawSize = this.getSize();
+        blitColorAttachmentFromFramebufferViewport(drawAttachmentIndex, 0, 0, drawSize.width, drawSize.height,
+            readFramebuffer.getViewport(0, 0, readSize.width, readSize.height), readAttachmentIndex, linearFiltering);
+    }
+
+    /**
+     * Copies pixels from a viewport within one framebuffer depth attachment to another framebuffer.
+     * Due to OpenGL limitations, linear filtering will not be applied.
+     * @param destX The left edge of the rectangle to copy into within this framebuffer.
+     * @param destY The bottom edge of the rectangle to copy into within this framebuffer.
+     * @param destWidth The width of the rectangle to copy into within this framebuffer.
+     * @param destHeight The height of the rectangle to copy into within this framebuffer.
+     * @param readFramebuffer A viewport into the framebuffer to copy from.
+     */
+    void blitDepthAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
+        FramebufferViewport<ContextType> readFramebuffer);
+
+    /**
+     * Copies pixels from one framebuffer depth attachment to another.
+     * The copying operation will be start at the lower left corner of this framebuffer, and will preserve the resolution of the read framebuffer
+     * @param readFramebuffer The framebuffer to copy from.
+     */
+    default void blitDepthAttachmentFromFramebuffer(Framebuffer<ContextType> readFramebuffer)
+    {
+        FramebufferSize size = readFramebuffer.getSize();
+        blitDepthAttachmentFromFramebuffer(0, 0, readFramebuffer);
+    }
+
+    /**
+     * Copies pixels from one framebuffer depth attachment to another.
+     * The copying operation will be start at (x, y) within this framebuffer, and will preserve the resolution of the read framebuffer
+     * @param x The left edge of the rectangle to copy into within this framebuffer.
+     * @param y The bottom edge of the rectangle to copy into within this framebuffer.
+     * @param readFramebuffer The framebuffer to copy from.
+     */
+    default void blitDepthAttachmentFromFramebuffer(int x, int y, Framebuffer<ContextType> readFramebuffer)
+    {
+        FramebufferSize size = readFramebuffer.getSize();
+        blitDepthAttachmentFromFramebufferViewport(x, y, size.width, size.height,
+            readFramebuffer.getViewport(0, 0, size.width, size.height));
+    }
+
+    /**
+     * Copies pixels from one framebuffer depth attachment to another.
+     * The copying operation will span the entirety of both framebuffers, resizing it the framebuffer resolutions are not the same.
+     * Due to OpenGL limitations, linear filtering will not be applied.
+     * @param readFramebuffer The framebuffer to copy from.
+     */
+    default void blitScaledDepthAttachmentFromFramebuffer(Framebuffer<ContextType> readFramebuffer)
+    {
+        FramebufferSize readSize = readFramebuffer.getSize();
+        FramebufferSize drawSize = this.getSize();
+        blitDepthAttachmentFromFramebufferViewport(0, 0, drawSize.width, drawSize.height,
+            readFramebuffer.getViewport(0, 0, readSize.width, readSize.height));
+    }
+
+    /**
+     * Copies pixels from a viewport within one framebuffer stencil attachment to another framebuffer.
+     * Due to OpenGL limitations, linear filtering will not be applied.
+     * @param destX The left edge of the rectangle to copy into within this framebuffer.
+     * @param destY The bottom edge of the rectangle to copy into within this framebuffer.
+     * @param destWidth The width of the rectangle to copy into within this framebuffer.
+     * @param destHeight The height of the rectangle to copy into within this framebuffer.
+     * @param readFramebuffer A viewport into the framebuffer to copy from.
+     */
+    void blitStencilAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
+        FramebufferViewport<ContextType> readFramebuffer);
+
+    /**
+     * Copies pixels from one framebuffer stencil attachment to another.
+     * The copying operation will be start at the lower left corner of this framebuffer, and will preserve the resolution of the read framebuffer
+     * @param readFramebuffer The framebuffer to copy from.
+     */
+    default void blitStencilAttachmentFromFramebuffer(Framebuffer<ContextType> readFramebuffer)
+    {
+        FramebufferSize size = readFramebuffer.getSize();
+        blitStencilAttachmentFromFramebuffer(0, 0, readFramebuffer);
+    }
+
+    /**
+     * Copies pixels from one framebuffer stencil attachment to another.
+     * The copying operation will be start at (x, y) within this framebuffer, and will preserve the resolution of the read framebuffer
+     * @param x The left edge of the rectangle to copy into within this framebuffer.
+     * @param y The bottom edge of the rectangle to copy into within this framebuffer.
+     * @param readFramebuffer The framebuffer to copy from.
+     */
+    default void blitStencilAttachmentFromFramebuffer(int x, int y, Framebuffer<ContextType> readFramebuffer)
+    {
+        FramebufferSize size = readFramebuffer.getSize();
+        blitStencilAttachmentFromFramebufferViewport(x, y, size.width, size.height,
+            readFramebuffer.getViewport(0, 0, size.width, size.height));
+    }
+
+    /**
+     * Copies pixels from one framebuffer stencil attachment to another.
+     * The copying operation will span the entirety of both framebuffers, resizing it the framebuffer resolutions are not the same.
+     * Due to OpenGL limitations, linear filtering will not be applied.
+     * @param readFramebuffer The framebuffer to copy from.
+     */
+    default void blitScaledStencilAttachmentFromFramebuffer(Framebuffer<ContextType> readFramebuffer)
+    {
+        FramebufferSize readSize = readFramebuffer.getSize();
+        FramebufferSize drawSize = this.getSize();
+        blitStencilAttachmentFromFramebufferViewport(0, 0, drawSize.width, drawSize.height,
+            readFramebuffer.getViewport(0, 0, readSize.width, readSize.height));
     }
 }

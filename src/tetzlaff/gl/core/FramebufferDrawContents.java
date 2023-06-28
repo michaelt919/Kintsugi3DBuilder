@@ -13,11 +13,11 @@
 package tetzlaff.gl.core;
 
 /**
- * Encapsulates the logical concept of the "contents" of a framebuffer on the GPU.  These methods will typically not be
- * called directly, but can be invoked by Drawable instances or the framebuffer itself to prepare for read or draw commands.
+ * Encapsulates the logical concept of the "contents" of a framebuffer for drawing on the GPU.  These methods will typically not be
+ * called directly, but can be invoked by Drawable instances or the framebuffer itself to prepare for draw commands.
  * @param <ContextType>
  */
-public interface FramebufferContents<ContextType extends Context<ContextType>> extends Contextual<ContextType>
+public interface FramebufferDrawContents<ContextType extends Context<ContextType>> extends Contextual<ContextType>
 {
     /**
      * Gets the size of the framebuffer for which these are the contents.
@@ -34,7 +34,7 @@ public interface FramebufferContents<ContextType extends Context<ContextType>> e
      * @param width The width of the viewport
      * @param height THe height of the viewport
      */
-    void bindForDraw(int x, int y, int width, int height);
+    void bindViewportForDraw(int x, int y, int width, int height);
 
     /**
      * Prepares the contents of a framebuffer to be used for drawing within the entire framebuffer.
@@ -44,14 +44,23 @@ public interface FramebufferContents<ContextType extends Context<ContextType>> e
     default void bindForDraw()
     {
         FramebufferSize size = getSize();
-        bindForDraw(0, 0, size.width, size.height);
+        bindViewportForDraw(0, 0, size.width, size.height);
     }
 
     /**
-     * Prepares the contents of a particular framebuffer attachment to be used for read operations
+     * Prepares the contents of a particular framebuffer attachment to be used for draw operations.
+     * This is primarily intended for blit operations.
      * From the invokation of this function until another framebuffer attachment is bound, this framebuffer should
-     * be prepared to accept any read requests.
+     * be prepared to accept any draw requests.
      * @param attachmentIndex The attachment to be used for reading.
      */
-    void bindForRead(int attachmentIndex);
+    void bindSingleAttachmentForDraw(int attachmentIndex);
+
+    /**
+     * Prepares the contents of a non-color (i.e. depth, stencil) attachment to be used for draw operations.
+     * This is primarily intended for blit operations.
+     * From the invokation of this function until another framebuffer attachment is bound, this framebuffer should
+     * be prepared to accept any draw requests.
+     */
+    void bindNonColorAttachmentsForDraw();
 }
