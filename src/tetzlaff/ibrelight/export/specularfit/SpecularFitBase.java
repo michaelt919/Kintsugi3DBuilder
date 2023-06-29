@@ -19,24 +19,18 @@ import tetzlaff.ibrelight.core.TextureFitSettings;
 
 public abstract class SpecularFitBase<ContextType extends Context<ContextType>> implements SpecularResources<ContextType>
 {
-    /**
-     * Basis functions and weights (originally calculated on the CPU)
-     */
-    final BasisResources<ContextType> basisResources;
+    private final BasisResources<ContextType> basisResources;
 
-    /**
-     * Estimated specular reflectivity and roughness
-     */
-    final RoughnessOptimization<ContextType> roughnessOptimization;
+    private final RoughnessOptimization<ContextType> roughnessOptimization;
 
     protected SpecularFitBase(ContextType context, TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings) throws FileNotFoundException
     {
         // Textures calculated on CPU and passed to GPU (not framebuffers): basis functions & weights
-        basisResources = new BasisResources<>(context, textureFitSettings, specularBasisSettings);
+        basisResources = new BasisResources<>(context, textureFitSettings.width, textureFitSettings.height, specularBasisSettings);
 
         // Specular roughness / reflectivity module that manages its own resources
         roughnessOptimization =
-            new RoughnessOptimizationSimple<>(basisResources);
+            new RoughnessOptimizationSimple<>(basisResources, textureFitSettings);
             //new RoughnessOptimizationIterative<>(context, basisResources, this::getDiffuseMap, settings);
         roughnessOptimization.clear();
     }
@@ -49,20 +43,31 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
     }
 
     @Override
-    public Texture2D<ContextType> getSpecularReflectivityMap()
+    public final Texture2D<ContextType> getSpecularReflectivityMap()
     {
         return roughnessOptimization.getReflectivityTexture();
     }
 
     @Override
-    public Texture2D<ContextType> getSpecularRoughnessMap()
+    public final Texture2D<ContextType> getSpecularRoughnessMap()
     {
         return roughnessOptimization.getRoughnessTexture();
     }
 
+    /**
+     * Basis functions and weights (originally calculated on the CPU)
+     */
     @Override
-    public BasisResources<ContextType> getBasisResources()
+    public final BasisResources<ContextType> getBasisResources()
     {
         return basisResources;
+    }
+
+    /**
+     * Estimated specular reflectivity and roughness
+     */
+    public final RoughnessOptimization<ContextType> getRoughnessOptimization()
+    {
+        return roughnessOptimization;
     }
 }

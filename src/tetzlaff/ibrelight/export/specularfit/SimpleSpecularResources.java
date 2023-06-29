@@ -13,6 +13,7 @@ package tetzlaff.ibrelight.export.specularfit;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Texture2D;
+import tetzlaff.ibrelight.rendering.resources.ImageCache;
 
 public class SimpleSpecularResources<ContextType extends Context<ContextType>> implements SpecularResources<ContextType>
 {
@@ -50,6 +51,18 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
     public BasisResources<ContextType> getBasisResources()
     {
         return basisResources;
+    }
+
+    @Override
+    public SpecularResources<ContextType> createBlockResources(ImageCache<ContextType> imageCache, int i, int j)
+    {
+        SimpleSpecularResources<ContextType> blockResources = new SimpleSpecularResources<>();
+        blockResources.diffuseMap = imageCache.cropForBlock(diffuseMap, i, j);
+        blockResources.normalMap = imageCache.cropForBlock(normalMap, i, j);
+        blockResources.specularReflectivityMap = imageCache.cropForBlock(specularReflectivityMap, i, j);
+        blockResources.specularRoughnessMap = imageCache.cropForBlock(specularRoughnessMap, i, j);
+        blockResources.basisResources = imageCache.cropForBlock(basisResources, i, j);
+        return blockResources;
     }
 
     /**

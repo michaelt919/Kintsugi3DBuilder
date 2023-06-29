@@ -26,7 +26,8 @@ import tetzlaff.gl.types.AbstractDataType;
  *
  * @param <ContextType> The type of the GL context that the texture is associated with.
  */
-public interface Texture3D<ContextType extends Context<ContextType>> extends Texture<ContextType>
+public interface Texture3D<ContextType extends Context<ContextType>>
+    extends Texture<ContextType>, Croppable<Texture3D<ContextType>>, CloneCroppable<Texture3D<ContextType>>
 {
     /**
      * Gets the width of the texture.
@@ -167,4 +168,99 @@ public interface Texture3D<ContextType extends Context<ContextType>> extends Tex
      * @return An object encapsulating the use of a layer of this texture as a framebuffer attachment.
      */
     FramebufferAttachment<ContextType> getLayerAsFramebufferAttachment(int layerIndex);
+
+    /**
+     * Creates a new, empty texture with different dimensions but the same internal format and settings as this texture.
+     * Especially intended to be used with framebuffer blitting to ensure compatibility.
+     * @param newWidth The width of the new texture.
+     * @param newHeight The height of the new texture.
+     * @param newDepth The depth of the new texture.
+     * @return The newly created texture.
+     */
+    Texture3D<ContextType> createTextureWithMatchingFormat(int newWidth, int newHeight, int newDepth);
+
+    /**
+     * Fills this texture with a cropped region of another 3D texture.
+     * @param x The left boundary of the cropped region
+     * @param y The bottom boundary of the cropped region
+     * @param z The lower depth boundary of the cropped region
+     * @param cropWidth The width of the cropped region
+     * @param cropHeight The height of the cropped region
+     * @param cropDepth The depth of the cropped region
+     * @return The new cropped resource.
+     */
+    default void cropFrom(Texture3D<ContextType> other, int x, int y, int z, int cropWidth, int cropHeight, int cropDepth)
+    {
+        try(FramebufferObject<ContextType> sourceFBO = getContext().buildFramebufferObject(other.getWidth(), other.getHeight()).createFramebufferObject();
+            FramebufferObject<ContextType> destFBO = getContext().buildFramebufferObject(cropWidth, cropHeight).createFramebufferObject())
+        {
+            int effectiveDepth = Math.min(Math.min(this.getDepth(), other.getDepth()), cropDepth);
+
+            // Use framebuffer blitting on each depth layer requested
+            for (int i = 0; i < effectiveDepth; i++)
+            {
+                sourceFBO.setColorAttachment(0, other.getLayerAsFramebufferAttachment(z + i));
+                destFBO.setColorAttachment(0, this.getLayerAsFramebufferAttachment(i));
+                destFBO.blitColorAttachmentFromFramebuffer(0,
+                    sourceFBO.getViewport(x, y, cropWidth, cropHeight), 0);
+            }
+        }
+    }
+
+    @Override
+    default void cropFrom(Texture3D<ContextType> other, int x, int y, int cropWidth, int cropHeight)
+    {
+        cropFrom(other, x, y, 0, cropWidth, cropHeight, other.getDepth());
+    }
+
+    /**
+     * Creates a new texture that contains a cropped 3D region of this texture.
+     * The texture this method is called on will remain unchanged.
+     * @param x The left boundary of the cropped region
+     * @param y The bottom boundary of the cropped region
+     * @param z The lower depth boundary of the cropped region
+     * @param cropWidth The width of the cropped region
+     * @param cropHeight The height of the cropped region
+     * @param cropDepth The depth of the cropped region
+     * @return The new cropped texture.
+     */
+    default Texture3D<ContextType> crop(int x, int y, int z, int cropWidth, int cropHeight, int cropDepth)
+    {
+        Texture3D<ContextType> cropTexture = createTextureWithMatchingFormat(cropWidth, cropHeight, cropDepth);
+        cropTexture.cropFrom(this, x, y, z, cropWidth, cropHeight, cropDepth);
+        return cropTexture;
+    }
+
+    /**
+     * Creates a new texture that contains a cropped 2D region of this texture.  All z-layers will be copied.
+     * The texture this method is called on will remain unchanged.
+     * @param x The left boundary of the cropped region
+     * @param y The bottom boundary of the cropped region
+     * @param cropWidth The width of the cropped region
+     * @param cropHeight The height of the cropped region
+     * @return The new cropped texture.
+     */
+    @Override
+    default Texture3D<ContextType> crop(int x, int y, int cropWidth, int cropHeight)
+    {
+        return this.crop(x, y, 0, cropWidth, cropHeight, this.getDepth());
+    }
+
+    /**
+     * Copies another texture into this texture using framebuffer blitting
+     * @param other The texture to copy.
+     */
+    default void copyFrom(Texture3D<ContextType> other)
+    {
+        cropFrom(other, 0, 0, this.getWidth(), this.getHeight());
+    }
+
+    /**
+     * Copies this texture, creating a new resource with identical contents.
+     * @return The new resource containing a copy of the texture
+     */
+    default Texture3D<ContextType> copy()
+    {
+        return this.crop(0, 0, this.getWidth(), this.getHeight());
+    }
 }

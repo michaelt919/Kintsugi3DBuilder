@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.function.Function;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
@@ -167,7 +166,7 @@ public class SpecularOptimization
             {
 
                 // Calculate final diffuse map without the constraint of basis functions.
-                specularFit.diffuseOptimization.execute(specularFit);
+                specularFit.getDiffuseOptimization().execute(specularFit);
             }
 
             Duration duration = Duration.between(start, Instant.now());
@@ -183,8 +182,8 @@ public class SpecularOptimization
             }
 
             // Save the final diffuse and normal maps
-            specularFit.diffuseOptimization.saveDiffuseMap(settings.getOutputDirectory());
-            specularFit.normalOptimization.saveNormalMap(settings.getOutputDirectory());
+            specularFit.getDiffuseOptimization().saveDiffuseMap(settings.getOutputDirectory());
+            specularFit.getNormalOptimization().saveNormalMap(settings.getOutputDirectory());
 
             // Save the final basis functions
             specularDecomposition.saveBasisFunctions(settings.getOutputDirectory());
@@ -241,8 +240,8 @@ public class SpecularOptimization
             settings.getTextureFitSettings(), settings.getSpecularBasisSettings(), priorSolutionDirectory);
 
         // Fit specular textures
-        solution.roughnessOptimization.execute();
-        solution.roughnessOptimization.saveTextures(settings.getOutputDirectory());
+        solution.getRoughnessOptimization().execute();
+        solution.getRoughnessOptimization().saveTextures(settings.getOutputDirectory());
 
         // Generate albedo / ORM maps
         try(AlbedoORMOptimization<ContextType> albedoORM = new AlbedoORMOptimization<>(context, settings.getTextureFitSettings()))
@@ -284,7 +283,7 @@ public class SpecularOptimization
             SpecularFitFromOptimization<ContextType> specularFit, Program<ContextType> errorCalcProgram)
     {
         Drawable<ContextType> errorCalcDrawable = specularFit.getResources().createDrawable(errorCalcProgram);
-        specularFit.basisResources.useWithShaderProgram(errorCalcProgram);
+        specularFit.getBasisResources().useWithShaderProgram(errorCalcProgram);
         errorCalcProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
         errorCalcProgram.setUniform("errorGamma", 1.0f);
         return errorCalcDrawable;

@@ -14,7 +14,7 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
     protected final VertexBuffer<ContextType> rect;
     protected final Drawable<ContextType> specularRoughnessFitDrawable;
 
-    protected RoughnessOptimizationBase(BasisResources<ContextType> resources)
+    protected RoughnessOptimizationBase(BasisResources<ContextType> resources, float gamma)
         throws FileNotFoundException
     {
         // Fit specular parameters from weighted basis functions
@@ -33,7 +33,7 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
         // Set up shader program
         specularRoughnessFitDrawable.addVertexBuffer("position", rect);
         resources.useWithShaderProgram(specularRoughnessFitProgram);
-        specularRoughnessFitProgram.setUniform("gamma", resources.getTextureFitSettings().gamma);
+        specularRoughnessFitProgram.setUniform("gamma", gamma);
         specularRoughnessFitProgram.setUniform("fittingGamma", 1.0f);
 
     }

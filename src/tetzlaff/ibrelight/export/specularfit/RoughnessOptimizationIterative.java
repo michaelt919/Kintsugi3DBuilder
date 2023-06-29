@@ -33,20 +33,20 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
      * @throws FileNotFoundException
      */
     public RoughnessOptimizationIterative(
-        BasisResources<ContextType> basisResources, Supplier<Texture2D<ContextType>> getDiffuseTexture,
+        BasisResources<ContextType> basisResources, TextureFitSettings settings, Supplier<Texture2D<ContextType>> getDiffuseTexture,
         double convergenceTolerance, int unsuccessfulLMIterationsAllowed)
             throws FileNotFoundException
     {
         // Inherit from base class to facilitate initial fit.
-        super(basisResources);
-        this.settings = basisResources.getTextureFitSettings();
+        super(basisResources, settings.gamma);
+        this.settings = settings;
         this.convergenceTolerance = convergenceTolerance;
         this.unsuccessfulLMIterationsAllowed = unsuccessfulLMIterationsAllowed;
 
         roughnessOptimization = new ShaderBasedOptimization<>(
             getRoughnessEstimationProgramBuilder(basisResources.context),
                 basisResources.context.buildFramebufferObject(
-                    basisResources.getTextureFitSettings().width, basisResources.getTextureFitSettings().height)
+                    settings.width, settings.height)
                 // Reflectivity map
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F)
                     .setLinearFilteringEnabled(true))
@@ -76,7 +76,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
             estimationProgram.setTexture("dampingTex", roughnessOptimization.getFrontFramebuffer().getColorAttachmentTexture(2));
 
             // Gamma correction constants
-            float gamma = basisResources.getTextureFitSettings().gamma;
+            float gamma = settings.gamma;
             estimationProgram.setUniform("gamma", gamma);
             estimationProgram.setUniform("gammaInv", 1.0f / gamma);
 

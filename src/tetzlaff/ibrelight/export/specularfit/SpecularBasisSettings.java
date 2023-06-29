@@ -21,10 +21,6 @@ public class SpecularBasisSettings
 
     private boolean smithMaskingShadowingEnabled = true;
 
-    public SpecularBasisSettings()
-    {
-    }
-
     /**
      * @return The number of basis functions to use for the specular lobe.
      */

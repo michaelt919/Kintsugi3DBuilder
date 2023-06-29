@@ -15,9 +15,22 @@ import tetzlaff.gl.core.*;
 
 public interface GeometryTextures<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
 {
+    int getWidth();
+    int getHeight();
+
     Texture2D<ContextType> getPositionTexture();
     Texture2D<ContextType> getNormalTexture();
     Texture2D<ContextType> getTangentTexture();
 
     void setupShaderProgram(Program<ContextType> program);
+
+    /**
+     *
+     * @param x
+     * @param y
+     * @param viewportWidth
+     * @param viewportHeight
+     * @return A newly created resource containing a copy of the geometry textures within the specified viewport
+     */
+    GeometryTextures<ContextType> createViewportCopy(int x, int y, int viewportWidth, int viewportHeight);
 }

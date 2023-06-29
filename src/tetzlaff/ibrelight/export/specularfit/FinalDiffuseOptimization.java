@@ -51,7 +51,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
     public void execute(SpecularFitBase<ContextType> specularFit)
     {
         // Set up diffuse estimation shader program
-        specularFit.basisResources.useWithShaderProgram(estimationProgram);
+        specularFit.getBasisResources().useWithShaderProgram(estimationProgram);
         estimationProgram.setTexture("normalEstimate", specularFit.getNormalMap());
         estimationProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
 

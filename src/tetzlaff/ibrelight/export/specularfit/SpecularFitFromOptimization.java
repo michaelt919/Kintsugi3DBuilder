@@ -45,15 +45,9 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
 
     private final Consumer<Program<ContextType>> setupShaderProgram;
 
-    /**
-     * Final diffuse estimate
-     */
-    final FinalDiffuseOptimization<ContextType> diffuseOptimization;
+    private final FinalDiffuseOptimization<ContextType> diffuseOptimization;
 
-    /**
-     * Estimated surface normals
-     */
-    final NormalOptimization<ContextType> normalOptimization;
+    private final NormalOptimization<ContextType> normalOptimization;
 
     public SpecularFitFromOptimization(IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
         TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings, NormalOptimizationSettings normalOptimizationSettings)
@@ -77,7 +71,7 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
             {
                 Drawable<ContextType> drawable = resources.createDrawable(estimationProgram);
                 programFactory.setupShaderProgram(resources, estimationProgram);
-                basisResources.useWithShaderProgram(estimationProgram);
+                getBasisResources().useWithShaderProgram(estimationProgram);
                 return drawable;
             },
             textureFitSettings, normalOptimizationSettings);
@@ -147,7 +141,7 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
             {
                 // Prepare for error calculation on the GPU.
                 // Basis functions will have changed.
-                basisResources.updateFromSolution(specularDecomposition);
+                getBasisResources().updateFromSolution(specularDecomposition);
 
                 System.out.println("Calculating error...");
                 errorCalculator.update();
@@ -197,7 +191,7 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
 
             // Prepare for error calculation and then normal optimization on the GPU.
             // Weight maps will have changed.
-            basisResources.updateFromSolution(specularDecomposition);
+            getBasisResources().updateFromSolution(specularDecomposition);
 
             // Calculate the error in preparation for normal estimation.
             errorCalculator.update();
@@ -249,14 +243,14 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
 
             // Estimate specular roughness and reflectivity.
             // This can cause error to increase but it's unclear if that poses a problem for convergence.
-            roughnessOptimization.execute();
+            getRoughnessOptimization().execute();
 
             if (SpecularOptimization.DEBUG)
             {
-                roughnessOptimization.saveTextures(debugDirectory);
+                getRoughnessOptimization().saveTextures(debugDirectory);
 
                 // Log error in debug mode.
-                basisResources.updateFromSolution(specularDecomposition);
+                getBasisResources().updateFromSolution(specularDecomposition);
                 System.out.println("Calculating error...");
                 errorCalculator.update();
                 logError(errorCalculator.getReport());
@@ -293,5 +287,21 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
     public Texture2D<ContextType> getNormalMap()
     {
         return normalOptimization.getNormalMap();
+    }
+
+    /**
+     * Final diffuse estimate
+     */
+    public FinalDiffuseOptimization<ContextType> getDiffuseOptimization()
+    {
+        return diffuseOptimization;
+    }
+
+    /**
+     * Estimated surface normals
+     */
+    public NormalOptimization<ContextType> getNormalOptimization()
+    {
+        return normalOptimization;
     }
 }

@@ -21,14 +21,14 @@ public class RoughnessOptimizationSimple<ContextType extends Context<ContextType
 {
     private final FramebufferObject<ContextType> specularTexFramebuffer;
 
-    public RoughnessOptimizationSimple(BasisResources<ContextType> resources)
+    public RoughnessOptimizationSimple(BasisResources<ContextType> resources, TextureFitSettings settings)
         throws FileNotFoundException
     {
-        super(resources);
+        super(resources, settings.gamma);
 
         // Framebuffer for fitting and storing the specular parameter estimates (specular Fresnel color and roughness)
         specularTexFramebuffer = resources.context.buildFramebufferObject(
-                resources.getTextureFitSettings().width, resources.getTextureFitSettings().height)
+                settings.width, settings.height)
             .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGBA8).setLinearFilteringEnabled(true))
             .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGBA8).setLinearFilteringEnabled(true))
             .createFramebufferObject();

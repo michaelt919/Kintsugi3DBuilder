@@ -17,19 +17,19 @@ import java.io.IOException;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Texture2D;
 import tetzlaff.ibrelight.core.TextureFitSettings;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.ImageCache;
 
 public class SpecularFitFromPriorSolution<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
 {
     /**
      * Diffuse map from file
      */
-    final Texture2D<ContextType> diffuseMap;
+    private final Texture2D<ContextType> diffuseMap;
 
     /**
      * Normal map from file
      */
-    final Texture2D<ContextType> normalMap;
+    private final Texture2D<ContextType> normalMap;
 
     public SpecularFitFromPriorSolution(ContextType context, TextureFitSettings textureFitSettings,
         SpecularBasisSettings specularBasisSettings, File priorSolutionDirectory) throws IOException
@@ -48,7 +48,7 @@ public class SpecularFitFromPriorSolution<ContextType extends Context<ContextTyp
             .setLinearFilteringEnabled(true)
             .createTexture();
 
-        basisResources.loadFromPriorSolution(priorSolutionDirectory);
+        getBasisResources().loadFromPriorSolution(priorSolutionDirectory);
     }
 
     @Override

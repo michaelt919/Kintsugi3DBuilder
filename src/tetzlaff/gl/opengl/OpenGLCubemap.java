@@ -265,6 +265,7 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
         FaceData positiveZ = new FaceData();
         FaceData negativeZ = new FaceData();
 
+        int format;
         boolean useLinearFiltering = false;
         boolean useMipmaps = false;
         int maxMipmapLevel = Integer.MAX_VALUE;
@@ -276,6 +277,7 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
 
         OptionalParameters(int format)
         {
+            this.format = format;
             positiveX.format = format;
             negativeX.format = format;
             positiveY.format = format;
@@ -288,7 +290,8 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
     private OpenGLCubemap(OpenGLContext context, int textureTarget, ColorFormat colorFormat, int faceSize, OptionalParameters opt)
     {
         // Create an empty texture to be used as a render target for a framebuffer.
-        super(context, textureTarget, colorFormat, opt.useMipmaps);
+        super(context, textureTarget, colorFormat,
+            new Parameters(opt.format, opt.useLinearFiltering, opt.useMipmaps, opt.maxMipmapLevel, opt.maxAnisotropy));
         this.faceSize = faceSize;
         init(OpenGLContext.getOpenGLInternalColorFormat(colorFormat), opt);
     }
@@ -296,7 +299,8 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
     private OpenGLCubemap(OpenGLContext context, int textureTarget, CompressionFormat compressionFormat, int faceSize, OptionalParameters opt)
     {
         // Create an empty texture to be used as a render target for a framebuffer.
-        super(context, textureTarget, compressionFormat, opt.useMipmaps);
+        super(context, textureTarget, compressionFormat,
+            new Parameters(opt.format, opt.useLinearFiltering, opt.useMipmaps, opt.maxMipmapLevel, opt.maxAnisotropy));
         this.faceSize = faceSize;
         init(OpenGLContext.getOpenGLCompressionFormat(compressionFormat), opt);
     }
@@ -304,7 +308,8 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
     private OpenGLCubemap(OpenGLContext context, int textureTarget, TextureType textureType, int precision, int faceSize, OptionalParameters opt)
     {
         // Create an empty texture to be used as a render target for a framebuffer.
-        super(context, textureTarget, textureType, opt.useMipmaps);
+        super(context, textureTarget, textureType, precision,
+            new Parameters(opt.format, opt.useLinearFiltering, opt.useMipmaps, opt.maxMipmapLevel, opt.maxAnisotropy));
         this.faceSize = faceSize;
         init(getSpecialInternalFormat(textureType, precision), opt);
     }
@@ -424,7 +429,7 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
     {
         super.initFilteringAndMipmaps(useLinearFiltering, maxMipmapLevel, generateMipmaps);
 
-        if (useMipmaps)
+        if (parameters.useMipmaps)
         {
             // Calculate the number of mipmap levels
             this.levelCount = 0;

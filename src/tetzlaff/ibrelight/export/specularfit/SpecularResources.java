@@ -14,6 +14,7 @@ package tetzlaff.ibrelight.export.specularfit;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Texture2D;
 import tetzlaff.gl.core.Texture3D;
+import tetzlaff.ibrelight.rendering.resources.ImageCache;
 
 public interface SpecularResources<ContextType extends Context<ContextType>> extends AutoCloseable
 {
@@ -22,6 +23,7 @@ public interface SpecularResources<ContextType extends Context<ContextType>> ext
     Texture2D<ContextType> getSpecularReflectivityMap();
     Texture2D<ContextType> getSpecularRoughnessMap();
     BasisResources<ContextType> getBasisResources();
+    SpecularResources<ContextType> createBlockResources(ImageCache<ContextType> imageCache, int i, int j);
 
     @Override
     void close(); // no exception

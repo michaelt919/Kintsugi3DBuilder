@@ -21,11 +21,9 @@ import java.util.stream.IntStream;
 
 import javax.imageio.ImageIO;
 
-import org.w3c.dom.Text;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.geometry.GeometryFramebuffer;
 import tetzlaff.gl.geometry.GeometryTextures;
-import tetzlaff.gl.geometry.GeometryTexturesNonRendered;
 import tetzlaff.gl.material.TextureLoadOptions;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
@@ -33,7 +31,6 @@ import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.vecmath.IntVector2;
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibrelight.core.SimpleLoadOptionsModel;
-import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.util.BufferedImageBuilder;
 
 public class ImageCache<ContextType extends Context<ContextType>>
@@ -77,15 +74,30 @@ public class ImageCache<ContextType extends Context<ContextType>>
             }
         }
     }
+
     public ContextType getContext()
     {
         return context;
     }
 
+    public ImageCacheSettings getSettings()
+    {
+        return settings;
+    }
 
-    private File getBlockDir(int i, int j)
+    File getBlockDir(int i, int j)
     {
         return new File(settings.getCacheDirectory(), String.format("%d_%d", i, j));
+    }
+
+    int getBlockStartX(int i)
+    {
+        return (int) Math.round((double) i * (double) settings.getTextureWidth() / (double) settings.getTextureSubdiv());
+    }
+
+    int getBlockStartY(int j)
+    {
+        return (int) Math.round((double) j * (double) settings.getTextureHeight() / (double) settings.getTextureSubdiv());
     }
 
     public boolean isInitialized()
@@ -285,7 +297,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
                     // Loop over "columns"
                     for (int i = 0; i < settings.getTextureSubdiv(); i++)
                     {
-                        int xNext = (int) Math.round((double) (i + 1) * (double) settings.getTextureWidth() / (double) settings.getTextureSubdiv());
+                        int xNext = getBlockStartX(i + 1);
 
                         // xRand < round(texture width * (xSample + 1) / sampled width)
                         // xRand <= texture width * (xSample + 1) / sampled width - 0.5;
@@ -305,7 +317,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
                         // Loop over "rows"
                         for (int j = 0; j < settings.getTextureSubdiv(); j++)
                         {
-                            int yNext = (int) Math.round((double) (j + 1) * (double) settings.getTextureHeight() / (double) settings.getTextureSubdiv());
+                            int yNext = getBlockStartY(j + 1);
 
                             int width = xNext - x;
                             int height = yNext - y;
@@ -374,22 +386,42 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
     /**
      *
-     * @param i The first coordinate of the block
-     * @param j The second coordinate of the block
-     * @return
-     * @throws IOException
+     * @return A resource (that itself needs to be closed with no longer needed) which in turn creates resources for specific blocks
      */
-    public IBRResourcesTextureSpace<ContextType> createBlockResources(int i, int j) throws IOException
+    public TextureBlockResourceFactory<ContextType> createBlockResourceFactory()
     {
-        TextureLoadOptions loadOptions = new TextureLoadOptions();
-        loadOptions.setLinearFilteringRequested(false);
-        loadOptions.setMipmapsRequested(false);
-        loadOptions.setCompressionRequested(false);
+        return new TextureBlockResourceFactory<>(this, resources.getSharedResources());
+    }
 
+    public FramebufferViewport<ContextType> viewportForBlock(Framebuffer<ContextType> framebuffer, int i, int j)
+    {
+        int x = getBlockStartX(i);
+        int y = getBlockStartY(j);
+        int width = getBlockStartX(i + 1) - x;
+        int height = getBlockStartY(j + 1) - y;
 
-        // TODO: Not done; will also need to only use a part of the geometry textures
-        return new IBRResourcesTextureSpace<>(resources.getSharedResources(), getBlockDir(i, j),
-                loadOptions, settings.getSampledSize(), settings.getSampledSize(), null);
+        return framebuffer.getViewport(x, y, width, height);
+    }
+
+    public <ResourceType extends Resource & Croppable<ResourceType>> void cropForBlock(
+        ResourceType destination, ResourceType source, int i, int j)
+    {
+        int x = getBlockStartX(i);
+        int y = getBlockStartY(j);
+        int width = getBlockStartX(i + 1) - x;
+        int height = getBlockStartY(j + 1) - y;
+
+        destination.cropFrom(source, x, y, width, height);
+    }
+
+    public <ResourceType extends Resource> ResourceType cropForBlock(CloneCroppable<ResourceType> resource, int i, int j)
+    {
+        int x = getBlockStartX(i);
+        int y = getBlockStartY(j);
+        int width = getBlockStartX(i + 1) - x;
+        int height = getBlockStartY(j + 1) - y;
+
+        return resource.crop(x, y, width, height);
     }
 
     private int getHighResIndexForSample(int sampleIndex)
@@ -397,12 +429,6 @@ public class ImageCache<ContextType extends Context<ContextType>>
         // Figure out which pixels in the high-res image are being used in the sampled image
         IntVector2 highResCoords = sampledPixelCoords[sampleIndex % settings.getSampledSize()][sampleIndex / settings.getSampledSize()];
         return highResCoords.x + highResCoords.y * settings.getTextureWidth();
-
-//        int x = sampleIndex % settings.getSampledSize();
-//        int y = sampleIndex / settings.getSampledSize();
-//        int highResX = Math.min(settings.getTextureWidth() - 1, Math.round((float)x * settings.getTextureWidth() / settings.getSampledSize()));
-//        int highResY = Math.min(settings.getTextureHeight() - 1, Math.round((float)y * settings.getTextureHeight() / settings.getSampledSize()));
-//        return highResX + highResY * settings.getTextureWidth();
     }
 
     private NativeVectorBuffer sampleHighResBuffer(NativeVectorBuffer highResBuffer)
@@ -426,7 +452,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         {
             // Use non-rendered since we need to sample on the CPU (where the sample coordinates live) and then pass the data back to the GPU.
             GeometryTextures<ContextType> sampledGeometryTextures =
-                new GeometryTexturesNonRendered<>(context, settings.getSampledSize(), settings.getSampledSize());
+                GeometryFramebuffer.createEmpty(context, settings.getSampledSize(), settings.getSampledSize());
 
             // Sample position buffer
             sampledGeometryTextures.getPositionTexture().load(

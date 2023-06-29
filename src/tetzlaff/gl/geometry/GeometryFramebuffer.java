@@ -16,24 +16,35 @@ import java.io.FileNotFoundException;
 
 import tetzlaff.gl.core.*;
 
-public class GeometryFramebuffer<ContextType extends Context<ContextType>> extends GeometryTexturesBase<ContextType>
-{
+public class GeometryFramebuffer<ContextType extends Context<ContextType>> implements GeometryTextures<ContextType> {
     private final FramebufferObject<ContextType> fbo;
+    private final ContextType context;
 
-    GeometryFramebuffer(Drawable<ContextType> drawable, int width, int height)
+    public static <ContextType extends Context<ContextType>> GeometryFramebuffer<ContextType> createEmpty(
+        ContextType contextType, int width, int height)
     {
-        super(drawable.getContext());
-        fbo = drawable.getContext().buildFramebufferObject(width, height)
+        return new GeometryFramebuffer<>(contextType, width, height);
+    }
+
+    /**
+     * Creates an empty framebuffer for storing geometry textures
+     * @param context
+     * @param width
+     * @param height
+     */
+    GeometryFramebuffer(ContextType context, int width, int height)
+    {
+        this.context = context;
+
+        this.fbo = context.buildFramebufferObject(width, height)
             .addColorAttachment(ColorFormat.RGB32F) // position
             .addColorAttachment(ColorFormat.RGB32F) // normal
             .addColorAttachment(ColorFormat.RGB32F) // tangent
             .createFramebufferObject();
-
-        drawable.draw(fbo);
     }
 
     /**
-     *
+     * Creates a framebuffer containing geometry textures rendered from a particular geometry instance
      * @param geometry
      * @param width
      * @param height
@@ -41,22 +52,24 @@ public class GeometryFramebuffer<ContextType extends Context<ContextType>> exten
      */
     GeometryFramebuffer(GeometryResources<ContextType> geometry, int width, int height) throws FileNotFoundException
     {
+        this(geometry.context, width, height);
+
         // Use a shader program to initialize the framebuffer once
-        super(geometry.context);
         try(Program<ContextType> program = geometry.context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/common/geomBuffers.frag"))
             .createProgram())
         {
             Drawable<ContextType> drawable = geometry.createDrawable(program);
-
-            fbo = geometry.context.buildFramebufferObject(width, height)
-                .addColorAttachment(ColorFormat.RGB32F) // position
-                .addColorAttachment(ColorFormat.RGB32F) // normal
-                .addColorAttachment(ColorFormat.RGB32F) // tangent
-                .createFramebufferObject();
-
             drawable.draw(fbo);
+        }
+        catch (FileNotFoundException e)
+        {
+            // Make sure there isn't a memory leak if it can't find the shaders.
+            this.fbo.close();
+
+            // Re-throw the exception.
+            throw e;
         }
     }
 
@@ -92,4 +105,50 @@ public class GeometryFramebuffer<ContextType extends Context<ContextType>> exten
         }
     }
 
+    @Override
+    public ContextType getContext()
+    {
+        return context;
+    }
+
+    @Override
+    public int getWidth()
+    {
+        return fbo.getSize().width;
+    }
+
+    @Override
+    public int getHeight()
+    {
+        return fbo.getSize().height;
+    }
+
+    @Override
+    public void setupShaderProgram(Program<ContextType> program)
+    {
+        program.setTexture("positionTex", getPositionTexture());
+        program.setTexture("normalTex", getNormalTexture());
+        program.setTexture("tangentTex", getTangentTexture());
+    }
+
+    @Override
+    public GeometryTextures<ContextType> createViewportCopy(int x, int y, int viewportWidth, int viewportHeight)
+    {
+        GeometryFramebuffer<ContextType> viewportFBO = GeometryFramebuffer.createEmpty(context, viewportWidth, viewportHeight);
+
+        // Copy positions
+        viewportFBO.getFramebuffer().blitColorAttachmentFromFramebuffer(0,
+            this.getFramebuffer().getViewport(x, y, viewportWidth, viewportHeight), 0);
+
+        // Copy normals
+        viewportFBO.getFramebuffer().blitColorAttachmentFromFramebuffer(1,
+            this.getFramebuffer().getViewport(x, y, viewportWidth, viewportHeight), 1);
+
+        // Copy tangents
+        viewportFBO.getFramebuffer().blitColorAttachmentFromFramebuffer(2,
+            this.getFramebuffer().getViewport(x, y, viewportWidth, viewportHeight), 2);
+
+        // Return the new resource
+        return viewportFBO;
+    }
 }

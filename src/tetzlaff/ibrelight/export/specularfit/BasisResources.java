@@ -19,9 +19,10 @@ import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.ibrelight.core.TextureFitSettings;
+import tetzlaff.ibrelight.rendering.resources.ImageCache;
 
 @SuppressWarnings("PublicField")
-public class BasisResources<ContextType extends Context<ContextType>> implements AutoCloseable
+public class BasisResources<ContextType extends Context<ContextType>> implements Resource, CloneCroppable<BasisResources<ContextType>>
 {
     public final ContextType context;
 
@@ -29,43 +30,65 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
     public final Texture2D<ContextType> weightMask;
     public final Texture2D<ContextType> basisMaps;
     public final UniformBuffer<ContextType> diffuseUniformBuffer;
-    private final TextureFitSettings textureFitSettings;
+
+    /**
+     * When creating "resources" for a block the basis maps and diffuse uniform buffer are reused from the parent resources.
+     * Thus they shouldn't be closed when the block is closed.
+     */
+    private final boolean nonWeightResourcesOwned;
+
+    private final int width;
+    private final int height;
     private final SpecularBasisSettings specularBasisSettings;
 
-    public BasisResources(ContextType context, TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings)
+    public BasisResources(ContextType context, int width, int height, SpecularBasisSettings specularBasisSettings)
     {
-        this.context = context;
-        this.textureFitSettings = textureFitSettings;
-        this.specularBasisSettings = specularBasisSettings;
-        weightMaps = context.getTextureFactory().build2DColorTextureArray(textureFitSettings.width, textureFitSettings.height, specularBasisSettings.getBasisCount())
-            .setInternalFormat(ColorFormat.R32F)
-            .setLinearFilteringEnabled(true)
-            .setMipmapsEnabled(false)
-            .createTexture();
-
-        weightMask = context.getTextureFactory().build2DColorTexture(textureFitSettings.width, textureFitSettings.height)
-            .setInternalFormat(ColorFormat.R8)
-            .setLinearFilteringEnabled(true)
-            .setMipmapsEnabled(false)
-            .createTexture();
-
-        basisMaps = context.getTextureFactory().build1DColorTextureArray(
-                specularBasisSettings.getMicrofacetDistributionResolution() + 1, specularBasisSettings.getBasisCount())
-            .setInternalFormat(ColorFormat.RGB32F)
-            .setLinearFilteringEnabled(true)
-            .setMipmapsEnabled(false)
-            .createTexture();
-
-        diffuseUniformBuffer = context.createUniformBuffer();
-
-        weightMaps.setTextureWrap(TextureWrapMode.None, TextureWrapMode.None, TextureWrapMode.None);
-        basisMaps.setTextureWrap(TextureWrapMode.None, TextureWrapMode.None);
-
+        this(context,
+            // Weight maps:
+            context.getTextureFactory().build2DColorTextureArray(width, height, specularBasisSettings.getBasisCount())
+                .setInternalFormat(ColorFormat.R32F)
+                .setLinearFilteringEnabled(true)
+                .setMipmapsEnabled(false)
+                .createTexture(),
+            // Weight mask:
+            context.getTextureFactory().build2DColorTexture(width, height)
+                .setInternalFormat(ColorFormat.R8)
+                .setLinearFilteringEnabled(true)
+                .setMipmapsEnabled(false)
+                .createTexture(),
+            // Basis maps:
+            context.getTextureFactory().build1DColorTextureArray(
+                    specularBasisSettings.getMicrofacetDistributionResolution() + 1, specularBasisSettings.getBasisCount())
+                .setInternalFormat(ColorFormat.RGB32F)
+                .setLinearFilteringEnabled(true)
+                .setMipmapsEnabled(false)
+                .createTexture(),
+            // Uniform buffer:
+            context.createUniformBuffer(),
+            true, specularBasisSettings);
     }
 
-    public TextureFitSettings getTextureFitSettings()
+    private BasisResources(ContextType context, Texture3D<ContextType> weightMaps, Texture2D<ContextType> weightMask,
+        Texture2D<ContextType> basisMaps, UniformBuffer<ContextType> diffuseUniformBuffer, boolean nonWeightResourcesOwned,
+        SpecularBasisSettings specularBasisSettings)
     {
-        return textureFitSettings;
+        this.context = context;
+        this.width = weightMaps.getWidth();
+        this.height = weightMaps.getHeight();
+        this.specularBasisSettings = specularBasisSettings;
+        this.weightMaps = weightMaps;
+        this.weightMask = weightMask;
+        this.basisMaps = basisMaps;
+        this.diffuseUniformBuffer = diffuseUniformBuffer;
+
+        this.nonWeightResourcesOwned = nonWeightResourcesOwned;
+
+        this.weightMaps.setTextureWrap(TextureWrapMode.None, TextureWrapMode.None, TextureWrapMode.None);
+
+        if (nonWeightResourcesOwned)
+        {
+            this.basisMaps.setTextureWrap(TextureWrapMode.None, TextureWrapMode.None);
+        }
     }
 
     public SpecularBasisSettings getSpecularBasisSettings()
@@ -77,13 +100,13 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
     {
         NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
         NativeVectorBuffer weightMaskBuffer = factory.createEmpty(NativeDataType.FLOAT, 1,
-            textureFitSettings.width * textureFitSettings.height);
+            width * height);
         NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3,
             specularBasisSettings.getBasisCount() * (specularBasisSettings.getMicrofacetDistributionResolution() + 1));
         NativeVectorBuffer diffuseNativeBuffer = factory.createEmpty(NativeDataType.FLOAT, 4, specularBasisSettings.getBasisCount());
 
         // Load weight mask first.
-        for (int p = 0; p < textureFitSettings.width * textureFitSettings.height; p++)
+        for (int p = 0; p < width * height; p++)
         {
             weightMaskBuffer.set(p, 0, solution.areWeightsValid(p) ? 1.0 : 0.0);
         }
@@ -93,7 +116,7 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
         for (int b = 0; b < specularBasisSettings.getBasisCount(); b++)
         {
             // Copy weights from the individual solutions into the weight buffer laid out in texture space to be sent to the GPU.
-            for (int p = 0; p < textureFitSettings.width * textureFitSettings.height; p++)
+            for (int p = 0; p < width * height; p++)
             {
                 weightMaskBuffer.set(p, 0, solution.getWeights(p).get(b));
             }
@@ -136,8 +159,8 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
 
         // Fill trivial weight mask.
         NativeVectorBuffer weightMaskBuffer = factory.createEmpty(NativeDataType.FLOAT, 1,
-            textureFitSettings.width * textureFitSettings.height);
-        for (int p = 0; p < textureFitSettings.width * textureFitSettings.height; p++)
+            width * height);
+        for (int p = 0; p < width * height; p++)
         {
             weightMaskBuffer.set(p, 0, 1.0);
         }
@@ -177,13 +200,23 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
         program.setTexture("weightMask", weightMask);
         program.setUniformBuffer("DiffuseColors", diffuseUniformBuffer);
     }
+    @Override
+    public BasisResources<ContextType> crop(int x, int y, int cropWidth, int cropHeight)
+    {
+        return new BasisResources<>(context, weightMaps.crop(x, y, cropWidth, cropHeight), weightMask.crop(x, y, cropWidth, cropHeight),
+            basisMaps, diffuseUniformBuffer, false, specularBasisSettings);
+    }
 
     @Override
     public void close()
     {
         weightMaps.close();
         weightMask.close();
-        basisMaps.close();
-        diffuseUniformBuffer.close();
+
+        if (nonWeightResourcesOwned)
+        {
+            basisMaps.close();
+            diffuseUniformBuffer.close();
+        }
     }
 }

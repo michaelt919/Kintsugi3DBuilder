@@ -70,7 +70,7 @@ public final class SpecularFitFinalizer
             rmseOut.println("Previously calculated RMSE: " + errorCalculator.getReport().getError());
 
             // Calculate the final RMSE from the raw result
-            specularFit.basisResources.updateFromSolution(solution);
+            specularFit.getBasisResources().updateFromSolution(solution);
             errorCalculator.getProgram().setTexture("normalEstimate", specularFit.getNormalMap());
 
             errorCalculator.update();
@@ -84,12 +84,12 @@ public final class SpecularFitFinalizer
             solution.saveDiffuseMap(textureFitSettings.gamma, outputDirectory);
 
             // Update the GPU resources with the hole-filled weight maps.
-            specularFit.basisResources.updateFromSolution(solution);
+            specularFit.getBasisResources().updateFromSolution(solution);
 
             // Fit specular textures after filling holes
-            specularFit.roughnessOptimization.execute();
+            specularFit.getRoughnessOptimization().execute();
 
-            specularFit.roughnessOptimization.saveTextures(outputDirectory);
+            specularFit.getRoughnessOptimization().saveTextures(outputDirectory);
 
             // Calculate RMSE after filling holes
             errorCalculator.update();
@@ -101,7 +101,7 @@ public final class SpecularFitFinalizer
             rmseOut.println("RMSE after hole fill (gamma-corrected): " + errorCalculator.getReport().getError());
 
             Drawable<ContextType> finalErrorCalcDrawable = resources.createDrawable(finalErrorCalcProgram);
-            specularFit.basisResources.useWithShaderProgram(finalErrorCalcProgram);
+            specularFit.getBasisResources().useWithShaderProgram(finalErrorCalcProgram);
             finalErrorCalcProgram.setTexture("normalEstimate", specularFit.getNormalMap());
             finalErrorCalcProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
             finalErrorCalcProgram.setTexture("diffuseEstimate", specularFit.getDiffuseMap());
@@ -154,7 +154,7 @@ public final class SpecularFitFinalizer
 //                    textureRectFBO.saveColorBufferToFile(0, "PNG", new File(textureFitSettings.outputDirectory, "test_normalGT.png"));
 
                 float[] groundTruth = textureRectFBO.readFloatingPointColorBufferRGBA(0);
-                float[] estimate = specularFit.normalOptimization.readNormalMap();
+                float[] estimate = specularFit.getNormalOptimization().readNormalMap();
 
                 double rmse = Math.sqrt( // root
                     IntStream.range(0, groundTruth.length / 4)
