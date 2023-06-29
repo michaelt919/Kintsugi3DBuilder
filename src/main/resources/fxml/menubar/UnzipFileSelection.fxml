@@ -21,7 +21,7 @@
        <Label text="Metashape File: " />
        <TextField fx:id="psxPathTxtField" onKeyPressed="#enterToRun" prefHeight="25.0" prefWidth="310.0" GridPane.columnIndex="1" />
        <Button mnemonicParsing="false" onAction="#selectOutputDirectory" text="Choose output directory..." visible="false" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-       <Button fx:id="unzipPSXButton" mnemonicParsing="false" onAction="#parseXML" text="Unzip .psx file..." GridPane.rowIndex="3" />
+       <Button fx:id="unzipPSXButton" mnemonicParsing="false" onAction="#unzipPSXAndParse" text="Unzip .psx file..." GridPane.rowIndex="3" />
       <Label text="Output Directory" visible="false" GridPane.rowIndex="1" />
       <TextField fx:id="outputDirectoryPathTxtField" prefHeight="25.0" prefWidth="310.0" visible="false" GridPane.columnIndex="1" GridPane.rowIndex="1" />
       <Button mnemonicParsing="false" onAction="#selectPSX" text="Choose .psx file..." GridPane.columnIndex="2" />

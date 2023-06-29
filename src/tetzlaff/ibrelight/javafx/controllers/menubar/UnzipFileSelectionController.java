@@ -2,6 +2,9 @@ package tetzlaff.ibrelight.javafx.controllers.menubar;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
@@ -23,6 +26,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 public class UnzipFileSelectionController {
     @FXML
@@ -43,13 +47,24 @@ public class UnzipFileSelectionController {
 
     @FXML
     private TextField outputDirectoryPathTxtField;
+
+    private Scene scene;
+    private Parent root;
+
+    //key is chunk name, value is path to chunk's zip file
+    private HashMap<String, String> chunkZipPathPairs;
+
+    public UnzipFileSelectionController() {
+        chunkZipPathPairs = new HashMap<>();
+    }
+
     public void init(){
         this.directoryChooser = new DirectoryChooser();
         chunkSelectionChoiceBox.setDisable(true);
         selectChunkButton.setDisable(true);
     }
 
-    public void selectPSX(ActionEvent actionEvent) {
+    public void selectPSX() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose .psx file");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Metashape files", "*.psx"));
@@ -62,7 +77,7 @@ public class UnzipFileSelectionController {
         }
     }
 
-    public void parseXML(ActionEvent actionEvent) {
+    public void unzipPSXAndParse() {
         //open .psx as an XML file and grab the path attribute from the document tag
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         //TODO: MAY BE PRONE TO XXE ATTACKS
@@ -95,6 +110,7 @@ public class UnzipFileSelectionController {
                 NodeList chunkList = docXML.getElementsByTagName("chunk");
                 String chunkZipPath;
                 chunkSelectionChoiceBox.getItems().clear();
+                chunkZipPathPairs.clear();
                 for(int i = 0; i < chunkList.getLength(); ++i) {//add all chunks to choice box
                     Node chunk = chunkList.item(i);
 
@@ -103,11 +119,12 @@ public class UnzipFileSelectionController {
 
                         //open doc.xml within each chunk and read the chunk's label attribute --> display it to user
                         chunkZipPath = chunkElement.getAttribute("path"); //gives xx/chunk.zip where xx is a number
-                        chunkZipPath = psxFilePath.substring(0, psxFilePath.length() - 4) + ".files\\" + chunkZipPath;//append this path to the psxFilePath (without that path's .psx)
+
+                        //append this path to the psxFilePath (without that path's .psx)
+                        chunkZipPath = psxFilePath.substring(0, psxFilePath.length() - 4) + ".files\\" + chunkZipPath;
 
                         Document chunkDocument = UnzipHelper.convertStringToDocument(
                                 UnzipHelper.unzipToString(chunkZipPath));//path --> XML as String --> XML document
-                        chunkDocument.getDocumentElement().normalize();
 
                         NodeList innerChunkList = chunkDocument.getElementsByTagName("chunk");
                         for(int j = 0; j < innerChunkList.getLength(); ++j) {
@@ -115,7 +132,9 @@ public class UnzipFileSelectionController {
 
                             if (innerChunk.getNodeType() == Node.ELEMENT_NODE) {
                                 Element innerChunkElement = (Element) innerChunk;
-                                chunkSelectionChoiceBox.getItems().add(innerChunkElement.getAttribute("label"));
+                                String chunkName = innerChunkElement.getAttribute("label");
+                                chunkSelectionChoiceBox.getItems().add(chunkName);
+                                chunkZipPathPairs.put(chunkName, chunkZipPath);
                             }
                         }
                     }
@@ -138,7 +157,7 @@ public class UnzipFileSelectionController {
         return file.exists() && file.getAbsolutePath().endsWith(".psx");
     }
 
-    public void selectOutputDirectory(ActionEvent actionEvent) {
+    public void selectOutputDirectory() {
         this.directoryChooser.setTitle("Choose an output directory");
 
         stage = (Stage) outputDirectoryPathTxtField.getScene().getWindow();
@@ -153,10 +172,23 @@ public class UnzipFileSelectionController {
         }
     }
 
-    public void selectChunk(ActionEvent actionEvent) {
+    public void selectChunk(ActionEvent actionEvent) throws IOException {
         //TODO: FULLY IMPLEMENT SELECTION
         //user selects a chunk to load --> treat that chunk's doc.xml as the camera's xml file
-        System.out.println(chunkSelectionChoiceBox.getValue());
+        String selectedChunkZip = chunkZipPathPairs.get(chunkSelectionChoiceBox.getValue());
+        Document selectedChunkXML = UnzipHelper.convertStringToDocument(
+                UnzipHelper.unzipToString(selectedChunkZip));//path --> XML as String --> XML document
+
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/menubar/ChunkViewer.fxml"));
+        root = fxmlLoader.load();
+        ChunkViewerController chunkViewerController = fxmlLoader.getController();
+        chunkViewerController.initializeChunkSelectionAndTreeView(selectedChunkXML, psxPathTxtField.getText());
+        stage = (Stage) ((javafx.scene.Node) actionEvent.getSource()).getScene().getWindow();
+        scene = new Scene(root);
+        stage.setScene(scene);
+        stage.show();
+
+
     }
 
     public void enterToRun(KeyEvent keyEvent) {//press the enter button while in the text field to unzip
