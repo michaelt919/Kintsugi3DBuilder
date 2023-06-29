@@ -24,8 +24,7 @@ import javax.imageio.ImageIO;
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.core.Context;
-import tetzlaff.gl.vecmath.DoubleVector3;
-import tetzlaff.gl.vecmath.DoubleVector4;
+import tetzlaff.gl.vecmath.*;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
 public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights
@@ -209,6 +208,12 @@ public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights
             SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(resources.geometry);
             exporter.setDefaultNames();
             exporter.addWeightImages(settings.basisCount, settings.isCombineWeights());
+
+            Matrix4 rotation = resources.viewSet.getCameraPose(resources.viewSet.getPrimaryViewIndex());
+            Vector3 translation = rotation.getUpperLeft3x3().times(resources.geometry.getCentroid().times(-1.f));
+            Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2), translation.asVector4(1.0f));
+            exporter.setTransform(transform);
+
             exporter.write(new File(settings.outputDirectory, "model.glb"));
             System.out.println("DONE!");
         } catch (IOException e)

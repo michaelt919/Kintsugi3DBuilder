@@ -58,7 +58,6 @@ public class SpecularFitSerializer
         // Loop over the index of each final image to export
         for (int i = 0; i < (basisCount + 3) / 4; i++)
         {
-            System.out.println(String.format("Building image index %d", i));
             BufferedImage weightImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
             int[] weightDataPacked = new int[width * height];
 
@@ -66,7 +65,6 @@ public class SpecularFitSerializer
             // i.e. 0,1,2,3 for image 0 and 4,5,6,7 for image 1
             for (int j = i * 4; j < (i + 1) * 4; j++)
             {
-                System.out.println(String.format("Building channel index %d", j));
                 int targetChannel = j % 4;
 
                 for (int p = 0; p < width * height; p++)

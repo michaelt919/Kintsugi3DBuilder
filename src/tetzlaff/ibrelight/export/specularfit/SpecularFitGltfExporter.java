@@ -12,7 +12,9 @@ import de.javagl.jgltf.model.io.v2.GltfAssetWriterV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetsV2;
 import de.javagl.jgltf.model.v2.MaterialModelV2;
 import tetzlaff.gl.util.VertexGeometry;
+import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.vecmath.Vector4;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -24,15 +26,18 @@ public class SpecularFitGltfExporter
 
     private final GltfAssetV2 asset;
 
+    private int modelNodeIndex = 0;
+
     private TextureInfo baseColorTexture, normalTexture, roughnessMetallicTexture;
 
     private TextureInfo diffuseTexture, specularTexture;
 
     GltfMaterialExtras extraData = new GltfMaterialExtras();
 
-    public SpecularFitGltfExporter(GltfAssetV2 glTfAsset)
+    public SpecularFitGltfExporter(GltfAssetV2 glTfAsset, int modelNodeIndex)
     {
         this.asset = glTfAsset;
+        this.modelNodeIndex = modelNodeIndex;
     }
 
     public void setBaseColorUri(String uri)
@@ -118,6 +123,35 @@ public class SpecularFitGltfExporter
             weights.addTexture(weightTexInfo);
         }
         extraData.setSpecularWeights(weights);
+    }
+
+    public void setTranslation(Vector3 translation)
+    {
+        GlTF gltf = asset.getGltf();
+        gltf.getNodes().get(modelNodeIndex).setTranslation(new float[]{translation.x, translation.y, translation.z});
+    }
+
+    public void setRotation(Vector4 quaternion)
+    {
+        GlTF gltf = asset.getGltf();
+        gltf.getNodes().get(modelNodeIndex).setRotation(new float[]{quaternion.x, quaternion.y, quaternion.z, quaternion.w});
+    }
+
+    public void setScale(Vector3 scale)
+    {
+        GlTF gltf = asset.getGltf();
+        gltf.getNodes().get(modelNodeIndex).setScale(new float[]{scale.x, scale.y, scale.z});
+    }
+
+    public void setTransform(Matrix4 transform)
+    {
+        GlTF gltf = asset.getGltf();
+        gltf.getNodes().get(modelNodeIndex).setMatrix(new float[]{
+                transform.get(0,0), transform.get(1,0), transform.get(2,0), transform.get(3,0),
+                transform.get(0,1), transform.get(1,1), transform.get(2,1), transform.get(3,1),
+                transform.get(0,2), transform.get(1,2), transform.get(2,2), transform.get(3,2),
+                transform.get(0,3), transform.get(1,3), transform.get(2,3), transform.get(3,3),
+        });
     }
 
     public void write(File file) throws IOException
@@ -216,10 +250,6 @@ public class SpecularFitGltfExporter
         DefaultMeshModel mesh = new DefaultMeshModel();
         MeshPrimitiveBuilder primitiveBuilder = MeshPrimitiveBuilder.create();
 
-        // Set the translation of the glTF node to the inverse of the centroid, centering the model
-        Vector3 ctr = geometry.getCentroid().times(-1.f);
-        node.setTranslation(new float[]{ctr.x, ctr.y, ctr.z});
-
         // Add positions, normals and texcords by buffer
         primitiveBuilder.addPositions3D(geometry.getVertices().getBuffer().asFloatBuffer());
 
@@ -265,6 +295,6 @@ public class SpecularFitGltfExporter
         // Build model and convert to embedded asset
         GltfAssetV2 gltfAsset = GltfAssetsV2.createEmbedded(builder.build());
 
-        return new SpecularFitGltfExporter(gltfAsset);
+        return new SpecularFitGltfExporter(gltfAsset, scene.getNodeModels().size() - 1);
     }
 }
