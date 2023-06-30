@@ -1,5 +1,6 @@
 package tetzlaff.gl.util;
 
+import javafx.scene.image.Image;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
@@ -11,9 +12,13 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class UnzipHelper {
+    static final String[] validExtensions = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
+
     private UnzipHelper() {
     }
 
@@ -43,8 +48,7 @@ public class UnzipHelper {
         DocumentBuilder builder;
         try {
             builder = factory.newDocumentBuilder();
-            Document doc = builder.parse(new InputSource(new StringReader(xmlStr)));
-            return doc;
+            return builder.parse(new InputSource(new StringReader(xmlStr)));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -67,4 +71,44 @@ public class UnzipHelper {
         return null;
     }
 
+    public static ArrayList<Image> unzipImages(String zipFilePath){
+        ArrayList<Image> images = new ArrayList<>();
+
+        try (ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFilePath))) {
+            ZipEntry entry;
+            while ((entry = zipInputStream.getNextEntry()) != null) {
+                String entryName = entry.getName();
+                if (isValidImageType(entryName)) {
+                    Image imageData = readImageData(zipInputStream);
+                    images.add(imageData);
+                }
+                zipInputStream.closeEntry();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Total images extracted: " + images.size());
+        return images;
+    }
+
+    private static Image readImageData(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+            outputStream.write(buffer, 0, bytesRead);
+        }
+        ByteArrayInputStream imageInputStream = new ByteArrayInputStream(outputStream.toByteArray());
+        return new Image(imageInputStream);
+    }
+
+    private static boolean isValidImageType(String path) {
+        for (String extension : validExtensions) {
+            if (path.matches("." + extension)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
