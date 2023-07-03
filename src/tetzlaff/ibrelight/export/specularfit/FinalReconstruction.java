@@ -81,6 +81,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
             program ->
             {
                 specularFit.getBasisResources().useWithShaderProgram(program);
+                specularFit.getBasisWeightResources().useWithShaderProgram(program);
                 program.setTexture("normalEstimate", specularFit.getNormalMap());
                 program.setTexture("specularEstimate", specularFit.getSpecularReflectivityMap());
                 program.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());

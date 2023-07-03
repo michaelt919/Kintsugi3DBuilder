@@ -54,9 +54,10 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
             .createFramebufferObject();
     }
 
-    public void createImages(SpecularFitFromOptimization<ContextType> specularFit, File outputDirectory) throws IOException
+    public void createImages(SpecularResources<ContextType> specularFit, File outputDirectory) throws IOException
     {
-        program.setTexture("basisFunctions", specularFit.getBasisResources().basisMaps);
+        specularFit.getBasisResources().useWithShaderProgram(program);
+        specularFit.getBasisWeightResources().useWithShaderProgram(program);
 
         // Save basis functions in image format.
         for (int i = 0; i < settings.getBasisCount(); i++)

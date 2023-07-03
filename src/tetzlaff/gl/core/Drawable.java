@@ -24,7 +24,7 @@ import tetzlaff.gl.vecmath.*;
  *
  * @param <ContextType> The type of the GL context that the Drawable is associated with.
  */
-public interface Drawable<ContextType extends Context<ContextType>> extends Contextual<ContextType>
+public interface Drawable<ContextType extends Context<ContextType>> extends ContextBound<ContextType>
 {
     /**
      * Gets the shader program that will be used by this drawable object.

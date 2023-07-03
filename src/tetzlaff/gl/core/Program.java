@@ -23,7 +23,7 @@ import tetzlaff.gl.vecmath.*;
  *
  * @param <ContextType> The type of the GL context that the program is associated with.
  */
-public interface Program<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
+public interface Program<ContextType extends Context<ContextType>> extends Resource, ContextBound<ContextType>
 {
     /**
      * Checks whether a given preprocessor #define has been specified to be injected into the code.

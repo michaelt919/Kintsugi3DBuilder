@@ -49,6 +49,7 @@ public class SpecularFitFromPriorSolution<ContextType extends Context<ContextTyp
             .createTexture();
 
         getBasisResources().loadFromPriorSolution(priorSolutionDirectory);
+        getBasisWeightResources().loadFromPriorSolution(priorSolutionDirectory);
     }
 
     @Override

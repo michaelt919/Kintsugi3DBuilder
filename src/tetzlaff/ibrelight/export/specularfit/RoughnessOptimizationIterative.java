@@ -29,23 +29,23 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
 
     /**
      *
-     * @param basisResources Used for the initial estimate
+     * @param basisWeightResources Used for the initial estimate
      * @throws FileNotFoundException
      */
-    public RoughnessOptimizationIterative(
-        BasisResources<ContextType> basisResources, TextureFitSettings settings, Supplier<Texture2D<ContextType>> getDiffuseTexture,
-        double convergenceTolerance, int unsuccessfulLMIterationsAllowed)
+    public RoughnessOptimizationIterative(BasisResources<ContextType> basisResources,
+        BasisWeightResources<ContextType> basisWeightResources, TextureFitSettings settings,
+        Supplier<Texture2D<ContextType>> getDiffuseTexture, double convergenceTolerance, int unsuccessfulLMIterationsAllowed)
             throws FileNotFoundException
     {
         // Inherit from base class to facilitate initial fit.
-        super(basisResources, settings.gamma);
+        super(basisResources, basisWeightResources, settings.gamma);
         this.settings = settings;
         this.convergenceTolerance = convergenceTolerance;
         this.unsuccessfulLMIterationsAllowed = unsuccessfulLMIterationsAllowed;
 
         roughnessOptimization = new ShaderBasedOptimization<>(
-            getRoughnessEstimationProgramBuilder(basisResources.context),
-                basisResources.context.buildFramebufferObject(
+            getRoughnessEstimationProgramBuilder(basisResources.getContext()),
+            basisResources.getContext().buildFramebufferObject(
                     settings.width, settings.height)
                 // Reflectivity map
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F)
@@ -57,7 +57,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
                 .addColorAttachment(ColorFormat.RG32F),
             program -> // Just use the rectangle as geometry
             {
-                Drawable<ContextType> drawable = basisResources.context.createDrawable(program);
+                Drawable<ContextType> drawable = basisResources.getContext().createDrawable(program);
                 drawable.addVertexBuffer("position", rect);
                 drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
                 return drawable;

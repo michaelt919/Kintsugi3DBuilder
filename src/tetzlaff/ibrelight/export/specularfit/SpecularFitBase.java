@@ -20,17 +20,19 @@ import tetzlaff.ibrelight.core.TextureFitSettings;
 public abstract class SpecularFitBase<ContextType extends Context<ContextType>> implements SpecularResources<ContextType>
 {
     private final BasisResources<ContextType> basisResources;
+    private final BasisWeightResources<ContextType> basisWeightResources;
 
     private final RoughnessOptimization<ContextType> roughnessOptimization;
 
     protected SpecularFitBase(ContextType context, TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings) throws FileNotFoundException
     {
         // Textures calculated on CPU and passed to GPU (not framebuffers): basis functions & weights
-        basisResources = new BasisResources<>(context, textureFitSettings.width, textureFitSettings.height, specularBasisSettings);
+        basisResources = new BasisResources<>(context, specularBasisSettings);
+        basisWeightResources = new BasisWeightResources<>(context, textureFitSettings.width, textureFitSettings.height, specularBasisSettings.getBasisCount());
 
         // Specular roughness / reflectivity module that manages its own resources
         roughnessOptimization =
-            new RoughnessOptimizationSimple<>(basisResources, textureFitSettings);
+            new RoughnessOptimizationSimple<>(basisResources, basisWeightResources, textureFitSettings);
             //new RoughnessOptimizationIterative<>(context, basisResources, this::getDiffuseMap, settings);
         roughnessOptimization.clear();
     }
@@ -39,6 +41,7 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
     public void close()
     {
         basisResources.close();
+        basisWeightResources.close();
         roughnessOptimization.close();
     }
 
@@ -55,12 +58,21 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
     }
 
     /**
-     * Basis functions and weights (originally calculated on the CPU)
+     * Basis functions (originally calculated on the CPU)
      */
     @Override
     public final BasisResources<ContextType> getBasisResources()
     {
         return basisResources;
+    }
+
+    /**
+     * Basis weights (originally calculated on the CPU)
+     */
+    @Override
+    public final BasisWeightResources<ContextType> getBasisWeightResources()
+    {
+        return basisWeightResources;
     }
 
     /**

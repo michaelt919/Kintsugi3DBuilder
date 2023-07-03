@@ -27,7 +27,7 @@ import java.nio.ShortBuffer;
  *
  * @param <ContextType> The type of the GL context that the framebuffer is associated with.
  */
-public interface Framebuffer<ContextType extends Context<ContextType>> extends Contextual<ContextType>
+public interface Framebuffer<ContextType extends Context<ContextType>> extends ContextBound<ContextType>
 {
     /**
      * Gets a representation of the contents of this framebuffer fr reading.

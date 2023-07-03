@@ -13,7 +13,7 @@ package tetzlaff.gl.geometry;
 
 import tetzlaff.gl.core.*;
 
-public interface GeometryTextures<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
+public interface GeometryTextures<ContextType extends Context<ContextType>> extends Resource, ContextBound<ContextType>
 {
     int getWidth();
     int getHeight();

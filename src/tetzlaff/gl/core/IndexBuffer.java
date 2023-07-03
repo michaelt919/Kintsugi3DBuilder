@@ -18,7 +18,7 @@ package tetzlaff.gl.core;
  *
  * @param <ContextType> The type of the GL context that the index buffer object is associated with.
  */
-public interface IndexBuffer<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
+public interface IndexBuffer<ContextType extends Context<ContextType>> extends Resource, ContextBound<ContextType>
 {
     /**
      * Gets the number of indices in the buffer.

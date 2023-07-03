@@ -284,6 +284,7 @@ public class SpecularOptimization
     {
         Drawable<ContextType> errorCalcDrawable = specularFit.getResources().createDrawable(errorCalcProgram);
         specularFit.getBasisResources().useWithShaderProgram(errorCalcProgram);
+        specularFit.getBasisWeightResources().useWithShaderProgram(errorCalcProgram);
         errorCalcProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
         errorCalcProgram.setUniform("errorGamma", 1.0f);
         return errorCalcDrawable;

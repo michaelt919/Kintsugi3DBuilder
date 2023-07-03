@@ -17,7 +17,7 @@ package tetzlaff.gl.core;
  * called directly, but can be invoked by Drawable instances or the framebuffer itself to prepare for draw commands.
  * @param <ContextType>
  */
-public interface FramebufferDrawContents<ContextType extends Context<ContextType>> extends Contextual<ContextType>
+public interface FramebufferDrawContents<ContextType extends Context<ContextType>> extends ContextBound<ContextType>
 {
     /**
      * Gets the size of the framebuffer for which these are the contents.

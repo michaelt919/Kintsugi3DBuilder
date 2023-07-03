@@ -72,6 +72,7 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
                 Drawable<ContextType> drawable = resources.createDrawable(estimationProgram);
                 programFactory.setupShaderProgram(resources, estimationProgram);
                 getBasisResources().useWithShaderProgram(estimationProgram);
+                getBasisWeightResources().useWithShaderProgram(estimationProgram);
                 return drawable;
             },
             textureFitSettings, normalOptimizationSettings);
@@ -191,7 +192,7 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
 
             // Prepare for error calculation and then normal optimization on the GPU.
             // Weight maps will have changed.
-            getBasisResources().updateFromSolution(specularDecomposition);
+            getBasisWeightResources().updateFromSolution(specularDecomposition);
 
             // Calculate the error in preparation for normal estimation.
             errorCalculator.update();
@@ -251,6 +252,7 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
 
                 // Log error in debug mode.
                 getBasisResources().updateFromSolution(specularDecomposition);
+                getBasisWeightResources().updateFromSolution(specularDecomposition);
                 System.out.println("Calculating error...");
                 errorCalculator.update();
                 logError(errorCalculator.getReport());

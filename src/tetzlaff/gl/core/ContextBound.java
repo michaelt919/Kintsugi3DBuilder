@@ -17,7 +17,8 @@ package tetzlaff.gl.core;
  *
  * @param <ContextType> The type of the Context.
  */
-public interface Contextual<ContextType extends Context<ContextType>>
+@FunctionalInterface
+public interface ContextBound<ContextType extends Context<ContextType>>
 {
     /**
      * Gets the associated GL context.

@@ -71,6 +71,7 @@ public final class SpecularFitFinalizer
 
             // Calculate the final RMSE from the raw result
             specularFit.getBasisResources().updateFromSolution(solution);
+            specularFit.getBasisWeightResources().updateFromSolution(solution);
             errorCalculator.getProgram().setTexture("normalEstimate", specularFit.getNormalMap());
 
             errorCalculator.update();
@@ -84,7 +85,7 @@ public final class SpecularFitFinalizer
             solution.saveDiffuseMap(textureFitSettings.gamma, outputDirectory);
 
             // Update the GPU resources with the hole-filled weight maps.
-            specularFit.getBasisResources().updateFromSolution(solution);
+            specularFit.getBasisWeightResources().updateFromSolution(solution);
 
             // Fit specular textures after filling holes
             specularFit.getRoughnessOptimization().execute();
@@ -102,6 +103,7 @@ public final class SpecularFitFinalizer
 
             Drawable<ContextType> finalErrorCalcDrawable = resources.createDrawable(finalErrorCalcProgram);
             specularFit.getBasisResources().useWithShaderProgram(finalErrorCalcProgram);
+            specularFit.getBasisWeightResources().useWithShaderProgram(finalErrorCalcProgram);
             finalErrorCalcProgram.setTexture("normalEstimate", specularFit.getNormalMap());
             finalErrorCalcProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
             finalErrorCalcProgram.setTexture("diffuseEstimate", specularFit.getDiffuseMap());

@@ -1,7 +1,6 @@
 package tetzlaff.ibrelight.export.specularfit;
 
 import tetzlaff.gl.core.*;
-import tetzlaff.ibrelight.core.TextureFitSettings;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -14,25 +13,26 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
     protected final VertexBuffer<ContextType> rect;
     protected final Drawable<ContextType> specularRoughnessFitDrawable;
 
-    protected RoughnessOptimizationBase(BasisResources<ContextType> resources, float gamma)
+    protected RoughnessOptimizationBase(BasisResources<ContextType> basisResources, BasisWeightResources<ContextType> weightResources, float gamma)
         throws FileNotFoundException
     {
         // Fit specular parameters from weighted basis functions
-        specularRoughnessFitProgram = resources.context.getShaderProgramBuilder()
+        specularRoughnessFitProgram = basisResources.getContext().getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/specularRoughnessFitNew.frag"))
-                .define("BASIS_COUNT", resources.getSpecularBasisSettings().getBasisCount())
-                .define("MICROFACET_DISTRIBUTION_RESOLUTION", resources.getSpecularBasisSettings().getMicrofacetDistributionResolution())
+                .define("BASIS_COUNT", basisResources.getSpecularBasisSettings().getBasisCount())
+                .define("MICROFACET_DISTRIBUTION_RESOLUTION", basisResources.getSpecularBasisSettings().getMicrofacetDistributionResolution())
                 .createProgram();
 
         // Create basic rectangle vertex buffer
-        rect = resources.context.createRectangle();
-        specularRoughnessFitDrawable = resources.context.createDrawable(specularRoughnessFitProgram);
+        rect = basisResources.getContext().createRectangle();
+        specularRoughnessFitDrawable = basisResources.getContext().createDrawable(specularRoughnessFitProgram);
         specularRoughnessFitDrawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
 
         // Set up shader program
-        specularRoughnessFitDrawable.addVertexBuffer("position", rect);
-        resources.useWithShaderProgram(specularRoughnessFitProgram);
+        specularRoughnessFitDrawable.addVertexBuffer("position", rect);;
+        basisResources.useWithShaderProgram(specularRoughnessFitProgram);
+        weightResources.useWithShaderProgram(specularRoughnessFitProgram);
         specularRoughnessFitProgram.setUniform("gamma", gamma);
         specularRoughnessFitProgram.setUniform("fittingGamma", 1.0f);
 
