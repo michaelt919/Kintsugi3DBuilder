@@ -24,6 +24,8 @@ public abstract class WindowContextBase<ContextType extends WindowContextBase<Co
 {
     private final long handle;
 
+    private GLCapabilities capabilities;
+
     protected WindowContextBase(long handle)
     {
         this.handle = handle;
@@ -33,7 +35,11 @@ public abstract class WindowContextBase<ContextType extends WindowContextBase<Co
     public void makeContextCurrent()
     {
         glfwMakeContextCurrent(handle);
-        GL.createCapabilities(false);
+
+        if (capabilities == null)
+        {
+            capabilities = GL.createCapabilities(false);
+        }
     }
 
     public void swapDefaultFramebuffer()
