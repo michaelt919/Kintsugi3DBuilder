@@ -33,7 +33,7 @@ public class BRDFReconstruction
         matrixSize = this.settings.getBasisCount() * (this.settings.getMicrofacetDistributionResolution() + 1);
     }
 
-    public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularDecomposition solution)
+    public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularDecompositionFromScratch solution)
     {
         System.out.println("Building reflectance fitting matrix...");
         MatrixSystem system = buildReflectanceMatrix(viewStream, solution);

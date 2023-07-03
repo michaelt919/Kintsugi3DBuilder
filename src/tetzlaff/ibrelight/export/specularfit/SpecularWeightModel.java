@@ -78,24 +78,24 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
             {
                 return new DoubleVector3(
                     solution.getDiffuseAlbedo(b).x / PI +
-                        (solution.getSpecularRed().get(m1, b) * (1 - t)
-                            + solution.getSpecularRed().get(m2, b) * t) * geomRatio,
+                        (solution.evaluateRed(b, m1) * (1 - t)
+                            + solution.evaluateRed(b, m2) * t) * geomRatio,
                     solution.getDiffuseAlbedo(b).y / PI +
-                        (solution.getSpecularGreen().get(m1, b) * (1 - t)
-                            + solution.getSpecularGreen().get(m2, b) * t) * geomRatio,
+                        (solution.evaluateGreen(b, m1) * (1 - t)
+                            + solution.evaluateGreen(b, m2) * t) * geomRatio,
                     solution.getDiffuseAlbedo(b).z / PI +
-                        (solution.getSpecularBlue().get(m1, b) * (1 - t)
-                            + solution.getSpecularBlue().get(m2, b) * t) * geomRatio);
+                        (solution.evaluateBlue(b, m1) * (1 - t)
+                            + solution.evaluateBlue(b, m2) * t) * geomRatio);
             }
             else if (specularBasisSettings.getMetallicity() > 0.0f)
             {
                 return new DoubleVector3(
                     solution.getDiffuseAlbedo(b).x / PI +
-                        solution.getSpecularRed().get(specularBasisSettings.getMicrofacetDistributionResolution(), b) * geomRatio,
+                        solution.evaluateRed(b, specularBasisSettings.getMicrofacetDistributionResolution()) * geomRatio,
                     solution.getDiffuseAlbedo(b).y / PI +
-                        solution.getSpecularGreen().get(specularBasisSettings.getMicrofacetDistributionResolution(), b) * geomRatio,
+                        solution.evaluateGreen(b, specularBasisSettings.getMicrofacetDistributionResolution()) * geomRatio,
                     solution.getDiffuseAlbedo(b).z / PI +
-                        solution.getSpecularBlue().get(specularBasisSettings.getMicrofacetDistributionResolution(), b) * geomRatio);
+                        solution.evaluateBlue(b, specularBasisSettings.getMicrofacetDistributionResolution()) * geomRatio);
             }
             else // if metallicity == 0, then the MDF should be 0 here
             {

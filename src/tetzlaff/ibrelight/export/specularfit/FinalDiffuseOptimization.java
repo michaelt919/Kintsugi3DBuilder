@@ -48,7 +48,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         drawable = resources.createDrawable(estimationProgram);
     }
 
-    public void execute(SpecularFitBase<ContextType> specularFit)
+    public void execute(SpecularResources<ContextType> specularFit)
     {
         // Set up diffuse estimation shader program
         specularFit.getBasisResources().useWithShaderProgram(estimationProgram);

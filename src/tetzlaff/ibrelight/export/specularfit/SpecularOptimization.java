@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.function.BiConsumer;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
@@ -88,15 +89,14 @@ public class SpecularOptimization
     }
 
     public <ContextType extends Context<ContextType>> SpecularResources<ContextType> createFit(ImageCache<ContextType> cache)
-    throws IOException
+        throws IOException
     {
         Instant start = Instant.now();
 
         SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(
-                settings.getIbrSettings(), settings.getSpecularBasisSettings());
+            settings.getIbrSettings(), settings.getSpecularBasisSettings());
 
         // Create space for the solution.
-        SpecularDecomposition sampledDecomposition = null;
 
         try (IBRResourcesTextureSpace<ContextType> sampled = cache.createSampledResources())
         {
@@ -105,12 +105,8 @@ public class SpecularOptimization
             // (should be the case already from generating the cache, but good to do just in case)
             context.getState().disableBackFaceCulling();
 
-            // Calculate reasonable image resolution for error calculation
-            int imageWidth = determineImageWidth(sampled.getViewSet());
-            int imageHeight = determineImageHeight(sampled.getViewSet());
-
             TextureFitSettings sampledSettings = sampled.getTextureFitSettings(settings.getTextureFitSettings().gamma);
-            sampledDecomposition = new SpecularDecomposition(sampledSettings, settings.getSpecularBasisSettings());
+            SpecularDecompositionFromScratch sampledDecomposition = new SpecularDecompositionFromScratch(sampledSettings, settings.getSpecularBasisSettings());
 
             // Initialize weights using K-means.
             SpecularFitInitializer<ContextType> initializer = new SpecularFitInitializer<>(sampled, settings.getSpecularBasisSettings());
@@ -121,32 +117,51 @@ public class SpecularOptimization
                 initializer.saveDebugImage(sampledDecomposition, settings.getOutputDirectory());
             }
 
-            // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.
-            SpecularFitFromOptimization<ContextType> sampledFit = new SpecularFitFromOptimization<>(sampled, programFactory,
-                sampledSettings, settings.getSpecularBasisSettings(), settings.getNormalOptimizationSettings());
+            // TODO temp for testing
+            SpecularFitFromOptimization<ContextType> specularFit;
 
             try
             (
-                // Reflectance stream: includes a shader program and a framebuffer object for extracting reflectance data from images.
-                GraphicsStreamResource<ContextType> sampledStream = sampled.streamFactory().streamAsResource(
-                    getReflectanceProgramBuilder(sampled, programFactory),
-                    context.buildFramebufferObject(sampledSettings.width, sampledSettings.height)
-                        .addColorAttachment(ColorFormat.RGBA32F)
-                        .addColorAttachment(ColorFormat.RGBA32F));
-
-                ShaderBasedErrorCalculator<ContextType> sampledErrorCalculator = ShaderBasedErrorCalculator.create(context,
-                    () -> createErrorCalcProgram(sampled, programFactory),
-                    program -> createErrorCalcDrawable(sampledFit, program),
-                    imageWidth, imageHeight);
+                // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.
+                SpecularFitFromOptimization<ContextType> sampledFit = SpecularFitFromOptimization.create(
+                    sampled, programFactory, sampledSettings, settings.getSpecularBasisSettings(), settings.getNormalOptimizationSettings())
             )
             {
-                sampledFit.optimize(
-                    sampledDecomposition, sampledStream, settings.getWeightBlockSize(), settings.getConvergenceTolerance(),
-                    sampledErrorCalculator, DEBUG ? settings.getOutputDirectory() : null);
+                optimizeTexSpaceFit(sampled, sampledFit,
+                    (stream, errorCalculator) -> sampledFit.optimizeFromScratch(
+                        sampledDecomposition, stream, settings.getConvergenceTolerance(),
+                        errorCalculator, DEBUG ? settings.getOutputDirectory() : null));
+
+                try(TextureBlockResourceFactory<ContextType> blockResourceFactory = cache.createBlockResourceFactory())
+                {
+                    // Optimize each block of the texture map at full resolution.
+                    for (int i = 0; i < cache.getSettings().getTextureSubdiv(); i++)
+                    {
+                        for (int j = 0; j < cache.getSettings().getTextureSubdiv(); j++)
+                        {
+//                            try(IBRResourcesTextureSpace<ContextType> blockResources = blockResourceFactory.createBlockResources(i, j))
+//                            {
+//                                TextureFitSettings blockSettings = blockResources.getTextureFitSettings(settings.getTextureFitSettings().gamma);
+//                                try(SpecularFitFromOptimization<ContextType> blockOptimization = SpecularFitFromOptimization.create(
+//                                    blockResources, programFactory, blockSettings, settings.getSpecularBasisSettings(),
+//                                    settings.getNormalOptimizationSettings()))
+//                                {
+//                                    SpecularDecomposition blockDecomposition = new SpecularDecompositionFromExistingBasis(blockSettings, sampledDecomposition);
+//                                    optimizeTexSpaceFit(blockResources, blockOptimization,
+//                                        (stream, errorCalculator) -> blockOptimization.optimizeFromExistingBasis(
+//                                            blockDecomposition, stream, settings.getConvergenceTolerance(),
+//                                            errorCalculator, DEBUG ? settings.getOutputDirectory() : null));
+//                                }
+//                            }
+                        }
+                    }
+                }
+
+                // TODO temp for testing
+                specularFit = sampledFit;
             }
 
             // TODO temp for testing
-            SpecularFitFromOptimization<ContextType> specularFit = sampledFit;
             IBRResources<ContextType> resources = sampled;
             SpecularDecomposition specularDecomposition = sampledDecomposition;
 
@@ -195,8 +210,8 @@ public class SpecularOptimization
             }
 
             // Calculate reasonable image resolution for error calculation
-            imageWidth = determineImageWidth(resources.getViewSet());
-            imageHeight = determineImageHeight(resources.getViewSet());
+            int imageWidth = determineImageWidth(resources.getViewSet());
+            int imageHeight = determineImageHeight(resources.getViewSet());
 
             try (ShaderBasedErrorCalculator<ContextType> errorCalculator = ShaderBasedErrorCalculator.create(cache.getContext(),
                     () -> createErrorCalcProgram(resources, programFactory), program -> createErrorCalcDrawable(specularFit, program),
@@ -219,6 +234,36 @@ public class SpecularOptimization
                 albedoORM.saveTextures(settings.getOutputDirectory());
                 return specularFit;
             }
+        }
+    }
+
+    private <ContextType extends Context<ContextType>> void optimizeTexSpaceFit(
+        IBRResourcesTextureSpace<ContextType> resources,
+        SpecularFitFromOptimization<ContextType> specularFit,
+        BiConsumer<GraphicsStreamResource<ContextType>, ShaderBasedErrorCalculator<ContextType>> optimizeFunc) throws IOException
+    {
+        SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(
+            settings.getIbrSettings(), settings.getSpecularBasisSettings());
+
+        // Create new texture fit settings with a resolution that matches the IBRResources, but the same gamma as specified by the user.
+        TextureFitSettings texFitSettings = resources.getTextureFitSettings(settings.getTextureFitSettings().gamma);
+
+        try
+        (
+            // Reflectance stream: includes a shader program and a framebuffer object for extracting reflectance data from images.
+            GraphicsStreamResource<ContextType> stream = resources.streamFactory().streamAsResource(
+                getReflectanceProgramBuilder(resources, programFactory),
+                resources.getContext().buildFramebufferObject(texFitSettings.width, texFitSettings.height)
+                    .addColorAttachment(ColorFormat.RGBA32F)
+                    .addColorAttachment(ColorFormat.RGBA32F));
+
+            ShaderBasedErrorCalculator<ContextType> errorCalculator = ShaderBasedErrorCalculator.create(resources.getContext(),
+                () -> createErrorCalcProgram(resources, programFactory),
+                program -> createErrorCalcDrawable(specularFit, program),
+                texFitSettings.width, texFitSettings.height);
+        )
+        {
+            optimizeFunc.accept(stream, errorCalculator);
         }
     }
 

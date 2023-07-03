@@ -19,10 +19,10 @@ import tetzlaff.optimization.NonNegativeWeightOptimization;
 
 public class SpecularWeightOptimization
 {
-
     private final NonNegativeWeightOptimization base;
     private final TextureFitSettings textureFitSettings;
     private final SpecularBasisSettings specularBasisSettings;
+
     private final int weightBlockSize;
 
     public SpecularWeightOptimization(TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings,
@@ -33,6 +33,17 @@ public class SpecularWeightOptimization
         this.weightBlockSize = weightBlockSize;
         base = new NonNegativeWeightOptimization(weightBlockSize, this.specularBasisSettings.getBasisCount(),
             Collections.singletonList(b -> 1.0), Collections.singletonList(1.0)); // Equality constraint to ensure that the weights sum up to 1.0.
+    }
+
+    public SpecularWeightOptimization(TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings)
+    {
+        // Default weight block size (only one weight block)
+        this(textureFitSettings, specularBasisSettings, textureFitSettings.width * textureFitSettings.height);
+    }
+
+    public int getWeightBlockSize()
+    {
+        return weightBlockSize;
     }
 
     public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularDecomposition solution, int pStart)
@@ -77,5 +88,11 @@ public class SpecularWeightOptimization
         }
 
         System.out.println("DONE!");
+    }
+
+    public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularDecomposition solution)
+    {
+        // Start at p=0 by default
+        execute(viewStream, solution, 0);
     }
 }

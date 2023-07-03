@@ -33,8 +33,7 @@ import tetzlaff.util.ColorList;
  * A class that bundles all of the GPU resources for representing a final specular fit solution.
  * @param <ContextType>
  */
-@SuppressWarnings("PackageVisibleField")
-public class SpecularFitFromOptimization<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
+public final class SpecularFitFromOptimization<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
 {
     private final ContextType context;
 
@@ -49,15 +48,17 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
 
     private final NormalOptimization<ContextType> normalOptimization;
 
-    public SpecularFitFromOptimization(IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
-        TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings, NormalOptimizationSettings normalOptimizationSettings)
+    private SpecularFitFromOptimization(
+        IBRResources<ContextType> resources, BasisResources<ContextType> basisResources, boolean basisResourcesOwned,
+        SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings textureFitSettings,
+        NormalOptimizationSettings normalOptimizationSettings)
         throws FileNotFoundException
     {
-        super(resources.getContext(), textureFitSettings, specularBasisSettings);
+        super(basisResources, basisResourcesOwned, textureFitSettings);
         this.context = resources.getContext();
         this.resources = resources;
         this.textureFitSettings = textureFitSettings;
-        this.specularBasisSettings = specularBasisSettings;
+        this.specularBasisSettings = basisResources.getSpecularBasisSettings();
         this.setupShaderProgram = program -> programFactory.setupShaderProgram(resources, program);
 
         // Final diffuse estimation
@@ -78,6 +79,16 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
             textureFitSettings, normalOptimizationSettings);
     }
 
+    public static <ContextType extends Context<ContextType>> SpecularFitFromOptimization<ContextType> create(
+        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings textureFitSettings,
+        SpecularBasisSettings specularBasisSettings, NormalOptimizationSettings normalOptimizationSettings)
+        throws FileNotFoundException
+    {
+        return new SpecularFitFromOptimization<>(resources,
+            new BasisResources<>(resources.getContext(), specularBasisSettings), true,
+            programFactory, textureFitSettings, normalOptimizationSettings);
+    }
+
     public IBRResources<ContextType> getResources()
     {
         return resources;
@@ -93,18 +104,137 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
         return specularBasisSettings;
     }
 
-    void optimize(SpecularDecomposition specularDecomposition,
-        GraphicsStreamResource<ContextType> reflectanceStream, int weightBlockSize, double convergenceTolerance,
-        ShaderBasedErrorCalculator<ContextType> errorCalculator, File debugDirectory) throws IOException
+    private void optimize(Runnable iteration, double convergenceTolerance, ShaderBasedErrorCalculator<ContextType> errorCalculator)
+    {
+        // Track how the error improves over iterations of the whole algorithm.
+        double previousIterationError;
+
+        do
+        {
+            previousIterationError = errorCalculator.getReport().getError();
+            iteration.run();
+        }
+        while ((specularBasisSettings.getBasisCount() > 1 || normalOptimization.isNormalRefinementEnabled()) &&
+            // Iteration not necessary if basisCount is 1 and normal refinement is off.
+            previousIterationError - errorCalculator.getReport().getError() > convergenceTolerance);
+    }
+
+    void optimizeFromExistingBasis(SpecularDecomposition specularDecomposition,
+        GraphicsStreamResource<ContextType> reflectanceStream, double convergenceTolerance,
+        ShaderBasedErrorCalculator<ContextType> errorCalculator, File debugDirectory)
+    {
+        prepareForOptimization(reflectanceStream);
+
+        // Track how the error improves over iterations of the whole algorithm.
+        SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(textureFitSettings, specularBasisSettings);
+
+        // Run once just in case
+        getBasisResources().updateFromSolution(specularDecomposition);
+
+        optimize(
+            () ->
+            {
+                // Use the current front normal buffer for extracting reflectance information.
+                reflectanceStream.getProgram().setTexture("normalEstimate", getNormalMap());
+
+                weightAndNormalIteration(specularDecomposition, reflectanceStream, weightOptimization,
+                    convergenceTolerance, errorCalculator, debugDirectory);
+            },
+            convergenceTolerance, errorCalculator);
+    }
+
+    void optimizeFromScratch(SpecularDecompositionFromScratch specularDecomposition,
+        GraphicsStreamResource<ContextType> reflectanceStream, double convergenceTolerance,
+        ShaderBasedErrorCalculator<ContextType> errorCalculator, File debugDirectory)
+    {
+        prepareForOptimization(reflectanceStream);
+
+        // Track how the error improves over iterations of the whole algorithm.
+        SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(textureFitSettings, specularBasisSettings);
+
+        // Instantiate once so that the memory buffers can be reused.
+        GraphicsStream<ColorList[]> reflectanceStreamParallel = reflectanceStream.parallel();
+
+        optimize(
+            () ->
+            {
+                // Use the current front normal buffer for extracting reflectance information.
+                reflectanceStream.getProgram().setTexture("normalEstimate", getNormalMap());
+
+                basisOptimizationIteration(specularDecomposition, reflectanceStreamParallel, errorCalculator, debugDirectory);
+                getBasisResources().updateFromSolution(specularDecomposition);
+
+                weightAndNormalIteration(specularDecomposition, reflectanceStream, weightOptimization,
+                    convergenceTolerance, errorCalculator, debugDirectory);
+            },
+            convergenceTolerance, errorCalculator);
+    }
+
+    private void weightAndNormalIteration(SpecularDecomposition specularDecomposition, GraphicsStream<ColorList[]> reflectanceStream,
+        SpecularWeightOptimization weightOptimization, double convergenceTolerance, ShaderBasedErrorCalculator<ContextType> errorCalculator,
+        File debugDirectory)
+    {
+        if (specularBasisSettings.getBasisCount() > 1)
+        {
+            weightOptimizationIteration(specularDecomposition, reflectanceStream, weightOptimization, debugDirectory);
+        }
+
+        // Prepare for error calculation and then normal optimization on the GPU.
+        // Weight maps will have changed.
+        // TODO: do we need to do this when basis count == 1?  Not sure where they're initialized otherwise.
+        getBasisWeightResources().updateFromSolution(specularDecomposition);
+
+        // Use the current front normal buffer for calculating error.
+        errorCalculator.getProgram().setTexture("normalEstimate", getNormalMap());
+        calculateError(errorCalculator);
+
+        if (normalOptimization.isNormalRefinementEnabled())
+        {
+            normalOptimizationIteration(convergenceTolerance, errorCalculator, debugDirectory);
+        }
+
+        // Estimate specular roughness and reflectivity.
+        // This can cause error to increase but it's unclear if that poses a problem for convergence.
+        getRoughnessOptimization().execute();
+
+        if (SpecularOptimization.DEBUG)
+        {
+            getRoughnessOptimization().saveTextures(debugDirectory);
+
+            // Log error in debug mode.
+            calculateError(errorCalculator);
+        }
+    }
+
+    private void prepareForOptimization(GraphicsStreamResource<ContextType> reflectanceStream)
     {
         // Setup reflectance extraction program
         setupShaderProgram.accept(reflectanceStream.getProgram());
 
         reflectanceStream.getProgram().setTexture("roughnessEstimate", getSpecularRoughnessMap());
+    }
 
-        // Track how the error improves over iterations of the whole algorithm.
-        double previousIterationError;
+    private void calculateError(ShaderBasedErrorCalculator<ContextType> errorCalculator)
+    {
+        if (SpecularOptimization.DEBUG)
+        {
+            System.out.println("Calculating error...");
+        }
 
+        // Calculate the error in preparation for normal estimation.
+        errorCalculator.update();
+
+        if (SpecularOptimization.DEBUG)
+        {
+            // Log error in debug mode.
+            logError(errorCalculator.getReport());
+        }
+    }
+
+    private void basisOptimizationIteration(SpecularDecompositionFromScratch specularDecomposition,
+        GraphicsStream<ColorList[]> reflectanceStreamParallel, ShaderBasedErrorCalculator<ContextType> errorCalculator,
+        File debugDirectory)
+    {
         BRDFReconstruction brdfReconstruction = new BRDFReconstruction(
             specularBasisSettings,
             new GeneralizedSmoothStepBasis(
@@ -114,153 +244,96 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
                 x -> 3 * x * x - 2 * x * x * x)
 //                new StepBasis(settings.microfacetDistributionResolution, settings.getMetallicity())
         );
-        SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(
-            textureFitSettings, specularBasisSettings, weightBlockSize);
 
-        // Instantiate once so that the memory buffers can be reused.
-        GraphicsStream<ColorList[]> reflectanceStreamParallel = reflectanceStream.parallel();
+        // Reconstruct the basis BRDFs.
+        // Set up a stream and pass it to the BRDF reconstruction module to give it access to the reflectance information.
+        // Operate in parallel for optimal performance.
+        brdfReconstruction.execute(
+            reflectanceStreamParallel.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
+            specularDecomposition);
 
-        do
+        // Log error in debug mode.
+        if (debugDirectory != null)
         {
-            previousIterationError = errorCalculator.getReport().getError();
-
-            // Use the current front normal buffer for extracting reflectance information.
-            reflectanceStream.getProgram().setTexture("normalEstimate", getNormalMap());
-
-            // Reconstruct the basis BRDFs.
-            // Set up a stream and pass it to the BRDF reconstruction module to give it access to the reflectance information.
-            // Operate in parallel for optimal performance.
-            brdfReconstruction.execute(
-                reflectanceStreamParallel.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
-                specularDecomposition);
-
             // Use the current front normal buffer for calculating error.
             errorCalculator.getProgram().setTexture("normalEstimate", getNormalMap());
 
-            // Log error in debug mode.
+            // Prepare for error calculation on the GPU.
+            // Basis functions will have changed.
+            getBasisResources().updateFromSolution(specularDecomposition);
+
+            System.out.println("Calculating error...");
+            errorCalculator.update();
+            logError(errorCalculator.getReport());
+
+            // Save basis image visualization for reference and debugging
+            try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(context, specularBasisSettings))
+            {
+                basisImageCreator.createImages(this, debugDirectory);
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+
+            // write out diffuse texture for debugging
+            specularDecomposition.saveDiffuseMap(textureFitSettings.gamma, debugDirectory);
+        }
+    }
+
+    private void weightOptimizationIteration(SpecularDecomposition specularDecomposition,
+        GraphicsStream<ColorList[]> reflectanceStream, SpecularWeightOptimization weightOptimization, File debugDirectory)
+    {
+        int weightBlockSize = weightOptimization.getWeightBlockSize();
+
+        // Make sure there are enough blocks for any pixels that don't go into the weight blocks evenly.
+        int blockCount = (textureFitSettings.width * textureFitSettings.height + weightBlockSize - 1) / weightBlockSize;
+
+        // Initially assume that all texels are invalid.
+        specularDecomposition.invalidateWeights();
+
+        for (int i = 0; i < blockCount; i++) // TODO: this was done quickly; may need to be refactored
+        {
+            System.out.println("Starting block " + i + "...");
+            weightOptimization.execute(
+                reflectanceStream.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
+                specularDecomposition, i * weightBlockSize);
+
             if (debugDirectory != null)
             {
-                // Prepare for error calculation on the GPU.
-                // Basis functions will have changed.
-                getBasisResources().updateFromSolution(specularDecomposition);
-
-                System.out.println("Calculating error...");
-                errorCalculator.update();
-                logError(errorCalculator.getReport());
-
-                // Save basis image visualization for reference and debugging
-                try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(context, specularBasisSettings))
-                {
-                    basisImageCreator.createImages(this, debugDirectory);
-                }
+                // write out weight textures for debugging
+                specularDecomposition.saveWeightMaps(debugDirectory);
 
                 // write out diffuse texture for debugging
-                specularDecomposition.saveDiffuseMap(textureFitSettings.gamma, debugDirectory);
-            }
-
-            if (specularBasisSettings.getBasisCount() > 1)
-            {
-                // Make sure there are enough blocks for any pixels that don't go into the weight blocks evenly.
-                int blockCount = (textureFitSettings.width * textureFitSettings.height + weightBlockSize - 1) / weightBlockSize;
-
-                // Initially assume that all texels are invalid.
-                specularDecomposition.invalidateWeights();
-
-                for (int i = 0; i < blockCount; i++) // TODO: this was done quickly; may need to be refactored
-                {
-                    System.out.println("Starting block " + i + "...");
-                    weightOptimization.execute(
-                        reflectanceStream.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
-                        specularDecomposition, i * weightBlockSize);
-
-                    if (debugDirectory != null)
-                    {
-                        // write out weight textures for debugging
-                        specularDecomposition.saveWeightMaps(debugDirectory);
-
-                        // write out diffuse texture for debugging
-                        specularDecomposition.saveDiffuseMap(
-                            textureFitSettings.gamma, debugDirectory);
-                    }
-                }
-            }
-
-            if (SpecularOptimization.DEBUG)
-            {
-                System.out.println("Calculating error...");
-            }
-
-            // Prepare for error calculation and then normal optimization on the GPU.
-            // Weight maps will have changed.
-            getBasisWeightResources().updateFromSolution(specularDecomposition);
-
-            // Calculate the error in preparation for normal estimation.
-            errorCalculator.update();
-
-            if (SpecularOptimization.DEBUG)
-            {
-                // Log error in debug mode.
-                logError(errorCalculator.getReport());
-            }
-
-            if (normalOptimization.isNormalRefinementEnabled())
-            {
-                System.out.println("Optimizing normals...");
-
-                normalOptimization.execute(normalMap ->
-                    {
-                        // Update program to use the new front buffer for error calculation.
-                        errorCalculator.getProgram().setTexture("normalEstimate", normalMap);
-
-                        if (SpecularOptimization.DEBUG)
-                        {
-                            System.out.println("Calculating error...");
-                        }
-
-                        // Calculate the error to determine if we should stop.
-                        errorCalculator.update();
-
-                        if (SpecularOptimization.DEBUG)
-                        {
-                            // Log error in debug mode.
-                            logError(errorCalculator.getReport());
-                        }
-
-                        return errorCalculator.getReport();
-                    },
-                    convergenceTolerance);
-
-                if (debugDirectory != null)
-                {
-                    normalOptimization.saveNormalMap(debugDirectory);
-                }
-
-                if (errorCalculator.getReport().getError() > errorCalculator.getReport().getPreviousError())
-                {
-                    // Revert error calculations to the last accepted result.
-                    errorCalculator.reject();
-                }
-            }
-
-            // Estimate specular roughness and reflectivity.
-            // This can cause error to increase but it's unclear if that poses a problem for convergence.
-            getRoughnessOptimization().execute();
-
-            if (SpecularOptimization.DEBUG)
-            {
-                getRoughnessOptimization().saveTextures(debugDirectory);
-
-                // Log error in debug mode.
-                getBasisResources().updateFromSolution(specularDecomposition);
-                getBasisWeightResources().updateFromSolution(specularDecomposition);
-                System.out.println("Calculating error...");
-                errorCalculator.update();
-                logError(errorCalculator.getReport());
+                specularDecomposition.saveDiffuseMap(
+                    textureFitSettings.gamma, debugDirectory);
             }
         }
-        while ((specularBasisSettings.getBasisCount() > 1 || normalOptimization.isNormalRefinementEnabled()) &&
-            // Iteration not necessary if basisCount is 1 and normal refinement is off.
-            previousIterationError - errorCalculator.getReport().getError() > convergenceTolerance);
+    }
+
+    private void normalOptimizationIteration(double convergenceTolerance, ShaderBasedErrorCalculator<ContextType> errorCalculator, File debugDirectory)
+    {
+        System.out.println("Optimizing normals...");
+
+        normalOptimization.execute(normalMap ->
+            {
+                // Update program to use the new front buffer for error calculation.
+                errorCalculator.getProgram().setTexture("normalEstimate", normalMap);
+                calculateError(errorCalculator);
+                return errorCalculator.getReport();
+            },
+            convergenceTolerance);
+
+        if (debugDirectory != null)
+        {
+            normalOptimization.saveNormalMap(debugDirectory);
+        }
+
+        if (errorCalculator.getReport().getError() > errorCalculator.getReport().getPreviousError())
+        {
+            // Revert error calculations to the last accepted result.
+            errorCalculator.reject();
+        }
     }
 
     private static void logError(ReadonlyErrorReport report)
@@ -275,6 +348,7 @@ public class SpecularFitFromOptimization<ContextType extends Context<ContextType
     @Override
     public void close()
     {
+        super.close();
         diffuseOptimization.close();
         normalOptimization.close();
     }

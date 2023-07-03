@@ -36,7 +36,7 @@ public class TextureBlockResourceFactory<ContextType extends Context<ContextType
             .createGeometryFramebuffer(settings.getTextureWidth(), settings.getTextureHeight());
     }
 
-    public IBRResources<ContextType> createBlockResources(int i, int j) throws IOException
+    public IBRResourcesTextureSpace<ContextType> createBlockResources(int i, int j) throws IOException
     {
         TextureLoadOptions loadOptions = new TextureLoadOptions();
         loadOptions.setLinearFilteringRequested(false);

@@ -28,8 +28,6 @@ public class SpecularFitRequestParams
 
     private double convergenceTolerance = 0.00001;
 
-    private int weightBlockSize = 512 * 512;
-
     private File priorSolutionDirectory = null;
     private File outputDirectory;
 
@@ -143,16 +141,6 @@ public class SpecularFitRequestParams
     public void setPriorSolutionDirectory(File priorSolutionDirectory)
     {
         this.priorSolutionDirectory = priorSolutionDirectory;
-    }
-
-    public int getWeightBlockSize()
-    {
-        return weightBlockSize;
-    }
-
-    public void setWeightBlockSize(int weightBlockSize)
-    {
-        this.weightBlockSize = weightBlockSize;
     }
 
     public File getOutputDirectory()

@@ -21,26 +21,55 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
 {
     private final BasisResources<ContextType> basisResources;
     private final BasisWeightResources<ContextType> basisWeightResources;
+    private final boolean basisResourcesOwned;
 
     private final RoughnessOptimization<ContextType> roughnessOptimization;
 
-    protected SpecularFitBase(ContextType context, TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings) throws FileNotFoundException
+    /**
+     *
+     * @param basisResources
+     * @param basisResourcesOwned If false, basis resources will not be managed / owned by this instance and will never be destroyed by this instance.
+     *                            Basis weight resources, however, will always be managed / owned and destroyed when this instance is closed.
+     * @param textureFitSettings
+     * @throws FileNotFoundException
+     */
+    protected SpecularFitBase(BasisResources<ContextType> basisResources, boolean basisResourcesOwned,
+        TextureFitSettings textureFitSettings) throws FileNotFoundException
     {
         // Textures calculated on CPU and passed to GPU (not framebuffers): basis functions & weights
-        basisResources = new BasisResources<>(context, specularBasisSettings);
-        basisWeightResources = new BasisWeightResources<>(context, textureFitSettings.width, textureFitSettings.height, specularBasisSettings.getBasisCount());
+        this.basisResources = basisResources;
+        this.basisResourcesOwned = basisResourcesOwned;
+        this.basisWeightResources = new BasisWeightResources<>(basisResources.getContext(),
+            textureFitSettings.width, textureFitSettings.height, basisResources.getSpecularBasisSettings().getBasisCount());
 
         // Specular roughness / reflectivity module that manages its own resources
-        roughnessOptimization =
+        this.roughnessOptimization =
             new RoughnessOptimizationSimple<>(basisResources, basisWeightResources, textureFitSettings);
-            //new RoughnessOptimizationIterative<>(context, basisResources, this::getDiffuseMap, settings);
-        roughnessOptimization.clear();
+        //new RoughnessOptimizationIterative<>(context, basisResources, this::getDiffuseMap, settings);
+        this.roughnessOptimization.clear();
+    }
+
+    /**
+     * Basis resources and basis weight resources will be managed / owned by this instance
+     * @param context
+     * @param textureFitSettings
+     * @param specularBasisSettings
+     * @throws FileNotFoundException
+     */
+    protected SpecularFitBase(ContextType context, TextureFitSettings textureFitSettings,
+        SpecularBasisSettings specularBasisSettings) throws FileNotFoundException
+    {
+        this(new BasisResources<>(context, specularBasisSettings), true, textureFitSettings);
     }
 
     @Override
     public void close()
     {
-        basisResources.close();
+        if (basisResourcesOwned)
+        {
+            basisResources.close();
+        }
+
         basisWeightResources.close();
         roughnessOptimization.close();
     }

@@ -49,6 +49,11 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
                 .createTexture());
     }
 
+    /**
+     * Takes ownership of the textures passed
+     * @param weightMaps
+     * @param weightMask
+     */
     private BasisWeightResources(Texture3D<ContextType> weightMaps, Texture2D<ContextType> weightMask)
     {
         this.context = weightMaps.getContext();

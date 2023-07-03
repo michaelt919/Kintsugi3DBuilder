@@ -66,9 +66,9 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
             for (int m = 0; m <= specularBasisSettings.getMicrofacetDistributionResolution(); m++)
             {
                 // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
-                basisMapBuffer.set(m + (specularBasisSettings.getMicrofacetDistributionResolution() + 1) * b, 0, solution.getSpecularRed().get(m, b));
-                basisMapBuffer.set(m + (specularBasisSettings.getMicrofacetDistributionResolution() + 1) * b, 1, solution.getSpecularGreen().get(m, b));
-                basisMapBuffer.set(m + (specularBasisSettings.getMicrofacetDistributionResolution() + 1) * b, 2, solution.getSpecularBlue().get(m, b));
+                basisMapBuffer.set(m + (specularBasisSettings.getMicrofacetDistributionResolution() + 1) * b, 0, solution.evaluateRed(b, m));
+                basisMapBuffer.set(m + (specularBasisSettings.getMicrofacetDistributionResolution() + 1) * b, 1, solution.evaluateGreen(b, m));
+                basisMapBuffer.set(m + (specularBasisSettings.getMicrofacetDistributionResolution() + 1) * b, 2, solution.evaluateBlue(b, m));
             }
 
             // Store each channel of the diffuse albedo in the local buffer.
