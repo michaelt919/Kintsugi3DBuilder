@@ -143,7 +143,7 @@ public class UnzipFileSelectionController {
                     chunkSelectionChoiceBox.setDisable(false);
                     selectChunkButton.setDisable(false);
 
-                    //initialize to first option instead of null option
+                    //initialize choice box to first option instead of null option
                     if (chunkSelectionChoiceBox.getItems() != null &&
                         chunkSelectionChoiceBox.getItems().get(0) != null){
                         chunkSelectionChoiceBox.setValue(chunkSelectionChoiceBox.getItems().get(0));

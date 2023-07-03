@@ -111,4 +111,8 @@ public class UnzipHelper {
         }
         return false;
     }
+
+    public static Document unzipToDocument(String zipPath) throws IOException {
+        return UnzipHelper.convertStringToDocument(UnzipHelper.unzipToString(zipPath));
+    }
 }
