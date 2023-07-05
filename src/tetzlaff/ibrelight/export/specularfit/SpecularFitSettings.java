@@ -42,6 +42,8 @@ public class SpecularFitSettings extends TextureFitSettings
 
     private File priorSolutionDirectory = null;
 
+    private boolean generateLowResTextures = false;
+
     private boolean glTFEnabled = false;
     private boolean glTFPackTextures = false;
 
@@ -360,5 +362,15 @@ public class SpecularFitSettings extends TextureFitSettings
     public void setCombineWeights(boolean combineWeights)
     {
         this.combineWeights = combineWeights;
+    }
+
+    public boolean isGenerateLowResTextures()
+    {
+        return generateLowResTextures;
+    }
+
+    public void setGenerateLowResTextures(boolean generateLowResTextures)
+    {
+        this.generateLowResTextures = generateLowResTextures;
     }
 }
