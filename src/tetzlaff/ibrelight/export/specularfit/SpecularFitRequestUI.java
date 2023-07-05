@@ -59,6 +59,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
 
     @FXML private CheckBox exportGLTFCheckbox;
     @FXML private CheckBox exportGLTFPackedCheckbox;
+    @FXML private CheckBox exportTextureLODsCheckbox;
 
     @FXML private Button runButton;
 
@@ -209,6 +210,8 @@ public class SpecularFitRequestUI implements IBRRequestUI
             settings.setLevenbergMarquardtEnabled(levenbergMarquardtCheckBox.isSelected());
             settings.setUnsuccessfulLMIterationsAllowed(Integer.parseInt(unsuccessfulLMIterationsTextField.getText()));
             settings.setReconstructAll(reconstructAllCheckBox.isSelected());
+
+            settings.setGenerateLowResTextures(exportTextureLODsCheckbox.isSelected());
 
             // glTF export settings
             settings.setGlTFEnabled(exportGLTFCheckbox.isSelected());

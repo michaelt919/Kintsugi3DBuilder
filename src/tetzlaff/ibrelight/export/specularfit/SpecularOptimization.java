@@ -299,16 +299,16 @@ public class SpecularOptimization
                 basisImageCreator.createImages(specularFit);
             }
 
-            // Fill holes in weight maps and calculate some final error statistics.
-            new SpecularFitFinalizer(settings)
-                .execute(solution, resources, specularFit, scratchFramebuffer, errorCalculator.getReport(), errorCalcDrawable);
-
             // Generate albedo / ORM maps
             try(AlbedoORMOptimization<ContextType> albedoORM = new AlbedoORMOptimization<>(context, settings))
             {
                 albedoORM.execute(specularFit);
                 albedoORM.saveTextures();
             }
+
+            // Fill holes in weight maps and calculate some final error statistics.
+            new SpecularFitFinalizer(settings)
+                    .execute(solution, resources, specularFit, scratchFramebuffer, errorCalculator.getReport(), errorCalcDrawable);
 
             return specularFit;
         }

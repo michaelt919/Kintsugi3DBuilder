@@ -10,7 +10,7 @@ import java.io.IOException;
 public class ImageLodResizer
 {
 
-    private static final int MIN_SIZE = 128;
+    private static final int DEFAULT_MIN_SIZE = 128;
     private final File outputDirectory;
     private final BufferedImage inputImage;
 
@@ -26,13 +26,12 @@ public class ImageLodResizer
         this.outputDirectory = outputDirectory;
     }
 
-    //TODO: Delete test harness
-    public static void main(String[] args) throws IOException
+    public static void generateLods(File inputFile) throws IOException
     {
-        generateLods(new File("X:\\CHViewer\\exports\\temp\\albedo.png"));
+        generateLods(inputFile, DEFAULT_MIN_SIZE);
     }
 
-    public static void generateLods(File inputFile) throws IOException
+    public static void generateLods(File inputFile, int minSize) throws IOException
     {
         File dir = inputFile.getParentFile();
         ImageLodResizer resize = new ImageLodResizer(inputFile);
@@ -46,7 +45,7 @@ public class ImageLodResizer
             filename = filename.substring(0, i);
         }
 
-        for (int size = resize.inputImage.getHeight() / 2; size >= MIN_SIZE; size /= 2)
+        for (int size = resize.inputImage.getHeight() / 2; size >= minSize; size /= 2)
         {
             StringBuilder sb = new StringBuilder(filename);
             sb.append("-");
@@ -75,7 +74,8 @@ public class ImageLodResizer
 
     private static String getFormatFor(File file)
     {
-        return "PNG"; //TODO
+        int i = file.getName().lastIndexOf('.');
+        return file.getName().substring(i + 1).toUpperCase();
     }
 
     public BufferedImage scaleToResolution(int width, int height)

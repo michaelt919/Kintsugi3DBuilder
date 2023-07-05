@@ -1,6 +1,11 @@
 package tetzlaff.ibrelight.export.specularfit;
 
+import tetzlaff.ibrelight.export.general.ImageLodResizer;
+
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SpecularFitTextureRescaler
 {
@@ -12,9 +17,42 @@ public class SpecularFitTextureRescaler
         this.settings = settings;
     }
 
-    public void rescaleAll() throws IOException
+    public void rescaleAll()
     {
+        List<String> files = new ArrayList<>(List.of(new String[]{"albedo.png", "diffuse.png", "specular.png", "orm.png", "normal.png"}));
 
+        if (settings.isCombineWeights())
+        {
+            for (int i = 0; i < (settings.basisCount + 3) / 4; i++)
+            {
+                files.add(SpecularFitSerializer.getCombinedWeightFilename(i));
+            }
+        }
+        else
+        {
+            for (int i = 0; i < settings.basisCount; i++)
+            {
+                files.add(SpecularFitSerializer.getWeightFileName(i));
+            }
+        }
+
+        for (String file : files)
+        {
+            try
+            {
+                generateLodsFor(file);
+            }
+            catch (IOException e)
+            {
+                System.out.println("Failed to generate LODs for file: " + file);
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void generateLodsFor(String filename) throws IOException
+    {
+        ImageLodResizer.generateLods(new File(settings.outputDirectory, filename), settings.getMinimumTextureResolution());
     }
 
 }

@@ -232,13 +232,6 @@ public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights
         }
 
         SpecularFitTextureRescaler rescaler = new SpecularFitTextureRescaler(settings);
-        try
-        {
-            rescaler.rescaleAll();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
+        rescaler.rescaleAll();
     }
 }

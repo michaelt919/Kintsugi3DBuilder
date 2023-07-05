@@ -55,6 +55,7 @@
       <Button layoutX="428.0" layoutY="287.0" mnemonicParsing="false" onAction="#priorSolutionButtonAction" prefHeight="25.0" prefWidth="114.0" text="Choose file..." />
       <CheckBox fx:id="exportGLTFCheckbox" layoutX="14.0" layoutY="322.0" mnemonicParsing="false" selected="true" text="Export glTF" />
       <CheckBox fx:id="exportGLTFPackedCheckbox" layoutX="110.0" layoutY="322.0" mnemonicParsing="false" text="Pack textures with glTF" disable="true" />
+      <CheckBox fx:id="exportTextureLODsCheckbox" layoutX="270.0" layoutY="322.0" mnemonicParsing="false" text="Generate low-res textures" />
 
    </children>
 </AnchorPane>
