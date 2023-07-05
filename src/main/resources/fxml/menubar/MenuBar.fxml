@@ -22,7 +22,7 @@
       <Menu mnemonicParsing="false" text="File">
          <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="Create project">
             <accelerator>
-               <KeyCodeCombination alt="UP" code="W" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+               <KeyCodeCombination alt="UP" code="N" control="ANY" meta="UP" shift="UP" shortcut="UP" />
             </accelerator></MenuItem>
          <MenuItem mnemonicParsing="false" onAction="#file_openProject" text="Open project">
             <accelerator>
@@ -44,11 +44,14 @@
             <accelerator>
                <KeyCodeCombination alt="UP" code="W" control="ANY" meta="UP" shift="UP" shortcut="UP" />
             </accelerator></MenuItem>
-         <MenuItem mnemonicParsing="false" onAction="#unzip" text="UNZIPPER (UNFINISHED)" />
          <SeparatorMenuItem />
          <Menu fx:id="exportMenu" mnemonicParsing="false" text="Export" />
           <CheckMenuItem fx:id="lightCalibrationCheckMenuItem" mnemonicParsing="false" text="Light Calibration Mode" />
           <MenuItem mnemonicParsing="false" onAction="#file_colorChecker" text="Enter Color Checker Values..." />
+         <MenuItem mnemonicParsing="false" onAction="#unzip" text="Unzip Metashape File">
+            <accelerator>
+               <KeyCodeCombination alt="UP" code="M" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+            </accelerator></MenuItem>
          <MenuItem mnemonicParsing="false" onAction="#file_loadOptions" text="Load Options..." />
           <SeparatorMenuItem />
          <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
@@ -69,9 +72,6 @@
          <CheckMenuItem fx:id="visibleSavedCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show saved camera poses" visible="false" />
       </Menu>
       <Menu mnemonicParsing="false" text="Shading">
-         <fx:define>
-            <ToggleGroup fx:id="renderGroup" />
-         </fx:define>
          <RadioMenuItem mnemonicParsing="false" text="None" userData="None" visible="false">
              <userData>
                  <StandardRenderingMode fx:value="NONE" />

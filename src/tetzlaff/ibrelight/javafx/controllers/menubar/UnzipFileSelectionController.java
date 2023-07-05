@@ -27,8 +27,6 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class UnzipFileSelectionController {
     @FXML
@@ -147,12 +145,11 @@ public class UnzipFileSelectionController {
                     if (chunkSelectionChoiceBox.getItems() != null &&
                         chunkSelectionChoiceBox.getItems().get(0) != null){
                         chunkSelectionChoiceBox.setValue(chunkSelectionChoiceBox.getItems().get(0));
-
                     }
                 }
 
             } catch (ParserConfigurationException|IOException|SAXException e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
         }
         else{//invalid .psx path
@@ -167,6 +164,7 @@ public class UnzipFileSelectionController {
     }
 
     public void selectOutputDirectory() {//TODO: REMOVE THIS?
+        //if this is removed, also remove the necessary items from UnzipFileSelection.fxml
         this.directoryChooser.setTitle("Choose an output directory");
 
         stage = (Stage) outputDirectoryPathTxtField.getScene().getWindow();
@@ -182,46 +180,31 @@ public class UnzipFileSelectionController {
     }
 
     public void selectChunk(ActionEvent actionEvent) throws IOException {
-        //TODO: FULLY IMPLEMENT SELECTION
-        //user selects a chunk to load --> treat that chunk's doc.xml as the camera's xml file
         String selectedChunkZip = chunkZipPathPairs.get(chunkSelectionChoiceBox.getValue());
-        int chunkID = getChunkIdFromZipPath(selectedChunkZip);
-        Document selectedChunkXML = UnzipHelper.convertStringToDocument(
-                UnzipHelper.unzipToString(selectedChunkZip));//path --> XML as String --> XML document
+        int chunkID = UnzipHelper.getChunkIdFromZipPath(selectedChunkZip);
 
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/menubar/ChunkViewer.fxml"));
-        root = fxmlLoader.load();
-        ChunkViewerController chunkViewerController = fxmlLoader.getController();
-        chunkViewerController.initializeChunkSelectionAndTreeView(selectedChunkXML, psxPathTxtField.getText(), chunkID);
+        Document selectedChunkXML;
+        try {
+            selectedChunkXML = UnzipHelper.convertStringToDocument(
+                    UnzipHelper.unzipToString(selectedChunkZip));//path --> XML as String --> XML document
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/menubar/ChunkViewer.fxml"));
+            root = fxmlLoader.load();
+            ChunkViewerController chunkViewerController = fxmlLoader.getController();
+            chunkViewerController.initializeChunkSelectionAndTreeView(selectedChunkXML, psxPathTxtField.getText(), chunkID,
+                    chunkSelectionChoiceBox, chunkZipPathPairs);
+        }
+        catch (Exception e){
+            unzipPSXButton.fire();//selected .psx file and list of chunks may be referring to different objects
+                                    //if chunk selection fails, try unzipping the file again
+            return;
+        }
+
         stage = (Stage) ((javafx.scene.Node) actionEvent.getSource()).getScene().getWindow();
         scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
     }
 
-    private int getChunkIdFromZipPath(String selectedChunkZip) {
-        //...GuanYu_with_ground_truth.files\0\chunk.zip
-        //want to extract the 0 in this example because that number denotes the chunkID
-        File file = new File(selectedChunkZip);
-
-        //parent file would give "...GuanYu_with_ground_truth.files\0" in this case
-        File parentFile = new File(file.getParent());
-
-        String lastFewChars = parentFile.getAbsolutePath().substring(parentFile.getAbsolutePath().length() - 6);
-
-        Pattern pattern = Pattern.compile("\\d+");
-        Matcher matcher = pattern.matcher(lastFewChars);
-
-        if (matcher.find()) {
-            String number = matcher.group();
-            return Integer.valueOf(number);
-        } else {
-            //TODO: WHAT ELSE TO DO IF CHUNK ID NOT FOUND?
-            System.err.println("Could not find chunk id in file path: " + selectedChunkZip);
-            return -1;
-        }
-
-    }
 
     public void enterToRun(KeyEvent keyEvent) {//press the enter button while in the text field to unzip
         if (keyEvent.getCode() == KeyCode.ENTER) {

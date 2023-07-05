@@ -25,21 +25,28 @@ public class UnzipHelper {
     public static String unzipToString(String zipFileName) throws IOException {
         //unzip the zip file (which should be a .psx) and return the contents as a string
         //intended to only unzip one file
-        //string will be converted to XML outside of this function
-        //TODO: NEED TO ADD SAFETY FOR WHEN IT OPENS A ZIP WITH MULTIPLE FILES?
-        //TODO: SONARLINT UPSET BECAUSE THE ZIPINPUTSTREAM MAY NOT BE CLOSED (if an exception occurs)
+        //Note: if this function unzips a file with multiple text files, it will simply concatenate them
+
         ZipInputStream zis= new ZipInputStream(new FileInputStream(zipFileName));
-        byte[] buffer = new byte[1024];
-        StringBuilder s = new StringBuilder();
-        int read = 0;
-        while ((zis.getNextEntry())!= null) {
-            while ((read = zis.read(buffer, 0, 1024)) >= 0) {
-                s.append(new String(buffer, 0, read));
+        try{
+            byte[] buffer = new byte[1024];
+            StringBuilder s = new StringBuilder();
+            int read = 0;
+            while ((zis.getNextEntry())!= null) {
+                while ((read = zis.read(buffer, 0, 1024)) >= 0) {
+                    s.append(new String(buffer, 0, read));
+                }
             }
+            return s.toString();
         }
-        zis.closeEntry();
-        zis.close();
-        return s.toString();
+        catch(Exception e){
+            e.printStackTrace();
+        }
+        finally{
+            zis.closeEntry();
+            zis.close();
+        }
+        return "";
     }
 
     public static Document convertStringToDocument(String xmlStr) {
@@ -84,6 +91,7 @@ public class UnzipHelper {
                 }
                 zipInputStream.closeEntry();
             }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -101,6 +109,23 @@ public class UnzipHelper {
         }
         ByteArrayInputStream imageInputStream = new ByteArrayInputStream(outputStream.toByteArray());
         return new Image(imageInputStream);
+    }
+
+    public static int getChunkIdFromZipPath(String chunkZipPath) {
+        //example chunk zip path ----> ...GuanYu_with_ground_truth.files\0\chunk.zip
+        //want to extract the 0 in this example because that number denotes the chunkID
+        File file = new File(chunkZipPath);
+
+        //parent file would give "...GuanYu_with_ground_truth.files\0" in this case
+        File parentFile = new File(file.getParent());
+
+        try{
+            return Integer.parseInt(parentFile.getName());
+        }
+        catch (NumberFormatException nfe){
+            nfe.printStackTrace();
+            return -1;
+        }
     }
 
     private static boolean isValidImageType(String path) {
