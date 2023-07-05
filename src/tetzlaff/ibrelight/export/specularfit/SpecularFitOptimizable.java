@@ -33,7 +33,7 @@ import tetzlaff.util.ColorList;
  * A class that bundles all of the GPU resources for representing a final specular fit solution.
  * @param <ContextType>
  */
-public final class SpecularFitFromOptimization<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
+public final class SpecularFitOptimizable<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
 {
     private final ContextType context;
 
@@ -48,7 +48,7 @@ public final class SpecularFitFromOptimization<ContextType extends Context<Conte
 
     private final NormalOptimization<ContextType> normalOptimization;
 
-    private SpecularFitFromOptimization(
+    private SpecularFitOptimizable(
         IBRResources<ContextType> resources, BasisResources<ContextType> basisResources, boolean basisResourcesOwned,
         SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings textureFitSettings,
         NormalOptimizationSettings normalOptimizationSettings)
@@ -79,12 +79,12 @@ public final class SpecularFitFromOptimization<ContextType extends Context<Conte
             textureFitSettings, normalOptimizationSettings);
     }
 
-    public static <ContextType extends Context<ContextType>> SpecularFitFromOptimization<ContextType> create(
+    public static <ContextType extends Context<ContextType>> SpecularFitOptimizable<ContextType> create(
         IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings textureFitSettings,
         SpecularBasisSettings specularBasisSettings, NormalOptimizationSettings normalOptimizationSettings)
         throws FileNotFoundException
     {
-        return new SpecularFitFromOptimization<>(resources,
+        return new SpecularFitOptimizable<>(resources,
             new BasisResources<>(resources.getContext(), specularBasisSettings), true,
             programFactory, textureFitSettings, normalOptimizationSettings);
     }
@@ -326,7 +326,7 @@ public final class SpecularFitFromOptimization<ContextType extends Context<Conte
 
         if (debugDirectory != null)
         {
-            normalOptimization.saveNormalMap(debugDirectory);
+            saveNormalMap(debugDirectory);
         }
 
         if (errorCalculator.getReport().getError() > errorCalculator.getReport().getPreviousError())

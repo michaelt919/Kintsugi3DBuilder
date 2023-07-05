@@ -11,7 +11,18 @@
 
 package tetzlaff.gl.core;
 
+import org.lwjgl.BufferUtils;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.util.BufferedImageBuilder;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 
 /**
  * An interface for a two-dimensional texture.
@@ -20,7 +31,7 @@ import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
  * @param <ContextType> The type of the GL context that the texture is associated with.
  */
 public interface Texture2D<ContextType extends Context<ContextType>>
-    extends Texture<ContextType>, FramebufferAttachment<ContextType>, Croppable<Texture2D<ContextType>>, CloneCroppable<Texture2D<ContextType>>
+    extends Texture<ContextType>, FramebufferAttachment<ContextType>, Blittable<Texture2D<ContextType>>, Croppable<Texture2D<ContextType>>
 {
     /**
      * Gets the width of the texture.
@@ -56,16 +67,54 @@ public interface Texture2D<ContextType extends Context<ContextType>>
      */
     Texture2D<ContextType> createTextureWithMatchingFormat(int newWidth, int newHeight);
 
+    /**
+     * Copies pixels from part of a blittable to another.  The copying operation will be start at (x, y) within
+     * this blittable, and resize if the requested source and destination rectangles are not the same size.
+     * @param destX The left edge of the rectangle to copy into within this blittable.
+     * @param destY The bottom edge of the rectangle to copy into within this blittable.
+     * @param destWidth The width of the rectangle to copy at the destination resolution.
+     * @param destHeight The height of the rectangle to copy at the destination resolution.
+     * @param readSource The blittable source to copy from.
+     * @param srcX The left edge of the rectangle to copy from within the source.
+     * @param srcY The bottom edge of the rectangle to copy from within the source.
+     * @param srcWidth The width of the rectangle to copy at the source resolution.
+     * @param srcHeight The height of the rectangle to copy at the source resolution.
+     * @param linearFiltering Whether or not to use linear filtering if the dimensions of the source and destination are not the same.
+     *                        If the texture is a depth or stencil texture, this will be ignored (linear filtering will be disabled).
+     */
     @Override
-    default
-    void cropFrom(Texture2D<ContextType> other, int x, int y, int cropWidth, int cropHeight)
+    default void blitCroppedAndScaled(int destX, int destY, int destWidth, int destHeight,
+        Texture2D<ContextType> readSource, int srcX, int srcY, int srcWidth, int srcHeight, boolean linearFiltering)
     {
-        try(FramebufferObject<ContextType> sourceFBO = getContext().buildFramebufferObject(other.getWidth(), other.getHeight()).createFramebufferObject();
-            FramebufferObject<ContextType> destFBO = getContext().buildFramebufferObject(cropWidth, cropHeight).createFramebufferObject())
+        try(FramebufferObject<ContextType> sourceFBO = getContext().buildFramebufferObject(readSource.getWidth(), readSource.getHeight()).createFramebufferObject();
+            FramebufferObject<ContextType> destFBO = getContext().buildFramebufferObject(this.getWidth(), this.getHeight()).createFramebufferObject())
         {
-            sourceFBO.setColorAttachment(0, other);
-            destFBO.setColorAttachment(0, this);
-            destFBO.blitColorAttachmentFromFramebuffer(0, sourceFBO.getViewport(x, y, cropWidth, cropHeight), 0);
+            switch(this.getTextureType())
+            {
+                case COLOR:
+                    sourceFBO.setColorAttachment(0, readSource);
+                    destFBO.setColorAttachment(0, this);
+                    destFBO.getViewport(destX, destY, destWidth, destHeight)
+                        .blitColorAttachmentFromFramebuffer(0, sourceFBO.getViewport(srcX, srcY, srcWidth, srcHeight), 0);
+                    break;
+                case DEPTH:
+                case FLOATING_POINT_DEPTH:
+                    sourceFBO.setDepthAttachment(readSource);
+                    destFBO.setDepthAttachment(this);
+                    destFBO.getViewport(destX, destY, destWidth, destHeight)
+                        .blitDepthAttachmentFromFramebuffer(sourceFBO.getViewport(srcX, srcY, srcWidth, srcHeight));
+                case STENCIL:
+                    sourceFBO.setStencilAttachment(readSource);
+                    destFBO.setStencilAttachment(this);
+                    destFBO.getViewport(destX, destY, destWidth, destHeight)
+                        .blitStencilAttachmentFromFramebuffer(sourceFBO.getViewport(srcX, srcY, srcWidth, srcHeight));
+                case DEPTH_STENCIL:
+                case FLOATING_POINT_DEPTH_STENCIL:
+                    sourceFBO.setDepthStencilAttachment(readSource);
+                    destFBO.setDepthStencilAttachment(this);
+                    destFBO.getViewport(destX, destY, destWidth, destHeight)
+                        .blitDepthStencilAttachmentFromFramebuffer(sourceFBO.getViewport(srcX, srcY, srcWidth, srcHeight));
+            }
         }
     }
 
@@ -82,17 +131,8 @@ public interface Texture2D<ContextType extends Context<ContextType>>
     default Texture2D<ContextType> crop(int x, int y, int cropWidth, int cropHeight)
     {
         Texture2D<ContextType> cropTexture = createTextureWithMatchingFormat(cropWidth, cropHeight);
-        cropTexture.cropFrom(this, x, y, cropWidth, cropHeight);
+        cropTexture.blitCropped(this, x, y, cropWidth, cropHeight);
         return cropTexture;
-    }
-
-    /**
-     * Copies another texture into this texture using framebuffer blitting
-     * @param other The texture to copy.
-     */
-    default void copyFrom(Texture2D<ContextType> other)
-    {
-        cropFrom(other, 0, 0, this.getWidth(), this.getHeight());
     }
 
     /**
@@ -102,5 +142,93 @@ public interface Texture2D<ContextType extends Context<ContextType>>
     default Texture2D<ContextType> copy()
     {
         return this.crop(0, 0, this.getWidth(), this.getHeight());
+    }
+
+    /**
+     * Gets an object that encapsulates read capabilities for this texture as a color texture.
+     * @return the texture reader
+     */
+    default ColorTextureReader getColorTextureReader()
+    {
+        return new ColorTextureReaderBase()
+        {
+            @Override
+            public int getWidth()
+            {
+                return Texture2D.this.getWidth();
+            }
+
+            @Override
+            public int getHeight()
+            {
+                return Texture2D.this.getHeight();
+            }
+
+            @Override
+            public void readARGB(ByteBuffer destination, int x, int y, int width, int height)
+            {
+                try(FramebufferObject<ContextType> fbo = getContext()
+                    .buildFramebufferObject(this.getWidth(), this.getHeight()).createFramebufferObject())
+                {
+                    fbo.setColorAttachment(0, Texture2D.this);
+                    fbo.getColorAttachmentTexture(0).getColorTextureReader().readARGB(destination, x, y, width, height);
+                }
+            }
+
+            @Override
+            public void readFloatingPointRGBA(FloatBuffer destination, int x, int y, int width, int height)
+            {
+                try(FramebufferObject<ContextType> fbo = getContext()
+                    .buildFramebufferObject(this.getWidth(), this.getHeight()).createFramebufferObject())
+                {
+                    fbo.setColorAttachment(0, Texture2D.this);
+                    fbo.getColorAttachmentTexture(0).getColorTextureReader().readFloatingPointRGBA(destination, x, y, width, height);
+                }
+            }
+
+            @Override
+            public void readIntegerRGBA(IntBuffer destination, int x, int y, int width, int height)
+            {
+                try(FramebufferObject<ContextType> fbo = getContext()
+                    .buildFramebufferObject(this.getWidth(), this.getHeight()).createFramebufferObject())
+                {
+                    fbo.setColorAttachment(0, Texture2D.this);
+                    fbo.getColorAttachmentTexture(0).getColorTextureReader().readIntegerRGBA(destination, x, y, width, height);
+                }
+            }
+        };
+    }
+
+    /**
+     * Gets an object that encapsulates read capabilities for this texture as a depth texture.
+     * @return the texture reader
+     */
+    default DepthTextureReader getDepthTextureReader()
+    {
+        return new DepthTextureReaderBase()
+        {
+            @Override
+            public int getWidth()
+            {
+                return Texture2D.this.getWidth();
+            }
+
+            @Override
+            public int getHeight()
+            {
+                return Texture2D.this.getHeight();
+            }
+
+            @Override
+            public void read(ShortBuffer destination, int x, int y, int width, int height)
+            {
+                try(FramebufferObject<ContextType> fbo = getContext()
+                    .buildFramebufferObject(this.getWidth(), this.getHeight()).createFramebufferObject())
+                {
+                    fbo.setDepthAttachment(Texture2D.this);
+                    fbo.getDepthAttachmentTexture().getDepthTextureReader().read(destination, x, y, width, height);
+                }
+            }
+        };
     }
 }

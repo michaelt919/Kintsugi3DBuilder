@@ -24,6 +24,27 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
     private BasisResources<ContextType> basisResources;
     private BasisWeightResources<ContextType> basisWeightResources;
 
+    /**
+     * Package-visible default constructor
+     */
+    SimpleSpecularResources()
+    {
+    }
+
+    @Override
+    public int getWidth()
+    {
+        // TODO validation that textures all have the same resolution?
+        return basisWeightResources.weightMaps.getWidth();
+    }
+
+    @Override
+    public int getHeight()
+    {
+        // TODO validation that textures all have the same resolution?
+        return basisWeightResources.weightMaps.getHeight();
+    }
+
     @Override
     public Texture2D<ContextType> getDiffuseMap()
     {

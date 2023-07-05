@@ -195,23 +195,6 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         }
     }
 
-    public void saveNormalMap(File outputDirectory)
-    {
-        try
-        {
-            getNormalMapFBO().saveColorBufferToFile(0, "PNG", new File(outputDirectory, "normal.png"));
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    public float[] readNormalMap()
-    {
-        return getNormalMapFBO().readFloatingPointColorBufferRGBA(0);
-    }
-
     private ProgramBuilder<ContextType> getNormalEstimationProgramBuilder(
         IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {

@@ -14,12 +14,16 @@ package tetzlaff.ibrelight.export.specularfit;
 import java.io.File;
 import java.io.IOException;
 
+import tetzlaff.gl.core.ColorFormat;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Texture2D;
 import tetzlaff.ibrelight.core.TextureFitSettings;
-import tetzlaff.ibrelight.rendering.resources.ImageCache;
 
-public class SpecularFitFromPriorSolution<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
+/**
+ * Can do the roughness / ORM map fit, hole fill, etc., but should not need access to the original photographs
+ * @param <ContextType>
+ */
+public class SpecularFitFinal<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
 {
     /**
      * Diffuse map from file
@@ -31,7 +35,42 @@ public class SpecularFitFromPriorSolution<ContextType extends Context<ContextTyp
      */
     private final Texture2D<ContextType> normalMap;
 
-    public SpecularFitFromPriorSolution(ContextType context, TextureFitSettings textureFitSettings,
+    public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> createEmpty(
+        ContextType context, TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings) throws IOException
+    {
+        return new SpecularFitFinal<>(context, textureFitSettings, specularBasisSettings);
+    }
+
+    private SpecularFitFinal(ContextType context, TextureFitSettings textureFitSettings,
+        SpecularBasisSettings specularBasisSettings) throws IOException
+    {
+        super(context, textureFitSettings, specularBasisSettings);
+
+        // Load normal map
+        diffuseMap = context.getTextureFactory()
+            .build2DColorTexture(textureFitSettings.width, textureFitSettings.height)
+            .setInternalFormat(ColorFormat.RGB8)
+            .setLinearFilteringEnabled(true)
+            .setMipmapsEnabled(true)
+            .createTexture();
+
+        // Load normal map
+        normalMap = context.getTextureFactory()
+            .build2DColorTexture(textureFitSettings.width, textureFitSettings.height)
+            .setInternalFormat(ColorFormat.RGB8)
+            .setLinearFilteringEnabled(true)
+            .setMipmapsEnabled(true)
+            .createTexture();
+    }
+
+    public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> loadFromPriorSolution(
+        ContextType context, TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings,
+        File priorSolutionDirectory) throws IOException
+    {
+        return new SpecularFitFinal<>(context, textureFitSettings, specularBasisSettings, priorSolutionDirectory);
+    }
+
+    private SpecularFitFinal(ContextType context, TextureFitSettings textureFitSettings,
         SpecularBasisSettings specularBasisSettings, File priorSolutionDirectory) throws IOException
     {
         super(context, textureFitSettings, specularBasisSettings);

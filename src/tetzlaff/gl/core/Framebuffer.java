@@ -54,51 +54,16 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
     int getColorAttachmentCount();
 
     /**
-     * Reads the pixels currently in one of the framebuffer's attachments into an existing buffer in memory.
-     * Only a rectangular subset of the pixels will be read.
-     * @param attachmentIndex The index of the framebuffer attachment to be read.
-     * @param destination The buffer into which to copy the framebuffer data.
-     * @param x The column at which to begin reading.
-     * @param y The row at which to begin reading.
-     * @param width The number of columns to read.
-     * @param height The number of rows to read.
+     * Gets an object that encapsulates read capabilities for this texture as a color texture.
+     * @return the texture reader
      */
-    void readColorBufferARGB(int attachmentIndex, ByteBuffer destination, int x, int y, int width, int height);
+    ColorTextureReader getTextureReaderForColorAttachment(int attachmentIndex);
 
     /**
-     * Reads the pixels currently in one of the framebuffer's attachments as floating point numbers.
-     * Only a rectangular subset of the pixels will be read.
-     * @param attachmentIndex The index of the framebuffer attachment to be read.
-     * @param destination The buffer into which to copy the framebuffer data.
-     * @param x The column at which to begin reading.
-     * @param y The row at which to begin reading.
-     * @param width The number of columns to read.
-     * @param height The number of rows to read.
+     * Gets an object that encapsulates read capabilities for this texture as a depth texture.
+     * @return the texture reader
      */
-    void readFloatingPointColorBufferRGBA(int attachmentIndex, FloatBuffer destination, int x, int y, int width, int height);
-
-    /**
-     * Reads the pixels currently in one of the framebuffer's attachments as 32-bit integers.
-     * Only a rectangular subset of the pixels will be read.
-     * @param attachmentIndex The index of the framebuffer attachment to be read.
-     * @param destination The buffer into which to copy the framebuffer data.
-     * @param x The column at which to begin reading.
-     * @param y The row at which to begin reading.
-     * @param width The number of columns to read.
-     * @param height The number of rows to read.
-     */
-    void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination, int x, int y, int width, int height);
-
-    /**
-     * Reads the pixels currently in the framebuffer's depth attachment.
-     * Only a rectangular subset of the pixels will be read.
-     * @param destination The buffer into which to copy the framebuffer data.
-     * @param x The column at which to begin reading.
-     * @param y The row at which to begin reading.
-     * @param width The number of columns to read.
-     * @param height The number of rows to read.
-     */
-    void readDepthBuffer(ShortBuffer destination, int x, int y, int width, int height);
+    DepthTextureReader getTextureReaderForDepthAttachment();
 
     /**
      * Reads the pixels currently in one of the framebuffer's attachments.
@@ -107,10 +72,9 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
      * @param destination The buffer into which to copy the framebuffer data.
      * Each entry is encoded as a 32-bit integer using 8-bytes each for the alpha, red, green, and blue channels, respectively, from highest order byte to lowest.
      */
-    default void readColorBufferARGB(int attachmentIndex, ByteBuffer destination)
+    @Deprecated default void readColorBufferARGB(int attachmentIndex, ByteBuffer destination)
     {
-        FramebufferSize size = this.getSize();
-        this.readColorBufferARGB(attachmentIndex, destination, 0, 0, size.width, size.height);
+        this.getTextureReaderForColorAttachment(attachmentIndex).readARGB(destination);
     }
 
     /**
@@ -119,10 +83,9 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
      * @param attachmentIndex The index of the framebuffer attachment to be read.
      * @param destination The buffer into which to copy the framebuffer data.
      */
-    default void readFloatingPointColorBufferRGBA(int attachmentIndex, FloatBuffer destination)
+    @Deprecated default void readFloatingPointColorBufferRGBA(int attachmentIndex, FloatBuffer destination)
     {
-        FramebufferSize size = this.getSize();
-        this.readFloatingPointColorBufferRGBA(attachmentIndex, destination, 0, 0, size.width, size.height);
+        this.getTextureReaderForColorAttachment(attachmentIndex).readFloatingPointRGBA(destination);
     }
 
     /**
@@ -131,10 +94,9 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
      * @param attachmentIndex The index of the framebuffer attachment to be read.
      * @param destination The buffer into which to copy the framebuffer data.
      */
-    default void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination)
+    @Deprecated default void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination)
     {
-        FramebufferSize size = this.getSize();
-        this.readIntegerColorBufferRGBA(attachmentIndex, destination, 0, 0, size.width, size.height);
+        this.getTextureReaderForColorAttachment(attachmentIndex).readIntegerRGBA(destination);
     }
 
     /**
@@ -142,10 +104,9 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
      * The entire framebuffer will be read.
      * @param destination The buffer into which to copy the framebuffer data.
      */
-    default void readDepthBuffer(ShortBuffer destination)
+    @Deprecated default void readDepthBuffer(ShortBuffer destination)
     {
-        FramebufferSize size = this.getSize();
-        this.readDepthBuffer(destination, 0, 0, size.width, size.height);
+        this.getTextureReaderForDepthAttachment().read(destination);
     }
 
     /**
@@ -155,36 +116,10 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
      * @return An array containing the pixels.
      * Each entry is encoded as a 32-bit integer using 8-bytes each for the alpha, red, green, and blue channels, respectively, from highest order byte to lowest.
      */
-    default int[] readColorBufferARGB(int attachmentIndex)
+    @Deprecated default int[] readColorBufferARGB(int attachmentIndex)
     {
-        FramebufferSize size = this.getSize();
-        return this.readColorBufferARGB(attachmentIndex, 0, 0, size.width, size.height);
+        return this.getTextureReaderForColorAttachment(attachmentIndex).readARGB();
     }
-
-    /**
-     * Reads the pixels currently in one of the framebuffer's attachments.
-     * Only a rectangular subset of the pixels will be read.
-     * @param attachmentIndex The index of the framebuffer attachment to be read.
-     * @param x The column at which to begin reading.
-     * @param y The row at which to begin reading.
-     * @param width The number of columns to read.
-     * @param height The number of rows to read.
-     * @return An array containing the pixels.
-     * Each entry is encoded as a 32-bit integer using 8-bytes each for the alpha, red, green, and blue channels, respectively, from highest order byte to lowest.
-     */
-    int[] readColorBufferARGB(int attachmentIndex, int x, int y, int width, int height);
-
-    /**
-     * Reads the pixels currently in one of the framebuffer's attachments as floating point numbers.
-     * Only a rectangular subset of the pixels will be read.
-     * @param attachmentIndex The index of the framebuffer attachment to be read.
-     * @param x The column at which to begin reading.
-     * @param y The row at which to begin reading.
-     * @param width The number of columns to read.
-     * @param height The number of rows to read.
-     * @return An array containing the pixels as floating point numbers.
-     */
-    float[] readFloatingPointColorBufferRGBA(int attachmentIndex, int x, int y, int width, int height);
 
     /**
      * Reads the pixels currently in one of the framebuffer's attachments as floating point numbers.
@@ -192,23 +127,10 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
      * @param attachmentIndex The index of the framebuffer attachment to be read.
      * @return An array containing the pixels as floating point numbers.
      */
-    default float[] readFloatingPointColorBufferRGBA(int attachmentIndex)
+    @Deprecated default float[] readFloatingPointColorBufferRGBA(int attachmentIndex)
     {
-        FramebufferSize size = this.getSize();
-        return this.readFloatingPointColorBufferRGBA(attachmentIndex, 0, 0, size.width, size.height);
+        return this.getTextureReaderForColorAttachment(attachmentIndex).readFloatingPointRGBA();
     }
-
-    /**
-     * Reads the pixels currently in one of the framebuffer's attachments as 32-bit integers.
-     * Only a rectangular subset of the pixels will be read.
-     * @param attachmentIndex The index of the framebuffer attachment to be read.
-     * @param x The column at which to begin reading.
-     * @param y The row at which to begin reading.
-     * @param width The number of columns to read.
-     * @param height The number of rows to read.
-     * @return An array containing the pixels as floating point numbers.
-     */
-    int[] readIntegerColorBufferRGBA(int attachmentIndex, int x, int y, int width, int height);
 
     /**
      * Reads the pixels currently in one of the framebuffer's attachments as 32-bit integers.
@@ -216,32 +138,19 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
      * @param attachmentIndex The index of the framebuffer attachment to be read.
      * @return An array containing the pixels as floating point numbers.
      */
-    default int[] readIntegerColorBufferRGBA(int attachmentIndex)
+    @Deprecated default int[] readIntegerColorBufferRGBA(int attachmentIndex)
     {
-        FramebufferSize size = this.getSize();
-        return this.readIntegerColorBufferRGBA(attachmentIndex, 0, 0, size.width, size.height);
+        return this.getTextureReaderForColorAttachment(attachmentIndex).readIntegerRGBA();
     }
-
-    /**
-     * Reads the pixels currently in the framebuffer's depth attachment.
-     * Only a rectangular subset of the pixels will be read.
-     * @param x The column at which to begin reading.
-     * @param y The row at which to begin reading.
-     * @param width The number of columns to read.
-     * @param height The number of rows to read.
-     * @return An array containing the depth values.
-     */
-    short[] readDepthBuffer(int x, int y, int width, int height);
 
     /**
      * Reads the pixels currently in the framebuffer's depth attachment.
      * The entire framebuffer will be read.
      * @return An array containing the depth values.
      */
-    default short[] readDepthBuffer()
+    @Deprecated default short[] readDepthBuffer()
     {
-        FramebufferSize size = this.getSize();
-        return this.readDepthBuffer(0, 0, size.width, size.height);
+        return this.getTextureReaderForDepthAttachment().read();
     }
 
     /**
@@ -252,21 +161,10 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
      * @param file The file to be written.
      * @throws IOException Thrown if any file I/O problems occur when writing the file.
      */
-    void saveColorBufferToFile(int attachmentIndex, String fileFormat, File file) throws IOException;
-
-    /**
-     * Saves the the pixels currently in one of the framebuffer's attachments to a file.
-     * Only a rectangular subset of the pixels will be read.
-     * @param attachmentIndex The index of the framebuffer attachment to be read.
-     * @param x The column at which to begin reading.
-     * @param y The row at which to begin reading.
-     * @param width The number of columns to read.
-     * @param height The number of rows to read.
-     * @param fileFormat The format of the file to be written.
-     * @param file The file to be written.
-     * @throws IOException Thrown if any file I/O problems occur when writing the file.
-     */
-    void saveColorBufferToFile(int attachmentIndex, int x, int y, int width, int height, String fileFormat, File file) throws IOException;
+    @Deprecated default void saveColorBufferToFile(int attachmentIndex, String fileFormat, File file) throws IOException
+    {
+        this.getTextureReaderForColorAttachment(attachmentIndex).saveToFile(fileFormat, file);
+    }
 
     /**
      * Clears one of the framebuffer's color attachments.
@@ -392,7 +290,6 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
      */
     default void blitColorAttachmentFromFramebuffer(int drawAttachmentIndex, Framebuffer<ContextType> readFramebuffer, int readAttachmentIndex)
     {
-        FramebufferSize size = readFramebuffer.getSize();
         blitColorAttachmentFromFramebuffer(drawAttachmentIndex, 0, 0, readFramebuffer, readAttachmentIndex);
     }
 
@@ -528,6 +425,57 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
         FramebufferSize readSize = readFramebuffer.getSize();
         FramebufferSize drawSize = this.getSize();
         blitStencilAttachmentFromFramebufferViewport(0, 0, drawSize.width, drawSize.height,
+            readFramebuffer.getViewport(0, 0, readSize.width, readSize.height));
+    }
+
+    /**
+     * Copies pixels from a viewport within one framebuffer's depth and stencil attachments to another framebuffer.
+     * Due to OpenGL limitations, linear filtering will not be applied.
+     * @param destX The left edge of the rectangle to copy into within this framebuffer.
+     * @param destY The bottom edge of the rectangle to copy into within this framebuffer.
+     * @param destWidth The width of the rectangle to copy into within this framebuffer.
+     * @param destHeight The height of the rectangle to copy into within this framebuffer.
+     * @param readFramebuffer A viewport into the framebuffer to copy from.
+     */
+    void blitDepthStencilAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
+        FramebufferViewport<ContextType> readFramebuffer);
+
+    /**
+     * Copies pixels from one framebuffer's depth and stencil attachments to another.
+     * The copying operation will be start at the lower left corner of this framebuffer, and will preserve the resolution of the read framebuffer
+     * @param readFramebuffer The framebuffer to copy from.
+     */
+    default void blitDepthStencilAttachmentFromFramebuffer(Framebuffer<ContextType> readFramebuffer)
+    {
+        FramebufferSize size = readFramebuffer.getSize();
+        blitDepthStencilAttachmentFromFramebuffer(0, 0, readFramebuffer);
+    }
+
+    /**
+     * Copies pixels from one framebuffer's depth and stencil attachments to another.
+     * The copying operation will be start at (x, y) within this framebuffer, and will preserve the resolution of the read framebuffer
+     * @param x The left edge of the rectangle to copy into within this framebuffer.
+     * @param y The bottom edge of the rectangle to copy into within this framebuffer.
+     * @param readFramebuffer The framebuffer to copy from.
+     */
+    default void blitDepthStencilAttachmentFromFramebuffer(int x, int y, Framebuffer<ContextType> readFramebuffer)
+    {
+        FramebufferSize size = readFramebuffer.getSize();
+        blitDepthStencilAttachmentFromFramebufferViewport(x, y, size.width, size.height,
+            readFramebuffer.getViewport(0, 0, size.width, size.height));
+    }
+
+    /**
+     * Copies pixels from one framebuffer's depth and stencil attachments to another.
+     * The copying operation will span the entirety of both framebuffers, resizing it the framebuffer resolutions are not the same.
+     * Due to OpenGL limitations, linear filtering will not be applied.
+     * @param readFramebuffer The framebuffer to copy from.
+     */
+    default void blitScaledDepthStencilAttachmentFromFramebuffer(Framebuffer<ContextType> readFramebuffer)
+    {
+        FramebufferSize readSize = readFramebuffer.getSize();
+        FramebufferSize drawSize = this.getSize();
+        blitDepthStencilAttachmentFromFramebufferViewport(0, 0, drawSize.width, drawSize.height,
             readFramebuffer.getViewport(0, 0, readSize.width, readSize.height));
     }
 }

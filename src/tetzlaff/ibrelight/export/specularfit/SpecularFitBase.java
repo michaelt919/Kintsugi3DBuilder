@@ -11,7 +11,9 @@
 
 package tetzlaff.ibrelight.export.specularfit;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Texture2D;
@@ -63,6 +65,18 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
     }
 
     @Override
+    public int getWidth()
+    {
+        return basisWeightResources.weightMaps.getWidth();
+    }
+
+    @Override
+    public int getHeight()
+    {
+        return basisWeightResources.weightMaps.getHeight();
+    }
+
+    @Override
     public void close()
     {
         if (basisResourcesOwned)
@@ -110,5 +124,29 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
     public final RoughnessOptimization<ContextType> getRoughnessOptimization()
     {
         return roughnessOptimization;
+    }
+
+    public void saveDiffuseMap(File outputDirectory)
+    {
+        try
+        {
+            getDiffuseMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "diffuse.png"));
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void saveNormalMap(File outputDirectory)
+    {
+        try
+        {
+            getNormalMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "normal.png"));
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 }

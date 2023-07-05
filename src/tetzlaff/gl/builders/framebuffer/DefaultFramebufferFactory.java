@@ -34,8 +34,7 @@ public final class DefaultFramebufferFactory
     }
 
     private static class DefaultFramebufferObjectImpl<ContextType extends Context<ContextType>>
-        extends FramebufferBase<ContextType>
-        implements DoubleFramebufferObject<ContextType>
+        implements DoubleFramebufferObject<ContextType>, Framebuffer<ContextType>
     {
         private final ContextType context;
         private FramebufferObject<ContextType> fbo1;
@@ -136,27 +135,15 @@ public final class DefaultFramebufferFactory
         }
 
         @Override
-        public void readColorBufferARGB(int attachmentIndex, ByteBuffer destination, int x, int y, int width, int height)
+        public ColorTextureReader getTextureReaderForColorAttachment(int attachmentIndex)
         {
-            frontFBO.readColorBufferARGB(attachmentIndex, destination, x, y, width, height);
+            return frontFBO.getTextureReaderForColorAttachment(attachmentIndex);
         }
 
         @Override
-        public void readFloatingPointColorBufferRGBA(int attachmentIndex, FloatBuffer destination, int x, int y, int width, int height)
+        public DepthTextureReader getTextureReaderForDepthAttachment()
         {
-            frontFBO.readFloatingPointColorBufferRGBA(attachmentIndex, destination, x, y, width, height);
-        }
-
-        @Override
-        public void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination, int x, int y, int width, int height)
-        {
-            frontFBO.readIntegerColorBufferRGBA(attachmentIndex, destination, x, y, width, height);
-        }
-
-        @Override
-        public void readDepthBuffer(ShortBuffer destination, int x, int y, int width, int height)
-        {
-            frontFBO.readDepthBuffer(x, y, width, height);
+            return frontFBO.getTextureReaderForDepthAttachment();
         }
 
         @Override
@@ -203,6 +190,13 @@ public final class DefaultFramebufferFactory
             FramebufferViewport<ContextType> readFramebuffer)
         {
             backFBO.blitStencilAttachmentFromFramebufferViewport(destX, destY, destWidth, destHeight, readFramebuffer);
+        }
+
+        @Override
+        public void blitDepthStencilAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
+            FramebufferViewport<ContextType> readFramebuffer)
+        {
+            backFBO.blitDepthStencilAttachmentFromFramebufferViewport(destX, destY, destWidth, destHeight, readFramebuffer);
         }
 
         @Override

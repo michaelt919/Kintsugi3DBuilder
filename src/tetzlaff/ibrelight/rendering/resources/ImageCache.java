@@ -90,12 +90,12 @@ public class ImageCache<ContextType extends Context<ContextType>>
         return new File(settings.getCacheDirectory(), String.format("%d_%d", i, j));
     }
 
-    int getBlockStartX(int i)
+    public int getBlockStartX(int i)
     {
         return (int) Math.round((double) i * (double) settings.getTextureWidth() / (double) settings.getTextureSubdiv());
     }
 
-    int getBlockStartY(int j)
+    public int getBlockStartY(int j)
     {
         return (int) Math.round((double) j * (double) settings.getTextureHeight() / (double) settings.getTextureSubdiv());
     }
@@ -323,7 +323,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
                             int height = yNext - y;
 
                             // Read pixels from the framebuffer
-                            int[] block = fbo.readColorBufferARGB(0, x, y, width, height);
+                            int[] block = fbo.getTextureReaderForColorAttachment(0).readARGB(x, y, width, height);
                             BufferedImage blockImage = BufferedImageBuilder.build()
                                 .setDataFromArray(block, width, height)
                                 .flipVertical()
@@ -403,18 +403,18 @@ public class ImageCache<ContextType extends Context<ContextType>>
         return framebuffer.getViewport(x, y, width, height);
     }
 
-    public <ResourceType extends Resource & Croppable<ResourceType>> void cropForBlock(
-        ResourceType destination, ResourceType source, int i, int j)
+    public <ResourceType extends Resource & Blittable<ResourceType>> void cropForBlock(
+        ResourceType destination, ResourceType source, int i, int j, boolean linearFiltering)
     {
         int x = getBlockStartX(i);
         int y = getBlockStartY(j);
         int width = getBlockStartX(i + 1) - x;
         int height = getBlockStartY(j + 1) - y;
 
-        destination.cropFrom(source, x, y, width, height);
+        destination.blitCroppedAndScaled(source, x, y, width, height, linearFiltering);
     }
 
-    public <ResourceType extends Resource> ResourceType cropForBlock(CloneCroppable<ResourceType> resource, int i, int j)
+    public <ResourceType extends Resource> ResourceType cropForBlock(Croppable<ResourceType> resource, int i, int j)
     {
         int x = getBlockStartX(i);
         int y = getBlockStartY(j);

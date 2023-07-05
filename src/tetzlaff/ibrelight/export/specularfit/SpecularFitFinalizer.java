@@ -59,7 +59,7 @@ public final class SpecularFitFinalizer
      */
     public <ContextType extends Context<ContextType>> void finishAndCalculateError(
         SpecularDecomposition solution, IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
-        SpecularFitFromOptimization<ContextType> specularFit, ShaderBasedErrorCalculator<ContextType> errorCalculator,
+        SpecularFitOptimizable<ContextType> specularFit, ShaderBasedErrorCalculator<ContextType> errorCalculator,
         PrintStream rmseOut, File outputDirectory)
     {
         try (Program<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(resources, programFactory))
@@ -135,18 +135,16 @@ public final class SpecularFitFinalizer
      * @param <ContextType>
      */
     public <ContextType extends Context<ContextType>> void validateNormalMap(
-        IBRResources<ContextType> resources, SpecularFitFromOptimization<ContextType> specularFit, PrintStream rmseOut)
+        IBRResources<ContextType> resources, SpecularResources<ContextType> specularFit, PrintStream rmseOut)
     {
         if (CALCULATE_NORMAL_RMSE && resources.getMaterialResources().getNormalTexture() != null)
         {
-            TextureFitSettings textureFitSettings = specularFit.getTextureFitSettings();
-
             try (Program<ContextType> textureRectProgram = resources.getContext().getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_dynamic.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/common/texture.frag"))
                 .createProgram();
                 FramebufferObject<ContextType> textureRectFBO =
-                    resources.getContext().buildFramebufferObject(textureFitSettings.width, textureFitSettings.height).addColorAttachment().createFramebufferObject())
+                    resources.getContext().buildFramebufferObject(specularFit.getWidth(), specularFit.getHeight()).addColorAttachment().createFramebufferObject())
             {
                 // Use the real geometry rather than a rectangle so that the normal map is masked properly for the part of the normal map used.
                 Drawable<ContextType> textureRect = resources.createDrawable(textureRectProgram);
@@ -156,7 +154,7 @@ public final class SpecularFitFinalizer
 //                    textureRectFBO.saveColorBufferToFile(0, "PNG", new File(textureFitSettings.outputDirectory, "test_normalGT.png"));
 
                 float[] groundTruth = textureRectFBO.readFloatingPointColorBufferRGBA(0);
-                float[] estimate = specularFit.getNormalOptimization().readNormalMap();
+                float[] estimate = specularFit.getNormalMap().getColorTextureReader().readFloatingPointRGBA();
 
                 double rmse = Math.sqrt( // root
                     IntStream.range(0, groundTruth.length / 4)

@@ -15,12 +15,14 @@ package tetzlaff.gl.core;
 public interface Croppable<ResourceType extends Resource>
 {
     /**
-     * Fills this resource with a cropped region of another resource.
+     * Creates a new resource that contains a cropped region of this resource.
+     * The resource this method is called on will remain unchanged.
      * @param x The left boundary of the cropped region
      * @param y The bottom boundary of the cropped region
      * @param cropWidth The width of the cropped region
      * @param cropHeight The height of the cropped region
      * @return The new cropped resource.
      */
-    void cropFrom(ResourceType other, int x, int y, int cropWidth, int cropHeight);
+    ResourceType crop(int x, int y, int cropWidth, int cropHeight);
+
 }

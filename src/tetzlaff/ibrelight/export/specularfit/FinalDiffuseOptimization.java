@@ -108,18 +108,6 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         return framebuffer.getColorAttachmentTexture(0);
     }
 
-    public void saveDiffuseMap(File outputDirectory)
-    {
-        try
-        {
-            framebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, "diffuse.png"));
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
     private static <ContextType extends Context<ContextType>>
         Program<ContextType> createDiffuseEstimationProgram(
             IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException

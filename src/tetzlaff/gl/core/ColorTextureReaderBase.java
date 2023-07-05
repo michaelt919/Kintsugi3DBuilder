@@ -25,18 +25,17 @@ import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 
 /**
- * Base class for framebuffers that contains commonly used implementations for transferring native buffer data to a
+ * Base class for texture readers that contains commonly used implementations for transferring native buffer data to a
  * "normal" Java array, and saving color images to file.
- * @param <ContextType>
  */
-public abstract class FramebufferBase<ContextType extends Context<ContextType>> implements Framebuffer<ContextType>
+public abstract class ColorTextureReaderBase implements ColorTextureReader
 {
     @Override
-    public int[] readColorBufferARGB(int attachmentIndex, int x, int y, int width, int height)
+    public int[] readARGB(int x, int y, int width, int height)
     {
         ByteBuffer pixelBuffer = BufferUtils.createByteBuffer(width * height * 4);
 
-        readColorBufferARGB(attachmentIndex, pixelBuffer, x, y, width, height);
+        readARGB(pixelBuffer, x, y, width, height);
 
         int[] pixelArray = new int[width * height];
         pixelBuffer.asIntBuffer().get(pixelArray);
@@ -44,11 +43,11 @@ public abstract class FramebufferBase<ContextType extends Context<ContextType>> 
     }
 
     @Override
-    public float[] readFloatingPointColorBufferRGBA(int attachmentIndex, int x, int y, int width, int height)
+    public float[] readFloatingPointRGBA(int x, int y, int width, int height)
     {
         FloatBuffer pixelBuffer = BufferUtils.createFloatBuffer(width * height * 4);
 
-        readFloatingPointColorBufferRGBA(attachmentIndex, pixelBuffer, x, y, width, height);
+        readFloatingPointRGBA(pixelBuffer, x, y, width, height);
 
         float[] pixelArray = new float[width * height * 4];
         pixelBuffer.get(pixelArray);
@@ -56,11 +55,11 @@ public abstract class FramebufferBase<ContextType extends Context<ContextType>> 
     }
 
     @Override
-    public int[] readIntegerColorBufferRGBA(int attachmentIndex, int x, int y, int width, int height)
+    public int[] readIntegerRGBA(int x, int y, int width, int height)
     {
         IntBuffer pixelBuffer = BufferUtils.createIntBuffer(width * height * 4);
 
-        readIntegerColorBufferRGBA(attachmentIndex, pixelBuffer, x, y, width, height);
+        readIntegerRGBA(pixelBuffer, x, y, width, height);
 
         int[] pixelArray = new int[width * height * 4];
         pixelBuffer.get(pixelArray);
@@ -68,36 +67,24 @@ public abstract class FramebufferBase<ContextType extends Context<ContextType>> 
     }
 
     @Override
-    public void saveColorBufferToFile(int attachmentIndex, String fileFormat, File file) throws IOException
+    public void saveToFile(String fileFormat, File file) throws IOException
     {
-        int[] pixels = this.readColorBufferARGB(attachmentIndex);
-        FramebufferSize size = this.getSize();
+        int[] pixels = this.readARGB();
         BufferedImage outImg = BufferedImageBuilder.build()
-            .setDataFromArray(pixels, size.width, size.height)
+            .setDataFromArray(pixels, getWidth(), getHeight())
             .flipVertical()
             .create();
         ImageIO.write(outImg, fileFormat, file);
     }
 
     @Override
-    public void saveColorBufferToFile(int attachmentIndex, int x, int y, int width, int height, String fileFormat, File file) throws IOException
+    public void saveToFile(int x, int y, int width, int height, String fileFormat, File file) throws IOException
     {
-        int[] pixels = this.readColorBufferARGB(attachmentIndex, x, y, width, height);
+        int[] pixels = this.readARGB(x, y, width, height);
         BufferedImage outImg = BufferedImageBuilder.build()
             .setDataFromArray(pixels, width, height)
             .flipVertical()
             .create();
         ImageIO.write(outImg, fileFormat, file);
-    }
-
-    public short[] readDepthBuffer(int x, int y, int width, int height)
-    {
-        ShortBuffer pixelBuffer = BufferUtils.createShortBuffer(width * height);
-
-        readDepthBuffer(pixelBuffer, x, y, width, height);
-
-        short[] pixelArray = new short[width * height];
-        pixelBuffer.get(pixelArray);
-        return pixelArray;
     }
 }

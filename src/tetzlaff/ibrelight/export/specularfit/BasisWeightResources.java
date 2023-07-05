@@ -21,7 +21,7 @@ import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 
 @SuppressWarnings("PublicField")
 public class BasisWeightResources<ContextType extends Context<ContextType>>
-    implements Resource, ContextBound<ContextType>, CloneCroppable<BasisWeightResources<ContextType>>
+    implements Resource, ContextBound<ContextType>, Croppable<BasisWeightResources<ContextType>>
 {
     private final ContextType context;
 

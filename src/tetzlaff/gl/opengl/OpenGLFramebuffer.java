@@ -24,7 +24,7 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL30.*;
 
-abstract class OpenGLFramebuffer extends tetzlaff.gl.core.FramebufferBase<OpenGLContext> implements Framebuffer<OpenGLContext>
+abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
 {
     protected final OpenGLContext context;
 
@@ -161,72 +161,110 @@ abstract class OpenGLFramebuffer extends tetzlaff.gl.core.FramebufferBase<OpenGL
     protected abstract ContentsBase getContents();
 
     @Override
-    public void readColorBufferARGB(int attachmentIndex, ByteBuffer destination, int x, int y, int width, int height)
+    public ColorTextureReader getTextureReaderForColorAttachment(int attachmentIndex)
     {
-        if (destination.remaining() < width * height * 4)
+        return new ColorTextureReaderBase()
         {
-            throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
-        }
+            @Override
+            public int getWidth()
+            {
+                return getSize().width;
+            }
 
-        this.getReadContents().bindForRead(attachmentIndex);
+            @Override
+            public int getHeight()
+            {
+                return getSize().height;
+            }
 
-        glPixelStorei(GL_PACK_ALIGNMENT, 4);
-        OpenGLContext.errorCheck();
+            @Override
+            public void readARGB(ByteBuffer destination, int x, int y, int width, int height)
+            {
+                if (destination.remaining() < width * height * 4)
+                {
+                    throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
+                }
 
-        // use BGRA because due to byte order differences it ends up being ARGB
-        glReadPixels(x, y, width, height, GL_BGRA, GL_UNSIGNED_BYTE, destination);
-        OpenGLContext.errorCheck();
+                getReadContents().bindForRead(attachmentIndex);
+
+                glPixelStorei(GL_PACK_ALIGNMENT, 4);
+                OpenGLContext.errorCheck();
+
+                // use BGRA because due to byte order differences it ends up being ARGB
+                glReadPixels(x, y, width, height, GL_BGRA, GL_UNSIGNED_BYTE, destination);
+                OpenGLContext.errorCheck();
+            }
+
+            @Override
+            public void readFloatingPointRGBA(FloatBuffer destination, int x, int y, int width, int height)
+            {
+                if (destination.remaining() < width * height * 4)
+                {
+                    throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
+                }
+
+                getReadContents().bindForRead(attachmentIndex);
+
+                glPixelStorei(GL_PACK_ALIGNMENT, 4);
+                OpenGLContext.errorCheck();
+
+                glReadPixels(x, y, width, height, GL_RGBA, GL_FLOAT, destination);
+                OpenGLContext.errorCheck();
+            }
+
+            @Override
+            public void readIntegerRGBA(IntBuffer destination, int x, int y, int width, int height)
+            {
+                if (destination.remaining() < width * height * 4)
+                {
+                    throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
+                }
+
+                getReadContents().bindForRead(attachmentIndex);
+
+                glPixelStorei(GL_PACK_ALIGNMENT, 4);
+                OpenGLContext.errorCheck();
+
+                glReadPixels(x, y, width, height, GL_RGBA_INTEGER, GL_INT, destination);
+                OpenGLContext.errorCheck();
+            }
+        };
     }
 
     @Override
-    public void readFloatingPointColorBufferRGBA(int attachmentIndex, FloatBuffer destination, int x, int y, int width, int height)
+    public DepthTextureReader getTextureReaderForDepthAttachment()
     {
-        if (destination.remaining() < width * height * 4)
+        return new DepthTextureReaderBase()
         {
-            throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
-        }
+            @Override
+            public int getWidth()
+            {
+                return getSize().width;
+            }
 
-        this.getReadContents().bindForRead(attachmentIndex);
+            @Override
+            public int getHeight()
+            {
+                return getSize().height;
+            }
 
-        glPixelStorei(GL_PACK_ALIGNMENT, 4);
-        OpenGLContext.errorCheck();
+            @Override
+            public void read(ShortBuffer destination, int x, int y, int width, int height)
+            {
+                if (destination.remaining() < width * height)
+                {
+                    throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
+                }
 
-        glReadPixels(x, y, width, height, GL_RGBA, GL_FLOAT, destination);
-        OpenGLContext.errorCheck();
-    }
+                getReadContents().bindForRead(0);
 
-    @Override
-    public void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination, int x, int y, int width, int height)
-    {
-        if (destination.remaining() < width * height * 4)
-        {
-            throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
-        }
+                glPixelStorei(GL_PACK_ALIGNMENT, 2);
+                OpenGLContext.errorCheck();
 
-        this.getReadContents().bindForRead(attachmentIndex);
-
-        glPixelStorei(GL_PACK_ALIGNMENT, 4);
-        OpenGLContext.errorCheck();
-
-        glReadPixels(x, y, width, height, GL_RGBA_INTEGER, GL_INT, destination);
-        OpenGLContext.errorCheck();
-    }
-
-    @Override
-    public void readDepthBuffer(ShortBuffer destination, int x, int y, int width, int height)
-    {
-        if (destination.remaining() < width * height)
-        {
-            throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
-        }
-
-        this.getReadContents().bindForRead(0);
-
-        glPixelStorei(GL_PACK_ALIGNMENT, 2);
-        OpenGLContext.errorCheck();
-
-        glReadPixels(x, y, width, height, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, destination);
-        OpenGLContext.errorCheck();
+                glReadPixels(x, y, width, height, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, destination);
+                OpenGLContext.errorCheck();
+            }
+        };
     }
 
     @Override
@@ -412,5 +450,19 @@ abstract class OpenGLFramebuffer extends tetzlaff.gl.core.FramebufferBase<OpenGL
         glBlitFramebuffer(srcOffset.x, srcOffset.y, srcOffset.x + srcSize.width, srcOffset.y + srcSize.height,
             destX, destY, destX + destWidth, destY + destHeight,
             GL_STENCIL_BUFFER_BIT, GL_NEAREST);
+    }
+
+    @Override
+    public void blitDepthStencilAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
+        FramebufferViewport<OpenGLContext> readFramebuffer)
+    {
+        this.getDrawContents().bindNonColorAttachmentsForDraw();
+        readFramebuffer.getReadContents().bindNonColorAttachmentForRead();
+
+        IntVector2 srcOffset = readFramebuffer.getOffset();
+        FramebufferSize srcSize = readFramebuffer.getSize();
+        glBlitFramebuffer(srcOffset.x, srcOffset.y, srcOffset.x + srcSize.width, srcOffset.y + srcSize.height,
+            destX, destY, destX + destWidth, destY + destHeight,
+            GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST);
     }
 }
