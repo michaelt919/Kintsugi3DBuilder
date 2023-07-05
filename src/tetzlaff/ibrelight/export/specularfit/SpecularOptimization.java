@@ -117,15 +117,12 @@ public class SpecularOptimization
                 initializer.saveDebugImage(sampledDecomposition, settings.getOutputDirectory());
             }
 
-            // TODO temp for testing
-            SpecularFitFromOptimization<ContextType> specularFit;
-
-            try
-            (
+//            try
+//            (
                 // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.
                 SpecularFitFromOptimization<ContextType> sampledFit = SpecularFitFromOptimization.create(
                     sampled, programFactory, sampledSettings, settings.getSpecularBasisSettings(), settings.getNormalOptimizationSettings())
-            )
+;//            )
             {
                 optimizeTexSpaceFit(sampled, sampledFit,
                     (stream, errorCalculator) -> sampledFit.optimizeFromScratch(
@@ -156,12 +153,10 @@ public class SpecularOptimization
                         }
                     }
                 }
-
-                // TODO temp for testing
-                specularFit = sampledFit;
             }
 
             // TODO temp for testing
+            SpecularFitFromOptimization<ContextType> specularFit = sampledFit;
             IBRResources<ContextType> resources = sampled;
             SpecularDecomposition specularDecomposition = sampledDecomposition;
 
