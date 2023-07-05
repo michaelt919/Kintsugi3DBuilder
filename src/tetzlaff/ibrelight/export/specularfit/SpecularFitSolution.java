@@ -25,6 +25,7 @@ import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.vecmath.*;
+import tetzlaff.ibrelight.export.specularfit.gltf.SpecularFitGltfExporter;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
 public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights

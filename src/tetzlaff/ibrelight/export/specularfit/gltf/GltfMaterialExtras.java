@@ -1,9 +1,6 @@
-package tetzlaff.ibrelight.export.specularfit;
+package tetzlaff.ibrelight.export.specularfit.gltf;
 
 import de.javagl.jgltf.impl.v2.TextureInfo;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class GltfMaterialExtras
 {

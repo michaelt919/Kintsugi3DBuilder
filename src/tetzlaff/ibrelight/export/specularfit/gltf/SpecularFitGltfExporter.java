@@ -1,4 +1,4 @@
-package tetzlaff.ibrelight.export.specularfit;
+package tetzlaff.ibrelight.export.specularfit.gltf;
 
 import de.javagl.jgltf.impl.v2.*;
 import de.javagl.jgltf.model.creation.GltfModelBuilder;
@@ -15,6 +15,7 @@ import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
+import tetzlaff.ibrelight.export.specularfit.SpecularFitSerializer;
 
 import java.io.File;
 import java.io.FileOutputStream;
