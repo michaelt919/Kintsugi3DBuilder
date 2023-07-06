@@ -11,6 +11,10 @@
             <outputDirectory></outputDirectory>
         </file>
         <file>
+            <source>ibrelight-about.txt</source>
+            <outputDirectory></outputDirectory>
+        </file>
+        <file>
             <source>target/IBRelight.exe</source>
             <outputDirectory></outputDirectory>
         </file>
