@@ -123,8 +123,7 @@ public class UnzipFileSelectionController {
                         //append this path to the psxFilePath (without that path's .psx)
                         chunkZipPath = psxFilePath.substring(0, psxFilePath.length() - 4) + ".files\\" + chunkZipPath;
 
-                        Document chunkDocument = UnzipHelper.convertStringToDocument(
-                                UnzipHelper.unzipToString(chunkZipPath));//path --> XML as String --> XML document
+                        Document chunkDocument = UnzipHelper.unzipToDocument(chunkZipPath);;//path --> XML as String --> XML document
 
                         NodeList innerChunkList = chunkDocument.getElementsByTagName("chunk");
                         for(int j = 0; j < innerChunkList.getLength(); ++j) {
