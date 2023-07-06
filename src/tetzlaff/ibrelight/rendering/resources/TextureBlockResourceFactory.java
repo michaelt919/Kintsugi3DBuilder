@@ -20,20 +20,19 @@ import java.io.IOException;
 
 public class TextureBlockResourceFactory<ContextType extends Context<ContextType>> implements Resource
 {
-    private final ImageCache<ContextType> imageCache;
+    private final ImageCacheSettings imageCacheSettings;
 
     private final IBRSharedResources<ContextType> sharedResources;
 
     private final GeometryTextures<ContextType> fullGeometryTextures;
 
-    TextureBlockResourceFactory(ImageCache<ContextType> imageCache, IBRSharedResources<ContextType> sharedResources)
+    TextureBlockResourceFactory(IBRSharedResources<ContextType> sharedResources, ImageCacheSettings imageCacheSettings)
     {
-        this.imageCache = imageCache;
+        this.imageCacheSettings = imageCacheSettings;
         this.sharedResources = sharedResources;
 
-        ImageCacheSettings settings = imageCache.getSettings();
         this.fullGeometryTextures = sharedResources.getGeometryResources()
-            .createGeometryFramebuffer(settings.getTextureWidth(), settings.getTextureHeight());
+            .createGeometryFramebuffer(imageCacheSettings.getTextureWidth(), imageCacheSettings.getTextureHeight());
     }
 
     public IBRResourcesTextureSpace<ContextType> createBlockResources(int i, int j) throws IOException
@@ -43,13 +42,13 @@ public class TextureBlockResourceFactory<ContextType extends Context<ContextType
         loadOptions.setMipmapsRequested(false);
         loadOptions.setCompressionRequested(false);
 
-        int x = imageCache.getBlockStartX(i);
-        int y = imageCache.getBlockStartY(j);
-        int width = imageCache.getBlockStartX(i + 1) - x;
-        int height = imageCache.getBlockStartY(j + 1) - y;
+        int x = imageCacheSettings.getBlockStartX(i);
+        int y = imageCacheSettings.getBlockStartY(j);
+        int width = imageCacheSettings.getBlockStartX(i + 1) - x;
+        int height = imageCacheSettings.getBlockStartY(j + 1) - y;
 
         return new IBRResourcesTextureSpace<>(sharedResources,
-            () -> fullGeometryTextures.createViewportCopy(x, y, width, height), imageCache.getBlockDir(i, j),
+            () -> fullGeometryTextures.createViewportCopy(x, y, width, height), imageCacheSettings.getBlockDir(i, j),
             loadOptions, width, height, null);
     }
 

@@ -15,15 +15,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.nio.FloatBuffer;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.stream.IntStream;
 
 import org.lwjgl.BufferUtils;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.DoubleVector2;
 import tetzlaff.gl.vecmath.DoubleVector3;
-import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
 
@@ -31,100 +28,19 @@ import tetzlaff.optimization.ShaderBasedErrorCalculator;
  * A module that performs some final steps to finish a specular fit: filling holes in the weight maps, and calculating some final error statistics.
  * TODO this class doesn't have a well defined identity; should probably be refactored.
  */
-public final class SpecularFitFinalizer
+public final class FinalErrorCalculaton
 {
-    private static final SpecularFitFinalizer INSTANCE = new SpecularFitFinalizer();
+    private static final FinalErrorCalculaton INSTANCE = new FinalErrorCalculaton();
 
-    public static SpecularFitFinalizer getInstance()
+    public static FinalErrorCalculaton getInstance()
     {
         return INSTANCE;
     }
 
     private static final boolean CALCULATE_NORMAL_RMSE = true;
 
-    private SpecularFitFinalizer()
+    private FinalErrorCalculaton()
     {
-    }
-
-    /**
-     * TODO: Yikes, this function has gotten to be a mess!
-     * @param solution
-     * @param resources
-     * @param programFactory
-     * @param specularFit
-     * @param errorCalculator
-     * @param rmseOut
-     * @param outputDirectory
-     * @param <ContextType>
-     */
-    public <ContextType extends Context<ContextType>> void finishAndCalculateError(
-        SpecularDecomposition solution, IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
-        SpecularFitOptimizable<ContextType> specularFit, ShaderBasedErrorCalculator<ContextType> errorCalculator,
-        PrintStream rmseOut, File outputDirectory)
-    {
-        try (Program<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(resources, programFactory))
-        {
-            TextureFitSettings textureFitSettings = specularFit.getTextureFitSettings();
-
-            // Print out RMSE from the penultimate iteration (to verify convergence)
-            rmseOut.println("Previously calculated RMSE: " + errorCalculator.getReport().getError());
-
-            // Calculate the final RMSE from the raw result
-            specularFit.getBasisResources().updateFromSolution(solution);
-            specularFit.getBasisWeightResources().updateFromSolution(solution);
-            errorCalculator.getProgram().setTexture("normalEstimate", specularFit.getNormalMap());
-
-            errorCalculator.update();
-            rmseOut.println("RMSE before hole fill: " + errorCalculator.getReport().getError());
-
-            // Fill holes in the weight map
-            fillHoles(solution);
-
-            // Save the weight map and preliminary diffuse result after filling holes
-            solution.saveWeightMaps(outputDirectory);
-            solution.saveDiffuseMap(textureFitSettings.gamma, outputDirectory);
-
-            // Update the GPU resources with the hole-filled weight maps.
-            specularFit.getBasisWeightResources().updateFromSolution(solution);
-
-            // Fit specular textures after filling holes
-            specularFit.getRoughnessOptimization().execute();
-
-            specularFit.getRoughnessOptimization().saveTextures(outputDirectory);
-
-            // Calculate RMSE after filling holes
-            errorCalculator.update();
-            rmseOut.println("RMSE after hole fill: " + errorCalculator.getReport().getError());
-
-            // Calculate gamma-corrected RMSE
-            errorCalculator.getProgram().setUniform("errorGamma", 2.2f);
-            errorCalculator.update();
-            rmseOut.println("RMSE after hole fill (gamma-corrected): " + errorCalculator.getReport().getError());
-
-            Drawable<ContextType> finalErrorCalcDrawable = resources.createDrawable(finalErrorCalcProgram);
-            specularFit.getBasisResources().useWithShaderProgram(finalErrorCalcProgram);
-            specularFit.getBasisWeightResources().useWithShaderProgram(finalErrorCalcProgram);
-            finalErrorCalcProgram.setTexture("normalEstimate", specularFit.getNormalMap());
-            finalErrorCalcProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
-            finalErrorCalcProgram.setTexture("diffuseEstimate", specularFit.getDiffuseMap());
-            finalErrorCalcProgram.setUniform("errorGamma", 1.0f);
-
-            // Reuse errorCalculator's framebuffer as a scratch framebuffer (for efficiency)
-            Framebuffer<ContextType> scratchFramebuffer = errorCalculator.getFramebuffer();
-
-            rmseOut.println("Final RMSE after diffuse estimate: " +
-                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCameraPoseCount()));
-
-            finalErrorCalcProgram.setUniform("errorGamma", 2.2f);
-            rmseOut.println("Final RMSE after diffuse estimate (gamma-corrected): " +
-                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCameraPoseCount()));
-
-            calculateGGXRMSE(resources, programFactory, specularFit, scratchFramebuffer, rmseOut);
-        }
-        catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -185,6 +101,50 @@ public final class SpecularFitFinalizer
         }
     }
 
+    public <ContextType extends Context<ContextType>> void calculateFinalErrorMetrics(
+        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
+        SpecularResources<ContextType> specularFit, ShaderBasedErrorCalculator<ContextType> basisErrorCalculator,
+        PrintStream rmseOut)
+    {
+        try (Program<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(resources, programFactory))
+        {
+            // Calculate RMSE using basis diffuse
+            basisErrorCalculator.update();
+            rmseOut.println("RMSE using basis diffuse: " + basisErrorCalculator.getReport().getError());
+
+            // Calculate gamma-corrected RMSE using basis diffuse
+            basisErrorCalculator.getProgram().setUniform("errorGamma", 2.2f);
+            basisErrorCalculator.update();
+            rmseOut.println("RMSE using basis diffuse (gamma-corrected): " + basisErrorCalculator.getReport().getError());
+
+            // Setup drawable that uses the final diffuse texture (not limited to basis colors)
+            Drawable<ContextType> finalErrorCalcDrawable = resources.createDrawable(finalErrorCalcProgram);
+            specularFit.getBasisResources().useWithShaderProgram(finalErrorCalcProgram);
+            specularFit.getBasisWeightResources().useWithShaderProgram(finalErrorCalcProgram);
+            finalErrorCalcProgram.setTexture("normalEstimate", specularFit.getNormalMap());
+            finalErrorCalcProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
+            finalErrorCalcProgram.setTexture("diffuseEstimate", specularFit.getDiffuseMap());
+            finalErrorCalcProgram.setUniform("errorGamma", 1.0f);
+
+            // Reuse errorCalculator's framebuffer as a scratch framebuffer (for efficiency)
+            Framebuffer<ContextType> scratchFramebuffer = basisErrorCalculator.getFramebuffer();
+
+            rmseOut.println("Final RMSE with final diffuse estimate: " +
+                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCameraPoseCount()));
+
+            finalErrorCalcProgram.setUniform("errorGamma", 2.2f);
+            rmseOut.println("Final RMSE with final diffuse estimate (gamma-corrected): " +
+                runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCameraPoseCount()));
+
+            // Calculate error using the GGX fit rather than the basis functions.
+            calculateGGXRMSE(resources, programFactory, specularFit, scratchFramebuffer, rmseOut);
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * Calculates RMSE for GGX.
      * Can be used standalone (i.e. when loading the optimized specular basis from a file)
@@ -195,7 +155,7 @@ public final class SpecularFitFinalizer
      * @param <ContextType>
      * @throws FileNotFoundException
      */
-    public <ContextType extends Context<ContextType>> void calculateGGXRMSE(
+    private <ContextType extends Context<ContextType>> void calculateGGXRMSE(
             IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
             SpecularResources<ContextType> specularFit, Framebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
         throws FileNotFoundException
@@ -297,78 +257,4 @@ public final class SpecularFitFinalizer
             false); // Disable visibility and shadow tests for error calculation.
     }
 
-    private static void fillHoles(SpecularDecomposition solution)
-    {
-        TextureFitSettings textureFitSettings = solution.getTextureFitSettings();
-
-        // Fill holes
-        // TODO Quick hack; should be replaced with something more robust.
-        System.out.println("Filling holes...");
-
-        int texelCount = textureFitSettings.width * textureFitSettings.height;
-
-        for (int i = 0; i < Math.max(textureFitSettings.width, textureFitSettings.height); i++)
-        {
-            Collection<Integer> filledPositions = new HashSet<>(256);
-            for (int p = 0; p < texelCount; p++)
-            {
-                if (!solution.areWeightsValid(p))
-                {
-                    int left = (texelCount + p - 1) % texelCount;
-                    int right = (p + 1) % texelCount;
-                    int up = (texelCount + p - textureFitSettings.width) % texelCount;
-                    int down = (p + textureFitSettings.width) % texelCount;
-
-                    int count = 0;
-
-                    for (int b = 0; b < solution.getSpecularBasisSettings().getBasisCount(); b++)
-                    {
-                        count = 0;
-                        double sum = 0.0;
-
-                        if (solution.areWeightsValid(left))
-                        {
-                            sum += solution.getWeights(left).get(b);
-                            count++;
-                        }
-
-                        if (solution.areWeightsValid(right))
-                        {
-                            sum += solution.getWeights(right).get(b);
-                            count++;
-                        }
-
-                        if (solution.areWeightsValid(up))
-                        {
-                            sum += solution.getWeights(up).get(b);
-                            count++;
-                        }
-
-                        if (solution.areWeightsValid(down))
-                        {
-                            sum += solution.getWeights(down).get(b);
-                            count++;
-                        }
-
-                        if (sum > 0.0)
-                        {
-                            solution.getWeights(p).set(b, sum / count);
-                        }
-                    }
-
-                    if (count > 0)
-                    {
-                        filledPositions.add(p);
-                    }
-                }
-            }
-
-            for (int p : filledPositions)
-            {
-                solution.setWeightsValidity(p, true);
-            }
-        }
-
-        System.out.println("DONE!");
-    }
 }

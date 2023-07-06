@@ -129,7 +129,7 @@ public interface Blittable<SourceType extends Blittable<?>>
      */
     default void blit(int x, int y, SourceType readSource)
     {
-        blitCropped(0, 0, readSource, 0, 0, readSource.getWidth(), readSource.getHeight());
+        blitCropped(x, y, readSource, 0, 0, readSource.getWidth(), readSource.getHeight());
     }
 
     /**

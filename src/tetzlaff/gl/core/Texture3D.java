@@ -23,6 +23,7 @@ import java.nio.ShortBuffer;
 import java.util.function.Function;
 
 import org.lwjgl.BufferUtils;
+import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.types.AbstractDataType;
 import tetzlaff.util.BufferedImageBuilder;
@@ -211,10 +212,16 @@ public interface Texture3D<ContextType extends Context<ContextType>>
         Texture3D<ContextType> readSource, int srcX, int srcY, int srcZ, int srcWidth, int srcHeight, int srcDepth,
         boolean linearFiltering)
     {
-        try(FramebufferObject<ContextType> sourceFBO = getContext()
-            .buildFramebufferObject(readSource.getWidth(), readSource.getHeight()).createFramebufferObject();
-            FramebufferObject<ContextType> destFBO = getContext()
-                .buildFramebufferObject(this.getWidth(), this.getHeight()).createFramebufferObject())
+        FramebufferObjectBuilder<ContextType> fboBuilder = getContext().buildFramebufferObject(readSource.getWidth(), readSource.getHeight());
+
+        if (this.getTextureType() == TextureType.COLOR)
+        {
+            // Color attachments need to be declared in advance; depth and stencil are assumed to always be a possibility
+            fboBuilder.addEmptyColorAttachment();
+        }
+
+        try(FramebufferObject<ContextType> sourceFBO = fboBuilder.createFramebufferObject();
+            FramebufferObject<ContextType> destFBO = fboBuilder.createFramebufferObject())
         {
             int effectiveDepth = Math.min(Math.min(this.getDepth() - destZ, readSource.getDepth() - srcZ), srcDepth);
 
@@ -379,10 +386,12 @@ public interface Texture3D<ContextType extends Context<ContextType>>
             public void readARGB(ByteBuffer destination, int x, int y, int width, int height)
             {
                 try(FramebufferObject<ContextType> fbo = getContext()
-                    .buildFramebufferObject(this.getWidth(), this.getHeight()).createFramebufferObject())
+                    .buildFramebufferObject(this.getWidth(), this.getHeight())
+                    .addEmptyColorAttachment()
+                    .createFramebufferObject())
                 {
                     fbo.setColorAttachment(0, Texture3D.this.getLayerAsFramebufferAttachment(layerIndex));
-                    fbo.getColorAttachmentTexture(0).getColorTextureReader().readARGB(destination, x, y, width, height);
+                    fbo.getTextureReaderForColorAttachment(0).readARGB(destination, x, y, width, height);
                 }
             }
 
@@ -390,10 +399,12 @@ public interface Texture3D<ContextType extends Context<ContextType>>
             public void readFloatingPointRGBA(FloatBuffer destination, int x, int y, int width, int height)
             {
                 try(FramebufferObject<ContextType> fbo = getContext()
-                    .buildFramebufferObject(this.getWidth(), this.getHeight()).createFramebufferObject())
+                    .buildFramebufferObject(this.getWidth(), this.getHeight())
+                    .addEmptyColorAttachment()
+                    .createFramebufferObject())
                 {
                     fbo.setColorAttachment(0, Texture3D.this.getLayerAsFramebufferAttachment(layerIndex));
-                    fbo.getColorAttachmentTexture(0).getColorTextureReader().readFloatingPointRGBA(destination, x, y, width, height);
+                    fbo.getTextureReaderForColorAttachment(0).readFloatingPointRGBA(destination, x, y, width, height);
                 }
             }
 
@@ -401,10 +412,12 @@ public interface Texture3D<ContextType extends Context<ContextType>>
             public void readIntegerRGBA(IntBuffer destination, int x, int y, int width, int height)
             {
                 try(FramebufferObject<ContextType> fbo = getContext()
-                    .buildFramebufferObject(this.getWidth(), this.getHeight()).createFramebufferObject())
+                    .buildFramebufferObject(this.getWidth(), this.getHeight())
+                    .addEmptyColorAttachment()
+                    .createFramebufferObject())
                 {
                     fbo.setColorAttachment(0, Texture3D.this.getLayerAsFramebufferAttachment(layerIndex));
-                    fbo.getColorAttachmentTexture(0).getColorTextureReader().readIntegerRGBA(destination, x, y, width, height);
+                    fbo.getTextureReaderForColorAttachment(0).readIntegerRGBA(destination, x, y, width, height);
                 }
             }
         };
@@ -438,7 +451,7 @@ public interface Texture3D<ContextType extends Context<ContextType>>
                     .buildFramebufferObject(this.getWidth(), this.getHeight()).createFramebufferObject())
                 {
                     fbo.setDepthAttachment(Texture3D.this.getLayerAsFramebufferAttachment(layerIndex));
-                    fbo.getDepthAttachmentTexture().getDepthTextureReader().read(destination, x, y, width, height);
+                    fbo.getTextureReaderForDepthAttachment().read(destination, x, y, width, height);
                 }
             }
         };

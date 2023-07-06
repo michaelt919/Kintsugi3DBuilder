@@ -17,6 +17,8 @@ import tetzlaff.ibrelight.core.TextureFitSettings;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -34,6 +36,12 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
         weightsValidity = new boolean[textureFitSettings.width * textureFitSettings.height];
         this.textureFitSettings = textureFitSettings;
 
+    }
+
+    @Override
+    public TextureFitSettings getTextureFitSettings()
+    {
+        return textureFitSettings;
     }
 
     @Override
@@ -80,15 +88,83 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
     }
 
     @Override
+    public void fillHoles()
+    {
+        // Fill holes
+        // TODO Quick hack; should be replaced with something more robust.
+        System.out.println("Filling holes...");
+
+        int texelCount = textureFitSettings.width * textureFitSettings.height;
+
+        for (int i = 0; i < Math.max(textureFitSettings.width, textureFitSettings.height); i++)
+        {
+            Collection<Integer> filledPositions = new HashSet<>(256);
+            for (int p = 0; p < texelCount; p++)
+            {
+                if (!this.areWeightsValid(p))
+                {
+                    int left = (texelCount + p - 1) % texelCount;
+                    int right = (p + 1) % texelCount;
+                    int up = (texelCount + p - textureFitSettings.width) % texelCount;
+                    int down = (p + textureFitSettings.width) % texelCount;
+
+                    int count = 0;
+
+                    for (int b = 0; b < this.getSpecularBasisSettings().getBasisCount(); b++)
+                    {
+                        count = 0;
+                        double sum = 0.0;
+
+                        if (this.areWeightsValid(left))
+                        {
+                            sum += this.getWeights(left).get(b);
+                            count++;
+                        }
+
+                        if (this.areWeightsValid(right))
+                        {
+                            sum += this.getWeights(right).get(b);
+                            count++;
+                        }
+
+                        if (this.areWeightsValid(up))
+                        {
+                            sum += this.getWeights(up).get(b);
+                            count++;
+                        }
+
+                        if (this.areWeightsValid(down))
+                        {
+                            sum += this.getWeights(down).get(b);
+                            count++;
+                        }
+
+                        if (sum > 0.0)
+                        {
+                            this.getWeights(p).set(b, sum / count);
+                        }
+                    }
+
+                    if (count > 0)
+                    {
+                        filledPositions.add(p);
+                    }
+                }
+            }
+
+            for (int p : filledPositions)
+            {
+                this.setWeightsValidity(p, true);
+            }
+        }
+
+        System.out.println("DONE!");
+    }
+
+    @Override
     public void saveWeightMaps(File outputDirectory)
     {
         SpecularFitSerializer.saveWeightImages(
             getSpecularBasisSettings().getBasisCount(), textureFitSettings.width, textureFitSettings.height, this, outputDirectory);
-    }
-
-    @Override
-    public TextureFitSettings getTextureFitSettings()
-    {
-        return textureFitSettings;
     }
 }

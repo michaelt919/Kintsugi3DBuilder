@@ -11,6 +11,8 @@
 
 package tetzlaff.ibrelight.export.specularfit;
 
+import tetzlaff.gl.core.Texture3D;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -47,6 +49,20 @@ public class SpecularFitSerializer
             try
             {
                 ImageIO.write(weightImg, "PNG", new File(outputDirectory, getWeightFileName(b)));
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+    public static void saveWeightImages(Texture3D<?> basisWeights, File outputDirectory)
+    {
+        for (int b = 0; b < basisWeights.getDepth(); b++)
+        {
+            try
+            {
+                basisWeights.getColorTextureReader(b).saveToFile("PNG", new File(outputDirectory, getWeightFileName(b)));
             }
             catch (IOException e)
             {

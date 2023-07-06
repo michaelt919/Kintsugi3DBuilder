@@ -20,6 +20,10 @@ import java.util.List;
 
 public interface SpecularDecomposition extends SpecularBasis, SpecularBasisWeights
 {
+    TextureFitSettings getTextureFitSettings();
+
+    SpecularBasisSettings getSpecularBasisSettings();
+
     DoubleVector3 getDiffuseAlbedo(int basisIndex);
 
     SimpleMatrix getWeights(int texelIndex);
@@ -30,6 +34,8 @@ public interface SpecularDecomposition extends SpecularBasis, SpecularBasisWeigh
 
     void invalidateWeights();
 
+    void fillHoles();
+
     void setWeightsValidity(int texelIndex, boolean validity);
 
     void saveBasisFunctions(File outputDirectory);
@@ -37,8 +43,4 @@ public interface SpecularDecomposition extends SpecularBasis, SpecularBasisWeigh
     void saveWeightMaps(File outputDirectory);
 
     void saveDiffuseMap(double gamma, File outputDirectory);
-
-    TextureFitSettings getTextureFitSettings();
-
-    SpecularBasisSettings getSpecularBasisSettings();
 }

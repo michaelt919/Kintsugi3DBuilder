@@ -85,21 +85,6 @@ public class ImageCache<ContextType extends Context<ContextType>>
         return settings;
     }
 
-    File getBlockDir(int i, int j)
-    {
-        return new File(settings.getCacheDirectory(), String.format("%d_%d", i, j));
-    }
-
-    public int getBlockStartX(int i)
-    {
-        return (int) Math.round((double) i * (double) settings.getTextureWidth() / (double) settings.getTextureSubdiv());
-    }
-
-    public int getBlockStartY(int j)
-    {
-        return (int) Math.round((double) j * (double) settings.getTextureHeight() / (double) settings.getTextureSubdiv());
-    }
-
     public boolean isInitialized()
     {
         return initialized;
@@ -122,7 +107,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         {
             for (int j = 0; j < settings.getTextureSubdiv(); j++)
             {
-                getBlockDir(i, j).mkdirs();
+                settings.getBlockDir(i, j).mkdirs();
             }
         }
 
@@ -297,7 +282,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
                     // Loop over "columns"
                     for (int i = 0; i < settings.getTextureSubdiv(); i++)
                     {
-                        int xNext = getBlockStartX(i + 1);
+                        int xNext = getSettings().getBlockStartX(i + 1);
 
                         // xRand < round(texture width * (xSample + 1) / sampled width)
                         // xRand <= texture width * (xSample + 1) / sampled width - 0.5;
@@ -317,7 +302,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
                         // Loop over "rows"
                         for (int j = 0; j < settings.getTextureSubdiv(); j++)
                         {
-                            int yNext = getBlockStartY(j + 1);
+                            int yNext = getSettings().getBlockStartY(j + 1);
 
                             int width = xNext - x;
                             int height = yNext - y;
@@ -390,38 +375,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
      */
     public TextureBlockResourceFactory<ContextType> createBlockResourceFactory()
     {
-        return new TextureBlockResourceFactory<>(this, resources.getSharedResources());
-    }
-
-    public FramebufferViewport<ContextType> viewportForBlock(Framebuffer<ContextType> framebuffer, int i, int j)
-    {
-        int x = getBlockStartX(i);
-        int y = getBlockStartY(j);
-        int width = getBlockStartX(i + 1) - x;
-        int height = getBlockStartY(j + 1) - y;
-
-        return framebuffer.getViewport(x, y, width, height);
-    }
-
-    public <ResourceType extends Resource & Blittable<ResourceType>> void cropForBlock(
-        ResourceType destination, ResourceType source, int i, int j, boolean linearFiltering)
-    {
-        int x = getBlockStartX(i);
-        int y = getBlockStartY(j);
-        int width = getBlockStartX(i + 1) - x;
-        int height = getBlockStartY(j + 1) - y;
-
-        destination.blitCroppedAndScaled(source, x, y, width, height, linearFiltering);
-    }
-
-    public <ResourceType extends Resource> ResourceType cropForBlock(Croppable<ResourceType> resource, int i, int j)
-    {
-        int x = getBlockStartX(i);
-        int y = getBlockStartY(j);
-        int width = getBlockStartX(i + 1) - x;
-        int height = getBlockStartY(j + 1) - y;
-
-        return resource.crop(x, y, width, height);
+        return new TextureBlockResourceFactory<>(resources.getSharedResources(), settings);
     }
 
     private int getHighResIndexForSample(int sampleIndex)

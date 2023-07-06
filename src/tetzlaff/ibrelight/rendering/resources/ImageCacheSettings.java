@@ -80,4 +80,19 @@ public class ImageCacheSettings
     {
         return String.format("%d-%d-%d-%d", textureWidth, textureHeight, textureSubdiv, sampledSize);
     }
+
+    public File getBlockDir(int i, int j)
+    {
+        return new File(getCacheDirectory(), String.format("%d_%d", i, j));
+    }
+
+    public int getBlockStartX(int i)
+    {
+        return (int) Math.round((double) i * (double) textureWidth / (double) textureSubdiv);
+    }
+
+    public int getBlockStartY(int j)
+    {
+        return (int) Math.round((double) j * (double) textureHeight / (double) textureSubdiv);
+    }
 }

@@ -82,17 +82,6 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
         return basisWeightResources;
     }
 
-    public SpecularResources<ContextType> createBlockResources(ImageCache<ContextType> imageCache, int i, int j)
-    {
-        SimpleSpecularResources<ContextType> blockResources = new SimpleSpecularResources<>();
-        blockResources.diffuseMap = imageCache.cropForBlock(diffuseMap, i, j);
-        blockResources.normalMap = imageCache.cropForBlock(normalMap, i, j);
-        blockResources.specularReflectivityMap = imageCache.cropForBlock(specularReflectivityMap, i, j);
-        blockResources.specularRoughnessMap = imageCache.cropForBlock(specularRoughnessMap, i, j);
-        blockResources.basisWeightResources = imageCache.cropForBlock(basisWeightResources, i, j);
-        return blockResources;
-    }
-
     /**
      * Sets the diffuse texture.  This object will take ownership of the diffuse map.
      * @param diffuseMap
