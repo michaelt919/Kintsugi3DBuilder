@@ -54,6 +54,45 @@ public class SpecularFitGltfExporter
         }
     }
 
+    public void addBaseColorLods(String baseUri, int baseRes, int minRes)
+    {
+        if (baseColorTexture == null)
+            return;
+
+        addLodsToTexture(baseColorTexture, baseUri, baseRes, minRes);
+    }
+
+    private void addLodsToTexture(TextureInfo textureInfo, String baseUri, int baseRes, int minRes)
+    {
+        Texture tex = getTexForInfo(textureInfo);
+        GlTF gltf = asset.getGltf();
+
+        GltfTextureExtras extras = new GltfTextureExtras();
+
+        extras.setBaseRes(baseRes);
+
+        String filename = baseUri;
+        String extension = "";
+        int i = filename.lastIndexOf('.'); //Strip file extension
+        if (i > 0)
+        {
+            extension = filename.substring(i);
+            filename = filename.substring(0, i);
+        }
+
+        // size = 2048, 1024, 512... minRes
+        for (int size = baseRes / 2; size >= minRes; size /= 2)
+        {
+            Image image = new Image();
+            image.setUri(filename + "-" + size + extension);
+            gltf.addImages(image);
+            int imageIndex = gltf.getImages().size() - 1;
+            extras.setLodImageIndex(size, imageIndex);
+        }
+
+        tex.setExtras(extras);
+    }
+
     public void setDiffuseUri(String uri)
     {
         if (diffuseTexture == null)
@@ -61,6 +100,18 @@ public class SpecularFitGltfExporter
             diffuseTexture = createRelativeTexture(uri, "diffuse");
             extraData.setDiffuseTexture(diffuseTexture);
         }
+        else
+        {
+            setTextureUri(baseColorTexture, uri);
+        }
+    }
+
+    public void addDiffuseLods(String baseUri, int baseRes, int minRes)
+    {
+        if (diffuseTexture == null)
+            return;
+
+        addLodsToTexture(diffuseTexture, baseUri, baseRes, minRes);
     }
 
     public void setNormalUri(String uri)
@@ -76,6 +127,14 @@ public class SpecularFitGltfExporter
         }
     }
 
+    public void addNormalLods(String baseUri, int baseRes, int minRes)
+    {
+        if (normalTexture == null)
+            return;
+
+        addLodsToTexture(normalTexture, baseUri, baseRes, minRes);
+    }
+
     public void setRoughnessMetallicUri(String uri)
     {
         if (roughnessMetallicTexture == null)
@@ -89,6 +148,14 @@ public class SpecularFitGltfExporter
         }
     }
 
+    public void addRoughnessMetallicLods(String baseUri, int baseRes, int minRes)
+    {
+        if (roughnessMetallicTexture == null)
+            return;
+
+        addLodsToTexture(roughnessMetallicTexture, baseUri, baseRes, minRes);
+    }
+
     public void setSpecularUri(String uri)
     {
         if (specularTexture == null)
@@ -100,6 +167,14 @@ public class SpecularFitGltfExporter
         {
             setTextureUri(specularTexture, uri);
         }
+    }
+
+    public void addSpecularLods(String baseUri, int baseRes, int minRes)
+    {
+        if (specularTexture == null)
+            return;
+
+        addLodsToTexture(specularTexture, baseUri, baseRes, minRes);
     }
 
     public void setBasisFunctionsUri(String uri)
@@ -182,6 +257,15 @@ public class SpecularFitGltfExporter
         setBasisFunctionsUri("basisFunctions.csv");
     }
 
+    public void addAllDefaultLods(int baseRes, int minRes)
+    {
+        addBaseColorLods("albedo.png", baseRes, minRes);
+        addDiffuseLods("diffuse.png", baseRes, minRes);
+        addNormalLods("normal.png", baseRes, minRes);
+        addRoughnessMetallicLods("orm.png", baseRes, minRes);
+        addSpecularLods("specular.png", baseRes, minRes);
+    }
+
     private static MaterialNormalTextureInfo convertTexInfoToNormal(TextureInfo normalTextureInfo, float scale)
     {
         MaterialNormalTextureInfo normInfo = new MaterialNormalTextureInfo();
@@ -235,6 +319,12 @@ public class SpecularFitGltfExporter
 
         Image image = gltf.getImages().get(texture.getSource());
         image.setUri(newUri);
+    }
+
+    private Texture getTexForInfo(TextureInfo info)
+    {
+        GlTF gltf = asset.getGltf();
+        return gltf.getTextures().get(info.getIndex());
     }
 
     private TextureInfo createRelativeTexture(String uri)

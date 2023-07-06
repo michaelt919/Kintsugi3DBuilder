@@ -210,6 +210,12 @@ public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights
             exporter.setDefaultNames();
             exporter.addWeightImages(settings.basisCount, settings.isCombineWeights());
 
+            // Deal with LODs if enabled
+            if (settings.isGenerateLowResTextures())
+            {
+                exporter.addAllDefaultLods(settings.height, settings.getMinimumTextureResolution());
+            }
+
             Matrix4 rotation = resources.viewSet.getCameraPose(resources.viewSet.getPrimaryViewIndex());
             Vector3 translation = rotation.getUpperLeft3x3().times(resources.geometry.getCentroid().times(-1.f));
             Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2), translation.asVector4(1.0f));
