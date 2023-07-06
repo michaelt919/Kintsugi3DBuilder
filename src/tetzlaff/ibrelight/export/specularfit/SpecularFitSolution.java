@@ -214,6 +214,7 @@ public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights
             if (settings.isGenerateLowResTextures())
             {
                 exporter.addAllDefaultLods(settings.height, settings.getMinimumTextureResolution());
+                exporter.addWeightImageLods(settings.basisCount, settings.height, settings.getMinimumTextureResolution());
             }
 
             Matrix4 rotation = resources.viewSet.getCameraPose(resources.viewSet.getPrimaryViewIndex());

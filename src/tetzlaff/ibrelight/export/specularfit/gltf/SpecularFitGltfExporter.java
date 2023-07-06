@@ -193,12 +193,26 @@ public class SpecularFitGltfExporter
         weights.setStride(combined ? 4 : 1);
         for (int b = 0; b < basisCount / weights.getStride(); b++)
         {
-            String weightsFilename = SpecularFitSerializer.getCombinedWeightFilename(b);
+            String weightsFilename = combined ? SpecularFitSerializer.getCombinedWeightFilename(b) : SpecularFitSerializer.getWeightFileName(b);
             String weightName = weightsFilename.split("\\.")[0];
             TextureInfo weightTexInfo = createRelativeTexture(weightsFilename, weightName);
             weights.addTexture(weightTexInfo);
         }
         extraData.setSpecularWeights(weights);
+    }
+
+    public void addWeightImageLods(int basisCount, int baseRes, int minRes)
+    {
+        if (extraData.getSpecularWeights() == null)
+            return;
+
+        boolean combined = extraData.getSpecularWeights().getStride() == 4;
+
+        for (int b = 0; b < basisCount / extraData.getSpecularWeights().getStride(); b++)
+        {
+            String weightsFilename = combined ? SpecularFitSerializer.getCombinedWeightFilename(b) : SpecularFitSerializer.getWeightFileName(b);
+            addLodsToTexture(extraData.getSpecularWeights().getTextures().get(b), weightsFilename, baseRes, minRes);
+        }
     }
 
     public void setTranslation(Vector3 translation)
