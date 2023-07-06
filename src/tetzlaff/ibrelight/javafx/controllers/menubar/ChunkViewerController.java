@@ -13,6 +13,8 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -21,7 +23,11 @@ import org.w3c.dom.NodeList;
 import javafx.scene.image.ImageView;
 import tetzlaff.gl.util.UnzipHelper;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -42,17 +48,22 @@ public class ChunkViewerController implements Initializable {
     public Text imgViewLabel;
     private Document selectedChunkXML;
 
-    static final String[] validExtensions = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
+    static final String[] VALID_EXTENSIONS = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
     private String psxFilePath;
     private Document frameZip;
 
     private int chunkID;
     private String chunkName;
+
+    static final int THUMBNAIL_SIZE = 30;
     @FXML
     public ChoiceBox<String> newChunkSelectionChoiceBox;//allows the user to select a new chunk to view
 
     @FXML
     public Button selectChunkButton;
+
+    @FXML
+    public TextFlow textFlow;
 
     private Scene scene;
     private Parent root;
@@ -109,7 +120,7 @@ public class ChunkViewerController implements Initializable {
 
             if (camera.getNodeType() == Node.ELEMENT_NODE) {
                 Element cameraElement = (Element) camera;
-                String imageName = cameraElement.getAttribute("id");
+                String imageName = cameraElement.getAttribute("label");
 
                 ImageView thumbnailImgView;
                 try {
@@ -118,8 +129,8 @@ public class ChunkViewerController implements Initializable {
                     //thumbnail not found in thumbnailImageList
                     thumbnailImgView = new ImageView(new Image(new File("question-mark.png").toURI().toString()));
                 }
-                thumbnailImgView.setFitWidth(30);//TODO: SCALE SIZE INSTEAD OF HARD CODING?
-                thumbnailImgView.setFitHeight(30);
+                thumbnailImgView.setFitWidth(THUMBNAIL_SIZE);
+                thumbnailImgView.setFitHeight(THUMBNAIL_SIZE);
 
                 TreeItem<String> imageTreeItem = new TreeItem<>(imageName, thumbnailImgView);
                 rootItem.getChildren().add(imageTreeItem);
@@ -142,7 +153,8 @@ public class ChunkViewerController implements Initializable {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/menubar/ChunkViewer.fxml"));
             root = fxmlLoader.load();
             ChunkViewerController chunkViewerController = fxmlLoader.getController();
-            chunkViewerController.initializeChunkSelectionAndTreeView(newSelectedChunkXML, psxFilePath, newChunkID, this.newChunkSelectionChoiceBox, chunkZipPathPairs);
+            chunkViewerController.initializeChunkSelectionAndTreeView(newSelectedChunkXML, psxFilePath, newChunkID,
+                    this.newChunkSelectionChoiceBox, chunkZipPathPairs);
             stage = (Stage) ((javafx.scene.Node) actionEvent.getSource()).getScene().getWindow();
             scene = new Scene(root);
             stage.setScene(scene);
@@ -152,31 +164,11 @@ public class ChunkViewerController implements Initializable {
         }
     }
 
-
-    private void initializeChoiceBox(ChoiceBox<String> chunkSelectionChoiceBox) {
-        //add all items from old checkbox to new checkbox
-        this.newChunkSelectionChoiceBox.getItems().addAll(chunkSelectionChoiceBox.getItems());
-
-        //initialize checkbox to selected chunk (instead of blank) if possible
-        //otherwise, set to first item in list
-        try {
-            this.newChunkSelectionChoiceBox.setValue(chunkName);
-        } catch (Exception e) {
-            if (this.newChunkSelectionChoiceBox.getItems() != null) {
-                this.newChunkSelectionChoiceBox.setValue(this.newChunkSelectionChoiceBox.getItems().get(0));
-            }
-        }
-
-        if (this.newChunkSelectionChoiceBox.getItems().size() <= 1) {
-            selectChunkButton.setDisable(true);
-        }
-    }
-
     public void selectImageInTreeView() {
         //selectedItem holds the cameraID associated with the image
         TreeItem<String> selectedItem = chunkTreeView.getSelectionModel().getSelectedItem();
         if (selectedItem != null) {
-            String cameraID = selectedItem.getValue();
+            String imageName = selectedItem.getValue();
             try {
                 NodeList cameras = frameZip.getElementsByTagName("frame").
                         item(0).getChildNodes().
@@ -189,7 +181,14 @@ public class ChunkViewerController implements Initializable {
                     if (cameras.item(i).getNodeName().equals("camera")) {
                         Element camera = (Element) cameras.item(i);
 
-                        if (camera.getAttribute("camera_id").equals(cameraID)) {
+                        Node photoNode = camera.getElementsByTagName("photo").item(0);
+                        Element photoElement = (Element) photoNode;
+
+                        //path in photo element contains "../../.." before the name of the image,
+                        // so we cannot test for an exact match
+                        //using regex to see if the image names are the same regardless of their paths
+                        //ex. "folder/anotherFolder/asdfghjk/imageName.png" matches with "imageName.png"
+                        if (photoElement.getAttribute("path").matches(".*" + imageName)) {
                             selectedItemCam = camera;
                         }
                     }
@@ -212,14 +211,17 @@ public class ChunkViewerController implements Initializable {
                     if (imgFile.exists()) {
                         chunkViewerImgView.setImage(new Image(imgFile.toURI().toString()));
 
-                        //set label to: psx name + chunk name + cameraID
-
-                        imgViewLabel.setText(psxFile.getName() + "\n" + chunkName + ": Image " + cameraID);
+//                      set label to: psx name + chunk name + cameraID
+                        imgViewLabel.setText("File: " + psxFile.getName() +
+                                            "\nChunk: " + chunkName +
+                                            "\nImage: " + imageName);
+                        textFlow.setTextAlignment(TextAlignment.LEFT);
                     } else {
                         //use thumbnail as main image if main image not found
                         chunkViewerImgView.setImage(selectedItem.getGraphic().
                                 snapshot(new SnapshotParameters(), null));
                         imgViewLabel.setText("Image not found.");
+                        textFlow.setTextAlignment(TextAlignment.CENTER);
                     }
                 }
                 //TODO: .TIF (and maybe other image types) ARE NOT SUPPORTED. CONVERT THESE?
@@ -230,8 +232,46 @@ public class ChunkViewerController implements Initializable {
         }
     }
 
+    private void initializeChoiceBox(ChoiceBox<String> chunkSelectionChoiceBox) {
+        //add all items from old checkbox to new checkbox
+        this.newChunkSelectionChoiceBox.getItems().addAll(chunkSelectionChoiceBox.getItems());
+
+        //initialize checkbox to selected chunk (instead of blank) if possible
+        //otherwise, set to first item in list
+        try {
+            this.newChunkSelectionChoiceBox.setValue(chunkName);
+        } catch (Exception e) {
+            if (this.newChunkSelectionChoiceBox.getItems() != null) {
+                this.newChunkSelectionChoiceBox.setValue(this.newChunkSelectionChoiceBox.getItems().get(0));
+            }
+        }
+
+        if (this.newChunkSelectionChoiceBox.getItems().size() <= 1) {
+            selectChunkButton.setDisable(true);
+        }
+    }
+
+//    private Image convertTifToJpg(File inputFile) {
+//        try {
+//            BufferedImage bufferedImage = ImageIO.read(inputFile);
+//
+//            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+//            ImageIO.write(bufferedImage, "jpg", outputStream);
+//
+//            byte[] jpegData = outputStream.toByteArray();
+//
+//            ByteArrayInputStream imageInputStream = new ByteArrayInputStream(outputStream.toByteArray());
+//
+//            return new Image(imageInputStream);
+//
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        return null;
+//    }
+
     private boolean isValidImageType(String path) {
-        for (String extension : validExtensions) {
+        for (String extension : VALID_EXTENSIONS) {
             if (path.matches("." + extension)) {
                 return true;
             }

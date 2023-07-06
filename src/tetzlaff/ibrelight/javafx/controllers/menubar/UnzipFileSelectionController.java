@@ -147,7 +147,6 @@ public class UnzipFileSelectionController {
                         chunkSelectionChoiceBox.setValue(chunkSelectionChoiceBox.getItems().get(0));
                     }
                 }
-
             } catch (ParserConfigurationException|IOException|SAXException e) {
                 e.printStackTrace();
             }
@@ -179,7 +178,7 @@ public class UnzipFileSelectionController {
         }
     }
 
-    public void selectChunk(ActionEvent actionEvent) throws IOException {
+    public void selectChunk(ActionEvent actionEvent) {
         String selectedChunkZip = chunkZipPathPairs.get(chunkSelectionChoiceBox.getValue());
         int chunkID = UnzipHelper.getChunkIdFromZipPath(selectedChunkZip);
 
@@ -187,16 +186,19 @@ public class UnzipFileSelectionController {
         try {
             selectedChunkXML = UnzipHelper.convertStringToDocument(
                     UnzipHelper.unzipToString(selectedChunkZip));//path --> XML as String --> XML document
+
+            //load chunk viewer window
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/menubar/ChunkViewer.fxml"));
             root = fxmlLoader.load();
             ChunkViewerController chunkViewerController = fxmlLoader.getController();
-            chunkViewerController.initializeChunkSelectionAndTreeView(selectedChunkXML, psxPathTxtField.getText(), chunkID,
-                    chunkSelectionChoiceBox, chunkZipPathPairs);
+            chunkViewerController.initializeChunkSelectionAndTreeView(selectedChunkXML, psxPathTxtField.getText(),
+                    chunkID, chunkSelectionChoiceBox, chunkZipPathPairs);
         }
         catch (Exception e){
             unzipPSXButton.fire();//selected .psx file and list of chunks may be referring to different objects
                                     //if chunk selection fails, try unzipping the file again
-            return;
+                                    //this action will also update the chunk selection choice box
+            return;//do not load new window for chunk viewer
         }
 
         stage = (Stage) ((javafx.scene.Node) actionEvent.getSource()).getScene().getWindow();
@@ -204,7 +206,6 @@ public class UnzipFileSelectionController {
         stage.setScene(scene);
         stage.show();
     }
-
 
     public void enterToRun(KeyEvent keyEvent) {//press the enter button while in the text field to unzip
         if (keyEvent.getCode() == KeyCode.ENTER) {

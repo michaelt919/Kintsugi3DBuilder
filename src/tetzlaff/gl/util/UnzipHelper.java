@@ -100,7 +100,7 @@ public class UnzipHelper {
         return images;
     }
 
-    private static Image readImageData(InputStream inputStream) throws IOException {
+    public static Image readImageData(InputStream inputStream) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         byte[] buffer = new byte[4096];
         int bytesRead;
