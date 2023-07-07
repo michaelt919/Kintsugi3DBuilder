@@ -152,6 +152,11 @@ public class SpecularFitFinalizer
                 runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.viewSet.getCameraPoseCount()));
 
             calculateGGXRMSE(resources, specularFit, scratchFramebuffer, rmseOut);
+
+            if (settings.isGlTFEnabled())
+            {
+                solution.saveGlTF(resources);
+            }
         }
         catch (FileNotFoundException e)
         {

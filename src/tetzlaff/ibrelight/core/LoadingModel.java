@@ -99,4 +99,6 @@ public class LoadingModel
     {
         this.handler.unload();
     }
+
+    public boolean hasValidHandler(){return this.handler != null;}
 }

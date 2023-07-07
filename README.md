@@ -8,9 +8,13 @@ Contributors:
 - Sam Steinkamp (University of Minnesota) - contributor
 - Josh Lyu (University of Wisconsin - Stout) - contributor
 - Mey Amor (University of Wisconsin - Stout) - contributor
+- Jacob Buelow (University of Wisconsin - Stout) - contributor
+- Luke Denney (University of Wisconsin - Stout) - contributor
+- Darcy Hannen (University of Wisconsin - Stout) - UX designer
 - Gary Meyer (University of Minnesota) - designer and advisor
 
-Copyright (c) Seth Berrier, Michael Tetzlaff, Zhangchi (Josh) Lyu, Mey Amor 2022
+Copyright (c) Seth Berrier, Michael Tetzlaff, Zhangchi (Josh) Lyu, Mey Amor, Jacob Buelow, Luke Denney 2023
+
 Copyright (c) The Regents of the University of Minnesota 2019
 
 Licensed under GPLv3 

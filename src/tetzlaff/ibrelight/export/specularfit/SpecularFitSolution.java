@@ -23,8 +23,10 @@ import javax.imageio.ImageIO;
 
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
+import tetzlaff.gl.core.Context;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.gl.vecmath.DoubleVector4;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
 public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights
 {
@@ -151,8 +153,16 @@ public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights
 
     public void saveWeightMaps()
     {
-        SpecularFitSerializer.saveWeightImages(
-            settings.basisCount, settings.width, settings.height, this, settings.outputDirectory);
+        if (settings.isCombineWeights())
+        {
+            SpecularFitSerializer.saveCombinedWeightImages(
+                    settings.basisCount, settings.width, settings.height, this, settings.outputDirectory);
+        }
+        else
+        {
+            SpecularFitSerializer.saveWeightImages(
+                    settings.basisCount, settings.width, settings.height, this, settings.outputDirectory);
+        }
     }
 
     public void saveDiffuseMap(double gamma)
@@ -187,6 +197,23 @@ public class SpecularFitSolution implements SpecularBasis, SpecularBasisWeights
         }
         catch (IOException e)
         {
+            e.printStackTrace();
+        }
+    }
+
+    public <ContextType extends Context<ContextType>> void saveGlTF(IBRResources<ContextType> resources)
+    {
+        System.out.println("Starting glTF export...");
+        try
+        {
+            SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(resources.geometry);
+            exporter.setDefaultNames();
+            exporter.addWeightImages(settings.basisCount, settings.isCombineWeights());
+            exporter.write(new File(settings.outputDirectory, "model.glb"));
+            System.out.println("DONE!");
+        } catch (IOException e)
+        {
+            System.out.println("Error occurred during glTF export:");
             e.printStackTrace();
         }
     }

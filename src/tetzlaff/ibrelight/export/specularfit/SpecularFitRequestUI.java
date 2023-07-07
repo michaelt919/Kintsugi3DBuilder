@@ -42,6 +42,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
     @FXML private TextField exportDirectoryField;
 
     @FXML private TextField basisCountTextField;
+    @FXML private CheckBox combineBasisCheckbox;
     @FXML private TextField mfdResolutionTextField;
     @FXML private TextField convergenceToleranceTextField;
     @FXML private TextField specularSmoothnessTextField;
@@ -55,6 +56,9 @@ public class SpecularFitRequestUI implements IBRRequestUI
 
     @FXML private CheckBox priorSolutionCheckBox;
     @FXML private TextField priorSolutionField;
+
+    @FXML private CheckBox exportGLTFCheckbox;
+    @FXML private CheckBox exportGLTFPackedCheckbox;
 
     @FXML private Button runButton;
 
@@ -188,6 +192,8 @@ public class SpecularFitRequestUI implements IBRRequestUI
                     new File(exportDirectoryField.getText()),
                     modelAccess.getSettingsModel());
 
+            settings.setCombineWeights(combineBasisCheckbox.isSelected());
+
             // Specular / general settings
             settings.setConvergenceTolerance(Double.parseDouble(convergenceToleranceTextField.getText()));
             settings.setSpecularSmoothness(Double.parseDouble(specularSmoothnessTextField.getText()));
@@ -203,6 +209,10 @@ public class SpecularFitRequestUI implements IBRRequestUI
             settings.setLevenbergMarquardtEnabled(levenbergMarquardtCheckBox.isSelected());
             settings.setUnsuccessfulLMIterationsAllowed(Integer.parseInt(unsuccessfulLMIterationsTextField.getText()));
             settings.setReconstructAll(reconstructAllCheckBox.isSelected());
+
+            // glTF export settings
+            settings.setGlTFEnabled(exportGLTFCheckbox.isSelected());
+            settings.setGlTFPackTextures(exportGLTFPackedCheckbox.isSelected());
 
             if (reconstructionViewSetField.getText() != null && !reconstructionViewSetField.getText().isEmpty())
             {
