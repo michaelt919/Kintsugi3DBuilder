@@ -109,7 +109,7 @@ public class ShaderBasedErrorCalculator<ContextType extends Context<ContextType>
                     total1.weight += total2.weight;
                 });
 
-        report.setError(Math.sqrt(errorTotal.error / errorTotal.weight));
+        report.setError(Math.sqrt(errorTotal.error / Math.max(1.0, errorTotal.weight)));
     }
 
     public void reject()

@@ -188,7 +188,8 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         errorCalculator.getProgram().setTexture("normalEstimate", getNormalMap());
         calculateError(errorCalculator);
 
-        if (normalOptimization.isNormalRefinementEnabled())
+        if (errorCalculator.getReport().getError() > 0.0 // error == 0 probably only if there are no valid pixels
+            && normalOptimization.isNormalRefinementEnabled())
         {
             normalOptimizationIteration(convergenceTolerance, errorCalculator, debugDirectory);
         }
@@ -294,7 +295,11 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
         for (int i = 0; i < blockCount; i++) // TODO: this was done quickly; may need to be refactored
         {
-            System.out.println("Starting block " + i + "...");
+            if (blockCount > 1)
+            {
+                System.out.println("Starting block " + i + "...");
+            }
+
             weightOptimization.execute(
                 reflectanceStream.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
                 specularDecomposition, i * weightBlockSize);

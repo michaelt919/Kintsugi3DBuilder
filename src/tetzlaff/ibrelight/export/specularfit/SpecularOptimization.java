@@ -223,6 +223,9 @@ public class SpecularOptimization
             {
                 for (int j = 0; j < cache.getSettings().getTextureSubdiv(); j++)
                 {
+                    System.out.println();
+                    System.out.println("Starting block (" + i + ", " + j + ")...");
+
                     try (IBRResourcesTextureSpace<ContextType> blockResources = blockResourceFactory.createBlockResources(i, j))
                     {
                         TextureFitSettings blockSettings = blockResources.getTextureFitSettings(settings.getTextureFitSettings().gamma);
