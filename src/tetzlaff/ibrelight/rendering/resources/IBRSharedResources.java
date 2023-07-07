@@ -62,11 +62,11 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
     /**
      * Contains the VBOs for positions, tex-coords, normals, and tangents
      */
-    private GeometryResources<ContextType> geometryResources;
+    private final GeometryResources<ContextType> geometryResources;
 
-    private MaterialResources<ContextType> materialResources;
+    private final MaterialResources<ContextType> materialResources;
 
-    private LuminanceMapResources<ContextType> luminanceMapResources;
+    private final LuminanceMapResources<ContextType> luminanceMapResources;
 
     private final ContextType context;
 
@@ -408,8 +408,8 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
             .define("CAMERA_POSE_COUNT", viewSet.getCameraPoseCount())
             .define("LIGHT_COUNT", viewSet.getLightCount())
             .define("INFINITE_LIGHT_SOURCES", viewSet.areLightSourcesInfinite())
-            .define("LUMINANCE_MAP_ENABLED", luminanceMapResources.getLuminanceMap() != null)
-            .define("INVERSE_LUMINANCE_MAP_ENABLED", luminanceMapResources.getInverseLuminanceMap() != null)
+            .define("LUMINANCE_MAP_ENABLED", luminanceMapResources != null && luminanceMapResources.getLuminanceMap() != null)
+            .define("INVERSE_LUMINANCE_MAP_ENABLED", luminanceMapResources != null && luminanceMapResources.getInverseLuminanceMap() != null)
             .define("IMAGE_BASED_RENDERING_ENABLED", renderingMode.isImageBased())
             .define("DIFFUSE_TEXTURE_ENABLED", materialResources.getDiffuseTexture() != null && renderingMode.useDiffuseTexture())
             .define("SPECULAR_TEXTURE_ENABLED", materialResources.getSpecularTexture() != null && renderingMode.useSpecularTextures())
@@ -444,46 +444,13 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
 
     public void close()
     {
-        if (this.cameraWeightBuffer != null)
-        {
-            this.cameraWeightBuffer.close();
-        }
-
-        if (this.cameraPoseBuffer != null)
-        {
-            this.cameraPoseBuffer.close();
-        }
-
-        if (this.lightPositionBuffer != null)
-        {
-            this.lightPositionBuffer.close();
-        }
-
-        if (this.lightIntensityBuffer != null)
-        {
-            this.lightIntensityBuffer.close();
-        }
-
-        if (this.lightIndexBuffer != null)
-        {
-            this.lightIndexBuffer.close();
-        }
-
-        if (this.geometryResources != null)
-        {
-            this.geometryResources.close();
-        }
-
-        if (this.materialResources != null)
-        {
-            this.materialResources.close();
-            this.materialResources = null;
-        }
-
-        if (this.luminanceMapResources != null)
-        {
-            this.luminanceMapResources.close();
-            this.luminanceMapResources = null;
-        }
+        this.cameraWeightBuffer.close();
+        this.cameraPoseBuffer.close();
+        this.lightPositionBuffer.close();
+        this.lightIntensityBuffer.close();
+        this.lightIndexBuffer.close();
+        this.geometryResources.close();
+        this.materialResources.close();
+        this.luminanceMapResources.close();
     }
 }
