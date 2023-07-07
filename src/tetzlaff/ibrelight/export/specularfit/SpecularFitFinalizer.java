@@ -153,6 +153,8 @@ public class SpecularFitFinalizer
 
             calculateGGXRMSE(resources, specularFit, scratchFramebuffer, rmseOut);
 
+            solution.rescaleTextures();
+
             if (settings.isGlTFEnabled())
             {
                 solution.saveGlTF(resources);

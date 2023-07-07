@@ -1,30 +1,17 @@
-package tetzlaff.ibrelight.export.specularfit;
+package tetzlaff.ibrelight.export.specularfit.gltf;
 
 import de.javagl.jgltf.impl.v2.TextureInfo;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class GltfMaterialExtras
 {
 
-    private TextureInfo roughnessTexture = null;
+    private TextureInfo diffuseTexture = null;
 
     private TextureInfo specularTexture = null;
 
     private String basisFunctionsUri = null;
 
     private GltfMaterialSpecularWeights specularWeights = null;
-
-    public TextureInfo getRoughnessTexture()
-    {
-        return roughnessTexture;
-    }
-
-    public void setRoughnessTexture(TextureInfo roughnessTexture)
-    {
-        this.roughnessTexture = roughnessTexture;
-    }
 
     public TextureInfo getSpecularTexture()
     {
@@ -56,4 +43,13 @@ public class GltfMaterialExtras
         this.specularWeights = specularWeights;
     }
 
+    public TextureInfo getDiffuseTexture()
+    {
+        return diffuseTexture;
+    }
+
+    public void setDiffuseTexture(TextureInfo diffuseTexture)
+    {
+        this.diffuseTexture = diffuseTexture;
+    }
 }

@@ -1,4 +1,4 @@
-package tetzlaff.ibrelight.export.specularfit;
+package tetzlaff.ibrelight.export.specularfit.gltf;
 
 import de.javagl.jgltf.impl.v2.*;
 import de.javagl.jgltf.model.creation.GltfModelBuilder;
@@ -12,6 +12,10 @@ import de.javagl.jgltf.model.io.v2.GltfAssetWriterV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetsV2;
 import de.javagl.jgltf.model.v2.MaterialModelV2;
 import tetzlaff.gl.geometry.VertexGeometry;
+import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.vecmath.Vector4;
+import tetzlaff.ibrelight.export.specularfit.SpecularFitSerializer;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -23,15 +27,70 @@ public class SpecularFitGltfExporter
 
     private final GltfAssetV2 asset;
 
-    private TextureInfo diffuseTexture, normalTexture, roughnessMetallicTexture;
+    private int modelNodeIndex = 0;
 
-    private TextureInfo specularTexture, roughnessTexture;
+    private TextureInfo baseColorTexture, normalTexture, roughnessMetallicTexture;
+
+    private TextureInfo diffuseTexture, specularTexture;
 
     GltfMaterialExtras extraData = new GltfMaterialExtras();
 
-    public SpecularFitGltfExporter(GltfAssetV2 glTfAsset)
+    public SpecularFitGltfExporter(GltfAssetV2 glTfAsset, int modelNodeIndex)
     {
         this.asset = glTfAsset;
+        this.modelNodeIndex = modelNodeIndex;
+    }
+
+    public void setBaseColorUri(String uri)
+    {
+        if (baseColorTexture == null)
+        {
+            baseColorTexture = createRelativeTexture(uri, "baseColor");
+            asset.getGltf().getMaterials().forEach((material -> material.getPbrMetallicRoughness().setBaseColorTexture(baseColorTexture)));
+        }
+        else
+        {
+            setTextureUri(baseColorTexture, uri);
+        }
+    }
+
+    public void addBaseColorLods(String baseUri, int baseRes, int minRes)
+    {
+        if (baseColorTexture == null)
+            return;
+
+        addLodsToTexture(baseColorTexture, baseUri, baseRes, minRes);
+    }
+
+    private void addLodsToTexture(TextureInfo textureInfo, String baseUri, int baseRes, int minRes)
+    {
+        Texture tex = getTexForInfo(textureInfo);
+        GlTF gltf = asset.getGltf();
+
+        GltfTextureExtras extras = new GltfTextureExtras();
+
+        extras.setBaseRes(baseRes);
+
+        String filename = baseUri;
+        String extension = "";
+        int i = filename.lastIndexOf('.'); //Strip file extension
+        if (i > 0)
+        {
+            extension = filename.substring(i);
+            filename = filename.substring(0, i);
+        }
+
+        // size = 2048, 1024, 512... minRes
+        for (int size = baseRes / 2; size >= minRes; size /= 2)
+        {
+            Image image = new Image();
+            image.setUri(filename + "-" + size + extension);
+            gltf.addImages(image);
+            int imageIndex = gltf.getImages().size() - 1;
+            extras.setLodImageIndex(size, imageIndex);
+        }
+
+        tex.setExtras(extras);
     }
 
     public void setDiffuseUri(String uri)
@@ -39,12 +98,20 @@ public class SpecularFitGltfExporter
         if (diffuseTexture == null)
         {
             diffuseTexture = createRelativeTexture(uri, "diffuse");
-            asset.getGltf().getMaterials().forEach((material -> material.getPbrMetallicRoughness().setBaseColorTexture(diffuseTexture)));
+            extraData.setDiffuseTexture(diffuseTexture);
         }
         else
         {
-            setTextureUri(diffuseTexture, uri);
+            setTextureUri(baseColorTexture, uri);
         }
+    }
+
+    public void addDiffuseLods(String baseUri, int baseRes, int minRes)
+    {
+        if (diffuseTexture == null)
+            return;
+
+        addLodsToTexture(diffuseTexture, baseUri, baseRes, minRes);
     }
 
     public void setNormalUri(String uri)
@@ -60,6 +127,14 @@ public class SpecularFitGltfExporter
         }
     }
 
+    public void addNormalLods(String baseUri, int baseRes, int minRes)
+    {
+        if (normalTexture == null)
+            return;
+
+        addLodsToTexture(normalTexture, baseUri, baseRes, minRes);
+    }
+
     public void setRoughnessMetallicUri(String uri)
     {
         if (roughnessMetallicTexture == null)
@@ -73,13 +148,12 @@ public class SpecularFitGltfExporter
         }
     }
 
-    private void setRoughnessUri(String uri)
+    public void addRoughnessMetallicLods(String baseUri, int baseRes, int minRes)
     {
-        if (roughnessTexture == null)
-        {
-            roughnessTexture = createRelativeTexture(uri, "roughness");
-            extraData.setRoughnessTexture(roughnessTexture);
-        }
+        if (roughnessMetallicTexture == null)
+            return;
+
+        addLodsToTexture(roughnessMetallicTexture, baseUri, baseRes, minRes);
     }
 
     public void setSpecularUri(String uri)
@@ -93,6 +167,14 @@ public class SpecularFitGltfExporter
         {
             setTextureUri(specularTexture, uri);
         }
+    }
+
+    public void addSpecularLods(String baseUri, int baseRes, int minRes)
+    {
+        if (specularTexture == null)
+            return;
+
+        addLodsToTexture(specularTexture, baseUri, baseRes, minRes);
     }
 
     public void setBasisFunctionsUri(String uri)
@@ -111,12 +193,55 @@ public class SpecularFitGltfExporter
         weights.setStride(combined ? 4 : 1);
         for (int b = 0; b < basisCount / weights.getStride(); b++)
         {
-            String weightsFilename = SpecularFitSerializer.getCombinedWeightFilename(b);
+            String weightsFilename = combined ? SpecularFitSerializer.getCombinedWeightFilename(b) : SpecularFitSerializer.getWeightFileName(b);
             String weightName = weightsFilename.split("\\.")[0];
             TextureInfo weightTexInfo = createRelativeTexture(weightsFilename, weightName);
             weights.addTexture(weightTexInfo);
         }
         extraData.setSpecularWeights(weights);
+    }
+
+    public void addWeightImageLods(int basisCount, int baseRes, int minRes)
+    {
+        if (extraData.getSpecularWeights() == null)
+            return;
+
+        boolean combined = extraData.getSpecularWeights().getStride() == 4;
+
+        for (int b = 0; b < basisCount / extraData.getSpecularWeights().getStride(); b++)
+        {
+            String weightsFilename = combined ? SpecularFitSerializer.getCombinedWeightFilename(b) : SpecularFitSerializer.getWeightFileName(b);
+            addLodsToTexture(extraData.getSpecularWeights().getTextures().get(b), weightsFilename, baseRes, minRes);
+        }
+    }
+
+    public void setTranslation(Vector3 translation)
+    {
+        GlTF gltf = asset.getGltf();
+        gltf.getNodes().get(modelNodeIndex).setTranslation(new float[]{translation.x, translation.y, translation.z});
+    }
+
+    public void setRotation(Vector4 quaternion)
+    {
+        GlTF gltf = asset.getGltf();
+        gltf.getNodes().get(modelNodeIndex).setRotation(new float[]{quaternion.x, quaternion.y, quaternion.z, quaternion.w});
+    }
+
+    public void setScale(Vector3 scale)
+    {
+        GlTF gltf = asset.getGltf();
+        gltf.getNodes().get(modelNodeIndex).setScale(new float[]{scale.x, scale.y, scale.z});
+    }
+
+    public void setTransform(Matrix4 transform)
+    {
+        GlTF gltf = asset.getGltf();
+        gltf.getNodes().get(modelNodeIndex).setMatrix(new float[]{
+                transform.get(0,0), transform.get(1,0), transform.get(2,0), transform.get(3,0),
+                transform.get(0,1), transform.get(1,1), transform.get(2,1), transform.get(3,1),
+                transform.get(0,2), transform.get(1,2), transform.get(2,2), transform.get(3,2),
+                transform.get(0,3), transform.get(1,3), transform.get(2,3), transform.get(3,3),
+        });
     }
 
     public void write(File file) throws IOException
@@ -138,12 +263,21 @@ public class SpecularFitGltfExporter
 
     public void setDefaultNames()
     {
+        setBaseColorUri("albedo.png");
         setDiffuseUri("diffuse.png");
         setNormalUri("normal.png");
         setRoughnessMetallicUri("orm.png");
         setSpecularUri("specular.png");
-        setRoughnessUri("roughness.png");
         setBasisFunctionsUri("basisFunctions.csv");
+    }
+
+    public void addAllDefaultLods(int baseRes, int minRes)
+    {
+        addBaseColorLods("albedo.png", baseRes, minRes);
+        addDiffuseLods("diffuse.png", baseRes, minRes);
+        addNormalLods("normal.png", baseRes, minRes);
+        addRoughnessMetallicLods("orm.png", baseRes, minRes);
+        addSpecularLods("specular.png", baseRes, minRes);
     }
 
     private static MaterialNormalTextureInfo convertTexInfoToNormal(TextureInfo normalTextureInfo, float scale)
@@ -199,6 +333,12 @@ public class SpecularFitGltfExporter
 
         Image image = gltf.getImages().get(texture.getSource());
         image.setUri(newUri);
+    }
+
+    private Texture getTexForInfo(TextureInfo info)
+    {
+        GlTF gltf = asset.getGltf();
+        return gltf.getTextures().get(info.getIndex());
     }
 
     private TextureInfo createRelativeTexture(String uri)
@@ -260,6 +400,6 @@ public class SpecularFitGltfExporter
         // Build model and convert to embedded asset
         GltfAssetV2 gltfAsset = GltfAssetsV2.createEmbedded(builder.build());
 
-        return new SpecularFitGltfExporter(gltfAsset);
+        return new SpecularFitGltfExporter(gltfAsset, scene.getNodeModels().size() - 1);
     }
 }
