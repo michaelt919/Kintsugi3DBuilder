@@ -25,6 +25,7 @@ public class SpecularFitRequestParams
     private final SpecularBasisSettings specularBasisSettings = new SpecularBasisSettings();
     private final ReconstructionSettings reconstructionSettings = new ReconstructionSettings();
     private final ImageCacheSettings imageCacheSettings = new ImageCacheSettings();
+    private final ExportSettings exportSettings = new ExportSettings();
 
     private double convergenceTolerance = 0.00001;
 
@@ -98,6 +99,11 @@ public class SpecularFitRequestParams
     public ReconstructionSettings getReconstructionSettings()
     {
         return reconstructionSettings;
+    }
+
+    public ExportSettings getExportSettings()
+    {
+        return exportSettings;
     }
 
     /**

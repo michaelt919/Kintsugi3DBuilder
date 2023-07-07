@@ -62,7 +62,7 @@ public class SpecularWeightOptimization
 
         System.out.println("Finished building matrices; solving now...");
 
-        // Optimize the weights and store the result in the SpecularFitSolution.
+        // Optimize the weights and store the result in the SpecularDecomposition.
         if (pStart + weightBlockSize > textureFitSettings.width * textureFitSettings.height)
         {
             base.optimizeWeights(p -> solution.areWeightsValid(pStart + p),

@@ -9,28 +9,27 @@ import java.util.List;
 
 public class SpecularFitTextureRescaler
 {
+    private final ExportSettings settings;
 
-    private final SpecularFitSettings settings;
-
-    public SpecularFitTextureRescaler(SpecularFitSettings settings)
+    public SpecularFitTextureRescaler(ExportSettings settings)
     {
         this.settings = settings;
     }
 
-    public void rescaleAll()
+    public void rescaleAll(File outputDirectory, int basisCount)
     {
         List<String> files = new ArrayList<>(List.of(new String[]{"albedo.png", "diffuse.png", "specular.png", "orm.png", "normal.png"}));
 
         if (settings.isCombineWeights())
         {
-            for (int i = 0; i < (settings.basisCount + 3) / 4; i++)
+            for (int i = 0; i < (basisCount + 3) / 4; i++)
             {
                 files.add(SpecularFitSerializer.getCombinedWeightFilename(i));
             }
         }
         else
         {
-            for (int i = 0; i < settings.basisCount; i++)
+            for (int i = 0; i < basisCount; i++)
             {
                 files.add(SpecularFitSerializer.getWeightFileName(i));
             }
@@ -40,7 +39,7 @@ public class SpecularFitTextureRescaler
         {
             try
             {
-                generateLodsFor(file);
+                generateLodsFor(new File(outputDirectory, file));
             }
             catch (IOException e)
             {
@@ -50,9 +49,9 @@ public class SpecularFitTextureRescaler
         }
     }
 
-    public void generateLodsFor(String filename) throws IOException
+    public void generateLodsFor(File file) throws IOException
     {
-        ImageLodResizer.generateLods(new File(settings.outputDirectory, filename), settings.getMinimumTextureResolution());
+        ImageLodResizer.generateLods(file, settings.getMinimumTextureResolution());
     }
 
 }

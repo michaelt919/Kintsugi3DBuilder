@@ -197,7 +197,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
             int microfacetDistributionResolution = Integer.parseInt(mfdResolutionTextField.getText());
             settings.getSpecularBasisSettings().setMicrofacetDistributionResolution(microfacetDistributionResolution);
 
-            settings.setCombineWeights(combineBasisCheckbox.isSelected());
+            settings.getExportSettings().setCombineWeights(combineBasisCheckbox.isSelected());
 
             // Specular / general settings
             double convergenceTolerance = Double.parseDouble(convergenceToleranceTextField.getText());
@@ -226,11 +226,11 @@ public class SpecularFitRequestUI implements IBRRequestUI
             boolean reconstructAll = reconstructAllCheckBox.isSelected();
             settings.getReconstructionSettings().setReconstructAll(reconstructAll);
 
-            settings.setGenerateLowResTextures(exportTextureLODsCheckbox.isSelected());
+            settings.getExportSettings().setGenerateLowResTextures(exportTextureLODsCheckbox.isSelected());
 
             // glTF export settings
-            settings.setGlTFEnabled(exportGLTFCheckbox.isSelected());
-            settings.setGlTFPackTextures(exportGLTFPackedCheckbox.isSelected());
+            settings.getExportSettings().setGlTFEnabled(exportGLTFCheckbox.isSelected());
+            settings.getExportSettings().setGlTFPackTextures(exportGLTFPackedCheckbox.isSelected());
 
             if (reconstructionViewSetField.getText() != null && !reconstructionViewSetField.getText().isEmpty())
             {

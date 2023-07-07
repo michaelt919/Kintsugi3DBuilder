@@ -21,9 +21,12 @@ import java.util.function.BiConsumer;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
+import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.Projection;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.core.ViewSet;
+import tetzlaff.ibrelight.export.specularfit.gltf.SpecularFitGltfExporter;
 import tetzlaff.ibrelight.rendering.resources.*;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
 
@@ -82,9 +85,6 @@ public class SpecularOptimization
     {
         Instant start = Instant.now();
 
-        // Get GPU context
-        ContextType context = resources.getContext();
-
         // Generate cache
         ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings());
 
@@ -127,6 +127,13 @@ public class SpecularOptimization
         {
             albedoORM.execute(specularFit);
             albedoORM.saveTextures(settings.getOutputDirectory());
+        }
+
+        rescaleTextures();
+
+        if (settings.getExportSettings().isGlTFEnabled())
+        {
+            saveGlTF(resources);
         }
 
         return specularFit;
@@ -199,6 +206,7 @@ public class SpecularOptimization
             fullResolution.saveNormalMap(settings.getOutputDirectory());
 
             // Save the final weight maps
+            // TODO combined weight images when using block-based fitting
             SpecularFitSerializer.saveWeightImages(fullResolution.getBasisWeightResources().weightMaps, settings.getOutputDirectory());
 
             // Save the final specular albedo and roughness maps
@@ -286,7 +294,7 @@ public class SpecularOptimization
             ShaderBasedErrorCalculator<ContextType> errorCalculator = ShaderBasedErrorCalculator.create(resources.getContext(),
                 () -> createErrorCalcProgram(resources, programFactory),
                 program -> createErrorCalcDrawable(specularFit, resources, program),
-                texFitSettings.width, texFitSettings.height);
+                texFitSettings.width, texFitSettings.height)
         )
         {
             optimizeFunc.accept(stream, errorCalculator);
@@ -360,5 +368,52 @@ public class SpecularOptimization
         errorCalcProgram.setTexture("normalEstimate", specularFit.getNormalMap());
         errorCalcProgram.setUniform("errorGamma", 1.0f);
         return errorCalcDrawable;
+    }
+
+    public <ContextType extends Context<ContextType>> void saveGlTF(IBRResources<ContextType> resources)
+    {
+        if (resources.getGeometryResources() == null || resources.getGeometryResources().geometry == null)
+        {
+            throw new IllegalArgumentException("Geometry is null; cannot export GLTF.");
+        }
+
+        System.out.println("Starting glTF export...");
+        try
+        {
+            SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(resources.getGeometryResources().geometry);
+            exporter.setDefaultNames();
+            exporter.addWeightImages(settings.getSpecularBasisSettings().getBasisCount(), settings.getExportSettings().isCombineWeights());
+
+            // Deal with LODs if enabled
+            if (settings.getExportSettings().isGenerateLowResTextures())
+            {
+                exporter.addAllDefaultLods(settings.getTextureFitSettings().height,
+                    settings.getExportSettings().getMinimumTextureResolution());
+                exporter.addWeightImageLods(settings.getSpecularBasisSettings().getBasisCount(),
+                    settings.getTextureFitSettings().height, settings.getExportSettings().getMinimumTextureResolution());
+            }
+
+            Matrix4 rotation = resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex());
+            Vector3 translation = rotation.getUpperLeft3x3().times(resources.getGeometryResources().geometry.getCentroid().times(-1.f));
+            Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2), translation.asVector4(1.0f));
+            exporter.setTransform(transform);
+
+            exporter.write(new File(settings.getOutputDirectory(), "model.glb"));
+            System.out.println("DONE!");
+        }
+        catch (IOException e)
+        {
+            System.out.println("Error occurred during glTF export:");
+            e.printStackTrace();
+        }
+    }
+
+    public void rescaleTextures()
+    {
+        if (settings.getExportSettings().isGenerateLowResTextures())
+        {
+            SpecularFitTextureRescaler rescaler = new SpecularFitTextureRescaler(settings.getExportSettings());
+            rescaler.rescaleAll(settings.getOutputDirectory(), settings.getSpecularBasisSettings().getBasisCount());
+        }
     }
 }

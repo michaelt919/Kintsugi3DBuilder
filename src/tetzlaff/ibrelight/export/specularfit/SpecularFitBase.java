@@ -17,7 +17,11 @@ import java.io.IOException;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Texture2D;
+import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.TextureFitSettings;
+import tetzlaff.ibrelight.export.specularfit.gltf.SpecularFitGltfExporter;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
 public abstract class SpecularFitBase<ContextType extends Context<ContextType>> implements SpecularResources<ContextType>
 {
