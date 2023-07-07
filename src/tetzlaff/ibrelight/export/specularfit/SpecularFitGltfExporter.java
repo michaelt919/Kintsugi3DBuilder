@@ -11,7 +11,7 @@ import de.javagl.jgltf.model.io.v2.GltfAssetV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetWriterV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetsV2;
 import de.javagl.jgltf.model.v2.MaterialModelV2;
-import tetzlaff.gl.util.VertexGeometry;
+import tetzlaff.gl.geometry.VertexGeometry;
 
 import java.io.File;
 import java.io.FileOutputStream;
