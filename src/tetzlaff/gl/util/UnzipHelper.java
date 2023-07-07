@@ -112,6 +112,7 @@ public class UnzipHelper {
     }
 
     public static int getChunkIdFromZipPath(String chunkZipPath) {
+        //TODO: REMOVE CALLS TO THIS FUNCTION IN CHUNK VIEWER CONTROLLER AND UNZIP FILE SELECTION CONTROLLER
         //example chunk zip path ----> ...GuanYu_with_ground_truth.files\0\chunk.zip
         //want to extract the 0 in this example because that number denotes the chunkID
         File file = new File(chunkZipPath);
