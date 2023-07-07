@@ -23,7 +23,7 @@ import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.*;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.interactive.InitializationException;
 import tetzlaff.models.ReadonlyCameraModel;
 import tetzlaff.models.ReadonlyLightingModel;
@@ -79,8 +79,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         try
         {
             IBRInstance<ContextType> newItem =
-                new IBREngine<>(id, context,
-                    IBRResources.getBuilderForContext(this.context)
+                new IBREngine<ContextType>(id, context,
+                    IBRResourcesImageSpace.getBuilderForContext(this.context)
                         .setLoadingMonitor(this.loadingMonitor)
                         .setLoadOptions(loadOptions)
                         .loadVSETFile(vsetFile));
@@ -170,7 +170,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         {
             IBRInstance<ContextType> newItem =
                 new IBREngine<>(id, context,
-                    IBRResources.getBuilderForContext(this.context)
+                    IBRResourcesImageSpace.getBuilderForContext(this.context)
                         .setLoadingMonitor(this.loadingMonitor)
                         .setLoadOptions(loadOptions)
                         .loadAgisoftFiles(xmlFile, meshFile, undistortedImageDirectory)
@@ -276,7 +276,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     @Override
     public void applyLightCalibration()
     {
-        ViewSet viewSet = ibrInstance.getIBRResources().viewSet;
+        ViewSet viewSet = ibrInstance.getIBRResources().getViewSet();
 
         ibrInstance.getDynamicResourceManager().setLightCalibration(
             viewSet.getLightPosition(viewSet.getLightIndex(viewSet.getPrimaryViewIndex()))

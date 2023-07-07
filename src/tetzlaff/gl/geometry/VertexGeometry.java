@@ -9,7 +9,7 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.gl.util;
+package tetzlaff.gl.geometry;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 
+import tetzlaff.gl.core.Context;
 import tetzlaff.gl.material.Material;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
@@ -437,6 +438,11 @@ public final class VertexGeometry
     public boolean hasTexCoords()
     {
         return hasTexCoords;
+    }
+
+    public <ContextType extends Context<ContextType>> GeometryResources<ContextType> createGraphicsResources(ContextType context)
+    {
+        return new GeometryResources<>(context, this);
     }
 
     /**

@@ -1,5 +1,3 @@
-#version 330
-
 /*
  *  Copyright (c) Michael Tetzlaff 2022
  *  Copyright (c) The Regents of the University of Minnesota 2019
@@ -12,32 +10,20 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-in vec2 fTexCoord;
+#ifndef TEXSPACE_SINGLE_GLSL
+#define TEXSPACE_SINGLE_GLSL
 
-layout(location = 0) out vec4 residual;
+#include "colorappearance_single.glsl"
 
+#line 19 1110
+
+uniform sampler2D viewImage;
 uniform vec2 minTexCoord;
 uniform vec2 maxTexCoord;
 
-#include "../common/use_deferred.glsl"
-
-#define fPosition ( getPosition(fTexCoord) )
-
-#include "../colorappearance/colorappearance_multi_as_single.glsl"
-#include "../colorappearance/imgspace.glsl"
-#include "resid.glsl"
-
-#line 31 0
-
-void main()
+vec4 getColor()
 {
-    vec3 normal = getNormal(fTexCoord);
-    if (normal == vec3(0))
-    {
-        discard;
-    }
-    else
-    {
-        residual = computeResidual(mix(minTexCoord, maxTexCoord, fTexCoord), normal);
-    }
+    return texture(viewImage, (fTexCoord - minTexCoord) / (maxTexCoord - minTexCoord));
 }
+
+#endif // TEXSPACE_SINGLE_GLSL

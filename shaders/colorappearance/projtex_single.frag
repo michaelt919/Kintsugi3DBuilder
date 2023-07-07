@@ -1,3 +1,5 @@
+#version 330
+
 /*
  *  Copyright (c) Michael Tetzlaff 2022
  *  Copyright (c) The Regents of the University of Minnesota 2019
@@ -10,8 +12,6 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-#version 330
-
 in vec3 fPosition;
 in vec2 fTexCoord;
 in vec3 fNormal;
@@ -22,11 +22,10 @@ layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec4 shadingInfo;
 layout(location = 2) out vec4 projTexCoord;
 
-
 #include "colorappearance_single.glsl"
 #include "imgspace_single.glsl"
 
-#line 30 1010
+#line 29 1010
 
 uniform bool lightIntensityCompensation;
 

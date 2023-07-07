@@ -13,6 +13,7 @@ package tetzlaff.ibrelight.export.specularfit;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Texture2D;
+import tetzlaff.ibrelight.rendering.resources.ImageCache;
 
 public class SimpleSpecularResources<ContextType extends Context<ContextType>> implements SpecularResources<ContextType>
 {
@@ -21,6 +22,28 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
     private Texture2D<ContextType> specularReflectivityMap;
     private Texture2D<ContextType> specularRoughnessMap;
     private BasisResources<ContextType> basisResources;
+    private BasisWeightResources<ContextType> basisWeightResources;
+
+    /**
+     * Package-visible default constructor
+     */
+    SimpleSpecularResources()
+    {
+    }
+
+    @Override
+    public int getWidth()
+    {
+        // TODO validation that textures all have the same resolution?
+        return basisWeightResources.weightMaps.getWidth();
+    }
+
+    @Override
+    public int getHeight()
+    {
+        // TODO validation that textures all have the same resolution?
+        return basisWeightResources.weightMaps.getHeight();
+    }
 
     @Override
     public Texture2D<ContextType> getDiffuseMap()
@@ -50,6 +73,13 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
     public BasisResources<ContextType> getBasisResources()
     {
         return basisResources;
+    }
+
+
+    @Override
+    public BasisWeightResources<ContextType> getBasisWeightResources()
+    {
+        return basisWeightResources;
     }
 
     /**
@@ -88,42 +118,29 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
         this.specularRoughnessMap = specularRoughnessMap;
     }
 
-    /**
-     * Sets the basis resources (i.e. weight texture array, basis function 1D texture array, etc.).
-     * This object will take ownership of the basis resources.
-     * @param basisResources
-     */
     public void setBasisResources(BasisResources<ContextType> basisResources)
     {
         this.basisResources = basisResources;
     }
 
+    /**
+     * Sets the basis resources (i.e. weight texture array, basis function 1D texture array, etc.).
+     * This object will take ownership of the basis resources.
+     * @param basisWeightResources
+     */
+    public void setBasisWeightResources(BasisWeightResources<ContextType> basisWeightResources)
+    {
+        this.basisWeightResources = basisWeightResources;
+    }
+
     @Override
     public void close()
     {
-        if (diffuseMap != null)
-        {
-            diffuseMap.close();
-        }
-
-        if (normalMap != null)
-        {
-            normalMap.close();
-        }
-
-        if (specularReflectivityMap != null)
-        {
-            specularReflectivityMap.close();
-        }
-
-        if (specularRoughnessMap != null)
-        {
-            specularRoughnessMap.close();
-        }
-
-        if (basisResources != null)
-        {
-            basisResources.close();
-        }
+        diffuseMap.close();
+        normalMap.close();
+        specularReflectivityMap.close();
+        specularRoughnessMap.close();
+        basisResources.close();
+        basisWeightResources.close();
     }
 }

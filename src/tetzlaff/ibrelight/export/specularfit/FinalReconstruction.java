@@ -12,10 +12,8 @@
 package tetzlaff.ibrelight.export.specularfit;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.DoubleAdder;
 
 import tetzlaff.gl.builders.ProgramBuilder;
@@ -23,51 +21,53 @@ import tetzlaff.gl.core.ColorFormat;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Framebuffer;
 import tetzlaff.ibrelight.core.Projection;
+import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.core.ViewSet;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.ibrelight.rendering.ImageReconstruction;
+import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
 public class FinalReconstruction<ContextType extends Context<ContextType>>
 {
     private final IBRResources<ContextType> resources;
-    private final SpecularFitSettings settings;
+    private final TextureFitSettings textureFitSettings;
+    private final ReconstructionSettings reconstructionSettings;
 
     private final int imageWidth;
     private final int imageHeight;
 
-    public FinalReconstruction(IBRResources<ContextType> resources, SpecularFitSettings settings)
+    public FinalReconstruction(IBRResources<ContextType> resources, TextureFitSettings textureFitSettings, ReconstructionSettings reconstructionSettings)
     {
         this.resources = resources;
-        this.settings = settings;
+        this.textureFitSettings = textureFitSettings;
+        this.reconstructionSettings = reconstructionSettings;
 
         // Calculate reasonable image resolution for reconstructed images (supplemental output)
-        Projection defaultProj = resources.viewSet.getCameraProjection(resources.viewSet.getCameraProjectionIndex(
-            resources.viewSet.getPrimaryViewIndex()));
-
+        Projection defaultProj = resources.getViewSet().getCameraProjection(resources.getViewSet().getCameraProjectionIndex(
+            resources.getViewSet().getPrimaryViewIndex()));
         if (defaultProj.getAspectRatio() < 1.0)
         {
-            imageWidth = settings.width;
+            imageWidth = this.textureFitSettings.width;
             imageHeight = Math.round(imageWidth / defaultProj.getAspectRatio());
         }
         else
         {
-            imageHeight = settings.height;
+            imageHeight = this.textureFitSettings.height;
             imageWidth = Math.round(imageHeight * defaultProj.getAspectRatio());
         }
     }
 
-    public double reconstruct(SpecularResources<ContextType> specularFit, ProgramBuilder<ContextType> programBuilder, boolean reconstructAll,
-        String reconstructName, String groundTruthName)
+    public double reconstruct(SpecularResources<ContextType> specularFit, ProgramBuilder<ContextType> programBuilder,
+        boolean reconstructAll, String reconstructName, String groundTruthName, File outputDirectory)
     {
         if (reconstructAll)
         {
             // Create directory for reconstructions from basis functions
-            new File(settings.outputDirectory, reconstructName).mkdir();
+            new File(outputDirectory, reconstructName).mkdir();
 
             if (groundTruthName != null)
             {
                 // Create directory for ground truth images with consistent tonemapping
-                new File(settings.outputDirectory, groundTruthName).mkdir();
+                new File(outputDirectory, groundTruthName).mkdir();
             }
         }
 
@@ -75,12 +75,13 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         try (ImageReconstruction<ContextType> reconstruction = new ImageReconstruction<>(
             resources,
             programBuilder,
-            resources.context.buildFramebufferObject(imageWidth, imageHeight)
+            resources.getContext().buildFramebufferObject(imageWidth, imageHeight)
                 .addColorAttachment(ColorFormat.RGBA32F)
                 .addDepthAttachment(),
             program ->
             {
                 specularFit.getBasisResources().useWithShaderProgram(program);
+                specularFit.getBasisWeightResources().useWithShaderProgram(program);
                 program.setTexture("normalEstimate", specularFit.getNormalMap());
                 program.setTexture("specularEstimate", specularFit.getSpecularReflectivityMap());
                 program.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
@@ -88,11 +89,19 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
             }))
         {
             // Use the same view set as for fitting if another wasn't specified for reconstruction.
-            ViewSet reconstructionViewSet = settings.getReconstructionViewSet() != null ? settings.getReconstructionViewSet() : resources.viewSet;
+            ViewSet reconstructionViewSet;
+            if (reconstructionSettings.getReconstructionViewSet() != null)
+            {
+                reconstructionViewSet = reconstructionSettings.getReconstructionViewSet();
+            }
+            else
+            {
+                reconstructionViewSet = resources.getViewSet();
+            }
 
             if (reconstructAll)
             {
-                try (PrintStream rmseOut = new PrintStream(new File(new File(settings.outputDirectory, reconstructName), "rmse.txt")))
+                try (PrintStream rmseOut = new PrintStream(new File(new File(outputDirectory, reconstructName), "rmse.txt")))
                 // Text file containing error information
                 {
                     DoubleAdder totalMSE = new DoubleAdder();
@@ -100,12 +109,12 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
 
                     // Run the reconstruction and save the results to file
                     reconstruction.execute(reconstructionViewSet,
-                        (k, framebuffer) -> saveImageToFile(reconstructName, k, framebuffer),
+                        (k, framebuffer) -> saveImageToFile(outputDirectory, reconstructName, k, framebuffer),
                         (k, framebuffer) ->
                         {
                             if (groundTruthName != null)
                             {
-                                saveImageToFile(groundTruthName, k, framebuffer);
+                                saveImageToFile(outputDirectory, groundTruthName, k, framebuffer);
                             }
                         },
                         (k, rmse) ->
@@ -128,12 +137,12 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
             {
                 // Run the reconstruction and save the results to file
                 return reconstruction.executeOnce(reconstructionViewSet, 0,
-                    framebuffer -> saveImageToFile(reconstructName + ".png", framebuffer),
+                    framebuffer -> saveImageToFile(outputDirectory, reconstructName + ".png", framebuffer),
                     framebuffer ->
                     {
                         if (groundTruthName != null)
                         {
-                            saveImageToFile(groundTruthName + ".png", framebuffer);
+                            saveImageToFile(outputDirectory, groundTruthName + ".png", framebuffer);
                         }
                     }).x /* first component contains the actual RMSE */;
             }
@@ -145,13 +154,13 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         }
     }
 
-    private void saveImageToFile(String directoryName, int k, Framebuffer<ContextType> framebuffer)
+    private void saveImageToFile(File outputDirectory, String directoryName, int k, Framebuffer<ContextType> framebuffer)
     {
         try
         {
             String filename = String.format("%04d.png", k);
             framebuffer.saveColorBufferToFile(0, "PNG",
-                new File(new File(settings.outputDirectory, directoryName), filename));
+                new File(new File(outputDirectory, directoryName), filename));
         }
         catch (IOException e)
         {
@@ -159,12 +168,12 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         }
     }
 
-    private void saveImageToFile(String filename, Framebuffer<ContextType> framebuffer)
+    private void saveImageToFile(File outputDirectory, String filename, Framebuffer<ContextType> framebuffer)
     {
         try
         {
             framebuffer.saveColorBufferToFile(0, "PNG",
-                new File(settings.outputDirectory, filename));
+                new File(outputDirectory, filename));
         }
         catch (IOException e)
         {

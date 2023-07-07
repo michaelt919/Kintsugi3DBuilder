@@ -17,7 +17,7 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.CameraViewport;
 import tetzlaff.ibrelight.core.RenderedComponent;
 import tetzlaff.ibrelight.core.SceneModel;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.ibrelight.rendering.resources.LightingResources;
 import tetzlaff.ibrelight.rendering.SceneViewportModel;
 import tetzlaff.ibrelight.rendering.components.lit.LitContent;
@@ -32,15 +32,15 @@ public class StandardScene<ContextType extends Context<ContextType>> extends Lit
     private final ContextType context;
     private final SceneModel sceneModel;
     private final SceneViewportModel<ContextType> sceneViewportModel;
-    private final IBRResources<ContextType> resources;
+    private final IBRResourcesImageSpace<ContextType> resources;
 
     private IBRSubject<ContextType> ibrSubject;
     private LightVisuals<ContextType> lightVisuals;
     private final List<RenderedComponent<ContextType>> otherComponents = new ArrayList<>();
 
-    public StandardScene(IBRResources<ContextType> resources, SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
+    public StandardScene(IBRResourcesImageSpace<ContextType> resources, SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
     {
-        this.context = resources.context;
+        this.context = resources.getContext();
         this.sceneModel = sceneModel;
         this.sceneViewportModel = sceneViewportModel;
         this.resources = resources;

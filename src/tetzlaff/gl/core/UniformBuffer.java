@@ -22,7 +22,7 @@ import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
  *
  * @param <ContextType> The type of the GL context that the index buffer object is associated with.
  */
-public interface UniformBuffer<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
+public interface UniformBuffer<ContextType extends Context<ContextType>> extends Resource, ContextBound<ContextType>
 {
     /**
      * Sets the content of the uniform buffer from a raw ByteBuffer.

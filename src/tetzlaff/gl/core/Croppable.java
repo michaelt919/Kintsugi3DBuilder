@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2022
+ *  Copyright (c) Michael Tetzlaff 2023
  *
  *  Licensed under GPLv3
  *  ( http://www.gnu.org/licenses/gpl-3.0.html )
@@ -11,17 +11,18 @@
 
 package tetzlaff.gl.core;
 
-/**
- * A simple interface for a type that is associated with a Context implementation.
- * @author Michael Tetzlaff
- *
- * @param <ContextType> The type of the Context.
- */
-public interface Contextual<ContextType extends Context<ContextType>>
+@FunctionalInterface
+public interface Croppable<ResourceType extends Resource>
 {
     /**
-     * Gets the associated GL context.
-     * @return A GL context associated with this object.
+     * Creates a new resource that contains a cropped region of this resource.
+     * The resource this method is called on will remain unchanged.
+     * @param x The left boundary of the cropped region
+     * @param y The bottom boundary of the cropped region
+     * @param cropWidth The width of the cropped region
+     * @param cropHeight The height of the cropped region
+     * @return The new cropped resource.
      */
-    ContextType getContext();
+    ResourceType crop(int x, int y, int cropWidth, int cropHeight);
+
 }

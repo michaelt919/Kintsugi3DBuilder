@@ -17,11 +17,12 @@ import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.interactive.GraphicsRequest;
 
 public class SpecularFitRequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>, GraphicsRequest<ContextType>
 {
-    private final SpecularFitSettings settings;
+    private final SpecularFitRequestParams settings;
 
     /**
      * Default constructor for CLI args requests
@@ -32,11 +33,12 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
     public static <ContextType extends Context<ContextType>> SpecularFitRequest<ContextType> create(
             IBRelightModels modelAccess, String... args)
     {
-        return new SpecularFitRequest<>(new SpecularFitSettings(2048, 2048,
-                8, 90, new File(args[2]), modelAccess.getSettingsModel()));
+        return new SpecularFitRequest<>(new SpecularFitRequestParams(
+            new TextureFitSettings(2048, 2048, modelAccess.getSettingsModel().getFloat("gamma")),
+            modelAccess.getSettingsModel(), new File(args[2])));
     }
 
-    public SpecularFitRequest(SpecularFitSettings settings)
+    public SpecularFitRequest(SpecularFitRequestParams settings)
     {
         this.settings = settings;
     }
@@ -64,9 +66,9 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
             loadOptions.setColorImagesRequested(false);
             loadOptions.setDepthImagesRequested(false);
 
-            try(IBRResources<ContextType> resources = IBRResources.getBuilderForContext(context)
+            try(IBRResources<ContextType> resources = IBRResourcesImageSpace.getBuilderForContext(context)
                 .setLoadOptions(loadOptions)
-                .useExistingViewSet(settings.getReconstructionViewSet())
+                .useExistingViewSet(settings.getReconstructionSettings().getReconstructionViewSet())
                 .create())
             {
                 // Perform the specular fit
@@ -74,7 +76,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
                 specularFit.close(); // Close immediately when this is just an export operation.
             }
         }
-        catch(IOException e) // thrown by createReflectanceProgram
+        catch(IOException e)
         {
             e.printStackTrace();
         }
@@ -109,27 +111,31 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
         throws FileNotFoundException
     {
         // Create output directory
-        settings.outputDirectory.mkdirs();
+        settings.getOutputDirectory().mkdirs();
 
-        if (resources.viewSet != null)
+        if (resources.getViewSet() != null)
         {
             // Reconstruct images both from basis functions and from fitted roughness
-            SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(resources, settings);
-            FinalReconstruction<ContextType> reconstruction = new FinalReconstruction<>(resources, settings);
+            SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(
+               settings.getIbrSettings(), settings.getSpecularBasisSettings());
+            FinalReconstruction<ContextType> reconstruction =
+                new FinalReconstruction<>(resources, settings.getTextureFitSettings(), settings.getReconstructionSettings());
 
             System.out.println("Reconstructing ground truth images from basis representation:");
             double reconstructionRMSE =
-                reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(programFactory), settings.shouldReconstructAll(),
-                    "reconstruction", "ground-truth");
+                reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(resources, programFactory),
+                    settings.getReconstructionSettings().shouldReconstructAll(),
+                    "reconstruction", "ground-truth", settings.getOutputDirectory());
 
             System.out.println("Reconstructing ground truth images from fitted roughness / specular color:");
             double fittedRMSE =
-                reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(programFactory), settings.shouldReconstructAll(),
-                    "fitted", null);
+                reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(resources, programFactory),
+                    settings.getReconstructionSettings().shouldReconstructAll(),
+                    "fitted", null, settings.getOutputDirectory());
 
-            if (!settings.shouldReconstructAll()) // Write to just one RMSE file if only doing a single image per reconstruction method
+            if (!settings.getReconstructionSettings().shouldReconstructAll()) // Write to just one RMSE file if only doing a single image per reconstruction method
             {
-                try (PrintStream rmseOut = new PrintStream(new File(settings.outputDirectory, "rmse.txt")))
+                try (PrintStream rmseOut = new PrintStream(new File(settings.getOutputDirectory(), "rmse.txt")))
                 // Text file containing error information
                 {
                     rmseOut.println("reconstruction, " + reconstructionRMSE);
@@ -140,17 +146,19 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
     }
 
     private static <ContextType extends Context<ContextType>>
-    ProgramBuilder<ContextType> getImageReconstructionProgramBuilder(SpecularFitProgramFactory<ContextType> programFactory)
+    ProgramBuilder<ContextType> getImageReconstructionProgramBuilder(
+        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
-        return programFactory.getShaderProgramBuilder(
+        return programFactory.getShaderProgramBuilder(resources,
                 new File("shaders/common/imgspace.vert"),
                 new File("shaders/specularfit/reconstructImage.frag"));
     }
 
     private static <ContextType extends Context<ContextType>>
-    ProgramBuilder<ContextType> getFittedImageReconstructionProgramBuilder(SpecularFitProgramFactory<ContextType> programFactory)
+    ProgramBuilder<ContextType> getFittedImageReconstructionProgramBuilder(
+        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
-        return programFactory.getShaderProgramBuilder(
+        return programFactory.getShaderProgramBuilder(resources,
                 new File("shaders/common/imgspace.vert"),
                 new File("shaders/specularfit/renderFit.frag"));
     }

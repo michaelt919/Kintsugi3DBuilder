@@ -12,6 +12,7 @@
 package tetzlaff.ibrelight.util;
 
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
@@ -63,19 +64,20 @@ public class KNNViewWeightGenerator implements ViewWeightGenerator
     @Override
     public float[] generateWeights(IBRResources<?> resources, Iterable<Integer> activeViewIndexList, Matrix4 targetView)
     {
-        float[] viewWeights = new float[resources.viewSet.getCameraPoseCount()];
+        float[] viewWeights = new float[resources.getViewSet().getCameraPoseCount()];
         float viewWeightSum = 0.0f;
 
-        Queue<WeightedView> viewPriority = new PriorityQueue<>(resources.viewSet.getCameraPoseCount(), Comparator.reverseOrder());
+        Queue<WeightedView> viewPriority = new PriorityQueue<>(resources.getViewSet().getCameraPoseCount(), Comparator.reverseOrder());
 
         for (int i : activeViewIndexList)
         {
-            Vector3 viewDir = resources.viewSet.getCameraPose(i).times(
-                    resources.geometry.getCentroid().asPosition())
+            Vector3 viewDir = resources.getViewSet().getCameraPose(i).times(
+                    Objects.requireNonNull(resources.getGeometryResources().geometry).getCentroid().asPosition())
                 .getXYZ().negated().normalized();
 
-            Vector3 targetDir = resources.viewSet.getCameraPose(i).times(
-                    targetView.quickInverse(0.01f).getColumn(3).minus(resources.geometry.getCentroid().asPosition()))
+            Vector3 targetDir = resources.getViewSet().getCameraPose(i).times(
+                targetView.quickInverse(0.01f).getColumn(3).minus(
+                    Objects.requireNonNull(resources.getGeometryResources().geometry).getCentroid().asPosition()))
                 .getXYZ().normalized();
 
             viewPriority.add(new WeightedView(i, targetDir.dot(viewDir)));

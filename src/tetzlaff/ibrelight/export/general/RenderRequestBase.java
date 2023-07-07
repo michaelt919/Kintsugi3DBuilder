@@ -19,12 +19,12 @@ import java.util.function.Consumer;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.models.ReadonlySettingsModel;
 
 abstract class RenderRequestBase<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>
 {
-    private static final File TEX_SPACE_VERTEX_SHADER = Paths.get("shaders", "common", "texspace_noscale.vert").toFile();
+    private static final File TEX_SPACE_VERTEX_SHADER = Paths.get("shaders", "common", "texspace.vert").toFile();
     private static final File IMG_SPACE_VERTEX_SHADER = Paths.get("shaders", "common", "imgspace.vert").toFile();
 
     private final int width;
@@ -144,10 +144,10 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
     }
 
     protected
-    Program<ContextType> createProgram(IBRResources<ContextType> resources) throws FileNotFoundException
+    Program<ContextType> createProgram(IBRResourcesImageSpace<ContextType> resources) throws FileNotFoundException
     {
         Program<ContextType> program =
-            resources.getIBRShaderProgramBuilder(this.settingsModel.get("renderingMode", StandardRenderingMode.class))
+            resources.getShaderProgramBuilder(this.settingsModel.get("renderingMode", StandardRenderingMode.class))
                 .define("VISIBILITY_TEST_ENABLED", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"))
                 .define("SHADOW_TEST_ENABLED", resources.shadowTextures != null && this.settingsModel.getBoolean("occlusionEnabled"))
                 .define("PHYSICALLY_BASED_MASKING_SHADOWING", this.settingsModel.getBoolean("pbrGeometricAttenuationEnabled"))
@@ -175,14 +175,9 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
     }
 
     protected static <ContextType extends Context<ContextType>> Drawable<ContextType>
-        createDrawable(Program<ContextType> program, IBRResources<ContextType> resources)
+        createDrawable(Program<ContextType> program, IBRResourcesImageSpace<ContextType> resources)
     {
-        Drawable<ContextType> drawable = program.getContext().createDrawable(program);
-        drawable.addVertexBuffer("position", resources.positionBuffer);
-        drawable.addVertexBuffer("texCoord", resources.texCoordBuffer);
-        drawable.addVertexBuffer("normal", resources.normalBuffer);
-        drawable.addVertexBuffer("tangent", resources.tangentBuffer);
-        return drawable;
+        return resources.createDrawable(program);
     }
 
     protected void render(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
@@ -191,7 +186,7 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
         framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
         framebuffer.clearDepthBuffer();
         shaderSetupCallback.accept(drawable.program());
-        drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+        drawable.draw(framebuffer);
     }
 
     protected File getOutputDirectory()

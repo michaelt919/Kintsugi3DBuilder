@@ -1,7 +1,5 @@
-#version 330
-
 /*
- *  Copyright (c) Michael Tetzlaff 2022
+ *  Copyright (c) Michael Tetzlaff 2023
  *  Copyright (c) The Regents of the University of Minnesota 2019
  *
  *  Licensed under GPLv3
@@ -12,23 +10,31 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-in vec3 position;
-in vec2 texCoord;
-in vec3 normal;
-in vec4 tangent;
+#ifndef USE_GEOM_GLSL
+#define USE_GEOM_GLSL
 
-out vec3 fPosition;
-out vec2 fTexCoord;
-out vec3 fNormal;
-out vec3 fTangent;
-out vec3 fBitangent;
+#line 17 9903
 
-void main(void)
+#ifndef GEOMETRY_TEXTURES_ENABLED
+#define GEOMETRY_TEXTURES_ENABLED 0
+#endif
+
+#if GEOMETRY_TEXTURES_ENABLED
+uniform sampler2D positionTex;
+
+vec3 getPosition()
 {
-    gl_Position = vec4(2.0 * texCoord - vec2(1.0), 0.0, 1.0);
-    fPosition = position;
-    fTexCoord = texCoord;
-    fNormal = normal;
-    fTangent = tangent.xyz;
-    fBitangent = tangent.w * normalize(cross(normal, tangent.xyz));
+    // Assume fTexCoord to be declared previously
+    // Assume the texture is set to store floating-point elements.
+    return texture(positionTex, fTexCoord).xyz;
 }
+
+#else
+// Assume fPosition is defined previously
+vec3 getPosition()
+{
+    return fPosition;
+}
+#endif
+
+#endif // USE_GEOM_GLSL

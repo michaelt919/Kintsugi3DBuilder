@@ -18,7 +18,7 @@ import tetzlaff.ibrelight.core.CameraViewport;
 import tetzlaff.ibrelight.core.RenderedComponent;
 import tetzlaff.ibrelight.core.SceneModel;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.ibrelight.rendering.resources.LightingResources;
 import tetzlaff.ibrelight.rendering.SceneViewportModel;
 import tetzlaff.ibrelight.rendering.StandardShader;
@@ -38,10 +38,10 @@ public class GroundPlane<ContextType extends Context<ContextType>> implements Re
     private VertexBuffer<ContextType> rectangleVertices;
     private Drawable<ContextType> groundPlaneDrawable;
 
-    public GroundPlane(IBRResources<ContextType> resources, LightingResources<ContextType> lightingResources,
+    public GroundPlane(IBRResourcesImageSpace<ContextType> resources, LightingResources<ContextType> lightingResources,
                        SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
     {
-        this.context = resources.context;
+        this.context = resources.getContext();
         this.sceneModel = sceneModel;
         this.sceneViewportModel = sceneViewportModel;
         this.groundPlaneStandardShader = new StandardShader<>(resources, lightingResources, sceneModel);

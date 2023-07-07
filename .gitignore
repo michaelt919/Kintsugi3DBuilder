@@ -3,5 +3,4 @@ target/*
 classes/*
 ImageBasedColorAppearance.iml
 *.log
-
 /out/*

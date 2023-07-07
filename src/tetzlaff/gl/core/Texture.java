@@ -20,7 +20,7 @@ package tetzlaff.gl.core;
  *
  * @param <ContextType> The type of the GL context that the texture is associated with.
  */
-public interface Texture<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
+public interface Texture<ContextType extends Context<ContextType>> extends Resource, ContextBound<ContextType>
 {
     /**
      * Gets the number of mipmap levels in the texture.

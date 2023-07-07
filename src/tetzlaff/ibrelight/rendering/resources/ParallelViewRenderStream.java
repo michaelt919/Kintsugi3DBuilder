@@ -125,7 +125,7 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
 
             // Run shader program to fill framebuffer with per-pixel information.
             drawable.program().setUniform("viewIndex", k);
-            drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+            drawable.draw(framebuffer);
 
 
             // Copy framebuffer from GPU to main memory.

@@ -17,10 +17,7 @@ import java.util.ArrayList;
 
 import org.lwjgl.*;
 import tetzlaff.gl.builders.base.FramebufferObjectBuilderBase;
-import tetzlaff.gl.core.FramebufferAttachment;
-import tetzlaff.gl.core.FramebufferObject;
-import tetzlaff.gl.core.FramebufferSize;
-import tetzlaff.gl.core.Resource;
+import tetzlaff.gl.core.*;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
@@ -88,6 +85,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
     private class Contents extends ContentsBase
     {
         final int fboId;
+        IntBuffer drawBufferList;
 
         Contents(int fboId)
         {
@@ -105,6 +103,23 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
         {
             glReadBuffer(GL_COLOR_ATTACHMENT0 + index);
             OpenGLContext.errorCheck();
+        }
+
+        @Override
+        void selectColorDestinationForDraw(int index)
+        {
+            glDrawBuffer(GL_COLOR_ATTACHMENT0 + index);
+            OpenGLContext.errorCheck();
+        }
+
+        @Override
+        void useAllColorDestinationsForDraw()
+        {
+            if (colorAttachments.length > 0)
+            {
+                glDrawBuffers(drawBufferList);
+                OpenGLContext.errorCheck();
+            }
         }
     }
 
@@ -131,14 +146,14 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
         this.stencilAttachment = stencilAttachment;
         this.depthStencilAttachment = depthStencilAttachment;
 
-        IntBuffer drawBufferList = BufferUtils.createIntBuffer(colorAttachments.length);
+        contents.drawBufferList = BufferUtils.createIntBuffer(colorAttachments.length);
 
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, contents.fboId);
         OpenGLContext.errorCheck();
 
         for (int i = 0; i < colorAttachments.length; i++)
         {
-            drawBufferList.put(i, GL_COLOR_ATTACHMENT0 + i);
+            contents.drawBufferList.put(i, GL_COLOR_ATTACHMENT0 + i);
 
             if (colorAttachments[i] != null)
             {
@@ -147,12 +162,6 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
                 colorAttachments[i].attachToDrawFramebuffer(GL_COLOR_ATTACHMENT0 + i, 0);
                 ownedAttachments.add(colorAttachments[i]);
             }
-        }
-
-        if (colorAttachments.length > 0)
-        {
-            glDrawBuffers(drawBufferList);
-            OpenGLContext.errorCheck();
         }
 
         if (depthAttachment != null)
@@ -175,13 +184,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
     }
 
     @Override
-    public Contents getContentsForRead()
-    {
-        return this.contents;
-    }
-
-    @Override
-    public Contents getContentsForWrite()
+    public Contents getContents()
     {
         return this.contents;
     }

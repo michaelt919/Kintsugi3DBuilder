@@ -20,7 +20,7 @@ import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
  *
  * @param <ContextType> The type of the GL context that the index buffer object is associated with.
  */
-public interface VertexBuffer<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
+public interface VertexBuffer<ContextType extends Context<ContextType>> extends Resource, ContextBound<ContextType>
 {
     /**
      * Gets the number of vertices in the vertex buffer.

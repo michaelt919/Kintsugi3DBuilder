@@ -10,31 +10,21 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-#ifndef USE_DEFERRED_GLSL
-#define USE_DEFERRED_GLSL
+#ifndef TEXSPACE_GLSL
+#define TEXSPACE_GLSL
 
-#line 17 9901
+#include "colorappearance.glsl"
 
-uniform sampler2D positionMap;
-uniform sampler2D normalMap;
+#line 19 1100
 
-vec3 getPosition(vec2 texCoord)
+uniform sampler2DArray viewImages;
+uniform vec2 minTexCoord;
+uniform vec2 maxTexCoord;
+
+vec4 getColor(int virtualIndex)
 {
-    return texture(positionMap, texCoord).xyz;
+    int viewIndex = getViewIndex(virtualIndex);
+    return texture(viewImages, vec3((fTexCoord - minTexCoord) / (maxTexCoord - minTexCoord), viewIndex));
 }
 
-vec3 getNormal(vec2 texCoord)
-{
-    vec3 normal = texture(normalMap, texCoord).xyz;
-
-    if (normal == vec3(0))
-    {
-        return vec3(0);
-    }
-    else
-    {
-        return normalize(normal);
-    }
-}
-
-#endif // USE_DEFERRED_GLSL
+#endif // TEXSPACE_GLSL

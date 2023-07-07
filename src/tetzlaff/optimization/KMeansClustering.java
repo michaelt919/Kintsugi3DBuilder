@@ -39,12 +39,19 @@ public class KMeansClustering
 
         // Randomly choose the first center.
         int firstCenterIndex;
+        int failsafeCounter = 0;
 
         do
         {
             firstCenterIndex = random.nextInt(colorMap.size());
+            failsafeCounter++;
         }
-        while(colorMap.getAlpha(firstCenterIndex) < 1.0); // Make sure the center chosen is valid.
+        while(colorMap.getAlpha(firstCenterIndex) < 1.0 && failsafeCounter <= colorMap.size()); // Make sure the center chosen is valid.
+
+        if (colorMap.getAlpha(firstCenterIndex) < 1.0)
+        {
+            throw new IllegalStateException("Color map does not contain any valid elements.");
+        }
 
         int basisCount = solutionOut.get(0).getNumElements();
         Vector3[] centers = new Vector3[basisCount];

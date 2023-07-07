@@ -20,7 +20,7 @@ package tetzlaff.gl.core;
  *
  * @param <ContextType> The type of the GL context that the shader is associated with.
  */
-public interface Shader<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
+public interface Shader<ContextType extends Context<ContextType>> extends Resource, ContextBound<ContextType>
 {
 
 }

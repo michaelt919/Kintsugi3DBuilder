@@ -15,7 +15,7 @@ import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Program;
 import tetzlaff.gl.core.ShaderType;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -24,14 +24,14 @@ import java.util.Map;
 
 public class PTMProgramFactory <ContextType extends Context<ContextType>>
 {
-    private final IBRResources<ContextType> resources;
+    private final IBRResourcesImageSpace<ContextType> resources;
 
-    public PTMProgramFactory(IBRResources<ContextType> resources) {
+    public PTMProgramFactory(IBRResourcesImageSpace<ContextType> resources) {
         this.resources = resources;
     }
     public ProgramBuilder<ContextType> getShaderProgramBuilder(File vertexShader, File fragmentShader, boolean visibilityAndShadowTests)
     {
-        return resources.getIBRShaderProgramBuilder()
+        return resources.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, vertexShader)
                 .addShader(ShaderType.FRAGMENT, fragmentShader)
                 .define("VISIBILITY_TEST_ENABLED",

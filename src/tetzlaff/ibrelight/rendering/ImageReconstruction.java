@@ -14,11 +14,8 @@ package tetzlaff.ibrelight.rendering;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.IntToDoubleFunction;
-import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
 
 import tetzlaff.gl.builders.ProgramBuilder;
@@ -26,7 +23,6 @@ import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.DoubleVector2;
 import tetzlaff.gl.vecmath.DoubleVector3;
-import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
@@ -49,7 +45,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         programSetup.accept(program);
         this.drawable = resources.createDrawable(program);
 
-        this.groundTruthProgram = resources.getIBRShaderProgramBuilder()
+        this.groundTruthProgram = resources.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/colorappearance/tonemap.frag"))
             .createProgram();
@@ -95,7 +91,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         framebuffer.clearDepthBuffer();
 
         // Draw the view into the framebuffer.
-        drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+        drawable.draw(framebuffer);
 
         // Give the callback an opportunity to do something with the view.
         if (reconstructionAction != null)
@@ -110,7 +106,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         // Tonemap ground truth image
         try (Texture2D<ContextType> groundTruthTex =
             groundTruthProgram.getContext().getTextureFactory()
-                .build2DColorTextureFromFile(IBRResources.findImageFile(viewSet.getImageFile(viewIndex)), true)
+                .build2DColorTextureFromFile(viewSet.findImageFile(viewIndex), true)
                 .setLinearFilteringEnabled(true)
                 .setMipmapsEnabled(true)
                 .createTexture())

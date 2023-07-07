@@ -97,7 +97,7 @@ public class ScreenshotRequest<ContextType extends Context<ContextType>> impleme
     {
         try
         (
-            FramebufferObject<ContextType> framebuffer = renderable.getIBRResources().context.buildFramebufferObject(width, height)
+            FramebufferObject<ContextType> framebuffer = renderable.getIBRResources().getContext().buildFramebufferObject(width, height)
                 .addColorAttachment()
                 .addDepthAttachment()
                 .createFramebufferObject()

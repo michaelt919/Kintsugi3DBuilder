@@ -3,43 +3,50 @@ package tetzlaff.ibrelight.export.specularfit;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.core.*;
+import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.optimization.ErrorReport;
-import tetzlaff.optimization.ReadonlyErrorReport;
-import tetzlaff.optimization.ShaderBasedErrorCalculator;
 import tetzlaff.optimization.ShaderBasedOptimization;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
+/**
+ * TODO: sketched out but not fully functional; may not be needed
+ * @param <ContextType>
+ */
 public class RoughnessOptimizationIterative<ContextType extends Context<ContextType>>
         extends RoughnessOptimizationBase<ContextType>
 {
+    private final TextureFitSettings settings;
+
     private final ShaderBasedOptimization<ContextType> roughnessOptimization;
 //    private Program<ContextType> errorCalcProgram;
 
+    private final double convergenceTolerance;
+    private final int unsuccessfulLMIterationsAllowed;
+
     /**
      *
-     * @param context The graphics context
-     * @param basisResources Used for the initial estimate
-     * @param settings the global settings for the specular fit
+     * @param basisWeightResources Used for the initial estimate
      * @throws FileNotFoundException
      */
-    public RoughnessOptimizationIterative(
-        ContextType context,
-        BasisResources<ContextType> basisResources,
-        Supplier<Texture2D<ContextType>> getDiffuseTexture,
-        SpecularFitSettings settings)
+    public RoughnessOptimizationIterative(BasisResources<ContextType> basisResources,
+        BasisWeightResources<ContextType> basisWeightResources, TextureFitSettings settings,
+        Supplier<Texture2D<ContextType>> getDiffuseTexture, double convergenceTolerance, int unsuccessfulLMIterationsAllowed)
             throws FileNotFoundException
     {
         // Inherit from base class to facilitate initial fit.
-        super(context, basisResources, settings);
+        super(basisResources, basisWeightResources, settings.gamma);
+        this.settings = settings;
+        this.convergenceTolerance = convergenceTolerance;
+        this.unsuccessfulLMIterationsAllowed = unsuccessfulLMIterationsAllowed;
 
         roughnessOptimization = new ShaderBasedOptimization<>(
-            getRoughnessEstimationProgramBuilder(context),
-            context.buildFramebufferObject(settings.width, settings.height)
+            getRoughnessEstimationProgramBuilder(basisResources.getContext()),
+            basisResources.getContext().buildFramebufferObject(
+                    settings.width, settings.height)
                 // Reflectivity map
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F)
                     .setLinearFilteringEnabled(true))
@@ -50,7 +57,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
                 .addColorAttachment(ColorFormat.RG32F),
             program -> // Just use the rectangle as geometry
             {
-                Drawable<ContextType> drawable = context.createDrawable(program);
+                Drawable<ContextType> drawable = basisResources.getContext().createDrawable(program);
                 drawable.addVertexBuffer("position", rect);
                 drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
                 return drawable;
@@ -69,7 +76,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
             estimationProgram.setTexture("dampingTex", roughnessOptimization.getFrontFramebuffer().getColorAttachmentTexture(2));
 
             // Gamma correction constants
-            float gamma = settings.additional.getFloat("gamma");
+            float gamma = settings.gamma;
             estimationProgram.setUniform("gamma", gamma);
             estimationProgram.setUniform("gammaInv", 1.0f / gamma);
 
@@ -121,12 +128,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
                     .sum());
                 return errorReport;
             },
-            settings.getConvergenceTolerance(), settings.getUnsuccessfulLMIterationsAllowed());
-
-        if (SpecularOptimization.DEBUG)
-        {
-            saveTextures();
-        }
+            convergenceTolerance, unsuccessfulLMIterationsAllowed);
     }
 
     private static <ContextType extends Context<ContextType>>

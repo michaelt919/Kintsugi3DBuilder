@@ -75,12 +75,10 @@ vec2 getHeightCorrelatedSmithGradient(float roughness, vec3 light, vec3 view)
 
 void main()
 {
-    vec3 triangleNormal = normalize(fNormal);
-    vec3 tangent = normalize(fTangent - dot(triangleNormal, fTangent) * triangleNormal);
-    vec3 bitangent = normalize(fBitangent
-        - dot(triangleNormal, fBitangent) * triangleNormal
-        - dot(tangent, fBitangent) * tangent);
-    mat3 tangentToObject = mat3(tangent, bitangent, triangleNormal);
+    vec3 position = getPosition();
+
+    mat3 tangentToObject = constructTBNExact();
+    vec3 triangleNormal = tangentToObject[2];
 
     vec2 prevNormalXY = texture(normalEstimate, fTexCoord).xy * 2 - vec2(1.0);
     vec3 prevNormalTS = vec3(prevNormalXY, sqrt(1 - dot(prevNormalXY, prevNormalXY)));
@@ -105,9 +103,9 @@ void main()
     for (int k = 0; k < CAMERA_POSE_COUNT; k++)
     {
         vec4 imgColor = getLinearColor(k);
-        vec3 lightDisplacement = objectToFitting * getLightVector(k);
+        vec3 lightDisplacement = objectToFitting * getLightVector(k, position);
         vec3 light = normalize(lightDisplacement);
-        vec3 view = objectToFitting * normalize(getViewVector(k));
+        vec3 view = objectToFitting * normalize(getViewVector(k, position));
         vec3 halfway = normalize(light + view);
         float nDotH = max(0.0, halfway.z);
         float nDotL = max(0.0, light.z);
@@ -183,7 +181,7 @@ void main()
 #if USE_LEVENBERG_MARQUARDT
 
     vec2 normalFittingSpace;
-    float prevError = calculateError(triangleNormal, tangentToObject * prevNormalTS);
+    float prevError = calculateError(position, triangleNormal, tangentToObject * prevNormalTS);
 
     if (determinant(mJTJ) > 0)
     {
@@ -196,7 +194,7 @@ void main()
 
         vec3 newNormalTS = fittingToTangent * vec3(normalFittingSpace, sqrt(max(0, 1 - tangentLengthSq * tangentScale)));
 
-        float newError = calculateError(triangleNormal, tangentToObject * newNormalTS);
+        float newError = calculateError(position, triangleNormal, tangentToObject * newNormalTS);
 
         if (!isnan(newNormalTS.x) && !isnan(newNormalTS.y) && !isnan(newNormalTS.z) && newError < prevError)
         {

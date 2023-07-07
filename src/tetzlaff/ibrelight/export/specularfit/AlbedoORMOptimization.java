@@ -16,6 +16,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import tetzlaff.gl.core.*;
+import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.util.ShaderHoleFill;
 
 public class AlbedoORMOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
@@ -24,17 +25,15 @@ public class AlbedoORMOptimization<ContextType extends Context<ContextType>> imp
     private final ContextType context;
 
     // Estimation program
-    private final Program<ContextType> estimationProgram;
+    private Program<ContextType> estimationProgram;
 
     // Framebuffer for storing the diffuse solution
     private FramebufferObject<ContextType> framebuffer;
 
-    private final VertexBuffer<ContextType> rect;
+    private VertexBuffer<ContextType> rect;
     private final Drawable<ContextType> drawable;
 
-    private final SpecularFitSettings settings;
-
-    public AlbedoORMOptimization(ContextType context, SpecularFitSettings settings)
+    public AlbedoORMOptimization(ContextType context, TextureFitSettings settings)
         throws FileNotFoundException
     {
         this.context = context;
@@ -50,9 +49,7 @@ public class AlbedoORMOptimization<ContextType extends Context<ContextType>> imp
         drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
         drawable.addVertexBuffer("position", rect);
 
-        estimationProgram.setUniform("gamma", settings.additional.getFloat("gamma"));
-
-        this.settings = settings;
+        estimationProgram.setUniform("gamma", settings.gamma);
     }
 
     public void execute(SpecularResources<ContextType> specularFit)
@@ -107,9 +104,23 @@ public class AlbedoORMOptimization<ContextType extends Context<ContextType>> imp
     @Override
     public void close()
     {
-        estimationProgram.close();
-        framebuffer.close();
-        rect.close();
+        if (estimationProgram != null)
+        {
+            estimationProgram.close();
+            estimationProgram = null;
+        }
+
+        if (framebuffer != null)
+        {
+            framebuffer.close();
+            framebuffer = null;
+        }
+
+        if (rect != null)
+        {
+            rect.close();
+            rect = null;
+        }
     }
 
     public Texture2D<ContextType> getAlbedoMap()
@@ -122,12 +133,12 @@ public class AlbedoORMOptimization<ContextType extends Context<ContextType>> imp
         return framebuffer.getColorAttachmentTexture(1);
     }
 
-    public void saveTextures()
+    public void saveTextures(File outputDirectory)
     {
         try
         {
-            framebuffer.saveColorBufferToFile(0, "PNG", new File(settings.outputDirectory, "albedo.png"));
-            framebuffer.saveColorBufferToFile(1, "PNG", new File(settings.outputDirectory, "orm.png"));
+            framebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, "albedo.png"));
+            framebuffer.saveColorBufferToFile(1, "PNG", new File(outputDirectory, "orm.png"));
         }
         catch (IOException e)
         {

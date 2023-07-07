@@ -26,6 +26,7 @@ import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
+import tetzlaff.util.ImageFinder;
 
 /**
  * A class representing a collection of photographs, or views.
@@ -105,11 +106,6 @@ public final class ViewSet
     private String geometryFileName;
 
     /**
-     * The name of an (optional) texture containing an estimate of residual specularity
-     */
-    private final String residualTextureFileName;
-
-    /**
      * Used to decode pixel colors according to a gamma curve if reference values are unavailable, otherwise, affects the absolute brightness of the decoded colors.
      */
     private float gamma;
@@ -146,7 +142,6 @@ public final class ViewSet
         final List<String> imageFileNames = new ArrayList<>(128);
         String relativeImagePath;
         String geometryFileName;
-        String residualTextureFileName;
         File directory;
         float gamma = 2.2f;
         boolean infiniteLightSources;
@@ -179,7 +174,6 @@ public final class ViewSet
         this.encodedLuminanceValues = params.encodedLuminanceValues;
         this.rootDirectory = params.directory;
         this.relativeImagePath = params.relativeImagePath;
-        this.residualTextureFileName = params.residualTextureFileName;
     }
 
     public NativeVectorBuffer getCameraPoseData()
@@ -424,12 +418,6 @@ public final class ViewSet
                     case "i":
                     {
                         params.relativeImagePath = scanner.nextLine().trim();
-                        break;
-                    }
-                    case "r":
-                    {
-                        // Residual texture
-                        params.residualTextureFileName = scanner.nextLine().trim();
                         break;
                     }
                     case "p":
@@ -1350,16 +1338,6 @@ public final class ViewSet
         return geometryFileName == null ? null : new File(this.rootDirectory, geometryFileName);
     }
 
-    public String getResidualTextureFileName()
-    {
-        return residualTextureFileName;
-    }
-
-    public File getResidualTextureFile()
-    {
-        return residualTextureFileName == null ? null : new File(this.rootDirectory, residualTextureFileName);
-    }
-
     /**
      * Gets the image file path associated with this view set.
      * @return The image file path.
@@ -1578,5 +1556,26 @@ public final class ViewSet
     public void setInfiniteLightSources(boolean infiniteLightSources)
     {
         this.infiniteLightSources = infiniteLightSources;
+    }
+
+    /**
+     * Finds the image file for a particular view index.
+     * @param index The index of the view to find.
+     * @return The image file at the specified view index.
+     * @throws FileNotFoundException if the image file cannot be found.
+     */
+    public File findImageFile(int index) throws FileNotFoundException
+    {
+        return ImageFinder.getInstance().findImageFile(getImageFile(index));
+    }
+
+    /**
+     * Finds the image file for the primary view index.
+     * @return The image file at the primary view index.
+     * @throws FileNotFoundException if the image file cannot be found.
+     */
+    public File findPrimaryImageFile() throws FileNotFoundException
+    {
+        return findImageFile(getPrimaryViewIndex());
     }
 }

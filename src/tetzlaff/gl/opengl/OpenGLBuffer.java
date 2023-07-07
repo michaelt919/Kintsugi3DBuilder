@@ -13,13 +13,13 @@ package tetzlaff.gl.opengl;
 
 import java.nio.ByteBuffer;
 
-import tetzlaff.gl.core.Contextual;
+import tetzlaff.gl.core.ContextBound;
 import tetzlaff.gl.core.Resource;
 
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL30.*;
 
-abstract class OpenGLBuffer implements Contextual<OpenGLContext>, Resource
+abstract class OpenGLBuffer implements ContextBound<OpenGLContext>, Resource
 {
     protected final OpenGLContext context;
 

@@ -14,11 +14,12 @@ package tetzlaff.ibrelight.export.PTMfit;
 import org.ejml.data.SingularMatrixException;
 import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.builders.ProgramBuilder;
+import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 
 import tetzlaff.ibrelight.rendering.resources.GraphicsStreamResource;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.optimization.LeastSquaresMatrixBuilder;
 
 import java.io.File;
@@ -43,15 +44,15 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
         mapBuilder = new PolynomialTextureMapBuilder(settings.width,settings.height);
     }
 
-    public void createFit(IBRResources<ContextType> resources)
+    public void createFit(IBRResourcesImageSpace<ContextType> resources, File outputDirectory)
             throws IOException
     {
-        ContextType context = resources.context;
+        ContextType context = resources.getContext();
         context.getState().disableBackFaceCulling();
 
         PTMProgramFactory<ContextType> programFactory = new PTMProgramFactory<>(resources);
         try(
-            GraphicsStreamResource<ContextType> luminanceStream = resources.streamAsResource(
+            GraphicsStreamResource<ContextType> luminanceStream = resources.streamFactory().streamAsResource(
                 getLuminanceProgramBuilder(programFactory),
                 context.buildFramebufferObject(settings.width, settings.height)
                     .addColorAttachment(ColorFormat.RGBA32F)
@@ -99,15 +100,15 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
 
             // write out weight textures for debugging
             fillHoles(solution);
-            solution.saveWeightMaps();
+            solution.saveWeightMaps(outputDirectory);
 
             TangentSpaceWeightsToObjectSpace<ContextType> tsWeightsToOS = new TangentSpaceWeightsToObjectSpace<>(resources, settings);
-            tsWeightsToOS.run(solution, getTangentToObjectSpaceProgram1Builder(programFactory), 0, 4);
-            tsWeightsToOS.run(solution, getTangentToObjectSpaceProgram2Builder(programFactory), 4, 6);
+            tsWeightsToOS.run(solution, getTangentToObjectSpaceProgram1Builder(programFactory), 0, 4, outputDirectory);
+            tsWeightsToOS.run(solution, getTangentToObjectSpaceProgram2Builder(programFactory), 4, 6, outputDirectory);
 
             try (PTMReconstruction<ContextType> reconstruct = new PTMReconstruction<>(resources, settings))
             {
-                reconstruct.reconstruct(solution, getReconstructionProgramBuilder(programFactory), "reconstruction");
+                reconstruct.reconstruct(solution, getReconstructionProgramBuilder(programFactory), outputDirectory, "reconstruction");
             }
         }
 
@@ -261,7 +262,7 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getLuminanceProgramBuilder(PTMProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(
-                new File("shaders/common/texspace_noscale.vert"),
+                new File("shaders/common/texspace_dynamic.vert"),
                 new File("shaders/PTMfit/PTMShader.frag"));
     }
 
@@ -275,14 +276,14 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getTangentToObjectSpaceProgram1Builder(PTMProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(
-                new File("shaders/common/texspace_noscale.vert"),
+                new File("shaders/common/texspace_dynamic.vert"),
                 new File("shaders/PTMfit/ptm_objectspace1.frag"));
     }
 
     ProgramBuilder<ContextType> getTangentToObjectSpaceProgram2Builder(PTMProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(
-                new File("shaders/common/texspace_noscale.vert"),
+                new File("shaders/common/texspace_dynamic.vert"),
                 new File("shaders/PTMfit/ptm_objectspace2.frag"));
     }
 
@@ -290,7 +291,7 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getColorAverageProgramBuilder(PTMProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(
-            new File("shaders/common/texspace_noscale.vert"),
+            new File("shaders/common/texspace_dynamic.vert"),
             new File("shaders/PTMfit/colorAverage.frag"));
     }
 

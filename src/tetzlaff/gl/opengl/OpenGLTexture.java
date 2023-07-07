@@ -32,29 +32,66 @@ import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
 import static org.lwjgl.opengl.GL44.*;
 
-abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebufferAttachment
-{
+abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebufferAttachment {
     protected final OpenGLContext context;
 
     private final int textureId;
 
     protected final int openGLTextureTarget;
-    protected final boolean useMipmaps;
     protected boolean staleMipmaps = false;
+
+    static final class Parameters
+    {
+        final int multisamples;
+        final int format;
+        final boolean fixedMultisampleLocations;
+        final boolean useLinearFiltering;
+        final boolean useMipmaps;
+        final int maxMipmapLevel;
+        final float maxAnisotropy;
+
+        /**
+         * Default constructor for a null texture
+         */
+        Parameters()
+        {
+            this(0, false, false, 0, 0.0f, 0, true);
+        }
+
+        Parameters(int format, boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy, int multisamples, boolean fixedMultisampleLocations)
+        {
+            this.format = format;
+            this.useLinearFiltering = useLinearFiltering;
+            this.useMipmaps = useMipmaps;
+            this.maxMipmapLevel = maxMipmapLevel;
+            this.maxAnisotropy = maxAnisotropy;
+            this.multisamples = multisamples;
+            this.fixedMultisampleLocations = fixedMultisampleLocations;
+        }
+
+        Parameters(int format, boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
+        {
+            this(format, useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy, 1, true);
+        }
+    }
+
+    final Parameters parameters;
 
     private final ColorFormat colorFormat;
     private final CompressionFormat compressionFormat;
+    final int precision;
     private final TextureType textureType;
 
-    private OpenGLTexture(OpenGLContext context, int openGLTextureTarget, ColorFormat colorFormat, CompressionFormat compressionFormat,
-        TextureType textureType, boolean useMipmaps)
+    private OpenGLTexture(OpenGLContext context, int openGLTextureTarget, ColorFormat colorFormat,
+        CompressionFormat compressionFormat, TextureType textureType, int precision, Parameters parameters)
     {
         this.context = context;
         this.openGLTextureTarget = openGLTextureTarget;
         this.textureType = textureType;
         this.colorFormat = colorFormat;
         this.compressionFormat = compressionFormat;
-        this.useMipmaps = useMipmaps;
+        this.precision = precision;
+        this.parameters = parameters;
 
         if (textureType == TextureType.NULL)
         {
@@ -67,19 +104,19 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
         }
     }
 
-    OpenGLTexture(OpenGLContext context, int openGLTextureTarget, TextureType textureType, boolean useMipmaps)
+    OpenGLTexture(OpenGLContext context, int openGLTextureTarget, TextureType textureType, int precision, Parameters parameters)
     {
-        this(context, openGLTextureTarget, null, null, textureType, useMipmaps);
+        this(context, openGLTextureTarget, null, null, textureType, precision, parameters);
     }
 
-    OpenGLTexture(OpenGLContext context, int openGLTextureTarget, ColorFormat colorFormat, boolean useMipmaps)
+    OpenGLTexture(OpenGLContext context, int openGLTextureTarget, ColorFormat colorFormat, Parameters parameters)
     {
-        this(context, openGLTextureTarget, colorFormat, null, TextureType.COLOR, useMipmaps);
+        this(context, openGLTextureTarget, colorFormat, null, TextureType.COLOR, 0, parameters);
     }
 
-    OpenGLTexture(OpenGLContext context, int openGLTextureTarget, CompressionFormat compressionFormat, boolean useMipmaps)
+    OpenGLTexture(OpenGLContext context, int openGLTextureTarget, CompressionFormat compressionFormat, Parameters parameters)
     {
-        this(context, openGLTextureTarget, null, compressionFormat, TextureType.COLOR, useMipmaps);
+        this(context, openGLTextureTarget, null, compressionFormat, TextureType.COLOR, 0, parameters);
     }
 
     @Override
@@ -158,7 +195,7 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
 
     void initFilteringAndMipmaps(boolean useLinearFiltering, int maxMipmapLevel, boolean generateMipmaps)
     {
-        if (useMipmaps)
+        if (parameters.useMipmaps)
         {
             if (maxMipmapLevel < Integer.MAX_VALUE)
             {
