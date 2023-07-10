@@ -77,6 +77,11 @@ public final class ViewSet implements ReadonlyViewSet
     private final List<Integer> lightIndexList;
 
     /**
+     * A list containing the relative name of the image file corresponding to each view.
+     */
+    private final List<String> imageFileNames;
+
+    /**
      * The reference linear luminance values used for decoding pixel colors.
      */
     private double[] linearLuminanceValues;
@@ -85,11 +90,6 @@ public final class ViewSet implements ReadonlyViewSet
      * The reference encoded luminance values used for decoding pixel colors.
      */
     private byte[] encodedLuminanceValues;
-
-    /**
-     * A list containing the relative name of the image file corresponding to each view.
-     */
-    private final List<String> imageFileNames;
 
     /**
      * The absolute file path to be used for loading all resources.
@@ -109,72 +109,84 @@ public final class ViewSet implements ReadonlyViewSet
     /**
      * Used to decode pixel colors according to a gamma curve if reference values are unavailable, otherwise, affects the absolute brightness of the decoded colors.
      */
-    private float gamma;
+    private float gamma = 2.2f;
 
     /**
      * If false, inverse-square light attenuation should be applied.
      */
-    private boolean infiniteLightSources;
+    private boolean infiniteLightSources = false;
 
     /**
      * The recommended near plane to use when rendering this view set.
      */
-    private final float recommendedNearPlane;
+    private float recommendedNearPlane = 0.01f;
 
     /**
      * The recommended far plane to use when rendering this view set.
      */
-    private final float recommendedFarPlane;
+    private float recommendedFarPlane = 100.0f;
 
     /**
      * The index of the view that sets the initial orientation when viewing, is used for color calibration, etc.
      */
     private int primaryViewIndex = 0;
 
-    private static class Parameters
-    {
-        final List<Matrix4> cameraPoseList = new ArrayList<>(128);
-        final List<Matrix4> cameraPoseInvList = new ArrayList<>(128);
-        final List<Projection> cameraProjectionList = new ArrayList<>(128);
-        final List<Integer> cameraProjectionIndexList = new ArrayList<>(128);
-        final List<Vector3> lightPositionList = new ArrayList<>(128);
-        final List<Vector3> lightIntensityList = new ArrayList<>(128);
-        final List<Integer> lightIndexList = new ArrayList<>(128);
-        final List<String> imageFileNames = new ArrayList<>(128);
-        String relativeImagePath;
-        String geometryFileName;
-        File directory;
-        float gamma = 2.2f;
-        boolean infiniteLightSources;
-        double[] linearLuminanceValues;
-        byte[] encodedLuminanceValues;
-        float recommendedNearPlane;
-        float recommendedFarPlane;
-    }
-
     /**
      * Creates a new view set object.
-     * @param params The parameters defining the new view set.
+     * @param initialCapacity The capacity to use for initializing array-based lists that scale with the number of views
      */
-    private ViewSet(Parameters params)
+    private ViewSet(int initialCapacity)
     {
-        this.cameraPoseList = params.cameraPoseList;
-        this.cameraPoseInvList = params.cameraPoseInvList;
-        this.cameraProjectionList = params.cameraProjectionList;
-        this.cameraProjectionIndexList = params.cameraProjectionIndexList;
-        this.lightPositionList = params.lightPositionList;
-        this.lightIntensityList = params.lightIntensityList;
-        this.lightIndexList = params.lightIndexList;
-        this.imageFileNames = params.imageFileNames;
-        this.geometryFileName = params.geometryFileName;
-        this.recommendedNearPlane = params.recommendedNearPlane;
-        this.recommendedFarPlane = params.recommendedFarPlane;
-        this.gamma = params.gamma;
-        this.infiniteLightSources = params.infiniteLightSources;
-        this.linearLuminanceValues = params.linearLuminanceValues;
-        this.encodedLuminanceValues = params.encodedLuminanceValues;
-        this.rootDirectory = params.directory;
-        this.relativeImagePath = params.relativeImagePath;
+        this.cameraPoseList = new ArrayList<>(initialCapacity);
+        this.cameraPoseInvList = new ArrayList<>(initialCapacity);
+        this.cameraProjectionIndexList = new ArrayList<>(initialCapacity);
+        this.lightIndexList = new ArrayList<>(initialCapacity);
+        this.imageFileNames = new ArrayList<>(initialCapacity);
+
+        // Often these lists will have just one element
+        this.cameraProjectionList = new ArrayList<>(1);
+        this.lightIntensityList = new ArrayList<>(1);
+        this.lightPositionList = new ArrayList<>(1);
+    }
+
+    public List<Matrix4> getCameraPoseList()
+    {
+        return cameraPoseList;
+    }
+
+    public List<Matrix4> getCameraPoseInvList()
+    {
+        return cameraPoseInvList;
+    }
+
+    public List<Projection> getCameraProjectionList()
+    {
+        return cameraProjectionList;
+    }
+
+    public List<Integer> getCameraProjectionIndexList()
+    {
+        return cameraProjectionIndexList;
+    }
+
+    public List<Vector3> getLightPositionList()
+    {
+        return lightPositionList;
+    }
+
+    public List<Vector3> getLightIntensityList()
+    {
+        return lightIntensityList;
+    }
+
+    public List<Integer> getLightIndexList()
+    {
+        return lightIndexList;
+    }
+
+    public List<String> getImageFileNames()
+    {
+        return imageFileNames;
     }
 
     @Override
@@ -304,7 +316,7 @@ public final class ViewSet implements ReadonlyViewSet
     @Override
     public ReadonlyNativeVectorBuffer getLightIndexData()
     {
-        // Store the light indices indices in a uniform buffer
+        // Store the light indices in a uniform buffer
         if (!lightIndexList.isEmpty())
         {
             int[] indexArray = new int[lightIndexList.size()];
@@ -321,92 +333,93 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public ReadonlyViewSet createPermutation(Iterable<Integer> permutationIndices)
+    public ReadonlyViewSet createPermutation(Collection<Integer> permutationIndices)
     {
-        Parameters params = new Parameters();
+        ViewSet result = new ViewSet(permutationIndices.size());
 
         for (int i : permutationIndices)
         {
-            params.cameraPoseList.add(this.cameraPoseList.get(i));
-            params.cameraPoseInvList.add(this.cameraPoseInvList.get(i));
-            params.cameraProjectionIndexList.add(this.cameraProjectionIndexList.get(i));
-            params.lightIndexList.add(this.lightIndexList.get(i));
-            params.imageFileNames.add(this.imageFileNames.get(i));
+            result.getCameraPoseList().add(this.cameraPoseList.get(i));
+            result.getCameraPoseInvList().add(this.cameraPoseInvList.get(i));
+            result.getCameraProjectionIndexList().add(this.cameraProjectionIndexList.get(i));
+            result.getLightIndexList().add(this.lightIndexList.get(i));
+            result.getImageFileNames().add(this.imageFileNames.get(i));
         }
 
-        params.cameraProjectionList.addAll(this.cameraProjectionList);
-        params.lightIntensityList.addAll(this.lightIntensityList);
-        params.lightPositionList.addAll(this.lightPositionList);
+        result.getCameraProjectionList().addAll(this.cameraProjectionList);
+        result.getLightIntensityList().addAll(this.lightIntensityList);
+        result.getLightPositionList().addAll(this.lightPositionList);
 
-        params.relativeImagePath = this.relativeImagePath;
-        params.geometryFileName = this.geometryFileName;
-        params.directory = this.rootDirectory;
-        params.gamma = this.gamma;
-        params.infiniteLightSources = this.infiniteLightSources;
-        params.recommendedNearPlane = this.recommendedNearPlane;
-        params.recommendedFarPlane = this.recommendedFarPlane;
+        result.setTonemapping(this.gamma,
+            Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
+            Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
 
-        params.linearLuminanceValues = Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length);
-        params.encodedLuminanceValues = Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length);
+        result.setRootDirectory(this.rootDirectory);
+        result.setRelativeImagePathName(this.relativeImagePath);
+        result.setGeometryFileName(this.geometryFileName);
+        result.setInfiniteLightSources(this.infiniteLightSources);
+        result.setRecommendedNearPlane(this.recommendedNearPlane);
+        result.setRecommendedFarPlane(this.recommendedFarPlane);
+        result.setPrimaryView(primaryViewIndex);
 
-        return new ViewSet(params);
+        return result;
     }
 
     @Override
     public ViewSet copy()
     {
-        Parameters params = new Parameters();
+        ViewSet result = new ViewSet(this.getCameraPoseCount());
 
-        params.cameraPoseList.addAll(this.cameraPoseList);
-        params.cameraPoseInvList.addAll(this.cameraPoseInvList);
-        params.cameraProjectionList.addAll(this.cameraProjectionList);
-        params.cameraProjectionIndexList.addAll(this.cameraProjectionIndexList);
-        params.lightPositionList.addAll(this.lightPositionList);
-        params.lightIntensityList.addAll(this.lightIntensityList);
-        params.lightIndexList.addAll(this.lightIndexList);
-        params.imageFileNames.addAll(this.imageFileNames);
+        result.getCameraPoseList().addAll(this.cameraPoseList);
+        result.getCameraPoseInvList().addAll(this.cameraPoseInvList);
+        result.getCameraProjectionList().addAll(this.cameraProjectionList);
+        result.getCameraProjectionIndexList().addAll(this.cameraProjectionIndexList);
+        result.getLightPositionList().addAll(this.lightPositionList);
+        result.getLightIntensityList().addAll(this.lightIntensityList);
+        result.getLightIndexList().addAll(this.lightIndexList);
+        result.getImageFileNames().addAll(this.imageFileNames);
 
-        params.linearLuminanceValues = Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length);
-        params.encodedLuminanceValues = Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length);
+        result.setTonemapping(this.gamma,
+            Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
+            Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
 
-        params.directory = this.rootDirectory;
-        params.relativeImagePath = this.relativeImagePath;
-        params.geometryFileName = this.geometryFileName;
-        params.gamma = this.gamma;
-        params.infiniteLightSources = this.infiniteLightSources;
-        params.recommendedNearPlane = this.recommendedNearPlane;
-        params.recommendedFarPlane = this.recommendedFarPlane;
-
-        ViewSet result = new ViewSet(params);
+        result.setRootDirectory(this.rootDirectory);
+        result.setRelativeImagePathName(this.relativeImagePath);
+        result.setGeometryFileName(this.geometryFileName);
+        result.setInfiniteLightSources(this.infiniteLightSources);
+        result.setRecommendedNearPlane(this.recommendedNearPlane);
+        result.setRecommendedFarPlane(this.recommendedFarPlane);
         result.setPrimaryView(primaryViewIndex);
+
         return result;
     }
 
     public static ReadonlyViewSet createFromLookAt(List<Vector3> viewDir, Vector3 center, Vector3 up, float distance,
         float nearPlane, float aspect, float sensorWidth, float focalLength)
     {
-        Parameters params = new Parameters();
-        params.cameraProjectionList.add(new DistortionProjection(sensorWidth, sensorWidth / aspect, focalLength));
+        ViewSet result = new ViewSet(viewDir.size());
 
-        params.recommendedNearPlane = nearPlane;
-        params.recommendedFarPlane = 2 * distance - nearPlane;
+        result.getCameraProjectionList().add(new DistortionProjection(sensorWidth, sensorWidth / aspect, focalLength));
 
-        params.lightIntensityList.add(new Vector3(distance * distance));
-        params.lightPositionList.add(Vector3.ZERO);
+        result.setRecommendedNearPlane(nearPlane);
+        result.setRecommendedFarPlane(2 * distance - nearPlane);
+
+        result.getLightIntensityList().add(new Vector3(distance * distance));
+        result.getLightPositionList().add(Vector3.ZERO);
 
         for (int i = 0; i < viewDir.size(); i++)
         {
-            params.cameraProjectionIndexList.add(0);
-            params.lightIndexList.add(0);
-            params.imageFileNames.add(String.format("%04d.png", i + 1));
+            result.getCameraProjectionIndexList().add(0);
+            result.getLightIndexList().add(0);
+            result.getImageFileNames().add(String.format("%04d.png", i + 1));
 
             Matrix4 cameraPose = Matrix4.lookAt(viewDir.get(i).times(-distance).plus(center), center, up);
 
-            params.cameraPoseList.add(cameraPose);
-            params.cameraPoseInvList.add(cameraPose.quickInverse(0.001f));
+            result.getCameraPoseList().add(cameraPose);
+            result.getCameraPoseInvList().add(cameraPose.quickInverse(0.001f));
         }
 
-        return new ViewSet(params);
+        return result;
     }
 
     /**
@@ -419,14 +432,9 @@ public final class ViewSet implements ReadonlyViewSet
     {
         Date timestamp = new Date();
 
-        Parameters params = new Parameters();
+        ViewSet result = new ViewSet(128);
 
-        params.gamma = 2.2f;
-        params.recommendedNearPlane = 0.0f;
-        params.recommendedFarPlane = Float.MAX_VALUE;
-
-        params.geometryFileName = "manifold.obj";
-        params.relativeImagePath = null;
+        float gamma = 2.2f;
 
         List<Double> linearLuminanceList = new ArrayList<>(8);
         List<Byte> encodedLuminanceList = new ArrayList<>(8);
@@ -443,19 +451,19 @@ public final class ViewSet implements ReadonlyViewSet
                 {
                     case "c":
                     {
-                        params.recommendedNearPlane = scanner.nextFloat();
-                        params.recommendedFarPlane = scanner.nextFloat();
+                        result.setRecommendedNearPlane(scanner.nextFloat());
+                        result.setRecommendedFarPlane(scanner.nextFloat());
                         scanner.nextLine();
                         break;
                     }
                     case "m":
                     {
-                        params.geometryFileName = scanner.nextLine().trim();
+                        result.setGeometryFileName(scanner.nextLine().trim());
                         break;
                     }
                     case "i":
                     {
-                        params.relativeImagePath = scanner.nextLine().trim();
+                        result.setRelativeImagePathName(scanner.nextLine().trim());
                         break;
                     }
                     case "p":
@@ -521,7 +529,7 @@ public final class ViewSet implements ReadonlyViewSet
 
                         float sensorHeight = sensorWidth / aspect;
 
-                        params.cameraProjectionList.add(new DistortionProjection(
+                        result.getCameraProjectionList().add(new DistortionProjection(
                             sensorWidth, sensorHeight,
                             focalLength, focalLength,
                             sensorWidth / 2, sensorHeight / 2, k1, k2, k3
@@ -541,7 +549,7 @@ public final class ViewSet implements ReadonlyViewSet
                     case "g":
                     {
                         // Gamma
-                        params.gamma = scanner.nextFloat();
+                        gamma = scanner.nextFloat();
                         scanner.nextLine();
                         break;
                     }
@@ -554,7 +562,7 @@ public final class ViewSet implements ReadonlyViewSet
                         float aspect = scanner.nextFloat();
                         float fovy = (float)(scanner.nextFloat() * Math.PI / 180.0);
 
-                        params.cameraProjectionList.add(new SimpleProjection(aspect, fovy));
+                        result.getCameraProjectionList().add(new SimpleProjection(aspect, fovy));
 
                         scanner.nextLine();
                         break;
@@ -564,12 +572,12 @@ public final class ViewSet implements ReadonlyViewSet
                         float x = scanner.nextFloat();
                         float y = scanner.nextFloat();
                         float z = scanner.nextFloat();
-                        params.lightPositionList.add(new Vector3(x, y, z));
+                        result.getLightPositionList().add(new Vector3(x, y, z));
 
                         float r = scanner.nextFloat();
                         float g = scanner.nextFloat();
                         float b = scanner.nextFloat();
-                        params.lightIntensityList.add(new Vector3(r, g, b));
+                        result.getLightIntensityList().add(new Vector3(r, g, b));
 
                         // Skip the rest of the line
                         scanner.nextLine();
@@ -584,11 +592,11 @@ public final class ViewSet implements ReadonlyViewSet
 
                         String imgFilename = scanner.nextLine().trim();
 
-                        params.cameraPoseList.add(unorderedCameraPoseList.get(poseId));
-                        params.cameraPoseInvList.add(unorderedCameraPoseInvList.get(poseId));
-                        params.cameraProjectionIndexList.add(projectionId);
-                        params.lightIndexList.add(lightId);
-                        params.imageFileNames.add(imgFilename);
+                        result.getCameraPoseList().add(unorderedCameraPoseList.get(poseId));
+                        result.getCameraPoseInvList().add(unorderedCameraPoseInvList.get(poseId));
+                        result.getCameraProjectionIndexList().add(projectionId);
+                        result.getLightIndexList().add(lightId);
+                        result.getImageFileNames().add(imgFilename);
                         break;
                     }
                     default:
@@ -598,30 +606,38 @@ public final class ViewSet implements ReadonlyViewSet
             }
         }
 
-        params.linearLuminanceValues = new double[linearLuminanceList.size()];
-        for (int i = 0; i < params.linearLuminanceValues.length; i++)
+        double[] linearLuminanceValues = new double[linearLuminanceList.size()];
+        for (int i = 0; i < linearLuminanceValues.length; i++)
         {
-            params.linearLuminanceValues[i] = linearLuminanceList.get(i);
+            linearLuminanceValues[i] = linearLuminanceList.get(i);
         }
 
-        params.encodedLuminanceValues = new byte[encodedLuminanceList.size()];
-        for (int i = 0; i < params.encodedLuminanceValues.length; i++)
+        byte[] encodedLuminanceValues = new byte[encodedLuminanceList.size()];
+        for (int i = 0; i < encodedLuminanceValues.length; i++)
         {
-            params.encodedLuminanceValues[i] = encodedLuminanceList.get(i);
+            encodedLuminanceValues[i] = encodedLuminanceList.get(i);
         }
 
-        int maxLightIndex = params.lightIndexList.stream().max(Comparator.naturalOrder()).orElse(-1);
+        result.setTonemapping(gamma, linearLuminanceValues, encodedLuminanceValues);
 
-        for (int i = params.lightIntensityList.size(); i <= maxLightIndex; i++)
+        int maxLightIndex = result.getLightIndexList().stream().max(Comparator.naturalOrder()).orElse(-1);
+
+        for (int i = result.getLightIntensityList().size(); i <= maxLightIndex; i++)
         {
-            params.lightPositionList.add(Vector3.ZERO);
-            params.lightIntensityList.add(Vector3.ZERO);
+            result.getLightPositionList().add(Vector3.ZERO);
+            result.getLightIntensityList().add(Vector3.ZERO);
+        }
+
+        result.setRootDirectory(vsetFile.getParentFile());
+
+        if (result.getGeometryFile() == null)
+        {
+            result.setGeometryFileName("manifold.obj"); // Used by some really old datasets
         }
 
         System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
-        params.directory = vsetFile.getParentFile();
-        return new ViewSet(params);
+        return result;
     }
 
     /**
@@ -1069,8 +1085,8 @@ public final class ViewSet implements ReadonlyViewSet
                 break;
             }
         }
-        
-        Parameters params = new Parameters();
+
+        ViewSet result = new ViewSet(cameraSet.size());
         
         Sensor[] sensors = sensorSet.values().toArray(new Sensor[0]);
         
@@ -1079,7 +1095,7 @@ public final class ViewSet implements ReadonlyViewSet
         for (int i = 0; i < sensors.length; i++)
         {
             sensors[i].index = i;
-            params.cameraProjectionList.add(new DistortionProjection(
+            result.getCameraProjectionList().add(new DistortionProjection(
                 sensors[i].width,
                 sensors[i].height,
                 sensors[i].fx,
@@ -1111,7 +1127,7 @@ public final class ViewSet implements ReadonlyViewSet
                 .times(Matrix4.translate(globalTranslate))
             ;//     .times(Matrix4.scale(globalScale));
 
-            params.cameraPoseList.add(cam.transform);
+            result.getCameraPoseList().add(cam.transform);
 
             // Compute inverse by just reversing steps to build transformation
             Matrix4 cameraPoseInv = //Matrix4.scale(1.0f / globalScale)
@@ -1119,7 +1135,7 @@ public final class ViewSet implements ReadonlyViewSet
                 .times(globalRotation.transpose())
                 .times(m1.getUpperLeft3x3().transpose().asMatrix4())
                 .times(Matrix4.translate(m1.getColumn(3).getXYZ().negated()));
-            params.cameraPoseInvList.add(cameraPoseInv);
+            result.getCameraPoseInvList().add(cameraPoseInv);
 
             Matrix4 expectedIdentity = cameraPoseInv.times(cam.transform);
             boolean error = false;
@@ -1162,21 +1178,20 @@ public final class ViewSet implements ReadonlyViewSet
                 }
             }
 
-            params.cameraProjectionIndexList.add(cam.sensor.index);
-            params.lightIndexList.add(cam.lightIndex);
-            params.imageFileNames.add(cam.filename);
+            result.getCameraProjectionIndexList().add(cam.sensor.index);
+            result.getLightIndexList().add(cam.lightIndex);
+            result.getImageFileNames().add(cam.filename);
         }
         
         for (int i = 0; i < nextLightIndex; i++)
         {
-            params.lightPositionList.add(Vector3.ZERO);
-            params.lightIntensityList.add(Vector3.ZERO);
+            result.getLightPositionList().add(Vector3.ZERO);
+            result.getLightIntensityList().add(Vector3.ZERO);
         }
-        params.infiniteLightSources = true; // TODO Could be set to false if support for automatically computing light intensities based on camera distance is added.
 
-        params.recommendedFarPlane = findFarPlane(params.cameraPoseInvList);
-        params.recommendedNearPlane = params.recommendedFarPlane / 32.0f;
-        System.out.println("Near and far planes: " + params.recommendedNearPlane + ", " + params.recommendedFarPlane);
+        result.setRecommendedFarPlane(findFarPlane(result.getCameraPoseInvList()));
+        result.setRecommendedNearPlane(result.getRecommendedFarPlane() / 32.0f);
+        System.out.println("Near and far planes: " + result.getRecommendedNearPlane() + ", " + result.getRecommendedFarPlane());
 
         int primaryViewIndex = 0;
         String primaryViewName = cameras[0].filename;
@@ -1189,11 +1204,10 @@ public final class ViewSet implements ReadonlyViewSet
             }
         }
         
-        params.directory = file.getParentFile();
+        result.setRootDirectory(file.getParentFile());
+        result.setPrimaryView(primaryViewIndex);
 
-        ViewSet returnValue = new ViewSet(params);
-        returnValue.primaryViewIndex = primaryViewIndex;
-        return returnValue;
+        return result;
     }
 
     /**
@@ -1489,10 +1503,20 @@ public final class ViewSet implements ReadonlyViewSet
         return this.recommendedNearPlane;
     }
 
+    public void setRecommendedNearPlane(float recommendedNearPlane)
+    {
+        this.recommendedNearPlane = recommendedNearPlane;
+    }
+
     @Override
     public float getRecommendedFarPlane()
     {
         return this.recommendedFarPlane;
+    }
+
+    public void setRecommendedFarPlane(float recommendedFarPlane)
+    {
+        this.recommendedFarPlane = recommendedFarPlane;
     }
 
     @Override

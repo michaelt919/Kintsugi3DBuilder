@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.Collection;
 
 public interface ReadonlyViewSet
 {
@@ -35,7 +36,7 @@ public interface ReadonlyViewSet
 
     ReadonlyNativeVectorBuffer getLightIndexData();
 
-    ReadonlyViewSet createPermutation(Iterable<Integer> permutationIndices);
+    ReadonlyViewSet createPermutation(Collection<Integer> permutationIndices);
 
     ViewSet copy();
 
