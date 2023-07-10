@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.FramebufferObject;
 import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.loaders.ViewSetReaderFromVSET;
 
 public class ResampleRequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>
 {
@@ -39,9 +40,9 @@ public class ResampleRequest<ContextType extends Context<ContextType>> implement
     }
 
     @Override
-    public void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
+    public void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws Exception
     {
-        ReadonlyViewSet targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile);
+        ReadonlyViewSet targetViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(resampleVSETFile);
 
         try
         (

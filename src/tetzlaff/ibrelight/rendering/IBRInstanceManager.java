@@ -145,7 +145,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             });
             newInstance = newItem;
         }
-        catch (FileNotFoundException e)
+        catch (Exception e)
         {
             handleMissingFiles(e);
         }
@@ -228,7 +228,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             });
             newInstance = newItem;
         }
-        catch(FileNotFoundException|XMLStreamException e)
+        catch(Exception e)
         {
             handleMissingFiles(e);
         }

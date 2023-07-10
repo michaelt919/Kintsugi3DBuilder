@@ -31,6 +31,8 @@ import tetzlaff.gl.geometry.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.loaders.ViewSetReaderFromAgisoftXML;
+import tetzlaff.ibrelight.loaders.ViewSetReaderFromVSET;
 
 /**
  * A class that encapsulates all of the GPU resources like vertex buffers, uniform buffers, and textures for a given
@@ -116,17 +118,17 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
-        public Builder<ContextType> loadVSETFile(File vsetFile) throws FileNotFoundException
+        public Builder<ContextType> loadVSETFile(File vsetFile) throws Exception
         {
-            this.viewSet = ViewSet.loadFromVSETFile(vsetFile);
+            this.viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile);
             this.geometry = VertexGeometry.createFromOBJFile(this.viewSet.getGeometryFile());
             return this;
         }
 
         // undistorted images are defined in the load options
-        public Builder<ContextType> loadAgisoftFiles(File cameraFile, File geometryFile, File undistortedImageDirectory) throws FileNotFoundException, XMLStreamException
+        public Builder<ContextType> loadAgisoftFiles(File cameraFile, File geometryFile, File undistortedImageDirectory) throws Exception
         {
-            this.viewSet = ViewSet.loadFromAgisoftXMLFile(cameraFile);
+            this.viewSet = ViewSetReaderFromAgisoftXML.getInstance().readFromFile(cameraFile);
             if (geometryFile != null)
             {
                 this.geometry = VertexGeometry.createFromOBJFile(geometryFile);

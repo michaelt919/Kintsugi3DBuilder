@@ -31,6 +31,7 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import tetzlaff.gl.core.Context;
 import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.loaders.ViewSetReaderFromVSET;
 
 public class SpecularFitRequestUI implements IBRRequestUI
 {
@@ -237,11 +238,11 @@ public class SpecularFitRequestUI implements IBRRequestUI
                 // Reconstruction view set
                 try
                 {
-                    ReadonlyViewSet reconstructionViewSet = ViewSet.loadFromVSETFile(
+                    ReadonlyViewSet reconstructionViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(
                         new File(reconstructionViewSetField.getText()));
                     settings.getReconstructionSettings().setReconstructionViewSet(reconstructionViewSet);
                 }
-                catch (FileNotFoundException e)
+                catch (Exception e)
                 {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Invalid view set");
