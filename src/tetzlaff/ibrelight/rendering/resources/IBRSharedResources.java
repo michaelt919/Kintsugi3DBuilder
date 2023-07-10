@@ -15,16 +15,19 @@ import java.io.IOException;
 import java.util.AbstractList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.geometry.GeometryResources;
+import tetzlaff.gl.geometry.ReadonlyVertexGeometry;
 import tetzlaff.gl.geometry.VertexGeometry;
 import tetzlaff.gl.material.*;
 import tetzlaff.gl.material.TextureLoadOptions;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.ibrelight.core.ReadonlyViewSet;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
 import tetzlaff.ibrelight.core.ViewSet;
 
@@ -206,7 +209,7 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
         }
     }
 
-    private static float[] computeCameraWeights(ViewSet viewSet, VertexGeometry geometry)
+    private static float[] computeCameraWeights(ReadonlyViewSet viewSet, ReadonlyVertexGeometry geometry)
     {
         float[] cameraWeights = new float[viewSet.getCameraPoseCount()];
 

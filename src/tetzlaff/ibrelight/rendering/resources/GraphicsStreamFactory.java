@@ -23,9 +23,9 @@ import java.io.FileNotFoundException;
 
 public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
 {
-    private final IBRResources<ContextType> resources;
+    private final ReadonlyIBRResources<ContextType> resources;
 
-    GraphicsStreamFactory(IBRResources<ContextType> resources)
+    GraphicsStreamFactory(ReadonlyIBRResources<ContextType> resources)
     {
         this.resources = resources;
     }

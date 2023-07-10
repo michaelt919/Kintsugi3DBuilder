@@ -11,7 +11,7 @@
 
 package tetzlaff.gl.material;
 
-public class MaterialBumpMap extends MaterialScalarMap 
+public class MaterialBumpMap extends MaterialScalarMap implements ReadonlyMaterialBumpMap
 {
     private float bumpMultiplier;
 
@@ -20,6 +20,7 @@ public class MaterialBumpMap extends MaterialScalarMap
         bumpMultiplier = 1.0f;
     }
 
+    @Override
     public float getBumpMultiplier()
     {
         return bumpMultiplier;

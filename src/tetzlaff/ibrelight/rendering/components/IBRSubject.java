@@ -12,8 +12,8 @@
 package tetzlaff.ibrelight.rendering.components;
 
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.CameraViewport;
@@ -126,7 +126,7 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
         }
     }
 
-    private NativeVectorBuffer generateViewWeights(Matrix4 targetView)
+    private ReadonlyNativeVectorBuffer generateViewWeights(Matrix4 targetView)
     {
         float[] viewWeights = //new PowerViewWeightGenerator(settings.getWeightExponent())
             new KNNViewWeightGenerator(4)

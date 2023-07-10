@@ -22,6 +22,7 @@ import javax.xml.stream.XMLStreamReader;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
@@ -32,7 +33,7 @@ import tetzlaff.util.ImageFinder;
  * A class representing a collection of photographs, or views.
  * @author Michael Tetzlaff
  */
-public final class ViewSet
+public final class ViewSet implements ReadonlyViewSet
 {
     /**
      * A list of camera poses defining the transformation from object space to camera space for each view.
@@ -176,10 +177,11 @@ public final class ViewSet
         this.relativeImagePath = params.relativeImagePath;
     }
 
-    public NativeVectorBuffer getCameraPoseData()
+    @Override
+    public ReadonlyNativeVectorBuffer getCameraPoseData()
     {
         // Store the poses in a uniform buffer
-        if (cameraPoseList != null && !cameraPoseList.isEmpty())
+        if (!cameraPoseList.isEmpty())
         {
             // Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
             NativeVectorBuffer cameraPoseData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 16, cameraPoseList.size());
@@ -205,10 +207,11 @@ public final class ViewSet
         }
     }
 
-    public NativeVectorBuffer getCameraProjectionData()
+    @Override
+    public ReadonlyNativeVectorBuffer getCameraProjectionData()
     {
         // Store the camera projections in a uniform buffer
-        if (cameraProjectionList != null && !cameraProjectionList.isEmpty())
+        if (!cameraProjectionList.isEmpty())
         {
             // Flatten the camera projection matrices into 16-component vectors and store them in the vertex list data structure.
             NativeVectorBuffer cameraProjectionData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 16, cameraProjectionList.size());
@@ -234,10 +237,11 @@ public final class ViewSet
         }
     }
 
-    public NativeVectorBuffer getCameraProjectionIndexData()
+    @Override
+    public ReadonlyNativeVectorBuffer getCameraProjectionIndexData()
     {
         // Store the camera projection indices in a uniform buffer
-        if (cameraProjectionIndexList != null && !cameraProjectionIndexList.isEmpty())
+        if (!cameraProjectionIndexList.isEmpty())
         {
             int[] indexArray = new int[cameraProjectionIndexList.size()];
             for (int i = 0; i < indexArray.length; i++)
@@ -252,10 +256,11 @@ public final class ViewSet
         }
     }
 
-    public NativeVectorBuffer getLightPositionData()
+    @Override
+    public ReadonlyNativeVectorBuffer getLightPositionData()
     {
         // Store the light positions in a uniform buffer
-        if (lightPositionList != null && !lightPositionList.isEmpty())
+        if (!lightPositionList.isEmpty())
         {
             NativeVectorBuffer lightPositionData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, lightPositionList.size());
             for (int k = 0; k < lightPositionList.size(); k++)
@@ -274,10 +279,11 @@ public final class ViewSet
         }
     }
 
-    public NativeVectorBuffer getLightIntensityData()
+    @Override
+    public ReadonlyNativeVectorBuffer getLightIntensityData()
     {
         // Store the light positions in a uniform buffer
-        if (lightIntensityList != null && !lightIntensityList.isEmpty())
+        if (!lightIntensityList.isEmpty())
         {
             NativeVectorBuffer lightIntensityData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, lightIntensityList.size());
             for (int k = 0; k < lightPositionList.size(); k++)
@@ -295,10 +301,11 @@ public final class ViewSet
         }
     }
 
-    public NativeVectorBuffer getLightIndexData()
+    @Override
+    public ReadonlyNativeVectorBuffer getLightIndexData()
     {
         // Store the light indices indices in a uniform buffer
-        if (lightIndexList != null && !lightIndexList.isEmpty())
+        if (!lightIndexList.isEmpty())
         {
             int[] indexArray = new int[lightIndexList.size()];
             for (int i = 0; i < indexArray.length; i++)
@@ -313,7 +320,8 @@ public final class ViewSet
         }
     }
 
-    public ViewSet createPermutation(Iterable<Integer> permutationIndices)
+    @Override
+    public ReadonlyViewSet createPermutation(Iterable<Integer> permutationIndices)
     {
         Parameters params = new Parameters();
 
@@ -344,7 +352,37 @@ public final class ViewSet
         return new ViewSet(params);
     }
 
-    public static ViewSet createFromLookAt(List<Vector3> viewDir, Vector3 center, Vector3 up, float distance,
+    @Override
+    public ViewSet copy()
+    {
+        Parameters params = new Parameters();
+
+        params.cameraPoseList.addAll(this.cameraPoseList);
+        params.cameraPoseInvList.addAll(this.cameraPoseInvList);
+        params.cameraProjectionList.addAll(this.cameraProjectionList);
+        params.cameraProjectionIndexList.addAll(this.cameraProjectionIndexList);
+        params.lightPositionList.addAll(this.lightPositionList);
+        params.lightIntensityList.addAll(this.lightIntensityList);
+        params.lightIndexList.addAll(this.lightIndexList);
+        params.imageFileNames.addAll(this.imageFileNames);
+
+        params.linearLuminanceValues = Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length);
+        params.encodedLuminanceValues = Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length);
+
+        params.directory = this.rootDirectory;
+        params.relativeImagePath = this.relativeImagePath;
+        params.geometryFileName = this.geometryFileName;
+        params.gamma = this.gamma;
+        params.infiniteLightSources = this.infiniteLightSources;
+        params.recommendedNearPlane = this.recommendedNearPlane;
+        params.recommendedFarPlane = this.recommendedFarPlane;
+
+        ViewSet result = new ViewSet(params);
+        result.setPrimaryView(primaryViewIndex);
+        return result;
+    }
+
+    public static ReadonlyViewSet createFromLookAt(List<Vector3> viewDir, Vector3 center, Vector3 up, float distance,
         float nearPlane, float aspect, float sensorWidth, float focalLength)
     {
         Parameters params = new Parameters();
@@ -648,8 +686,15 @@ public final class ViewSet
         @Override
         public boolean equals(Object other)
         {
-          Camera otherCam = (Camera)other;
-          return this.id.equals(otherCam.id);
+            if (other instanceof Camera)
+            {
+                Camera otherCam = (Camera) other;
+                return this.id.equals(otherCam.id);
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 
@@ -1051,7 +1096,7 @@ public final class ViewSet
             ));
         }
                 
-        Camera[] cameras = cameraSet.toArray(new Camera[cameraSet.size()]);
+        Camera[] cameras = cameraSet.toArray(new Camera[0]);
         
         // Fill out the camera pose, projection index, and light index lists
         for (Camera cam : cameras)
@@ -1187,18 +1232,24 @@ public final class ViewSet
 //        return Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
     }
 
+    @Override
     public void writeVSETFileToStream(OutputStream outputStream)
     {
         writeVSETFileToStream(outputStream, null);
     }
 
+    @Override
     public void writeVSETFileToStream(OutputStream outputStream, Path parentDirectory)
     {
         PrintStream out = new PrintStream(outputStream);
         out.println("# Created by IBRelight");
 
-        out.println("\n# Geometry file name (mesh)");
-        out.println("m " + (parentDirectory == null ? geometryFileName : parentDirectory.relativize(getGeometryFile().toPath())));
+        if (getGeometryFile() != null)
+        {
+            out.println("\n# Geometry file name (mesh)");
+            out.println("m " + (parentDirectory == null ? geometryFileName : parentDirectory.relativize(getGeometryFile().toPath())));
+        }
+
         out.println("\n# Image file path");
         out.println("i " + (parentDirectory == null ? relativeImagePath : parentDirectory.relativize(getImageFilePath().toPath())));
 
@@ -1270,33 +1321,22 @@ public final class ViewSet
 
         out.close();
     }
-    
-    
 
-    /**
-     * Gets the camera pose defining the transformation from object space to camera space for a particular view.
-     * @param poseIndex The index of the camera pose to retrieve.
-     * @return The camera pose as a 4x4 affine transformation matrix.
-     */
+
+
+    @Override
     public Matrix4 getCameraPose(int poseIndex)
     {
         return this.cameraPoseList.get(poseIndex);
     }
 
-    /**
-     * Gets the inverse of the camera pose, defining the transformation from camera space to object space for a particular view.
-     * @param poseIndex The index of the camera pose to retrieve.
-     * @return The inverse camera pose as a 4x4 affine transformation matrix.
-     */
+    @Override
     public Matrix4 getCameraPoseInverse(int poseIndex)
     {
         return this.cameraPoseInvList.get(poseIndex);
     }
 
-    /**
-     * Gets the root directory for this view set.
-     * @return The root directory.
-     */
+    @Override
     public File getRootDirectory()
     {
         return this.rootDirectory;
@@ -1311,10 +1351,7 @@ public final class ViewSet
         this.rootDirectory = rootDirectory;
     }
 
-    /**
-     * Gets the name of the geometry file associated with this view set.
-     * @return The name of the geometry file.
-     */
+    @Override
     public String getGeometryFileName()
     {
         return geometryFileName;
@@ -1329,28 +1366,19 @@ public final class ViewSet
         this.geometryFileName = fileName;
     }
 
-    /**
-     * Gets the geometry file associated with this view set.
-     * @return The geometry file.
-     */
+    @Override
     public File getGeometryFile()
     {
         return geometryFileName == null ? null : new File(this.rootDirectory, geometryFileName);
     }
 
-    /**
-     * Gets the image file path associated with this view set.
-     * @return The image file path.
-     */
+    @Override
     public File getImageFilePath()
     {
         return this.relativeImagePath == null ? this.rootDirectory : new File(this.rootDirectory, relativeImagePath);
     }
 
-    /**
-     * Sets the image file path associated with this view set.
-     * @return imageFilePath The image file path.
-     */
+    @Override
     public String getRelativeImagePathName()
     {
         return this.relativeImagePath;
@@ -1365,26 +1393,19 @@ public final class ViewSet
         this.relativeImagePath = relativeImagePath;
     }
 
-    /**
-     * Gets the relative name of the image file corresponding to a particular view.
-     * @param poseIndex The index of the image file to retrieve.
-     * @return The image file's relative name.
-     */
+    @Override
     public String getImageFileName(int poseIndex)
     {
         return this.imageFileNames.get(poseIndex);
     }
 
-    /**
-     * Gets the image file corresponding to a particular view.
-     * @param poseIndex The index of the image file to retrieve.
-     * @return The image file.
-     */
+    @Override
     public File getImageFile(int poseIndex)
     {
         return new File(this.getImageFilePath(), this.imageFileNames.get(poseIndex));
     }
     
+    @Override
     public int getPrimaryViewIndex()
     {
         return this.primaryViewIndex;
@@ -1404,49 +1425,25 @@ public final class ViewSet
         }
     }
 
-    /**
-     * Gets the projection transformation defining the intrinsic properties of a particular camera.
-     * @param projectionIndex The index of the camera whose projection transformation is to be retrieved.
-     * IMPORTANT: this is NOT usually the same as the index of the view to be retrieved.
-     * @return The projection transformation.
-     */
+    @Override
     public Projection getCameraProjection(int projectionIndex)
     {
         return this.cameraProjectionList.get(projectionIndex);
     }
 
-    /**
-     * Gets the index of the projection transformation to be used for a particular view,
-     * which can subsequently be used with getCameraProjection() to obtain the corresponding projection transformation itself.
-     * @param poseIndex The index of the view.
-     * @return The index of the projection transformation.
-     */
+    @Override
     public int getCameraProjectionIndex(int poseIndex)
     {
         return this.cameraProjectionIndexList.get(poseIndex);
     }
 
-    /**
-     * Gets the position of a particular light source.
-     * Used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
-     * Assumed by convention to be in camera space.
-     * @param lightIndex The index of the light source.
-     * IMPORTANT: this is NOT usually the same as the index of the view to be retrieved.
-     * @return The position of the light source.
-     */
+    @Override
     public Vector3 getLightPosition(int lightIndex)
     {
         return this.lightPositionList.get(lightIndex);
     }
 
-    /**
-     * Gets the intensity of a particular light source.
-     * Used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
-     * Assumed by convention to be in camera space.
-     * @param lightIndex The index of the light source.
-     * IMPORTANT: this is NOT usually the same as the index of the view to be retrieved.
-     * @return The position of the light source.
-     */
+    @Override
     public Vector3 getLightIntensity(int lightIndex)
     {
         return this.lightIntensityList.get(lightIndex);
@@ -1462,73 +1459,56 @@ public final class ViewSet
         this.lightIntensityList.set(lightIndex, lightIntensity);
     }
 
-    /**
-     * Gets the index of the light source to be used for a particular view,
-     * which can subsequently be used with getLightPosition() and getLightIntensity() to obtain the actual position and intensity of the light source.
-     * @param poseIndex The index of the view.
-     * @return The index of the light source.
-     */
+    @Override
     public int getLightIndex(int poseIndex)
     {
         return this.lightIndexList.get(poseIndex);
     }
 
-    /**
-     * Gets the number of camera poses defined in this view set.
-     * @return The number of camera poses defined in this view set.
-     */
+    @Override
     public int getCameraPoseCount()
     {
         return this.cameraPoseList.size();
     }
 
-    /**
-     * Gets the number of projection transformations defined in this view set.
-     * @return The number of projection transformations defined in this view set.
-     */
+    @Override
     public int getCameraProjectionCount()
     {
         return this.cameraProjectionList.size();
     }
 
-    /**
-     * Gets the number of lights defined in this view set.
-     * @return The number of projection transformations defined in this view set.
-     */
+    @Override
     public int getLightCount()
     {
         return this.lightPositionList.size();
     }
 
-    /**
-     * Gets the recommended near plane to use when rendering this view set.
-     * @return The near plane value.
-     */
+    @Override
     public float getRecommendedNearPlane()
     {
         return this.recommendedNearPlane;
     }
 
-    /**
-     * Gets the recommended far plane to use when rendering this view set.
-     * @return The far plane value.
-     */
+    @Override
     public float getRecommendedFarPlane()
     {
         return this.recommendedFarPlane;
     }
 
+    @Override
     public float getGamma()
     {
         return gamma;
     }
 
+    @Override
     public boolean hasCustomLuminanceEncoding()
     {
         return linearLuminanceValues != null && encodedLuminanceValues != null
             && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0;
     }
 
+    @Override
     public SampledLuminanceEncoding getLuminanceEncoding()
     {
         if (hasCustomLuminanceEncoding())
@@ -1548,6 +1528,7 @@ public final class ViewSet
         this.encodedLuminanceValues = encodedLuminanceValues;
     }
 
+    @Override
     public boolean areLightSourcesInfinite()
     {
         return infiniteLightSources;
@@ -1558,22 +1539,13 @@ public final class ViewSet
         this.infiniteLightSources = infiniteLightSources;
     }
 
-    /**
-     * Finds the image file for a particular view index.
-     * @param index The index of the view to find.
-     * @return The image file at the specified view index.
-     * @throws FileNotFoundException if the image file cannot be found.
-     */
+    @Override
     public File findImageFile(int index) throws FileNotFoundException
     {
         return ImageFinder.getInstance().findImageFile(getImageFile(index));
     }
 
-    /**
-     * Finds the image file for the primary view index.
-     * @return The image file at the primary view index.
-     * @throws FileNotFoundException if the image file cannot be found.
-     */
+    @Override
     public File findPrimaryImageFile() throws FileNotFoundException
     {
         return findImageFile(getPrimaryViewIndex());

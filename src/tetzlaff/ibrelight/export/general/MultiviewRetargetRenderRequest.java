@@ -19,10 +19,7 @@ import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Drawable;
 import tetzlaff.gl.core.FramebufferObject;
 import tetzlaff.gl.core.Program;
-import tetzlaff.ibrelight.core.IBRInstance;
-import tetzlaff.ibrelight.core.IBRRequest;
-import tetzlaff.ibrelight.core.LoadingMonitor;
-import tetzlaff.ibrelight.core.ViewSet;
+import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.models.ReadonlySettingsModel;
 
@@ -58,7 +55,7 @@ class MultiviewRetargetRenderRequest<ContextType extends Context<ContextType>> e
     @Override
     public void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
     {
-        ViewSet targetViewSet = ViewSet.loadFromVSETFile(targetViewSetFile);
+        ReadonlyViewSet targetViewSet = ViewSet.loadFromVSETFile(targetViewSetFile);
 
         IBRResourcesImageSpace<ContextType> resources = renderable.getIBRResources();
 

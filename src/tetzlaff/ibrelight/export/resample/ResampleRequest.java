@@ -21,10 +21,7 @@ import java.util.stream.Stream;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.FramebufferObject;
-import tetzlaff.ibrelight.core.IBRInstance;
-import tetzlaff.ibrelight.core.IBRRequest;
-import tetzlaff.ibrelight.core.LoadingMonitor;
-import tetzlaff.ibrelight.core.ViewSet;
+import tetzlaff.ibrelight.core.*;
 
 public class ResampleRequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>
 {
@@ -44,7 +41,7 @@ public class ResampleRequest<ContextType extends Context<ContextType>> implement
     @Override
     public void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
     {
-        ViewSet targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile);
+        ReadonlyViewSet targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile);
 
         try
         (

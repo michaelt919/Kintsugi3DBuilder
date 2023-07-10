@@ -24,8 +24,8 @@ import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.Projection;
+import tetzlaff.ibrelight.core.ReadonlyViewSet;
 import tetzlaff.ibrelight.core.TextureFitSettings;
-import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.export.specularfit.gltf.SpecularFitGltfExporter;
 import tetzlaff.ibrelight.rendering.resources.*;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
@@ -44,7 +44,7 @@ public class SpecularOptimization
         this.settings = settings;
     }
 
-    private int determineImageWidth(ViewSet viewSet)
+    private int determineImageWidth(ReadonlyViewSet viewSet)
     {
         Projection defaultProj = viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(
             viewSet.getPrimaryViewIndex()));
@@ -59,7 +59,7 @@ public class SpecularOptimization
         }
     }
 
-    private int determineImageHeight(ViewSet viewSet)
+    private int determineImageHeight(ReadonlyViewSet viewSet)
     {
         Projection defaultProj = viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(
             viewSet.getPrimaryViewIndex()));
@@ -334,7 +334,7 @@ public class SpecularOptimization
 
     private static <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getReflectanceProgramBuilder(
-        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
+        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,
             new File("shaders/common/texspace_dynamic.vert"),
@@ -343,7 +343,7 @@ public class SpecularOptimization
 
     private static <ContextType extends Context<ContextType>>
     Program<ContextType> createErrorCalcProgram(
-        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
+        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
         try
         {
@@ -359,7 +359,7 @@ public class SpecularOptimization
     }
 
     private static <ContextType extends Context<ContextType>> Drawable<ContextType> createErrorCalcDrawable(
-            SpecularResources<ContextType> specularFit, IBRResources<ContextType> resources, Program<ContextType> errorCalcProgram)
+            SpecularResources<ContextType> specularFit, ReadonlyIBRResources<ContextType> resources, Program<ContextType> errorCalcProgram)
     {
         Drawable<ContextType> errorCalcDrawable = resources.createDrawable(errorCalcProgram);
         specularFit.getBasisResources().useWithShaderProgram(errorCalcProgram);
@@ -370,9 +370,9 @@ public class SpecularOptimization
         return errorCalcDrawable;
     }
 
-    public <ContextType extends Context<ContextType>> void saveGlTF(IBRResources<ContextType> resources)
+    public <ContextType extends Context<ContextType>> void saveGlTF(ReadonlyIBRResources<ContextType> resources)
     {
-        if (resources.getGeometryResources() == null || resources.getGeometryResources().geometry == null)
+        if (resources.getGeometry() == null)
         {
             throw new IllegalArgumentException("Geometry is null; cannot export GLTF.");
         }
@@ -380,7 +380,7 @@ public class SpecularOptimization
         System.out.println("Starting glTF export...");
         try
         {
-            SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(resources.getGeometryResources().geometry);
+            SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(resources.getGeometry());
             exporter.setDefaultNames();
             exporter.addWeightImages(settings.getSpecularBasisSettings().getBasisCount(), settings.getExportSettings().isCombineWeights());
 
@@ -394,7 +394,7 @@ public class SpecularOptimization
             }
 
             Matrix4 rotation = resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex());
-            Vector3 translation = rotation.getUpperLeft3x3().times(resources.getGeometryResources().geometry.getCentroid().times(-1.f));
+            Vector3 translation = rotation.getUpperLeft3x3().times(resources.getGeometry().getCentroid().times(-1.f));
             Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2), translation.asVector4(1.0f));
             exporter.setTransform(transform);
 

@@ -187,7 +187,7 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
 
             float lightScale = resources.getViewSet().areLightSourcesInfinite() ? 1.0f :
                 resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex())
-                    .times(Objects.requireNonNull(resources.getGeometryResources().geometry).getCentroid().asPosition())
+                    .times(Objects.requireNonNull(resources.getGeometry()).getCentroid().asPosition())
                     .getXYZ().length();
             program.setUniform("lightIntensityVirtual[" + lightIndex + ']',
                 controllerLightIntensity.times(lightDistance * lightDistance * resources.getViewSet().getLightIntensity(0).y / (lightScale * lightScale)));

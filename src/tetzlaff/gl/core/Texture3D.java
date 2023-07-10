@@ -12,7 +12,6 @@
 package tetzlaff.gl.core;
 
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,13 +21,9 @@ import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.function.Function;
 
-import org.lwjgl.BufferUtils;
 import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import tetzlaff.gl.types.AbstractDataType;
-import tetzlaff.util.BufferedImageBuilder;
-
-import javax.imageio.ImageIO;
 
 /**
  * An interface for a three-dimensional texture.
@@ -170,7 +165,7 @@ public interface Texture3D<ContextType extends Context<ContextType>>
      * @param layerIndex The index of the layer where the pixel data should go.
      * @param data The new pixel data to put in the texture.
      */
-    void loadLayer(int layerIndex, NativeVectorBuffer data);
+    void loadLayer(int layerIndex, ReadonlyNativeVectorBuffer data);
 
     /**
      * Gets a single layer of this texture for use as a framebuffer attachment.

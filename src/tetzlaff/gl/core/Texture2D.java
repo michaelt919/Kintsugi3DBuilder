@@ -12,7 +12,8 @@
 package tetzlaff.gl.core;
 
 import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
+
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -50,7 +51,7 @@ public interface Texture2D<ContextType extends Context<ContextType>>
      * Loads pixel data from a buffer and sends it to the GPU, replacing whatever pixel data was there before.
      * @param data The new pixel data to put in the texture.
      */
-    void load(NativeVectorBuffer data);
+    void load(ReadonlyNativeVectorBuffer data);
 
     /**
      * Creates a new, empty texture with different dimensions but the same internal format and settings as this texture.

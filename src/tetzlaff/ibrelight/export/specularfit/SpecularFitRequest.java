@@ -18,6 +18,7 @@ import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
+import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 import tetzlaff.interactive.GraphicsRequest;
 
 public class SpecularFitRequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>, GraphicsRequest<ContextType>
@@ -68,7 +69,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
 
             try(IBRResources<ContextType> resources = IBRResourcesImageSpace.getBuilderForContext(context)
                 .setLoadOptions(loadOptions)
-                .useExistingViewSet(settings.getReconstructionSettings().getReconstructionViewSet())
+                .useExistingViewSet(settings.getReconstructionSettings().getReconstructionViewSet().copy())
                 .create())
             {
                 // Perform the specular fit
@@ -107,7 +108,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
         }
     }
 
-    private void executeRequest(IBRResources<ContextType> resources, SpecularResources<ContextType> specularFit)
+    private void executeRequest(ReadonlyIBRResources<ContextType> resources, SpecularResources<ContextType> specularFit)
         throws FileNotFoundException
     {
         // Create output directory
@@ -147,7 +148,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
 
     private static <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getImageReconstructionProgramBuilder(
-        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
+        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,
                 new File("shaders/common/imgspace.vert"),
@@ -156,7 +157,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
 
     private static <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getFittedImageReconstructionProgramBuilder(
-        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
+        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,
                 new File("shaders/common/imgspace.vert"),

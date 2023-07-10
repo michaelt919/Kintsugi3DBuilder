@@ -19,6 +19,7 @@ import tetzlaff.gl.core.Texture1D;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import tetzlaff.ibrelight.rendering.resources.LuminanceMapResources;
 import tetzlaff.util.CubicHermiteSpline;
 
@@ -95,7 +96,7 @@ public class SampledLuminanceEncoding
         this.encodeFunction = encodeFunction;
     }
 
-    public NativeVectorBuffer sampleDecodeFunction()
+    public ReadonlyNativeVectorBuffer sampleDecodeFunction()
     {
         NativeVectorBuffer sampledDecodeFunction = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 256);
         for (int i = 0; i < 256; i++)
@@ -106,7 +107,7 @@ public class SampledLuminanceEncoding
         return sampledDecodeFunction;
     }
 
-    public NativeVectorBuffer sampleEncodeFunction()
+    public ReadonlyNativeVectorBuffer sampleEncodeFunction()
     {
         NativeVectorBuffer sampledEncodeFunction = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 256);
         for (int i = 0; i < 256; i++)

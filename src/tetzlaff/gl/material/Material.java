@@ -18,7 +18,7 @@ import java.util.*;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.vecmath.Vector3;
 
-public class Material 
+public class Material implements ReadonlyMaterial
 {
     private String name;
 
@@ -35,22 +35,22 @@ public class Material
     private Vector3 clearcoat;
     private float clearcoatRoughness;
 
-    private MaterialColorMap ambientMap;
-    private MaterialColorMap diffuseMap;
-    private MaterialColorMap specularMap;
-    private MaterialColorMap emissionMap;
-    private MaterialScalarMap exponentMap;
-    private MaterialScalarMap roughnessMap;
-    private MaterialScalarMap opacityMap;
-    private MaterialScalarMap transparencyMap;
-    private MaterialScalarMap translucencyMap;
-    private MaterialScalarMap metallicMap;
-    private MaterialColorMap sheenMap;
-    private MaterialScalarMap anisotropyMap;
-    private MaterialScalarMap anisotropyRotationMap;
-    private MaterialBumpMap bumpMap;
-    private MaterialTextureMap normalMap;
-    private MaterialScalarMap displacementMap;
+    private ReadonlyMaterialColorMap ambientMap;
+    private ReadonlyMaterialColorMap diffuseMap;
+    private ReadonlyMaterialColorMap specularMap;
+    private ReadonlyMaterialColorMap emissionMap;
+    private ReadonlyMaterialScalarMap exponentMap;
+    private ReadonlyMaterialScalarMap roughnessMap;
+    private ReadonlyMaterialScalarMap opacityMap;
+    private ReadonlyMaterialScalarMap transparencyMap;
+    private ReadonlyMaterialScalarMap translucencyMap;
+    private ReadonlyMaterialScalarMap metallicMap;
+    private ReadonlyMaterialColorMap sheenMap;
+    private ReadonlyMaterialScalarMap anisotropyMap;
+    private ReadonlyMaterialScalarMap anisotropyRotationMap;
+    private ReadonlyMaterialBumpMap bumpMap;
+    private ReadonlyMaterialTextureMap normalMap;
+    private ReadonlyMaterialScalarMap displacementMap;
 
     public Material(String name)
     {
@@ -135,19 +135,19 @@ public class Material
                                     currentMaterial.setClearcoatRoughness(scanner.nextFloat());
                                     break;
                                 case "map_ka":
-                                    MaterialColorMap ambientMap = parseColorMapStatement(scanner);
+                                    ReadonlyMaterialColorMap ambientMap = parseColorMapStatement(scanner);
                                     currentMaterial.setAmbientMap(ambientMap);
                                     break;
                                 case "map_kd":
-                                    MaterialColorMap diffuseMap = parseColorMapStatement(scanner);
+                                    ReadonlyMaterialColorMap diffuseMap = parseColorMapStatement(scanner);
                                     currentMaterial.setDiffuseMap(diffuseMap);
                                     break;
                                 case "map_ks":
-                                    MaterialColorMap specularMap = parseColorMapStatement(scanner);
+                                    ReadonlyMaterialColorMap specularMap = parseColorMapStatement(scanner);
                                     currentMaterial.setSpecularMap(specularMap);
                                     break;
                                 case "map_ke":
-                                    MaterialColorMap emissionMap = parseColorMapStatement(scanner);
+                                    ReadonlyMaterialColorMap emissionMap = parseColorMapStatement(scanner);
                                     currentMaterial.setEmissionMap(emissionMap);
                                     break;
                                 case "map_d":
@@ -204,7 +204,7 @@ public class Material
                                     currentMaterial.setMetallicMap(metallicMap);
                                     break;
                                 case "map_ps":
-                                    MaterialColorMap sheenMap = parseColorMapStatement(scanner);
+                                    ReadonlyMaterialColorMap sheenMap = parseColorMapStatement(scanner);
                                     currentMaterial.setSheenMap(sheenMap);
                                     break;
                                 case "aniso":
@@ -241,7 +241,7 @@ public class Material
                                     break;
                                 case "normal":
                                 case "norm":
-                                    MaterialTextureMap normalMap = parseTextureStatement(scanner);
+                                    ReadonlyMaterialTextureMap normalMap = parseTextureStatement(scanner);
                                     currentMaterial.setNormalMap(normalMap);
                                     break;
                             }
@@ -361,7 +361,7 @@ public class Material
         }
     }
 
-    private static MaterialTextureMap parseTextureStatement(Scanner scanner)
+    private static ReadonlyMaterialTextureMap parseTextureStatement(Scanner scanner)
     {
         MaterialTextureMap texture = new MaterialTextureMap();
 
@@ -388,7 +388,7 @@ public class Material
         return texture;
     }
 
-    private static MaterialColorMap parseColorMapStatement(Scanner scanner)
+    private static ReadonlyMaterialColorMap parseColorMapStatement(Scanner scanner)
     {
         MaterialColorMap texture = new MaterialColorMap();
 
@@ -550,6 +550,7 @@ public class Material
         return texture;
     }
 
+    @Override
     public String getName()
     {
         return this.name;
@@ -560,6 +561,7 @@ public class Material
         this.name = name;
     }
 
+    @Override
     public Vector3 getAmbient()
     {
         return this.ambient;
@@ -570,6 +572,7 @@ public class Material
         this.ambient = ambient;
     }
 
+    @Override
     public Vector3 getDiffuse()
     {
         return this.diffuse;
@@ -580,6 +583,7 @@ public class Material
         this.diffuse = diffuse;
     }
 
+    @Override
     public Vector3 getSpecular()
     {
         return this.specular;
@@ -590,6 +594,7 @@ public class Material
         this.specular = specular;
     }
 
+    @Override
     public float getExponent()
     {
         return this.exponent;
@@ -601,6 +606,7 @@ public class Material
         this.roughness = (float)Math.sqrt(2.0 / (exponent + 2));
     }
 
+    @Override
     public float getRoughness()
     {
         return this.roughness;
@@ -612,6 +618,7 @@ public class Material
         this.exponent = 2.0f / (roughness * roughness) - 2;
     }
 
+    @Override
     public Vector3 getEmission()
     {
         return this.emission;
@@ -622,6 +629,7 @@ public class Material
         this.emission = emission;
     }
 
+    @Override
     public float getMetallic()
     {
         return this.metallic;
@@ -632,6 +640,7 @@ public class Material
         this.metallic = metallic;
     }
 
+    @Override
     public Vector3 getSheen()
     {
         return this.sheen;
@@ -642,6 +651,7 @@ public class Material
         this.sheen = sheen;
     }
 
+    @Override
     public Vector3 getClearcoat()
     {
         return this.clearcoat;
@@ -652,6 +662,7 @@ public class Material
         this.clearcoat = clearcoat;
     }
 
+    @Override
     public float getClearcoatRoughness()
     {
         return this.clearcoatRoughness;
@@ -662,6 +673,7 @@ public class Material
         this.clearcoatRoughness = clearcoatRoughness;
     }
 
+    @Override
     public float getOpacity()
     {
         return this.opacity;
@@ -672,6 +684,7 @@ public class Material
         this.opacity = opacity;
     }
 
+    @Override
     public float getTransparency()
     {
         return 1.0f - this.opacity;
@@ -682,6 +695,7 @@ public class Material
         this.opacity = 1.0f - opacity;
     }
 
+    @Override
     public float getTranslucency()
     {
         return translucency;
@@ -692,168 +706,185 @@ public class Material
         this.translucency = translucency;
     }
 
-    public MaterialColorMap getAmbientMap()
+    @Override
+    public ReadonlyMaterialColorMap getAmbientMap()
     {
         return this.ambientMap;
     }
 
-    public void setAmbientMap(MaterialColorMap ambientMap)
+    public void setAmbientMap(ReadonlyMaterialColorMap ambientMap)
     {
         this.ambientMap = ambientMap;
     }
 
-    public MaterialColorMap getDiffuseMap()
+    @Override
+    public ReadonlyMaterialColorMap getDiffuseMap()
     {
         return this.diffuseMap;
     }
 
-    public void setDiffuseMap(MaterialColorMap diffuseMap)
+    public void setDiffuseMap(ReadonlyMaterialColorMap diffuseMap)
     {
         this.diffuseMap = diffuseMap;
     }
 
-    public MaterialColorMap getSpecularMap()
+    @Override
+    public ReadonlyMaterialColorMap getSpecularMap()
     {
         return this.specularMap;
     }
 
-    public void setSpecularMap(MaterialColorMap specularMap)
+    public void setSpecularMap(ReadonlyMaterialColorMap specularMap)
     {
         this.specularMap = specularMap;
     }
 
-    public MaterialScalarMap getExponentMap()
+    @Override
+    public ReadonlyMaterialScalarMap getExponentMap()
     {
         return this.exponentMap;
     }
 
-    public void setExponentMap(MaterialScalarMap exponentMap)
+    public void setExponentMap(ReadonlyMaterialScalarMap exponentMap)
     {
         this.exponentMap = exponentMap;
     }
 
-    public MaterialScalarMap getRoughnessMap()
+    @Override
+    public ReadonlyMaterialScalarMap getRoughnessMap()
     {
         return this.roughnessMap;
     }
 
-    public void setRoughnessMap(MaterialScalarMap roughnessMap)
+    public void setRoughnessMap(ReadonlyMaterialScalarMap roughnessMap)
     {
         this.roughnessMap = roughnessMap;
     }
 
-    public MaterialScalarMap getOpacityMap()
+    @Override
+    public ReadonlyMaterialScalarMap getOpacityMap()
     {
         return opacityMap;
     }
 
-    public void setOpacityMap(MaterialScalarMap opacityMap)
+    public void setOpacityMap(ReadonlyMaterialScalarMap opacityMap)
     {
         this.opacityMap = opacityMap;
     }
 
-    public MaterialScalarMap getTransparencyMap()
+    @Override
+    public ReadonlyMaterialScalarMap getTransparencyMap()
     {
         return transparencyMap;
     }
 
-    public void setTransparencyMap(MaterialScalarMap transparencyMap)
+    public void setTransparencyMap(ReadonlyMaterialScalarMap transparencyMap)
     {
         this.transparencyMap = transparencyMap;
     }
 
-    public MaterialScalarMap getTranslucencyMap()
+    @Override
+    public ReadonlyMaterialScalarMap getTranslucencyMap()
     {
         return translucencyMap;
     }
 
-    public void setTranslucencyMap(MaterialScalarMap translucencyMap)
+    public void setTranslucencyMap(ReadonlyMaterialScalarMap translucencyMap)
     {
         this.translucencyMap = translucencyMap;
     }
 
-    public MaterialColorMap getEmissionMap()
+    @Override
+    public ReadonlyMaterialColorMap getEmissionMap()
     {
         return this.emissionMap;
     }
 
-    public void setEmissionMap(MaterialColorMap emissionMap)
+    public void setEmissionMap(ReadonlyMaterialColorMap emissionMap)
     {
         this.emissionMap = emissionMap;
     }
 
-    public MaterialScalarMap getMetallicMap()
+    @Override
+    public ReadonlyMaterialScalarMap getMetallicMap()
     {
         return this.metallicMap;
     }
 
-    public void setMetallicMap(MaterialScalarMap metallicMap)
+    public void setMetallicMap(ReadonlyMaterialScalarMap metallicMap)
     {
         this.metallicMap = metallicMap;
     }
 
-    public MaterialColorMap getSheenMap()
+    @Override
+    public ReadonlyMaterialColorMap getSheenMap()
     {
         return this.sheenMap;
     }
 
-    public void setSheenMap(MaterialColorMap sheenMap)
+    public void setSheenMap(ReadonlyMaterialColorMap sheenMap)
     {
         this.sheenMap = sheenMap;
     }
 
-    public MaterialScalarMap getAnisotropyMap()
+    @Override
+    public ReadonlyMaterialScalarMap getAnisotropyMap()
     {
         return this.anisotropyMap;
     }
 
-    public void setAnisotropyMap(MaterialScalarMap anisotropyMap)
+    public void setAnisotropyMap(ReadonlyMaterialScalarMap anisotropyMap)
     {
         this.anisotropyMap = anisotropyMap;
     }
 
-    public MaterialScalarMap getAnisotropyRotationMap()
+    @Override
+    public ReadonlyMaterialScalarMap getAnisotropyRotationMap()
     {
         return this.anisotropyRotationMap;
     }
 
-    public void setAnisotropyRotationMap(MaterialScalarMap anisotropyRotationMap)
+    public void setAnisotropyRotationMap(ReadonlyMaterialScalarMap anisotropyRotationMap)
     {
         this.anisotropyRotationMap = anisotropyRotationMap;
     }
 
-    public MaterialBumpMap getBumpMap()
+    @Override
+    public ReadonlyMaterialBumpMap getBumpMap()
     {
         return this.bumpMap;
     }
 
-    public void setBumpMap(MaterialBumpMap bumpMap)
+    public void setBumpMap(ReadonlyMaterialBumpMap bumpMap)
     {
         this.bumpMap = bumpMap;
     }
 
-    public MaterialTextureMap getNormalMap()
+    @Override
+    public ReadonlyMaterialTextureMap getNormalMap()
     {
         return this.normalMap;
     }
 
-    public void setNormalMap(MaterialTextureMap normalMap)
+    public void setNormalMap(ReadonlyMaterialTextureMap normalMap)
     {
         this.normalMap = normalMap;
     }
 
-    public MaterialScalarMap getDisplacementMap()
+    @Override
+    public ReadonlyMaterialScalarMap getDisplacementMap()
     {
         return this.displacementMap;
     }
 
-    public void setDisplacementMap(MaterialScalarMap displacmentMap)
+    public void setDisplacementMap(ReadonlyMaterialScalarMap displacmentMap)
     {
         this.displacementMap = displacmentMap;
     }
 
+    @Override
     public <ContextType extends Context<ContextType>> MaterialResources<ContextType> createResources(
-            ContextType context, File textureDirectory, TextureLoadOptions loadOptions) throws IOException
+        ContextType context, File textureDirectory, TextureLoadOptions loadOptions) throws IOException
     {
         return new MaterialResources<>(context, this, textureDirectory, loadOptions);
     }

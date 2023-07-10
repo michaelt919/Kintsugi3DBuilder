@@ -125,16 +125,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                     double primaryViewDistance = newItem.getIBRResources().getPrimaryViewDistance();
                     Vector3 lightIntensity = new Vector3((float)(primaryViewDistance * primaryViewDistance));
 
-                    for (int i = 0; i < newItem.getActiveViewSet().getLightCount(); i++)
-                    {
-                        if (Objects.equals(newItem.getActiveViewSet().getLightIntensity(i), Vector3.ZERO))
-                        {
-                            newItem.getActiveViewSet().setLightIntensity(i, lightIntensity);
-                        }
-                    }
-
-                    newItem.getActiveViewSet().setInfiniteLightSources(false);
-                    newItem.getIBRResources().updateLightData();
+                    newItem.getIBRResources().initializeLightIntensities(lightIntensity, false);
                     newItem.reloadShaders();
 
                     if (loadingMonitor != null)
@@ -217,14 +208,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
                     Vector3 lightIntensity = new Vector3((float)(primaryViewDistance * primaryViewDistance));
 
-                    for (int i = 0; i < newItem.getActiveViewSet().getLightCount(); i++)
-                    {
-                        newItem.getActiveViewSet().setLightIntensity(i, lightIntensity);
-                    }
-
-                    newItem.getActiveViewSet().setInfiniteLightSources(false);
-
-                    newItem.getIBRResources().updateLightData();
+                    newItem.getIBRResources().initializeLightIntensities(lightIntensity, false);
                     newItem.reloadShaders();
 
                     if (loadingMonitor != null)
@@ -276,7 +260,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     @Override
     public void applyLightCalibration()
     {
-        ViewSet viewSet = ibrInstance.getIBRResources().getViewSet();
+        ReadonlyViewSet viewSet = ibrInstance.getIBRResources().getViewSet();
 
         ibrInstance.getDynamicResourceManager().setLightCalibration(
             viewSet.getLightPosition(viewSet.getLightIndex(viewSet.getPrimaryViewIndex()))

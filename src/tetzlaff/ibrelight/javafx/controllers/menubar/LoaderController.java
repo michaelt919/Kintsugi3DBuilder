@@ -28,6 +28,7 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
+import tetzlaff.ibrelight.core.ReadonlyViewSet;
 import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.javafx.MultithreadModels;
 
@@ -83,7 +84,7 @@ public class LoaderController implements Initializable
 
             try
             {
-                ViewSet newViewSet = ViewSet.loadFromAgisoftXMLFile(cameraFile);
+                ReadonlyViewSet newViewSet = ViewSet.loadFromAgisoftXMLFile(cameraFile);
 
                 loadCheckCameras.setText("Loaded");
                 loadCheckCameras.setFill(Paint.valueOf("Green"));

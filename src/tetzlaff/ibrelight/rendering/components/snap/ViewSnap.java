@@ -15,10 +15,7 @@ import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.FramebufferObject;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector4;
-import tetzlaff.ibrelight.core.CameraViewport;
-import tetzlaff.ibrelight.core.RenderedComponent;
-import tetzlaff.ibrelight.core.SceneModel;
-import tetzlaff.ibrelight.core.ViewSet;
+import tetzlaff.ibrelight.core.*;
 
 /**
  * Snaps to viewpoints from the view set
@@ -27,11 +24,11 @@ import tetzlaff.ibrelight.core.ViewSet;
 public class ViewSnap<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
     private final SceneModel sceneModel;
-    private final ViewSet viewSet;
+    private final ReadonlyViewSet viewSet;
 
     private ViewSnapContent<ContextType> contentRoot;
 
-    public ViewSnap(SceneModel sceneModel, ViewSet viewSet)
+    public ViewSnap(SceneModel sceneModel, ReadonlyViewSet viewSet)
     {
         this.sceneModel = sceneModel;
         this.viewSet = viewSet;

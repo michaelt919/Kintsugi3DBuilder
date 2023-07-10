@@ -17,7 +17,7 @@ import java.util.*;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.geometry.VertexGeometry;
+import tetzlaff.gl.geometry.ReadonlyVertexGeometry;
 import tetzlaff.gl.vecmath.*;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.rendering.resources.DynamicResourceLoader;
@@ -170,11 +170,11 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
     private void updateWorldSpaceDefinition()
     {
-        if (resources.getGeometryResources().geometry != null)
+        if (resources.getGeometry() != null)
         {
-            sceneModel.setScale(resources.getGeometryResources().geometry.getBoundingRadius() * 2);
+            sceneModel.setScale(resources.getGeometry().getBoundingRadius() * 2);
             sceneModel.setOrientation(resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex()).getUpperLeft3x3());
-            sceneModel.setCentroid(resources.getGeometryResources().geometry.getCentroid());
+            sceneModel.setCentroid(resources.getGeometry().getCentroid());
         }
     }
 
@@ -331,13 +331,13 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     }
 
     @Override
-    public VertexGeometry getActiveGeometry()
+    public ReadonlyVertexGeometry getActiveGeometry()
     {
-        return this.resources.getGeometryResources().geometry;
+        return this.resources.getGeometry();
     }
 
     @Override
-    public ViewSet getActiveViewSet()
+    public ReadonlyViewSet getActiveViewSet()
     {
         return this.resources.getViewSet();
     }

@@ -237,7 +237,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
                 // Reconstruction view set
                 try
                 {
-                    ViewSet reconstructionViewSet = ViewSet.loadFromVSETFile(
+                    ReadonlyViewSet reconstructionViewSet = ViewSet.loadFromVSETFile(
                         new File(reconstructionViewSetField.getText()));
                     settings.getReconstructionSettings().setReconstructionViewSet(reconstructionViewSet);
                 }

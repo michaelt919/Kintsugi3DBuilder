@@ -28,7 +28,7 @@ import tetzlaff.gl.builders.base.DepthTextureBuilderBase;
 import tetzlaff.gl.builders.base.StencilTextureBuilderBase;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.core.ColorFormat.DataType;
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import tetzlaff.gl.types.AbstractDataType;
 import tetzlaff.gl.types.AbstractDataTypeFactory;
 
@@ -446,7 +446,7 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
     }
 
     @Override
-    public void loadLayer(int layerIndex, NativeVectorBuffer data)
+    public void loadLayer(int layerIndex, ReadonlyNativeVectorBuffer data)
     {
         if (data.getCount() != width * height)
         {

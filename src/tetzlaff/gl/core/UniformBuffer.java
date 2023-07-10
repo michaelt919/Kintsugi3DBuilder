@@ -13,7 +13,7 @@ package tetzlaff.gl.core;
 
 import java.nio.ByteBuffer;
 
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 
 /**
  * An interface for a uniform buffer object that can provide data to be used in conjunction with a shader program.
@@ -36,5 +36,5 @@ public interface UniformBuffer<ContextType extends Context<ContextType>> extends
      * @param data The buffer containing the uniform data.
      * @return The calling object.
      */
-    UniformBuffer<ContextType> setData(NativeVectorBuffer data);
+    UniformBuffer<ContextType> setData(ReadonlyNativeVectorBuffer data);
 }

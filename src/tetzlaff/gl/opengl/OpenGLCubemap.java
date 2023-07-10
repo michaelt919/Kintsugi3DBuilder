@@ -20,7 +20,7 @@ import tetzlaff.gl.builders.base.StencilTextureBuilderBase;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.core.ColorFormat.DataType;
 import tetzlaff.gl.nativebuffer.NativeDataType;
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -87,7 +87,7 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
         }
 
         @Override
-        public ColorBuilder loadFace(CubemapFace face, NativeVectorBuffer data)
+        public ColorBuilder loadFace(CubemapFace face, ReadonlyNativeVectorBuffer data)
         {
             if (data.getCount() != faceSize * faceSize)
             {

@@ -23,7 +23,7 @@ import java.util.function.Function;
 
 import tetzlaff.gl.builders.*;
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import tetzlaff.gl.opengl.OpenGLTexture1D.OpenGLTexture1DFromBufferBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture2D.*;
 import tetzlaff.gl.opengl.OpenGLTexture3D.ColorBuilder;
@@ -47,14 +47,14 @@ class OpenGLTextureFactory implements TextureFactory<OpenGLContext>
     }
 
     @Override
-    public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> build1DColorTexture(NativeVectorBuffer data)
+    public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> build1DColorTexture(ReadonlyNativeVectorBuffer data)
     {
         return new OpenGLTexture1DFromBufferBuilder(context, GL_TEXTURE_1D, data.getCount(), data.getDimensions(),
             OpenGLContext.getDataTypeConstant(data.getDataType()), data.getBuffer());
     }
 
     @Override
-    public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> build2DColorTextureFromBuffer(int width, int height, NativeVectorBuffer data)
+    public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> build2DColorTextureFromBuffer(int width, int height, ReadonlyNativeVectorBuffer data)
     {
         return new OpenGLTexture2DFromBufferBuilder(context, GL_TEXTURE_2D, width, height, data.getDimensions(),
             OpenGLContext.getDataTypeConstant(data.getDataType()), data.getBuffer());

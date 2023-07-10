@@ -15,9 +15,11 @@ package tetzlaff.ibrelight.rendering.resources;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.geometry.GeometryResources;
 import tetzlaff.gl.material.MaterialResources;
+import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.ViewSet;
 
 import java.util.List;
+import java.util.Objects;
 
 public abstract class IBRResourcesBase<ContextType extends Context<ContextType>> implements IBRResources<ContextType>
 {
@@ -83,9 +85,40 @@ public abstract class IBRResourcesBase<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public void updateLuminanceMap()
+    public void updateLuminanceMap(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
     {
+        this.getViewSet().setTonemapping(
+            this.getViewSet().getGamma(),
+            linearLuminanceValues,
+            encodedLuminanceValues);
+
         sharedResources.updateLuminanceMap();
+    }
+
+    @Override
+    public void updateLightCalibration(Vector3 lightCalibration)
+    {
+        for (int i = 0; i < this.getViewSet().getLightCount(); i++)
+        {
+            this.getViewSet().setLightPosition(i, lightCalibration);
+        }
+
+        sharedResources.updateLightData();
+    }
+
+    @Override
+    public void initializeLightIntensities(Vector3 lightIntensity, boolean infiniteLightSources)
+    {
+        for (int i = 0; i < this.getViewSet().getLightCount(); i++)
+        {
+            if (Objects.equals(this.getViewSet().getLightIntensity(i), Vector3.ZERO))
+            {
+                this.getViewSet().setLightIntensity(i, lightIntensity);
+            }
+        }
+
+        this.getViewSet().setInfiniteLightSources(infiniteLightSources);
+        this.sharedResources.updateLightData();
     }
 
     @Override

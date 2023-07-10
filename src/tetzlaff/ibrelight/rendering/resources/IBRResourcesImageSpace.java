@@ -22,12 +22,14 @@ import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.geometry.GeometryMode;
+import tetzlaff.gl.geometry.ReadonlyVertexGeometry;
 import tetzlaff.gl.material.TextureLoadOptions;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.geometry.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.*;
 
 /**
@@ -431,9 +433,10 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
      * Refresh the light data in the uniform buffers using the current values in the view set,
      * and also update the shadow textures.
      */
-    public void updateLightData()
+    @Override
+    public void updateLightCalibration(Vector3 lightCalibration)
     {
-        getSharedResources().updateLightData();
+        super.updateLightCalibration(lightCalibration);
 
         try
         {
@@ -558,7 +561,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     public SingleCalibratedImageResource<ContextType> createSingleImageResource(int viewIndex, File imageFile, ReadonlyLoadOptionsModel loadOptions)
         throws IOException
     {
-        return new SingleCalibratedImageResource<>(getContext(), getViewSet(), viewIndex, imageFile, getGeometryResources().geometry, loadOptions);
+        return new SingleCalibratedImageResource<>(getContext(), getViewSet(), viewIndex, imageFile, getGeometry(), loadOptions);
     }
 
     public ImageCache<ContextType> cache(ImageCacheSettings settings) throws IOException

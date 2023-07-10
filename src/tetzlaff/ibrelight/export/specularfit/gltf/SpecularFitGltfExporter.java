@@ -11,7 +11,7 @@ import de.javagl.jgltf.model.io.v2.GltfAssetV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetWriterV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetsV2;
 import de.javagl.jgltf.model.v2.MaterialModelV2;
-import tetzlaff.gl.geometry.VertexGeometry;
+import tetzlaff.gl.geometry.ReadonlyVertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
@@ -346,7 +346,7 @@ public class SpecularFitGltfExporter
         return createRelativeTexture(uri, null);
     }
 
-    public static SpecularFitGltfExporter fromVertexGeometry(VertexGeometry geometry) throws IOException
+    public static SpecularFitGltfExporter fromVertexGeometry(ReadonlyVertexGeometry geometry) throws IOException
     {
         GltfModelBuilder builder = GltfModelBuilder.create();
 
