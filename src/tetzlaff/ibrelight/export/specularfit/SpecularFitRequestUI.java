@@ -255,7 +255,8 @@ public class SpecularFitRequestUI implements IBRRequestUI
             settings.getImageCacheSettings().setCacheParentDirectory(new File(settings.getOutputDirectory(), "cache"));
             settings.getImageCacheSettings().setTextureWidth(settings.getTextureFitSettings().width);
             settings.getImageCacheSettings().setTextureHeight(settings.getTextureFitSettings().height);
-            settings.getImageCacheSettings().setTextureSubdiv(16); // TODO expose this in the interface
+            settings.getImageCacheSettings().setTextureSubdiv( // TODO expose this in the interface
+                (int)Math.ceil(Math.max(settings.getTextureFitSettings().width, settings.getTextureFitSettings().height) / 256.0));
             settings.getImageCacheSettings().setSampledSize(256); // TODO expose this in the interface
 
             SpecularFitRequest<ContextType> request = new SpecularFitRequest<>(settings);
