@@ -12,7 +12,6 @@
 package tetzlaff.ibrelight.export.general;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.function.Consumer;
 
 import tetzlaff.gl.core.Context;
@@ -20,7 +19,7 @@ import tetzlaff.gl.core.Drawable;
 import tetzlaff.gl.core.FramebufferObject;
 import tetzlaff.gl.core.Program;
 import tetzlaff.ibrelight.core.*;
-import tetzlaff.ibrelight.loaders.ViewSetReaderFromVSET;
+import tetzlaff.ibrelight.io.ViewSetReaderFromVSET;
 import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.models.ReadonlySettingsModel;
 

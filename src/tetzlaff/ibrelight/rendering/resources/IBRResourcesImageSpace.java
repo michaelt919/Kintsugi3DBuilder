@@ -16,13 +16,11 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.Date;
 import javax.imageio.ImageIO;
-import javax.xml.stream.XMLStreamException;
 
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.geometry.GeometryMode;
-import tetzlaff.gl.geometry.ReadonlyVertexGeometry;
 import tetzlaff.gl.material.TextureLoadOptions;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
@@ -31,8 +29,8 @@ import tetzlaff.gl.geometry.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.*;
-import tetzlaff.ibrelight.loaders.ViewSetReaderFromAgisoftXML;
-import tetzlaff.ibrelight.loaders.ViewSetReaderFromVSET;
+import tetzlaff.ibrelight.io.ViewSetReaderFromAgisoftXML;
+import tetzlaff.ibrelight.io.ViewSetReaderFromVSET;
 
 /**
  * A class that encapsulates all of the GPU resources like vertex buffers, uniform buffers, and textures for a given

@@ -10,7 +10,7 @@
  *
  */
 
-package tetzlaff.ibrelight.loaders;
+package tetzlaff.ibrelight.io;
 
 import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
@@ -29,9 +29,9 @@ import java.util.*;
 /**
  * Handles loading view sets from a camera definition file exported in XML format from Agisoft PhotoScan.
  */
-public class ViewSetReaderFromAgisoftXML implements ViewSetReader
+public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 {
-    private static ViewSetReaderFromAgisoftXML INSTANCE = new ViewSetReaderFromAgisoftXML();
+    private static final ViewSetReader INSTANCE = new ViewSetReaderFromAgisoftXML();
 
     public static ViewSetReader getInstance()
     {
@@ -652,7 +652,7 @@ public class ViewSetReaderFromAgisoftXML implements ViewSetReader
             }
         }
 
-        result.setPrimaryView(primaryViewIndex);
+        result.setPrimaryViewIndex(primaryViewIndex);
 
         return result;
     }

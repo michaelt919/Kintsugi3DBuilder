@@ -10,7 +10,7 @@
  *
  */
 
-package tetzlaff.ibrelight.loaders;
+package tetzlaff.ibrelight.io;
 
 import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
@@ -26,9 +26,9 @@ import java.util.*;
 /**
  * Handles loading view sets from the VSET text file format
  */
-public class ViewSetReaderFromVSET implements ViewSetReader
+public final class ViewSetReaderFromVSET implements ViewSetReader
 {
-    private static ViewSetReaderFromVSET INSTANCE = new ViewSetReaderFromVSET();
+    private static final ViewSetReader INSTANCE = new ViewSetReaderFromVSET();
 
     public static ViewSetReader getInstance()
     {

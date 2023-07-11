@@ -23,6 +23,7 @@ import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.io.ViewSetWriterToVSET;
 import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.interactive.InitializationException;
 import tetzlaff.models.ReadonlyCameraModel;
@@ -319,10 +320,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     @Override
     public void saveToVSETFile(File vsetFile) throws IOException
     {
-        try (OutputStream stream = new FileOutputStream(vsetFile))
-        {
-            ibrInstance.getActiveViewSet().writeVSETFileToStream(stream, vsetFile.getParentFile().toPath());
-        }
+        ViewSetWriterToVSET.getInstance().writeToFile(ibrInstance.getActiveViewSet(), vsetFile);
     }
 
     @Override

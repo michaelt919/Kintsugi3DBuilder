@@ -15,7 +15,7 @@ package tetzlaff.ibrelight.rendering.resources;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.SampledLuminanceEncoding;
 
-public class LuminanceMapResources<ContextType extends Context<ContextType>> implements Resource
+public final class LuminanceMapResources<ContextType extends Context<ContextType>> implements Resource
 {
     private final ContextType context;
 

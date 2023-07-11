@@ -12,7 +12,6 @@
 package tetzlaff.ibrelight.export.resample;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
@@ -22,7 +21,7 @@ import java.util.stream.Stream;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.FramebufferObject;
 import tetzlaff.ibrelight.core.*;
-import tetzlaff.ibrelight.loaders.ViewSetReaderFromVSET;
+import tetzlaff.ibrelight.io.ViewSetReaderFromVSET;
 
 public class ResampleRequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>
 {

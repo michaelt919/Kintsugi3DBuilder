@@ -10,7 +10,7 @@
  *
  */
 
-package tetzlaff.ibrelight.loaders;
+package tetzlaff.ibrelight.io;
 
 import tetzlaff.ibrelight.core.ViewSet;
 
@@ -20,6 +20,7 @@ import java.io.*;
  * Abstracts the idea of loading a view set from a file as a factory object.
  * Typically, an implementation would support just one file format, but that format is not specified by this interface.
  */
+@FunctionalInterface
 public interface ViewSetReader
 {
     /**
@@ -44,6 +45,5 @@ public interface ViewSetReader
             result.setRootDirectory(file.getParentFile());
             return result;
         }
-
     }
 }

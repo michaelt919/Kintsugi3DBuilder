@@ -18,8 +18,6 @@ import tetzlaff.gl.vecmath.Vector3;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.OutputStream;
-import java.nio.file.Path;
 import java.util.Collection;
 
 public interface ReadonlyViewSet
@@ -39,10 +37,6 @@ public interface ReadonlyViewSet
     ReadonlyViewSet createPermutation(Collection<Integer> permutationIndices);
 
     ViewSet copy();
-
-    void writeVSETFileToStream(OutputStream outputStream);
-
-    void writeVSETFileToStream(OutputStream outputStream, Path parentDirectory);
 
     /**
      * Gets the camera pose defining the transformation from object space to camera space for a particular view.
@@ -183,6 +177,9 @@ public interface ReadonlyViewSet
     boolean hasCustomLuminanceEncoding();
 
     SampledLuminanceEncoding getLuminanceEncoding();
+
+    double[] getLinearLuminanceValues();
+    byte[] getEncodedLuminanceValues();
 
     boolean areLightSourcesInfinite();
 

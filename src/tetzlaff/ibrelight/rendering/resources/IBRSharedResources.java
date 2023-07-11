@@ -133,7 +133,7 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
         }
         else
         {
-            luminanceMapResources = null;
+            luminanceMapResources = LuminanceMapResources.createNull(context);
         }
 
         if (geometry != null)

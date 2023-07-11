@@ -12,11 +12,9 @@
 package tetzlaff.ibrelight.javafx.controllers.menubar;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.Comparator;
 import java.util.ResourceBundle;
-import javax.xml.stream.XMLStreamException;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -29,9 +27,8 @@ import javafx.scene.text.Text;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
 import tetzlaff.ibrelight.core.ReadonlyViewSet;
-import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.javafx.MultithreadModels;
-import tetzlaff.ibrelight.loaders.ViewSetReaderFromAgisoftXML;
+import tetzlaff.ibrelight.io.ViewSetReaderFromAgisoftXML;
 
 public class LoaderController implements Initializable
 {

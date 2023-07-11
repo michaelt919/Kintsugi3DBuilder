@@ -12,7 +12,6 @@
 package tetzlaff.ibrelight.export.specularfit;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 
@@ -31,7 +30,7 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import tetzlaff.gl.core.Context;
 import tetzlaff.ibrelight.core.*;
-import tetzlaff.ibrelight.loaders.ViewSetReaderFromVSET;
+import tetzlaff.ibrelight.io.ViewSetReaderFromVSET;
 
 public class SpecularFitRequestUI implements IBRRequestUI
 {

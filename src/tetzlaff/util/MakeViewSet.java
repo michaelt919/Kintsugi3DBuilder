@@ -19,6 +19,7 @@ import java.util.List;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.ReadonlyViewSet;
 import tetzlaff.ibrelight.core.ViewSet;
+import tetzlaff.ibrelight.io.ViewSetWriterToVSET;
 
 public final class MakeViewSet
 {
@@ -57,9 +58,9 @@ public final class MakeViewSet
             Float.parseFloat(args[2]), Float.parseFloat(args[3]), Float.parseFloat(args[4]), Float.parseFloat(args[5]));
         try (PrintStream out = new PrintStream(String.format(args[6], viewSet.getCameraPoseCount())))
         {
-            viewSet.writeVSETFileToStream(out);
+            ViewSetWriterToVSET.getInstance().writeToStream(viewSet, out);
         }
-        catch (FileNotFoundException e)
+        catch (Exception e)
         {
             e.printStackTrace();
         }
