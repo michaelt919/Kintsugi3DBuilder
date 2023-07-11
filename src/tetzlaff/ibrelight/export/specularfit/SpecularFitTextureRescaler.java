@@ -1,6 +1,6 @@
 package tetzlaff.ibrelight.export.specularfit;
 
-import tetzlaff.ibrelight.export.general.ImageLodResizer;
+import tetzlaff.util.ImageLodResizer;
 
 import java.io.File;
 import java.io.IOException;

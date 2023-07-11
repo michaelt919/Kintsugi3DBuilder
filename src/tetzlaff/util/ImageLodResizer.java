@@ -1,4 +1,4 @@
-package tetzlaff.ibrelight.export.general;
+package tetzlaff.util;
 
 import javax.imageio.ImageIO;
 import java.awt.geom.AffineTransform;
