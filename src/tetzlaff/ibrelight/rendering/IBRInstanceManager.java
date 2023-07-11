@@ -80,7 +80,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         try
         {
             IBRInstance<ContextType> newItem =
-                new IBREngine<ContextType>(id, context,
+                new IBREngine<>(id, context,
                     IBRResourcesImageSpace.getBuilderForContext(this.context)
                         .setLoadingMonitor(this.loadingMonitor)
                         .setLoadOptions(loadOptions)
@@ -166,7 +166,9 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                         .setLoadingMonitor(this.loadingMonitor)
                         .setLoadOptions(loadOptions)
                         .loadAgisoftFiles(xmlFile, meshFile, undistortedImageDirectory)
-                        .setPrimaryView(primaryViewName));
+                        .setPrimaryView(primaryViewName)
+                        .generatePreviewImages(loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight(),
+                            String.format("_%dx%d", loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight())));
 
             newItem.getSceneModel().setObjectModel(this.objectModel);
             newItem.getSceneModel().setCameraModel(this.cameraModel);

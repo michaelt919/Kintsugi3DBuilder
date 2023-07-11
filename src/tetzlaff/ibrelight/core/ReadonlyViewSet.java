@@ -18,6 +18,7 @@ import tetzlaff.gl.vecmath.Vector3;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Collection;
 
 public interface ReadonlyViewSet
@@ -71,16 +72,28 @@ public interface ReadonlyViewSet
     File getGeometryFile();
 
     /**
-     * Gets the image file path associated with this view set.
+     * Gets the full resolution image file path associated with this view set.
      * @return The image file path.
      */
-    File getImageFilePath();
+    File getFullResImageFilePath();
 
     /**
-     * Sets the image file path associated with this view set.
+     * Gets the full resolution image file path string associated with this view set, relative to the root directory.
      * @return imageFilePath The image file path.
      */
-    String getRelativeImagePathName();
+    String getRelativeFullResImagePathName();
+
+    /**
+     * Gets the image file path for downscaled "preview" images for real-time rendering
+     * @return The image file path.
+     */
+    File getPreviewImageFilePath();
+
+    /**
+     * Gets the image file path string for downscaled "preview" images for real-time rendering, relative to the root directory.
+     * @return The image file path.
+     */
+    String getRelativePreviewImagePathName();
 
     /**
      * Gets the relative name of the image file corresponding to a particular view.
@@ -90,11 +103,35 @@ public interface ReadonlyViewSet
     String getImageFileName(int poseIndex);
 
     /**
-     * Gets the image file corresponding to a particular view.
+     * Gets the relative name of the image file corresponding to a particular view,
+     * with a specific file format (i.e. PNG, JPEG, etc.) -- which may not match the format originally specified in the view set.
+     * @param poseIndex The index of the image file to retrieve.
+     * @return The image file's relative name with the requested format.
+     */
+    String getImageFileNameWithFormat(int poseIndex, String format);
+
+    /**
+     * Gets the full resolution image file corresponding to a particular view.
      * @param poseIndex The index of the image file to retrieve.
      * @return The image file.
      */
-    File getImageFile(int poseIndex);
+    File getFullResImageFile(int poseIndex);
+
+    /**
+     * Gets the downscaled "preview" image file corresponding to a particular view.
+     * @param poseIndex The index of the image file to retrieve.
+     * @return The image file.
+     */
+    File getPreviewImageFile(int poseIndex);
+
+    /**
+     * Generates preview images at the requested resolution in the preview directory designated for this view set.
+     * If the preview directory is the same as the full-res directory, this will throw an IllegalStateException to prevent overwriting.
+     * @param width The width of each preview image.
+     * @param height The height of each preview image.
+     * @throws IOException If errors occur while saving the images.
+     */
+    void generatePreviewImages(int width, int height) throws IOException;
 
     int getPrimaryViewIndex();
 
@@ -189,12 +226,14 @@ public interface ReadonlyViewSet
      * @return The image file at the specified view index.
      * @throws FileNotFoundException if the image file cannot be found.
      */
-    File findImageFile(int index) throws FileNotFoundException;
+    File findFullResImageFile(int index) throws FileNotFoundException;
 
     /**
      * Finds the image file for the primary view index.
      * @return The image file at the primary view index.
      * @throws FileNotFoundException if the image file cannot be found.
      */
-    File findPrimaryImageFile() throws FileNotFoundException;
+    File findFullResPrimaryImageFile() throws FileNotFoundException;
+    File findPreviewImageFile(int index) throws FileNotFoundException;
+    File findPreviewPrimaryImageFile() throws FileNotFoundException;
 }

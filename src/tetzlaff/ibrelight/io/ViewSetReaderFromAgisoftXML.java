@@ -102,11 +102,11 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         }
 
         @Override
-        public boolean equals(Object other)
+        public boolean equals(Object obj)
         {
-            if (other instanceof Camera)
+            if (obj instanceof Camera)
             {
-                Camera otherCam = (Camera) other;
+                Camera otherCam = (Camera) obj;
                 return this.id.equals(otherCam.id);
             }
             else
@@ -122,7 +122,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * @param cameraPoseInvList The list of camera poses.
      * @return A far plane estimate.
      */
-    private static float findFarPlane(List<Matrix4> cameraPoseInvList)
+    private static float findFarPlane(Iterable<Matrix4> cameraPoseInvList)
     {
         float minX = Float.POSITIVE_INFINITY;
         float minY = Float.POSITIVE_INFINITY;

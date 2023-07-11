@@ -14,6 +14,8 @@ package tetzlaff.ibrelight.core;
 import java.io.*;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
@@ -21,7 +23,7 @@ import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibrelight.io.ViewSetWriterToVSET;
+import tetzlaff.ibrelight.export.general.ImageLodResizer;
 import tetzlaff.util.ImageFinder;
 
 /**
@@ -95,7 +97,12 @@ public final class ViewSet implements ReadonlyViewSet
     /**
      * The relative file path to be used for loading images.
      */
-    private String relativeImagePathName;
+    private String relativeFullResImagePathName;
+
+    /**
+     * The relative file path to be used for loading images.
+     */
+    private String relativePreviewImagePathName;
 
     /**
      * The relative name of the mesh file.
@@ -348,7 +355,8 @@ public final class ViewSet implements ReadonlyViewSet
         }
 
         result.rootDirectory = this.rootDirectory;
-        result.relativeImagePathName = this.relativeImagePathName;
+        result.relativeFullResImagePathName = this.relativeFullResImagePathName;
+        result.relativePreviewImagePathName = this.relativePreviewImagePathName;
         result.geometryFileName = this.geometryFileName;
         result.infiniteLightSources = this.infiniteLightSources;
         result.recommendedNearPlane = this.recommendedNearPlane;
@@ -380,7 +388,8 @@ public final class ViewSet implements ReadonlyViewSet
         }
 
         result.rootDirectory = this.rootDirectory;
-        result.relativeImagePathName = this.relativeImagePathName;
+        result.relativeFullResImagePathName = this.relativeFullResImagePathName;
+        result.relativePreviewImagePathName = this.relativePreviewImagePathName;
         result.geometryFileName = this.geometryFileName;
         result.infiniteLightSources = this.infiniteLightSources;
         result.recommendedNearPlane = this.recommendedNearPlane;
@@ -460,9 +469,14 @@ public final class ViewSet implements ReadonlyViewSet
                 this.geometryFileName = newRootDirectory.relativize(getGeometryFile().toPath()).toString();
             }
 
-            if (this.getImageFilePath() != null)
+            if (this.getFullResImageFilePath() != null)
             {
-                this.relativeImagePathName = newRootDirectory.relativize(getImageFilePath().toPath()).toString();
+                this.relativeFullResImagePathName = newRootDirectory.relativize(getFullResImageFilePath().toPath()).toString();
+            }
+
+            if (this.getPreviewImageFilePath() != null)
+            {
+                this.relativePreviewImagePathName = newRootDirectory.relativize(getPreviewImageFilePath().toPath()).toString();
             }
         }
 
@@ -491,24 +505,45 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public File getImageFilePath()
+    public File getFullResImageFilePath()
     {
-        return this.relativeImagePathName == null ? this.rootDirectory : new File(this.rootDirectory, relativeImagePathName);
+        return this.relativeFullResImagePathName == null ? this.rootDirectory : new File(this.rootDirectory, relativeFullResImagePathName);
     }
 
     @Override
-    public String getRelativeImagePathName()
+    public String getRelativeFullResImagePathName()
     {
-        return this.relativeImagePathName;
+        return this.relativeFullResImagePathName;
     }
 
     /**
      * Sets the image file path associated with this view set.
      * @param relativeImagePath The image file path.
      */
-    public void setRelativeImagePathName(String relativeImagePath)
+    public void setRelativeFullResImagePathName(String relativeImagePath)
     {
-        this.relativeImagePathName = relativeImagePath;
+        this.relativeFullResImagePathName = relativeImagePath;
+    }
+
+    @Override
+    public File getPreviewImageFilePath()
+    {
+        return this.relativePreviewImagePathName == null ? this.rootDirectory : new File(this.rootDirectory, relativePreviewImagePathName);
+    }
+
+    @Override
+    public String getRelativePreviewImagePathName()
+    {
+        return this.relativePreviewImagePathName;
+    }
+
+    /**
+     * Sets the image file path associated with this view set.
+     * @param relativeImagePath The image file path.
+     */
+    public void setRelativePreviewImagePathName(String relativeImagePath)
+    {
+        this.relativePreviewImagePathName = relativeImagePath;
     }
 
     @Override
@@ -518,9 +553,53 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public File getImageFile(int poseIndex)
+    public String getImageFileNameWithFormat(int poseIndex, String format)
     {
-        return new File(this.getImageFilePath(), this.imageFileNames.get(poseIndex));
+        String[] parts = this.getImageFileName(poseIndex).split("\\.");
+        return Stream.concat(Arrays.stream(parts, 0, Math.max(1, parts.length - 1)), Stream.of(format))
+                .collect(Collectors.joining("."));
+    }
+
+    @Override
+    public File getFullResImageFile(int poseIndex)
+    {
+        return new File(this.getFullResImageFilePath(), this.imageFileNames.get(poseIndex));
+    }
+
+    @Override
+    public File getPreviewImageFile(int poseIndex)
+    {
+        // Use PNG for preview images (TODO: make this a configurable setting?)
+        return new File(this.getPreviewImageFilePath(), this.getImageFileNameWithFormat(poseIndex, "PNG"));
+    }
+
+    @Override
+    public void generatePreviewImages(int width, int height) throws IOException
+    {
+        if (Objects.equals(this.relativePreviewImagePathName, this.relativeFullResImagePathName))
+        {
+            throw new IllegalStateException("Preview directory is the same as the full res directory; generating preview images would overwrite full resolution images.");
+        }
+        else
+        {
+            Date timestamp = new Date();
+
+            System.out.println("Generating preview images...");
+
+            // Make sure the preview image directory exists; create it if not
+            this.getPreviewImageFilePath().mkdirs();
+
+            // Resize and save the preview images
+            for (int i = 0; i < this.getCameraPoseCount(); i++)
+            {
+                System.out.printf("%d/%d", i, this.getCameraPoseCount());
+                System.out.println();
+                ImageLodResizer resizer = new ImageLodResizer(this.getFullResImageFile(i));
+                resizer.saveAtResolution(this.getPreviewImageFile(i), width, height);
+            }
+
+            System.out.println("Preview images generated in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+        }
     }
     
     @Override
@@ -680,14 +759,26 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public File findImageFile(int index) throws FileNotFoundException
+    public File findFullResImageFile(int index) throws FileNotFoundException
     {
-        return ImageFinder.getInstance().findImageFile(getImageFile(index));
+        return ImageFinder.getInstance().findImageFile(getFullResImageFile(index));
     }
 
     @Override
-    public File findPrimaryImageFile() throws FileNotFoundException
+    public File findFullResPrimaryImageFile() throws FileNotFoundException
     {
-        return findImageFile(primaryViewIndex);
+        return findFullResImageFile(primaryViewIndex);
+    }
+
+    @Override
+    public File findPreviewImageFile(int index) throws FileNotFoundException
+    {
+        return ImageFinder.getInstance().findImageFile(getPreviewImageFile(index));
+    }
+
+    @Override
+    public File findPreviewPrimaryImageFile() throws FileNotFoundException
+    {
+        return findPreviewImageFile(primaryViewIndex);
     }
 }

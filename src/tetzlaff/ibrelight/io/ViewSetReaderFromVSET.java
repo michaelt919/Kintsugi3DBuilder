@@ -73,9 +73,14 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         result.setGeometryFileName(scanner.nextLine().trim());
                         break;
                     }
+                    case "I":
+                    {
+                        result.setRelativeFullResImagePathName(scanner.nextLine().trim());
+                        break;
+                    }
                     case "i":
                     {
-                        result.setRelativeImagePathName(scanner.nextLine().trim());
+                        result.setRelativePreviewImagePathName(scanner.nextLine().trim());
                         break;
                     }
                     case "p":
@@ -219,10 +224,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         }
 
         double[] linearLuminanceValues = new double[linearLuminanceList.size()];
-        for (int i = 0; i < linearLuminanceValues.length; i++)
-        {
-            linearLuminanceValues[i] = linearLuminanceList.get(i);
-        }
+        Arrays.setAll(linearLuminanceValues, linearLuminanceList::get);
 
         byte[] encodedLuminanceValues = new byte[encodedLuminanceList.size()];
         for (int i = 0; i < encodedLuminanceValues.length; i++)
@@ -238,6 +240,17 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         {
             result.getLightPositionList().add(Vector3.ZERO);
             result.getLightIntensityList().add(Vector3.ZERO);
+        }
+
+        if (result.getRelativeFullResImagePathName() == null && result.getRelativePreviewImagePathName() != null)
+        {
+            // If no full res images, just use preview images as full res
+            result.setRelativeFullResImagePathName(result.getRelativePreviewImagePathName());
+        }
+        else if (result.getRelativePreviewImagePathName() == null && result.getRelativeFullResImagePathName() != null)
+        {
+            // Conversely, if no preview images, default to just using full res images
+            result.setRelativePreviewImagePathName(result.getRelativeFullResImagePathName());
         }
 
         if (result.getGeometryFile() == null)

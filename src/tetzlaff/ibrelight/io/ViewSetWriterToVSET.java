@@ -11,7 +11,6 @@
 
 package tetzlaff.ibrelight.io;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
@@ -47,8 +46,12 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         }
 
         out.println();
-        out.println("# Image file path");
-        out.println("i " + viewSet.getRelativeImagePathName());
+        out.println("# Full resolution image file path");
+        out.println("I " + viewSet.getRelativeFullResImagePathName());
+
+        out.println();
+        out.println("# Preview resolution image file path");
+        out.println("i " + viewSet.getRelativePreviewImagePathName());
 
         out.println();
         out.println("# Estimated near and far planes");

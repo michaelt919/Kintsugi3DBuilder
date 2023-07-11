@@ -134,7 +134,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             if (undistortedImageDirectory != null)
             {
                 this.imageDirectoryOverride = undistortedImageDirectory;
-                this.viewSet.setRelativeImagePathName(cameraFile.getParentFile().toPath().relativize(undistortedImageDirectory.toPath()).toString());
+                this.viewSet.setRelativeFullResImagePathName(cameraFile.getParentFile().toPath().relativize(undistortedImageDirectory.toPath()).toString());
             }
             return this;
         }
@@ -157,6 +157,17 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
+        public Builder<ContextType> generatePreviewImages(int width, int height, String previewDirectoryName) throws IOException
+        {
+            if (this.viewSet != null)
+            {
+                this.viewSet.setRelativePreviewImagePathName(previewDirectoryName);
+                this.viewSet.generatePreviewImages(width, height);
+            }
+
+            return this;
+        }
+
         public IBRResourcesImageSpace<ContextType> create() throws IOException
         {
             if (linearLuminanceValues != null && encodedLuminanceValues != null)
@@ -166,7 +177,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
             if (imageDirectoryOverride != null)
             {
-                viewSet.setRelativeImagePathName(viewSet.getRootDirectory().toPath().relativize(imageDirectoryOverride.toPath()).toString());
+                viewSet.setRelativeFullResImagePathName(viewSet.getRootDirectory().toPath().relativize(imageDirectoryOverride.toPath()).toString());
             }
 
             if (primaryViewName != null)
@@ -201,11 +212,12 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 true);
 
         // Read the images from a file
-        if (loadOptions != null && loadOptions.areColorImagesRequested() && viewSet.getImageFilePath() != null && viewSet.getCameraPoseCount() > 0)
+        if (loadOptions != null && loadOptions.areColorImagesRequested() && viewSet.getFullResImageFilePath() != null && viewSet.getCameraPoseCount() > 0)
         {
             Date timestamp = new Date();
 
-            File imageFile = viewSet.findPrimaryImageFile();
+            // Use preview-resolution images for the texture array due to VRAM limitations
+            File imageFile = viewSet.findPreviewPrimaryImageFile();
 
             // Read a single image to get the dimensions for the texture array
             BufferedImage img = null;
@@ -235,7 +247,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             {
                 System.out.printf("%d/%d", i, m);
                 System.out.println();
-                imageFile = viewSet.findImageFile(i);
+                imageFile = viewSet.findPreviewImageFile(i);
 
                 this.colorTextures.loadLayer(i, imageFile, true);
 
@@ -547,7 +559,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     public SingleCalibratedImageResource<ContextType> createSingleImageResource(int viewIndex, ReadonlyLoadOptionsModel loadOptions)
         throws IOException
     {
-        return createSingleImageResource(viewIndex, getViewSet().getImageFile(viewIndex), loadOptions);
+        return createSingleImageResource(viewIndex, getViewSet().getFullResImageFile(viewIndex), loadOptions);
     }
 
     /**
@@ -570,7 +582,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         if (!cache.isInitialized())
         {
-            cache.initialize(/* TODO: implement high-res image directory */ getViewSet().getImageFilePath());
+            cache.initialize(/* TODO: implement high-res image directory */ getViewSet().getFullResImageFilePath());
         }
 
         return cache;

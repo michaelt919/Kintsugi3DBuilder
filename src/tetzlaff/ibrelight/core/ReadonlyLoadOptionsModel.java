@@ -25,6 +25,8 @@ public interface ReadonlyLoadOptionsModel
     boolean areDepthImagesRequested();
     int getDepthImageWidth();
     int getDepthImageHeight();
+    int getPreviewImageWidth();
+    int getPreviewImageHeight();
 
     default TextureLoadOptions getTextureLoadOptions()
     {

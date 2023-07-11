@@ -106,7 +106,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         // Tonemap ground truth image
         try (Texture2D<ContextType> groundTruthTex =
             groundTruthProgram.getContext().getTextureFactory()
-                .build2DColorTextureFromFile(viewSet.findImageFile(viewIndex), true)
+                .build2DColorTextureFromFile(viewSet.findFullResImageFile(viewIndex), true)
                 .setLinearFilteringEnabled(true)
                 .setMipmapsEnabled(true)
                 .createTexture())
