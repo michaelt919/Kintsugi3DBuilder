@@ -73,6 +73,12 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
+    public boolean isInstanceLoaded()
+    {
+        return ibrInstance != null;
+    }
+
+    @Override
     public void loadFromVSETFile(String id, File vsetFile, ReadonlyLoadOptionsModel loadOptions)
     {
         this.loadingMonitor.startLoading();
