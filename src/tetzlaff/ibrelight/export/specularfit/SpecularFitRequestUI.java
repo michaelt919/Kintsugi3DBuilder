@@ -42,7 +42,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
     @FXML private TextField exportDirectoryField;
 
     @FXML private TextField basisCountTextField;
-    @FXML private CheckBox combineBasisCheckbox;
+    @FXML private CheckBox combineWeightsCheckbox;
     @FXML private TextField mfdResolutionTextField;
     @FXML private TextField convergenceToleranceTextField;
     @FXML private TextField specularSmoothnessTextField;
@@ -197,7 +197,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
             int microfacetDistributionResolution = Integer.parseInt(mfdResolutionTextField.getText());
             settings.getSpecularBasisSettings().setMicrofacetDistributionResolution(microfacetDistributionResolution);
 
-            settings.getExportSettings().setCombineWeights(combineBasisCheckbox.isSelected());
+            settings.getExportSettings().setCombineWeights(combineWeightsCheckbox.isSelected());
 
             // Specular / general settings
             double convergenceTolerance = Double.parseDouble(convergenceToleranceTextField.getText());
