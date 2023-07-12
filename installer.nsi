@@ -1,23 +1,41 @@
 ; IBRelight NSIS Installer script
 
+;Include Modern UI
+
+!include "MUI2.nsh"
+!include "LangFile.nsh"
+
 Name "IBRelight"
 OutFile "target\IBRelight-Installer.exe"
 RequestExecutionLevel admin
 Unicode True
+ManifestDPIAware True
 
 InstallDir $PROGRAMFILES\IBRelight
 
 InstallDirRegKey HKLM "Software\IBRelight" "Install_Dir"
 
+; MUI Settings
+!define MUI_ICON "ibr.ico"
+!define MUI_UNICON "ibr.ico"
+!define MUI_ABORTWARNING
+
 ; ---------------------------
 
-; Pages
-Page components
-Page directory
-Page instfiles
+; Installer Pages
+!insertmacro MUI_PAGE_WELCOME
+!insertmacro MUI_PAGE_LICENSE "ibrelight-about.txt"
+!insertmacro MUI_PAGE_COMPONENTS
+!insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_INSTFILES
+!insertmacro MUI_PAGE_FINISH
 
-UninstPage uninstConfirm
-UninstPage instFiles
+; Uninstaller Pages
+!insertmacro MUI_UNPAGE_CONFIRM
+!insertmacro MUI_UNPAGE_INSTFILES
+
+; Language Files
+!insertmacro MUI_LANGUAGE "English"
 
 ; ---------------------------
 
@@ -47,8 +65,6 @@ Section "IBRelight (required)"
 
 SectionEnd
 
-; ---------------------------
-
 ; Optional start menu shortcuts
 Section "Start Menu Shortcuts"
 
@@ -58,27 +74,15 @@ Section "Start Menu Shortcuts"
 
 SectionEnd
 
-; ---------------------------
-
 ; Uninstaller
 Section "Uninstall"
+
+    ; Remove directories
+    RMDir /r "$SMPROGRAMS\IBRelight"
+    RMDir /r "$INSTDIR"
 
     ; Remove registry keys
     DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\IBRelight"
     DeleteRegKey HKLM SOFTWARE\IBRelight
-
-    ; Remove files and uninstaller
-    Delete "$INSTDIR\IBRelight.exe"
-    RMDir /R "$INSTDIR\shaders"
-    Delete "$INSTDIR\*"
-
-    Delete $INSTDIR\uninstall.exe
-
-    ; Remove shortcuts, if any
-    Delete "$SMPROGRAMS\IBRelight\*.lnk"
-
-    ; Remove directories
-    RMDir "$SMPROGRAMS\IBRelight"
-    RMDir "$INSTDIR"
 
 SectionEnd
