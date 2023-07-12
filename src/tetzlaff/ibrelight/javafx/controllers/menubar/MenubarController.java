@@ -26,7 +26,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -578,11 +577,11 @@ public class MenubarController
     }
 
     public void unzip() {
-        try
-        {
+        try {
             UnzipFileSelectionController unzipFileSelectionController =
                     makeWindow(".psx Unzipper", unzipperOpen, "fxml/menubar/UnzipFileSelection.fxml");
             unzipFileSelectionController.init();
+        }
           catch(IOException e)
         {
             e.printStackTrace();
