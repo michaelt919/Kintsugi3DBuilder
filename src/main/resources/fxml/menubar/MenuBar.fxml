@@ -48,7 +48,11 @@
          <Menu fx:id="exportMenu" mnemonicParsing="false" text="Export" />
           <CheckMenuItem fx:id="lightCalibrationCheckMenuItem" mnemonicParsing="false" text="Light Calibration Mode" />
           <MenuItem mnemonicParsing="false" onAction="#file_colorChecker" text="Enter Color Checker Values... (DEPRECATED)" visible="false" />
-         <MenuItem mnemonicParsing="false" onAction="#eyedropperColorChecker" text="Color Calibration">
+          <MenuItem mnemonicParsing="false" onAction="#unzip" text="Unzip Metashape File">
+          <accelerator>
+          <KeyCodeCombination alt="UP" code="M" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+          </accelerator></MenuItem>
+          <MenuItem mnemonicParsing="false" onAction="#eyedropperColorChecker" text="Color Calibration">
             <accelerator>
                <KeyCodeCombination alt="UP" code="B" control="ANY" meta="UP" shift="UP" shortcut="UP" />
             </accelerator></MenuItem>

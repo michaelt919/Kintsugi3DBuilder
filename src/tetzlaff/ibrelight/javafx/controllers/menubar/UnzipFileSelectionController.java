@@ -77,7 +77,7 @@ public class UnzipFileSelectionController {
         }
 
         ArrayList<String> chunkNames = (ArrayList<String>)
-                metashapeObject.getChunkNamesFromPSX(psxPathTxtField.getText());
+                metashapeObject.loadChunkNamesFromPSX(psxPathTxtField.getText());
 
         chunkSelectionChoiceBox.getItems().clear();
         chunkSelectionChoiceBox.getItems().addAll(chunkNames);

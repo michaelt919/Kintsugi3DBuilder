@@ -25,7 +25,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 
@@ -60,7 +61,7 @@ public class ChunkViewerController implements Initializable {
     private Parent root;
     private Stage stage;
     //key is chunk name, value is path to chunk's zip file
-    private HashMap<String, String> chunkZipPathPairs;
+    private Map<String, String> chunkZipPathPairs;
     private MetashapeObjectChunk metashapeObjectChunk;
     private MetashapeObject metashapeObject;
 
@@ -80,8 +81,7 @@ public class ChunkViewerController implements Initializable {
         this.chunkID = metashapeObjectChunk.getChunkID();
         this.chunkName = metashapeObjectChunk.getChunkName();
         
-        //TODO: SHOULD DO CASTING?
-        this.chunkZipPathPairs = (HashMap<String, String>) metashapeObjectChunk.getChunkZipPathPairs();
+        this.chunkZipPathPairs = metashapeObjectChunk.getChunkZipPathPairs();
 
         //add chunk name to tree
         TreeItem<String> rootItem = new TreeItem<>(chunkName);
@@ -95,28 +95,64 @@ public class ChunkViewerController implements Initializable {
         updateSelectChunkButton();
 
         //fill thumbnail list
-        ArrayList <Image> thumbnailImageList = metashapeObjectChunk.getThumbnailImageList();
+        ArrayList <Image> thumbnailImageList = metashapeObjectChunk.loadThumbnailImageList();
 
         //add full-res images as children to the chunk name in treeview
-        ArrayList<Element> cameras = (ArrayList<Element>) metashapeObjectChunk.getThumbnailCameras();
+        ArrayList<Element> cameras = (ArrayList<Element>) metashapeObjectChunk.findThumbnailCameras();
 
         for (int i = 0; i < cameras.size(); ++i) {
             Element camera = cameras.get(i);
             String imageName = camera.getAttribute("label");
 
-            ImageView thumbnailImgView;
-            try {
-                thumbnailImgView = new ImageView(thumbnailImageList.get(i));
-            } catch (IndexOutOfBoundsException e) {
-                //thumbnail not found in thumbnailImageList
-                thumbnailImgView = new ImageView(new Image(new File("question-mark.png").toURI().toString()));
+            //get parent of camera
+            //if parent of camera is a group, create a group node and put it under the root, then add camera to it
+            //unless that group already exists, then add the camera to the already created group
+
+            Element parent = (Element) camera.getParentNode();
+            TreeItem<String> destinationItem; //stores the node which the image will be added to
+                                                // (either a group or the root node)
+            if(parent.getTagName().equals("group")){
+                String groupName = parent.getAttribute("label");//TODO: CURRENTLY ONLY CHECKS TO SEE IF NAMES MATCH
+
+                //TODO: CLEAN THIS UP
+                List<TreeItem<String>> rootChildren = rootItem.getChildren();
+                boolean groupAlreadyCreated = false;//boolean to track if group is already present in treeview
+                TreeItem<String> matchingItem = null;
+                for (TreeItem<String> item : rootChildren){
+                    if (item.getValue().equals(groupName)){
+                        groupAlreadyCreated = true;
+                        matchingItem = item;
+                        break;
+                    }
+                }
+
+                if (groupAlreadyCreated){
+                    //add camera to this item
+                    destinationItem = matchingItem;
+                }
+                else{//group has not been created yet
+                    TreeItem<String> newGroup = new TreeItem<>(groupName);
+                    rootItem.getChildren().add(newGroup);
+                    destinationItem = newGroup;
+                }
             }
-            thumbnailImgView.setFitWidth(THUMBNAIL_SIZE);
-            thumbnailImgView.setFitHeight(THUMBNAIL_SIZE);
+            else{
+                //parent is camera, so add to root node
+                destinationItem = rootItem;
+            }
+
+                ImageView thumbnailImgView;
+                try {
+                    thumbnailImgView = new ImageView(thumbnailImageList.get(i));
+                } catch (IndexOutOfBoundsException e) {
+                    //thumbnail not found in thumbnailImageList
+                    thumbnailImgView = new ImageView(new Image(new File("question-mark.png").toURI().toString()));
+                }
+                thumbnailImgView.setFitWidth(THUMBNAIL_SIZE);
+                thumbnailImgView.setFitHeight(THUMBNAIL_SIZE);
 
             TreeItem<String> imageTreeItem = new TreeItem<>(imageName, thumbnailImgView);
-            rootItem.getChildren().add(imageTreeItem);
-
+            destinationItem.getChildren().add(imageTreeItem);
         }
 
         //unroll treeview
@@ -148,7 +184,10 @@ public class ChunkViewerController implements Initializable {
     public void selectImageInTreeView() {
         //selectedItem holds the cameraID associated with the image
         TreeItem<String> selectedItem = chunkTreeView.getSelectionModel().getSelectedItem();
-        if (selectedItem != null) {
+        if (selectedItem != null &&
+                selectedItem.getValue() != null &&
+                selectedItem.isLeaf()) {
+
             String imageName = selectedItem.getValue();
             try {
                 //goal of this try block is to find the camera which is associated with the image name in selectedItem

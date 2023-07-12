@@ -23,7 +23,7 @@ public class MetashapeObjectChunk {
     private Document chunkXML;
     private Document frameZip;
 
-    public MetashapeObjectChunk(){
+    private MetashapeObjectChunk(){
         metashapeObject = new MetashapeObject();
         chunkName = "";
         chunkID = -1;//TODO: GOOD NULL CHUNK ID?
@@ -105,16 +105,17 @@ public class MetashapeObjectChunk {
         return this.metashapeObject;
     }
 
-    public ArrayList<Image> getThumbnailImageList() {
+    public ArrayList<Image> loadThumbnailImageList() {
         //unzip thumbnail folder
         String psxFilePath = this.metashapeObject.getPsxFilePath();
         String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4);//remove ".psx" from path
 
+        //Note: the 0 denotes that these thumbnails are for frame 0
         String thumbnailPath = psxPathBase + ".files\\" + chunkID + "\\0\\thumbnails\\thumbnails.zip";
         return UnzipHelper.unzipImages(thumbnailPath);
     }
 
-    public List<Element> getThumbnailCameras() {
+    public List<Element> findThumbnailCameras() {
         NodeList cams = this.chunkXML.getElementsByTagName("camera");
         ArrayList<Element> cameras = new ArrayList<>();
         for (int i = 0; i < cams.getLength(); ++i) {
@@ -126,8 +127,15 @@ public class MetashapeObjectChunk {
         return cameras;
     }
 
-    public Document getFrameZip() {
-        return this.frameZip;
+    public List<Element> findThumbnailCamsWithGroupings() {
+        //<cameras> contains <group>, <group> contains <camera>
+        //<cameras> may also directly contain <camera>
+        return (List<Element>) this.chunkXML.getElementsByTagName("cameras");
+    }
+
+    public boolean doesXMLContainGroups(){
+        //some chunk xml documents organize cameras/photos into groups, others do not
+        return this.chunkXML.getElementsByTagName("group").getLength() != 0;
     }
 
     public Element matchImageToCam(String imageName) {
