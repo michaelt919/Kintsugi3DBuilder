@@ -127,6 +127,7 @@
           </RadioMenuItem>
          <SeparatorMenuItem mnemonicParsing="false" />
          <MenuItem mnemonicParsing="false" onAction="#shading_IBRSettings" text="IBR settings…" />
+         <MenuItem mnemonicParsing="false" onAction="#shading_JVMSettings" text="JVM Settings…" />
          <CheckMenuItem fx:id="phyMaskingCheckMenuItem" mnemonicParsing="false" text="Physically based masking/shadowing" />
          <CheckMenuItem fx:id="fresnelEffectCheckMenuItem" mnemonicParsing="false" text="Fresnel effect" />
       </Menu>
