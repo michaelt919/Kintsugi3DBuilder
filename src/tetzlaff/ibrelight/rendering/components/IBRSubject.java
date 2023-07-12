@@ -12,15 +12,15 @@
 package tetzlaff.ibrelight.rendering.components;
 
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.CameraViewport;
 import tetzlaff.ibrelight.core.RenderedComponent;
 import tetzlaff.ibrelight.core.SceneModel;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.ibrelight.rendering.resources.LightingResources;
 import tetzlaff.ibrelight.rendering.SceneViewportModel;
 import tetzlaff.ibrelight.rendering.StandardShader;
@@ -38,7 +38,7 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
     private final ContextType context;
     private final SceneModel sceneModel;
     private final SceneViewportModel<ContextType> sceneViewportModel;
-    private final IBRResources<ContextType> resources;
+    private final IBRResourcesImageSpace<ContextType> resources;
 
     private StandardShader<ContextType> standardShader;
     private Drawable<ContextType> drawable;
@@ -47,11 +47,11 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
 
     private StandardRenderingMode lastCompiledRenderingMode = StandardRenderingMode.IMAGE_BASED;
 
-    public IBRSubject(IBRResources<ContextType> resources, LightingResources<ContextType> lightingResources,
+    public IBRSubject(IBRResourcesImageSpace<ContextType> resources, LightingResources<ContextType> lightingResources,
                       SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
     {
         this.resources = resources;
-        this.context = resources.context;
+        this.context = resources.getContext();
         this.sceneModel = sceneModel;
         this.sceneViewportModel = sceneViewportModel;
         this.sceneViewportModel.addSceneObjectType("IBRObject");
@@ -100,23 +100,7 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
 
     private void refreshDrawable()
     {
-        this.drawable = context.createDrawable(standardShader.getProgram());
-        this.drawable.addVertexBuffer("position", this.resources.positionBuffer);
-
-        if (this.resources.normalBuffer != null)
-        {
-            this.drawable.addVertexBuffer("normal", this.resources.normalBuffer);
-        }
-
-        if (this.resources.texCoordBuffer != null)
-        {
-            this.drawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
-        }
-
-        if (this.resources.tangentBuffer != null)
-        {
-            this.drawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
-        }
+        this.drawable = resources.createDrawable(standardShader.getProgram());
     }
 
     private StandardRenderingMode getExpectedRenderingMode()
@@ -142,7 +126,7 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
         }
     }
 
-    private NativeVectorBuffer generateViewWeights(Matrix4 targetView)
+    private ReadonlyNativeVectorBuffer generateViewWeights(Matrix4 targetView)
     {
         float[] viewWeights = //new PowerViewWeightGenerator(settings.getWeightExponent())
             new KNNViewWeightGenerator(4)
@@ -158,7 +142,7 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
                         @Override
                         public int size()
                         {
-                            return resources.viewSet.getCameraPoseCount();
+                            return resources.getViewSet().getCameraPoseCount();
                         }
                     },
                     targetView);
@@ -184,7 +168,7 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
         drawable.program().setUniform("projection", cameraViewport.getViewportProjection());
         drawable.program().setUniform("fullProjection", cameraViewport.getFullProjection());
 
-        drawable.draw(PrimitiveMode.TRIANGLES, framebuffer, cameraViewport.getX(), cameraViewport.getY(), cameraViewport.getWidth(), cameraViewport.getHeight());
+        drawable.draw(framebuffer, cameraViewport.getX(), cameraViewport.getY(), cameraViewport.getWidth(), cameraViewport.getHeight());
 
         context.getState().enableBackFaceCulling();
     }

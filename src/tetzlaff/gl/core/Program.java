@@ -23,7 +23,7 @@ import tetzlaff.gl.vecmath.*;
  *
  * @param <ContextType> The type of the GL context that the program is associated with.
  */
-public interface Program<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
+public interface Program<ContextType extends Context<ContextType>> extends Resource, ContextBound<ContextType>
 {
     /**
      * Checks whether a given preprocessor #define has been specified to be injected into the code.
@@ -129,6 +129,18 @@ public interface Program<ContextType extends Context<ContextType>> extends Resou
      * @return true if the uniform variable was successfully set;
      * false if the variable was not set because no variable with the specified name exists in any of this program's shaders.
      */
+    default boolean setUniform(String name, IntLike value)
+    {
+        return setUniform(name, value.getIntValue());
+    }
+
+    /**
+     * Sets a uniform variable by its shader name.
+     * @param name The name used to reference the variable within the shaders.
+     * @param value The value to set the uniform variable to.
+     * @return true if the uniform variable was successfully set;
+     * false if the variable was not set because no variable with the specified name exists in any of this program's shaders.
+     */
     boolean setUniform(String name, Matrix4 value);
 
     /**
@@ -213,6 +225,18 @@ public interface Program<ContextType extends Context<ContextType>> extends Resou
      * false if the variable was not set because no variable exists at the specified location in this shader program.
      */
     boolean setUniform(int location, int value);
+
+    /**
+     * Sets a uniform variable at a particular location in this shader program.
+     * @param location The location of the uniform variable to set.
+     * @param value The value to set the uniform variable to.
+     * @return true if the uniform variable was successfully set;
+     * false if the variable was not set because no variable exists at the specified location in this shader program.
+     */
+    default boolean setUniform(int location, IntLike value)
+    {
+        return setUniform(location, value.getIntValue());
+    }
 
     /**
      * Sets a uniform variable at a particular location in this shader program.

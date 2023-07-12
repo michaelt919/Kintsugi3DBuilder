@@ -676,15 +676,17 @@ public class EyedropperController implements Initializable {
         }
     }
 
-    private boolean isGoodLoadingModel(){//treat this function as a replacement for (loadingModel == null) b/c that statement doesn't work
-        //TODO: REMOVE JANKY WORKAROUND
-        try{
-            DoubleUnaryOperator luminanceEncoding = loadingModel.getLuminanceEncodingFunction();
-        }
-        catch(Exception e){
-            return false;
-        }
+    private boolean goodLoadingModel(){//treat this function as a replacement for (loadingModel == null) b/c that statement doesn't work
+//        //TODO: REMOVE JANKY WORKAROUND
+//        try{
+//            DoubleUnaryOperator luminanceEncoding = loadingModel.getLuminanceEncodingFunction();
+//        }
+//        catch(Exception e){
+//            return false;
+//        }
+//
+//        return true;
 
-        return true;
+        return loadingModel.hasValidHandler();
     }
 }

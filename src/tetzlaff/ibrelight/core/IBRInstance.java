@@ -14,10 +14,10 @@ package tetzlaff.ibrelight.core;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Framebuffer;
 import tetzlaff.gl.core.FramebufferSize;
+import tetzlaff.gl.geometry.ReadonlyVertexGeometry;
 import tetzlaff.gl.interactive.InteractiveRenderable;
-import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.models.*;
 
 /**
@@ -72,15 +72,16 @@ public interface IBRInstance<ContextType extends Context<ContextType>> extends I
 
     /**
      * Gets the view set for the currently loaded object.
+     *
      * @return The view set.
      */
-    ViewSet getActiveViewSet();
+    ReadonlyViewSet getActiveViewSet();
 
     /**
      * Gets the geometry mesh for the currently loaded object.
      * @return The geometry mesh.
      */
-    VertexGeometry getActiveGeometry();
+    ReadonlyVertexGeometry getActiveGeometry();
 
     /**
      * Gets the scene model (object, camera, and lights)
@@ -107,7 +108,7 @@ public interface IBRInstance<ContextType extends Context<ContextType>> extends I
      * The resources are automatically destroyed when this implementation closes.
      * @return The IBR resources.
      */
-    IBRResources<ContextType> getIBRResources();
+    IBRResourcesImageSpace<ContextType> getIBRResources();
 
     /**
      * Gets the scene resource manager (handles environment map, backplate, tonemapping, etc.)

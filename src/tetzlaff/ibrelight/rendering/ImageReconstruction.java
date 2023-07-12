@@ -14,11 +14,8 @@ package tetzlaff.ibrelight.rendering;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.IntToDoubleFunction;
-import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
 
 import tetzlaff.gl.builders.ProgramBuilder;
@@ -26,9 +23,8 @@ import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.DoubleVector2;
 import tetzlaff.gl.vecmath.DoubleVector3;
-import tetzlaff.gl.vecmath.Vector2;
-import tetzlaff.ibrelight.core.ViewSet;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.core.ReadonlyViewSet;
+import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 
 public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -40,7 +36,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
 
     private final FramebufferObject<ContextType> framebuffer;
 
-    public ImageReconstruction(IBRResources<ContextType> resources, ProgramBuilder<ContextType> programBuilder,
+    public ImageReconstruction(ReadonlyIBRResources<ContextType> resources, ProgramBuilder<ContextType> programBuilder,
                                FramebufferObjectBuilder<ContextType> framebufferObjectBuilder, Consumer<Program<ContextType>> programSetup)
         throws FileNotFoundException
     {
@@ -49,7 +45,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         programSetup.accept(program);
         this.drawable = resources.createDrawable(program);
 
-        this.groundTruthProgram = resources.getIBRShaderProgramBuilder()
+        this.groundTruthProgram = resources.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/colorappearance/tonemap.frag"))
             .createProgram();
@@ -67,7 +63,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
      * @param groundTruthAction
      * @return x-component stores rmse, y-component stores pixel count after masking
      */
-    public DoubleVector2 executeOnce(ViewSet viewSet, int viewIndex,
+    public DoubleVector2 executeOnce(ReadonlyViewSet viewSet, int viewIndex,
         Consumer<Framebuffer<ContextType>> reconstructionAction,
         Consumer<Framebuffer<ContextType>> groundTruthAction)
         throws IOException
@@ -95,7 +91,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         framebuffer.clearDepthBuffer();
 
         // Draw the view into the framebuffer.
-        drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+        drawable.draw(framebuffer);
 
         // Give the callback an opportunity to do something with the view.
         if (reconstructionAction != null)
@@ -110,7 +106,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         // Tonemap ground truth image
         try (Texture2D<ContextType> groundTruthTex =
             groundTruthProgram.getContext().getTextureFactory()
-                .build2DColorTextureFromFile(IBRResources.findImageFile(viewSet.getImageFile(viewIndex)), true)
+                .build2DColorTextureFromFile(viewSet.findFullResImageFile(viewIndex), true)
                 .setLinearFilteringEnabled(true)
                 .setMipmapsEnabled(true)
                 .createTexture())
@@ -190,7 +186,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
      * @param groundTruthAction
      * @param rmseAction First parameter: view index; second parameter: x-component stores rmse, y-component stores pixel count after masking
      */
-    public void execute(ViewSet viewSet,
+    public void execute(ReadonlyViewSet viewSet,
         BiConsumer<Integer, Framebuffer<ContextType>> reconstructionAction,
         BiConsumer<Integer, Framebuffer<ContextType>> groundTruthAction,
         BiConsumer<Integer, DoubleVector2> rmseAction)

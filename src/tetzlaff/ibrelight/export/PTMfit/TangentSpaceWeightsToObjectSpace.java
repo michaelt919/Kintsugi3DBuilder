@@ -17,36 +17,35 @@ import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.ibrelight.core.TextureFitSettings;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.util.ShaderHoleFill;
 
-import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class TangentSpaceWeightsToObjectSpace <ContextType extends Context<ContextType>>
 {
-    private final IBRResources<ContextType> resources;
+    private final IBRResourcesImageSpace<ContextType> resources;
     private final TextureFitSettings settings;
 
-    public TangentSpaceWeightsToObjectSpace(IBRResources<ContextType> resources, TextureFitSettings settings)
+    public TangentSpaceWeightsToObjectSpace(IBRResourcesImageSpace<ContextType> resources, TextureFitSettings settings)
     {
         this.resources = resources;
         this.settings = settings;
     }
 
-    public void run(PTMsolution solutions, ProgramBuilder<ContextType> programBuilder, int weightStart, int weightCount)
+    public void run(PTMsolution solutions, ProgramBuilder<ContextType> programBuilder, int weightStart, int weightCount, File outputDirectory)
     {
         try (Program<ContextType> program = programBuilder.createProgram();
-             FramebufferObject<ContextType> fbo = resources.context.buildFramebufferObject(settings.width, settings.height)
+             FramebufferObject<ContextType> fbo = resources.getContext().buildFramebufferObject(settings.width, settings.height)
                  .addColorAttachments(ColorFormat.RGBA8, weightCount)
                  .createFramebufferObject();
-             FramebufferObject<ContextType> fbo2 = resources.context.buildFramebufferObject(settings.width, settings.height)
+             FramebufferObject<ContextType> fbo2 = resources.getContext().buildFramebufferObject(settings.width, settings.height)
                      .addColorAttachments(ColorFormat.RGBA8, weightCount)
                      .createFramebufferObject();
              Texture3D<ContextType> weightMaps =
-                     resources.context.getTextureFactory().build2DColorTextureArray(settings.width, settings.height, 10)
+                     resources.getContext().getTextureFactory().build2DColorTextureArray(settings.width, settings.height, 10)
                      .setInternalFormat(ColorFormat.RGBA32F)
                      .setLinearFilteringEnabled(true)
                      .setMipmapsEnabled(false)
@@ -87,9 +86,9 @@ public class TangentSpaceWeightsToObjectSpace <ContextType extends Context<Conte
             {
                 fbo.clearColorBuffer(i, 0, 0, 0, 0);
             }
-            drawable.draw(PrimitiveMode.TRIANGLES, fbo);
-            FramebufferObject<ContextType> finalFBO = new ShaderHoleFill<>(resources.context).execute(fbo, fbo2);
-            saveToFile(finalFBO, weightStart, weightCount);
+            drawable.draw(fbo);
+            FramebufferObject<ContextType> finalFBO = new ShaderHoleFill<>(resources.getContext()).execute(fbo, fbo2);
+            saveToFile(finalFBO, weightStart, weightCount, outputDirectory);
         }
 
         catch (FileNotFoundException e)
@@ -98,7 +97,7 @@ public class TangentSpaceWeightsToObjectSpace <ContextType extends Context<Conte
         }
 
     }
-    private void saveToFile(Framebuffer<ContextType> framebuffer, int weightStart, int weightCount)
+    private void saveToFile(Framebuffer<ContextType> framebuffer, int weightStart, int weightCount, File outputDirectory)
     {
         try
         {
@@ -106,7 +105,7 @@ public class TangentSpaceWeightsToObjectSpace <ContextType extends Context<Conte
             {
                 String filename = String.format("objWeights%02d.png", weightStart + i);
                 framebuffer.saveColorBufferToFile(i, "PNG",
-                        new File(settings.outputDirectory, filename));
+                        new File(outputDirectory, filename));
             }
         }
         catch (IOException e)

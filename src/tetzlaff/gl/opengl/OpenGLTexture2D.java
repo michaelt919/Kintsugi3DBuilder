@@ -27,7 +27,7 @@ import tetzlaff.gl.builders.base.DepthTextureBuilderBase;
 import tetzlaff.gl.builders.base.StencilTextureBuilderBase;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.core.ColorFormat.DataType;
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import tetzlaff.gl.types.AbstractDataType;
 import tetzlaff.util.RadianceImageLoader;
 import tetzlaff.util.RadianceImageLoader.Image;
@@ -517,7 +517,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
             boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
     {
         // Create an empty texture to be used as a render target for a framebuffer.
-        super(context, openGLTextureTarget, colorFormat, useMipmaps);
+        super(context, openGLTextureTarget, colorFormat, new Parameters(format, useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy));
 
         this.width = width;
         this.height = height;
@@ -530,7 +530,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
             boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
     {
         // Create an empty texture to be used as a render target for a framebuffer.
-        super(context, openGLTextureTarget, compressionFormat, useMipmaps);
+        super(context, openGLTextureTarget, compressionFormat, new Parameters(format, useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy));
 
         this.width = width;
         this.height = height;
@@ -545,7 +545,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context,
             openGLTextureTarget == GL_TEXTURE_2D && multisamples > 1 ? GL_TEXTURE_2D_MULTISAMPLE : openGLTextureTarget,
-            colorFormat, useMipmaps);
+            colorFormat, new Parameters(format, useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy, multisamples, fixedMultisampleLocations));
 
         this.width = width;
         this.height = height;
@@ -560,7 +560,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context,
             openGLTextureTarget == GL_TEXTURE_2D && multisamples > 1 ? GL_TEXTURE_2D_MULTISAMPLE : openGLTextureTarget,
-            compressionFormat, useMipmaps);
+            compressionFormat, new Parameters(format, useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy, multisamples, fixedMultisampleLocations));
 
         this.width = width;
         this.height = height;
@@ -576,7 +576,8 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context,
             openGLTextureTarget == GL_TEXTURE_2D && multisamples > 1 ? GL_TEXTURE_2D_MULTISAMPLE : openGLTextureTarget,
-            textureType, useMipmaps);
+            textureType, precision,
+            new Parameters(format, useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy, multisamples, fixedMultisampleLocations));
 
         this.width = width;
         this.height = height;
@@ -636,7 +637,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
     {
         super.initFilteringAndMipmaps(useLinearFiltering, maxMipmapLevel, generateMipmaps);
 
-        if (useMipmaps)
+        if (parameters.useMipmaps)
         {
             // Calculate the number of mipmap levels
             this.mipmapLevelCount = 0;
@@ -699,8 +700,15 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
     }
 
     @Override
-    public void load(NativeVectorBuffer data)
+    public void load(ReadonlyNativeVectorBuffer data)
     {
+        if (data.getCount() != width * height)
+        {
+            throw new IllegalArgumentException(
+                String.format("Native vector buffer does not have the required number of elements for this texture.  Expected: %d (%dx%d)  Actual: %d",
+                    width * height, width, height, data.getCount()));
+        }
+
         this.bind();
 
         int format = OpenGLContext.getPixelDataFormatFromDimensions(
@@ -716,9 +724,35 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         glTexSubImage2D(openGLTextureTarget, 0, 0, 0, width, height, format, type, data.getBuffer());
         OpenGLContext.errorCheck();
 
-        if (this.useMipmaps)
+        if (parameters.useMipmaps)
         {
             this.staleMipmaps = true;
+        }
+    }
+
+    @Override
+    public Texture2D<OpenGLContext> createTextureWithMatchingFormat(int newWidth, int newHeight)
+    {
+        if (this.getTextureType() == TextureType.COLOR)
+        {
+            if (this.isInternalFormatCompressed())
+            {
+                return new OpenGLTexture2D(this.context, this.openGLTextureTarget, parameters.multisamples,
+                    getInternalCompressedColorFormat(), newWidth, newHeight, parameters.format, parameters.fixedMultisampleLocations,
+                    parameters.useLinearFiltering, parameters.useMipmaps, parameters.maxMipmapLevel, parameters.maxAnisotropy);
+            }
+            else
+            {
+                return new OpenGLTexture2D(this.context, this.openGLTextureTarget, parameters.multisamples,
+                    getInternalUncompressedColorFormat(), newWidth, newHeight, parameters.format, parameters.fixedMultisampleLocations,
+                    parameters.useLinearFiltering, parameters.useMipmaps, parameters.maxMipmapLevel, parameters.maxAnisotropy);
+            }
+        }
+        else
+        {
+            return new OpenGLTexture2D(this.context, this.openGLTextureTarget, parameters.multisamples,
+                getTextureType(), precision, newWidth, newHeight, parameters.format, parameters.fixedMultisampleLocations,
+                parameters.useLinearFiltering, parameters.useMipmaps, parameters.maxMipmapLevel, parameters.maxAnisotropy);
         }
     }
 }

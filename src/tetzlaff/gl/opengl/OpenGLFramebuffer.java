@@ -11,18 +11,14 @@
 
 package tetzlaff.gl.opengl;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
-import javax.imageio.ImageIO;
 
 import org.lwjgl.*;
-import tetzlaff.gl.core.Framebuffer;
-import tetzlaff.gl.core.FramebufferSize;
+import tetzlaff.gl.core.*;
+import tetzlaff.gl.vecmath.IntVector2;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
@@ -43,16 +39,35 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         return this.context;
     }
 
-    abstract class ContentsBase
+    abstract class ContentsBase implements FramebufferDrawContents<OpenGLContext>, FramebufferReadContents<OpenGLContext>
     {
+        private final OpenGLContext context;
+
+        protected ContentsBase()
+        {
+            this.context = OpenGLFramebuffer.this.context;
+        }
+
         abstract int getId();
 
-        void bindForDraw(int x, int y, int width, int height)
+        @Override
+        public OpenGLContext getContext()
+        {
+            return context;
+        }
+
+        @Override
+        public FramebufferSize getSize()
+        {
+            return OpenGLFramebuffer.this.getSize();
+        }
+
+        private void bindForDrawCommon(int x, int y, int width, int height)
         {
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
             OpenGLContext.errorCheck();
 
-            if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
                 OpenGLContext.throwInvalidFramebufferOperationException();
             }
@@ -62,15 +77,50 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
             OpenGLContext.errorCheck();
         }
 
-        void bindForDraw()
+        @Override
+        public void bindViewportForDraw(int x, int y, int width, int height)
         {
-            FramebufferSize size = getSize();
-            this.bindForDraw(0, 0, size.width, size.height);
+            bindForDrawCommon(x, y, width, height);
+            useAllColorDestinationsForDraw();
+        }
+
+        @Override
+        public void bindForDraw()
+        {
+            FramebufferSize size = OpenGLFramebuffer.this.getSize();
+            this.bindViewportForDraw(0, 0, size.width, size.height);
+        }
+
+        /**
+         * Select just a single color attachment for draw - used primarily for blit operations
+         * @param index
+         */
+        abstract void selectColorDestinationForDraw(int index);
+
+        /**
+         * Use all color attachments for draw - as would typically be the case when doing normal drawing.
+         */
+        abstract void useAllColorDestinationsForDraw();
+
+        @Override
+        public void bindSingleAttachmentForDraw(int attachmentIndex)
+        {
+            FramebufferSize size = OpenGLFramebuffer.this.getSize();
+            this.bindForDrawCommon(0, 0, size.width, size.height);
+
+            selectColorDestinationForDraw(attachmentIndex);
+        }
+
+        @Override
+        public void bindNonColorAttachmentsForDraw()
+        {
+            FramebufferSize size = OpenGLFramebuffer.this.getSize();
+            this.bindForDrawCommon(0, 0, size.width, size.height);
         }
 
         abstract void selectColorSourceForRead(int index);
 
-        void bindForRead(int attachmentIndex)
+        private void bindForReadCommon()
         {
             glBindFramebuffer(GL_READ_FRAMEBUFFER, this.getId());
             OpenGLContext.errorCheck();
@@ -80,260 +130,147 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
                 OpenGLContext.throwInvalidFramebufferOperationException();
             }
             OpenGLContext.errorCheck();
+        }
 
+        @Override
+        public void bindForRead(int attachmentIndex)
+        {
+            bindForReadCommon();
             selectColorSourceForRead(attachmentIndex);
         }
-    }
 
-    @Override
-    public abstract ContentsBase getContentsForRead();
-
-    @Override
-    public abstract ContentsBase getContentsForWrite();
-
-    @Override
-    public void readColorBufferARGB(int attachmentIndex, ByteBuffer destination, int x, int y, int width, int height)
-    {
-        if (destination.remaining() < width * height * 4)
+        @Override
+        public void bindNonColorAttachmentForRead()
         {
-            throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
+            bindForReadCommon();
         }
-
-        this.getContentsForRead().bindForRead(attachmentIndex);
-
-        glPixelStorei(GL_PACK_ALIGNMENT, 4);
-        OpenGLContext.errorCheck();
-
-        // use BGRA because due to byte order differences it ends up being ARGB
-        glReadPixels(x, y, width, height, GL_BGRA, GL_UNSIGNED_BYTE, destination);
-        OpenGLContext.errorCheck();
     }
 
     @Override
-    public void readFloatingPointColorBufferRGBA(int attachmentIndex, FloatBuffer destination, int x, int y, int width, int height)
+    public FramebufferReadContents<OpenGLContext> getReadContents()
     {
-        if (destination.remaining() < width * height * 4)
+        return getContents();
+    }
+
+    @Override
+    public FramebufferDrawContents<OpenGLContext> getDrawContents()
+    {
+        return getContents();
+    }
+
+    protected abstract ContentsBase getContents();
+
+    @Override
+    public ColorTextureReader getTextureReaderForColorAttachment(int attachmentIndex)
+    {
+        return new ColorTextureReaderBase()
         {
-            throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
-        }
-
-        this.getContentsForRead().bindForRead(attachmentIndex);
-
-        glPixelStorei(GL_PACK_ALIGNMENT, 4);
-        OpenGLContext.errorCheck();
-
-        glReadPixels(x, y, width, height, GL_RGBA, GL_FLOAT, destination);
-        OpenGLContext.errorCheck();
-    }
-
-    @Override
-    public void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination, int x, int y, int width, int height)
-    {
-        if (destination.remaining() < width * height * 4)
-        {
-            throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
-        }
-
-        this.getContentsForRead().bindForRead(attachmentIndex);
-
-        glPixelStorei(GL_PACK_ALIGNMENT, 4);
-        OpenGLContext.errorCheck();
-
-        glReadPixels(x, y, width, height, GL_RGBA_INTEGER, GL_INT, destination);
-        OpenGLContext.errorCheck();
-    }
-
-    @Override
-    public void readDepthBuffer(ShortBuffer destination, int x, int y, int width, int height)
-    {
-        if (destination.remaining() < width * height)
-        {
-            throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
-        }
-
-        this.getContentsForRead().bindForRead(0);
-
-        glPixelStorei(GL_PACK_ALIGNMENT, 2);
-        OpenGLContext.errorCheck();
-
-        glReadPixels(x, y, width, height, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, destination);
-        OpenGLContext.errorCheck();
-    }
-
-    @Override
-    public void readColorBufferARGB(int attachmentIndex, ByteBuffer destination)
-    {
-        FramebufferSize size = this.getSize();
-        this.readColorBufferARGB(attachmentIndex, destination, 0, 0, size.width, size.height);
-    }
-
-    @Override
-    public void readFloatingPointColorBufferRGBA(int attachmentIndex, FloatBuffer destination)
-    {
-        FramebufferSize size = this.getSize();
-        this.readFloatingPointColorBufferRGBA(attachmentIndex, destination, 0, 0, size.width, size.height);
-    }
-
-    @Override
-    public void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination)
-    {
-        FramebufferSize size = this.getSize();
-        this.readIntegerColorBufferRGBA(attachmentIndex, destination, 0, 0, size.width, size.height);
-    }
-
-    @Override
-    public void readDepthBuffer(ShortBuffer destination)
-    {
-        FramebufferSize size = this.getSize();
-        this.readDepthBuffer(destination, 0, 0, size.width, size.height);
-    }
-
-    @Override
-    public int[] readColorBufferARGB(int attachmentIndex, int x, int y, int width, int height)
-    {
-        this.getContentsForRead().bindForRead(attachmentIndex);
-        ByteBuffer pixelBuffer = BufferUtils.createByteBuffer(width * height * 4);
-
-        glPixelStorei(GL_PACK_ALIGNMENT, 4);
-        OpenGLContext.errorCheck();
-
-        // use BGRA because due to byte order differences it ends up being ARGB
-        glReadPixels(x, y, width, height, GL_BGRA, GL_UNSIGNED_BYTE, pixelBuffer);
-        OpenGLContext.errorCheck();
-
-        int[] pixelArray = new int[width * height];
-        pixelBuffer.asIntBuffer().get(pixelArray);
-        return pixelArray;
-    }
-
-    @Override
-    public int[] readColorBufferARGB(int attachmentIndex)
-    {
-        FramebufferSize size = this.getSize();
-        return this.readColorBufferARGB(attachmentIndex, 0, 0, size.width, size.height);
-    }
-
-    @Override
-    public float[] readFloatingPointColorBufferRGBA(int attachmentIndex, int x, int y, int width, int height)
-    {
-        this.getContentsForRead().bindForRead(attachmentIndex);
-        FloatBuffer pixelBuffer = BufferUtils.createFloatBuffer(width * height * 4);
-
-        glPixelStorei(GL_PACK_ALIGNMENT, 4);
-        OpenGLContext.errorCheck();
-
-        glReadPixels(x, y, width, height, GL_RGBA, GL_FLOAT, pixelBuffer);
-        OpenGLContext.errorCheck();
-
-        float[] pixelArray = new float[width * height * 4];
-        pixelBuffer.get(pixelArray);
-        return pixelArray;
-    }
-
-    @Override
-    public float[] readFloatingPointColorBufferRGBA(int attachmentIndex)
-    {
-        FramebufferSize size = this.getSize();
-        return this.readFloatingPointColorBufferRGBA(attachmentIndex, 0, 0, size.width, size.height);
-    }
-
-    @Override
-    public int[] readIntegerColorBufferRGBA(int attachmentIndex, int x, int y, int width, int height)
-    {
-        this.getContentsForRead().bindForRead(attachmentIndex);
-        IntBuffer pixelBuffer = BufferUtils.createIntBuffer(width * height * 4);
-
-        glPixelStorei(GL_PACK_ALIGNMENT, 4);
-        OpenGLContext.errorCheck();
-
-        glReadPixels(x, y, width, height, GL_RGBA_INTEGER, GL_INT, pixelBuffer);
-        OpenGLContext.errorCheck();
-
-        int[] pixelArray = new int[width * height * 4];
-        pixelBuffer.get(pixelArray);
-        return pixelArray;
-    }
-
-    @Override
-    public int[] readIntegerColorBufferRGBA(int attachmentIndex)
-    {
-        FramebufferSize size = this.getSize();
-        return this.readIntegerColorBufferRGBA(attachmentIndex, 0, 0, size.width, size.height);
-    }
-
-    @Override
-    public void saveColorBufferToFile(int attachmentIndex, String fileFormat, File file) throws IOException
-    {
-        int[] pixels = this.readColorBufferARGB(attachmentIndex);
-        
-        // Flip the array vertically
-        FramebufferSize size = this.getSize();
-        for (int y = 0; y < size.height / 2; y++)
-        {
-            int limit = (y + 1) * size.width;
-            for (int i1 = y * size.width, i2 = (size.height - y - 1) * size.width; i1 < limit; i1++, i2++)
+            @Override
+            public int getWidth()
             {
-                int tmp = pixels[i1];
-                pixels[i1] = pixels[i2];
-                pixels[i2] = tmp;
+                return getSize().width;
             }
-        }
-        
-        BufferedImage outImg = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_ARGB);
-        outImg.setRGB(0, 0, size.width, size.height, pixels, 0, size.width);
-        ImageIO.write(outImg, fileFormat, file);
-    }
 
-    @Override
-    public void saveColorBufferToFile(int attachmentIndex, int x, int y, int width, int height, String fileFormat, File file) throws IOException
-    {
-        int[] pixels = this.readColorBufferARGB(attachmentIndex, x, y, width, height);
-        
-        // Flip the array vertically
-        for (int row = 0; row < height / 2; row++)
-        {
-            int limit = (row + 1) * width;
-            for (int i1 = row * width, i2 = (height - row - 1) * width; i1 < limit; i1++, i2++)
+            @Override
+            public int getHeight()
             {
-                int tmp = pixels[i1];
-                pixels[i1] = pixels[i2];
-                pixels[i2] = tmp;
+                return getSize().height;
             }
-        }
-        
-        BufferedImage outImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        outImg.setRGB(0, 0, width, height, pixels, 0, width);
-        ImageIO.write(outImg, fileFormat, file);
+
+            @Override
+            public void readARGB(ByteBuffer destination, int x, int y, int width, int height)
+            {
+                if (destination.remaining() < width * height * 4)
+                {
+                    throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
+                }
+
+                getReadContents().bindForRead(attachmentIndex);
+
+                glPixelStorei(GL_PACK_ALIGNMENT, 4);
+                OpenGLContext.errorCheck();
+
+                // use BGRA because due to byte order differences it ends up being ARGB
+                glReadPixels(x, y, width, height, GL_BGRA, GL_UNSIGNED_BYTE, destination);
+                OpenGLContext.errorCheck();
+            }
+
+            @Override
+            public void readFloatingPointRGBA(FloatBuffer destination, int x, int y, int width, int height)
+            {
+                if (destination.remaining() < width * height * 4)
+                {
+                    throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
+                }
+
+                getReadContents().bindForRead(attachmentIndex);
+
+                glPixelStorei(GL_PACK_ALIGNMENT, 4);
+                OpenGLContext.errorCheck();
+
+                glReadPixels(x, y, width, height, GL_RGBA, GL_FLOAT, destination);
+                OpenGLContext.errorCheck();
+            }
+
+            @Override
+            public void readIntegerRGBA(IntBuffer destination, int x, int y, int width, int height)
+            {
+                if (destination.remaining() < width * height * 4)
+                {
+                    throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
+                }
+
+                getReadContents().bindForRead(attachmentIndex);
+
+                glPixelStorei(GL_PACK_ALIGNMENT, 4);
+                OpenGLContext.errorCheck();
+
+                glReadPixels(x, y, width, height, GL_RGBA_INTEGER, GL_INT, destination);
+                OpenGLContext.errorCheck();
+            }
+        };
     }
 
     @Override
-    public short[] readDepthBuffer(int x, int y, int width, int height)
+    public DepthTextureReader getTextureReaderForDepthAttachment()
     {
-        this.getContentsForRead().bindForRead(0);
-        ByteBuffer pixelBuffer = BufferUtils.createByteBuffer(width * height * 2);
+        return new DepthTextureReaderBase()
+        {
+            @Override
+            public int getWidth()
+            {
+                return getSize().width;
+            }
 
-        glPixelStorei(GL_PACK_ALIGNMENT, 2);
-        OpenGLContext.errorCheck();
+            @Override
+            public int getHeight()
+            {
+                return getSize().height;
+            }
 
-        glReadPixels(x, y, width, height, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, pixelBuffer);
-        OpenGLContext.errorCheck();
+            @Override
+            public void read(ShortBuffer destination, int x, int y, int width, int height)
+            {
+                if (destination.remaining() < width * height)
+                {
+                    throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
+                }
 
-        short[] pixelArray = new short[width * height];
-        pixelBuffer.asShortBuffer().get(pixelArray);
-        return pixelArray;
-    }
+                getReadContents().bindForRead(0);
 
-    @Override
-    public short[] readDepthBuffer()
-    {
-        FramebufferSize size = this.getSize();
-        return this.readDepthBuffer(0, 0, size.width, size.height);
+                glPixelStorei(GL_PACK_ALIGNMENT, 2);
+                OpenGLContext.errorCheck();
+
+                glReadPixels(x, y, width, height, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, destination);
+                OpenGLContext.errorCheck();
+            }
+        };
     }
 
     @Override
     public void clearColorBuffer(int attachmentIndex, float r, float g, float b, float a)
     {
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getContentsForWrite().getId());
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, getContents().getId());
         OpenGLContext.errorCheck();
 
         if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -355,7 +292,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     @Override
     public void clearIntegerColorBuffer(int attachmentIndex, int r, int g, int b, int a)
     {
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getContentsForWrite().getId());
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, getContents().getId());
         OpenGLContext.errorCheck();
 
         if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -377,7 +314,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     @Override
     public void clearDepthBuffer(float depth)
     {
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getContentsForWrite().getId());
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, getContents().getId());
         OpenGLContext.errorCheck();
 
         if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -394,15 +331,9 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     }
 
     @Override
-    public void clearDepthBuffer()
-    {
-        this.clearDepthBuffer(1.0f);
-    }
-
-    @Override
     public void clearStencilBuffer(int stencilIndex)
     {
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getContentsForWrite().getId());
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, getContents().getId());
         OpenGLContext.errorCheck();
 
         if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -416,5 +347,122 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         buffer.flip();
         glClearBufferiv(GL_STENCIL, 0, buffer);
         OpenGLContext.errorCheck();
+    }
+
+    @Override
+    public void clearColorBuffer(int attachmentIndex, float r, float g, float b, float a, int x, int y, int width, int height)
+    {
+        // Use scissor test to only clear the rectangle specified.
+        glEnable(GL_SCISSOR_TEST);
+        OpenGLContext.errorCheck();
+
+        glScissor(x, y, width, height);
+        OpenGLContext.errorCheck();
+
+        clearColorBuffer(attachmentIndex, r, g, b, a);
+
+        glDisable(GL_SCISSOR_TEST);
+    }
+
+    @Override
+    public void clearIntegerColorBuffer(int attachmentIndex, int r, int g, int b, int a, int x, int y, int width, int height)
+    {
+        // Use scissor test to only clear the rectangle specified.
+        glEnable(GL_SCISSOR_TEST);
+        OpenGLContext.errorCheck();
+
+        glScissor(x, y, width, height);
+        OpenGLContext.errorCheck();
+
+        clearIntegerColorBuffer(attachmentIndex, r, g, b, a);
+
+        glDisable(GL_SCISSOR_TEST);
+    }
+
+    @Override
+    public void clearDepthBuffer(float depth, int x, int y, int width, int height)
+    {
+        // Use scissor test to only clear the rectangle specified.
+        glEnable(GL_SCISSOR_TEST);
+        OpenGLContext.errorCheck();
+
+        glScissor(x, y, width, height);
+        OpenGLContext.errorCheck();
+
+        clearDepthBuffer(depth);
+
+        glDisable(GL_SCISSOR_TEST);
+    }
+
+    @Override
+    public void clearStencilBuffer(int stencilIndex, int x, int y, int width, int height)
+    {
+        // Use scissor test to only clear the rectangle specified.
+        glEnable(GL_SCISSOR_TEST);
+        OpenGLContext.errorCheck();
+
+        glScissor(x, y, width, height);
+        OpenGLContext.errorCheck();
+
+        clearStencilBuffer(stencilIndex);
+
+        glDisable(GL_SCISSOR_TEST);
+    }
+
+    @Override
+    public void blitColorAttachmentFromFramebufferViewport(
+        int drawAttachmentIndex, int destX, int destY, int destWidth, int destHeight,
+        FramebufferViewport<OpenGLContext> readFramebuffer, int readAttachmentIndex, boolean linearFiltering)
+    {
+        this.getDrawContents().bindSingleAttachmentForDraw(drawAttachmentIndex);
+        readFramebuffer.getReadContents().bindForRead(readAttachmentIndex);
+
+        IntVector2 srcOffset = readFramebuffer.getOffset();
+        FramebufferSize srcSize = readFramebuffer.getSize();
+        glBlitFramebuffer(srcOffset.x, srcOffset.y, srcOffset.x + srcSize.width, srcOffset.y + srcSize.height,
+            destX, destY, destX + destWidth, destY + destHeight,
+            GL_COLOR_BUFFER_BIT, linearFiltering ? GL_LINEAR : GL_NEAREST);
+    }
+
+    @Override
+    public void blitDepthAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
+        FramebufferViewport<OpenGLContext> readFramebuffer)
+    {
+        this.getDrawContents().bindNonColorAttachmentsForDraw();
+        readFramebuffer.getReadContents().bindNonColorAttachmentForRead();
+
+        IntVector2 srcOffset = readFramebuffer.getOffset();
+        FramebufferSize srcSize = readFramebuffer.getSize();
+        glBlitFramebuffer(srcOffset.x, srcOffset.y, srcOffset.x + srcSize.width, srcOffset.y + srcSize.height,
+            destX, destY, destX + destWidth, destY + destHeight,
+            GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+    }
+
+    @Override
+    public void blitStencilAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
+        FramebufferViewport<OpenGLContext> readFramebuffer)
+    {
+        this.getDrawContents().bindNonColorAttachmentsForDraw();
+        readFramebuffer.getReadContents().bindNonColorAttachmentForRead();
+
+        IntVector2 srcOffset = readFramebuffer.getOffset();
+        FramebufferSize srcSize = readFramebuffer.getSize();
+        glBlitFramebuffer(srcOffset.x, srcOffset.y, srcOffset.x + srcSize.width, srcOffset.y + srcSize.height,
+            destX, destY, destX + destWidth, destY + destHeight,
+            GL_STENCIL_BUFFER_BIT, GL_NEAREST);
+    }
+
+    @Override
+    public void blitDepthStencilAttachmentFromFramebufferViewport(int destX, int destY, int destWidth, int destHeight,
+        FramebufferViewport<OpenGLContext> readFramebuffer)
+    {
+        this.getDrawContents().bindNonColorAttachmentsForDraw();
+        readFramebuffer.getReadContents().bindNonColorAttachmentForRead();
+
+        IntVector2 srcOffset = readFramebuffer.getOffset();
+        FramebufferSize srcSize = readFramebuffer.getSize();
+        glBlitFramebuffer(srcOffset.x, srcOffset.y, srcOffset.x + srcSize.width, srcOffset.y + srcSize.height,
+            destX, destY, destX + destWidth, destY + destHeight,
+            GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST);
     }
 }

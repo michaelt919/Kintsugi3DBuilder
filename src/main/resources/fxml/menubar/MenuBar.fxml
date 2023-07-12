@@ -22,7 +22,7 @@
       <Menu mnemonicParsing="false" text="File">
          <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="Create project">
             <accelerator>
-               <KeyCodeCombination alt="UP" code="W" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+               <KeyCodeCombination alt="UP" code="N" control="ANY" meta="UP" shift="UP" shortcut="UP" />
             </accelerator></MenuItem>
          <MenuItem mnemonicParsing="false" onAction="#file_openProject" text="Open project">
             <accelerator>
@@ -72,9 +72,6 @@
          <CheckMenuItem fx:id="visibleSavedCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show saved camera poses" visible="false" />
       </Menu>
       <Menu mnemonicParsing="false" text="Shading">
-         <fx:define>
-            <ToggleGroup fx:id="renderGroup" />
-         </fx:define>
          <RadioMenuItem mnemonicParsing="false" text="None" userData="None" visible="false">
              <userData>
                  <StandardRenderingMode fx:value="NONE" />

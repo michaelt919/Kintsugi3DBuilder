@@ -22,12 +22,8 @@ uniform sampler2D prevNormalEstimate;
 
 void main()
 {
-    vec3 triangleNormal = normalize(fNormal);
-    vec3 tangent = normalize(fTangent - dot(triangleNormal, fTangent) * triangleNormal);
-    vec3 bitangent = normalize(fBitangent
-        - dot(triangleNormal, fBitangent) * triangleNormal
-        - dot(tangent, fBitangent) * tangent);
-    mat3 tangentToObject = mat3(tangent, bitangent, triangleNormal);
+    mat3 tangentToObject = constructTBNExact();
+    vec3 triangleNormal = tangentToObject[2];
 
     vec2 origNormalXY = texture(origNormalEstimate, fTexCoord).xy * 2 - vec2(1.0);
     vec3 origNormalTS = vec3(origNormalXY, sqrt(1 - dot(origNormalXY, origNormalXY)));

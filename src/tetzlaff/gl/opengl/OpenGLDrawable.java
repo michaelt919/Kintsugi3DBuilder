@@ -84,39 +84,25 @@ class OpenGLDrawable extends DrawableBase<OpenGLContext> implements Drawable<Ope
     @Override
     public void draw(PrimitiveMode primitiveMode, Framebuffer<OpenGLContext> framebuffer)
     {
-        if (framebuffer.getContentsForWrite() instanceof OpenGLFramebuffer.ContentsBase)
+        framebuffer.getDrawContents().bindForDraw();
+        program.use();
+        for (VertexAttributeSetting s : settings.values())
         {
-            ((OpenGLFramebuffer.ContentsBase)framebuffer.getContentsForWrite()).bindForDraw();
-            program.use();
-            for (VertexAttributeSetting s : settings.values())
-            {
-                s.set();
-            }
-            vao.draw(getOpenGLPrimitiveModeConst(primitiveMode));
+            s.set();
         }
-        else
-        {
-            throw new IllegalArgumentException("Contents of 'framebuffer' must be of type OpenGLFramebuffer.ContentsBase.");
-        }
+        vao.draw(getOpenGLPrimitiveModeConst(primitiveMode));
     }
 
     @Override
     public void draw(PrimitiveMode primitiveMode, Framebuffer<OpenGLContext> framebuffer, int x, int y, int width, int height)
     {
-        if (framebuffer.getContentsForWrite() instanceof OpenGLFramebuffer.ContentsBase)
+        framebuffer.getDrawContents().bindViewportForDraw(x, y, width, height);
+        program.use();
+        for (VertexAttributeSetting s : settings.values())
         {
-            ((OpenGLFramebuffer.ContentsBase)framebuffer.getContentsForWrite()).bindForDraw(x, y, width, height);
-            program.use();
-            for (VertexAttributeSetting s : settings.values())
-            {
-                s.set();
-            }
-            vao.draw(getOpenGLPrimitiveModeConst(primitiveMode));
+            s.set();
         }
-        else
-        {
-            throw new IllegalArgumentException("Contents of 'framebuffer' must be of type OpenGLFramebuffer.ContentsBase.");
-        }
+        vao.draw(getOpenGLPrimitiveModeConst(primitiveMode));
     }
 
     @Override

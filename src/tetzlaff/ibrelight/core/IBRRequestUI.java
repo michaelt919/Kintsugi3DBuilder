@@ -14,8 +14,6 @@ package tetzlaff.ibrelight.core;
 import tetzlaff.gl.core.Context;
 import tetzlaff.ibrelight.javafx.internal.SettingsModelImpl;
 
-import java.util.function.Consumer;
-
 public interface IBRRequestUI
 {
     <ContextType extends Context<ContextType>> void prompt(IBRRequestQueue<ContextType> requestQueue);

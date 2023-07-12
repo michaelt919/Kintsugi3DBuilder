@@ -21,6 +21,7 @@ import tetzlaff.util.AbstractImage;
 
 public interface LoadingHandler 
 {
+    boolean isInstanceLoaded();
     void loadFromVSETFile(String id, File vsetFile, ReadonlyLoadOptionsModel loadOptions);
     void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory,
         String primaryViewName, ReadonlyLoadOptionsModel loadOptions);

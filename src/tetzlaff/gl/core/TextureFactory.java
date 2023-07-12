@@ -17,7 +17,7 @@ import java.io.*;
 import java.util.function.Function;
 
 import tetzlaff.gl.builders.*;
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import tetzlaff.gl.types.AbstractDataType;
 
 public interface TextureFactory<ContextType extends Context<ContextType>>
@@ -247,7 +247,7 @@ public interface TextureFactory<ContextType extends Context<ContextType>>
      * @param data The buffer containing the texture data.
      * @return The builder object for the texture.
      */
-    ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> build1DColorTexture(NativeVectorBuffer data);
+    ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> build1DColorTexture(ReadonlyNativeVectorBuffer data);
 
 
     /**
@@ -257,7 +257,7 @@ public interface TextureFactory<ContextType extends Context<ContextType>>
      * @param data The buffer containing the texture data.
      * @return The builder object for the texture.
      */
-    ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> build2DColorTextureFromBuffer(int width, int height, NativeVectorBuffer data);
+    ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> build2DColorTextureFromBuffer(int width, int height, ReadonlyNativeVectorBuffer data);
 
     /**
      * Gets a builder object for a blank 2D color texture.

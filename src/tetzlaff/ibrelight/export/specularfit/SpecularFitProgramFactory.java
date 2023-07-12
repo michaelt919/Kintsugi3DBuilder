@@ -21,51 +21,58 @@ import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Program;
 import tetzlaff.gl.core.ShaderType;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
+import tetzlaff.models.ReadonlySettingsModel;
 
 public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
 {
-    private final IBRResources<ContextType> resources;
-    private final SpecularFitSettings settings;
+    private final ReadonlySettingsModel ibrSettings;
+    private final SpecularBasisSettings specularBasisSettings;
 
-    public SpecularFitProgramFactory(IBRResources<ContextType> resources, SpecularFitSettings settings)
+    public SpecularFitProgramFactory(ReadonlySettingsModel ibrSettings, SpecularBasisSettings specularBasisSettings)
     {
-        this.resources = resources;
-        this.settings = settings;
+        this.ibrSettings = ibrSettings;
+        this.specularBasisSettings = specularBasisSettings;
     }
 
-    public ProgramBuilder<ContextType> getShaderProgramBuilder(File vertexShader, File fragmentShader, boolean visibilityAndShadowTests)
+    public ProgramBuilder<ContextType> getShaderProgramBuilder(ReadonlyIBRResources<ContextType> resources, File vertexShader,
+        File fragmentShader, boolean visibilityAndShadowTests)
     {
+        ProgramBuilder<ContextType> builder = resources.getShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, vertexShader)
+            .addShader(ShaderType.FRAGMENT, fragmentShader);
+
+        // Disable occlusion / shadow culling if requested (may do nothing if already operating in texture space)
+        // getIBRShaderProgramBuilder() will enable by default if depth / shadow maps are available
+        if (!visibilityAndShadowTests || !ibrSettings.getBoolean("occlusionEnabled"))
+        {
+            builder.define("VISIBILITY_TEST_ENABLED", false);
+        }
+
+        if (!visibilityAndShadowTests || !ibrSettings.getBoolean("shadowsEnabled"))
+        {
+            builder.define("SHADOW_TEST_ENABLED", false);
+        }
+
         // Common definitions for all specular fitting related shaders.
-        return resources.getIBRShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, vertexShader)
-                .addShader(ShaderType.FRAGMENT, fragmentShader)
-                .define("VISIBILITY_TEST_ENABLED",
-                    visibilityAndShadowTests && resources.depthTextures != null && settings.additional.getBoolean("occlusionEnabled"))
-                .define("SHADOW_TEST_ENABLED",
-                    visibilityAndShadowTests && resources.shadowTextures != null && settings.additional.getBoolean("shadowsEnabled"))
+        return builder
                 .define("PHYSICALLY_BASED_MASKING_SHADOWING", 1)
-                .define("SMITH_MASKING_SHADOWING", settings.isSmithMaskingShadowingEnabled())
-                .define("BASIS_COUNT", settings.basisCount)
-                .define("MICROFACET_DISTRIBUTION_RESOLUTION", settings.microfacetDistributionResolution);
+                .define("SMITH_MASKING_SHADOWING", specularBasisSettings.isSmithMaskingShadowingEnabled())
+                .define("BASIS_COUNT", specularBasisSettings.getBasisCount())
+                .define("MICROFACET_DISTRIBUTION_RESOLUTION", specularBasisSettings.getMicrofacetDistributionResolution());
     }
 
-    public ProgramBuilder<ContextType> getShaderProgramBuilder(File vertexShader, File fragmentShader)
+    public ProgramBuilder<ContextType> getShaderProgramBuilder(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader)
     {
-        return getShaderProgramBuilder(vertexShader, fragmentShader, true);
+        return getShaderProgramBuilder(resources, vertexShader, fragmentShader, true);
     }
 
-    public void setupShaderProgram(Program<ContextType> program)
-    {
-        resources.setupShaderProgram(program);
-        program.setUniform("occlusionBias", settings.additional.getFloat("occlusionBias"));
-    }
-
-    public Program<ContextType> createProgram(File vertexShader, File fragmentShader, boolean visibilityAndShadowTests, Map<String, Object> additionalDefines)
+    public Program<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader,
+        boolean visibilityAndShadowTests, Map<String, Object> additionalDefines)
         throws FileNotFoundException
     {
         // Common definitions for all specular fitting related shaders.
-        ProgramBuilder<ContextType> programBuilder = getShaderProgramBuilder(vertexShader, fragmentShader, visibilityAndShadowTests);
+        ProgramBuilder<ContextType> programBuilder = getShaderProgramBuilder(resources, vertexShader, fragmentShader, visibilityAndShadowTests);
 
         // Add additional defines provided to the function.
         for (Entry<String, Object> definition : additionalDefines.entrySet())
@@ -77,18 +84,24 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
         Program<ContextType> program = programBuilder.createProgram();
 
         // Setup uniforms.
-        setupShaderProgram(program);
+        setupShaderProgram(resources, program);
 
         return program;
     }
 
-    public Program<ContextType> createProgram(File vertexShader, File fragmentShader, boolean visibilityAndShadowTests) throws FileNotFoundException
+    public Program<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader, boolean visibilityAndShadowTests) throws FileNotFoundException
     {
-        return createProgram(vertexShader, fragmentShader, visibilityAndShadowTests, Collections.emptyMap());
+        return createProgram(resources, vertexShader, fragmentShader, visibilityAndShadowTests, Collections.emptyMap());
     }
 
-    public Program<ContextType> createProgram(File vertexShader, File fragmentShader) throws FileNotFoundException
+    public Program<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader) throws FileNotFoundException
     {
-        return createProgram(vertexShader, fragmentShader, true);
+        return createProgram(resources, vertexShader, fragmentShader, true);
+    }
+
+    public void setupShaderProgram(ReadonlyIBRResources<ContextType> resources, Program<ContextType> program)
+    {
+        resources.setupShaderProgram(program);
+        program.setUniform("occlusionBias", ibrSettings.getFloat("occlusionBias"));
     }
 }

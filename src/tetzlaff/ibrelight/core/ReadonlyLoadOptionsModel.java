@@ -11,7 +11,12 @@
 
 package tetzlaff.ibrelight.core;//Created by alexk on 7/31/2017.
 
-public interface ReadonlyLoadOptionsModel 
+import tetzlaff.gl.builders.ColorTextureBuilder;
+import tetzlaff.gl.core.ColorFormat;
+import tetzlaff.gl.core.CompressionFormat;
+import tetzlaff.gl.material.TextureLoadOptions;
+
+public interface ReadonlyLoadOptionsModel
 {
     boolean areColorImagesRequested();
     boolean areMipmapsRequested();
@@ -20,4 +25,37 @@ public interface ReadonlyLoadOptionsModel
     boolean areDepthImagesRequested();
     int getDepthImageWidth();
     int getDepthImageHeight();
+    int getPreviewImageWidth();
+    int getPreviewImageHeight();
+
+    default TextureLoadOptions getTextureLoadOptions()
+    {
+        TextureLoadOptions options = new TextureLoadOptions();
+        options.setMipmapsRequested(areMipmapsRequested());
+        options.setCompressionRequested(isCompressionRequested());
+        return options;
+    }
+
+    default <BuilderType extends ColorTextureBuilder<?,?>> void configureColorTextureBuilder(BuilderType colorTextureBuilder)
+    {
+        if (this.isCompressionRequested())
+        {
+            if (this.isAlphaRequested())
+            {
+                colorTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP_ALPHA_4BPP);
+            }
+            else
+            {
+                colorTextureBuilder.setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP);
+            }
+        }
+        else
+        {
+            colorTextureBuilder.setInternalFormat(ColorFormat.RGBA8);
+        }
+
+        colorTextureBuilder.setMipmapsEnabled(this.areMipmapsRequested());
+        colorTextureBuilder.setLinearFilteringEnabled(true);
+        colorTextureBuilder.setMaxAnisotropy(16.0f);
+    }
 }

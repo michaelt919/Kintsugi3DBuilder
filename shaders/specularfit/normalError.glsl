@@ -12,17 +12,17 @@
 
 #line 14 4010
 
-float calculateError(vec3 triangleNormal, vec3 estimatedNormal)
+float calculateError(vec3 position, vec3 triangleNormal, vec3 estimatedNormal)
 {
     float error = 0.0;
 
     for (int k = 0; k < CAMERA_POSE_COUNT; k++)
     {
         vec4 imgColor = getLinearColor(k);
-        vec3 view = normalize(getViewVector(k));
+        vec3 view = normalize(getViewVector(k, position));
         float triangleNDotV = max(0.0, dot(triangleNormal, view));
 
-        vec3 lightDisplacement = getLightVector(k);
+        vec3 lightDisplacement = getLightVector(k, position);
         vec3 light = normalize(lightDisplacement);
         vec3 halfway = normalize(light + view);
         float nDotH = max(0.0, dot(estimatedNormal, halfway));

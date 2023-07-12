@@ -44,13 +44,7 @@ class OpenGLDefaultFramebuffer extends OpenGLFramebuffer implements DoubleFrameb
     }
 
     @Override
-    public ContentsImpl getContentsForRead()
-    {
-        return contentsImpl;
-    }
-
-    @Override
-    public ContentsImpl getContentsForWrite()
+    protected ContentsImpl getContents()
     {
         return contentsImpl;
     }
@@ -75,6 +69,27 @@ class OpenGLDefaultFramebuffer extends OpenGLFramebuffer implements DoubleFrameb
             {
                 throw new IllegalArgumentException("The default framebuffer does not have multiple color attachments.");
             }
+        }
+
+        @Override
+        void selectColorDestinationForDraw(int index)
+        {
+            if (index == 0)
+            {
+                glDrawBuffer(GL_FRONT);
+                OpenGLContext.errorCheck();
+            }
+            else
+            {
+                throw new IllegalArgumentException("The default framebuffer does not have multiple color attachments.");
+            }
+        }
+
+        @Override
+        void useAllColorDestinationsForDraw()
+        {
+            glDrawBuffer(GL_FRONT);
+            OpenGLContext.errorCheck();
         }
     }
 }

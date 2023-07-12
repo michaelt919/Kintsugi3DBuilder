@@ -12,7 +12,6 @@
 package tetzlaff.ibrelight.export.specularfit;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 
@@ -31,6 +30,7 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import tetzlaff.gl.core.Context;
 import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.io.ViewSetReaderFromVSET;
 
 public class SpecularFitRequestUI implements IBRRequestUI
 {
@@ -42,6 +42,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
     @FXML private TextField exportDirectoryField;
 
     @FXML private TextField basisCountTextField;
+    @FXML private CheckBox combineBasisCheckbox;
     @FXML private TextField mfdResolutionTextField;
     @FXML private TextField convergenceToleranceTextField;
     @FXML private TextField specularSmoothnessTextField;
@@ -55,6 +56,10 @@ public class SpecularFitRequestUI implements IBRRequestUI
 
     @FXML private CheckBox priorSolutionCheckBox;
     @FXML private TextField priorSolutionField;
+
+    @FXML private CheckBox exportGLTFCheckbox;
+    @FXML private CheckBox exportGLTFPackedCheckbox;
+    @FXML private CheckBox exportTextureLODsCheckbox;
 
     @FXML private Button runButton;
 
@@ -180,39 +185,63 @@ public class SpecularFitRequestUI implements IBRRequestUI
         {
             //stage.close();
 
-            SpecularFitSettings settings = new SpecularFitSettings(
+            SpecularFitRequestParams settings = new SpecularFitRequestParams(new TextureFitSettings(
                     Integer.parseInt(widthTextField.getText()),
                     Integer.parseInt(heightTextField.getText()),
-                    Integer.parseInt(basisCountTextField.getText()),
-                    Integer.parseInt(mfdResolutionTextField.getText()),
-                    new File(exportDirectoryField.getText()),
-                    modelAccess.getSettingsModel());
+                    modelAccess.getSettingsModel().getFloat("gamma")),
+                modelAccess.getSettingsModel(),
+                new File(exportDirectoryField.getText()));
+
+            int basisCount = Integer.parseInt(basisCountTextField.getText());
+            settings.getSpecularBasisSettings().setBasisCount(basisCount);
+            int microfacetDistributionResolution = Integer.parseInt(mfdResolutionTextField.getText());
+            settings.getSpecularBasisSettings().setMicrofacetDistributionResolution(microfacetDistributionResolution);
+
+            settings.getExportSettings().setCombineWeights(combineBasisCheckbox.isSelected());
 
             // Specular / general settings
-            settings.setConvergenceTolerance(Double.parseDouble(convergenceToleranceTextField.getText()));
-            settings.setSpecularSmoothness(Double.parseDouble(specularSmoothnessTextField.getText()));
-            settings.setMetallicity(Double.parseDouble(metallicityTextField.getText()));
+            double convergenceTolerance = Double.parseDouble(convergenceToleranceTextField.getText());
+            settings.setConvergenceTolerance(convergenceTolerance);
+            double specularSmoothness = Double.parseDouble(specularSmoothnessTextField.getText());
+            settings.getSpecularBasisSettings().setSpecularSmoothness(specularSmoothness);
+            double metallicity = Double.parseDouble(metallicityTextField.getText());
+            settings.getSpecularBasisSettings().setMetallicity(metallicity);
 
             // Normal estimation settings
-            settings.setNormalRefinementEnabled(normalRefinementCheckBox.isSelected());
-            settings.setMinNormalDamping(Double.parseDouble(minNormalDampingTextField.getText()));
-            settings.setNormalSmoothingIterations(Integer.parseInt(normalSmoothingIterationsTextField.getText()));
+            boolean normalRefinementEnabled = normalRefinementCheckBox.isSelected();
+            settings.getNormalOptimizationSettings().setNormalRefinementEnabled(normalRefinementEnabled);
+            double minNormalDamping = Double.parseDouble(minNormalDampingTextField.getText());
+            // Negative values shouldn't break anything here.
+            settings.getNormalOptimizationSettings().setMinNormalDamping(minNormalDamping);
+            int normalSmoothingIterations = Integer.parseInt(normalSmoothingIterationsTextField.getText());
+            // Negative values shouldn't break anything here.
+            settings.getNormalOptimizationSettings().setNormalSmoothingIterations(normalSmoothingIterations);
 
             // Settings which shouldn't usually need to be changed
-            settings.setSmithMaskingShadowingEnabled(smithCheckBox.isSelected());
-            settings.setLevenbergMarquardtEnabled(levenbergMarquardtCheckBox.isSelected());
-            settings.setUnsuccessfulLMIterationsAllowed(Integer.parseInt(unsuccessfulLMIterationsTextField.getText()));
-            settings.setReconstructAll(reconstructAllCheckBox.isSelected());
+            settings.getSpecularBasisSettings().setSmithMaskingShadowingEnabled(smithCheckBox.isSelected());
+            boolean levenbergMarquardtEnabled = levenbergMarquardtCheckBox.isSelected();
+            settings.getNormalOptimizationSettings().setLevenbergMarquardtEnabled(levenbergMarquardtEnabled);
+            int unsuccessfulLMIterationsAllowed = Integer.parseInt(unsuccessfulLMIterationsTextField.getText());
+            settings.getNormalOptimizationSettings().setUnsuccessfulLMIterationsAllowed(unsuccessfulLMIterationsAllowed);
+            boolean reconstructAll = reconstructAllCheckBox.isSelected();
+            settings.getReconstructionSettings().setReconstructAll(reconstructAll);
+
+            settings.getExportSettings().setGenerateLowResTextures(exportTextureLODsCheckbox.isSelected());
+
+            // glTF export settings
+            settings.getExportSettings().setGlTFEnabled(exportGLTFCheckbox.isSelected());
+            settings.getExportSettings().setGlTFPackTextures(exportGLTFPackedCheckbox.isSelected());
 
             if (reconstructionViewSetField.getText() != null && !reconstructionViewSetField.getText().isEmpty())
             {
                 // Reconstruction view set
                 try
                 {
-                    settings.setReconstructionViewSet(ViewSet.loadFromVSETFile(
-                        new File(reconstructionViewSetField.getText())));
+                    ReadonlyViewSet reconstructionViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(
+                        new File(reconstructionViewSetField.getText()));
+                    settings.getReconstructionSettings().setReconstructionViewSet(reconstructionViewSet);
                 }
-                catch (FileNotFoundException e)
+                catch (Exception e)
                 {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Invalid view set");
@@ -221,6 +250,14 @@ public class SpecularFitRequestUI implements IBRRequestUI
                     e.printStackTrace();
                 }
             }
+
+            // Image cache settings
+            settings.getImageCacheSettings().setCacheParentDirectory(new File(settings.getOutputDirectory(), "cache"));
+            settings.getImageCacheSettings().setTextureWidth(settings.getTextureFitSettings().width);
+            settings.getImageCacheSettings().setTextureHeight(settings.getTextureFitSettings().height);
+            settings.getImageCacheSettings().setTextureSubdiv( // TODO expose this in the interface
+                (int)Math.ceil(Math.max(settings.getTextureFitSettings().width, settings.getTextureFitSettings().height) / 256.0));
+            settings.getImageCacheSettings().setSampledSize(256); // TODO expose this in the interface
 
             SpecularFitRequest<ContextType> request = new SpecularFitRequest<>(settings);
 

@@ -15,18 +15,21 @@ import java.io.FileNotFoundException;
 
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.core.*;
+import tetzlaff.ibrelight.core.TextureFitSettings;
 
 public class RoughnessOptimizationSimple<ContextType extends Context<ContextType>> extends RoughnessOptimizationBase<ContextType>
 {
     private final FramebufferObject<ContextType> specularTexFramebuffer;
 
-    public RoughnessOptimizationSimple(ContextType context, BasisResources<ContextType> resources, SpecularFitSettings settings)
+    public RoughnessOptimizationSimple(BasisResources<ContextType> basisResources,
+        BasisWeightResources<ContextType> weightResources, TextureFitSettings settings)
         throws FileNotFoundException
     {
-        super(context, resources, settings);
+        super(basisResources, weightResources, settings.gamma);
 
         // Framebuffer for fitting and storing the specular parameter estimates (specular Fresnel color and roughness)
-        specularTexFramebuffer = context.buildFramebufferObject(settings.width, settings.height)
+        specularTexFramebuffer = basisResources.getContext().buildFramebufferObject(
+                settings.width, settings.height)
             .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGBA8).setLinearFilteringEnabled(true))
             .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGBA8).setLinearFilteringEnabled(true))
             .createFramebufferObject();

@@ -14,7 +14,7 @@ package tetzlaff.gl.opengl;
 import java.nio.ByteBuffer;
 
 import tetzlaff.gl.core.UniformBuffer;
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL31.*;
@@ -51,7 +51,7 @@ class OpenGLUniformBuffer extends OpenGLBuffer implements UniformBuffer<OpenGLCo
     }
 
     @Override
-    public OpenGLUniformBuffer setData(NativeVectorBuffer data)
+    public OpenGLUniformBuffer setData(ReadonlyNativeVectorBuffer data)
     {
         super.setData(data.getBuffer());
         return this;

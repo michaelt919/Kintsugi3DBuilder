@@ -68,7 +68,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
                                  LightingResources<ContextType> lightingResources)
     {
         this.loadingMonitor = loadingMonitor;
-        this.context = resources.context;
+        this.context = resources.getContext();
         this.resources = resources;
         this.lightingResources = lightingResources;
     }
@@ -178,24 +178,12 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
 
         if (this.newLuminanceEncodingDataAvailable)
         {
-            this.resources.viewSet.setTonemapping(
-                this.resources.viewSet.getGamma(),
-                this.newLinearLuminanceValues,
-                this.newEncodedLuminanceValues);
-
-            this.resources.updateLuminanceMap();
-
+            this.resources.updateLuminanceMap(this.newLinearLuminanceValues, this.newEncodedLuminanceValues);
             this.newLuminanceEncodingDataAvailable = false;
         }
 
         if (this.newLightCalibrationAvailable)
         {
-            for (int i = 0; i < resources.viewSet.getLightCount(); i++)
-            {
-                this.resources.viewSet.setLightPosition(i, newLightCalibration);
-            }
-
-            this.resources.updateLightData();
             this.newLightCalibrationAvailable = false;
         }
     }

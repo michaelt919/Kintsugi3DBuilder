@@ -12,7 +12,7 @@
 package tetzlaff.gl.opengl;
 
 import tetzlaff.gl.core.VertexBuffer;
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
@@ -50,7 +50,7 @@ class OpenGLVertexBuffer extends OpenGLBuffer implements VertexBuffer<OpenGLCont
     }
 
     @Override
-    public OpenGLVertexBuffer setData(NativeVectorBuffer data, boolean normalize)
+    public OpenGLVertexBuffer setData(ReadonlyNativeVectorBuffer data, boolean normalize)
     {
         super.setData(data.getBuffer());
         this.count = data.getCount();

@@ -95,7 +95,7 @@ final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLCon
             boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
     {
         // Create an empty texture to be used as a render target for a framebuffer.
-        super(context, textureTarget, colorFormat, useMipmaps);
+        super(context, textureTarget, colorFormat, new Parameters(format, useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy));
         this.width = width;
 
         init(textureTarget, OpenGLContext.getOpenGLInternalColorFormat(colorFormat), format, type, buffer, useLinearFiltering, maxMipmapLevel, maxAnisotropy);
@@ -105,7 +105,7 @@ final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLCon
             boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
     {
         // Create an empty texture to be used as a render target for a framebuffer.
-        super(context, textureTarget, compressionFormat, useMipmaps);
+        super(context, textureTarget, compressionFormat, new Parameters(format, useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy));
         this.width = width;
 
         init(textureTarget, OpenGLContext.getOpenGLCompressionFormat(compressionFormat), format, type, buffer, useLinearFiltering, maxMipmapLevel, maxAnisotropy);
@@ -142,7 +142,7 @@ final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLCon
         glTexImage1D(textureTarget, 0, internalFormat, width, 0, format, type, buffer);
         OpenGLContext.errorCheck();
 
-        if (useMipmaps)
+        if (parameters.useMipmaps)
         {
             // Calculate the number of mipmap levels
             this.levelCount = 0;

@@ -68,7 +68,7 @@ public class PTMsolution {
     public PolynomialTextureMapModel getPTMmodel(){
         return PTMmodel;
     }
-    public void saveWeightMaps() {
+    public void saveWeightMaps(File outputDirectory) {
         for (int b = 0; b < PTMmodel.getBasisFunctionCount(); b++)
         {
             BufferedImage weightImg = new BufferedImage(settings.width, settings.height, BufferedImage.TYPE_INT_ARGB);
@@ -90,7 +90,7 @@ public class PTMsolution {
 
             try
             {
-                ImageIO.write(weightImg, "PNG", new File(settings.outputDirectory, String.format("weights%02d.png", b)));
+                ImageIO.write(weightImg, "PNG", new File(outputDirectory, String.format("weights%02d.png", b)));
             }
             catch (IOException e)
             {
