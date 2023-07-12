@@ -348,6 +348,11 @@ public class SpecularFitGltfExporter
 
     public static SpecularFitGltfExporter fromVertexGeometry(VertexGeometry geometry) throws IOException
     {
+        return fromVertexGeometry(geometry, Matrix4.IDENTITY);
+    }
+
+    public static SpecularFitGltfExporter fromVertexGeometry(VertexGeometry geometry, Matrix4 transformation) throws IOException
+    {
         GltfModelBuilder builder = GltfModelBuilder.create();
 
         DefaultSceneModel scene = new DefaultSceneModel();
@@ -356,7 +361,22 @@ public class SpecularFitGltfExporter
         MeshPrimitiveBuilder primitiveBuilder = MeshPrimitiveBuilder.create();
 
         // Add positions, normals and texcords by buffer
-        primitiveBuilder.addPositions3D(geometry.getVertices().getBuffer().asFloatBuffer());
+
+        // Copy to a new buffer while applying transformation
+        FloatBuffer posInBuffer = geometry.getVertices().getBuffer().asFloatBuffer();
+        FloatBuffer posOutBuffer = FloatBuffer.allocate(posInBuffer.capacity());
+        for (int i = 0; i < posInBuffer.capacity(); i+=3)
+        {
+            Vector4 position = new Vector4(posInBuffer.get(i), posInBuffer.get(i+1), posInBuffer.get(i+2), 1.0f);
+
+            position = transformation.times(position);
+
+            posOutBuffer.put(i, position.x);
+            posOutBuffer.put(i+1, position.y);
+            posOutBuffer.put(i+2, position.z);
+        }
+        primitiveBuilder.addPositions3D(posOutBuffer);
+
 
         if (geometry.hasNormals())
         {

@@ -380,7 +380,12 @@ public class SpecularOptimization
         System.out.println("Starting glTF export...");
         try
         {
-            SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(resources.getGeometryResources().geometry);
+
+            Matrix4 rotation = resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex());
+            Vector3 translation = rotation.getUpperLeft3x3().times(resources.getGeometryResources().geometry.getCentroid().times(-1.f));
+            Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2), translation.asVector4(1.0f));
+
+            SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(resources.getGeometryResources().geometry, transform);
             exporter.setDefaultNames();
             exporter.addWeightImages(settings.getSpecularBasisSettings().getBasisCount(), settings.getExportSettings().isCombineWeights());
 
@@ -392,11 +397,6 @@ public class SpecularOptimization
                 exporter.addWeightImageLods(settings.getSpecularBasisSettings().getBasisCount(),
                     settings.getTextureFitSettings().height, settings.getExportSettings().getMinimumTextureResolution());
             }
-
-            Matrix4 rotation = resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex());
-            Vector3 translation = rotation.getUpperLeft3x3().times(resources.getGeometryResources().geometry.getCentroid().times(-1.f));
-            Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2), translation.asVector4(1.0f));
-            exporter.setTransform(transform);
 
             exporter.write(new File(settings.getOutputDirectory(), "model.glb"));
             System.out.println("DONE!");
