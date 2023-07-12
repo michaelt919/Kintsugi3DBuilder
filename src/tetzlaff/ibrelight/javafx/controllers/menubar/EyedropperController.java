@@ -621,7 +621,7 @@ public class EyedropperController implements Initializable {
                 return false;
             }
         }
-        return true;
+        return this.loadingModel.hasValidHandler();
     }
 
     public void enterColorSelectionMode(ActionEvent actionEvent) {
@@ -676,17 +676,7 @@ public class EyedropperController implements Initializable {
         }
     }
 
-    private boolean goodLoadingModel(){//treat this function as a replacement for (loadingModel == null) b/c that statement doesn't work
-//        //TODO: REMOVE JANKY WORKAROUND
-//        try{
-//            DoubleUnaryOperator luminanceEncoding = loadingModel.getLuminanceEncodingFunction();
-//        }
-//        catch(Exception e){
-//            return false;
-//        }
-//
-//        return true;
-
+    private boolean isGoodLoadingModel(){
         return loadingModel.hasValidHandler();
     }
 }
