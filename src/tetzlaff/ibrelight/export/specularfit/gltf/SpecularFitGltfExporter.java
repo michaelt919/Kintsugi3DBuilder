@@ -351,7 +351,7 @@ public class SpecularFitGltfExporter
         return fromVertexGeometry(geometry, Matrix4.IDENTITY);
     }
 
-    public static SpecularFitGltfExporter fromVertexGeometry(VertexGeometry geometry, Matrix4 transformation) throws IOException
+    public static SpecularFitGltfExporter fromVertexGeometry(ReadonlyVertexGeometry geometry, Matrix4 transformation) throws IOException
     {
         GltfModelBuilder builder = GltfModelBuilder.create();
 
