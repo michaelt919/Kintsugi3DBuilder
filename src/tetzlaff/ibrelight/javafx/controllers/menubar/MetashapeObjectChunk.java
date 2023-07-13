@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class MetashapeObjectChunk {
     //contains a metashape object and a specific chunk
@@ -31,9 +30,11 @@ public class MetashapeObjectChunk {
         frameZip = null;
     }
 
-    public MetashapeObjectChunk(MetashapeObject metashapeObject, String selectedChunkZip) {
+    public MetashapeObjectChunk(MetashapeObject metashapeObject, String chunkName) {
         this.metashapeObject = metashapeObject;
-        this.chunkZipPath = selectedChunkZip;
+        this.chunkName = chunkName;
+
+        this.chunkZipPath = metashapeObject.getChunkZipPathPairs().get(chunkName);
 
         //set chunk xml
         try {
@@ -43,11 +44,6 @@ public class MetashapeObjectChunk {
             throw new RuntimeException(e);
         }
 
-        //set chunk name
-        Node chunk = this.chunkXML.getElementsByTagName("chunk").item(0);
-        Element chunkElement = (Element) chunk;
-        this.chunkName = chunkElement.getAttribute("label");
-
         //set chunkID
         this.chunkID = getChunkIdFromZipPath();
 
@@ -55,7 +51,9 @@ public class MetashapeObjectChunk {
         String psxFilePath = metashapeObject.getPsxFilePath();
         String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4);//remove ".psx" from path
 
+        //the 0 means that the program searches for info regarding frame 0
         String frameZipPath = psxPathBase + ".files\\" + chunkID + "\\0\\frame.zip";
+
         try {
             this.frameZip = UnzipHelper.unzipToDocument(frameZipPath);
         } catch (IOException e) {
@@ -77,7 +75,8 @@ public class MetashapeObjectChunk {
         File parentFile = new File(file.getParent());
 
         try{
-            return Integer.parseInt(parentFile.getName());
+            this.chunkID = Integer.parseInt(parentFile.getName());
+            return this.chunkID;
         }
         catch (NumberFormatException nfe){
             nfe.printStackTrace();
@@ -85,20 +84,8 @@ public class MetashapeObjectChunk {
         }
     }
 
-    public Document getChunkXML() {
-        return this.chunkXML;
-    }
-
     public String getPsxFilePath() {
         return this.metashapeObject.getPsxFilePath();
-    }
-
-    public int getChunkID() {
-        return this.chunkID;
-    }
-
-    public Map<String, String> getChunkZipPathPairs() {
-        return metashapeObject.getChunkZipPathPairs();
     }
 
     public MetashapeObject getMetashapeObject() {
@@ -125,17 +112,6 @@ public class MetashapeObjectChunk {
             }
         }
         return cameras;
-    }
-
-    public List<Element> findThumbnailCamsWithGroupings() {
-        //<cameras> contains <group>, <group> contains <camera>
-        //<cameras> may also directly contain <camera>
-        return (List<Element>) this.chunkXML.getElementsByTagName("cameras");
-    }
-
-    public boolean doesXMLContainGroups(){
-        //some chunk xml documents organize cameras/photos into groups, others do not
-        return this.chunkXML.getElementsByTagName("group").getLength() != 0;
     }
 
     public Element matchImageToCam(String imageName) {

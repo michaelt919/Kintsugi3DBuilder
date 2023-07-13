@@ -16,7 +16,6 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import javafx.scene.image.ImageView;
 
@@ -26,7 +25,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.ResourceBundle;
 
 
@@ -40,12 +38,7 @@ public class ChunkViewerController implements Initializable {
     @FXML
     public ImageView chunkViewerImgView;
     public Text imgViewLabel;
-    private Document selectedChunkXML;
-
     static final String[] VALID_EXTENSIONS = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
-    private String psxFilePath;
-    private int chunkID;
-    private String chunkName;
 
     static final int THUMBNAIL_SIZE = 30;
     @FXML
@@ -56,14 +49,8 @@ public class ChunkViewerController implements Initializable {
 
     @FXML
     public TextFlow textFlow;
-
-    private Scene scene;
-    private Parent root;
-    private Stage stage;
-    //key is chunk name, value is path to chunk's zip file
-    private Map<String, String> chunkZipPathPairs;
     private MetashapeObjectChunk metashapeObjectChunk;
-    private MetashapeObject metashapeObject;
+
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -71,19 +58,10 @@ public class ChunkViewerController implements Initializable {
     }
 
     public void initializeChunkSelectionAndTreeView(MetashapeObjectChunk metashapeObjectChunk) {
-        
-        //TODO: REMOVE THESE ASSIGNMENTS BECAUSE THEY'RE STORED IN METASHAPE OBJECT CHUNK?
         this.metashapeObjectChunk = metashapeObjectChunk;
-        this.metashapeObject = metashapeObjectChunk.getMetashapeObject();
-
-        this.selectedChunkXML = metashapeObjectChunk.getChunkXML();
-        this.psxFilePath = metashapeObjectChunk.getPsxFilePath();
-        this.chunkID = metashapeObjectChunk.getChunkID();
-        this.chunkName = metashapeObjectChunk.getChunkName();
-        
-        this.chunkZipPathPairs = metashapeObjectChunk.getChunkZipPathPairs();
 
         //add chunk name to tree
+        String chunkName = metashapeObjectChunk.getChunkName();
         TreeItem<String> rootItem = new TreeItem<>(chunkName);
         chunkTreeView.setRoot(rootItem);
 
@@ -114,7 +92,6 @@ public class ChunkViewerController implements Initializable {
             if(parent.getTagName().equals("group")){
                 String groupName = parent.getAttribute("label");//TODO: CURRENTLY ONLY CHECKS TO SEE IF NAMES MATCH
 
-                //TODO: CLEAN THIS UP
                 List<TreeItem<String>> rootChildren = rootItem.getChildren();
                 boolean groupAlreadyCreated = false;//boolean to track if group is already present in treeview
                 TreeItem<String> matchingItem = null;
@@ -127,7 +104,7 @@ public class ChunkViewerController implements Initializable {
                 }
 
                 if (groupAlreadyCreated){
-                    //add camera to this item
+                    //add camera to this group
                     destinationItem = matchingItem;
                 }
                 else{//group has not been created yet
@@ -137,19 +114,21 @@ public class ChunkViewerController implements Initializable {
                 }
             }
             else{
-                //parent is camera, so add to root node
+                //parent is camera, so add image to root node
+                //(camera is not part of a group)
                 destinationItem = rootItem;
             }
 
-                ImageView thumbnailImgView;
-                try {
-                    thumbnailImgView = new ImageView(thumbnailImageList.get(i));
-                } catch (IndexOutOfBoundsException e) {
-                    //thumbnail not found in thumbnailImageList
-                    thumbnailImgView = new ImageView(new Image(new File("question-mark.png").toURI().toString()));
-                }
-                thumbnailImgView.setFitWidth(THUMBNAIL_SIZE);
-                thumbnailImgView.setFitHeight(THUMBNAIL_SIZE);
+            //set image and thumbnail
+            ImageView thumbnailImgView;
+            try {
+                thumbnailImgView = new ImageView(thumbnailImageList.get(i));
+            } catch (IndexOutOfBoundsException e) {
+                //thumbnail not found in thumbnailImageList
+                thumbnailImgView = new ImageView(new Image(new File("question-mark.png").toURI().toString()));
+            }
+            thumbnailImgView.setFitWidth(THUMBNAIL_SIZE);
+            thumbnailImgView.setFitHeight(THUMBNAIL_SIZE);
 
             TreeItem<String> imageTreeItem = new TreeItem<>(imageName, thumbnailImgView);
             destinationItem.getChildren().add(imageTreeItem);
@@ -160,16 +139,21 @@ public class ChunkViewerController implements Initializable {
     }
 
     public void selectChunk(ActionEvent actionEvent) throws IOException {
-        String selectedChunk = this.newChunkSelectionChoiceBox.getValue();
+        Scene scene;
+        Parent root;
+        Stage stage;
 
-        if (!selectedChunk.equals(chunkName)) {//only change scene if switching to new chunk
-            String selectedChunkZip = chunkZipPathPairs.get(selectedChunk);
+        String currentChunkName = this.metashapeObjectChunk.getChunkName();
+        String selectedChunkName = this.newChunkSelectionChoiceBox.getValue();
 
+        MetashapeObject metashapeObject = this.metashapeObjectChunk.getMetashapeObject();
+
+        if (!selectedChunkName.equals(currentChunkName)) {//only change scene if switching to new chunk
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/menubar/ChunkViewer.fxml"));
             root = fxmlLoader.load();
             ChunkViewerController chunkViewerController = fxmlLoader.getController();
 
-            MetashapeObjectChunk newMetashapeObjectChunk = new MetashapeObjectChunk(this.metashapeObject, selectedChunkZip);
+            MetashapeObjectChunk newMetashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, selectedChunkName);
             chunkViewerController.initializeChunkSelectionAndTreeView(newMetashapeObjectChunk);
 
             stage = (Stage) ((javafx.scene.Node) actionEvent.getSource()).getScene().getWindow();
@@ -201,8 +185,11 @@ public class ChunkViewerController implements Initializable {
                     if (imgFile.exists()) {
                         chunkViewerImgView.setImage(new Image(imgFile.toURI().toString()));
 
+                        String psxFilePath = this.metashapeObjectChunk.getPsxFilePath();
+                        String chunkName = this.metashapeObjectChunk.getChunkName();
+
 //                      set label to: psx name + chunk name + cameraID
-                        File psxFile = new File(this.psxFilePath);
+                        File psxFile = new File(psxFilePath);
 
                         imgViewLabel.setText("File: " + psxFile.getName() +
                                             "\nChunk: " + chunkName +
@@ -234,6 +221,9 @@ public class ChunkViewerController implements Initializable {
     }
 
     private void initializeChoiceBox() {
+        MetashapeObject metashapeObject = this.metashapeObjectChunk.getMetashapeObject();
+        String chunkName = this.metashapeObjectChunk.getChunkName();
+
         //add all items from old checkbox to new checkbox
         this.newChunkSelectionChoiceBox.getItems().addAll(metashapeObject.getChunkNames());
 
@@ -264,12 +254,13 @@ public class ChunkViewerController implements Initializable {
     public void updateSelectChunkButton(ActionEvent actionEvent) {
         //need to keep the unused ActionEvent so we can link this method to the choice box
         String selectedChunk = this.newChunkSelectionChoiceBox.getValue();
+        String currentChunkName = this.metashapeObjectChunk.getChunkName();
 
         if (selectedChunk == null){
             return;
         }
 
-        if (selectedChunk.equals(chunkName)) {
+        if (selectedChunk.equals(currentChunkName)) {
             selectChunkButton.setDisable(true);
             selectChunkButton.setText("Chunk already selected");
         } else {
