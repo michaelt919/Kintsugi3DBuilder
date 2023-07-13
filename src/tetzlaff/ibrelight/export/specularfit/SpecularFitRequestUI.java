@@ -272,7 +272,6 @@ public class SpecularFitRequestUI implements IBRRequestUI
                 // Run as an IBR request that optimizes from scratch.
                 requestQueue.addIBRRequest(request);
             }
-
         });
     }
 }

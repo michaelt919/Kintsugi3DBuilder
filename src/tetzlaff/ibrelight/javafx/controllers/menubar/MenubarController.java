@@ -39,6 +39,7 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import org.xml.sax.SAXException;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.vecmath.Vector2;
+import tetzlaff.ibrelight.app.Rendering;
 import tetzlaff.ibrelight.app.WindowSynchronization;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.export.specularfit.SpecularFitRequestUI;
@@ -92,11 +93,9 @@ public class MenubarController
 
     private Runnable userDocumentationHandler;
 
-    private IBRRequestManager<?> requestQueue;
-
 
     public <ContextType extends Context<ContextType>> void init(
-        Window injectedParentWindow, IBRRequestManager<ContextType> requestQueue, InternalModels injectedInternalModels,
+        Window injectedParentWindow, InternalModels injectedInternalModels,
         Runnable injectedUserDocumentationHandler)
     {
         this.parentWindow = injectedParentWindow;
@@ -104,8 +103,6 @@ public class MenubarController
         this.userDocumentationHandler = injectedUserDocumentationHandler;
 
         projectFileChooser = new FileChooser();
-
-        this.requestQueue = requestQueue;
 
         projectFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
         projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Full projects", "*.ibr"));
@@ -184,7 +181,7 @@ public class MenubarController
                                     {
                                         IBRRequestUI requestUI = (IBRRequestUI) createMethod.invoke(null, injectedParentWindow, MultithreadModels.getInstance());
                                         requestUI.bind(internalModels.getSettingsModel());
-                                        requestUI.prompt(requestQueue);
+                                        requestUI.prompt(Rendering.getRequestQueue());
                                     }
                                     catch (IllegalAccessException | InvocationTargetException e)
                                     {
@@ -433,7 +430,7 @@ public class MenubarController
         try {
             IBRRequestUI requestUI = SpecularFitRequestUI.create(this.parentWindow, MultithreadModels.getInstance());
             requestUI.bind(internalModels.getSettingsModel());
-            requestUI.prompt(requestQueue);
+            requestUI.prompt(Rendering.getRequestQueue());
 
         } catch (IOException e) {
             e.printStackTrace();

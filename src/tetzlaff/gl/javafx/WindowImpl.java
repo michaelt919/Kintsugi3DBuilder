@@ -17,8 +17,9 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.OptionalInt;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.scene.Scene;
@@ -30,6 +31,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import javafx.util.converter.CharacterStringConverter;
 import org.lwjgl.*;
 import tetzlaff.gl.core.Context;
@@ -46,7 +48,9 @@ public class WindowImpl<ContextType extends Context<ContextType>>
     private final Pane root;
     private final ImageView imageView;
     private final DoubleFramebufferObject<ContextType> framebuffer;
-    private WritableImage image;
+
+    private WritableImage frontImage;
+    private WritableImage backImage;
 
     private boolean windowClosing = false;
 
@@ -63,6 +67,7 @@ public class WindowImpl<ContextType extends Context<ContextType>>
     private CursorPosition cursorPosition = new CursorPosition(0, 0);
 
     private ByteBuffer fboCopyBuffer;
+    private FramebufferSize fboCopyBufferDimensions;
 
     private final EventCollector eventCollector = new EventCollector();
 
@@ -125,12 +130,15 @@ public class WindowImpl<ContextType extends Context<ContextType>>
             stage.setY(windowSpec.getY());
         }
 
-        image = new WritableImage(windowSpec.getWidth(), windowSpec.getHeight());
-        imageView = new ImageView(image);
+        frontImage = new WritableImage(windowSpec.getWidth(), windowSpec.getHeight());
+        backImage = new WritableImage(windowSpec.getWidth(), windowSpec.getHeight());
+        imageView = new ImageView(frontImage);
 
         root = new StackPane(imageView);
         root.setPrefWidth(windowSpec.getWidth());
         root.setPrefHeight(windowSpec.getHeight());
+        root.widthProperty().addListener(width -> imageView.setFitWidth(root.getWidth()));
+        root.heightProperty().addListener(height -> imageView.setFitHeight(root.getHeight()));
 
         Scene scene = new Scene(root);
         stage.setScene(scene);
@@ -141,39 +149,63 @@ public class WindowImpl<ContextType extends Context<ContextType>>
         {
             if (!primaryStage.isIconified())
             {
-                FramebufferSize size = frontFBO.getSize();
+                // Read from FBO
+                fboCopyBufferDimensions = frontFBO.getSize();
 
-                if (fboCopyBuffer == null || fboCopyBuffer.capacity() != size.width * size.height * 4)
+                if (fboCopyBuffer == null || fboCopyBuffer.capacity() != fboCopyBufferDimensions.width * fboCopyBufferDimensions.height * 4)
                 {
-                    fboCopyBuffer = BufferUtils.createByteBuffer(size.width * size.height * 4);
+                    fboCopyBuffer = BufferUtils.createByteBuffer(fboCopyBufferDimensions.width * fboCopyBufferDimensions.height * 4);
                 }
                 else
                 {
                     fboCopyBuffer.clear();
                 }
 
-                frontFBO.readColorBufferARGB(0, fboCopyBuffer);
+                frontFBO.getTextureReaderForColorAttachment(0).readARGB(fboCopyBuffer);
 
-                Platform.runLater(() ->
+                // Copy into WritableImage:
+
+                //noinspection FloatingPointEquality
+                if (fboCopyBufferDimensions.width != backImage.getWidth() || fboCopyBufferDimensions.height != backImage.getHeight())
                 {
-                    //noinspection FloatingPointEquality
-                    if (size.width != image.getWidth() || size.height != image.getHeight())
-                    {
-                        image = new WritableImage(size.width, size.height);
-                    }
+                    backImage = new WritableImage(fboCopyBufferDimensions.width, fboCopyBufferDimensions.height);
+                }
 
-                    //noinspection FloatingPointEquality
-                    for (int y = size.height - 1; y >= 0; y--)
-                    {
-                        IntBuffer fboCopyIntBuffer = fboCopyBuffer.asIntBuffer();
-                        fboCopyIntBuffer.position((size.height - y - 1) * size.width);
-                        image.getPixelWriter().setPixels(0, y, size.width, 1, PixelFormat.getIntArgbInstance(), fboCopyIntBuffer, size.width);
-                    }
+                //noinspection FloatingPointEquality
+                for (int y = fboCopyBufferDimensions.height - 1; y >= 0; y--)
+                {
+                    IntBuffer fboCopyIntBuffer = fboCopyBuffer.asIntBuffer();
+                    fboCopyIntBuffer.position((fboCopyBufferDimensions.height - y - 1) * fboCopyBufferDimensions.width);
+                    backImage.getPixelWriter().setPixels(0, y, fboCopyBufferDimensions.width, 1,
+                        PixelFormat.getIntArgbInstance(), fboCopyIntBuffer, fboCopyBufferDimensions.width);
+                }
 
-                    imageView.setImage(image);
-                });
+                // Swap buffers
+                WritableImage tmp = frontImage;
+                frontImage = backImage;
+                backImage = tmp;
             }
         });
+
+        // use timeline to set up 60Hz refresh cycle for onscreen framebuffer
+        Timeline refresh = new Timeline();
+        refresh.setCycleCount(Timeline.INDEFINITE);
+        refresh.getKeyFrames().add(new KeyFrame(Duration.seconds(1.0 / 60.0), // 60 Hz refresh rate
+            event ->
+            {
+                try
+                {
+                    if (fboCopyBufferDimensions != null)
+                    {
+                        imageView.setImage(frontImage);
+                    }
+                }
+                catch(Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }));
+        refresh.play();
 
         stage.widthProperty().addListener((event, oldValue, newValue) -> handleWindowEvent());
         stage.heightProperty().addListener((event, oldValue, newValue) -> handleWindowEvent());
