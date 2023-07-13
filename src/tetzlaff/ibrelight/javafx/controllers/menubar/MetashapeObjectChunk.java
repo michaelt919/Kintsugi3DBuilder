@@ -92,7 +92,7 @@ public class MetashapeObjectChunk {
         return this.metashapeObject;
     }
 
-    public ArrayList<Image> loadThumbnailImageList() {
+    public List<Image> loadThumbnailImageList() {
         //unzip thumbnail folder
         String psxFilePath = this.metashapeObject.getPsxFilePath();
         String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4);//remove ".psx" from path
