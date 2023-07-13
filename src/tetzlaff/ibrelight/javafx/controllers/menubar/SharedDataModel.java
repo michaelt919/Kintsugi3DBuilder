@@ -1,10 +1,10 @@
 package tetzlaff.ibrelight.javafx.controllers.menubar;
 
-import java.io.File;
+import javafx.scene.image.Image;
 
 public class SharedDataModel {
     private static SharedDataModel instance;
-    private File selectedImage;
+    private Image selectedImage;
 
     private SharedDataModel() {
     }
@@ -16,11 +16,11 @@ public class SharedDataModel {
         return instance;
     }
 
-    public File getSelectedImage() {
+    public Image getSelectedImage() {
         return selectedImage;
     }
 
-    public void setSelectedImage(File selectedImage) {
+    public void setSelectedImage(Image selectedImage) {
         this.selectedImage = selectedImage;
     }
 }

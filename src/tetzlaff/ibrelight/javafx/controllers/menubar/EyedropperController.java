@@ -16,7 +16,6 @@ import javafx.scene.shape.Rectangle;
 import tetzlaff.ibrelight.core.LoadingModel;
 
 import java.awt.*;
-import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +64,7 @@ public class EyedropperController implements Initializable {
 
     private List<Color> selectedColors;
     @FXML private ImageView colorPickerImgView;
-    private File selectedFile;
+    private Image selectedFile;
     @FXML private Rectangle averageColorPreview = new Rectangle(); //displays the average color of selection
 
 
@@ -75,7 +74,7 @@ public class EyedropperController implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         SharedDataModel sharedDataModel = SharedDataModel.getInstance();
         selectedFile = sharedDataModel.getSelectedImage();
-        colorPickerImgView.setImage(new Image(selectedFile.toURI().toString()));
+        colorPickerImgView.setImage(selectedFile);
         colorPickerImgView.setPreserveRatio(true);
         colorPickerImgView.setSmooth(true);
 
@@ -193,7 +192,7 @@ public class EyedropperController implements Initializable {
         }
     }
 
-    public void enterCropMode(ActionEvent actionEvent) {
+    public void enterCropMode() {
         //same button is used for cropping and resetting cropping
         if(canResetCrop){//button text is "Reset Crop"
             resetViewport(colorPickerImgView);
