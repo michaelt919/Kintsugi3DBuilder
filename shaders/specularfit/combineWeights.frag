@@ -19,11 +19,8 @@ uniform int weightIndex;
 uniform int weightStride;
 
 void main() {
-    vec4 color = vec4(0, 0, 0, 1);
-    for (int i = 0; i < weightStride; i++)
-    {
-        color[i] = texture(weightMaps, vec3(fTexCoord.xy, weightIndex)).r;
+    fragColor = vec4(0, 0, 0, 1);
+    for (int i = 0; i < weightStride; i++) {
+        fragColor[i] = texture(weightMaps, vec3(fTexCoord, weightIndex + i)).r;
     }
-    //color = vec4(vec3(fTexCoord.xy, weightIndex), 1.0);
-    fragColor = color;
 }
