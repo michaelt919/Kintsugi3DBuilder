@@ -23,8 +23,8 @@ import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibrelight.export.general.ImageLodResizer;
 import tetzlaff.util.ImageFinder;
+import tetzlaff.util.ImageLodResizer;
 
 /**
  * A class representing a collection of photographs, or views.
