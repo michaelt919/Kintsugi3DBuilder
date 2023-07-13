@@ -111,13 +111,25 @@ public class SpecularFitSerializer
 
     public static String getCombinedWeightFilename(int imageIndex)
     {
-        imageIndex *= 4;
-        return String.format("weights%02d%02d.png", imageIndex, imageIndex + 3);
+        return getWeightFileName(imageIndex, 4);
     }
 
     public static String getWeightFileName(int weightMapIndex)
     {
-        return String.format("weights%02d.png", weightMapIndex);
+        return getWeightFileName(weightMapIndex, 1);
+    }
+
+    public static String getWeightFileName(int weightMapIndex, int weightsPerChannel)
+    {
+        if (weightsPerChannel <= 1)
+        {
+            return String.format("weights%02d.png", weightMapIndex);
+        }
+        else
+        {
+            weightMapIndex *= weightsPerChannel;
+            return String.format("weights%02d%02d.png", weightMapIndex, weightMapIndex + (weightsPerChannel - 1));
+        }
     }
 
     public static void serializeBasisFunctions(int basisCount, int microfacetDistributionResolution, SpecularBasis basis, File outputDirectory)
