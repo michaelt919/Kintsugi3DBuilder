@@ -206,8 +206,14 @@ public class SpecularOptimization
             fullResolution.saveNormalMap(settings.getOutputDirectory());
 
             // Save the final weight maps
-            // TODO combined weight images when using block-based fitting
-            SpecularFitSerializer.saveWeightImages(fullResolution.getBasisWeightResources().weightMaps, settings.getOutputDirectory());
+            int weightsPerImage = settings.getExportSettings().isCombineWeights() ? 4 : 1;
+            try (WeightImageCreator<ContextType> weightImageCreator = new WeightImageCreator<>(cache.getContext(), settings.getTextureFitSettings(), weightsPerImage))
+            {
+                weightImageCreator.createImages(fullResolution, settings.getOutputDirectory());
+            } catch (Exception e)
+            {
+                throw new RuntimeException(e);
+            }
 
             // Save the final specular albedo and roughness maps
             fullResolution.getRoughnessOptimization().saveTextures(settings.getOutputDirectory());
