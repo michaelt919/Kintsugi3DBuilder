@@ -63,7 +63,7 @@ public class WeightImageCreator<ContextType extends Context<ContextType>> implem
         {
             drawable.program().setUniform("weightIndex", i);
             drawable.draw(framebuffer);
-            framebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, SpecularFitSerializer.getWeightFileName(i, i / weightsPerImage)));
+            framebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, SpecularFitSerializer.getWeightFileName(i / weightsPerImage, weightsPerImage)));
         }
     }
 
