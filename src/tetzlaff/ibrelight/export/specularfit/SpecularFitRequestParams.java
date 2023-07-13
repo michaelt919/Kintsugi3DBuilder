@@ -28,6 +28,7 @@ public class SpecularFitRequestParams
     private final ExportSettings exportSettings = new ExportSettings();
 
     private double convergenceTolerance = 0.00001;
+    private double preliminaryConvergenceTolerance = 0.01;
 
     private File priorSolutionDirectory = null;
     private File outputDirectory;
@@ -129,6 +130,31 @@ public class SpecularFitRequestParams
         }
 
         this.convergenceTolerance = convergenceTolerance;
+    }
+
+    /**
+     * Gets the convergence tolerance used to determine whether the Levenberg-Marquardt algorithm for optimizing
+     * the normal map has converged.
+     * @return
+     */
+    public double getPreliminaryConvergenceTolerance()
+    {
+        return this.preliminaryConvergenceTolerance;
+    }
+
+    /**
+     * Sets the convergence tolerance used to determine whether the Levenberg-Marquardt algorithm for optimizing
+     * the normal map has converged.
+     * @param preliminaryConvergenceTolerance
+     */
+    public void setPreliminaryConvergenceTolerance(double preliminaryConvergenceTolerance)
+    {
+        if (preliminaryConvergenceTolerance < 0)
+        {
+            throw new IllegalArgumentException("Convergence tolerance must not be less than zero.");
+        }
+
+        this.preliminaryConvergenceTolerance = preliminaryConvergenceTolerance;
     }
 
     /**

@@ -179,7 +179,7 @@ public class SpecularOptimization
                 // Preliminary optimization at low resolution to determine basis functions
                 optimizeTexSpaceFit(sampled, sampledFit,
                     (stream, errorCalculator) -> sampledFit.optimizeFromScratch(
-                        sampledDecomposition, stream, settings.getConvergenceTolerance(),
+                        sampledDecomposition, stream, settings.getPreliminaryConvergenceTolerance(),
                         errorCalculator, DEBUG ? settings.getOutputDirectory() : null));
 
                 // Save the final basis functions
