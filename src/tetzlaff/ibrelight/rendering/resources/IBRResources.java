@@ -11,37 +11,30 @@
 
 package tetzlaff.ibrelight.rendering.resources;
 
-import java.io.FileNotFoundException;
 import java.util.List;
 
 import tetzlaff.gl.builders.ProgramBuilder;
-import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.geometry.GeometryResources;
+import tetzlaff.gl.geometry.ReadonlyVertexGeometry;
 import tetzlaff.gl.material.MaterialResources;
+import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
 import tetzlaff.ibrelight.core.ViewSet;
-import tetzlaff.util.ColorList;
 
-public interface IBRResources<ContextType extends Context<ContextType>> extends Resource
+public interface IBRResources<ContextType extends Context<ContextType>> extends Resource, ReadonlyIBRResources<ContextType>
 {
-    /**
-     * The graphics context associated with this instance.
-     */
-    ContextType getContext();
-
     /**
      * The view set that these resources were loaded from.
      */
+    @Override
     ViewSet getViewSet();
 
-    /**
-     * Gets the weight associated with a given view/camera (determined by the distance from other views).
-     * @param index The index of the view for which to retrieve its weight.
-     * @return The weight for the specified view.
-     */
-    float getCameraWeight(int index);
-
+    @Override
+    default ReadonlyVertexGeometry getGeometry()
+    {
+        return getGeometryResources().geometry;
+    }
 
     /**
      * Gets a read-only view of the whole list of camera weights
@@ -64,19 +57,24 @@ public interface IBRResources<ContextType extends Context<ContextType>> extends 
     LuminanceMapResources<ContextType> getLuminanceMapResources();
 
     /**
-     * Refresh the luminance map textures using the current values in the view set.
+     * Refresh the luminance map in the view set and its corresponding textures.
      */
-    void updateLuminanceMap();
+    void updateLuminanceMap(double[] linearLuminanceValues, byte[] encodedLuminanceValues);
+
 
     /**
-     * Gets a shader program builder with any required preprocessor defines automatically injected based on the
-     * characteristics of this instance.
-     * @param renderingMode The rendering mode to use, which may change some of the preprocessor defines.
-     * @return A program builder with preprocessor defines specified, ready to have the vertex and fragment shaders
-     * added as well as any additional application-specific preprocessor definitions.
+     * Refresh the light calibration in the view set and its corresponding uniform buffer data
      */
-    ProgramBuilder<ContextType> getShaderProgramBuilder(StandardRenderingMode renderingMode);
+    void updateLightCalibration(Vector3 lightCalibration);
 
+    /**
+     * Initialize any light intensities currently set to zero with the provided light intensity.
+     * Non-zero light intensities (i.e. loaded from a file) will remain unchanged.
+     * @param lightIntensity The default light intensity to apply to lights with an intensity of zero.
+     * @param infiniteLightSources If true, light attenuation will be disabled; otherwise, light intensity will be
+     *                             scaled by the square reciprocal of distance from light.
+     */
+    void initializeLightIntensities(Vector3 lightIntensity, boolean infiniteLightSources);
 
     /**
      * Gets a shader program builder with preprocessor defines automatically injected based on the
@@ -85,27 +83,13 @@ public interface IBRResources<ContextType extends Context<ContextType>> extends 
      * @return A program builder with preprocessor defines specified, ready to have the vertex and fragment shaders
      * added as well as any additional application-specific preprocessor definitions.
      */
+    @Override
     default ProgramBuilder<ContextType> getShaderProgramBuilder()
     {
         return getShaderProgramBuilder(StandardRenderingMode.IMAGE_BASED);
     }
 
-    /**
-     * Sets up a shader program to use this instance's IBR resources.
-     * While the geometry is generally associated with a Drawable using the createDrawable function,
-     * this method binds all of the textures and associated data like camera poses, light positions, etc.
-     * to the shader program's uniform variables.
-     * @param program The shader program to set up using this instance's resources.
-     */
-    void setupShaderProgram(Program<ContextType> program);
-
-    /**
-     * Creates a Drawable using this instance's geometry resources, and the specified shader program.
-     * @param program The program to use to construct the Drawable.
-     * @return A Drawable for rendering this instance using the specified shader program.
-     */
-    Drawable<ContextType> createDrawable(Program<ContextType> program);
-
+    @Override
     default GraphicsStreamFactory<ContextType> streamFactory()
     {
         return new GraphicsStreamFactory<>(this);

@@ -13,12 +13,11 @@ package tetzlaff.ibrelight.export.specularfit;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Objects;
 
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.TextureFitSettings;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 import tetzlaff.util.ShaderHoleFill;
 
 public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
@@ -35,7 +34,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
 
     private final Drawable<ContextType> drawable;
 
-    public FinalDiffuseOptimization(IBRResources<ContextType> resources,
+    public FinalDiffuseOptimization(ReadonlyIBRResources<ContextType> resources,
         SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings settings)
         throws FileNotFoundException
     {
@@ -110,7 +109,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
 
     private static <ContextType extends Context<ContextType>>
         Program<ContextType> createDiffuseEstimationProgram(
-            IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
+            ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {
         return programFactory.createProgram(resources,
             new File("shaders/common/texspace_dynamic.vert"),

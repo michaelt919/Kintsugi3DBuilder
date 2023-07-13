@@ -19,9 +19,11 @@ import java.util.Map.Entry;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.material.Material;
+import tetzlaff.gl.material.ReadonlyMaterial;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
@@ -31,7 +33,7 @@ import tetzlaff.gl.vecmath.Vector4;
  * @author Michael Tetzlaff
  *
  */
-public final class VertexGeometry
+public final class VertexGeometry implements ReadonlyVertexGeometry
 {
     private File filename;
 
@@ -422,123 +424,85 @@ public final class VertexGeometry
         return orthoTangent.asVector4(orthoBitangent.dot(normal.cross(orthoTangent)));
     }
 
-    /**
-     * Gets whether or not the mesh has surface normals.
-     * @return true if the mesh has surface normals, false otherwise.
-     */
+    @Override
     public boolean hasNormals()
     {
         return hasNormals;
     }
 
-    /**
-     * Gets whether or not the mesh has texture coordinates.
-     * @return true if the mesh has texture coordinates, false otherwise.
-     */
+    @Override
     public boolean hasTexCoords()
     {
         return hasTexCoords;
     }
 
+    @Override
     public <ContextType extends Context<ContextType>> GeometryResources<ContextType> createGraphicsResources(ContextType context)
     {
         return new GeometryResources<>(context, this);
     }
 
-    /**
-     * Gets a packed list containing the vertex positions of the mesh that can be used by a GL.
-     * @return A packed list containing the vertex positions.
-     */
-    public NativeVectorBuffer getVertices()
+    @Override
+    public ReadonlyNativeVectorBuffer getVertices()
     {
         return vertices;
     }
 
-    /**
-     * Gets a packed list containing the surface normals of the mesh that can be used by a GL.
-     * @return A packed list containing the surface normals.
-     */
-    public NativeVectorBuffer getNormals()
+    @Override
+    public ReadonlyNativeVectorBuffer getNormals()
     {
         return normals;
     }
 
-    /**
-     * Gets a packed list containing the texture coordinates of the mesh that can be used by a GL.
-     * @return A packed list containing the texture coordinates.
-     */
-    public NativeVectorBuffer getTexCoords()
+    @Override
+    public ReadonlyNativeVectorBuffer getTexCoords()
     {
         return texCoords;
     }
 
-    /**
-     * Gets the centroid of the mesh - that is, the average of all the vertex positions.
-     * @return The centroid of the mesh.
-     */
+    @Override
     public Vector3 getCentroid()
     {
         return centroid;
     }
 
-    /**
-     * Gets the bounding radius of the mesh - that is, the furthest distance from the centroid to a vertex position.
-     * @return The centroid of the mesh.
-     */
+    @Override
     public float getBoundingRadius()
     {
         return boundingRadius;
     }
 
-    /**
-     * Gets the center of the mesh's bounding box.
-     * @return The centroid of the mesh.
-     */
+    @Override
     public Vector3 getBoundingBoxCenter()
     {
         return boundingBoxCenter;
     }
 
-    /**
-     * Gets the size of the mesh's bounding box.
-     * @return The centroid of the mesh.
-     */
+    @Override
     public Vector3 getBoundingBoxSize()
     {
         return boundingBoxSize;
     }
 
-    /**
-     * Gets a packed list containing the tangents of the mesh that can be used by a GL.
-     * @return A packed list containing the tangents.
-     */
-    public NativeVectorBuffer getTangents()
+    @Override
+    public ReadonlyNativeVectorBuffer getTangents()
     {
         return tangents;
     }
 
-    /**
-     * Gets the filename of the mesh's associated material.
-     * @return The name of the material file for this mesh.
-     */
+    @Override
     public String getMaterialFileName()
     {
         return this.materialFileName;
     }
 
-    /**
-     * Gets the associated material for this mesh.
-     * @return The material for this mesh.
-     */
+    @Override
     public Material getMaterial()
     {
         return this.material;
     }
 
-    /**
-     * Gets the mesh filename.
-     * @return The filename of the mesh.
-     */
+    @Override
     public File getFilename()
     {
         return filename;

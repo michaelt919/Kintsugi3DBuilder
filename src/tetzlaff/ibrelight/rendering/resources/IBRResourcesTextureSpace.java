@@ -14,10 +14,7 @@ package tetzlaff.ibrelight.rendering.resources;
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.geometry.GeometryMode;
-import tetzlaff.gl.geometry.GeometryResources;
-import tetzlaff.gl.geometry.GeometryTextures;
-import tetzlaff.gl.geometry.VertexGeometry;
+import tetzlaff.gl.geometry.*;
 import tetzlaff.gl.material.TextureLoadOptions;
 import tetzlaff.gl.vecmath.IntVector2;
 import tetzlaff.ibrelight.core.*;
@@ -28,7 +25,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
-import java.util.List;
 import java.util.function.Supplier;
 
 public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> extends IBRResourcesBase<ContextType>

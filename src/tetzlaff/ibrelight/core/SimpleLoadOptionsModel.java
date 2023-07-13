@@ -20,11 +20,35 @@ public class SimpleLoadOptionsModel implements ReadonlyLoadOptionsModel
     private boolean depthImagesRequested;
     private int depthImageWidth;
     private int depthImageHeight;
+    private int previewImageWidth;
+    private int previewImageHeight;
 
     @Override
     public boolean areColorImagesRequested()
     {
         return this.colorImagesRequested;
+    }
+
+    @Override
+    public int getPreviewImageWidth()
+    {
+        return previewImageWidth;
+    }
+
+    public void setPreviewImageWidth(int previewImageWidth)
+    {
+        this.previewImageWidth = previewImageWidth;
+    }
+
+    @Override
+    public int getPreviewImageHeight()
+    {
+        return previewImageHeight;
+    }
+
+    public void setPreviewImageHeight(int previewImageHeight)
+    {
+        this.previewImageHeight = previewImageHeight;
     }
 
     public SimpleLoadOptionsModel setColorImagesRequested(boolean colorImagesRequested)

@@ -22,7 +22,7 @@ public class GeometryResources<ContextType extends Context<ContextType>> impleme
     /**
      * The geometry for this instance that the vertex buffers were loaded from.
      */
-    public final VertexGeometry geometry;
+    public final ReadonlyVertexGeometry geometry;
 
     /**
      * A vertex buffer containing vertex positions.
@@ -65,7 +65,7 @@ public class GeometryResources<ContextType extends Context<ContextType>> impleme
     /**
      * package-visible constructor, called by VertexGeometry.createGraphicsResources
      */
-    GeometryResources(ContextType context, VertexGeometry geometry)
+    GeometryResources(ContextType context, ReadonlyVertexGeometry geometry)
     {
         this.context = context;
         this.geometry = geometry;

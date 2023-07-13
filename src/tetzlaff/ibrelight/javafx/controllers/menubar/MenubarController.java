@@ -581,10 +581,10 @@ public class MenubarController
     public void unzip() {
         try {
             UnzipFileSelectionController unzipFileSelectionController =
-                    makeWindow(".psx Unzipper", unzipperOpen, "fxml/menubar/UnzipFileSelection.fxml");
+                makeWindow(".psx Unzipper", unzipperOpen, "fxml/menubar/UnzipFileSelection.fxml");
             unzipFileSelectionController.init();
         }
-          catch(IOException e)
+        catch(IOException e)
         {
             e.printStackTrace();
         }

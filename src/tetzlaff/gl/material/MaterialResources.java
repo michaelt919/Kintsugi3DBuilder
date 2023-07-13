@@ -14,9 +14,6 @@ package tetzlaff.gl.material;
 
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.nativebuffer.NativeDataType;
-import tetzlaff.gl.types.AbstractDataTypeFactory;
-import tetzlaff.gl.vecmath.IntVector3;
 
 import java.io.File;
 import java.io.IOException;
@@ -78,7 +75,7 @@ public class MaterialResources<ContextType extends Context<ContextType>> impleme
         roughnessTexture = null;
     }
 
-    MaterialResources(ContextType context, Material material, File textureDirectory, TextureLoadOptions loadOptions) throws IOException
+    MaterialResources(ContextType context, ReadonlyMaterial material, File textureDirectory, TextureLoadOptions loadOptions) throws IOException
     {
         File diffuseFile = new File(textureDirectory, material.getDiffuseMap().getMapName());
         if (diffuseFile.exists())

@@ -22,6 +22,7 @@ import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.DoubleVector2;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
 
 /**
@@ -102,7 +103,7 @@ public final class FinalErrorCalculaton
     }
 
     public <ContextType extends Context<ContextType>> void calculateFinalErrorMetrics(
-        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
+        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
         SpecularResources<ContextType> specularFit, ShaderBasedErrorCalculator<ContextType> basisErrorCalculator,
         PrintStream rmseOut)
     {
@@ -156,7 +157,7 @@ public final class FinalErrorCalculaton
      * @throws FileNotFoundException
      */
     private <ContextType extends Context<ContextType>> void calculateGGXRMSE(
-            IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
+            ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
             SpecularResources<ContextType> specularFit, Framebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
         throws FileNotFoundException
     {
@@ -239,7 +240,7 @@ public final class FinalErrorCalculaton
 
     private static <ContextType extends Context<ContextType>>
     Program<ContextType> createFinalErrorCalcProgram(
-        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
+        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {
         return programFactory.createProgram(resources,
             new File("shaders/colorappearance/imgspace_multi_as_single.vert"),
@@ -249,7 +250,7 @@ public final class FinalErrorCalculaton
 
     private static <ContextType extends Context<ContextType>>
     Program<ContextType> createGGXErrorCalcProgram(
-        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
+        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {
         return programFactory.createProgram(resources,
             new File("shaders/colorappearance/imgspace_multi_as_single.vert"),

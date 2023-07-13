@@ -12,12 +12,12 @@
 package tetzlaff.gl.builders;
 
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 
 public interface ColorCubemapBuilder <ContextType extends Context<ContextType>, TextureType extends Cubemap<ContextType>>
 extends ColorTextureBuilder<ContextType, TextureType>
 {
-    ColorCubemapBuilder<ContextType, TextureType> loadFace(CubemapFace face, NativeVectorBuffer data);
+    ColorCubemapBuilder<ContextType, TextureType> loadFace(CubemapFace face, ReadonlyNativeVectorBuffer data);
 
     @Override
     ColorCubemapBuilder<ContextType, TextureType> setInternalFormat(ColorFormat format);

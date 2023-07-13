@@ -12,11 +12,12 @@
 
 package tetzlaff.ibrelight.export.specularfit;
 
+import tetzlaff.ibrelight.core.ReadonlyViewSet;
 import tetzlaff.ibrelight.core.ViewSet;
 
 public class ReconstructionSettings
 {
-    ViewSet reconstructionViewSet = null;
+    ReadonlyViewSet reconstructionViewSet = null;
     boolean reconstructAll = false;
 
     public ReconstructionSettings()
@@ -50,7 +51,7 @@ public class ReconstructionSettings
      *
      * @return
      */
-    public ViewSet getReconstructionViewSet()
+    public ReadonlyViewSet getReconstructionViewSet()
     {
         return reconstructionViewSet;
     }
@@ -60,7 +61,7 @@ public class ReconstructionSettings
      *
      * @return
      */
-    public void setReconstructionViewSet(ViewSet reconstructionViewSet)
+    public void setReconstructionViewSet(ReadonlyViewSet reconstructionViewSet)
     {
         this.reconstructionViewSet = reconstructionViewSet;
     }

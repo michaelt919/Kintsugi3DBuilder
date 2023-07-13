@@ -11,7 +11,7 @@
 
 package tetzlaff.gl.material;
 
-public class MaterialScalarMap extends MaterialTextureMap
+public class MaterialScalarMap extends MaterialTextureMap implements ReadonlyMaterialScalarMap
 {
     private MaterialTextureChannel channel;
 
@@ -20,6 +20,7 @@ public class MaterialScalarMap extends MaterialTextureMap
         channel = MaterialTextureChannel.Unspecified;
     }
 
+    @Override
     public MaterialTextureChannel getChannel()
     {
         return channel;

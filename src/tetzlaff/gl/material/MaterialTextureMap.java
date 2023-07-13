@@ -13,7 +13,7 @@ package tetzlaff.gl.material;
 
 import tetzlaff.gl.vecmath.Vector3;
 
-public class MaterialTextureMap 
+public class MaterialTextureMap implements ReadonlyMaterialTextureMap
 {
     private String mapName;
 
@@ -32,6 +32,7 @@ public class MaterialTextureMap
         scale = new Vector3(1.0f);
     }
 
+    @Override
     public String getMapName()
     {
         return mapName;
@@ -42,6 +43,7 @@ public class MaterialTextureMap
         this.mapName = mapName;
     }
 
+    @Override
     public boolean isClampingRequired()
     {
         return clampingRequired;
@@ -52,6 +54,7 @@ public class MaterialTextureMap
         this.clampingRequired = clampingEnabled;
     }
 
+    @Override
     public float getBase()
     {
         return base;
@@ -62,6 +65,7 @@ public class MaterialTextureMap
         this.base = base;
     }
 
+    @Override
     public float getGain()
     {
         return gain;
@@ -72,6 +76,7 @@ public class MaterialTextureMap
         this.gain = gain;
     }
 
+    @Override
     public Vector3 getOffset()
     {
         return offset;
@@ -82,6 +87,7 @@ public class MaterialTextureMap
         this.offset = offset;
     }
 
+    @Override
     public Vector3 getScale()
     {
         return scale;

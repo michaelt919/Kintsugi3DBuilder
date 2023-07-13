@@ -11,7 +11,7 @@
 
 package tetzlaff.gl.material;
 
-public class MaterialColorMap extends MaterialTextureMap
+public class MaterialColorMap extends MaterialTextureMap implements ReadonlyMaterialColorMap
 {
     private boolean gammaCorrectionRequired;
 
@@ -20,6 +20,7 @@ public class MaterialColorMap extends MaterialTextureMap
         gammaCorrectionRequired = false;
     }
 
+    @Override
     public boolean isGammaCorrectionRequired()
     {
         return gammaCorrectionRequired;

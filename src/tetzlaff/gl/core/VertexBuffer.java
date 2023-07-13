@@ -11,7 +11,7 @@
 
 package tetzlaff.gl.core;
 
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 
 /**
  * An interface for a vertex buffer object that can provide data to be used for rendering.
@@ -34,14 +34,14 @@ public interface VertexBuffer<ContextType extends Context<ContextType>> extends 
      * @param normalize Whether or not each vertex should be automatically normalized.
      * @return The calling object.
      */
-    VertexBuffer<ContextType> setData(NativeVectorBuffer data, boolean normalize);
+    VertexBuffer<ContextType> setData(ReadonlyNativeVectorBuffer data, boolean normalize);
 
     /**
      * Sets the content of the vertex buffer from a memory buffer with a defined format (an array of vectors).
      * @param data The buffer containing the vertex data.
      * @return The calling object.
      */
-    default VertexBuffer<ContextType> setData(NativeVectorBuffer  data)
+    default VertexBuffer<ContextType> setData(ReadonlyNativeVectorBuffer data)
     {
         return this.setData(data, false);
     }

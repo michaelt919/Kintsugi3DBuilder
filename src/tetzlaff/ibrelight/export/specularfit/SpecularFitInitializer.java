@@ -22,16 +22,16 @@ import javax.imageio.ImageIO;
 
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 import tetzlaff.util.ColorArrayList;
 import tetzlaff.optimization.KMeansClustering;
 
 public class SpecularFitInitializer<ContextType extends Context<ContextType>>
 {
-    private final IBRResources<ContextType> resources;
+    private final ReadonlyIBRResources<ContextType> resources;
     private final SpecularBasisSettings specularBasisSettings;
 
-    public SpecularFitInitializer(IBRResources<ContextType> resources, SpecularBasisSettings specularBasisSettings)
+    public SpecularFitInitializer(ReadonlyIBRResources<ContextType> resources, SpecularBasisSettings specularBasisSettings)
     {
         this.resources = resources;
         this.specularBasisSettings = specularBasisSettings;

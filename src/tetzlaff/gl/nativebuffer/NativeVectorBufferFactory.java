@@ -60,7 +60,7 @@ public final class NativeVectorBufferFactory
      * @param count The number of elements in the buffer.
      * @param buffer The buffer to use as storage.
      */
-    public NativeVectorBuffer createFromExistingBuffer(NativeDataType dataType, int dimensions, int count, ByteBuffer buffer)
+    public ReadonlyNativeVectorBuffer createFromExistingBuffer(NativeDataType dataType, int dimensions, int count, ByteBuffer buffer)
     {
         switch(dataType)
         {
@@ -83,7 +83,7 @@ public final class NativeVectorBufferFactory
      * @param count The number of vector elements in the buffer.
      * @param byteArray The elements to use to initialize the vector buffer.
      */
-    public NativeVectorBuffer createFromByteArray(NativeDataType dataType, int dimensions, int count, byte... byteArray)
+    public ReadonlyNativeVectorBuffer createFromByteArray(NativeDataType dataType, int dimensions, int count, byte... byteArray)
     {
         switch(dataType)
         {
@@ -107,7 +107,7 @@ public final class NativeVectorBufferFactory
      * @param count The number of vector elements in the buffer.
      * @param shortArray The elements to use to initialize the vector buffer.
      */
-    public NativeVectorBuffer createFromShortArray(boolean unsigned, int dimensions, int count, short... shortArray)
+    public ReadonlyNativeVectorBuffer createFromShortArray(boolean unsigned, int dimensions, int count, short... shortArray)
     {
         if (!unsigned)
         {
@@ -127,7 +127,7 @@ public final class NativeVectorBufferFactory
      * @param count The number of vector elements in the buffer.
      * @param intArray The elements to use to initialize the vector buffer.
      */
-    public NativeVectorBuffer createFromIntArray(boolean unsigned, int dimensions, int count, int... intArray)
+    public ReadonlyNativeVectorBuffer createFromIntArray(boolean unsigned, int dimensions, int count, int... intArray)
     {
         if (!unsigned)
         {
@@ -146,7 +146,7 @@ public final class NativeVectorBufferFactory
      * @param count The number of vector elements in the buffer.
      * @param floatArray The elements to use to initialize the vector buffer.
      */
-    public NativeVectorBuffer createFromFloatArray(int dimensions, int count, float... floatArray)
+    public ReadonlyNativeVectorBuffer createFromFloatArray(int dimensions, int count, float... floatArray)
     {
         return new NativeFloatVectorBuffer(dimensions, count, floatArray);
     }
@@ -158,7 +158,7 @@ public final class NativeVectorBufferFactory
      * @param count The number of vector elements in the buffer.
      * @param doubleArray The elements to use to initialize the vector buffer.
      */
-    public NativeVectorBuffer createFromDoubleArray(int dimensions, int count, double... doubleArray)
+    public ReadonlyNativeVectorBuffer createFromDoubleArray(int dimensions, int count, double... doubleArray)
     {
         return new NativeDoubleVectorBuffer(dimensions, count, doubleArray);
     }

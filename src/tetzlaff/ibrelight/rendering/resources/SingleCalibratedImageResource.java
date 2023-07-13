@@ -17,10 +17,10 @@ import java.io.IOException;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.geometry.GeometryResources;
-import tetzlaff.gl.geometry.VertexGeometry;
+import tetzlaff.gl.geometry.ReadonlyVertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.ibrelight.core.ReadonlyLoadOptionsModel;
-import tetzlaff.ibrelight.core.ViewSet;
+import tetzlaff.ibrelight.core.ReadonlyViewSet;
 
 /**
  * For use i.e. with projtex_single.frag
@@ -28,7 +28,7 @@ import tetzlaff.ibrelight.core.ViewSet;
 public class SingleCalibratedImageResource<ContextType extends Context<ContextType>> implements Resource
 {
     private final ContextType context;
-    private final ViewSet viewSet;
+    private final ReadonlyViewSet viewSet;
     private final int viewIndex;
     private GeometryResources<ContextType> geometryResources;
     private final boolean geometryResourcesOwned;
@@ -47,7 +47,7 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
      * @param loadOptions
      * @throws IOException
      */
-    SingleCalibratedImageResource(ContextType context, ViewSet viewSet, int viewIndex, File imageFile, VertexGeometry geometry,
+    SingleCalibratedImageResource(ContextType context, ReadonlyViewSet viewSet, int viewIndex, File imageFile, ReadonlyVertexGeometry geometry,
         ReadonlyLoadOptionsModel loadOptions) throws IOException
     {
         this(context, viewSet, viewIndex, imageFile,
@@ -66,13 +66,13 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
      * @param loadOptions
      * @throws IOException
      */
-    private SingleCalibratedImageResource(ContextType context, ViewSet viewSet, int viewIndex, File imageFile,
+    private SingleCalibratedImageResource(ContextType context, ReadonlyViewSet viewSet, int viewIndex, File imageFile,
         GeometryResources<ContextType> geometryResources, ReadonlyLoadOptionsModel loadOptions) throws IOException
     {
         this(context, viewSet, viewIndex, imageFile, geometryResources, false, loadOptions);
     }
 
-    private SingleCalibratedImageResource(ContextType context, ViewSet viewSet, int viewIndex, File imageFile,
+    private SingleCalibratedImageResource(ContextType context, ReadonlyViewSet viewSet, int viewIndex, File imageFile,
         GeometryResources<ContextType> geometryResources, boolean geometryResourcesOwned, ReadonlyLoadOptionsModel loadOptions) throws IOException
     {
         this.context = context;
@@ -147,7 +147,7 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
     }
 
     public static <ContextType extends Context<ContextType>> ProgramBuilder<ContextType> getShaderProgramBuilder(
-        ContextType context, ViewSet viewSet, ReadonlyLoadOptionsModel loadOptions)
+        ContextType context, ReadonlyViewSet viewSet, ReadonlyLoadOptionsModel loadOptions)
     {
         return context.getShaderProgramBuilder()
             .define("INFINITE_LIGHT_SOURCE", viewSet.areLightSourcesInfinite())

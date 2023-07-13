@@ -26,6 +26,8 @@ public class LoadOptionsModelImpl implements ReadonlyLoadOptionsModel
     public final BooleanProperty depthImages = new SimpleBooleanProperty(true);
     public final IntegerProperty depthWidth = new SimpleIntegerProperty(1024);
     public final IntegerProperty depthHeight = new SimpleIntegerProperty(1024);
+    public final IntegerProperty previewWidth = new SimpleIntegerProperty(1024);
+    public final IntegerProperty previewHeight = new SimpleIntegerProperty(1024);
 
     @Override
     public boolean areColorImagesRequested()
@@ -67,5 +69,17 @@ public class LoadOptionsModelImpl implements ReadonlyLoadOptionsModel
     public int getDepthImageHeight()
     {
         return depthHeight.get();
+    }
+
+    @Override
+    public int getPreviewImageWidth()
+    {
+        return previewWidth.get();
+    }
+
+    @Override
+    public int getPreviewImageHeight()
+    {
+        return previewHeight.get();
     }
 }

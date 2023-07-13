@@ -23,7 +23,7 @@ import tetzlaff.gl.core.Texture2D;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStreamResource;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 import tetzlaff.optimization.ReadonlyErrorReport;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
 import tetzlaff.optimization.function.GeneralizedSmoothStepBasis;
@@ -37,7 +37,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 {
     private final ContextType context;
 
-    private final IBRResources<ContextType> resources;
+    private final ReadonlyIBRResources<ContextType> resources;
     private final TextureFitSettings textureFitSettings;
 
     private final SpecularBasisSettings specularBasisSettings;
@@ -49,7 +49,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     private final NormalOptimization<ContextType> normalOptimization;
 
     private SpecularFitOptimizable(
-        IBRResources<ContextType> resources, BasisResources<ContextType> basisResources, boolean basisResourcesOwned,
+        ReadonlyIBRResources<ContextType> resources, BasisResources<ContextType> basisResources, boolean basisResourcesOwned,
         SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings textureFitSettings,
         NormalOptimizationSettings normalOptimizationSettings)
         throws FileNotFoundException
@@ -80,7 +80,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     }
 
     public static <ContextType extends Context<ContextType>> SpecularFitOptimizable<ContextType> create(
-        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings textureFitSettings,
+        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings textureFitSettings,
         SpecularBasisSettings specularBasisSettings, NormalOptimizationSettings normalOptimizationSettings)
         throws FileNotFoundException
     {
@@ -89,7 +89,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
             programFactory, textureFitSettings, normalOptimizationSettings);
     }
 
-    public IBRResources<ContextType> getResources()
+    public ReadonlyIBRResources<ContextType> getResources()
     {
         return resources;
     }

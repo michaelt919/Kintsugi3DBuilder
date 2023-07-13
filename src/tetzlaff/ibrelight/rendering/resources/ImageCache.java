@@ -28,6 +28,7 @@ import tetzlaff.gl.material.TextureLoadOptions;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import tetzlaff.gl.vecmath.IntVector2;
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibrelight.core.SimpleLoadOptionsModel;
@@ -263,7 +264,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
                 try (SingleCalibratedImageResource<ContextType> image =
                     resources.createSingleImageResource(k,
                         // TODO: use specified originalImageDirectory; need to handle search for different file extensions; jpg/png/tiff/etc.
-                        resources.getViewSet().findImageFile(k), // new File(originalImageDirectory, resources.viewSet.getImageFileName(k)),
+                        resources.getViewSet().findFullResImageFile(k), // new File(originalImageDirectory, resources.viewSet.getImageFileName(k)),
                         loadOptions))
                 {
                     fbo.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -385,7 +386,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         return highResCoords.x + highResCoords.y * settings.getTextureWidth();
     }
 
-    private NativeVectorBuffer sampleHighResBuffer(NativeVectorBuffer highResBuffer)
+    private ReadonlyNativeVectorBuffer sampleHighResBuffer(ReadonlyNativeVectorBuffer highResBuffer)
     {
         NativeVectorBuffer sampledBuffer = NativeVectorBufferFactory.getInstance()
             .createEmpty(NativeDataType.FLOAT, 3, settings.getSampledSize() * settings.getSampledSize());

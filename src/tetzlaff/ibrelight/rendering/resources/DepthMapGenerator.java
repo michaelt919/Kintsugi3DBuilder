@@ -17,7 +17,7 @@ import tetzlaff.gl.core.*;
 import tetzlaff.gl.geometry.GeometryResources;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibrelight.core.ViewSet;
+import tetzlaff.ibrelight.core.ReadonlyViewSet;
 
 /**
  * Encapsulates the process of generating a depth map for occlusion / shadow culling with image-based rendering
@@ -49,7 +49,7 @@ public class DepthMapGenerator<ContextType extends Context<ContextType>> impleme
         depthDrawable.addVertexBuffer("position", geometryResources.positionBuffer);
     }
 
-    public void generateDepthMap(ViewSet viewSet, int viewIndex, Framebuffer<ContextType> framebuffer)
+    public void generateDepthMap(ReadonlyViewSet viewSet, int viewIndex, Framebuffer<ContextType> framebuffer)
     {
         framebuffer.clearDepthBuffer();
 
@@ -72,7 +72,7 @@ public class DepthMapGenerator<ContextType extends Context<ContextType>> impleme
      * @param framebuffer
      * @return The shadow matrix
      */
-    public Matrix4 generateShadowMap(ViewSet viewSet, int viewIndex, Framebuffer<ContextType> framebuffer)
+    public Matrix4 generateShadowMap(ReadonlyViewSet viewSet, int viewIndex, Framebuffer<ContextType> framebuffer)
     {
         framebuffer.clearDepthBuffer();
 

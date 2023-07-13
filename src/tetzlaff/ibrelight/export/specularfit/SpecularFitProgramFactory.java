@@ -19,11 +19,9 @@ import java.util.Map.Entry;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.Context;
-import tetzlaff.gl.core.Drawable;
 import tetzlaff.gl.core.Program;
 import tetzlaff.gl.core.ShaderType;
-import tetzlaff.ibrelight.core.TextureFitSettings;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 import tetzlaff.models.ReadonlySettingsModel;
 
 public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
@@ -37,7 +35,7 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
         this.specularBasisSettings = specularBasisSettings;
     }
 
-    public ProgramBuilder<ContextType> getShaderProgramBuilder(IBRResources<ContextType> resources, File vertexShader,
+    public ProgramBuilder<ContextType> getShaderProgramBuilder(ReadonlyIBRResources<ContextType> resources, File vertexShader,
         File fragmentShader, boolean visibilityAndShadowTests)
     {
         ProgramBuilder<ContextType> builder = resources.getShaderProgramBuilder()
@@ -64,12 +62,12 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
                 .define("MICROFACET_DISTRIBUTION_RESOLUTION", specularBasisSettings.getMicrofacetDistributionResolution());
     }
 
-    public ProgramBuilder<ContextType> getShaderProgramBuilder(IBRResources<ContextType> resources, File vertexShader, File fragmentShader)
+    public ProgramBuilder<ContextType> getShaderProgramBuilder(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader)
     {
         return getShaderProgramBuilder(resources, vertexShader, fragmentShader, true);
     }
 
-    public Program<ContextType> createProgram(IBRResources<ContextType> resources, File vertexShader, File fragmentShader,
+    public Program<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader,
         boolean visibilityAndShadowTests, Map<String, Object> additionalDefines)
         throws FileNotFoundException
     {
@@ -91,17 +89,17 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
         return program;
     }
 
-    public Program<ContextType> createProgram(IBRResources<ContextType> resources, File vertexShader, File fragmentShader, boolean visibilityAndShadowTests) throws FileNotFoundException
+    public Program<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader, boolean visibilityAndShadowTests) throws FileNotFoundException
     {
         return createProgram(resources, vertexShader, fragmentShader, visibilityAndShadowTests, Collections.emptyMap());
     }
 
-    public Program<ContextType> createProgram(IBRResources<ContextType> resources, File vertexShader, File fragmentShader) throws FileNotFoundException
+    public Program<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader) throws FileNotFoundException
     {
         return createProgram(resources, vertexShader, fragmentShader, true);
     }
 
-    public void setupShaderProgram(IBRResources<ContextType> resources, Program<ContextType> program)
+    public void setupShaderProgram(ReadonlyIBRResources<ContextType> resources, Program<ContextType> program)
     {
         resources.setupShaderProgram(program);
         program.setUniform("occlusionBias", ibrSettings.getFloat("occlusionBias"));

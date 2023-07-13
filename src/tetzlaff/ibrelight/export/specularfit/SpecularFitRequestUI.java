@@ -12,7 +12,6 @@
 package tetzlaff.ibrelight.export.specularfit;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 
@@ -31,6 +30,7 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import tetzlaff.gl.core.Context;
 import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.io.ViewSetReaderFromVSET;
 
 public class SpecularFitRequestUI implements IBRRequestUI
 {
@@ -237,11 +237,11 @@ public class SpecularFitRequestUI implements IBRRequestUI
                 // Reconstruction view set
                 try
                 {
-                    ViewSet reconstructionViewSet = ViewSet.loadFromVSETFile(
+                    ReadonlyViewSet reconstructionViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(
                         new File(reconstructionViewSetField.getText()));
                     settings.getReconstructionSettings().setReconstructionViewSet(reconstructionViewSet);
                 }
-                catch (FileNotFoundException e)
+                catch (Exception e)
                 {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Invalid view set");
@@ -255,7 +255,8 @@ public class SpecularFitRequestUI implements IBRRequestUI
             settings.getImageCacheSettings().setCacheParentDirectory(new File(settings.getOutputDirectory(), "cache"));
             settings.getImageCacheSettings().setTextureWidth(settings.getTextureFitSettings().width);
             settings.getImageCacheSettings().setTextureHeight(settings.getTextureFitSettings().height);
-            settings.getImageCacheSettings().setTextureSubdiv(16); // TODO expose this in the interface
+            settings.getImageCacheSettings().setTextureSubdiv( // TODO expose this in the interface
+                (int)Math.ceil(Math.max(settings.getTextureFitSettings().width, settings.getTextureFitSettings().height) / 256.0));
             settings.getImageCacheSettings().setSampledSize(256); // TODO expose this in the interface
 
             SpecularFitRequest<ContextType> request = new SpecularFitRequest<>(settings);

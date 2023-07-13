@@ -20,7 +20,7 @@ import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.TextureFitSettings;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 import tetzlaff.optimization.ReadonlyErrorReport;
 import tetzlaff.optimization.ShaderBasedOptimization;
 
@@ -33,7 +33,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     private boolean firstSmooth = true;
 
     public NormalOptimization(
-        IBRResources<ContextType> resources,
+        ReadonlyIBRResources<ContextType> resources,
         SpecularFitProgramFactory<ContextType> programFactory,
         Function<Program<ContextType>, Drawable<ContextType>> drawableFactory,
         TextureFitSettings textureFitSettings, NormalOptimizationSettings normalOptimizationSettings)
@@ -196,7 +196,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     }
 
     private ProgramBuilder<ContextType> getNormalEstimationProgramBuilder(
-        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
+        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,
                 new File("shaders/common/texspace_dynamic.vert"),
@@ -208,7 +208,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
 
     private static <ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> getNormalSmoothProgramBuilder(
-        IBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
+        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,
                 new File("shaders/common/texspace_dynamic.vert"),

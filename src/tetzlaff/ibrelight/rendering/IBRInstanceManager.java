@@ -23,6 +23,7 @@ import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.io.ViewSetWriterToVSET;
 import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.interactive.InitializationException;
 import tetzlaff.models.ReadonlyCameraModel;
@@ -72,6 +73,12 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
+    public boolean isInstanceLoaded()
+    {
+        return ibrInstance != null;
+    }
+
+    @Override
     public void loadFromVSETFile(String id, File vsetFile, ReadonlyLoadOptionsModel loadOptions)
     {
         this.loadingMonitor.startLoading();
@@ -79,7 +86,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         try
         {
             IBRInstance<ContextType> newItem =
-                new IBREngine<ContextType>(id, context,
+                new IBREngine<>(id, context,
                     IBRResourcesImageSpace.getBuilderForContext(this.context)
                         .setLoadingMonitor(this.loadingMonitor)
                         .setLoadOptions(loadOptions)
@@ -125,16 +132,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                     double primaryViewDistance = newItem.getIBRResources().getPrimaryViewDistance();
                     Vector3 lightIntensity = new Vector3((float)(primaryViewDistance * primaryViewDistance));
 
-                    for (int i = 0; i < newItem.getActiveViewSet().getLightCount(); i++)
-                    {
-                        if (Objects.equals(newItem.getActiveViewSet().getLightIntensity(i), Vector3.ZERO))
-                        {
-                            newItem.getActiveViewSet().setLightIntensity(i, lightIntensity);
-                        }
-                    }
-
-                    newItem.getActiveViewSet().setInfiniteLightSources(false);
-                    newItem.getIBRResources().updateLightData();
+                    newItem.getIBRResources().initializeLightIntensities(lightIntensity, false);
                     newItem.reloadShaders();
 
                     if (loadingMonitor != null)
@@ -154,7 +152,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             });
             newInstance = newItem;
         }
-        catch (FileNotFoundException e)
+        catch (Exception e)
         {
             handleMissingFiles(e);
         }
@@ -174,7 +172,9 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                         .setLoadingMonitor(this.loadingMonitor)
                         .setLoadOptions(loadOptions)
                         .loadAgisoftFiles(xmlFile, meshFile, undistortedImageDirectory)
-                        .setPrimaryView(primaryViewName));
+                        .setPrimaryView(primaryViewName)
+                        .generatePreviewImages(loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight(),
+                            String.format("_%dx%d", loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight())));
 
             newItem.getSceneModel().setObjectModel(this.objectModel);
             newItem.getSceneModel().setCameraModel(this.cameraModel);
@@ -217,14 +217,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
                     Vector3 lightIntensity = new Vector3((float)(primaryViewDistance * primaryViewDistance));
 
-                    for (int i = 0; i < newItem.getActiveViewSet().getLightCount(); i++)
-                    {
-                        newItem.getActiveViewSet().setLightIntensity(i, lightIntensity);
-                    }
-
-                    newItem.getActiveViewSet().setInfiniteLightSources(false);
-
-                    newItem.getIBRResources().updateLightData();
+                    newItem.getIBRResources().initializeLightIntensities(lightIntensity, false);
                     newItem.reloadShaders();
 
                     if (loadingMonitor != null)
@@ -244,7 +237,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             });
             newInstance = newItem;
         }
-        catch(FileNotFoundException|XMLStreamException e)
+        catch(Exception e)
         {
             handleMissingFiles(e);
         }
@@ -276,7 +269,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     @Override
     public void applyLightCalibration()
     {
-        ViewSet viewSet = ibrInstance.getIBRResources().getViewSet();
+        ReadonlyViewSet viewSet = ibrInstance.getIBRResources().getViewSet();
 
         ibrInstance.getDynamicResourceManager().setLightCalibration(
             viewSet.getLightPosition(viewSet.getLightIndex(viewSet.getPrimaryViewIndex()))
@@ -335,10 +328,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     @Override
     public void saveToVSETFile(File vsetFile) throws IOException
     {
-        try (OutputStream stream = new FileOutputStream(vsetFile))
-        {
-            ibrInstance.getActiveViewSet().writeVSETFileToStream(stream, vsetFile.getParentFile().toPath());
-        }
+        ViewSetWriterToVSET.getInstance().writeToFile(ibrInstance.getActiveViewSet(), vsetFile);
     }
 
     @Override

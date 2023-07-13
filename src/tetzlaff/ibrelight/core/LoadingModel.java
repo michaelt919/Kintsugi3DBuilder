@@ -100,5 +100,8 @@ public class LoadingModel
         this.handler.unload();
     }
 
-    public boolean hasValidHandler(){return this.handler != null;}
+    public boolean hasValidHandler()
+    {
+        return this.handler != null && this.handler.isInstanceLoaded();
+    }
 }

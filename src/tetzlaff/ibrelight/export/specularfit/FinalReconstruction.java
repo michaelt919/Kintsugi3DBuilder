@@ -21,21 +21,21 @@ import tetzlaff.gl.core.ColorFormat;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Framebuffer;
 import tetzlaff.ibrelight.core.Projection;
+import tetzlaff.ibrelight.core.ReadonlyViewSet;
 import tetzlaff.ibrelight.core.TextureFitSettings;
-import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.rendering.ImageReconstruction;
-import tetzlaff.ibrelight.rendering.resources.IBRResources;
+import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 
 public class FinalReconstruction<ContextType extends Context<ContextType>>
 {
-    private final IBRResources<ContextType> resources;
+    private final ReadonlyIBRResources<ContextType> resources;
     private final TextureFitSettings textureFitSettings;
     private final ReconstructionSettings reconstructionSettings;
 
     private final int imageWidth;
     private final int imageHeight;
 
-    public FinalReconstruction(IBRResources<ContextType> resources, TextureFitSettings textureFitSettings, ReconstructionSettings reconstructionSettings)
+    public FinalReconstruction(ReadonlyIBRResources<ContextType> resources, TextureFitSettings textureFitSettings, ReconstructionSettings reconstructionSettings)
     {
         this.resources = resources;
         this.textureFitSettings = textureFitSettings;
@@ -89,7 +89,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
             }))
         {
             // Use the same view set as for fitting if another wasn't specified for reconstruction.
-            ViewSet reconstructionViewSet;
+            ReadonlyViewSet reconstructionViewSet;
             if (reconstructionSettings.getReconstructionViewSet() != null)
             {
                 reconstructionViewSet = reconstructionSettings.getReconstructionViewSet();

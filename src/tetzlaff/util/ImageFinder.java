@@ -20,7 +20,7 @@ import java.io.FileNotFoundException;
  */
 public class ImageFinder
 {
-    private static ImageFinder INSTANCE = new ImageFinder();
+    private static final ImageFinder INSTANCE = new ImageFinder();
 
     public static ImageFinder getInstance()
     {
@@ -62,7 +62,7 @@ public class ImageFinder
                 System.out.printf("Trying '%s'\n", imageFileGuess.getAbsolutePath());
                 if (imageFileGuess.exists())
                 {
-                    System.out.printf("Found!!\n");
+                    System.out.println("Found!!");
                     return imageFileGuess;
                 }
             }

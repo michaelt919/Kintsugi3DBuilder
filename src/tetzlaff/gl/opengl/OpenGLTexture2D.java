@@ -27,7 +27,7 @@ import tetzlaff.gl.builders.base.DepthTextureBuilderBase;
 import tetzlaff.gl.builders.base.StencilTextureBuilderBase;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.core.ColorFormat.DataType;
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import tetzlaff.gl.types.AbstractDataType;
 import tetzlaff.util.RadianceImageLoader;
 import tetzlaff.util.RadianceImageLoader.Image;
@@ -700,7 +700,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
     }
 
     @Override
-    public void load(NativeVectorBuffer data)
+    public void load(ReadonlyNativeVectorBuffer data)
     {
         if (data.getCount() != width * height)
         {
