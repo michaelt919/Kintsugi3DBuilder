@@ -20,6 +20,7 @@ import java.util.OptionalInt;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
+import javafx.geometry.Bounds;
 import javafx.scene.Scene;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelFormat;
@@ -44,7 +45,7 @@ public class WindowImpl<ContextType extends Context<ContextType>>
     private final Stage stage;
     private final Pane root;
     private final ImageView imageView;
-    private final ChangeListener<Boolean> iconify;
+    private final DoubleFramebufferObject<ContextType> framebuffer;
     private WritableImage image;
 
     private boolean windowClosing = false;
@@ -134,7 +135,9 @@ public class WindowImpl<ContextType extends Context<ContextType>>
         Scene scene = new Scene(root);
         stage.setScene(scene);
 
-        framebuffer.addSwapListener(frontFBO ->
+        this.framebuffer = framebuffer;
+
+        this.framebuffer.addSwapListener(frontFBO ->
         {
             if (!primaryStage.isIconified())
             {
@@ -172,31 +175,10 @@ public class WindowImpl<ContextType extends Context<ContextType>>
             }
         });
 
-        ChangeListener<? super Number> windowSizeListener = (event, oldValue, newValue) ->
-        {
-            int width = (int) Math.round(root.getWidth());
-            int height = (int) Math.round(root.getHeight());
-
-            framebuffer.requestResize(width, height);
-            eventCollector.windowSize(l -> l.windowResized(this, width, height));
-            eventCollector.framebufferSize(l -> l.framebufferResized(this, width, height));
-            windowSize = new WindowSize(width, height);
-        };
-
-        root.widthProperty().addListener(windowSizeListener);
-        root.heightProperty().addListener(windowSizeListener);
-
-        ChangeListener<? super Number> windowPosListener = (event, oldValue, newValue) ->
-            eventCollector.windowPos(l ->
-            {
-                int width = (int) Math.round(stage.getX());
-                int height = (int) Math.round(stage.getY());
-                l.windowMoved(this, width, height);
-                windowPosition = new WindowPosition(width, height);
-            });
-
-        stage.xProperty().addListener(windowPosListener);
-        stage.yProperty().addListener(windowPosListener);
+        stage.widthProperty().addListener((event, oldValue, newValue) -> handleWindowEvent());
+        stage.heightProperty().addListener((event, oldValue, newValue) -> handleWindowEvent());
+        stage.xProperty().addListener((event, oldValue, newValue) -> handleWindowEvent());
+        stage.yProperty().addListener((event, oldValue, newValue) -> handleWindowEvent());
 
         stage.focusedProperty().addListener((event, oldValue, newValue) ->
         {
@@ -212,19 +194,17 @@ public class WindowImpl<ContextType extends Context<ContextType>>
             focused = stage.isFocused();
         });
 
-        iconify = (event, oldValue, newValue) ->
+        primaryStage.iconifiedProperty().addListener((event1, oldValue, newValue) ->
         {
             if (oldValue && !newValue)
             {
-                eventCollector.windowRestored(l -> l.windowRestored(this));
+                eventCollector.windowRestored(l1 -> l1.windowRestored(this));
             }
             else if (newValue && !oldValue)
             {
-                eventCollector.windowIconified(l -> l.windowIconified(this));
+                eventCollector.windowIconified(l1 -> l1.windowIconified(this));
             }
-        };
-
-        primaryStage.iconifiedProperty().addListener(iconify);
+        });
 
         stage.setOnCloseRequest(event ->
         {
@@ -276,14 +256,14 @@ public class WindowImpl<ContextType extends Context<ContextType>>
                 new CharacterStringConverter().fromString(event.getCharacter()), modifierKeys));
         });
 
-        root.setOnMousePressed(event ->
+        imageView.setOnMousePressed(event ->
         {
             handleMouseEvent(event);
             getButtonIndex(event.getButton()).ifPresent(
                 index -> eventCollector.mouseButtonPress(l -> l.mouseButtonPressed(this, index, modifierKeys)));
         });
 
-        root.setOnMouseReleased(event ->
+        imageView.setOnMouseReleased(event ->
         {
             handleMouseEvent(event);
             getButtonIndex(event.getButton()).ifPresent(
@@ -296,8 +276,8 @@ public class WindowImpl<ContextType extends Context<ContextType>>
             eventCollector.cursorPos(l -> l.cursorMoved(this, event.getSceneX(), event.getSceneY()));
         };
 
-        root.setOnMouseMoved(mouseCursor);
-        root.setOnMouseDragged(mouseCursor);
+        imageView.setOnMouseMoved(mouseCursor);
+        imageView.setOnMouseDragged(mouseCursor);
 
         EventHandler<? super MouseEvent> mouseEnter = event ->
         {
@@ -305,8 +285,8 @@ public class WindowImpl<ContextType extends Context<ContextType>>
             eventCollector.cursorEnter(l -> l.cursorEntered(this));
         };
 
-        root.setOnMouseEntered(mouseEnter);
-        root.setOnMouseDragEntered(mouseEnter);
+        imageView.setOnMouseEntered(mouseEnter);
+        imageView.setOnMouseDragEntered(mouseEnter);
 
         EventHandler<? super MouseEvent> mouseExit = event ->
         {
@@ -314,15 +294,37 @@ public class WindowImpl<ContextType extends Context<ContextType>>
             eventCollector.cursorExit(l -> l.cursorExited(this));
         };
 
-        root.setOnMouseExited(mouseExit);
-        root.setOnMouseDragExited(mouseExit);
+        imageView.setOnMouseExited(mouseExit);
+        imageView.setOnMouseDragExited(mouseExit);
 
-        root.setOnScroll(event -> eventCollector.scroll(
+        imageView.setOnScroll(event -> eventCollector.scroll(
             l -> l.scroll(this, event.getDeltaX(), event.getDeltaY())));
 
-        windowSize = new WindowSize((int)Math.round(root.getWidth()), (int)Math.round(root.getHeight()));
+        windowSize = new WindowSize((int)Math.round(imageView.getImage().getWidth()), (int)Math.round(imageView.getImage().getHeight()));
         windowPosition = new WindowPosition((int)Math.round(stage.getX()), (int)Math.round(stage.getY()));
         focused = stage.isFocused();
+    }
+
+    private void handleWindowEvent()
+    {
+        // https://stackoverflow.com/questions/31807329/get-screen-coordinates-of-a-node-in-javafx-8
+        Bounds bounds = imageView.getBoundsInLocal();
+        Bounds screenBounds = imageView.localToScreen(bounds);
+        int x = (int) Math.round(screenBounds.getMinX());
+        int y = (int) Math.round(screenBounds.getMinY());
+        int width = (int) Math.round(screenBounds.getWidth());
+        int height = (int) Math.round(screenBounds.getHeight());
+
+        framebuffer.requestResize(width, height);
+        eventCollector.windowSize(l -> l.windowResized(this, width, height));
+        eventCollector.framebufferSize(l -> l.framebufferResized(this, width, height));
+        windowSize = new WindowSize(width, height);
+
+        if (x != windowPosition.x || y != windowPosition.y)
+        {
+            eventCollector.windowPos(l -> l.windowMoved(this, x, y));
+            windowPosition = new WindowPosition(x, y);
+        }
     }
 
     private static OptionalInt getButtonIndex(MouseButton button)

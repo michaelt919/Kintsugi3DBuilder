@@ -21,6 +21,8 @@ public class InteractiveApplication
     private final List<EventPollable> pollables;
     private final List<Refreshable> refreshables;
 
+    private double fpsCap = Double.POSITIVE_INFINITY;
+
     private static final boolean FPS_COUNTER = false;
 
     public InteractiveApplication(EventPollable pollable, Refreshable refreshable)
@@ -59,6 +61,8 @@ public class InteractiveApplication
 
         while (!shouldTerminate)
         {
+            int frameTime = 0;
+
             for (Refreshable refreshable : this.refreshables)
             {
                 try
@@ -72,6 +76,7 @@ public class InteractiveApplication
             }
             Date timestampB = new Date();
             refreshTime += timestampB.getTime() - timestampA.getTime();
+            frameTime += timestampB.getTime() - timestampA.getTime();
             for (EventPollable poller : pollables)
             {
                 try
@@ -86,6 +91,7 @@ public class InteractiveApplication
             }
             timestampA = new Date();
             pollingTime += timestampA.getTime() - timestampB.getTime();
+            frameTime += timestampA.getTime() - timestampB.getTime();
 
             if (FPS_COUNTER)
             {
@@ -100,11 +106,27 @@ public class InteractiveApplication
                     frames++;
                 }
             }
+
+            // Sleep if necessary to not exceed the fps cap
+            double minFrameTime = 1000.0 / fpsCap;
+            if (frameTime < minFrameTime)
+            {
+                try
+                {
+                    Thread.sleep(Math.round(minFrameTime - frameTime));
+                }
+                catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
         }
+
         System.out.println("Main loop terminated.");
         System.out.println("Total time elapsed: " + (timestampA.getTime() - startTimestamp.getTime()) + " milliseconds");
         System.out.println("Time spent polling for events: " + pollingTime + " milliseconds");
         System.out.println("Time spent on refreshes: " + refreshTime + " milliseconds");
+
         for (Refreshable refreshable : this.refreshables)
         {
             try
@@ -199,5 +221,15 @@ public class InteractiveApplication
                 }
             }
         }
+    }
+
+    public double getFPSCap()
+    {
+        return fpsCap;
+    }
+
+    public void setFPSCap(double fpsCap)
+    {
+        this.fpsCap = fpsCap;
     }
 }

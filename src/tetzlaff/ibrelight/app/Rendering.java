@@ -295,6 +295,7 @@ public final class Rendering
             // Create a new application to run our event loop and give it the WindowImpl for polling
             // of events and the OpenGL context.  The ULFRendererList provides the renderable.
             InteractiveApplication app = InteractiveGraphics.createApplication(window, context, instanceManager);
+            app.setFPSCap(60.0); // TODO make this configurable
 
             requestQueue.setInstanceManager(instanceManager);
             requestQueue.setLoadingMonitor(new LoadingMonitor()

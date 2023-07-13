@@ -50,8 +50,9 @@ public class CopyWindowBuilder<ContextType extends WindowContextBase<ContextType
     {
         Platform.runLater(() -> result = new WindowImpl<>(primaryStage, context, framebuffer, this));
 
-        while(result == null)
+        while (result == null)
         {
+            Thread.onSpinWait();
         }
 
         return result;
