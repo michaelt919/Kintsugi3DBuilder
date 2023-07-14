@@ -21,11 +21,11 @@ import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.geometry.GeometryMode;
+import tetzlaff.gl.geometry.VertexGeometry;
 import tetzlaff.gl.material.TextureLoadOptions;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
-import tetzlaff.gl.geometry.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.*;
@@ -559,7 +559,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     public SingleCalibratedImageResource<ContextType> createSingleImageResource(int viewIndex, ReadonlyLoadOptionsModel loadOptions)
         throws IOException
     {
-        return createSingleImageResource(viewIndex, getViewSet().getFullResImageFile(viewIndex), loadOptions);
+        return createSingleImageResource(viewIndex, getViewSet().findFullResImageFile(viewIndex), loadOptions);
     }
 
     /**

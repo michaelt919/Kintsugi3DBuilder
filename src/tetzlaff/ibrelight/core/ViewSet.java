@@ -11,7 +11,9 @@
 
 package tetzlaff.ibrelight.core;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -594,7 +596,7 @@ public final class ViewSet implements ReadonlyViewSet
             {
                 System.out.printf("%d/%d", i, this.getCameraPoseCount());
                 System.out.println();
-                ImageLodResizer resizer = new ImageLodResizer(this.getFullResImageFile(i));
+                ImageLodResizer resizer = new ImageLodResizer(this.findFullResImageFile(i));
                 resizer.saveAtResolution(this.getPreviewImageFile(i), width, height);
             }
 

@@ -41,7 +41,7 @@ public class ImageFinder
         else
         {
             // Try some alternate file formats/extensions
-            String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG" };
+            String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "tif", "TIF", "tiff", "TIFF" };
             for(String extension : altFormats)
             {
                 String[] filenameParts = requestedFile.getName().split("\\.");
