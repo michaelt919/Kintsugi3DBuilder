@@ -35,6 +35,7 @@ import javafx.scene.control.Dialog;
 import javafx.scene.image.Image;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import tetzlaff.ibrelight.javafx.controllers.scene.WelcomeWindowController;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.ibrelight.app.Rendering;
 import tetzlaff.ibrelight.app.SynchronizedWindow;
@@ -128,34 +129,41 @@ public class MainApplication extends Application
         URL sceneURL = getClass().getClassLoader().getResource(sceneFXMLFileName);
         assert sceneURL != null : "cant find " + sceneFXMLFileName;
 
+        String welcomeWindowFXMLFileName = "fxml/scene/WelcomeWindow.fxml";
+        URL welcomeWindowURL = getClass().getClassLoader().getResource(welcomeWindowFXMLFileName);
+        assert welcomeWindowURL != null : "cant find " + welcomeWindowFXMLFileName;
+
         //init fxml loaders
         FXMLLoader sceneFXMLLoader = new FXMLLoader(sceneURL);
         FXMLLoader libraryFXMLLoader = new FXMLLoader(libraryURL);
         FXMLLoader menuBarFXMLLoader = new FXMLLoader(menuBarURL);
+        FXMLLoader welcomeWindowFXMLLoader = new FXMLLoader(welcomeWindowURL);
 
         //load Parents
         Parent menuBarRoot = menuBarFXMLLoader.load();
         Parent libraryRoot = libraryFXMLLoader.load();
         Parent sceneRoot = sceneFXMLLoader.load();
+        Parent welcomeRoot = welcomeWindowFXMLLoader.load();
 
         //load Controllers
         RootSceneController sceneController = sceneFXMLLoader.getController();
         MenubarController menuBarController = menuBarFXMLLoader.getController();
 //        LibraryController libraryController = libraryFXMLLoader.getController();
+        WelcomeWindowController welcomeWindowController = welcomeWindowFXMLLoader.getController();
 
         //load stages
         primaryStage.setTitle("IBRelight");
-        primaryStage.setScene(new Scene(menuBarRoot));
-
-        Stage libraryStage = new Stage();
-        libraryStage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
-        libraryStage.setTitle("Library");
-        libraryStage.setScene(new Scene(libraryRoot));
-
-        Stage sceneStage = new Stage();
-        sceneStage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
-        sceneStage.setTitle("Scene");
-        sceneStage.setScene(new Scene(sceneRoot));
+        primaryStage.setScene(new Scene(welcomeRoot));
+//
+//        Stage libraryStage = new Stage();
+//        libraryStage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+//        libraryStage.setTitle("Library");
+//        libraryStage.setScene(new Scene(libraryRoot));
+//
+//        Stage sceneStage = new Stage();
+//        sceneStage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+//        sceneStage.setTitle("Scene");
+//        sceneStage.setScene(new Scene(sceneRoot));
 
         //set positions
 
@@ -164,25 +172,22 @@ public class MainApplication extends Application
         primaryStage.setX(primaryScreenBounds.getMinX() + 10);
         primaryStage.setY(primaryScreenBounds.getMinY() + 10);
 
-        primaryStage.setResizable(false);
-
-        primaryStage.show();
-
-        libraryStage.setX(primaryScreenBounds.getMinX() + 10);
-        libraryStage.setY(primaryScreenBounds.getMinY() + 50);
-        libraryStage.initOwner(primaryStage.getScene().getWindow());
+//        libraryStage.setX(primaryScreenBounds.getMinX() + 10);
+//        libraryStage.setY(primaryScreenBounds.getMinY() + 50);
+//        libraryStage.initOwner(primaryStage.getScene().getWindow());
 
         //libraryStage.show();
 
-        sceneStage.setX(primaryScreenBounds.getMinX() + primaryScreenBounds.getWidth() - 430);
-        sceneStage.setY(primaryScreenBounds.getMinY() + 10);
-        sceneStage.initOwner(primaryStage.getScene().getWindow());
-
-        sceneStage.show();
-        sceneStage.setMinWidth(sceneStage.getWidth());
-        sceneStage.setMaxWidth(sceneStage.getWidth());
+//        sceneStage.setX(primaryScreenBounds.getMinX() + primaryScreenBounds.getWidth() - 430);
+//        sceneStage.setY(primaryScreenBounds.getMinY() + 10);
+//        sceneStage.initOwner(primaryStage.getScene().getWindow());
+//
+//        sceneStage.show();
+//        sceneStage.setMinWidth(sceneStage.getWidth());
+//        sceneStage.setMaxWidth(sceneStage.getWidth());
 
         primaryStage.requestFocus();
+        primaryStage.show();
 
         SettingsModelImpl settingsModel = InternalModels.getInstance().getSettingsModel();
         settingsModel.createBooleanSetting("lightCalibrationMode", false);
@@ -230,12 +235,12 @@ public class MainApplication extends Application
         //set up close and focusGained
         WindowSynchronization.getInstance().addListener(menuBarWindow);
 
-        sceneStage.setOnCloseRequest(event ->
-        {
-            // Consume the event and let the window synchronization system close the stage later if the user confirms that they want to exit.
-            event.consume();
-            WindowSynchronization.getInstance().quit();
-        });
+//        sceneStage.setOnCloseRequest(event ->
+//        {
+//            // Consume the event and let the window synchronization system close the stage later if the user confirms that they want to exit.
+//            event.consume();
+//            WindowSynchronization.getInstance().quit();
+//        });
 
         primaryStage.setOnCloseRequest(event ->
         {
