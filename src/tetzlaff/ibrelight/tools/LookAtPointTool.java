@@ -11,8 +11,8 @@
 
 package tetzlaff.ibrelight.tools;//Created by alexk on 8/8/2017.
 
+import tetzlaff.gl.window.CanvasSize;
 import tetzlaff.gl.window.CursorPosition;
-import tetzlaff.gl.window.WindowSize;
 import tetzlaff.models.ExtendedCameraModel;
 import tetzlaff.models.SceneViewport;
 import tetzlaff.models.SceneViewportModel;
@@ -43,10 +43,10 @@ final class LookAtPointTool implements DragTool
     }
 
     @Override
-    public void mouseButtonPressed(CursorPosition cursorPosition, WindowSize windowSize)
+    public void mouseButtonPressed(CursorPosition cursorPosition, CanvasSize canvasSize)
     {
-        double normalizedX = cursorPosition.x / windowSize.width;
-        double normalizedY = cursorPosition.y / windowSize.height;
+        double normalizedX = cursorPosition.x / canvasSize.width;
+        double normalizedY = cursorPosition.y / canvasSize.height;
 
         SceneViewport sceneViewport = sceneViewportModel.getSceneViewport();
         Object clickedObject = sceneViewport.getObjectAtCoordinates(normalizedX, normalizedY);

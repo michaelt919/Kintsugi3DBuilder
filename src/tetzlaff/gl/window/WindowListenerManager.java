@@ -15,13 +15,13 @@ import tetzlaff.gl.window.listeners.*;
 
 public interface WindowListenerManager 
 {
-    void addWindowPositionListener(CanvasPositionListener listener);
+    void addCanvasPositionListener(CanvasPositionListener listener);
 
-    void addWindowSizeListener(CanvasSizeListener listener);
+    void addCanvasSizeListener(CanvasSizeListener listener);
 
     void addWindowCloseListener(WindowCloseListener listener);
 
-    void addWindowRefreshListener(CanvasRefreshListener listener);
+    void addCanvasRefreshListener(CanvasRefreshListener listener);
 
     void addWindowFocusLostListener(WindowFocusLostListener listener);
 

@@ -19,8 +19,8 @@ public interface Canvas3D<ContextType extends Context<? extends ContextType>> ex
     boolean isHighDPI();
     @Override
     void close();
-    WindowSize getWindowSize();
-    WindowPosition getWindowPosition();
+    CanvasSize getSize();
+    CanvasPosition getPosition();
     MouseButtonState getMouseButtonState(int buttonIndex);
     KeyState getKeyState(Key key);
     CursorPosition getCursorPosition();

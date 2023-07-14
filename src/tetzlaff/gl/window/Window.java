@@ -29,9 +29,9 @@ public interface Window<ContextType extends Context<ContextType>> extends Canvas
 
     void setWindowTitle(String title);
 
-    void setWindowSize(int width, int height);
+    void setSize(int width, int height);
 
-    void setWindowPosition(int x, int y);
+    void setPosition(int x, int y);
 
     boolean isFocused();
 }

@@ -88,7 +88,7 @@ public final class ToolBox
                 DragTool selectedTool = getSelectedDragTool();
                 if (selectedTool != null)
                 {
-                    selectedTool.cursorDragged(new CursorPosition(xPos, yPos), canvas.getWindowSize());
+                    selectedTool.cursorDragged(new CursorPosition(xPos, yPos), canvas.getSize());
                 }
             }
         }
@@ -128,7 +128,7 @@ public final class ToolBox
                     DragTool selectedTool = getSelectedDragTool();
                     if (selectedTool != null)
                     {
-                        selectedTool.mouseButtonPressed(canvas.getCursorPosition(), canvas.getWindowSize());
+                        selectedTool.mouseButtonPressed(canvas.getCursorPosition(), canvas.getSize());
                     }
                 }
             }
@@ -150,7 +150,7 @@ public final class ToolBox
                 DragTool selectedTool = getSelectedDragTool();
                 if (selectedTool != null)
                 {
-                    selectedTool.mouseButtonReleased(canvas.getCursorPosition(), canvas.getWindowSize());
+                    selectedTool.mouseButtonReleased(canvas.getCursorPosition(), canvas.getSize());
                 }
                 currentMode = null;
             }

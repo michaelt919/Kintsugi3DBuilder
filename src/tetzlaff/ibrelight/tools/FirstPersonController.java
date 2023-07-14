@@ -15,9 +15,9 @@ import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.window.Canvas3D;
+import tetzlaff.gl.window.CanvasSize;
 import tetzlaff.gl.window.Key;
 import tetzlaff.gl.window.ModifierKeys;
-import tetzlaff.gl.window.WindowSize;
 import tetzlaff.gl.window.listeners.CursorPositionListener;
 import tetzlaff.gl.window.listeners.KeyPressListener;
 import tetzlaff.gl.window.listeners.KeyReleaseListener;
@@ -183,7 +183,7 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
     {
         if (enabled)
         {
-            WindowSize size = canvas.getWindowSize();
+            CanvasSize size = canvas.getSize();
 
             if (!Double.isNaN(lastCursorX) && !Double.isNaN(lastCursorY))
             {

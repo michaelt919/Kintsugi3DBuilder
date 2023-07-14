@@ -64,13 +64,13 @@ public class WindowListenerManagerInstance implements WindowListenerManager
     }
 
     @Override
-    public void addWindowPositionListener(CanvasPositionListener listener)
+    public void addCanvasPositionListener(CanvasPositionListener listener)
     {
         canvasPosListeners.add(listener);
     }
 
     @Override
-    public void addWindowSizeListener(CanvasSizeListener listener)
+    public void addCanvasSizeListener(CanvasSizeListener listener)
     {
         canvasSizeListeners.add(listener);
     }
@@ -82,7 +82,7 @@ public class WindowListenerManagerInstance implements WindowListenerManager
     }
 
     @Override
-    public void addWindowRefreshListener(CanvasRefreshListener listener)
+    public void addCanvasRefreshListener(CanvasRefreshListener listener)
     {
         canvasRefreshListeners.add(listener);
     }

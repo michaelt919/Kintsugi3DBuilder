@@ -161,7 +161,7 @@ public class WindowImpl<ContextType extends WindowContextBase<ContextType>>
     @Override
     public boolean isHighDPI()
     {
-        WindowSize winSize = getWindowSize();
+        CanvasSize winSize = getSize();
         FramebufferSize fbSize = context.getDefaultFramebufferSize();
         return winSize.width != fbSize.width || winSize.height != fbSize.height;
     }
@@ -191,35 +191,35 @@ public class WindowImpl<ContextType extends WindowContextBase<ContextType>>
     }
 
     @Override
-    public WindowSize getWindowSize()
+    public CanvasSize getSize()
     {
         ByteBuffer widthBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
         ByteBuffer heightBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
         glfwGetWindowSize(handle, widthBuffer, heightBuffer);
         int width = widthBuffer.asIntBuffer().get(0);
         int height = heightBuffer.asIntBuffer().get(0);
-        return new WindowSize(width, height);
+        return new CanvasSize(width, height);
     }
 
     @Override
-    public WindowPosition getWindowPosition()
+    public CanvasPosition getPosition()
     {
         ByteBuffer xBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
         ByteBuffer yBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
         glfwGetWindowPos(handle, xBuffer, yBuffer);
         int x = xBuffer.asIntBuffer().get(0);
         int y = yBuffer.asIntBuffer().get(0);
-        return new WindowPosition(x, y);
+        return new CanvasPosition(x, y);
     }
 
     @Override
-    public void setWindowSize(int width, int height)
+    public void setSize(int width, int height)
     {
         glfwSetWindowSize(handle, width, height);
     }
 
     @Override
-    public void setWindowPosition(int x, int y)
+    public void setPosition(int x, int y)
     {
         glfwSetWindowPos(handle, x, y);
     }

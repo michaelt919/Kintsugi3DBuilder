@@ -13,8 +13,8 @@ package tetzlaff.ibrelight.tools;//Created by alexk on 7/24/2017.
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.window.CanvasSize;
 import tetzlaff.gl.window.CursorPosition;
-import tetzlaff.gl.window.WindowSize;
 import tetzlaff.models.ExtendedCameraModel;
 import tetzlaff.models.ExtendedObjectModel;
 
@@ -52,17 +52,17 @@ final class ObjectRotationTool implements DragTool
     }
 
     @Override
-    public void mouseButtonPressed(CursorPosition cursorPosition, WindowSize windowSize)
+    public void mouseButtonPressed(CursorPosition cursorPosition, CanvasSize canvasSize)
     {
         this.mouseStart = cursorPosition;
 
         oldOrbitMatrix = objectModel.getOrbit();
         cameraOrbitMatrix = cameraModel.getOrbit();
-        orbitSensitivityAdjusted = ORBIT_SENSITIVITY / Math.min(windowSize.width, windowSize.height);
+        orbitSensitivityAdjusted = ORBIT_SENSITIVITY / Math.min(canvasSize.width, canvasSize.height);
     }
 
     @Override
-    public void cursorDragged(CursorPosition cursorPosition, WindowSize windowSize)
+    public void cursorDragged(CursorPosition cursorPosition, CanvasSize canvasSize)
     {
         if (cursorPosition.y != mouseStart.y || cursorPosition.x != mouseStart.x)
         {

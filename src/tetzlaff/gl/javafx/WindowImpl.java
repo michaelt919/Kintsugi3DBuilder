@@ -54,8 +54,8 @@ public class WindowImpl<ContextType extends Context<ContextType>>
 
     private boolean windowClosing = false;
 
-    private WindowSize windowSize;
-    private WindowPosition windowPosition;
+    private CanvasSize canvasSize;
+    private CanvasPosition canvasPosition;
     private boolean focused;
 
     private final Map<Key, KeyState> keyStates = new EnumMap<>(Key.class);
@@ -332,8 +332,8 @@ public class WindowImpl<ContextType extends Context<ContextType>>
         imageView.setOnScroll(event -> eventCollector.scroll(
             l -> l.scroll(this, event.getDeltaX(), event.getDeltaY())));
 
-        windowSize = new WindowSize((int)Math.round(imageView.getImage().getWidth()), (int)Math.round(imageView.getImage().getHeight()));
-        windowPosition = new WindowPosition((int)Math.round(stage.getX()), (int)Math.round(stage.getY()));
+        canvasSize = new CanvasSize((int)Math.round(imageView.getImage().getWidth()), (int)Math.round(imageView.getImage().getHeight()));
+        canvasPosition = new CanvasPosition((int)Math.round(stage.getX()), (int)Math.round(stage.getY()));
         focused = stage.isFocused();
     }
 
@@ -348,14 +348,14 @@ public class WindowImpl<ContextType extends Context<ContextType>>
         int height = (int) Math.round(screenBounds.getHeight());
 
         framebuffer.requestResize(width, height);
-        eventCollector.windowSize(l -> l.canvasResized(this, width, height));
+        eventCollector.canvasSize(l -> l.canvasResized(this, width, height));
         eventCollector.framebufferSize(l -> l.framebufferResized(this, width, height));
-        windowSize = new WindowSize(width, height);
+        canvasSize = new CanvasSize(width, height);
 
-        if (x != windowPosition.x || y != windowPosition.y)
+        if (x != canvasPosition.x || y != canvasPosition.y)
         {
-            eventCollector.windowPos(l -> l.canvasMoved(this, x, y));
-            windowPosition = new WindowPosition(x, y);
+            eventCollector.canvasPos(l -> l.canvasMoved(this, x, y));
+            canvasPosition = new CanvasPosition(x, y);
         }
     }
 
@@ -459,15 +459,15 @@ public class WindowImpl<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public WindowSize getWindowSize()
+    public CanvasSize getSize()
     {
-        return windowSize;
+        return canvasSize;
     }
 
     @Override
-    public WindowPosition getWindowPosition()
+    public CanvasPosition getPosition()
     {
-        return windowPosition;
+        return canvasPosition;
     }
 
     @Override
@@ -477,7 +477,7 @@ public class WindowImpl<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public void setWindowSize(int width, int height)
+    public void setSize(int width, int height)
     {
         Platform.runLater(() ->
         {
@@ -488,7 +488,7 @@ public class WindowImpl<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public void setWindowPosition(int x, int y)
+    public void setPosition(int x, int y)
     {
         Platform.runLater(() ->
         {

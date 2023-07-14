@@ -62,10 +62,10 @@ final class LightTool implements PickerTool
             updateFunction = null;
 
             CursorPosition cursorPosition = canvas.getCursorPosition();
-            WindowSize windowSize = canvas.getWindowSize();
+            CanvasSize canvasSize = canvas.getSize();
 
-            double normalizedX = cursorPosition.x / windowSize.width;
-            double normalizedY = cursorPosition.y / windowSize.height;
+            double normalizedX = cursorPosition.x / canvasSize.width;
+            double normalizedY = cursorPosition.y / canvasSize.height;
 
             Object clickedObject = sceneViewportModel.getSceneViewport().getObjectAtCoordinates(normalizedX, normalizedY);
             if (clickedObject instanceof String)
@@ -156,7 +156,7 @@ final class LightTool implements PickerTool
 
             lightingModel.setLightWidgetsEthereal(false);
 
-            WindowPosition position = canvas.getWindowPosition();
+            CanvasPosition position = canvas.getPosition();
             updateForHoverState(canvas, position.x, position.y);
 
             updateFunction = null;
@@ -176,10 +176,10 @@ final class LightTool implements PickerTool
             lightWidgetModel.setCenterWidgetSelected(false);
         }
 
-        WindowSize windowSize = canvas.getWindowSize();
+        CanvasSize canvasSize = canvas.getSize();
 
-        double normalizedX = xPos / windowSize.width;
-        double normalizedY = yPos / windowSize.height;
+        double normalizedX = xPos / canvasSize.width;
+        double normalizedY = yPos / canvasSize.height;
 
         Object hoverObject = sceneViewportModel.getSceneViewport().getObjectAtCoordinates(normalizedX, normalizedY);
         if (hoverObject instanceof String)
@@ -309,8 +309,8 @@ final class LightTool implements PickerTool
         }
         else
         {
-            WindowSize windowSize = canvas.getWindowSize();
-            updateFunction.accept(new DoubleVector2(xPos / windowSize.width, yPos / windowSize.height));
+            CanvasSize canvasSize = canvas.getSize();
+            updateFunction.accept(new DoubleVector2(xPos / canvasSize.width, yPos / canvasSize.height));
             return true;
         }
     }

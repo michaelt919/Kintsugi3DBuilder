@@ -11,8 +11,8 @@
 
 package tetzlaff.ibrelight.tools;//Created by alexk on 7/24/2017.
 
+import tetzlaff.gl.window.CanvasSize;
 import tetzlaff.gl.window.CursorPosition;
-import tetzlaff.gl.window.WindowSize;
 import tetzlaff.models.ExtendedCameraModel;
 
 final class FocalLengthTool implements DragTool
@@ -46,15 +46,15 @@ final class FocalLengthTool implements DragTool
     }
 
     @Override
-    public void mouseButtonPressed(CursorPosition cursorPosition, WindowSize windowSize)
+    public void mouseButtonPressed(CursorPosition cursorPosition, CanvasSize canvasSize)
     {
         this.mouseStart = cursorPosition;
         oldLog10FocalLength = Math.log10(cameraModel.getFocalLength());
-        focalLengthSensitivityAdjusted = FOCAL_LENGTH_SENSITIVITY / windowSize.width;
+        focalLengthSensitivityAdjusted = FOCAL_LENGTH_SENSITIVITY / canvasSize.width;
     }
 
     @Override
-    public void cursorDragged(CursorPosition cursorPosition, WindowSize windowSize)
+    public void cursorDragged(CursorPosition cursorPosition, CanvasSize canvasSize)
     {
         cameraModel.setFocalLength((float)Math.pow(10,
             oldLog10FocalLength - (float) Math.toDegrees((cursorPosition.y - this.mouseStart.y) * 0.5 * focalLengthSensitivityAdjusted)));

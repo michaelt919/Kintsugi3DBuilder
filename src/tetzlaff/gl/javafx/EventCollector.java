@@ -21,10 +21,10 @@ import tetzlaff.gl.window.listeners.*;
 
 class EventCollector
 {
-    private final Queue<Consumer<CanvasPositionListener>> windowPos = new LinkedList<>();
-    private final Queue<Consumer<CanvasSizeListener>> windowSize = new LinkedList<>();
+    private final Queue<Consumer<CanvasPositionListener>> canvasPos = new LinkedList<>();
+    private final Queue<Consumer<CanvasSizeListener>> canvasSize = new LinkedList<>();
     private final Queue<Consumer<WindowCloseListener>> windowClose = new LinkedList<>();
-    private final Queue<Consumer<CanvasRefreshListener>> windowRefresh = new LinkedList<>();
+    private final Queue<Consumer<CanvasRefreshListener>> canvasRefresh = new LinkedList<>();
     private final Queue<Consumer<WindowFocusLostListener>> windowFocusLost = new LinkedList<>();
     private final Queue<Consumer<WindowFocusGainedListener>> windowFocusGained = new LinkedList<>();
     private final Queue<Consumer<WindowIconifiedListener>> windowIconified = new LinkedList<>();
@@ -49,14 +49,14 @@ class EventCollector
         return listenerManager;
     }
 
-    void windowPos(Consumer<CanvasPositionListener> event)
+    void canvasPos(Consumer<CanvasPositionListener> event)
     {
-        this.windowPos.add(event);
+        this.canvasPos.add(event);
     }
 
-    void windowSize(Consumer<CanvasSizeListener> event)
+    void canvasSize(Consumer<CanvasSizeListener> event)
     {
-        this.windowSize.add(event);
+        this.canvasSize.add(event);
     }
 
     void windowClose(Consumer<WindowCloseListener> event)
@@ -64,9 +64,9 @@ class EventCollector
         this.windowClose.add(event);
     }
 
-    void windowRefresh(Consumer<CanvasRefreshListener> event)
+    void canvasRefresh(Consumer<CanvasRefreshListener> event)
     {
-        this.windowRefresh.add(event);
+        this.canvasRefresh.add(event);
     }
 
     void windowFocusLost(Consumer<WindowFocusLostListener> event)
@@ -163,10 +163,10 @@ class EventCollector
 
     void pollEvents()
     {
-        pollEvents(windowPos, listenerManager.getCanvasPosListeners());
-        pollEvents(windowSize, listenerManager.getCanvasSizeListeners());
+        pollEvents(canvasPos, listenerManager.getCanvasPosListeners());
+        pollEvents(canvasSize, listenerManager.getCanvasSizeListeners());
         pollEvents(windowClose, listenerManager.getWindowCloseListeners());
-        pollEvents(windowRefresh, listenerManager.getCanvasRefreshListeners());
+        pollEvents(canvasRefresh, listenerManager.getCanvasRefreshListeners());
         pollEvents(windowFocusLost, listenerManager.getWindowFocusLostListeners());
         pollEvents(windowFocusGained, listenerManager.getWindowFocusGainedListeners());
         pollEvents(windowIconified, listenerManager.getWindowIconifiedListeners());
