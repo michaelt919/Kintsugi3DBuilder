@@ -14,9 +14,9 @@ package tetzlaff.ibrelight.tools;
 import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.window.Canvas3D;
 import tetzlaff.gl.window.Key;
 import tetzlaff.gl.window.ModifierKeys;
-import tetzlaff.gl.window.Window;
 import tetzlaff.gl.window.WindowSize;
 import tetzlaff.gl.window.listeners.CursorPositionListener;
 import tetzlaff.gl.window.listeners.KeyPressListener;
@@ -63,11 +63,11 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
         this.phi = 0.0f;
     }
 
-    public void addAsWindowListener(Window<?> window)
+    public void addAsWindowListener(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas)
     {
-        window.addKeyPressListener(this);
-        window.addKeyReleaseListener(this);
-        window.addCursorPositionListener(this);
+        canvas.addKeyPressListener(this);
+        canvas.addKeyReleaseListener(this);
+        canvas.addCursorPositionListener(this);
     }
 
     public boolean getEnabled()
@@ -92,7 +92,7 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
     }
 
     @Override
-    public void keyPressed(Window<?> window, Key key, ModifierKeys mods)
+    public void keyPressed(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, Key key, ModifierKeys mods)
     {
         if (enabled)
         {
@@ -140,7 +140,7 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
     }
 
     @Override
-    public void keyReleased(Window<?> window, Key key, ModifierKeys mods)
+    public void keyReleased(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, Key key, ModifierKeys mods)
     {
         if (enabled)
         {
@@ -179,11 +179,11 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
     }
 
     @Override
-    public void cursorMoved(Window<?> window, double xPos, double yPos)
+    public void cursorMoved(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, double xPos, double yPos)
     {
         if (enabled)
         {
-            WindowSize size = window.getWindowSize();
+            WindowSize size = canvas.getWindowSize();
 
             if (!Double.isNaN(lastCursorX) && !Double.isNaN(lastCursorY))
             {

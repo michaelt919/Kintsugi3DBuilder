@@ -9,10 +9,12 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.gl.window;
+package tetzlaff.util;//Created by alexk on 7/24/2017.
+
+import tetzlaff.gl.window.Canvas3D;
 
 @FunctionalInterface
-public interface WindowFactory<WindowType extends Window<?>>
+public interface CanvasInputController
 {
-    WindowBuilder<? extends WindowType> getWindowBuilder(int width, int height, String title);
+    void addAsCanvasListener(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas);
 }

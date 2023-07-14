@@ -20,13 +20,13 @@ public abstract class WindowBase<ContextType extends Context<ContextType>>
     protected abstract WindowListenerManager getListenerManager();
 
     @Override
-    public void addWindowPositionListener(WindowPositionListener listener)
+    public void addWindowPositionListener(CanvasPositionListener listener)
     {
         getListenerManager().addWindowPositionListener(listener);
     }
 
     @Override
-    public void addWindowSizeListener(WindowSizeListener listener)
+    public void addWindowSizeListener(CanvasSizeListener listener)
     {
         getListenerManager().addWindowSizeListener(listener);
     }
@@ -38,7 +38,7 @@ public abstract class WindowBase<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public void addWindowRefreshListener(WindowRefreshListener listener)
+    public void addWindowRefreshListener(CanvasRefreshListener listener)
     {
         getListenerManager().addWindowRefreshListener(listener);
     }

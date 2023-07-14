@@ -11,10 +11,10 @@
 
 package tetzlaff.gl.window.listeners;
 
-import tetzlaff.gl.window.Window;
+import tetzlaff.gl.window.Canvas3D;
 
 @FunctionalInterface
 public interface CursorEnteredListener
 {
-    void cursorEntered(Window<?> window);
+    void cursorEntered(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas);
 }

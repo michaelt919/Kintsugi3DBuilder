@@ -348,13 +348,13 @@ public class WindowImpl<ContextType extends Context<ContextType>>
         int height = (int) Math.round(screenBounds.getHeight());
 
         framebuffer.requestResize(width, height);
-        eventCollector.windowSize(l -> l.windowResized(this, width, height));
+        eventCollector.windowSize(l -> l.canvasResized(this, width, height));
         eventCollector.framebufferSize(l -> l.framebufferResized(this, width, height));
         windowSize = new WindowSize(width, height);
 
         if (x != windowPosition.x || y != windowPosition.y)
         {
-            eventCollector.windowPos(l -> l.windowMoved(this, x, y));
+            eventCollector.windowPos(l -> l.canvasMoved(this, x, y));
             windowPosition = new WindowPosition(x, y);
         }
     }

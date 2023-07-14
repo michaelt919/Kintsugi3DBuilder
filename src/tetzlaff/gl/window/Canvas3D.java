@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2022
+ *  Copyright (c) Michael Tetzlaff 2023
  *
  *  Licensed under GPLv3
  *  ( http://www.gnu.org/licenses/gpl-3.0.html )
@@ -11,8 +11,18 @@
 
 package tetzlaff.gl.window;
 
-@FunctionalInterface
-public interface WindowFactory<WindowType extends Window<?>>
+import tetzlaff.gl.core.Context;
+
+public interface Canvas3D<ContextType extends Context<? extends ContextType>> extends WindowListenerManager, AutoCloseable
 {
-    WindowBuilder<? extends WindowType> getWindowBuilder(int width, int height, String title);
+    ContextType getContext();
+    boolean isHighDPI();
+    @Override
+    void close();
+    WindowSize getWindowSize();
+    WindowPosition getWindowPosition();
+    MouseButtonState getMouseButtonState(int buttonIndex);
+    KeyState getKeyState(Key key);
+    CursorPosition getCursorPosition();
+    ModifierKeys getModifierKeys();
 }

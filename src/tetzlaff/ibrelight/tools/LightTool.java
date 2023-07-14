@@ -55,14 +55,14 @@ final class LightTool implements PickerTool
     }
 
     @Override
-    public boolean mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods)
+    public boolean mouseButtonPressed(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, int buttonIndex, ModifierKeys mods)
     {
         if (buttonIndex == 0)
         {
             updateFunction = null;
 
-            CursorPosition cursorPosition = window.getCursorPosition();
-            WindowSize windowSize = window.getWindowSize();
+            CursorPosition cursorPosition = canvas.getCursorPosition();
+            WindowSize windowSize = canvas.getWindowSize();
 
             double normalizedX = cursorPosition.x / windowSize.width;
             double normalizedY = cursorPosition.y / windowSize.height;
@@ -144,7 +144,7 @@ final class LightTool implements PickerTool
     }
 
     @Override
-    public boolean mouseButtonReleased(Window<?> window, int buttonIndex, ModifierKeys mods)
+    public boolean mouseButtonReleased(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, int buttonIndex, ModifierKeys mods)
     {
         if (buttonIndex == 0)
         {
@@ -156,8 +156,8 @@ final class LightTool implements PickerTool
 
             lightingModel.setLightWidgetsEthereal(false);
 
-            WindowPosition position = window.getWindowPosition();
-            updateForHoverState(window, position.x, position.y);
+            WindowPosition position = canvas.getWindowPosition();
+            updateForHoverState(canvas, position.x, position.y);
 
             updateFunction = null;
         }
@@ -165,7 +165,7 @@ final class LightTool implements PickerTool
         return updateFunction != null;
     }
 
-    private void updateForHoverState(Window<?> window, double xPos, double yPos)
+    private void updateForHoverState(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, double xPos, double yPos)
     {
         for (int i = 0; i < lightingModel.getLightCount(); i++)
         {
@@ -176,7 +176,7 @@ final class LightTool implements PickerTool
             lightWidgetModel.setCenterWidgetSelected(false);
         }
 
-        WindowSize windowSize = window.getWindowSize();
+        WindowSize windowSize = canvas.getWindowSize();
 
         double normalizedX = xPos / windowSize.width;
         double normalizedY = yPos / windowSize.height;
@@ -300,16 +300,16 @@ final class LightTool implements PickerTool
     }
 
     @Override
-    public boolean cursorMoved(Window<?> window, double xPos, double yPos)
+    public boolean cursorMoved(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, double xPos, double yPos)
     {
         if (updateFunction == null)
         {
-            updateForHoverState(window, xPos, yPos);
+            updateForHoverState(canvas, xPos, yPos);
             return false;
         }
         else
         {
-            WindowSize windowSize = window.getWindowSize();
+            WindowSize windowSize = canvas.getWindowSize();
             updateFunction.accept(new DoubleVector2(xPos / windowSize.width, yPos / windowSize.height));
             return true;
         }

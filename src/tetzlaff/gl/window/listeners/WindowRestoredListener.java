@@ -11,10 +11,11 @@
 
 package tetzlaff.gl.window.listeners;
 
-import tetzlaff.gl.window.Window;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.window.Canvas3D;
 
 @FunctionalInterface
 public interface WindowRestoredListener
 {
-    void windowRestored(Window<?> window);
+    void windowRestored(Canvas3D<? extends Context<?>> canvas);
 }

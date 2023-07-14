@@ -11,10 +11,10 @@
 
 package tetzlaff.gl.window.listeners;
 
-import tetzlaff.gl.window.Window;
+import tetzlaff.gl.window.Canvas3D;
 
 @FunctionalInterface
 public interface CursorPositionListener 
 {
-    void cursorMoved(Window<?> window, double xPos, double yPos);
+    void cursorMoved(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, double xPos, double yPos);
 }

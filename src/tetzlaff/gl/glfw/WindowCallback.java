@@ -25,6 +25,7 @@ import static org.lwjgl.opengl.GL11.*;
 // Window event callbacks
 // Internal classes for wrapping GLFW callbacks
 
+@SuppressWarnings("NestedAssignment")
 class WindowCallback extends WindowListenerManagerInstance
 {
     private final WindowImpl<?> window;
@@ -86,294 +87,294 @@ class WindowCallback extends WindowListenerManagerInstance
     {
         // Window position callback
         glfwSetWindowPosCallback(window.getHandle(),
-                windowPosCallback = new GLFWWindowPosCallback()
+            windowPosCallback = new GLFWWindowPosCallback()
+            {
+                @Override
+                public void invoke(long windowHandle, int xpos, int ypos)
                 {
-                    @Override
-                    public void invoke(long windowHandle, int xpos, int ypos)
+                    if (windowHandle == window.getHandle())
                     {
-                        if (windowHandle == window.getHandle())
+                        for (CanvasPositionListener listener : getCanvasPosListeners())
                         {
-                            for (WindowPositionListener listener : getWindowPosListeners())
-                            {
-                                listener.windowMoved(window, xpos, ypos);
-                            }
+                            listener.canvasMoved(window, xpos, ypos);
                         }
                     }
-                });
+                }
+            });
 
 
         glfwSetWindowSizeCallback(window.getHandle(),
-                windowSizeCallback = new GLFWWindowSizeCallback()
+            windowSizeCallback = new GLFWWindowSizeCallback()
+            {
+                @Override
+                public void invoke(long windowHandle, int width, int height)
                 {
-                    @Override
-                    public void invoke(long windowHandle, int width, int height)
+                    if (windowHandle == window.getHandle())
                     {
-                        if (windowHandle == window.getHandle())
+                        for (CanvasSizeListener listener : getCanvasSizeListeners())
                         {
-                            for (WindowSizeListener listener : getWindowSizeListeners())
-                            {
-                                listener.windowResized(window, width, height);
-                            }
+                            listener.canvasResized(window, width, height);
                         }
                     }
-                });
+                }
+            });
 
 
         glfwSetWindowCloseCallback(window.getHandle(),
-                windowCloseCallback = new GLFWWindowCloseCallback()
+            windowCloseCallback = new GLFWWindowCloseCallback()
+            {
+                @Override
+                public void invoke(long windowHandle)
                 {
-                    @Override
-                    public void invoke(long windowHandle)
+                    if (windowHandle == window.getHandle())
                     {
-                        if (windowHandle == window.getHandle())
+                        for (WindowCloseListener listener : getWindowCloseListeners())
                         {
-                            for (WindowCloseListener listener : getWindowCloseListeners())
-                            {
-                                listener.windowClosing(window);
-                            }
+                            listener.windowClosing(window);
                         }
                     }
-                });
+                }
+            });
 
         glfwSetWindowRefreshCallback(window.getHandle(),
-                windowRefreshCallback = new GLFWWindowRefreshCallback()
+            windowRefreshCallback = new GLFWWindowRefreshCallback()
+            {
+                @Override
+                public void invoke(long windowHandle)
                 {
-                    @Override
-                    public void invoke(long windowHandle)
+                    if (windowHandle == window.getHandle())
                     {
-                        if (windowHandle == window.getHandle())
+                        for (CanvasRefreshListener listener : getCanvasRefreshListeners())
                         {
-                            for (WindowRefreshListener listener : getWindowRefreshListeners())
-                            {
-                                listener.windowRefreshed(window);
-                            }
+                            listener.canvasRefreshed(window);
                         }
                     }
-                });
+                }
+            });
 
         glfwSetWindowFocusCallback(window.getHandle(),
-                windowFocusCallback = new GLFWWindowFocusCallback()
+            windowFocusCallback = new GLFWWindowFocusCallback()
+            {
+                @Override
+                public void invoke(long windowHandle, int focused)
                 {
-                    @Override
-                    public void invoke(long windowHandle, int focused)
+                    if (windowHandle == window.getHandle())
                     {
-                        if (windowHandle == window.getHandle())
+                        if (focused == GL_TRUE)
                         {
-                            if (focused == GL_TRUE)
+                            for (WindowFocusGainedListener listener : getWindowFocusGainedListeners())
                             {
-                                for (WindowFocusGainedListener listener : getWindowFocusGainedListeners())
-                                {
-                                    listener.windowFocusGained(window);
-                                }
+                                listener.windowFocusGained(window);
                             }
-                            else
+                        }
+                        else
+                        {
+                            for (WindowFocusLostListener listener : getWindowFocusLostListeners())
                             {
-                                for (WindowFocusLostListener listener : getWindowFocusLostListeners())
-                                {
-                                    listener.windowFocusLost(window);
-                                }
+                                listener.windowFocusLost(window);
                             }
                         }
                     }
-                });
+                }
+            });
 
         glfwSetWindowIconifyCallback(window.getHandle(),
-                windowIconifyCallback = new GLFWWindowIconifyCallback()
+            windowIconifyCallback = new GLFWWindowIconifyCallback()
+            {
+                @Override
+                public void invoke(long windowHandle, int iconified)
                 {
-                    @Override
-                    public void invoke(long windowHandle, int iconified)
+                    if (windowHandle == window.getHandle())
                     {
-                        if (windowHandle == window.getHandle())
+                        if (iconified == GL_TRUE)
                         {
-                            if (iconified == GL_TRUE)
+                            for (WindowIconifiedListener listener : getWindowIconifiedListeners())
                             {
-                                for (WindowIconifiedListener listener : getWindowIconifiedListeners())
-                                {
-                                    listener.windowIconified(window);
-                                }
+                                listener.windowIconified(window);
                             }
-                            else
+                        }
+                        else
+                        {
+                            for (WindowRestoredListener listener : getWindowRestoredListeners())
                             {
-                                for (WindowRestoredListener listener : getWindowRestoredListeners())
-                                {
-                                    listener.windowRestored(window);
-                                }
+                                listener.windowRestored(window);
                             }
                         }
                     }
-                });
+                }
+            });
 
         glfwSetFramebufferSizeCallback(window.getHandle(),
-                framebufferSizeCallback = new GLFWFramebufferSizeCallback()
+            framebufferSizeCallback = new GLFWFramebufferSizeCallback()
+            {
+                @Override
+                public void invoke(long windowHandle, int width, int height)
                 {
-                    @Override
-                    public void invoke(long windowHandle, int width, int height)
+                    if (windowHandle == window.getHandle())
                     {
-                        if (windowHandle == window.getHandle())
+                        for (FramebufferSizeListener listener : getFramebufferSizeListeners())
                         {
-                            for (FramebufferSizeListener listener : getFramebufferSizeListeners())
-                            {
-                                listener.framebufferResized(window, width, height);
-                            }
+                            listener.framebufferResized(window, width, height);
                         }
                     }
-                });
+                }
+            });
 
         glfwSetKeyCallback(window.getHandle(),
-                keyCallback = new GLFWKeyCallback()
+            keyCallback = new GLFWKeyCallback()
+            {
+                @Override
+                public void invoke(long windowHandle, int keycode, int scancode, int action, int mods)
                 {
-                    @Override
-                    public void invoke(long windowHandle, int keycode, int scancode, int action, int mods)
+                    if (windowHandle == window.getHandle())
                     {
-                        if (windowHandle == window.getHandle())
+                        Key key = KeyCodeMaps.codeToKey(keycode);
+
+                        if (action == GLFW_PRESS)
                         {
-                            Key key = KeyCodeMaps.codeToKey(keycode);
-
-                            if (action == GLFW_PRESS)
+                            for (KeyPressListener listener : getKeyPressListeners())
                             {
-                                for (KeyPressListener listener : getKeyPressListeners())
-                                {
-                                    listener.keyPressed(window, key, new ModifierKeys(mods));
-                                }
-
-                                for (KeyTypeListener listener : getKeyTypeListeners())
-                                {
-                                    listener.keyTyped(window, key, new ModifierKeys(mods));
-                                }
+                                listener.keyPressed(window, key, new ModifierKeys(mods));
                             }
-                            else if (action == GLFW_RELEASE)
+
+                            for (KeyTypeListener listener : getKeyTypeListeners())
                             {
-                                for (KeyReleaseListener listener : getKeyReleaseListeners())
-                                {
-                                    listener.keyReleased(window, key, new ModifierKeys(mods));
-                                }
+                                listener.keyTyped(window, key, new ModifierKeys(mods));
                             }
-                            else if (action == GLFW_REPEAT)
+                        }
+                        else if (action == GLFW_RELEASE)
+                        {
+                            for (KeyReleaseListener listener : getKeyReleaseListeners())
                             {
-                                for (KeyTypeListener listener : getKeyTypeListeners())
-                                {
-                                    listener.keyTyped(window, key, new ModifierKeys(mods));
-                                }
+                                listener.keyReleased(window, key, new ModifierKeys(mods));
+                            }
+                        }
+                        else if (action == GLFW_REPEAT)
+                        {
+                            for (KeyTypeListener listener : getKeyTypeListeners())
+                            {
+                                listener.keyTyped(window, key, new ModifierKeys(mods));
                             }
                         }
                     }
-                });
+                }
+            });
 
         glfwSetCharCallback(window.getHandle(),
-                charCallback = new GLFWCharCallback()
+            charCallback = new GLFWCharCallback()
+            {
+                @Override
+                public void invoke(long windowHandle, int codepoint)
                 {
-                    @Override
-                    public void invoke(long windowHandle, int codepoint)
+                    if (windowHandle == window.getHandle())
                     {
-                        if (windowHandle == window.getHandle())
+                        for (CharacterListener listener : getCharacterListeners())
                         {
-                            for (CharacterListener listener : getCharacterListeners())
-                            {
-                                listener.characterTyped(window, (char)codepoint);
-                            }
+                            listener.characterTyped(window, (char)codepoint);
                         }
                     }
-                });
+                }
+            });
 
         glfwSetCharModsCallback(window.getHandle(),
-                charModsCallback = new GLFWCharModsCallback()
+            charModsCallback = new GLFWCharModsCallback()
+            {
+                @Override
+                public void invoke(long windowHandle, int codepoint, int mods)
                 {
-                    @Override
-                    public void invoke(long windowHandle, int codepoint, int mods)
+                    if (windowHandle == window.getHandle())
                     {
-                        if (windowHandle == window.getHandle())
+                        for (CharacterModifiersListener listener : getCharModsListeners())
                         {
-                            for (CharacterModifiersListener listener : getCharModsListeners())
-                            {
-                                listener.characterTypedWithModifiers(window, (char)codepoint, new ModifierKeys(mods));
-                            }
+                            listener.characterTypedWithModifiers(window, (char)codepoint, new ModifierKeys(mods));
                         }
                     }
-                });
+                }
+            });
 
         glfwSetMouseButtonCallback(window.getHandle(),
-                mouseButtonCallback = new GLFWMouseButtonCallback()
+            mouseButtonCallback = new GLFWMouseButtonCallback()
+            {
+                @Override
+                public void invoke(long windowHandle, int button, int action, int mods)
                 {
-                    @Override
-                    public void invoke(long windowHandle, int button, int action, int mods)
+                    if (windowHandle == window.getHandle())
                     {
-                        if (windowHandle == window.getHandle())
+                        if (action == GLFW_PRESS)
                         {
-                            if (action == GLFW_PRESS)
+                            for (MouseButtonPressListener listener : getMouseButtonPressListeners())
                             {
-                                for (MouseButtonPressListener listener : getMouseButtonPressListeners())
-                                {
-                                    listener.mouseButtonPressed(window, button, new ModifierKeys(mods));
-                                }
+                                listener.mouseButtonPressed(window, button, new ModifierKeys(mods));
                             }
-                            else if (action == GLFW_RELEASE)
+                        }
+                        else if (action == GLFW_RELEASE)
+                        {
+                            for (MouseButtonReleaseListener listener : getMouseButtonReleaseListeners())
                             {
-                                for (MouseButtonReleaseListener listener : getMouseButtonReleaseListeners())
-                                {
-                                    listener.mouseButtonReleased(window, button, new ModifierKeys(mods));
-                                }
+                                listener.mouseButtonReleased(window, button, new ModifierKeys(mods));
                             }
                         }
                     }
-                });
+                }
+            });
 
         glfwSetCursorPosCallback(window.getHandle(),
-                cursorPosCallback = new GLFWCursorPosCallback()
+            cursorPosCallback = new GLFWCursorPosCallback()
+            {
+                @Override
+                public void invoke(long windowHandle, double xpos, double ypos)
                 {
-                    @Override
-                    public void invoke(long windowHandle, double xpos, double ypos)
+                    if (windowHandle == window.getHandle())
                     {
-                        if (windowHandle == window.getHandle())
+                        for (CursorPositionListener listener : getCursorPosListeners())
                         {
-                            for (CursorPositionListener listener : getCursorPosListeners())
-                            {
-                                listener.cursorMoved(window, xpos, ypos);
-                            }
+                            listener.cursorMoved(window, xpos, ypos);
                         }
                     }
-                });
+                }
+            });
 
         glfwSetCursorEnterCallback(window.getHandle(),
-                cursorEnterCallback = new GLFWCursorEnterCallback()
+            cursorEnterCallback = new GLFWCursorEnterCallback()
+            {
+                @Override
+                public void invoke(long windowHandle, int entered)
                 {
-                    @Override
-                    public void invoke(long windowHandle, int entered)
+                    if (windowHandle == window.getHandle())
                     {
-                        if (windowHandle == window.getHandle())
+                        if (entered == GL_TRUE)
                         {
-                            if (entered == GL_TRUE)
+                            for (CursorEnteredListener listener : getCursorEnterListeners())
                             {
-                                for (CursorEnteredListener listener : getCursorEnterListeners())
-                                {
-                                    listener.cursorEntered(window);
-                                }
+                                listener.cursorEntered(window);
                             }
-                            else
+                        }
+                        else
+                        {
+                            for (CursorExitedListener listener : getCursorExitListeners())
                             {
-                                for (CursorExitedListener listener : getCursorExitListeners())
-                                {
-                                    listener.cursorExited(window);
-                                }
+                                listener.cursorExited(window);
                             }
                         }
                     }
-                });
+                }
+            });
 
         glfwSetScrollCallback(window.getHandle(),
-                scrollCallback = new GLFWScrollCallback()
+            scrollCallback = new GLFWScrollCallback()
+            {
+                @Override
+                public void invoke(long windowHandle, double xoffset, double yoffset)
                 {
-                    @Override
-                    public void invoke(long windowHandle, double xoffset, double yoffset)
+                    if (windowHandle == window.getHandle())
                     {
-                        if (windowHandle == window.getHandle())
+                        for (ScrollListener listener : getScrollListeners())
                         {
-                            for (ScrollListener listener : getScrollListeners())
-                            {
-                                listener.scroll(window, xoffset, yoffset);
-                            }
+                            listener.scroll(window, xoffset, yoffset);
                         }
                     }
-                });
+                }
+            });
 
         glfwSetDropCallback(window.getHandle(), new GLFWDropCallback()
         {

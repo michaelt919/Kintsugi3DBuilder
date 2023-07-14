@@ -11,10 +11,11 @@
 
 package tetzlaff.gl.window.listeners;
 
-import tetzlaff.gl.window.Window;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.window.Canvas3D;
 
 @FunctionalInterface
-public interface WindowSizeListener
+public interface CanvasSizeListener
 {
-    void windowResized(Window<?> window, int width, int height);
+    void canvasResized(Canvas3D<? extends Context<?>> canvas, int width, int height);
 }
