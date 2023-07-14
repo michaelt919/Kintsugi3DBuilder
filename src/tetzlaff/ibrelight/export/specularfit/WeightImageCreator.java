@@ -18,7 +18,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-public class WeightImageCreator<ContextType extends Context<ContextType>> implements AutoCloseable
+public class WeightImageCreator<ContextType extends Context<ContextType>> implements Resource
 {
 
     private final int weightsPerImage;
@@ -63,12 +63,13 @@ public class WeightImageCreator<ContextType extends Context<ContextType>> implem
         {
             drawable.program().setUniform("weightIndex", i);
             drawable.draw(framebuffer);
-            framebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, SpecularFitSerializer.getWeightFileName(i / weightsPerImage, weightsPerImage)));
+            String filename = SpecularFitSerializer.getWeightFileName(i / weightsPerImage, weightsPerImage);
+            framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(outputDirectory, filename));
         }
     }
 
     @Override
-    public void close() throws Exception
+    public void close()
     {
         program.close();
         rect.close();
