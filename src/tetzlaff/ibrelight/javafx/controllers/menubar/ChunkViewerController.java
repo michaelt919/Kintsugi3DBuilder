@@ -1,7 +1,5 @@
 package tetzlaff.ibrelight.javafx.controllers.menubar;
 
-import javafx.application.Platform;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -21,9 +19,7 @@ import javafx.stage.Stage;
 import org.w3c.dom.Element;
 import javafx.scene.image.ImageView;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -53,7 +49,9 @@ public class ChunkViewerController implements Initializable {
 
     @FXML
     public TextFlow textFlow;
-    private MetashapeObjectChunk metashapeObjectChunk;
+    MetashapeObjectChunk metashapeObjectChunk;
+
+    private ImgSelectionThread loadImgThread;
 
 
     @Override
@@ -184,54 +182,18 @@ public class ChunkViewerController implements Initializable {
             //set thumbnail as main image, then update to full resolution later
             setThumbnailAsFullImage(selectedItem);
 
-            //TODO: IF MULTIPLE IMAGES ARE SELECTED BEFORE FULL RES IMAGE IS LOADED,
-            // MULTIPLE FULL RES IMAGES WILL CONTINUE LOADING (instead of cancelling)
-            final Image[] image = new Image[1];
-            new Thread(() -> loadFullResImg(imageName, image)).start();
-        }
-    }
-
-    private void loadFullResImg(String imageName, Image[] image) {
-        try {
-            //goal of this try block is to find the camera which is associated with the image name in selectedItem
-            //then take that camera's image and put it into the imageview to show to the user
-            Element selectedItemCam = metashapeObjectChunk.matchImageToCam(imageName);
-
-            if (selectedItemCam != null) {
-                File imgFile = metashapeObjectChunk.getImgFileFromCam(selectedItemCam);
-
-                //set imageview to selected image
-                if (imgFile.exists()) {
-                    //convert image if it is a .tif or .tiff
-                    if (imgFile.getAbsolutePath().toLowerCase().matches(".*\\.tiff?")) {
-                        try {
-                            BufferedImage bufferedImage = ImageIO.read(imgFile);
-                            image[0] = SwingFXUtils.toFXImage(bufferedImage, null);
-
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    } else {
-                        image[0] = new Image(imgFile.toURI().toString());
-                    }
-                }
-                else{//camera not found in xml document
-                    imgViewLabel.setText(imgViewLabel.getText() +
-                            " (full res image not found)");
-                }
+            //if loadImgThread is running, kill it and start a new one
+            if(loadImgThread != null && loadImgThread.isActive()){
+                loadImgThread.stopThread();
             }
-        } catch (IllegalArgumentException e) {//could not find image
-            imgViewLabel.setText(imgViewLabel.getText() + " (full res image not found)");
-            e.printStackTrace();
+
+            loadImgThread = new ImgSelectionThread(imageName,this);
+            Thread myThread = new Thread(loadImgThread);
+            myThread.start();
         }
-        Platform.runLater(() -> {
-            //TODO: WITH LARGER IMAGES, FORMATTING IS BROKEN
-            chunkViewerImgView.setImage(image[0]);
-            updateImageText(imageName);
-        });
     }
 
-    private void updateImageText(String imageName) {
+    void updateImageText(String imageName) {
         String psxFilePath = this.metashapeObjectChunk.getPsxFilePath();
         String chunkName = this.metashapeObjectChunk.getChunkName();
 
