@@ -12,14 +12,14 @@
 
 package tetzlaff.ibrelight.core;
 
-import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
-import tetzlaff.gl.vecmath.Matrix4;
-import tetzlaff.gl.vecmath.Vector3;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
+
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
+import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector3;
 
 public interface ReadonlyViewSet
 {
@@ -235,5 +235,6 @@ public interface ReadonlyViewSet
      */
     File findFullResPrimaryImageFile() throws FileNotFoundException;
     File findPreviewImageFile(int index) throws FileNotFoundException;
+    File findOrGeneratePreviewImageFile(int index, int width, int height) throws IOException;
     File findPreviewPrimaryImageFile() throws FileNotFoundException;
 }

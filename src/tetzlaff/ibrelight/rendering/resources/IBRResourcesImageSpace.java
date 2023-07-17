@@ -21,11 +21,11 @@ import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.geometry.GeometryMode;
+import tetzlaff.gl.geometry.VertexGeometry;
 import tetzlaff.gl.material.TextureLoadOptions;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
-import tetzlaff.gl.geometry.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.*;
@@ -216,24 +216,39 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         {
             Date timestamp = new Date();
 
+            int width;
+            int height;
+
             // Use preview-resolution images for the texture array due to VRAM limitations
-            File imageFile = viewSet.findPreviewPrimaryImageFile();
-
-            // Read a single image to get the dimensions for the texture array
-            BufferedImage img = null;
-            try(InputStream input = new FileInputStream(imageFile)) // myZip.retrieveFile(imageFile);
+            try
             {
-                img = ImageIO.read(input);
-            }
+                File imageFile = viewSet.findPreviewPrimaryImageFile();
 
-            if (img == null)
-            {
-                throw new IOException(String.format("Error: Unsupported image format '%s'.",
+                // Read a single image to get the dimensions for the texture array
+                BufferedImage img = null;
+                try (InputStream input = new FileInputStream(imageFile)) // myZip.retrieveFile(imageFile);
+                {
+                    img = ImageIO.read(input);
+                }
+
+                if (img == null)
+                {
+                    throw new IOException(String.format("Error: Unsupported image format '%s'.",
                         viewSet.getImageFileName(0)));
+                }
+
+                width = img.getWidth();
+                height = img.getHeight();
+            }
+            catch (FileNotFoundException e)
+            {
+                // Need to regenerate preview-resolution images
+                width = loadOptions.getPreviewImageWidth();
+                height = loadOptions.getPreviewImageHeight();
             }
 
             ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> textureArrayBuilder =
-                    context.getTextureFactory().build2DColorTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount());
+                    context.getTextureFactory().build2DColorTextureArray(width, height, viewSet.getCameraPoseCount());
             loadOptions.configureColorTextureBuilder(textureArrayBuilder);
             colorTextures = textureArrayBuilder.createTexture();
 
@@ -247,7 +262,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             {
                 System.out.printf("%d/%d", i, m);
                 System.out.println();
-                imageFile = viewSet.findPreviewImageFile(i);
+                File imageFile = viewSet.findOrGeneratePreviewImageFile(i, width, height);
 
                 this.colorTextures.loadLayer(i, imageFile, true);
 
@@ -559,7 +574,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     public SingleCalibratedImageResource<ContextType> createSingleImageResource(int viewIndex, ReadonlyLoadOptionsModel loadOptions)
         throws IOException
     {
-        return createSingleImageResource(viewIndex, getViewSet().getFullResImageFile(viewIndex), loadOptions);
+        return createSingleImageResource(viewIndex, getViewSet().findFullResImageFile(viewIndex), loadOptions);
     }
 
     /**

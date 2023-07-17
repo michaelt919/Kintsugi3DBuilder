@@ -11,6 +11,14 @@
 
 package tetzlaff.ibrelight.rendering.resources;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Objects;
+import java.util.Optional;
+import javax.imageio.ImageIO;
+
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.vecmath.Vector3;
@@ -19,14 +27,6 @@ import tetzlaff.ibrelight.core.LoadingMonitor;
 import tetzlaff.util.AbstractImage;
 import tetzlaff.util.ArrayBackedImage;
 import tetzlaff.util.EnvironmentMap;
-
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Objects;
-import java.util.Optional;
 
 public class DynamicResourceLoader<ContextType extends Context<ContextType>> implements DynamicResourceManager
 {
@@ -184,6 +184,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
 
         if (this.newLightCalibrationAvailable)
         {
+            this.resources.updateLightCalibration(this.newLightCalibration);
             this.newLightCalibrationAvailable = false;
         }
     }
