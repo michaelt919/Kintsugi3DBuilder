@@ -15,7 +15,8 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-<BorderPane fx:id="root" prefHeight="330.0" prefWidth="750.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.LoaderController">
+
+<BorderPane fx:id="root" prefHeight="330.0" prefWidth="750.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.LoaderController">
     <bottom>
         <HBox alignment="CENTER" BorderPane.alignment="CENTER">
             <children>
@@ -67,7 +68,7 @@
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
             </rowConstraints>
             <children>
-                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Camera Positions&#10;(Agisoft Photoscan XML file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Camera Positions&#10;(Agisoft Metashape XML file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
                     <font>
                         <Font name="Monospaced Regular" size="14.0" />
                     </font>
