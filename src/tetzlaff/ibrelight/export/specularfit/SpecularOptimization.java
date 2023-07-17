@@ -99,28 +99,31 @@ public class SpecularOptimization
             basisImageCreator.createImages(specularFit, settings.getOutputDirectory());
         }
 
-        // Calculate reasonable image resolution for error calculation
-        int imageWidth = determineImageWidth(resources.getViewSet());
-        int imageHeight = determineImageHeight(resources.getViewSet());
-
-        SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
-
-        try (ShaderBasedErrorCalculator<ContextType> errorCalculator =
-             ShaderBasedErrorCalculator.create(
-                cache.getContext(),
-                () -> createErrorCalcProgram(resources, programFactory),
-                program -> createErrorCalcDrawable(specularFit, resources, program),
-                imageWidth, imageHeight);
-             PrintStream rmseOut = new PrintStream(new File(settings.getOutputDirectory(), "rmse.txt")))
-        {
-            FinalErrorCalculaton finalErrorCalculaton = FinalErrorCalculaton.getInstance();
-
-            // Validate normals using input normal map (mainly for testing / experiment validation, not typical applications)
-            finalErrorCalculaton.validateNormalMap(resources, specularFit, rmseOut);
-
-            // Fill holes in weight maps and calculate some final error statistics.
-            finalErrorCalculaton.calculateFinalErrorMetrics(resources, programFactory, specularFit, errorCalculator, rmseOut);
-        }
+        // TODO: Final error calculation causes TDR for high-res textures
+        // and is also not accurate as it doesn't load the full resolution images
+        // Need to completely rework error metrics
+//        // Calculate reasonable image resolution for error calculation
+//        int imageWidth = determineImageWidth(resources.getViewSet());
+//        int imageHeight = determineImageHeight(resources.getViewSet());
+//
+//        SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
+//
+//        try (ShaderBasedErrorCalculator<ContextType> errorCalculator =
+//             ShaderBasedErrorCalculator.create(
+//                cache.getContext(),
+//                () -> createErrorCalcProgram(resources, programFactory),
+//                program -> createErrorCalcDrawable(specularFit, resources, program),
+//                imageWidth, imageHeight);
+//             PrintStream rmseOut = new PrintStream(new File(settings.getOutputDirectory(), "rmse.txt")))
+//        {
+//            FinalErrorCalculaton finalErrorCalculaton = FinalErrorCalculaton.getInstance();
+//
+//            // Validate normals using input normal map (mainly for testing / experiment validation, not typical applications)
+//            finalErrorCalculaton.validateNormalMap(resources, specularFit, rmseOut);
+//
+//            // Fill holes in weight maps and calculate some final error statistics.
+//            finalErrorCalculaton.calculateFinalErrorMetrics(resources, programFactory, specularFit, errorCalculator, rmseOut);
+//        }
 
         // Generate albedo / ORM maps at full resolution (does not require loaded source images)
         try (AlbedoORMOptimization<ContextType> albedoORM = new AlbedoORMOptimization<>(cache.getContext(), settings.getTextureFitSettings()))
