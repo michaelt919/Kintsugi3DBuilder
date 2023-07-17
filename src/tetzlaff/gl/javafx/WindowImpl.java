@@ -51,6 +51,10 @@ public class WindowImpl<ContextType extends Context<ContextType>>
 
     private WritableImage frontImage;
     private WritableImage backImage;
+    private boolean copyThreadRunning = false;
+    private Thread nextCopyThread = null;
+    private final Object nextCopyThreadLock = new Object();
+    private volatile boolean frontImagePending = false;
 
     private boolean windowClosing = false;
 
@@ -66,7 +70,10 @@ public class WindowImpl<ContextType extends Context<ContextType>>
 
     private CursorPosition cursorPosition = new CursorPosition(0, 0);
 
-    private ByteBuffer fboCopyBuffer;
+    private ByteBuffer backCopyBuffer;
+    private ByteBuffer frontCopyBuffer;
+    private final Object backCopyBufferLock = new Object();
+    private boolean copyBufferSwapReady = false;
     private FramebufferSize fboCopyBufferDimensions;
 
     private final EventCollector eventCollector = new EventCollector();
@@ -152,38 +159,104 @@ public class WindowImpl<ContextType extends Context<ContextType>>
                 // Read from FBO
                 fboCopyBufferDimensions = frontFBO.getSize();
 
-                if (fboCopyBuffer == null || fboCopyBuffer.capacity() != fboCopyBufferDimensions.width * fboCopyBufferDimensions.height * 4)
+                // Three threads need to be coordinated:
+                // 1) the graphics thread (copying data off the framebuffer)
+                // 2) the JavaFX thread (setting which Image is the current image for the ImageView)
+                // 3) an standalone copy thread for copying into the JavaFX image that doesn't block either graphics or JavaFX
+                // 3) must coordinate with both 1) and 2) to prevent race conditions
+                synchronized (backCopyBufferLock)
                 {
-                    fboCopyBuffer = BufferUtils.createByteBuffer(fboCopyBufferDimensions.width * fboCopyBufferDimensions.height * 4);
-                }
-                else
-                {
-                    fboCopyBuffer.clear();
-                }
+                    if (backCopyBuffer == null || backCopyBuffer.capacity() != fboCopyBufferDimensions.width * fboCopyBufferDimensions.height * 4)
+                    {
+                        backCopyBuffer = BufferUtils.createByteBuffer(fboCopyBufferDimensions.width * fboCopyBufferDimensions.height * 4);
+                    }
+                    else
+                    {
+                        backCopyBuffer.clear();
+                    }
 
-                frontFBO.getTextureReaderForColorAttachment(0).readARGB(fboCopyBuffer);
+                    frontFBO.getTextureReaderForColorAttachment(0).readARGB(backCopyBuffer);
 
-                // Copy into WritableImage:
-
-                //noinspection FloatingPointEquality
-                if (fboCopyBufferDimensions.width != backImage.getWidth() || fboCopyBufferDimensions.height != backImage.getHeight())
-                {
-                    backImage = new WritableImage(fboCopyBufferDimensions.width, fboCopyBufferDimensions.height);
-                }
-
-                //noinspection FloatingPointEquality
-                for (int y = fboCopyBufferDimensions.height - 1; y >= 0; y--)
-                {
-                    IntBuffer fboCopyIntBuffer = fboCopyBuffer.asIntBuffer();
-                    fboCopyIntBuffer.position((fboCopyBufferDimensions.height - y - 1) * fboCopyBufferDimensions.width);
-                    backImage.getPixelWriter().setPixels(0, y, fboCopyBufferDimensions.width, 1,
-                        PixelFormat.getIntArgbInstance(), fboCopyIntBuffer, fboCopyBufferDimensions.width);
+                    copyBufferSwapReady = true;
                 }
 
-                // Swap buffers
-                WritableImage tmp = frontImage;
-                frontImage = backImage;
-                backImage = tmp;
+                Thread copyThread = // Copy into WritableImage on another thread:
+                    new Thread(() ->
+                    {
+                        while(frontImagePending)
+                        {
+                            Thread.onSpinWait();
+                        }
+
+                        // prevent swap in the middle of graphics thread writing to back copy buffer
+                        synchronized (backCopyBufferLock)
+                        {
+                            if (copyBufferSwapReady)
+                            {
+                                copyBufferSwapReady = false;
+
+                                // Swap copy buffers
+                                // back is written to by graphics thread
+                                // front is read from by copy thread
+                                ByteBuffer tmp = frontCopyBuffer;
+                                frontCopyBuffer = backCopyBuffer;
+                                backCopyBuffer = tmp;
+                            }
+                        }
+
+                        //noinspection FloatingPointEquality
+                        if (fboCopyBufferDimensions.width != backImage.getWidth() || fboCopyBufferDimensions.height != backImage.getHeight())
+                        {
+                            backImage = new WritableImage(fboCopyBufferDimensions.width, fboCopyBufferDimensions.height);
+                        }
+
+                        //noinspection FloatingPointEquality
+                        for (int y = fboCopyBufferDimensions.height - 1; y >= 0; y--)
+                        {
+                            IntBuffer fboCopyIntBuffer = frontCopyBuffer.asIntBuffer();
+                            fboCopyIntBuffer.position((fboCopyBufferDimensions.height - y - 1) * fboCopyBufferDimensions.width);
+                            backImage.getPixelWriter().setPixels(0, y, fboCopyBufferDimensions.width, 1,
+                                PixelFormat.getIntArgbInstance(), fboCopyIntBuffer, fboCopyBufferDimensions.width);
+                        }
+
+                        // Swap images
+                        WritableImage tmp = frontImage;
+                        frontImage = backImage;
+                        backImage = tmp;
+
+                        frontImagePending = true;
+
+                        // prevent race conditions related to starting the next thread
+                        synchronized (nextCopyThreadLock)
+                        {
+                            if (nextCopyThread != null)
+                            {
+                                // Kick off the next copy thread if another is ready to go.
+                                nextCopyThread.start();
+                                nextCopyThread = null;
+                            }
+                            else
+                            {
+                                // Otherwise, there's no longer a copy thread running
+                                copyThreadRunning = false;
+                            }
+                        }
+                    });
+
+                synchronized (nextCopyThreadLock)
+                {
+                    if (copyThreadRunning)
+                    {
+                        // Defer starting the thread until the current one has finished
+                        nextCopyThread = copyThread;
+                    }
+                    else
+                    {
+                        // Start the thread right away.
+                        copyThreadRunning = true;
+                        copyThread.start();
+                    }
+                }
             }
         });
 
@@ -195,9 +268,11 @@ public class WindowImpl<ContextType extends Context<ContextType>>
             {
                 try
                 {
-                    if (fboCopyBufferDimensions != null)
+                    // Use the front image for the image view
+                    if (frontImagePending)
                     {
                         imageView.setImage(frontImage);
+                        frontImagePending = false;
                     }
                 }
                 catch(Exception e)
