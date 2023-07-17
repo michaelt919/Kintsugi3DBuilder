@@ -29,7 +29,7 @@ final class RotateEnvironmentTool implements DragTool
     private static class Builder extends ToolBuilderBase<RotateEnvironmentTool>
     {
         @Override
-        public RotateEnvironmentTool build()
+        public RotateEnvironmentTool create()
         {
             return new RotateEnvironmentTool(getEnvironmentModel());
         }

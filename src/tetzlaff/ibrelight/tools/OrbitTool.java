@@ -32,7 +32,7 @@ final class OrbitTool implements DragTool
     private static class Builder extends ToolBuilderBase<OrbitTool>
     {
         @Override
-        public OrbitTool build()
+        public OrbitTool create()
         {
             return new OrbitTool(getCameraModel());
         }

@@ -29,7 +29,7 @@ final class FocalLengthTool implements DragTool
     private static class Builder extends ToolBuilderBase<FocalLengthTool>
     {
         @Override
-        public FocalLengthTool build()
+        public FocalLengthTool create()
         {
             return new FocalLengthTool(getCameraModel());
         }

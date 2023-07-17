@@ -39,7 +39,7 @@ final class PanTool implements DragTool
     private static class Builder extends ToolBuilderBase<PanTool>
     {
         @Override
-        public PanTool build()
+        public PanTool create()
         {
             return new PanTool(getCameraModel(), getSettingsModel());
         }

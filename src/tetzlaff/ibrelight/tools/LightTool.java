@@ -37,7 +37,7 @@ final class LightTool implements PickerTool
     private static class Builder extends ToolBuilderBase<LightTool>
     {
         @Override
-        public LightTool build()
+        public LightTool create()
         {
             return new LightTool(getLightingModel(), getSceneViewportModel());
         }

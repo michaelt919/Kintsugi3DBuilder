@@ -37,6 +37,8 @@ public final class ToolBox
     private final Map<KeyPressToolType, KeyPressTool> keyPressTools;
     private final LightTool lightTool;
 
+    private final ScrollListener scrollTool;
+
     //window listener
     @Override
     public void addAsCanvasListener(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas)
@@ -68,14 +70,14 @@ public final class ToolBox
     @Override
     public void scroll(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, double xOffset, double yOffset)
     {
-//        try
-//        {
-//            getSelectedDragTool().scroll(window, xOffset, yOffset);
-//        }
-//        catch(RuntimeException e)
-//        {
-//            e.printStackTrace();
-//        }
+        try
+        {
+            scrollTool.scroll(canvas, xOffset, yOffset);
+        }
+        catch(RuntimeException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -186,18 +188,25 @@ public final class ToolBox
         dragToolBuilders.put(DragToolType.OBJECT_TWIST, ObjectTwistTool.getBuilder());
         dragToolBuilders.put(DragToolType.LOOK_AT_POINT, LookAtPointTool.getBuilder());
 
-        for (Entry<DragToolType, ToolBuilder<? extends DragTool>> entries : dragToolBuilders.entrySet())
+        // A little bit weird but using a closure here simultaneously avoids copy-pasting code and boilerplate classes
+        var dependencies = new Object()
         {
-            dragTools.put(entries.getKey(),
-                entries.getValue()
+            <ToolType> ToolBuilder<? extends ToolType> inject(ToolBuilder<ToolType> builder)
+            {
+                return builder
                     .setCameraModel(cameraModel)
                     .setEnvironmentMapModel(environmentModel)
                     .setLightingModel(lightingModel)
                     .setObjectModel(objectModel)
                     .setSettingsModel(settingsModel)
                     .setSceneViewportModel(sceneViewportModel)
-                    .setToolBindingModel(toolBindingModel)
-                    .build());
+                    .setToolBindingModel(toolBindingModel);
+            }
+        };
+
+        for (Entry<DragToolType, ToolBuilder<? extends DragTool>> entries : dragToolBuilders.entrySet())
+        {
+            dragTools.put(entries.getKey(), dependencies.inject(entries.getValue()).create());
         }
 
         Map<KeyPressToolType, ToolBuilder<? extends KeyPressTool>> keyPressToolBuilders = new EnumMap<>(KeyPressToolType.class);
@@ -241,27 +250,12 @@ public final class ToolBox
 
         for (Entry<KeyPressToolType, ToolBuilder<? extends KeyPressTool>> entries : keyPressToolBuilders.entrySet())
         {
-            keyPressTools.put(entries.getKey(),
-                entries.getValue()
-                    .setCameraModel(cameraModel)
-                    .setEnvironmentMapModel(environmentModel)
-                    .setLightingModel(lightingModel)
-                    .setObjectModel(objectModel)
-                    .setSettingsModel(settingsModel)
-                    .setSceneViewportModel(sceneViewportModel)
-                    .setToolBindingModel(toolBindingModel)
-                    .build());
+            keyPressTools.put(entries.getKey(), dependencies.inject(entries.getValue()).create());
         }
 
-        lightTool = LightTool.getBuilder()
-            .setCameraModel(cameraModel)
-            .setEnvironmentMapModel(environmentModel)
-            .setLightingModel(lightingModel)
-            .setObjectModel(objectModel)
-            .setSettingsModel(settingsModel)
-            .setSceneViewportModel(sceneViewportModel)
-            .setToolBindingModel(toolBindingModel)
-            .build();
+        scrollTool = dependencies.inject(ScrollDollyTool.getBuilder()).create();
+
+        lightTool = dependencies.inject(LightTool.getBuilder()).create();
     }
 
     public static final class Builder
