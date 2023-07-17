@@ -575,6 +575,24 @@ public final class ViewSet implements ReadonlyViewSet
         return new File(this.getPreviewImageFilePath(), this.getImageFileNameWithFormat(poseIndex, "PNG"));
     }
 
+    private void generatePreviewImage(int poseIndex, int width, int height) throws IOException
+    {
+        if (Objects.equals(this.relativePreviewImagePathName, this.relativeFullResImagePathName))
+        {
+            throw new IllegalStateException("Preview directory is the same as the full res directory; generating preview images would overwrite full resolution images.");
+        }
+        else
+        {
+            System.out.println("Generating preview image...");
+
+            // Make sure the preview image directory exists; create it if not
+            this.getPreviewImageFilePath().mkdirs();
+
+            ImageLodResizer resizer = new ImageLodResizer(this.findFullResImageFile(poseIndex));
+            resizer.saveAtResolution(this.getPreviewImageFile(poseIndex), width, height);
+        }
+    }
+
     @Override
     public void generatePreviewImages(int width, int height) throws IOException
     {
@@ -776,6 +794,21 @@ public final class ViewSet implements ReadonlyViewSet
     public File findPreviewImageFile(int index) throws FileNotFoundException
     {
         return ImageFinder.getInstance().findImageFile(getPreviewImageFile(index));
+    }
+
+    @Override
+    public File findOrGeneratePreviewImageFile(int index, int width, int height) throws IOException
+    {
+        try
+        {
+            return ImageFinder.getInstance().findImageFile(getPreviewImageFile(index));
+        }
+        catch (FileNotFoundException e)
+        {
+            // Generate file if necessary
+            generatePreviewImage(index, width, height);
+            return ImageFinder.getInstance().findImageFile(getPreviewImageFile(index));
+        }
     }
 
     @Override

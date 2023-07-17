@@ -68,8 +68,7 @@ public class ImageFinder
             }
 
             // Is it still not there?
-            throw new FileNotFoundException(
-                    String.format("'%s' not found.", requestedFile.getName()));
+            throw new FileNotFoundException(String.format("'%s' not found.", requestedFile.getName()));
         }
     }
 }
