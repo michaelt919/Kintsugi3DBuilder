@@ -90,9 +90,9 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
         ImageUndistorter<OpenGLContext> iu = new ImageUndistorter<OpenGLContext>(context);
 
         //DistortionProjection proj = new DistortionProjection(480f, 360f, 480f, 480f, 240f, 180f, 0.18f, 0.29f, 0.67f, -0.41f, -0.06f, 0.11f, 0);
-        DistortionProjection proj = new DistortionProjection(480f, 360f, 480f, 480f, 240f, 180f, 0.2f, 0f, 0, 0, 0,0,0);
+        DistortionProjection proj = new DistortionProjection(480f, 360f, 480f, 480f, 240f, 180f,  0.7f, 0.78f, -0.83f, 0, 0,0,0);
 
-        BufferedImage in = ImageIO.read(new File("X:\\CHViewer\\tmp\\canvas-simple.png"));
+        BufferedImage in = ImageIO.read(new File("X:\\CHViewer\\tmp\\canvas2.png"));
         Texture2D<OpenGLContext> inTex = context.getTextureFactory().build2DColorTextureFromImage(in, false).createTexture();
         Texture2D<OpenGLContext> out = iu.undistort(inTex, proj);
         out.getColorTextureReader().saveToFile("PNG", new File("X:\\CHViewer\\tmp\\out.png"));
