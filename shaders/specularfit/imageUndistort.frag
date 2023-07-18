@@ -32,9 +32,6 @@ void main() {
     float r6 = pow(r4, 2);
     float r8 = pow(r6, 2);
 
-    float P1 = coefficientsP[0];
-    float P2 = coefficientsP[1];
-
     vec2 uvd = uv;
     // Radial distortion
     // distort = 1 + K1*r^2 + K2*r^4 + K3*r^6 + K4*r^8
@@ -45,8 +42,8 @@ void main() {
     // Tangential distortion
     float xy = uvd.x * uvd.y;
     vec2 uvd22pr2 = r2 + (uvd * uvd) * 2;
-    uvd.x = uvd.x + (2 * P1 * xy + P2 * uvd22pr2.x);
-    uvd.y = uvd.y + (P1 * uvd22pr2.y + 2 * P2 * xy);
+    uvd.x = uvd.x + (2 * coefficientsP[0] * xy + coefficientsP[1] * uvd22pr2.x);
+    uvd.y = uvd.y + (coefficientsP[0] * uvd22pr2.y + 2 * coefficientsP[1] * xy);
 
 
     vec2 uvO = (uvd * focalLength + opticalCenter + vec2(uvd.y * skew, 0)) / viewportSize;
