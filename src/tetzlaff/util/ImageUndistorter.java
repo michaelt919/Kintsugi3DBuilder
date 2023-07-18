@@ -64,17 +64,22 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
 
         drawable.draw(framebuffer);
         int[] pixels = framebuffer.getTextureReaderForColorAttachment(0).readARGB();
+
+        // TODO: Convert to texture directly instead of to an image first
         BufferedImage image = BufferedImageBuilder.build()
             .setDataFromArray(pixels, inputImage.getWidth(), inputImage.getHeight())
             .flipVertical()
             .create();
+
+        framebuffer.close();
         return context.getTextureFactory().build2DColorTextureFromImage(image, false).createTexture();
     }
 
     @Override
     public void close() throws Exception
     {
-
+        program.close();
+        rect.close();
     }
 
     //Testing bootstrap
