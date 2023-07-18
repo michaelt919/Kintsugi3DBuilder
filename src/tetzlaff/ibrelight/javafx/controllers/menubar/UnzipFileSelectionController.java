@@ -35,7 +35,7 @@ public class UnzipFileSelectionController {
     public Button selectChunkButton;
 
     @FXML
-    private TextField outputDirectoryPathTxtField;
+    public TextField outputDirectoryPathTxtField;
 
     private Scene scene;
     private Parent root;

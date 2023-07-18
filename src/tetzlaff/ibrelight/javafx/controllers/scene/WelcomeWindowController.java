@@ -1,16 +1,20 @@
 package tetzlaff.ibrelight.javafx.controllers.scene;
 
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
+import main.resources.fxml.menubar.CreateProjectController;
 import org.xml.sax.SAXException;
 import tetzlaff.gl.core.Context;
 import tetzlaff.ibrelight.core.IBRRequestManager;
@@ -24,9 +28,7 @@ import tetzlaff.util.Flag;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 
 public class WelcomeWindowController {
@@ -124,7 +126,7 @@ public class WelcomeWindowController {
         });
     }
 
-    private void updateRecentProjectsButton() {
+    private void updateRecentProjectsButton() {//TODO: FORMAT ----- PROJECT NAME --> PATH
         recentProjectsSplitMenuButton.getItems().clear();
 
         List<String> items = getItemsFromRecentsFile();
@@ -139,6 +141,30 @@ public class WelcomeWindowController {
         //disable button if there are no recent projects
         if(recentProjectsSplitMenuButton.getItems().isEmpty()){
             recentProjectsSplitMenuButton.setDisable(true);
+        }
+
+        //attach event handlers to all menu items
+        for (MenuItem item : menuItems){
+            item.setOnAction(event -> handleMenuItemSelection(item));
+        }
+    }
+
+    public void handleMenuItemSelection(MenuItem item) {
+        String projectName = item.getText();
+        openProjectFromFile(new File(projectName));
+    }
+
+    public void splitMenuButtonActions(ActionEvent actionEvent) {
+        Object source = actionEvent.getSource();
+
+        //user clicks on a menu item
+        if (source.getClass() == MenuItem.class) {
+            handleMenuItemSelection((MenuItem) actionEvent.getSource());
+        }
+
+        //user clicks on the button, so unroll the menu
+        else{
+            unrollMenu();
         }
     }
 
@@ -155,8 +181,8 @@ public class WelcomeWindowController {
             e.printStackTrace();
         }
 
-        //remove duplicates
-        return new ArrayList<>(new HashSet<>(projectItems));
+        //remove duplicates while maintaining the same order (regular HashSet does not maintain order)
+        return new ArrayList<>(new LinkedHashSet<>(projectItems));
     }
 
     @FXML
@@ -186,8 +212,34 @@ public class WelcomeWindowController {
         updateRecentProjectsButton();
     }
 
+    public void createProject() {
+        if (loaderWindowOpen.get())
+        {
+            return;
+        }
+
+        if (confirmClose("Are you sure you want to create a new project?"))
+        {
+            try
+            {
+                CreateProjectController createProjectController = makeWindow("Load Files", loaderWindowOpen, "fxml/menubar/CreateProject.fxml");
+                createProjectController.setCallback(() ->
+                {
+                    this.file_closeProject();
+                    projectLoaded = true;
+                });
+                createProjectController.init();
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+        updateRecentProjectsButton();
+    }
+
     @FXML
-    private void file_openProject()
+    private void file_openProject()//TODO: CHANGE NAMING CONVENTION? (file_...)
     {
         if (confirmClose("Are you sure you want to open another project?"))
         {
@@ -195,54 +247,77 @@ public class WelcomeWindowController {
             File selectedFile = projectFileChooser.showOpenDialog(parentWindow);
             if (selectedFile != null)
             {
-                this.projectFile = selectedFile;
-                File newVsetFile = null;
-
-                if (projectFile.getName().endsWith(".vset"))
-                {
-                    newVsetFile = projectFile;
-                }
-                else
-                {
-                    try
-                    {
-                        newVsetFile = internalModels.getProjectModel().openProjectFile(projectFile);
-                    }
-                    catch (IOException | ParserConfigurationException | SAXException e)
-                    {
-                        e.printStackTrace();
-                    }
-                }
-
-                if (newVsetFile != null)
-                {
-                    MultithreadModels.getInstance().getLoadingModel().unload();
-
-                    this.vsetFile = newVsetFile;
-                    File vsetFileRef = newVsetFile;
-
-                    updateRecentFiles(projectFile.getAbsolutePath());
-
-                    projectLoaded = true;
-
-                    new Thread(() -> MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFileRef.getPath(), vsetFileRef)).start();
-                }
+                openProjectFromFile(selectedFile);
             }
         }
         updateRecentProjectsButton();
     }
 
-    private boolean updateRecentFiles(String fileName) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(recentProjectsFile, true))) {
-            // The second parameter 'true' in FileWriter constructor appends to the file
-            writer.println(fileName);
-            return true;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+    private void openProjectFromFile(File selectedFile) {
+        this.projectFile = selectedFile;
+        File newVsetFile = null;
+
+        if (projectFile.getName().endsWith(".vset"))
+        {
+            newVsetFile = projectFile;
+        }
+        else
+        {
+            try
+            {
+                newVsetFile = internalModels.getProjectModel().openProjectFile(projectFile);
+            }
+            catch (IOException | ParserConfigurationException | SAXException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        if (newVsetFile != null)
+        {
+            MultithreadModels.getInstance().getLoadingModel().unload();
+
+            this.vsetFile = newVsetFile;
+            File vsetFileRef = newVsetFile;
+
+            updateRecentFiles(projectFile.getAbsolutePath());
+
+            projectLoaded = true;
+
+            new Thread(() -> MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFileRef.getPath(), vsetFileRef)).start();
         }
     }
 
+    private void updateRecentFiles(String fileName) {
+        // Read existing file content into a List
+        List<String> existingFileNames = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(recentProjectsFile))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                existingFileNames.add(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Check if the fileName is already present
+        existingFileNames.remove(fileName); // Remove it from its current position
+
+        // Add the fileName to the front of the List
+        existingFileNames.add(0, fileName);
+
+        // Write the updated content back to the file
+        try (PrintWriter writer = new PrintWriter(new FileWriter(recentProjectsFile))) {
+            for (String name : existingFileNames) {
+                writer.println(name);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //update list of recent projects
+        updateRecentProjectsButton();
+    }
 
     private <ControllerType> ControllerType makeWindow(String title, Flag flag, String urlString) throws IOException
     {
@@ -329,6 +404,10 @@ public class WelcomeWindowController {
     private void help_userManual()
     {
         userDocumentationHandler.run();
+    }
+
+    public void unrollMenu() {
+        recentProjectsSplitMenuButton.show();
     }
 
 }
