@@ -125,11 +125,13 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
 
                         float aspect = scanner.nextFloat();
                         float focalLength = scanner.nextFloat();
-                        float sensorWidth = 32.0f; // Default sensor width
+
+                        // For Metashape projects read the sensor width; otherwise assume 32
+                        float sensorWidth = "D".equals(id) ? scanner.nextFloat() : 32.0f;
                         float sensorHeight = sensorWidth / aspect;
 
                         result.getCameraProjectionList().add(new SimpleProjection(
-                            aspect, 2.0f*(float)Math.atan2(sensorHeight, 2 * focalLength)));
+                            aspect, 2.0f * (float) Math.atan2(sensorHeight, 2 * focalLength)));
 
                         // Skip any distortion parameters as they aren't used consistently
                         // and images are probably undistorted from PhotoScan/Metashape
