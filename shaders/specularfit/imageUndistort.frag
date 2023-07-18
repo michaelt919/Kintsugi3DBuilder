@@ -22,7 +22,7 @@ uniform vec2 focalLength;
 uniform vec2 opticalCenter;
 uniform vec4 coefficientsK;
 uniform vec2 coefficientsP;
-uniform vec2 coefficientsB;
+uniform float skew;
 
 void main() {
     vec2 C = opticalCenter;
@@ -48,7 +48,8 @@ void main() {
     uvd.x = uvd.x + (2 * P1 * xy + P2 * (r2 + 2 * pow(uvd.x, 2)));
     uvd.y = uvd.y + (P1 * (r2 + 2 * pow(uvd.y, 2)) + 2 * P2 * xy);
 
-    vec2 uvO = (uvd * focalLength + C + uvd * coefficientsB) / viewportSize;
+
+    vec2 uvO = (uvd * focalLength + C + vec2(uvd.y * skew, 0)) / viewportSize;
     if (uvO.x > 1.0 || uvO.x < 0.0 || uvO.y > 1.0 || uvO.y < 0.0) {
         fragColor = vec4(0,0,0,1);
     } else {

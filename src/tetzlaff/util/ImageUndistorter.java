@@ -56,7 +56,7 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
         drawable.program().setUniform("opticalCenter", new Vector2(distortion.cx, distortion.cy));
         drawable.program().setUniform("coefficientsK", new Vector4(distortion.k1, distortion.k2, distortion.k3, distortion.k4));
         drawable.program().setUniform("coefficientsP", new Vector2(distortion.p1, distortion.p2));
-        drawable.program().setUniform("coefficientsB", new Vector2(distortion.b1, distortion.b2));
+        drawable.program().setUniform("skew", distortion.skew);
 
         FramebufferObject<ContextType> framebuffer = context.buildFramebufferObject(inputImage.getWidth(), inputImage.getHeight())
                 .addColorAttachment(ColorFormat.RGBA8)
@@ -95,8 +95,8 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
 
         ImageUndistorter<OpenGLContext> iu = new ImageUndistorter<OpenGLContext>(context);
 
-        //DistortionProjection proj = new DistortionProjection(480f, 360f, 480f, 480f, 240f, 180f, 0.18f, 0.29f, 0.67f, -0.41f, -0.06f, 0.11f, 0, 0);
-        DistortionProjection proj = new DistortionProjection(480f, 360f, 480f, 480f, 240f, 180f,  0.7f, 0.78f, -0.83f, 0, 0,0,0, 0);
+        //DistortionProjection proj = new DistortionProjection(480f, 360f, 480f, 480f, 240f, 180f, 0.18f, 0.29f, 0.67f, -0.41f, -0.06f, 0.11f, 0);
+        DistortionProjection proj = new DistortionProjection(480f, 360f, 480f, 480f, 240f, 180f,  0.7f, 0.78f, -0.83f, 0, 0,0,0);
 
         BufferedImage in = ImageIO.read(new File("X:\\CHViewer\\tmp\\canvas2.png"));
         Texture2D<OpenGLContext> inTex = context.getTextureFactory().build2DColorTextureFromImage(in, false).createTexture();
