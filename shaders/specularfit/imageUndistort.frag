@@ -25,8 +25,7 @@ uniform vec2 coefficientsP;
 uniform float skew;
 
 void main() {
-    vec2 C = opticalCenter;
-    vec2 uv = (fTexCoord * viewportSize - C) / focalLength;
+    vec2 uv = (fTexCoord * viewportSize - opticalCenter) / focalLength;
 
     float r2 = dot(uv, uv);
     float r4 = pow(r2, 2);
@@ -45,11 +44,12 @@ void main() {
 
     // Tangential distortion
     float xy = uvd.x * uvd.y;
-    uvd.x = uvd.x + (2 * P1 * xy + P2 * (r2 + 2 * pow(uvd.x, 2)));
-    uvd.y = uvd.y + (P1 * (r2 + 2 * pow(uvd.y, 2)) + 2 * P2 * xy);
+    vec2 uvd22pr2 = r2 + (uvd * uvd) * 2;
+    uvd.x = uvd.x + (2 * P1 * xy + P2 * uvd22pr2.x);
+    uvd.y = uvd.y + (P1 * uvd22pr2.y + 2 * P2 * xy);
 
 
-    vec2 uvO = (uvd * focalLength + C + vec2(uvd.y * skew, 0)) / viewportSize;
+    vec2 uvO = (uvd * focalLength + opticalCenter + vec2(uvd.y * skew, 0)) / viewportSize;
     if (uvO.x > 1.0 || uvO.x < 0.0 || uvO.y > 1.0 || uvO.y < 0.0) {
         fragColor = vec4(0,0,0,1);
     } else {
