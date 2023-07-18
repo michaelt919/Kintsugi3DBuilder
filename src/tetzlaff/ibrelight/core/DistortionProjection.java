@@ -34,7 +34,8 @@ public class DistortionProjection implements Projection
     public final float k4;
     public final float p1;
     public final float p2;
-    public final float skew;
+    public final float b1;
+    public final float b2;
     
     /**
      * Creates a new distortion projection.
@@ -58,7 +59,7 @@ public class DistortionProjection implements Projection
         float fx, float fy,
         float cx, float cy,
         float k1, float k2, float k3, float k4,
-        float p1, float p2, float skew)
+        float p1, float p2, float b1, float b2)
     {
         this.width = width;
         this.height = height;
@@ -72,7 +73,8 @@ public class DistortionProjection implements Projection
         this.k4 = k4;
         this.p1 = p1;
         this.p2 = p2;
-        this.skew = skew;
+        this.b1 = b1;
+        this.b2 = b2;
     }
     
     /**
@@ -97,7 +99,7 @@ public class DistortionProjection implements Projection
         float cx, float cy,
         float k1, float k2, float k3, float k4)
     {
-        this(width, height, fx, fy, cx, cy, k1, k2, k3, k4, 0.0f, 0.0f, 0.0f);
+        this(width, height, fx, fy, cx, cy, k1, k2, k3, k4, 0.0f, 0.0f, 0.0f, 0.0f);
     }
     
     /**
@@ -121,7 +123,7 @@ public class DistortionProjection implements Projection
         float cx, float cy,
         float k1, float k2, float k3)
     {
-        this(width, height, fx, fy, cx, cy, k1, k2, k3, 0.0f, 0.0f, 0.0f, 0.0f);
+        this(width, height, fx, fy, cx, cy, k1, k2, k3, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
     }
 
     /**
