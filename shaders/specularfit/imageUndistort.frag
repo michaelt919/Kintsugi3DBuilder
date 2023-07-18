@@ -24,5 +24,33 @@ uniform vec4 coefficientsK;
 uniform vec2 coefficientsP;
 
 void main() {
-    fragColor = vec4(fTexCoord.xy, 0, 1);
+    vec2 uv = (fTexCoord - 0.5) * 2;
+    vec2 C = ((opticalCenter / viewportSize) - 0.5) * 2;
+    float r = distance(uv, C);
+
+    float K1 = coefficientsK[0];
+    float K2 = coefficientsK[1];
+    float K3 = coefficientsK[2];
+    float K4 = coefficientsK[3];
+
+    float P1 = coefficientsP[0];
+    float P2 = coefficientsP[1];
+
+    vec2 uvd = uv;
+    // Radial distortion
+    uvd.x = uv.x * (1 + K1 * pow(r, 2) + K2 * pow(r, 4) + K3 * pow(r, 6) + K4 * pow(r, 8));
+    uvd.y = uv.y * (1 + K1 * pow(r, 2) + K2 * pow(r, 4) + K3 * pow(r, 6) + K4 * pow(r, 8));
+
+    // Tangential distortion
+    uvd.x = uvd.x + (2 * P1 * uvd.x * uvd.y + P2 * (pow(r, 2) + 2 * pow(uvd.x, 2)));
+    uvd.y = uvd.y + (P1 * (pow(r, 2) + 2 * pow(uvd.y, 2)) + 2 * P2 * uvd.x * uvd.y);
+
+    vec2 uvO = (uvd / 2) + 0.5;
+    if (uvO.x > 1.0 || uvO.x < 0.0 || uvO.y > 1.0 || uvO.y < 0.0) {
+        fragColor = vec4(0, 0, 0, 1);
+    } else {
+        fragColor = texture(inputImage, uvO);
+    }
+
+
 }
