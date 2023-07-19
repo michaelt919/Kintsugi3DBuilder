@@ -30,6 +30,8 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.transform.Scale;
+import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.converter.CharacterStringConverter;
@@ -140,6 +142,8 @@ public class WindowImpl<ContextType extends Context<ContextType>>
         frontImage = new WritableImage(windowSpec.getWidth(), windowSpec.getHeight());
         backImage = new WritableImage(windowSpec.getWidth(), windowSpec.getHeight());
         imageView = new ImageView(frontImage);
+        imageView.getTransforms().add(new Scale(1, -1));
+        imageView.getTransforms().add(new Translate(0, -frontImage.getHeight()));
 
         root = new StackPane(imageView);
         root.setPrefWidth(windowSpec.getWidth());
@@ -210,14 +214,8 @@ public class WindowImpl<ContextType extends Context<ContextType>>
                             backImage = new WritableImage(fboCopyBufferDimensions.width, fboCopyBufferDimensions.height);
                         }
 
-                        //noinspection FloatingPointEquality
-                        for (int y = fboCopyBufferDimensions.height - 1; y >= 0; y--)
-                        {
-                            IntBuffer fboCopyIntBuffer = frontCopyBuffer.asIntBuffer();
-                            fboCopyIntBuffer.position((fboCopyBufferDimensions.height - y - 1) * fboCopyBufferDimensions.width);
-                            backImage.getPixelWriter().setPixels(0, y, fboCopyBufferDimensions.width, 1,
-                                PixelFormat.getIntArgbInstance(), fboCopyIntBuffer, fboCopyBufferDimensions.width);
-                        }
+                        backImage.getPixelWriter().setPixels(0, 0, fboCopyBufferDimensions.width, fboCopyBufferDimensions.height,
+                            PixelFormat.getByteBgraInstance(), frontCopyBuffer, fboCopyBufferDimensions.width * 4);
 
                         // Swap images
                         WritableImage tmp = frontImage;
