@@ -168,6 +168,8 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         Matrix4 globalRotation = Matrix4.IDENTITY;
         Vector3 globalTranslate = new Vector3(0.0f, 0.0f, 0.0f);
 
+        float b1 = 0.0f; // fx - fy: https://www.agisoft.com/forum/index.php?topic=6437.0
+
         String version = "";
         String chunkLabel = "";
         String groupLabel = "";
@@ -270,8 +272,8 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         case "f":
                             if (sensor != null)
                             {
-                                sensor.fx = Float.parseFloat(reader.getElementText());
-                                sensor.fy = sensor.fx;
+                                sensor.fy = Float.parseFloat(reader.getElementText());
+                                sensor.fx = sensor.fy + b1;
                             }
                             break;
                         case "fx":
@@ -334,19 +336,25 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                 sensor.k4 = Float.parseFloat(reader.getElementText());
                             }
                             break;
+                        case "b1":
+                            b1 = Float.parseFloat(reader.getElementText());
+                            if (sensor != null)
+                            {
+                                sensor.fx = sensor.fy + b1;
+                            }
+                            break;
+                        case "b2": // See https://www.agisoft.com/forum/index.php?topic=6437.0
                         case "skew":
                             if (sensor != null)
                             {
                                 sensor.skew = Float.parseFloat(reader.getElementText());
                             }
                             break;
-
                         case "transform":
                             if (camera == null && intVersion >= 110)
                             {
                                 break;
                             }
-
                         case "rotation":
                         {
                             String[] components = reader.getElementText().split("\\s");
@@ -537,6 +545,15 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         ViewSet result = new ViewSet(cameraSet.size());
 
         Sensor[] sensors = sensorSet.values().toArray(new Sensor[0]);
+
+        if (intVersion >= 140) // centers were pre-offset prior to version 1.4
+        {
+            for (Sensor s : sensors)
+            {
+                s.cx += s.width * 0.5;
+                s.cy += s.height * 0.5;
+            }
+        }
 
         // Reassign the ID for each sensor to correspond with the sensor's index
         // and add the corresponding projection to the list.

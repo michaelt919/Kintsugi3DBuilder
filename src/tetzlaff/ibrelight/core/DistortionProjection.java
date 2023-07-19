@@ -178,7 +178,7 @@ public class DistortionProjection implements Projection
     @Override
     public String toVSETString()
     {
-        return String.format("D\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
-                                cx, cy, width/height, fx, width, k1, k2, k3, p1, p2);
+        return String.format("s\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
+                                cx, cy, width/height, fy, width, k1, k2, k3, k4, p1, p2, fx - fy, skew);
     }
 }

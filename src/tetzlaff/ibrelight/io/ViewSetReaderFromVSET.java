@@ -116,40 +116,50 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         unorderedCameraPoseInvList.add(newPose.quickInverse(0.002f));
                         break;
                     }
-                    case "d":
-                    case "D":
+                    case "d": // Legacy format; generally used with synthetic data
+                    case "D": // Legacy format from older IBRelight projects from PhotoScan / Metashape
                     {
-                        // Skip "center/offset" parameters which are not consistent across all VSET files
+                        // Skip cx / cy as they aren't used consistently
                         scanner.nextFloat();
                         scanner.nextFloat();
 
                         float aspect = scanner.nextFloat();
                         float focalLength = scanner.nextFloat();
 
-                        float sensorWidth;
-                        float k1;
-                        float k2;
-                        float k3;
-                        if ("D".equals(id))
-                        {
-                            sensorWidth = scanner.nextFloat();
-                            k1 = scanner.nextFloat();
-                            k2 = scanner.nextFloat();
-                            k3 = scanner.nextFloat();
-                        }
-                        else
-                        {
-                            sensorWidth = 32.0f; // Default sensor width
-                            k1 = scanner.nextFloat();
-                            k2 = k3 = 0.0f;
-                        }
-
+                        // For Metashape projects read the sensor width; otherwise assume 32
+                        float sensorWidth = "D".equals(id) ? scanner.nextFloat() : 32.0f;
                         float sensorHeight = sensorWidth / aspect;
+
+                        result.getCameraProjectionList().add(new SimpleProjection(
+                            aspect, 2.0f * (float) Math.atan2(sensorHeight, 2 * focalLength)));
+
+                        // Skip any distortion parameters as they aren't used consistently
+                        // and images are probably undistorted from PhotoScan/Metashape
+                        scanner.nextLine();
+                        break;
+                    }
+                    case "s":
+                    {
+                        float cx = scanner.nextFloat(); // relative to (0, 0)
+                        float cy = scanner.nextFloat();
+
+                        float aspect = scanner.nextFloat();
+                        float focalLength = scanner.nextFloat();
+                        float sensorWidth = scanner.nextFloat();
+                        float sensorHeight = sensorWidth / aspect;
+                        float k1 = scanner.nextFloat();
+                        float k2 = scanner.nextFloat();
+                        float k3 = scanner.nextFloat();
+                        float k4 = scanner.nextFloat();
+                        float p1 = scanner.nextFloat();
+                        float p2 = scanner.nextFloat();
+                        float b1 = scanner.nextFloat(); // fx - fy
+                        float b2 = scanner.nextFloat(); // a.k.a. skew
 
                         result.getCameraProjectionList().add(new DistortionProjection(
                             sensorWidth, sensorHeight,
-                            focalLength, focalLength,
-                            sensorWidth / 2, sensorHeight / 2, k1, k2, k3
+                            focalLength + b1, focalLength,
+                            cx, cy, k1, k2, k3, k4, p1, p2, b2
                         ));
 
                         scanner.nextLine();
