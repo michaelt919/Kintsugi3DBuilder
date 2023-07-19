@@ -81,7 +81,7 @@ public class WelcomeWindowController {
         projectFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Full projects", "*.ibr"));
         projectFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Standalone view sets", "*.vset"));
 
-        recentProjectsFile = new File("src/main/resources/recentFiles.txt");
+        recentProjectsFile = new File("src/main/resources/recentFiles.txt");//TODO: NEW LOCATION?
 
         updateRecentProjectsButton();
 
@@ -280,7 +280,7 @@ public class WelcomeWindowController {
             this.vsetFile = newVsetFile;
             File vsetFileRef = newVsetFile;
 
-            updateRecentFiles(projectFile.getAbsolutePath());
+            updateRecentFiles(projectFile.getAbsolutePath());//TODO: ADD TO CREATE()
 
             projectLoaded = true;
 

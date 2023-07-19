@@ -4,51 +4,60 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<GridPane hgap="10.0" prefHeight="318.0" prefWidth="788.0" vgap="10.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.resources.fxml.menubar.CreateProjectController">
+<GridPane fx:id="root" hgap="10.0" prefHeight="351.0" prefWidth="788.0" vgap="10.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.resources.fxml.menubar.CreateProjectController">
    <columnConstraints>
       <ColumnConstraints hgrow="SOMETIMES" maxWidth="128.33333333333331" minWidth="10.0" prefWidth="119.33333333333333" />
-      <ColumnConstraints halignment="LEFT" hgrow="SOMETIMES" maxWidth="456.3333333333333" minWidth="10.0" prefWidth="448.3333333333333" />
-      <ColumnConstraints hgrow="SOMETIMES" maxWidth="285.66669718424475" minWidth="10.0" prefWidth="179.66666666666663" />
+      <ColumnConstraints halignment="LEFT" hgrow="SOMETIMES" maxWidth="456.3333333333333" minWidth="10.0" prefWidth="371.3333333333333" />
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="285.66669718424475" minWidth="10.0" prefWidth="258.66666666666663" />
    </columnConstraints>
    <rowConstraints>
       <RowConstraints maxHeight="46.000000953674316" minHeight="0.0" prefHeight="38.000000953674316" vgrow="SOMETIMES" />
-      <RowConstraints maxHeight="40.0" minHeight="5.0" prefHeight="21.0" vgrow="SOMETIMES" />
-      <RowConstraints maxHeight="126.0" minHeight="10.0" prefHeight="110.0" vgrow="SOMETIMES" />
-      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="57.33333333333333" minHeight="5.0" prefHeight="55.33333333333333" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="186.66666666666666" minHeight="10.0" prefHeight="167.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="124.33333333333331" minHeight="0.0" prefHeight="29.666666666666686" vgrow="SOMETIMES" />
    </rowConstraints>
    <children>
-      <Button fx:id="createProjectButton" mnemonicParsing="false" onAction="#createProject" prefHeight="36.0" prefWidth="149.0" text="Create Project" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-      <TextField fx:id="projectNameTxtField" promptText="Enter Project Name..." GridPane.columnIndex="1" />
-      <Label text="Enter Project Name:" />
-      <Label layoutX="23.0" layoutY="35.0" text="Save Project In..." GridPane.rowIndex="1" />
-      <ChoiceBox fx:id="directoryChoices" prefHeight="25.0" prefWidth="458.0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" />
-      <Label layoutX="20.0" layoutY="78.0" text="Import Options:" GridPane.rowIndex="2" />
-      <HBox spacing="30.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+      <Label text="Enter Project Name:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+      <TextField fx:id="projectNameTxtField" prefHeight="25.0" prefWidth="206.0" promptText="Enter Project Name..." GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="0" />
+
+      <Label text="Save Project In..." GridPane.columnIndex="0" GridPane.rowIndex="1" />
+      <ChoiceBox fx:id="directoryChoices" maxWidth="640.0" minWidth="374.0" prefHeight="25.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+
+      <Label text="Import Options:" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.valignment="TOP" />
+      <VBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
          <children>
-            <VBox prefHeight="55.0" prefWidth="156.0" spacing="20.0">
-               <children>
-                  <CheckBox fx:id="imageCompressCheckbox" mnemonicParsing="false" text="Image Compression" />
-                  <CheckBox fx:id="import3DOriginCheckbox" mnemonicParsing="false" text="Use Imported 3D Origin" />
-               </children>
-            </VBox>
-            <VBox prefHeight="75.0" prefWidth="270.0" spacing="20.0">
-               <children>
-                  <CheckBox fx:id="visibilityAndShadowTestingCheckbox" mnemonicParsing="false" onAction="#toggleVisibilitySectionDisabling" prefHeight="17.0" prefWidth="245.0" text="Preload Visibility &amp; Shadow Testing" />
-                  <HBox alignment="CENTER_LEFT" spacing="10.0">
+            <CheckBox fx:id="imageCompressCheckbox" mnemonicParsing="false" text="Image Compression" />
+            <CheckBox fx:id="import3DOriginCheckbox" mnemonicParsing="false" text="Use Imported 3D Origin" />
+            <CheckBox fx:id="spatialOrientation3DOriginCheckbox" mnemonicParsing="false" text="Spatial Orientation Origin Point as 3D Origin" wrapText="true" />
+            <TitledPane expanded="false" lineSpacing="10.0" text="More Import Options">
+               <content>
+                  <VBox spacing="10.0">
                      <children>
-                        <Label alignment="CENTER" text="Width:" />
-                        <TextField fx:id="widthTextField" prefWidth="56.0" text="2048" />
-                        <Label text="Height:" />
-                        <TextField fx:id="heightTextField" prefWidth="56.0" text="2048" />
+                        <CheckBox fx:id="importedTransparencyCheckbox" mnemonicParsing="false" text="Imported Transparency" />
+                        <CheckBox fx:id="mipmapCheckbox" mnemonicParsing="false" text="Mipmap" />
                      </children>
-                     <opaqueInsets>
-                        <Insets />
-                     </opaqueInsets>
-                  </HBox>
-               </children>
-            </VBox>
+                  </VBox>
+               </content>
+            </TitledPane>
          </children>
-      </HBox>
+      </VBox>
+      <VBox spacing="10.0" GridPane.columnIndex="2" GridPane.rowIndex="2">
+         <children>
+            <CheckBox fx:id="visibilityAndShadowTestingCheckbox" mnemonicParsing="false" onAction="#updateVisibility" text="Preload Visibility &amp; Shadow Testing" />
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+               <children>
+                  <Label fx:id="widthLabel" text="Width:" />
+                  <TextField fx:id="widthTextField" prefWidth="56.0" text="2048" />
+                  <Label fx:id="heightLabel" text="Height:" />
+                  <TextField fx:id="heightTextField" prefWidth="56.0" text="2048" />
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+      <Accordion GridPane.columnIndex="1" GridPane.rowIndex="3" />
+      <Button fx:id="createProjectButton" mnemonicParsing="false" onAction="#createProject" text="Create Project" GridPane.rowIndex="3" />
+      <CheckBox fx:id="autosaveCheckbox" mnemonicParsing="false" selected="true" text="Autosave" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+      <Button fx:id="cancelButton" cancelButton="true" mnemonicParsing="false" onAction="#cancelButtonAction" text="Cancel" GridPane.columnIndex="2" GridPane.rowIndex="3" />
    </children>
    <padding>
       <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />

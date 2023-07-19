@@ -1,5 +1,5 @@
-C:\Users\DenneyLuke\OneDrive - University of Wisconsin-Stout\cultural-heritage\mia-leaf-lacquer\180325_mia328_117143_IBRelight.ibr
-C:\Users\DenneyLuke\OneDrive - University of Wisconsin-Stout\photoscan\cultural-heritage\mia-kuan-yu\guan-yu.ibr
-C:\Users\DenneyLuke\OneDrive - University of Wisconsin-Stout\cultural-heritage\mia-fang-ding\150615_mia337_001143_0403_camera_lightcalibrated.ibr
 C:\Users\DenneyLuke\OneDrive - University of Wisconsin-Stout\cultural-heritage\mia-celestial-horse\celestial-horse-light-calib.ibr
+C:\Users\DenneyLuke\OneDrive - University of Wisconsin-Stout\photoscan\cultural-heritage\mia-kuan-yu\guan-yu.ibr
+C:\Users\DenneyLuke\OneDrive - University of Wisconsin-Stout\cultural-heritage\mia-leaf-lacquer\180325_mia328_117143_IBRelight.ibr
+C:\Users\DenneyLuke\OneDrive - University of Wisconsin-Stout\cultural-heritage\mia-fang-ding\150615_mia337_001143_0403_camera_lightcalibrated.ibr
 C:\Users\DenneyLuke\OneDrive - University of Wisconsin-Stout\cultural-heritage\mia-ding\v1-default-tonemapping\darpa-video-request-top-half-only.ibr
