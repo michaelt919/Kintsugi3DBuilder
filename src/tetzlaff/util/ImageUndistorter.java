@@ -58,21 +58,28 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
         drawable.program().setUniform("coefficientsP", new Vector2(distortion.p1, distortion.p2));
         drawable.program().setUniform("skew", distortion.skew);
 
-        FramebufferObject<ContextType> framebuffer = context.buildFramebufferObject(inputImage.getWidth(), inputImage.getHeight())
-                .addColorAttachment(ColorFormat.RGBA8)
-                .createFramebufferObject();
+        try (FramebufferObject<ContextType> framebuffer = context.buildFramebufferObject(inputImage.getWidth(), inputImage.getHeight())
+                .addEmptyColorAttachment()
+                .createFramebufferObject())
+        {
+            Texture2D<ContextType> outputTexture = context.getTextureFactory().build2DColorTexture(inputImage.getWidth(), inputImage.getHeight()).createTexture();
+            framebuffer.setColorAttachment(0, outputTexture);
 
-        drawable.draw(framebuffer);
-        int[] pixels = framebuffer.getTextureReaderForColorAttachment(0).readARGB();
+            drawable.draw(framebuffer);
 
-        // TODO: Convert to texture directly instead of to an image first
-        BufferedImage image = BufferedImageBuilder.build()
-            .setDataFromArray(pixels, inputImage.getWidth(), inputImage.getHeight())
-            .flipVertical()
-            .create();
+            return outputTexture;
+        }
+    }
 
-        framebuffer.close();
-        return context.getTextureFactory().build2DColorTextureFromImage(image, false).createTexture();
+    public BufferedImage undistort(BufferedImage inputImage, DistortionProjection distortion)
+    {
+        Texture2D<ContextType> inTex = context.getTextureFactory().build2DColorTextureFromImage(inputImage, false).createTexture();
+        Texture2D<ContextType> outTex = undistort(inTex, distortion);
+
+        return BufferedImageBuilder.build()
+                .setDataFromArray(outTex.getColorTextureReader().readARGB(), inputImage.getWidth(), inputImage.getHeight())
+                .flipVertical()
+                .create();
     }
 
     @Override
