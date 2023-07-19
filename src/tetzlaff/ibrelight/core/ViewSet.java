@@ -11,12 +11,14 @@
 
 package tetzlaff.ibrelight.core;
 
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import tetzlaff.gl.core.Context;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
@@ -25,6 +27,9 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.util.ImageFinder;
 import tetzlaff.util.ImageLodResizer;
+import tetzlaff.util.ImageUndistorter;
+
+import javax.imageio.ImageIO;
 
 /**
  * A class representing a collection of photographs, or views.
@@ -574,7 +579,7 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public void generatePreviewImages(int width, int height) throws IOException
+    public void generatePreviewImages(Context<?> context, int width, int height) throws IOException
     {
         if (Objects.equals(this.relativePreviewImagePathName, this.relativeFullResImagePathName))
         {
@@ -589,13 +594,26 @@ public final class ViewSet implements ReadonlyViewSet
             // Make sure the preview image directory exists; create it if not
             this.getPreviewImageFilePath().mkdirs();
 
+            ImageUndistorter<?> undistorter = new ImageUndistorter<>(context);
+
             // Resize and save the preview images
             for (int i = 0; i < this.getCameraPoseCount(); i++)
             {
                 System.out.printf("%d/%d", i, this.getCameraPoseCount());
                 System.out.println();
-                ImageLodResizer resizer = new ImageLodResizer(this.getFullResImageFile(i));
-                resizer.saveAtResolution(this.getPreviewImageFile(i), width, height);
+                if (this.getCameraProjection(i) instanceof DistortionProjection)
+                {
+                    DistortionProjection proj = (DistortionProjection) this.getCameraProjection(i);
+                    BufferedImage image = ImageIO.read(this.getFullResImageFile(i));
+                    image = undistorter.undistort(image, proj);
+                    ImageLodResizer resizer = new ImageLodResizer(image, this.getFullResImageFile(i).getParentFile());
+                    resizer.saveAtResolution(this.getPreviewImageFile(i), width, height);
+                }
+                else
+                {
+                    ImageLodResizer resizer = new ImageLodResizer(this.getFullResImageFile(i));
+                    resizer.saveAtResolution(this.getPreviewImageFile(i), width, height);
+                }
             }
 
             System.out.println("Preview images generated in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");

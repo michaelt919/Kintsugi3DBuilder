@@ -83,7 +83,7 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
     }
 
     @Override
-    public void close() throws Exception
+    public void close()
     {
         program.close();
         rect.close();

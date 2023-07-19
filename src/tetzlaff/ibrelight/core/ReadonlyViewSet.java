@@ -12,6 +12,7 @@
 
 package tetzlaff.ibrelight.core;
 
+import tetzlaff.gl.core.Context;
 import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
@@ -131,7 +132,7 @@ public interface ReadonlyViewSet
      * @param height The height of each preview image.
      * @throws IOException If errors occur while saving the images.
      */
-    void generatePreviewImages(int width, int height) throws IOException;
+    void generatePreviewImages(Context<?> context, int width, int height) throws IOException;
 
     int getPrimaryViewIndex();
 
