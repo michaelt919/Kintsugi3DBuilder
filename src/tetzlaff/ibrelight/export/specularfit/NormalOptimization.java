@@ -16,6 +16,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.function.Function;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.core.*;
@@ -26,6 +28,7 @@ import tetzlaff.optimization.ShaderBasedOptimization;
 
 public class NormalOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
 {
+    private static final Logger log = LoggerFactory.getLogger(NormalOptimization.class);
     private final ShaderBasedOptimization<ContextType> estimateNormals;
     private final ShaderBasedOptimization<ContextType> smoothNormals;
     private final NormalOptimizationSettings normalOptimizationSettings;
@@ -73,7 +76,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
 
             if (SpecularOptimization.DEBUG)
             {
-                System.out.println("Estimating normals...");
+                log.info("Estimating normals...");
             }
         });
 
@@ -98,7 +101,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
 
             if (SpecularOptimization.DEBUG)
             {
-                System.out.println("Smoothing normals...");
+                log.info("Smoothing normals...");
             }
         });
 
@@ -106,7 +109,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         {
             if (SpecularOptimization.DEBUG)
             {
-                System.out.println("DONE!");
+                log.info("DONE!");
                 //saveNormalMapEstimate();
             }
         });
@@ -115,7 +118,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         {
             if (SpecularOptimization.DEBUG)
             {
-                System.out.println("DONE!");
+                log.info("DONE!");
             }
         });
     }

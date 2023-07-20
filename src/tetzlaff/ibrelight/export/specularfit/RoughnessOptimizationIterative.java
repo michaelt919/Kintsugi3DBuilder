@@ -1,5 +1,7 @@
 package tetzlaff.ibrelight.export.specularfit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.core.*;
@@ -19,6 +21,7 @@ import java.util.stream.IntStream;
 public class RoughnessOptimizationIterative<ContextType extends Context<ContextType>>
         extends RoughnessOptimizationBase<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(RoughnessOptimizationIterative.class);
     private final TextureFitSettings settings;
 
     private final ShaderBasedOptimization<ContextType> roughnessOptimization;
@@ -87,7 +90,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
 
             if (SpecularOptimization.DEBUG)
             {
-                System.out.println("Optimizing roughness...");
+                log.info("Optimizing roughness...");
             }
         });
     }

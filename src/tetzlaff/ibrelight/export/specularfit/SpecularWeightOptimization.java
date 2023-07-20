@@ -13,12 +13,15 @@ package tetzlaff.ibrelight.export.specularfit;
 
 import java.util.Collections;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.optimization.NonNegativeWeightOptimization;
 
 public class SpecularWeightOptimization
 {
+    private static final Logger log = LoggerFactory.getLogger(SpecularWeightOptimization.class);
     private final NonNegativeWeightOptimization base;
     private final TextureFitSettings textureFitSettings;
     private final SpecularBasisSettings specularBasisSettings;
@@ -48,7 +51,7 @@ public class SpecularWeightOptimization
 
     public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularDecomposition solution, int pStart)
     {
-        System.out.println("Building weight fitting matrices...");
+        log.info("Building weight fitting matrices...");
 
         // Setup all the matrices for fitting weights (one per texel)
         base.buildMatrices(viewStream, new SpecularWeightModel(solution, this.specularBasisSettings),
@@ -60,7 +63,7 @@ public class SpecularWeightOptimization
         // TODO expose the damping factor as a setting.
 //        base.dampenWithPreviousSolution(1.0, p -> b -> solution.getWeights(pStart + p).get(b));
 
-        System.out.println("Finished building matrices; solving now...");
+        log.info("Finished building matrices; solving now...");
 
         // Optimize the weights and store the result in the SpecularDecomposition.
         if (pStart + weightBlockSize > textureFitSettings.width * textureFitSettings.height)
@@ -87,7 +90,7 @@ public class SpecularWeightOptimization
                 });
         }
 
-        System.out.println("DONE!");
+        log.info("DONE!");
     }
 
     public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularDecomposition solution)

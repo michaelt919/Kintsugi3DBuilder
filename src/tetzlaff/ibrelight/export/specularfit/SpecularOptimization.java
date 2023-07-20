@@ -19,6 +19,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.function.BiConsumer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.Matrix4;
@@ -35,6 +37,7 @@ import tetzlaff.optimization.ShaderBasedErrorCalculator;
  */
 public class SpecularOptimization
 {
+    private static final Logger log = LoggerFactory.getLogger(SpecularOptimization.class);
     static final boolean DEBUG = true;
 
     private final SpecularFitRequestParams settings;
@@ -89,7 +92,7 @@ public class SpecularOptimization
         ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings());
 
         Duration duration = Duration.between(start, Instant.now());
-        System.out.println("Cache generated / loaded in: " + duration);
+        log.info("Cache generated / loaded in: " + duration);
 
         SpecularResources<ContextType> specularFit = createFit(cache);
 
@@ -193,7 +196,7 @@ public class SpecularOptimization
             }
 
             Duration duration = Duration.between(start, Instant.now());
-            System.out.println("Total processing time: " + duration);
+            log.info("Total processing time: " + duration);
 
             try (PrintStream time = new PrintStream(new File(settings.getOutputDirectory(), "time.txt")))
             {
@@ -234,8 +237,8 @@ public class SpecularOptimization
             {
                 for (int j = 0; j < cache.getSettings().getTextureSubdiv(); j++)
                 {
-                    System.out.println();
-                    System.out.println("Starting block (" + i + ", " + j + ")...");
+                    log.info("");
+                    log.info("Starting block (" + i + ", " + j + ")...");
 
                     try (IBRResourcesTextureSpace<ContextType> blockResources = blockResourceFactory.createBlockResources(i, j))
                     {
@@ -380,7 +383,7 @@ public class SpecularOptimization
             throw new IllegalArgumentException("Geometry is null; cannot export GLTF.");
         }
 
-        System.out.println("Starting glTF export...");
+        log.info("Starting glTF export...");
         try
         {
 
@@ -402,12 +405,11 @@ public class SpecularOptimization
             }
 
             exporter.write(new File(settings.getOutputDirectory(), "model.glb"));
-            System.out.println("DONE!");
+            log.info("DONE!");
         }
         catch (IOException e)
         {
-            System.out.println("Error occurred during glTF export:");
-            e.printStackTrace();
+            log.error("Error occurred during glTF export:", e);
         }
     }
 

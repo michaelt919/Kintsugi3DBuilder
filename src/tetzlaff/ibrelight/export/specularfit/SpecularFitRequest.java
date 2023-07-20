@@ -13,6 +13,8 @@ package tetzlaff.ibrelight.export.specularfit;
 
 import java.io.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.*;
@@ -23,6 +25,7 @@ import tetzlaff.interactive.GraphicsRequest;
 
 public class SpecularFitRequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>, GraphicsRequest<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(SpecularFitRequest.class);
     private final SpecularFitRequestParams settings;
 
     /**
@@ -59,7 +62,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
             SpecularResources<ContextType> specularFit;
 
             // Assume fitting from prior solution
-            System.out.println("No IBRelight project loaded; loading prior solution");
+            log.info("No IBRelight project loaded; loading prior solution");
             specularFit = new SpecularOptimization(settings).loadPriorSolution(context, settings.getPriorSolutionDirectory());
 
             // Load just geometry, tonemapping, settings.
@@ -122,13 +125,13 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
             FinalReconstruction<ContextType> reconstruction =
                 new FinalReconstruction<>(resources, settings.getTextureFitSettings(), settings.getReconstructionSettings());
 
-            System.out.println("Reconstructing ground truth images from basis representation:");
+            log.info("Reconstructing ground truth images from basis representation:");
             double reconstructionRMSE =
                 reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(resources, programFactory),
                     settings.getReconstructionSettings().shouldReconstructAll(),
                     "reconstruction", "ground-truth", settings.getOutputDirectory());
 
-            System.out.println("Reconstructing ground truth images from fitted roughness / specular color:");
+            log.info("Reconstructing ground truth images from fitted roughness / specular color:");
             double fittedRMSE =
                 reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(resources, programFactory),
                     settings.getReconstructionSettings().shouldReconstructAll(),

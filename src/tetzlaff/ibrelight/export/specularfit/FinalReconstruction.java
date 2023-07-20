@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.concurrent.atomic.DoubleAdder;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.ColorFormat;
 import tetzlaff.gl.core.Context;
@@ -28,6 +30,7 @@ import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 
 public class FinalReconstruction<ContextType extends Context<ContextType>>
 {
+    private static final Logger log = LoggerFactory.getLogger(FinalReconstruction.class);
     private final ReadonlyIBRResources<ContextType> resources;
     private final TextureFitSettings textureFitSettings;
     private final ReconstructionSettings reconstructionSettings;
@@ -128,7 +131,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
 
                     // Report average RMSE across all views
                     double avgRMSE = Math.sqrt(totalMSE.doubleValue() / totalPixels.doubleValue());
-                    System.out.println("Average RMSE across all views: " + avgRMSE);
+                    log.info("Average RMSE across all views: " + avgRMSE);
                     rmseOut.println("Average, " + avgRMSE);
                     return avgRMSE;
                 }
