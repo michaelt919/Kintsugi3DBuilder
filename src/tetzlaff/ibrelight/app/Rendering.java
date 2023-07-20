@@ -27,10 +27,13 @@ import javax.xml.parsers.ParserConfigurationException;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import org.xml.sax.SAXException;
-import tetzlaff.gl.glfw.WindowFactory;
-import tetzlaff.gl.glfw.WindowImpl;
+import tetzlaff.gl.builders.framebuffer.DefaultFramebufferFactory;
+import tetzlaff.gl.core.DoubleFramebufferObject;
+import tetzlaff.gl.glfw.CanvasWindow;
 import tetzlaff.gl.interactive.InteractiveGraphics;
+import tetzlaff.gl.javafx.CopyWindowBuilder;
 import tetzlaff.gl.opengl.OpenGLContext;
+import tetzlaff.gl.opengl.OpenGLContextFactory;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
@@ -79,56 +82,90 @@ public final class Rendering
         // Check for and print supported image formats (some are not as easy as you would think)
         printSupportedImageFormats();
 
-        // Create a GLFW window for integration with LWJGL (part of the 'view' in this MVC arrangement)
-        try(PollableWindow<OpenGLContext> window =
-            (stage == null ? WindowFactory.buildOpenGLWindow("IBRelight", 800, 800)
-                : WindowFactory.buildJavaFXWindow(stage, "IBRelight", 800, 800))
+        if (stage == null)
+        {
+            try
+            {
+                try(CanvasWindow<OpenGLContext> window = OpenGLContextFactory.getInstance().buildWindow("IBRelight", 800, 800)
                     .setResizable(true)
                     .setMultisamples(4)
                     .create())
-        {
-            SynchronizedWindow glfwSynchronization = new SynchronizedWindow()
+                {
+                    setupWindow(window);
+                    runProgram(stage, window.getCanvas(), args);
+                }
+            }
+            finally
             {
-                @Override
-                public boolean isFocused()
-                {
-                    return window.isFocused();
-                }
-
-                @Override
-                public void focus()
-                {
-                    // TODO uncomment this if it becomes possible to upgrade to new version of LWJGL that supports window focus through updated GLFW.
-                    //new Thread(window::focus).start();
-                }
-
-                @Override
-                public void quit()
-                {
-                    window.requestWindowClose();
-                }
+                // The event loop has terminated so cleanup the windows and exit with a successful return code.
+                CanvasWindow.closeAllWindows();
+            }
+        }
+        else
+        {
+            var framebufferCapture = new Object()
+            {
+                DoubleFramebufferObject<OpenGLContext> fbo;
             };
 
-            WindowSynchronization.getInstance().addListener(glfwSynchronization);
-
-            window.addWindowCloseListener(canvas ->
+            // Need to still specify a native window to create the context, even though we won't use it.
+            try(CanvasWindow<OpenGLContext> ignored = OpenGLContextFactory.getInstance().buildWindow("<ignore>", 1, 1)
+                .setDefaultFramebufferCreator(c -> framebufferCapture.fbo = DefaultFramebufferFactory.create(c, 800, 800))
+                .create())
             {
-                // Cancel the window closing and let the window synchronization system close the window later if the user confirms that they want to exit.
-                window.cancelWindowClose();
-                WindowSynchronization.getInstance().quit();
-            });
+                try (FramebufferCanvas<OpenGLContext> canvas = FramebufferCanvas.createUsingExistingFramebuffer(framebufferCapture.fbo))
+                {
+                    // JavaFX window is not a OpenGL resource
+                    PollableWindow window = new CopyWindowBuilder(stage, "IBRelight", 800, 800)
+                        .setCanvas(canvas)
+                        .setResizable(true)
+                        .setMultisamples(4)
+                        .create();
+
+                    setupWindow(window);
+                    runProgram(stage, canvas, args);
+                }
+            }
+        }
+    }
+
+    private static void setupWindow(PollableWindow window)
+    {
+        SynchronizedWindow glfwSynchronization = new SynchronizedWindow()
+        {
+            @Override
+            public boolean isFocused()
+            {
+                return window.isFocused();
+            }
+
+            @Override
+            public void focus()
+            {
+                // TODO uncomment this if it becomes possible to upgrade to new version of LWJGL that supports window focus through updated GLFW.
+                //new Thread(window::focus).start();
+            }
+
+            @Override
+            public void quit()
+            {
+                window.requestWindowClose();
+            }
+        };
+
+        WindowSynchronization.getInstance().addListener(glfwSynchronization);
+
+        window.getCanvas().addWindowCloseListener(canvas ->
+        {
+            // Cancel the window closing and let the window synchronization system close the window later if the user confirms that they want to exit.
+            window.cancelWindowClose();
+            WindowSynchronization.getInstance().quit();
+        });
 
 //            window.addWindowFocusGainedListener(win -> WindowSynchronization.getInstance().focusGained(glfwSynchronization));
 //            window.addWindowFocusLostListener(win -> WindowSynchronization.getInstance().focusLost(glfwSynchronization));
 
-            window.show();
-            runProgram(stage, window, args);
-        }
-        finally
-        {
-            // The event loop has terminated so cleanup the windows and exit with a successful return code.
-            WindowImpl.closeAllWindows();
-        }
+        window.show();
     }
 
     private static void runProgram(Stage stage, PollableCanvas3D<OpenGLContext> canvas, String... args) throws InitializationException

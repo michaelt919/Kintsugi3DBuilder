@@ -13,6 +13,7 @@ package tetzlaff.gl.window;
 
 import tetzlaff.gl.core.Context;
 
-public interface PollableWindow<ContextType extends Context<ContextType>> extends Window<ContextType>, PollableCanvas3D<ContextType>
+public interface PollableWindow extends Window
 {
+    PollableCanvas3D<? extends Context<?>> getCanvas();
 }

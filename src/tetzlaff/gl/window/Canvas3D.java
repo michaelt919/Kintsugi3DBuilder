@@ -12,13 +12,12 @@
 package tetzlaff.gl.window;
 
 import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Resource;
 
-public interface Canvas3D<ContextType extends Context<? extends ContextType>> extends WindowListenerManager, AutoCloseable
+public interface Canvas3D<ContextType extends Context<ContextType>> extends WindowListenerManager, Resource
 {
     ContextType getContext();
     boolean isHighDPI();
-    @Override
-    void close();
     CanvasSize getSize();
     CanvasPosition getPosition();
     MouseButtonState getMouseButtonState(int buttonIndex);

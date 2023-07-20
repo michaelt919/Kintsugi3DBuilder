@@ -14,6 +14,6 @@ package tetzlaff.gl.window;
 import tetzlaff.gl.core.Context;
 import tetzlaff.interactive.EventPollable;
 
-public interface PollableCanvas3D<ContextType extends Context<? extends ContextType>> extends Canvas3D<ContextType>, EventPollable
+public interface PollableCanvas3D<ContextType extends Context<ContextType>> extends Canvas3D<ContextType>, EventPollable
 {
 }

@@ -17,14 +17,14 @@ import tetzlaff.gl.core.DoubleFramebuffer;
 import tetzlaff.gl.window.PollableWindow;
 import tetzlaff.gl.window.WindowBuilderBase;
 
-public class WindowBuilderImpl<ContextType extends WindowContextBase<ContextType>>
-    extends WindowBuilderBase<ContextType>
+public class CanvasWindowBuilder<ContextType extends WindowContextBase<ContextType>>
+    extends WindowBuilderBase<CanvasWindow<ContextType>>
 {
     private final ContextFactory<ContextType> contextFactory;
 
     private Function<ContextType, DoubleFramebuffer<ContextType>> createDefaultFramebuffer;
 
-    WindowBuilderImpl(ContextFactory<ContextType> contextFactory, String title, int width, int height)
+    CanvasWindowBuilder(ContextFactory<ContextType> contextFactory, String title, int width, int height)
     {
         // (-1, -1) is the GLFW convention for default window position
         super(title, width, height, -1, -1);
@@ -32,15 +32,15 @@ public class WindowBuilderImpl<ContextType extends WindowContextBase<ContextType
         this.contextFactory = contextFactory;
     }
 
-    WindowBuilderImpl<ContextType> setDefaultFramebufferCreator(Function<ContextType, DoubleFramebuffer<ContextType>> createDefaultFramebuffer)
+    public CanvasWindowBuilder<ContextType> setDefaultFramebufferCreator(Function<ContextType, DoubleFramebuffer<ContextType>> createDefaultFramebuffer)
     {
         this.createDefaultFramebuffer = createDefaultFramebuffer;
         return this;
     }
 
     @Override
-    public PollableWindow<ContextType> create()
+    public CanvasWindow<ContextType> create()
     {
-        return new WindowImpl<>(contextFactory, createDefaultFramebuffer, this);
+        return new CanvasWindow<>(contextFactory, createDefaultFramebuffer, this);
     }
 }

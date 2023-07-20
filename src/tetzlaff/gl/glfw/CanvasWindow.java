@@ -18,6 +18,7 @@ import org.lwjgl.*;
 import org.lwjgl.Version.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
+import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.DoubleFramebuffer;
 import tetzlaff.gl.core.FramebufferSize;
 import tetzlaff.gl.exceptions.GLFWException;
@@ -27,15 +28,15 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
-public class WindowImpl<ContextType extends WindowContextBase<ContextType>>
-    extends WindowBase<ContextType> implements PollableWindow<ContextType>
+public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
+    extends CanvasBase<ContextType> implements PollableWindow, PollableCanvas3D<ContextType>
 {
     private final long handle;
     private final WindowListenerManager listenerManager;
 
     private final ContextType context;
 
-    WindowImpl(ContextFactory<ContextType> contextFactory,
+    CanvasWindow(ContextFactory<ContextType> contextFactory,
         Function<ContextType, DoubleFramebuffer<ContextType>> createDefaultFramebuffer,
         WindowSpecification windowSpec)
     {
@@ -91,7 +92,7 @@ public class WindowImpl<ContextType extends WindowContextBase<ContextType>>
         GL.createCapabilities(); // Make a valid OpenGL Context
         System.out.println("OpenGL version: " + glGetString(GL_VERSION));
         System.out.println("LWJGL version: " +
-                String.valueOf(Version.VERSION_MAJOR) + '.' + Version.VERSION_MINOR + '.' + Version.VERSION_REVISION +
+                Version.VERSION_MAJOR + '.' + Version.VERSION_MINOR + '.' + Version.VERSION_REVISION +
                 (Version.BUILD_TYPE == BuildType.ALPHA ? "a" : Version.BUILD_TYPE == BuildType.BETA ? "b" : "")
                 /*Version.getVersion()*/ /* <== causes annoying exception breakpoints in Eclipse */);
         System.out.println("GLFW version: " + glfwGetVersionString());
@@ -119,6 +120,12 @@ public class WindowImpl<ContextType extends WindowContextBase<ContextType>>
     public ContextType getContext()
     {
         return this.context;
+    }
+
+    @Override
+    public PollableCanvas3D<ContextType> getCanvas()
+    {
+        return this;
     }
 
     @Override

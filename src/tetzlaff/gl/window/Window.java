@@ -12,14 +12,21 @@
 package tetzlaff.gl.window;
 
 import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Resource;
 
-public interface Window<ContextType extends Context<ContextType>> extends Canvas3D<ContextType>
+import java.io.Closeable;
+
+public interface Window
 {
+    Canvas3D<? extends Context<?>> getCanvas();
+
     void show();
 
     void hide();
 
     void focus();
+
+    void close();
 
     boolean isWindowClosing();
 

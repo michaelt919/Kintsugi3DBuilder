@@ -28,9 +28,9 @@ import static org.lwjgl.opengl.GL11.*;
 @SuppressWarnings("NestedAssignment")
 class WindowCallback extends WindowListenerManagerInstance
 {
-    private final WindowImpl<?> window;
+    private final CanvasWindow<?> window;
 
-    WindowCallback(WindowImpl<?> window)
+    WindowCallback(CanvasWindow<?> window)
     {
         this.window = window;
 

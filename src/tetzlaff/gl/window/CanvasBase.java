@@ -14,8 +14,8 @@ package tetzlaff.gl.window;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.window.listeners.*;
 
-public abstract class WindowBase<ContextType extends Context<ContextType>>
-    implements Window<ContextType>
+public abstract class CanvasBase<ContextType extends Context<ContextType>>
+    implements Canvas3D<ContextType>
 {
     protected abstract WindowListenerManager getListenerManager();
 
