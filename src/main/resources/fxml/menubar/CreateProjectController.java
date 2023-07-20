@@ -6,7 +6,6 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -37,7 +36,6 @@ public class CreateProjectController {
     @FXML public Label widthLabel;
     @FXML public Label heightLabel;
 
-    public GridPane root;
     private Stage stage;
 
     private DirectoryChooser directoryChooser = new DirectoryChooser();
