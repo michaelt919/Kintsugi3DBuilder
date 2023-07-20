@@ -120,37 +120,25 @@ public class MainApplication extends Application
         URL menuBarURL = getClass().getClassLoader().getResource(menuBarFXMLFileName);
         assert menuBarURL != null : "cant find " + menuBarFXMLFileName;
 
-        String libraryFXMLFileName = "fxml/library/Library.fxml";
-        URL libraryURL = getClass().getClassLoader().getResource(libraryFXMLFileName);
-        assert libraryURL != null : "cant find " + libraryFXMLFileName;
-
         String sceneFXMLFileName = "fxml/scene/RootScene.fxml";
         URL sceneURL = getClass().getClassLoader().getResource(sceneFXMLFileName);
         assert sceneURL != null : "cant find " + sceneFXMLFileName;
 
         //init fxml loaders
         FXMLLoader sceneFXMLLoader = new FXMLLoader(sceneURL);
-        FXMLLoader libraryFXMLLoader = new FXMLLoader(libraryURL);
         FXMLLoader menuBarFXMLLoader = new FXMLLoader(menuBarURL);
 
         //load Parents
         Parent menuBarRoot = menuBarFXMLLoader.load();
-        Parent libraryRoot = libraryFXMLLoader.load();
         Parent sceneRoot = sceneFXMLLoader.load();
 
         //load Controllers
         RootSceneController sceneController = sceneFXMLLoader.getController();
         MenubarController menuBarController = menuBarFXMLLoader.getController();
-//        LibraryController libraryController = libraryFXMLLoader.getController();
 
         //load stages
         primaryStage.setTitle("IBRelight");
         primaryStage.setScene(new Scene(menuBarRoot));
-
-        Stage libraryStage = new Stage();
-        libraryStage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
-        libraryStage.setTitle("Library");
-        libraryStage.setScene(new Scene(libraryRoot));
 
         Stage sceneStage = new Stage();
         sceneStage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
@@ -161,18 +149,10 @@ public class MainApplication extends Application
 
         Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 
-        primaryStage.setX(primaryScreenBounds.getMinX() + 10);
-        primaryStage.setY(primaryScreenBounds.getMinY() + 10);
-
-        primaryStage.setResizable(false);
+//        primaryStage.setX(primaryScreenBounds.getMinX() + 10);
+//        primaryStage.setY(primaryScreenBounds.getMinY() + 10);
 
         primaryStage.show();
-
-        libraryStage.setX(primaryScreenBounds.getMinX() + 10);
-        libraryStage.setY(primaryScreenBounds.getMinY() + 50);
-        libraryStage.initOwner(primaryStage.getScene().getWindow());
-
-        //libraryStage.show();
 
         sceneStage.setX(primaryScreenBounds.getMinX() + primaryScreenBounds.getWidth() - 430);
         sceneStage.setY(primaryScreenBounds.getMinY() + 10);
@@ -182,7 +162,27 @@ public class MainApplication extends Application
         sceneStage.setMinWidth(sceneStage.getWidth());
         sceneStage.setMaxWidth(sceneStage.getWidth());
 
+//        String libraryFXMLFileName = "fxml/library/Library.fxml";
+//        URL libraryURL = getClass().getClassLoader().getResource(libraryFXMLFileName);
+//        assert libraryURL != null : "cant find " + libraryFXMLFileName;
+//        FXMLLoader libraryFXMLLoader = new FXMLLoader(libraryURL);
+//        LibraryController libraryController = libraryFXMLLoader.getController();
+
+//        Parent libraryRoot = libraryFXMLLoader.load();
+//        Stage libraryStage = new Stage();
+//        libraryStage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+//        libraryStage.setTitle("Library");
+//        libraryStage.setScene(new Scene(libraryRoot));
+
+//        libraryStage.setX(primaryScreenBounds.getMinX() + 10);
+//        libraryStage.setY(primaryScreenBounds.getMinY() + 50);
+//        libraryStage.initOwner(primaryStage.getScene().getWindow());
+//        libraryStage.show();
+
         primaryStage.requestFocus();
+
+        MultithreadModels.getInstance().getCanvasModel().addCanvasChangedListener(
+            canvas -> menuBarController.getFramebufferView().setCanvas(canvas));
 
         SettingsModelImpl settingsModel = InternalModels.getInstance().getSettingsModel();
         settingsModel.createBooleanSetting("lightCalibrationMode", false);
@@ -222,7 +222,7 @@ public class MainApplication extends Application
             InternalModels.getInstance().getProjectModel(),
             MultithreadModels.getInstance().getSceneViewportModel());
 
-        menuBarController.init(primaryStage.getScene().getWindow(), InternalModels.getInstance(),
+        menuBarController.init(primaryStage, InternalModels.getInstance(),
             () -> getHostServices().showDocument("https://docs.google.com/document/d/1jM4sr359-oacpom0TrGLYSqCUdHFEprnvsCn5oVwTEI/edit?usp=sharing"));
 
         SynchronizedWindow menuBarWindow = new StageSynchronization(primaryStage);

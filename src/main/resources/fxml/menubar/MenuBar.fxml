@@ -17,7 +17,7 @@
 <?import javafx.scene.layout.*?>
 <?import tetzlaff.ibrelight.core.*?>
 
-<VBox xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.MenubarController">
+<VBox prefHeight="720.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.MenubarController">
 <MenuBar>
       <Menu mnemonicParsing="false" text="File">
          <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="Create project">
@@ -142,7 +142,7 @@
           <MenuItem mnemonicParsing="false" onAction="#help_about" text="About" />
       </Menu>
    </MenuBar>
-   <ProgressBar fx:id="progressBar" prefWidth="410.0" progress="0.0" visible="false" VBox.vgrow="ALWAYS">
+   <ProgressBar fx:id="progressBar" prefWidth="0.0" progress="0.0" visible="false" VBox.vgrow="ALWAYS">
        <VBox.margin>
            <Insets>
                <right>-10</right>
@@ -150,4 +150,5 @@
            </Insets>
        </VBox.margin>
    </ProgressBar>
+    <fx:include fx:id="framebufferView" prefWidth="1280.0" source="FramebufferView.fxml" VBox.vgrow="ALWAYS" />
 </VBox>

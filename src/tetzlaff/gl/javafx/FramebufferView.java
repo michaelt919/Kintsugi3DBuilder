@@ -38,6 +38,7 @@ import java.util.OptionalInt;
 public class FramebufferView extends Region
 {
     private final ImageView imageView;
+    private Stage stage;
     private FramebufferCanvas<?> canvas;
 
     private WritableImage frontImage;
@@ -144,8 +145,7 @@ public class FramebufferView extends Region
         {
             if (canvas != null)
             {
-                getButtonIndex(event.getButton()).ifPresent(
-                    index -> canvas.moveCursor(getCursorPosition(event), getModifierKeys(event)));
+                canvas.moveCursor(getCursorPosition(event), getModifierKeys(event));
             }
         };
 
@@ -189,6 +189,7 @@ public class FramebufferView extends Region
 
     public void setStage(Stage stage)
     {
+        this.stage = stage;
         stage.getScene().setOnKeyPressed(event ->
         {
             if (canvas != null)
@@ -268,11 +269,10 @@ public class FramebufferView extends Region
     public void setCanvas(FramebufferCanvas<?> canvas)
     {
         this.canvas = canvas;
-        javafx.stage.Window window = this.getScene().getWindow();
 
         if (canvas != null)
         {
-            canvas.changeBounds(new CanvasPosition((int) Math.round(window.getX()), (int) Math.round(window.getY())),
+            canvas.changeBounds(new CanvasPosition((int) Math.round(this.stage.getX()), (int) Math.round(this.stage.getY())),
                 imageView.getImage() == null ? new CanvasSize(1, 1)
                     : new CanvasSize((int) Math.round(imageView.getImage().getWidth()), (int) Math.round(imageView.getImage().getHeight())));
 
@@ -432,8 +432,8 @@ public class FramebufferView extends Region
             event.isMetaDown());
     }
 
-    private static CursorPosition getCursorPosition(MouseEvent event)
+    private CursorPosition getCursorPosition(MouseEvent event)
     {
-        return new CursorPosition((int)Math.round(event.getSceneX()), (int)Math.round(event.getSceneY()));
+        return new CursorPosition((int)Math.round(event.getSceneX() - this.getLayoutX()), (int)Math.round(event.getSceneY() - this.getLayoutY()));
     }
 }

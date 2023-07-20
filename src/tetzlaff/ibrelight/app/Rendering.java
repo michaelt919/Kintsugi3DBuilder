@@ -91,7 +91,7 @@ public final class Rendering
                     .setMultisamples(4)
                     .create())
                 {
-                    setupWindow(window);
+                    setup3DWindow(window);
                     runProgram(stage, window.getCanvas(), args);
                 }
             }
@@ -115,21 +115,23 @@ public final class Rendering
             {
                 try (FramebufferCanvas<OpenGLContext> canvas = FramebufferCanvas.createUsingExistingFramebuffer(framebufferCapture.fbo))
                 {
-                    // JavaFX window is not a OpenGL resource
-                    PollableWindow window = new CopyWindowBuilder(stage, "IBRelight", 800, 800)
-                        .setCanvas(canvas)
-                        .setResizable(true)
-                        .setMultisamples(4)
-                        .create();
+//                    // JavaFX window is not a OpenGL resource
+//                    PollableWindow window = new CopyWindowBuilder(stage, "IBRelight", 800, 800)
+//                        .setCanvas(canvas)
+//                        .setResizable(true)
+//                        .setMultisamples(4)
+//                        .create();
+//                    setup3DWindow(window);
 
-                    setupWindow(window);
+                    MultithreadModels.getInstance().getCanvasModel().setCanvas(canvas);
+
                     runProgram(stage, canvas, args);
                 }
             }
         }
     }
 
-    private static void setupWindow(PollableWindow window)
+    private static void setup3DWindow(PollableWindow window)
     {
         SynchronizedWindow glfwSynchronization = new SynchronizedWindow()
         {
