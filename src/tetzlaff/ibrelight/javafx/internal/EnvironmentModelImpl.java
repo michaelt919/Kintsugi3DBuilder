@@ -21,6 +21,8 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.paint.Color;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.javafx.MultithreadModels;
@@ -31,6 +33,7 @@ import tetzlaff.util.AbstractImage;
 
 public class EnvironmentModelImpl implements EnvironmentModel
 {
+    private static final Logger log = LoggerFactory.getLogger(EnvironmentModelImpl.class);
     private ObservableValue<EnvironmentSetting> selected;
 
     private boolean environmentMapLoaded = false;
@@ -144,7 +147,7 @@ public class EnvironmentModelImpl implements EnvironmentModel
         {
             try
             {
-                System.out.println("Loading environment map file " + newFile.getName());
+                log.info("Loading environment map file " + newFile.getName());
                 Optional<AbstractImage> environmentMapImage = MultithreadModels.getInstance().getLoadingModel().loadEnvironmentMap(newFile);
                 loadedEnvironmentMapImage.setValue(environmentMapImage.orElse(null));
             }
@@ -182,7 +185,7 @@ public class EnvironmentModelImpl implements EnvironmentModel
         {
             try
             {
-                System.out.println("Loading backplate file " + newFile.getName());
+                log.info("Loading backplate file " + newFile.getName());
                 MultithreadModels.getInstance().getLoadingModel().loadBackplate(newFile);
             }
             catch (FileNotFoundException e)

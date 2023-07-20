@@ -11,6 +11,8 @@
 
 package tetzlaff.ibrelight.rendering.resources;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
@@ -29,6 +31,7 @@ import java.util.function.Supplier;
 
 public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> extends IBRResourcesBase<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(IBRResourcesTextureSpace.class);
     /**
      * Array of image data pre-projected into texture space
      */
@@ -114,8 +117,7 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
         // Iterate over the layers to load in the texture array
         for (int k = 0; k < getViewSet().getCameraPoseCount(); k++)
         {
-            System.out.printf("%d/%d", k, getViewSet().getCameraPoseCount());
-            System.out.println();
+            log.info("Loading camera pose {}/{}", k, getViewSet().getCameraPoseCount());
 
             textureArray.loadLayer(k,
                     ImageFinder.getInstance().findImageFile(new File(textureDirectory, getViewSet().getImageFileName(k))),
@@ -127,7 +129,7 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
             }
         }
 
-        System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+        log.info("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
         if (loadingMonitor != null)
         {

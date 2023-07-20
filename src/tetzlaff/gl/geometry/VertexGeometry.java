@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.material.Material;
 import tetzlaff.gl.material.ReadonlyMaterial;
@@ -35,6 +37,7 @@ import tetzlaff.gl.vecmath.Vector4;
  */
 public final class VertexGeometry implements ReadonlyVertexGeometry
 {
+    private static final Logger log = LoggerFactory.getLogger(VertexGeometry.class);
     private File filename;
 
     private boolean hasNormals;
@@ -385,7 +388,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
             inst.material = null;
         }
 
-        System.out.println("Mesh loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+        log.info("Mesh loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
         return inst;
     }

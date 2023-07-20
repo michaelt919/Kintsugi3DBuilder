@@ -15,6 +15,8 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.ibrelight.core.LoadingModel;
 
 import java.awt.*;
@@ -26,6 +28,7 @@ import java.util.ResourceBundle;
 import java.util.function.DoubleUnaryOperator;
 
 public class EyedropperController implements Initializable {
+    private static final Logger log = LoggerFactory.getLogger(EyedropperController.class);
 
     @FXML
     private Pane colorPickerPane;
@@ -172,14 +175,14 @@ public class EyedropperController implements Initializable {
 //            double relativeX = selectionRectangleRelativeCoords.getX();
 //            double relativeY = selectionRectangleRelativeCoords.getY();
 //
-//            System.out.println("x is " + x + ", relativeX is " + relativeX);
-//            System.out.println("y is " + y + ", relativeY is " + relativeY);
+//            log.debug("x is " + x + ", relativeX is " + relativeX);
+//            log.debug("y is " + y + ", relativeY is " + relativeY);
 //
 //            if (x > relativeX) {
-//                System.out.println("X TOO BIG");
+//                log.debug("X TOO BIG");
 //            }
 //            if (y > relativeY) {
-//                System.out.println("Y TOO BIG");
+//                log.debug("Y TOO BIG");
 //            }
 
             selectionRectangle.setWidth(width);
@@ -311,7 +314,7 @@ public class EyedropperController implements Initializable {
         }
 
         if(badColorDetected){//TODO: CHANGE SOLUTION TO THIS PROBLEM?
-            System.out.println("Some colors could not be added. Please confirm that your selection contains the desired colors.");
+            log.info("Some colors could not be added. Please confirm that your selection contains the desired colors.");
         }
 
         return calculateAverageColor(selectedColors);

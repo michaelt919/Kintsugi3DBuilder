@@ -18,6 +18,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
@@ -28,6 +30,7 @@ import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 
 public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable
 {
+    private static final Logger log = LoggerFactory.getLogger(ImageReconstruction.class);
     private final Program<ContextType> program;
     private final Program<ContextType> groundTruthProgram;
 
@@ -101,7 +104,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
 
         float[] reconstruction = framebuffer.readFloatingPointColorBufferRGBA(0);
 
-        System.out.println("View " + viewIndex + ':');
+        log.info("View " + viewIndex + ':');
 
         // Tonemap ground truth image
         try (Texture2D<ContextType> groundTruthTex =
@@ -163,17 +166,17 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                     })
                     .average().orElse(0.0)); // mean over pixels
 
-            System.out.println("Raw RMSE: " + rmse);
+            log.info("Raw RMSE: " + rmse);
 
             // Multiply by the true whitepoint luminance (for an encoded value of 1.0) divided by pi, gamma corrected.
             // To match the original images dynamic range, the cosine-weighted reflectance values in the framebuffer
             // will have been pre-divided by this value / PI, then gamma corrected.
             // Multiplying will reconvert the RMSE back to being in terms of cosine-weighted, normalized reflectance.
             double decodedWhitePoint = viewSet.getLuminanceEncoding().decodeFunction.applyAsDouble(255.0);
-            System.out.println("Decoded white point (as reflectance * pi): " + decodedWhitePoint);
+            log.info("Decoded white point (as reflectance * pi): " + decodedWhitePoint);
             double normalizedRMSE = rmse * Math.pow(decodedWhitePoint / Math.PI, 1.0 / viewSet.getGamma());
-            System.out.println("Normalized RMSE (* white point / pi): " + normalizedRMSE);
-            System.out.println();
+            log.info("Normalized RMSE (* white point / pi): " + normalizedRMSE);
+            log.info("");
 
             return new DoubleVector2(normalizedRMSE, sampleCount);
         }
@@ -191,7 +194,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         BiConsumer<Integer, Framebuffer<ContextType>> groundTruthAction,
         BiConsumer<Integer, DoubleVector2> rmseAction)
     {
-        System.out.println();
+        log.info("");
 
         for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
         {

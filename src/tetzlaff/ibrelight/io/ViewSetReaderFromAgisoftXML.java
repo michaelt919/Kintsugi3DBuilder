@@ -12,6 +12,8 @@
 
 package tetzlaff.ibrelight.io;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
@@ -31,6 +33,8 @@ import java.util.*;
  */
 public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 {
+    private static final Logger log = LoggerFactory.getLogger(ViewSetReaderFromAgisoftXML.class);
+
     private static final ViewSetReader INSTANCE = new ViewSetReaderFromAgisoftXML();
 
     public static ViewSetReader getInstance()
@@ -195,7 +199,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                 intVersion *= 10;
                                 intVersion += Integer.parseInt(verComponent);
                             }
-                            System.out.printf("PhotoScan XML version %s (%d)\n", version, intVersion);
+                            log.debug("PhotoScan XML version %s (%d)\n", version, intVersion);
                             break;
                         case "chunk":
                             chunkLabel = reader.getAttributeValue(null, "label");
@@ -203,18 +207,18 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             {
                                 chunkLabel = "unnamed";
                             }
-                            System.out.printf("Reading chunk '%s'\n", chunkLabel);
+                            log.debug("Reading chunk '%s'\n", chunkLabel);
                             break;
                         case "group":
                             groupLabel = reader.getAttributeValue(null, "label");
-                            System.out.printf("Reading group '%s'\n", groupLabel);
+                            log.debug("Reading group '%s'\n", groupLabel);
                             lightIndex = nextLightIndex;
                             nextLightIndex++;
-                            System.out.printf("Light index: " + lightIndex);
+                            log.debug("Light index: " + lightIndex);
                             break;
                         case "sensor":
                             sensorID = reader.getAttributeValue(null, "id");
-                            System.out.printf("\tAdding sensor '%s'\n", sensorID);
+                            log.debug("\tAdding sensor '%s'\n", sensorID);
                             sensor = new Sensor(sensorID);
                             break;
                         case "camera":
@@ -234,7 +238,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                         // Set default light index
                                         lightIndex = defaultLightIndex = nextLightIndex;
                                         nextLightIndex++;
-                                        System.out.println("Using default light index: " + lightIndex);
+                                        log.debug("Using default light index: " + lightIndex);
                                     }
 
                                     sensorID = reader.getAttributeValue(null, "sensor_id");
@@ -403,7 +407,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                 {
                                     if (expectedSize == 9)
                                     {
-                                        System.out.println("\tSetting global rotation.");
+                                        log.debug("\tSetting global rotation.");
                                         globalRotation = Matrix3.fromRows(
                                                 new Vector3(m[0], m[3], m[6]),
                                                 new Vector3(m[1], m[4], m[7]),
@@ -412,7 +416,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                     }
                                     else
                                     {
-                                        System.out.println("\tSetting global transformation.");
+                                        log.debug("\tSetting global transformation.");
                                         globalRotation = Matrix3.fromRows(
                                                 new Vector3(m[0], m[4], m[8]),
                                                 new Vector3(m[1], m[5], m[9]),
@@ -428,7 +432,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         case "translation":
                             if (camera == null)
                             {
-                                System.out.println("\tSetting global translate.");
+                                log.debug("\tSetting global translate.");
                                 String[] components = reader.getElementText().split("\\s");
                                 globalTranslate = new Vector3(
                                     -Float.parseFloat(components[0]),
@@ -440,7 +444,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         case "scale":
                             if (camera == null)
                             {
-                                System.out.println("\tSetting global scale.");
+                                log.debug("\tSetting global scale.");
                                 globalScale = 1.0f / Float.parseFloat(reader.getElementText());
                             }
                             break;
@@ -488,13 +492,13 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         case "dense_cloud":
                             if (intVersion < 110)
                             {
-                                System.out.printf("Unexpected tag '%s' for psz version %s\n",
+                                log.debug("Unexpected tag '%s' for psz version %s\n",
                                     reader.getLocalName(), version);
                             }
                             break;
 
                         default:
-                            System.out.printf("Unexpected tag '%s'\n", reader.getLocalName());
+                            log.debug("Unexpected tag '%s'\n", reader.getLocalName());
                             break;
                     }
                     break;
@@ -504,11 +508,11 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     switch (reader.getLocalName())
                     {
                         case "chunk":
-                            System.out.printf("Finished chunk '%s'\n", chunkLabel);
+                            log.debug("Finished chunk '%s'\n", chunkLabel);
                             chunkLabel = "";
                             break;
                         case "group":
-                            System.out.printf("Finished group '%s'\n", groupLabel);
+                            log.debug("Finished group '%s'\n", groupLabel);
                             groupLabel = "";
                             lightIndex = defaultLightIndex;
                             break;
@@ -523,7 +527,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             if (camera != null && camera.transform != null)
                             {
                                 cameraSet.add(camera);
-                                System.out.printf("\tAdding camera %s, with sensor %s and image %s\n",
+                                log.debug("\tAdding camera %s, with sensor %s and image %s\n",
                                     cameraID, sensorID, imageFile);
                                 camera = null;
                             }
@@ -639,7 +643,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
         result.setRecommendedFarPlane(findFarPlane(result.getCameraPoseInvList()));
         result.setRecommendedNearPlane(result.getRecommendedFarPlane() / 32.0f);
-        System.out.println("Near and far planes: " + result.getRecommendedNearPlane() + ", " + result.getRecommendedFarPlane());
+        log.debug("Near and far planes: " + result.getRecommendedNearPlane() + ", " + result.getRecommendedFarPlane());
 
         int primaryViewIndex = 0;
         String primaryViewName = cameras[0].filename;

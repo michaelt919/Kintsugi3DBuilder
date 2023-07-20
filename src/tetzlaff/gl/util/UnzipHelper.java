@@ -1,6 +1,8 @@
 package tetzlaff.gl.util;
 
 import javafx.scene.image.Image;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
@@ -17,6 +19,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class UnzipHelper {
+    private static final Logger log = LoggerFactory.getLogger(UnzipHelper.class);
     static final String[] validExtensions = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
 
     private UnzipHelper() {
@@ -96,7 +99,7 @@ public class UnzipHelper {
             e.printStackTrace();
         }
 
-        System.out.println("Total images extracted: " + images.size());
+        log.info("Total images extracted: " + images.size());
         return images;
     }
 

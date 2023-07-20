@@ -19,6 +19,8 @@ import java.util.Objects;
 import java.util.Optional;
 import javax.imageio.ImageIO;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.vecmath.Vector3;
@@ -30,6 +32,7 @@ import tetzlaff.util.EnvironmentMap;
 
 public class DynamicResourceLoader<ContextType extends Context<ContextType>> implements DynamicResourceManager
 {
+    private static final Logger log = LoggerFactory.getLogger(DynamicResourceLoader.class);
     private final LoadingMonitor loadingMonitor;
     private final ContextType context;
     private final IBRResources<ContextType> resources;
@@ -204,7 +207,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
         }
         else if (environmentFile.exists())
         {
-            System.out.println("Loading new environment texture.");
+            log.info("Loading new environment texture.");
 
             this.desiredEnvironmentFile = environmentFile;
             long lastModified = environmentFile.lastModified();
@@ -268,7 +271,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
         }
         else if (backplateFile != null && backplateFile.exists())
         {
-            System.out.println("Loading new backplate texture.");
+            log.info("Loading new backplate texture.");
 
             this.desiredBackplateFile = backplateFile;
             long lastModified = backplateFile.lastModified();

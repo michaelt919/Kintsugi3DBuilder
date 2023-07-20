@@ -26,6 +26,8 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import javafx.application.Platform;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 import tetzlaff.gl.glfw.WindowFactory;
 import tetzlaff.gl.glfw.WindowImpl;
@@ -58,6 +60,7 @@ import tetzlaff.util.WindowBasedController;
 
 public final class Rendering
 {
+    private static final Logger log = LoggerFactory.getLogger(Rendering.class);
     private Rendering()
     {
     }
@@ -278,7 +281,7 @@ public final class Rendering
             {
                 if (key == Key.F11)
                 {
-                    System.out.println("reloading program...");
+                    log.info("Reloading program...");
 
                     try
                     {
@@ -476,6 +479,6 @@ public final class Rendering
             .map(String::toLowerCase)
             .collect(Collectors.toCollection(() -> new HashSet<>(formatNames.length)));
 
-        System.out.println("Supported image formats: " + set);
+        log.info("Supported image formats: " + set);
     }
 }

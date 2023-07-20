@@ -8,11 +8,21 @@
         <Console name="console" target="SYSTEM_OUT" follow="true">
             <PatternLayout pattern="${LOG_PATTERN}"/>
         </Console>
+        <RollingFile name="fileLogger">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <FileName>IBRelight.log</FileName>
+            <FilePattern>IBRelight-%d{yyyy-MM-dd}.log</FilePattern>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true" />
+                <SizeBasedTriggeringPolicy size="10MB" />
+            </Policies>
+        </RollingFile>
     </Appenders>
 
     <Loggers>
-        <Root level="info">
-            <AppenderRef ref="console"/>
+        <Root level="debug">
+            <AppenderRef ref="console" />
+            <AppenderRef ref="fileLogger" />
         </Root>
     </Loggers>
 </Configuration>

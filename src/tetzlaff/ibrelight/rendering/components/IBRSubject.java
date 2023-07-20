@@ -11,6 +11,8 @@
 
 package tetzlaff.ibrelight.rendering.components;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
@@ -35,6 +37,7 @@ import java.util.Optional;
 
 public class IBRSubject<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(IBRSubject.class);
     private final ContextType context;
     private final SceneModel sceneModel;
     private final SceneViewportModel<ContextType> sceneViewportModel;
@@ -81,7 +84,7 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
             defineMap.entrySet().stream().anyMatch(
                 defineEntry -> !Objects.equals(drawable.program().getDefine(defineEntry.getKey()), defineEntry.getValue())))
         {
-            System.out.println("Updating compiled render settings.");
+            log.info("Updating compiled render settings.");
             reloadShaders();
         }
     }
