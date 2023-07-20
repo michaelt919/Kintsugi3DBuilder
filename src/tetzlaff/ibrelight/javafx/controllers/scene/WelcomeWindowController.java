@@ -4,12 +4,10 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.input.MouseEvent;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -24,6 +22,7 @@ import tetzlaff.ibrelight.javafx.MultithreadModels;
 import tetzlaff.ibrelight.javafx.controllers.menubar.LoaderController;
 import tetzlaff.ibrelight.javafx.controllers.menubar.MenubarController;
 import tetzlaff.util.Flag;
+import tetzlaff.util.RecentProjects;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
@@ -48,11 +47,9 @@ public class WelcomeWindowController {
     //toggle groups
     @FXML private ToggleGroup renderGroup;
 
-    @FXML private FileChooser projectFileChooser;
+    @FXML public FileChooser projectFileChooser;
 
-    @FXML private Menu exportMenu;
-
-    @FXML private SplitMenuButton recentProjectsSplitMenuButton;
+    @FXML public SplitMenuButton recentProjectsSplitMenuButton;
 
     private Window parentWindow;
 
@@ -63,8 +60,6 @@ public class WelcomeWindowController {
     private Runnable userDocumentationHandler;
 
     private IBRRequestManager<?> requestQueue;
-    private File recentProjectsFile;
-
 
     public <ContextType extends Context<ContextType>> void init(
             Window injectedParentWindow, IBRRequestManager<ContextType> requestQueue, InternalModels injectedInternalModels,
@@ -80,8 +75,6 @@ public class WelcomeWindowController {
         projectFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
         projectFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Full projects", "*.ibr"));
         projectFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Standalone view sets", "*.vset"));
-
-        recentProjectsFile = new File("src/main/resources/recentFiles.txt");//TODO: NEW LOCATION?
 
         updateRecentProjectsButton();
 
@@ -126,17 +119,12 @@ public class WelcomeWindowController {
         });
     }
 
-    private void updateRecentProjectsButton() {//TODO: FORMAT ----- PROJECT NAME --> PATH
+    public void updateRecentProjectsButton() {//TODO: FORMAT ----- PROJECT NAME --> PATH
         recentProjectsSplitMenuButton.getItems().clear();
 
-        List<String> items = getItemsFromRecentsFile();
+        ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
 
-        List<MenuItem> menuItems = new ArrayList<>();
-        for (String item : items){
-            menuItems.add(new MenuItem(item));
-        }
-
-        recentProjectsSplitMenuButton.getItems().addAll(menuItems);
+        recentProjectsSplitMenuButton.getItems().addAll(recentItems);
 
         //disable button if there are no recent projects
         if(recentProjectsSplitMenuButton.getItems().isEmpty()){
@@ -144,7 +132,7 @@ public class WelcomeWindowController {
         }
 
         //attach event handlers to all menu items
-        for (MenuItem item : menuItems){
+        for (MenuItem item : recentItems){
             item.setOnAction(event -> handleMenuItemSelection(item));
         }
     }
@@ -166,23 +154,6 @@ public class WelcomeWindowController {
         else{
             unrollMenu();
         }
-    }
-
-    private List<String> getItemsFromRecentsFile() {
-        List<String> projectItems = new ArrayList<>();
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(recentProjectsFile.getAbsolutePath()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String projectItem = line;
-                projectItems.add(projectItem);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        //remove duplicates while maintaining the same order (regular HashSet does not maintain order)
-        return new ArrayList<>(new LinkedHashSet<>(projectItems));
     }
 
     @FXML
@@ -220,7 +191,7 @@ public class WelcomeWindowController {
 
         if (confirmClose("Are you sure you want to create a new project?"))
         {
-            try
+            try//recent files are updated in CreateProjectController after project is made
             {
                 CreateProjectController createProjectController = makeWindow("Load Files", loaderWindowOpen, "fxml/menubar/CreateProject.fxml");
                 createProjectController.setCallback(() ->
@@ -235,7 +206,6 @@ public class WelcomeWindowController {
                 e.printStackTrace();
             }
         }
-        updateRecentProjectsButton();
     }
 
     @FXML
@@ -247,13 +217,14 @@ public class WelcomeWindowController {
             File selectedFile = projectFileChooser.showOpenDialog(parentWindow);
             if (selectedFile != null)
             {
+                //opens project and also updates the recently opened files list
                 openProjectFromFile(selectedFile);
             }
         }
-        updateRecentProjectsButton();
     }
 
     private void openProjectFromFile(File selectedFile) {
+        //open the project and update the recent files list
         this.projectFile = selectedFile;
         File newVsetFile = null;
 
@@ -280,43 +251,12 @@ public class WelcomeWindowController {
             this.vsetFile = newVsetFile;
             File vsetFileRef = newVsetFile;
 
-            updateRecentFiles(projectFile.getAbsolutePath());//TODO: ADD TO CREATE()
+            RecentProjects.updateRecentFiles(projectFile.getAbsolutePath(), this);
 
             projectLoaded = true;
 
             new Thread(() -> MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFileRef.getPath(), vsetFileRef)).start();
         }
-    }
-
-    private void updateRecentFiles(String fileName) {
-        // Read existing file content into a List
-        List<String> existingFileNames = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(recentProjectsFile))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                existingFileNames.add(line);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // Check if the fileName is already present
-        existingFileNames.remove(fileName); // Remove it from its current position
-
-        // Add the fileName to the front of the List
-        existingFileNames.add(0, fileName);
-
-        // Write the updated content back to the file
-        try (PrintWriter writer = new PrintWriter(new FileWriter(recentProjectsFile))) {
-            for (String name : existingFileNames) {
-                writer.println(name);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        //update list of recent projects
-        updateRecentProjectsButton();
     }
 
     private <ControllerType> ControllerType makeWindow(String title, Flag flag, String urlString) throws IOException

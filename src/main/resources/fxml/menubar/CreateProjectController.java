@@ -109,6 +109,7 @@ public class CreateProjectController {
         System.out.println("Autosave? --> " + autosaveCheckbox.isSelected());
 
         //TODO: PUT RESOURCE IMPACT ALL IN ONE SECTION?
+        //TODO: ADD UPDATE RECENT FILES
 
     }
 
