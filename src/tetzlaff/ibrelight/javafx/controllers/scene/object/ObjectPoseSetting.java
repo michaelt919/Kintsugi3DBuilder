@@ -28,7 +28,10 @@ public class ObjectPoseSetting implements DOMConvertable
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final StringProperty name = new SimpleStringProperty();
 
-    public ObjectPoseSetting(Double centerX, Double centerY, Double centerZ, Double rotateY, Double rotateX, Double rotateZ, Boolean locked, String name)
+    private final DoubleProperty scale = new SimpleDoubleProperty();
+
+    public ObjectPoseSetting(Double centerX, Double centerY, Double centerZ,
+                             Double rotateY, Double rotateX, Double rotateZ, Boolean locked, String name)
     {
         this.centerX.setValue(centerX);
         this.centerY.setValue(centerY);
