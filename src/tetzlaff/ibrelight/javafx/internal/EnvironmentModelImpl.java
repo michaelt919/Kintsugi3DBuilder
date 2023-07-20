@@ -153,7 +153,7 @@ public class EnvironmentModelImpl implements EnvironmentModel
             }
             catch (FileNotFoundException e)
             {
-                e.printStackTrace();
+                log.error("Failed to find environment map file '{}':", newFile.getName(), e);
             }
 
             if (doesSelectedExist())
@@ -190,7 +190,7 @@ public class EnvironmentModelImpl implements EnvironmentModel
             }
             catch (FileNotFoundException e)
             {
-                e.printStackTrace();
+                log.error("Failed to find backplate file '{}':", newFile.getName(), e);
             }
 
             if (doesSelectedExist())

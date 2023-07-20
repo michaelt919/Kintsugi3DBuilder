@@ -290,7 +290,7 @@ public final class Rendering
                     }
                     catch (RuntimeException e)
                     {
-                        e.printStackTrace();
+                        log.error("Error occurred while reloading application:", e);
                     }
                 }
             });
@@ -435,7 +435,7 @@ public final class Rendering
                     }
                     catch (IOException | ParserConfigurationException | SAXException e)
                     {
-                        e.printStackTrace();
+                        log.error("Error occurred processing arguments:", e);
                     }
                 });
             }
@@ -465,7 +465,7 @@ public final class Rendering
             }
             catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e)
             {
-                e.printStackTrace();
+                log.error("Reflection error occurred processing arguments:", e);
             }
         }
     }

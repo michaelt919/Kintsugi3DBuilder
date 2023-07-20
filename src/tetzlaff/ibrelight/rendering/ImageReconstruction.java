@@ -209,7 +209,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
             }
             catch (IOException e)
             {
-                e.printStackTrace();
+                log.error("Error occurred executing image reconstruction:", e);
             }
         }
     }

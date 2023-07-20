@@ -43,7 +43,7 @@ public class UnzipHelper {
             return s.toString();
         }
         catch(Exception e){
-            e.printStackTrace();
+            log.error("Error unzipping file:", e);
         }
         finally{
             zis.closeEntry();
@@ -60,7 +60,7 @@ public class UnzipHelper {
             builder = factory.newDocumentBuilder();
             return builder.parse(new InputSource(new StringReader(xmlStr)));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error converting document:", e);
         }
         return null;
     }
@@ -75,7 +75,7 @@ public class UnzipHelper {
             transformer.transform(new DOMSource(doc), new StreamResult(writer));
             return writer.getBuffer().toString();
         } catch (TransformerException e) {
-            e.printStackTrace();
+            log.error("Error converting document:", e);
         }
 
         return null;
@@ -96,7 +96,7 @@ public class UnzipHelper {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Error unzipping images:", e);
         }
 
         log.info("Total images extracted: " + images.size());
@@ -127,7 +127,7 @@ public class UnzipHelper {
             return Integer.parseInt(parentFile.getName());
         }
         catch (NumberFormatException nfe){
-            nfe.printStackTrace();
+            log.error("Invalid number format:", nfe);
             return -1;
         }
     }

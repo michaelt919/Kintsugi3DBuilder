@@ -14,12 +14,16 @@ package tetzlaff.ibrelight.core;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.Context;
+import tetzlaff.ibrelight.app.Rendering;
 import tetzlaff.ibrelight.rendering.IBRInstanceManager;
 import tetzlaff.interactive.GraphicsRequest;
 
 public class IBRRequestManager<ContextType extends Context<ContextType>> implements IBRRequestQueue<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(IBRRequestManager.class);
     private final ContextType context;
     private final Queue<Runnable> requestList;
     private IBRInstanceManager<ContextType> instanceManager;
@@ -75,7 +79,7 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
                     }
                     catch (Exception | AssertionError e)
                     {
-                        e.printStackTrace();
+                        log.error("Error occurred while executing request:", e);
                     }
                 }
             });
@@ -96,7 +100,7 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
             }
             catch(Exception | AssertionError e)
             {
-                e.printStackTrace();
+                log.error("Error occurred while executing request:", e);
             }
         });
     }

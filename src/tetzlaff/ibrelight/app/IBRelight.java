@@ -11,6 +11,7 @@
 
 package tetzlaff.ibrelight.app;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 
@@ -64,7 +65,7 @@ public final class IBRelight
                     }
                     catch (InitializationException e)
                     {
-                        e.printStackTrace();
+                        log.error("Error initializing render window:", e);
                     }
                 }).start();
             });

@@ -35,10 +35,13 @@ import javafx.scene.control.Dialog;
 import javafx.scene.image.Image;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.ibrelight.app.Rendering;
 import tetzlaff.ibrelight.app.SynchronizedWindow;
 import tetzlaff.ibrelight.app.WindowSynchronization;
+import tetzlaff.ibrelight.core.IBRRequestManager;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
 import tetzlaff.ibrelight.javafx.controllers.menubar.MenubarController;
 import tetzlaff.ibrelight.javafx.controllers.scene.RootSceneController;
@@ -48,6 +51,8 @@ import tetzlaff.util.ShadingParameterMode;
 
 public class MainApplication extends Application
 {
+    private static final Logger log = LoggerFactory.getLogger(MainApplication.class);
+
     private static class StageSynchronization implements SynchronizedWindow
     {
         private final Stage stage;
@@ -97,7 +102,7 @@ public class MainApplication extends Application
             }
             catch (InterruptedException | ExecutionException e)
             {
-                e.printStackTrace();
+                log.error("Exception occurred confirming application quit:", e);
                 return false;
             }
         }

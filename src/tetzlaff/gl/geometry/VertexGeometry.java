@@ -379,7 +379,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
             }
             catch(IOException e)
             {
-                e.printStackTrace();
+                log.error("IO Exception while loading material:", e);
                 inst.material = null;
             }
         }
