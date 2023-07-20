@@ -14,11 +14,14 @@ package tetzlaff.ibrelight.app;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.ibrelight.javafx.MainApplication;
 import tetzlaff.interactive.InitializationException;
 
 public final class IBRelight
 {
+    private static final Logger log = LoggerFactory.getLogger(IBRelight.class);
     private static final boolean DEBUG = true;
     private static final boolean GRAPHICS_WINDOW_ENABLED = true;
 
@@ -42,17 +45,17 @@ public final class IBRelight
 
         if (GRAPHICS_WINDOW_ENABLED)
         {
-            System.out.println("Starting JavaFX UI");
+            log.info("Starting JavaFX UI");
             new Thread(() -> MainApplication.launchWrapper("")).start();
 
-            System.out.println("Starting Render Window");
+            log.info("Starting Render Window");
             Rendering.runProgram(args);
         }
         else
         {
             MainApplication.addStartListener(stage ->
             {
-                System.out.println("Starting Render Window");
+                log.info("Starting Render Window");
                 new Thread(() ->
                 {
                     try
@@ -66,7 +69,7 @@ public final class IBRelight
                 }).start();
             });
 
-            System.out.println("Starting JavaFX UI");
+            log.info("Starting JavaFX UI");
             MainApplication.launchWrapper("");
         }
     }
