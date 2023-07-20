@@ -153,7 +153,13 @@ public class MainApplication extends Application
 
         //load stages
         primaryStage.setTitle("IBRelight");
-        primaryStage.setScene(new Scene(welcomeRoot));
+        primaryStage.setScene(new Scene(menuBarRoot));
+
+        Stage welcomeStage = new Stage();
+        welcomeStage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+        welcomeStage.setTitle("Welcome!");
+        welcomeStage.setScene(new Scene(welcomeRoot));
+        welcomeStage.initOwner(primaryStage.getScene().getWindow());
 //
 //        Stage libraryStage = new Stage();
 //        libraryStage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
@@ -172,6 +178,9 @@ public class MainApplication extends Application
         primaryStage.setX(primaryScreenBounds.getMinX() + 10);
         primaryStage.setY(primaryScreenBounds.getMinY() + 10);
 
+        welcomeStage.setX(primaryScreenBounds.getMinX() + 10);
+        welcomeStage.setY(primaryScreenBounds.getMinY() + 120);
+
 //        libraryStage.setX(primaryScreenBounds.getMinX() + 10);
 //        libraryStage.setY(primaryScreenBounds.getMinY() + 50);
 //        libraryStage.initOwner(primaryStage.getScene().getWindow());
@@ -188,6 +197,7 @@ public class MainApplication extends Application
 
         primaryStage.requestFocus();
         primaryStage.show();
+        welcomeStage.show();
 
         SettingsModelImpl settingsModel = InternalModels.getInstance().getSettingsModel();
         settingsModel.createBooleanSetting("lightCalibrationMode", false);
@@ -246,6 +256,13 @@ public class MainApplication extends Application
 //        });
 
         primaryStage.setOnCloseRequest(event ->
+        {
+            // Consume the event and let the window synchronization system close the stage later if the user confirms that they want to exit.
+            event.consume();
+            WindowSynchronization.getInstance().quit();
+        });
+
+        welcomeStage.setOnCloseRequest(event ->
         {
             // Consume the event and let the window synchronization system close the stage later if the user confirms that they want to exit.
             event.consume();
