@@ -5,6 +5,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.ibrelight.util.Launch4jConfiguration;
 
 import java.io.IOException;
@@ -13,6 +15,8 @@ import java.util.ResourceBundle;
 
 public class JvmSettingsController implements Initializable
 {
+    private static final Logger log = LoggerFactory.getLogger(JvmSettingsController.class);
+
     private static final int MIN_VALUE = 1;
     private static final int MAX_VALUE = 1048576;
 
@@ -34,7 +38,8 @@ public class JvmSettingsController implements Initializable
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            log.error("Failed to read jvm configuration:", e);
+            log.error("Using default configuration");
             configuration = Launch4jConfiguration.empty();
         }
 
@@ -59,7 +64,7 @@ public class JvmSettingsController implements Initializable
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred saving jvm settings:", e);
         }
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);

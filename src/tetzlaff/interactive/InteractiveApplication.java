@@ -71,7 +71,7 @@ public class InteractiveApplication
                 }
                 catch(RuntimeException e)
                 {
-                    e.printStackTrace();
+                    log.error("Runtime error occurred:", e);
                 }
             }
             Date timestampB = new Date();
@@ -85,7 +85,7 @@ public class InteractiveApplication
                 }
                 catch(RuntimeException e)
                 {
-                    e.printStackTrace();
+                    log.error("An error occurred while polling events:", e);
                 }
             }
             timestampA = new Date();
@@ -117,7 +117,7 @@ public class InteractiveApplication
             }
             catch(RuntimeException e)
             {
-                e.printStackTrace();
+                log.error("Error terminating refreshable:", e);
             }
         }
     }
@@ -148,7 +148,7 @@ public class InteractiveApplication
                     }
                     catch(RuntimeException e)
                     {
-                        e.printStackTrace();
+                        log.error("An error occurred:", e);
                     }
                 }
 
@@ -167,7 +167,7 @@ public class InteractiveApplication
                     }
                     catch(RuntimeException e)
                     {
-                        e.printStackTrace();
+                        log.error("An error has occurred:", e);
                     }
                 }
             }
@@ -183,7 +183,7 @@ public class InteractiveApplication
                     }
                     catch(RuntimeException e)
                     {
-                        e.printStackTrace();
+                        log.error("An error has occurred:", e);
                     }
                 }
             }
@@ -198,7 +198,7 @@ public class InteractiveApplication
                     }
                     catch(RuntimeException e)
                     {
-                        e.printStackTrace();
+                        log.error("An error has occurred:", e);
                     }
                 }
             }

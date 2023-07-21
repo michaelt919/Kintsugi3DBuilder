@@ -16,6 +16,9 @@ import java.util.Deque;
 import java.util.function.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Drawable;
 import tetzlaff.gl.core.Framebuffer;
@@ -25,6 +28,7 @@ import tetzlaff.util.ColorNativeBufferList;
 
 public class ParallelViewRenderStream<ContextType extends Context<ContextType>> extends GraphicsStreamBase<ColorList[]>
 {
+    private static final Logger log = LoggerFactory.getLogger(ParallelViewRenderStream.class);
     private final int viewCount;
     private final Drawable<ContextType> drawable;
     private final Framebuffer<ContextType> framebuffer;
@@ -109,7 +113,7 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
                     }
                     catch (InterruptedException e)
                     {
-                        e.printStackTrace();
+                        log.error("Error: Operation interrupted:", e);
                     }
                 }
 
@@ -169,7 +173,7 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
                 }
                 catch (InterruptedException e)
                 {
-                    e.printStackTrace();
+                    log.error("Error: Operation interrupted:", e);
                 }
             }
         }

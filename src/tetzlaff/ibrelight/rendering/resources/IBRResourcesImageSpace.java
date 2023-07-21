@@ -473,7 +473,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         }
         catch (FileNotFoundException e)
         {
-            e.printStackTrace();
+            log.error("Error updating light calibration:", e);
         }
     }
 

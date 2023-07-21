@@ -134,7 +134,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
             }
             catch (RuntimeException e)
             {
-                e.printStackTrace();
+                log.error("An error has occurred:", e);
             }
             finally
             {
@@ -171,7 +171,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
             }
             catch (RuntimeException e)
             {
-                e.printStackTrace();
+                log.error("An error has occurred:", e);
             }
             finally
             {
@@ -241,7 +241,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
                     }
                     catch (IOException e)
                     {
-                        e.printStackTrace();
+                        log.error("Error loading environment map:", e);
                     }
                 }
             }
@@ -294,7 +294,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
                     }
                     catch (IOException e)
                     {
-                        e.printStackTrace();
+                        log.error("Error loading backplate:", e);
                     }
                 }
             }

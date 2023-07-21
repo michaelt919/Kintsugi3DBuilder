@@ -247,7 +247,7 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
                 {
                     if (!suppressErrors)
                     {
-                        e.printStackTrace();
+                        log.error("Error occurred optimizing weights:", e);
                         suppressErrors = true;
                     }
                 }
