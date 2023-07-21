@@ -199,8 +199,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
 
         try
         {
-
-            Matrix4 rotation = viewSet.getCameraPose(viewSet.getPrimaryViewIndex());
+            Matrix4 rotation = viewSet == null ? Matrix4.IDENTITY : viewSet.getCameraPose(viewSet.getPrimaryViewIndex());
             Vector3 translation = rotation.getUpperLeft3x3().times(geometry.getCentroid().times(-1.0f));
             Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2), translation.asVector4(1.0f));
 
