@@ -80,53 +80,38 @@ public final class Rendering
 
         // Check for and print supported image formats (some are not as easy as you would think)
         printSupportedImageFormats();
-
-        if (stage == null)
+        try
         {
-            try
+            if (stage == null)
             {
-                try(CanvasWindow<OpenGLContext> window = OpenGLContextFactory.getInstance().buildWindow("IBRelight", 800, 800)
+                CanvasWindow<OpenGLContext> window = OpenGLContextFactory.getInstance().buildWindow("IBRelight", 800, 800)
                     .setResizable(true)
                     .setMultisamples(4)
-                    .create())
-                {
-                    setup3DWindow(window);
-                    runProgram(stage, window.getCanvas(), args);
-                }
+                    .create();
+                setup3DWindow(window);
+                runProgram(stage, window.getCanvas(), args);
             }
-            finally
+            else
             {
-                // The event loop has terminated so cleanup the windows and exit with a successful return code.
-                CanvasWindow.closeAllWindows();
+                var framebufferCapture = new Object()
+                {
+                    DoubleFramebufferObject<OpenGLContext> fbo;
+                };
+
+                // Need to still specify a native window to create the context, even though we won't use it.
+                CanvasWindow<OpenGLContext> nativeWindow = OpenGLContextFactory.getInstance().buildWindow("<ignore>", 1, 1)
+                    .setDefaultFramebufferCreator(c -> framebufferCapture.fbo = DefaultFramebufferFactory.create(c, 800, 800))
+                    .create();
+
+                FramebufferCanvas<OpenGLContext> canvas = FramebufferCanvas.createUsingExistingFramebuffer(framebufferCapture.fbo);
+                MultithreadModels.getInstance().getCanvasModel().setCanvas(canvas);
+                runProgram(stage, canvas, args);
             }
         }
-        else
+        finally
         {
-            var framebufferCapture = new Object()
-            {
-                DoubleFramebufferObject<OpenGLContext> fbo;
-            };
-
-            // Need to still specify a native window to create the context, even though we won't use it.
-            try(CanvasWindow<OpenGLContext> ignored = OpenGLContextFactory.getInstance().buildWindow("<ignore>", 1, 1)
-                .setDefaultFramebufferCreator(c -> framebufferCapture.fbo = DefaultFramebufferFactory.create(c, 800, 800))
-                .create())
-            {
-                try (FramebufferCanvas<OpenGLContext> canvas = FramebufferCanvas.createUsingExistingFramebuffer(framebufferCapture.fbo))
-                {
-//                    // JavaFX window is not a OpenGL resource
-//                    PollableWindow window = new CopyWindowBuilder(stage, "IBRelight", 800, 800)
-//                        .setCanvas(canvas)
-//                        .setResizable(true)
-//                        .setMultisamples(4)
-//                        .create();
-//                    setup3DWindow(window);
-
-                    MultithreadModels.getInstance().getCanvasModel().setCanvas(canvas);
-
-                    runProgram(stage, canvas, args);
-                }
-            }
+            // The event loop has terminated so cleanup the windows and exit with a successful return code.
+            CanvasWindow.closeAllWindows();
         }
     }
 

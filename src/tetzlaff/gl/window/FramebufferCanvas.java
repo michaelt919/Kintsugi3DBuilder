@@ -266,6 +266,7 @@ public final class FramebufferCanvas<ContextType extends Context<ContextType>>
     @Override
     public void close()
     {
+        requestTerminate(); // Signal that the graphics thread should quit, in addition to firing off the "window close" events
         eventCollector.windowClose(l -> l.windowClosing(this));
     }
 }

@@ -254,7 +254,6 @@ public class MainApplication extends Application
         //set up close and focusGained
         WindowSynchronization.getInstance().addListener(menuBarWindow);
 
-
         primaryStage.setOnCloseRequest(event ->
         {
             // Consume the event and let the window synchronization system close the stage later if the user confirms that they want to exit.

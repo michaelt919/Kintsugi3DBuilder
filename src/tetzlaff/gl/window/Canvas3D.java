@@ -12,9 +12,8 @@
 package tetzlaff.gl.window;
 
 import tetzlaff.gl.core.Context;
-import tetzlaff.gl.core.Resource;
 
-public interface Canvas3D<ContextType extends Context<ContextType>> extends WindowListenerManager, Resource
+public interface Canvas3D<ContextType extends Context<ContextType>> extends WindowListenerManager
 {
     ContextType getContext();
     boolean isHighDPI();

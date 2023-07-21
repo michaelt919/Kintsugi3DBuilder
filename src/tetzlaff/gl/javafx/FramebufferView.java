@@ -35,6 +35,7 @@ import javafx.util.converter.CharacterStringConverter;
 import org.lwjgl.*;
 import tetzlaff.gl.core.FramebufferSize;
 import tetzlaff.gl.window.*;
+import tetzlaff.ibrelight.app.WindowSynchronization;
 
 public final class FramebufferView extends Region
 {
@@ -256,11 +257,7 @@ public final class FramebufferView extends Region
             }
         });
 
-        stage.setOnCloseRequest(event ->
-        {
-            canvas.close();
-            event.consume();
-        });
+        WindowSynchronization.getInstance().addListener(() -> canvas.close());
     }
 
     public PollableCanvas3D<?> getCanvas()
