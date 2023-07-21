@@ -132,7 +132,9 @@ public interface ReadonlyViewSet
      * @param height The height of each preview image.
      * @throws IOException If errors occur while saving the images.
      */
-    void generatePreviewImages(Context<?> context, int width, int height) throws IOException;
+    void generatePreviewImages(int width, int height) throws IOException;
+
+    void undistortPreviewImages(Context<?> context) throws IOException;
 
     int getPrimaryViewIndex();
 

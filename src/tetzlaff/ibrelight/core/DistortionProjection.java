@@ -181,4 +181,12 @@ public class DistortionProjection implements Projection
         return String.format("s\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
                                 cx, cy, width/height, fy, width, k1, k2, k3, k4, p1, p2, fx - fy, skew);
     }
+
+    public DistortionProjection scaledTo(int newWidth, int newHeight)
+    {
+        float ratioX = newWidth / width;
+        float ratioY = newHeight / height;
+
+        return new DistortionProjection(newWidth, newHeight, fx * ratioX, fy * ratioY, cx * ratioX, cy * ratioY, k1, k2, k3, k4, p1, p2, skew);
+    }
 }

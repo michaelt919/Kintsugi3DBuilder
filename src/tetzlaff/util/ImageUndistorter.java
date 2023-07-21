@@ -23,6 +23,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class ImageUndistorter<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -73,13 +74,20 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
 
     public BufferedImage undistort(BufferedImage inputImage, DistortionProjection distortion)
     {
-        Texture2D<ContextType> inTex = context.getTextureFactory().build2DColorTextureFromImage(inputImage, false).createTexture();
+        Texture2D<ContextType> inTex = context.getTextureFactory().build2DColorTextureFromImage(inputImage, true).createTexture();
         Texture2D<ContextType> outTex = undistort(inTex, distortion);
 
         return BufferedImageBuilder.build()
                 .setDataFromArray(outTex.getColorTextureReader().readARGB(), inputImage.getWidth(), inputImage.getHeight())
                 .flipVertical()
                 .create();
+    }
+
+    public void undistortFile(File inputImage, DistortionProjection distortion) throws IOException
+    {
+        BufferedImage imageIn = ImageIO.read(inputImage);
+        BufferedImage imageOut = undistort(imageIn, distortion);
+        ImageIO.write(imageOut, "PNG", inputImage);
     }
 
     @Override
@@ -106,7 +114,7 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
         DistortionProjection proj = new DistortionProjection(480f, 360f, 480f, 480f, 240f, 180f,  0.7f, 0.78f, -0.83f, 0, 0,0,0);
 
         BufferedImage in = ImageIO.read(new File("X:\\CHViewer\\tmp\\canvas2.png"));
-        Texture2D<OpenGLContext> inTex = context.getTextureFactory().build2DColorTextureFromImage(in, false).createTexture();
+        Texture2D<OpenGLContext> inTex = context.getTextureFactory().build2DColorTextureFromImage(in, true).createTexture();
         Texture2D<OpenGLContext> out = iu.undistort(inTex, proj);
         out.getColorTextureReader().saveToFile("PNG", new File("X:\\CHViewer\\tmp\\out.png"));
     }

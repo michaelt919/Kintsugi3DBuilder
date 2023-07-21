@@ -162,8 +162,15 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             if (this.viewSet != null)
             {
                 this.viewSet.setRelativePreviewImagePathName(previewDirectoryName);
-                this.viewSet.generatePreviewImages(context, width, height);
+                this.viewSet.generatePreviewImages(width, height);
             }
+
+            return this;
+        }
+
+        public Builder<ContextType> undistortPreviewImages() throws IOException
+        {
+            this.viewSet.undistortPreviewImages(this.context);
 
             return this;
         }

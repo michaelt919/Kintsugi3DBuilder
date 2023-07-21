@@ -11,7 +11,6 @@
 
 package tetzlaff.ibrelight.core;
 
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Path;
 import java.util.*;
@@ -28,8 +27,6 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.util.ImageFinder;
 import tetzlaff.util.ImageLodResizer;
 import tetzlaff.util.ImageUndistorter;
-
-import javax.imageio.ImageIO;
 
 /**
  * A class representing a collection of photographs, or views.
@@ -138,6 +135,8 @@ public final class ViewSet implements ReadonlyViewSet
      * The index of the view that sets the initial orientation when viewing, is used for color calibration, etc.
      */
     private int primaryViewIndex = 0;
+    private int previewWidth = 0;
+    private int previewHeight = 0;
 
     /**
      * Creates a new view set object.
@@ -579,8 +578,11 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public void generatePreviewImages(Context<?> context, int width, int height) throws IOException
+    public void generatePreviewImages(int width, int height) throws IOException
     {
+        this.previewWidth = width;
+        this.previewHeight = height;
+
         if (Objects.equals(this.relativePreviewImagePathName, this.relativeFullResImagePathName))
         {
             throw new IllegalStateException("Preview directory is the same as the full res directory; generating preview images would overwrite full resolution images.");
@@ -594,32 +596,50 @@ public final class ViewSet implements ReadonlyViewSet
             // Make sure the preview image directory exists; create it if not
             this.getPreviewImageFilePath().mkdirs();
 
-            ImageUndistorter<?> undistorter = new ImageUndistorter<>(context);
-
             // Resize and save the preview images
             for (int i = 0; i < this.getCameraPoseCount(); i++)
             {
                 System.out.printf("%d/%d", i, this.getCameraPoseCount());
                 System.out.println();
-                if (this.getCameraProjection(i) instanceof DistortionProjection)
-                {
-                    DistortionProjection proj = (DistortionProjection) this.getCameraProjection(i);
-                    BufferedImage image = ImageIO.read(this.getFullResImageFile(i));
-                    image = undistorter.undistort(image, proj);
-                    ImageLodResizer resizer = new ImageLodResizer(image, this.getFullResImageFile(i).getParentFile());
-                    resizer.saveAtResolution(this.getPreviewImageFile(i), width, height);
-                }
-                else
-                {
-                    ImageLodResizer resizer = new ImageLodResizer(this.getFullResImageFile(i));
-                    resizer.saveAtResolution(this.getPreviewImageFile(i), width, height);
-                }
+                ImageLodResizer resizer = new ImageLodResizer(this.getFullResImageFile(i));
+                resizer.saveAtResolution(this.getPreviewImageFile(i), width, height);
             }
 
             System.out.println("Preview images generated in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
         }
     }
-    
+
+    @Override
+    public void undistortPreviewImages(Context<?> context) throws IOException
+    {
+        if (!this.getPreviewImageFilePath().exists())
+        {
+            throw new IllegalStateException("Preview images directory does not exist, cannot undistort!");
+        }
+
+        ImageUndistorter<?> undistort = new ImageUndistorter<>(context);
+
+        // Undistort and resave preview images
+        for (int i = 0; i < this.getCameraPoseCount(); i++)
+        {
+            System.out.printf("Undistorting image %d/%d", i, this.getCameraPoseCount());
+            System.out.println();
+            // If there is only one projection, use it for all images
+            int projectionIndex = this.getCameraProjectionCount() > 1 ? i : 0;
+            if (this.getCameraProjection(projectionIndex) instanceof DistortionProjection)
+            {
+                DistortionProjection distortion = (DistortionProjection) this.getCameraProjection(projectionIndex);
+                distortion = distortion.scaledTo(previewWidth, previewHeight);
+                undistort.undistortFile(this.getPreviewImageFile(i), distortion);
+            }
+            else
+            {
+                System.out.printf("Skipping image #%d: No distortion parameters", i);
+                System.out.println();
+            }
+        }
+    }
+
     @Override
     public int getPrimaryViewIndex()
     {
