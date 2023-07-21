@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2022
+ *  Copyright (c) Michael Tetzlaff 2023
  *
  *  Licensed under GPLv3
  *  ( http://www.gnu.org/licenses/gpl-3.0.html )
@@ -9,12 +9,18 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.gl.window.listeners;
+package tetzlaff.gl.window;
 
-import tetzlaff.gl.window.Window;
+import tetzlaff.gl.core.Context;
 
-@FunctionalInterface
-public interface WindowSizeListener
+public interface Canvas3D<ContextType extends Context<ContextType>> extends WindowListenerManager
 {
-    void windowResized(Window<?> window, int width, int height);
+    ContextType getContext();
+    boolean isHighDPI();
+    CanvasSize getSize();
+    CanvasPosition getPosition();
+    MouseButtonState getMouseButtonState(int buttonIndex);
+    KeyState getKeyState(Key key);
+    CursorPosition getCursorPosition();
+    ModifierKeys getModifierKeys();
 }

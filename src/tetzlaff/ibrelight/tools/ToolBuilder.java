@@ -22,5 +22,5 @@ interface ToolBuilder<ToolType>
     ToolBuilder<ToolType> setObjectModel(ExtendedObjectModel lightingModel);
     ToolBuilder<ToolType> setSceneViewportModel(SceneViewportModel sceneViewportModel);
     ToolBuilder<ToolType> setSettingsModel(SettingsModel settingsModel);
-    ToolType build();
+    ToolType create();
 }

@@ -13,8 +13,8 @@ package tetzlaff.ibrelight.tools;//Created by alexk on 7/24/2017.
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.window.CanvasSize;
 import tetzlaff.gl.window.CursorPosition;
-import tetzlaff.gl.window.WindowSize;
 import tetzlaff.models.ExtendedCameraModel;
 import tetzlaff.models.ExtendedObjectModel;
 
@@ -34,7 +34,7 @@ final class ObjectCenterTool implements DragTool
     private static class Builder extends ToolBuilderBase<ObjectCenterTool>
     {
         @Override
-        public ObjectCenterTool build()
+        public ObjectCenterTool create()
         {
             return new ObjectCenterTool(getCameraModel(), getObjectModel());
         }
@@ -52,18 +52,18 @@ final class ObjectCenterTool implements DragTool
     }
 
     @Override
-    public void mouseButtonPressed(CursorPosition cursorPosition, WindowSize windowSize)
+    public void mouseButtonPressed(CursorPosition cursorPosition, CanvasSize canvasSize)
     {
         this.mouseStart = cursorPosition;
 
         oldCenter = objectModel.getCenter();
         orbit = cameraModel.getOrbit().times(objectModel.getOrbit());
 
-        panSensitivityAdjusted = PAN_SENSITIVITY / Math.min(windowSize.width, windowSize.height);
+        panSensitivityAdjusted = PAN_SENSITIVITY / Math.min(canvasSize.width, canvasSize.height);
     }
 
     @Override
-    public void cursorDragged(CursorPosition cursorPosition, WindowSize windowSize)
+    public void cursorDragged(CursorPosition cursorPosition, CanvasSize canvasSize)
     {
         Vector3 moveVector = new Vector3(
                 (float) (cursorPosition.x - mouseStart.x),

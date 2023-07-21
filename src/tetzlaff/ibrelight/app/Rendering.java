@@ -27,17 +27,16 @@ import javax.xml.parsers.ParserConfigurationException;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import org.xml.sax.SAXException;
-import tetzlaff.gl.glfw.WindowFactory;
-import tetzlaff.gl.glfw.WindowImpl;
+import tetzlaff.gl.builders.framebuffer.DefaultFramebufferFactory;
+import tetzlaff.gl.core.DoubleFramebufferObject;
+import tetzlaff.gl.glfw.CanvasWindow;
 import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
+import tetzlaff.gl.opengl.OpenGLContextFactory;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.gl.window.Key;
-import tetzlaff.gl.window.ModifierKeys;
-import tetzlaff.gl.window.ModifierKeysBuilder;
-import tetzlaff.gl.window.PollableWindow;
+import tetzlaff.gl.window.*;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.javafx.MainApplication;
 import tetzlaff.ibrelight.javafx.MultithreadModels;
@@ -52,9 +51,9 @@ import tetzlaff.interactive.InitializationException;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
 import tetzlaff.models.*;
+import tetzlaff.util.CanvasInputController;
 import tetzlaff.util.KeyPress;
 import tetzlaff.util.MouseMode;
-import tetzlaff.util.WindowBasedController;
 
 public final class Rendering
 {
@@ -81,283 +80,316 @@ public final class Rendering
 
         // Check for and print supported image formats (some are not as easy as you would think)
         printSupportedImageFormats();
-
-        // Create a GLFW window for integration with LWJGL (part of the 'view' in this MVC arrangement)
-        try(PollableWindow<OpenGLContext> window =
-            (stage == null ? WindowFactory.buildOpenGLWindow("IBRelight", 800, 800)
-                : WindowFactory.buildJavaFXWindow(stage, "IBRelight", 800, 800))
+        try
+        {
+            if (stage == null)
+            {
+                CanvasWindow<OpenGLContext> window = OpenGLContextFactory.getInstance().buildWindow("IBRelight", 800, 800)
                     .setResizable(true)
                     .setMultisamples(4)
-                    .create())
+                    .create();
+                setup3DWindow(window);
+                runProgram(stage, window.getCanvas(), args);
+            }
+            else
+            {
+                var framebufferCapture = new Object()
+                {
+                    DoubleFramebufferObject<OpenGLContext> fbo;
+                };
+
+                // Need to still specify a native window to create the context, even though we won't use it.
+                CanvasWindow<OpenGLContext> nativeWindow = OpenGLContextFactory.getInstance().buildWindow("<ignore>", 1, 1)
+                    .setDefaultFramebufferCreator(c -> framebufferCapture.fbo = DefaultFramebufferFactory.create(c, 800, 800))
+                    .create();
+
+                FramebufferCanvas<OpenGLContext> canvas = FramebufferCanvas.createUsingExistingFramebuffer(framebufferCapture.fbo);
+                MultithreadModels.getInstance().getCanvasModel().setCanvas(canvas);
+                runProgram(stage, canvas, args);
+            }
+        }
+        finally
         {
-            SynchronizedWindow glfwSynchronization = new SynchronizedWindow()
+            // The event loop has terminated so cleanup the windows and exit with a successful return code.
+            CanvasWindow.closeAllWindows();
+        }
+    }
+
+    private static void setup3DWindow(PollableWindow window)
+    {
+        SynchronizedWindow glfwSynchronization = new SynchronizedWindow()
+        {
+            @Override
+            public boolean isFocused()
             {
-                @Override
-                public boolean isFocused()
-                {
-                    return window.isFocused();
-                }
+                return window.isFocused();
+            }
 
-                @Override
-                public void focus()
-                {
-                    // TODO uncomment this if it becomes possible to upgrade to new version of LWJGL that supports window focus through updated GLFW.
-                    //new Thread(window::focus).start();
-                }
-
-                @Override
-                public void quit()
-                {
-                    window.requestWindowClose();
-                }
-            };
-
-            WindowSynchronization.getInstance().addListener(glfwSynchronization);
-
-            window.addWindowCloseListener(win ->
+            @Override
+            public void focus()
             {
-                // Cancel the window closing and let the window synchronization system close the window later if the user confirms that they want to exit.
-                win.cancelWindowClose();
-                WindowSynchronization.getInstance().quit();
-            });
+                // TODO uncomment this if it becomes possible to upgrade to new version of LWJGL that supports window focus through updated GLFW.
+                //new Thread(window::focus).start();
+            }
+
+            @Override
+            public void quit()
+            {
+                window.requestWindowClose();
+            }
+        };
+
+        WindowSynchronization.getInstance().addListener(glfwSynchronization);
+
+        window.getCanvas().addWindowCloseListener(canvas ->
+        {
+            // Cancel the window closing and let the window synchronization system close the window later if the user confirms that they want to exit.
+            window.cancelWindowClose();
+            WindowSynchronization.getInstance().quit();
+        });
 
 //            window.addWindowFocusGainedListener(win -> WindowSynchronization.getInstance().focusGained(glfwSynchronization));
 //            window.addWindowFocusLostListener(win -> WindowSynchronization.getInstance().focusLost(glfwSynchronization));
 
+        window.show();
+    }
 
-            OpenGLContext context = window.getContext();
+    private static void runProgram(Stage stage, PollableCanvas3D<OpenGLContext> canvas, String... args) throws InitializationException
+    {
+        OpenGLContext context = canvas.getContext();
 
-            // Start the request queue as soon as we have a graphics context.
-            requestQueue = new IBRRequestManager<>(context);
+        // Start the request queue as soon as we have a graphics context.
+        requestQueue = new IBRRequestManager<>(context);
 
-            context.getState().enableDepthTest();
+        context.getState().enableDepthTest();
 
-            ExtendedLightingModel lightingModel = MultithreadModels.getInstance().getLightingModel();
-            EnvironmentModel environmentModel = MultithreadModels.getInstance().getEnvironmentModel();
-            ExtendedCameraModel cameraModel = MultithreadModels.getInstance().getCameraModel();
-            ExtendedObjectModel objectModel = MultithreadModels.getInstance().getObjectModel();
-            SettingsModel settingsModel = MultithreadModels.getInstance().getSettingsModel();
-            LoadingModel loadingModel = MultithreadModels.getInstance().getLoadingModel();
+        ExtendedLightingModel lightingModel = MultithreadModels.getInstance().getLightingModel();
+        EnvironmentModel environmentModel = MultithreadModels.getInstance().getEnvironmentModel();
+        ExtendedCameraModel cameraModel = MultithreadModels.getInstance().getCameraModel();
+        ExtendedObjectModel objectModel = MultithreadModels.getInstance().getObjectModel();
+        SettingsModel settingsModel = MultithreadModels.getInstance().getSettingsModel();
+        LoadingModel loadingModel = MultithreadModels.getInstance().getLoadingModel();
 
-            // Bind tools
-            ToolBindingModel toolBindingModel = new ToolBindingModelImpl();
+        // Bind tools
+        ToolBindingModel toolBindingModel = new ToolBindingModelImpl();
 
-            toolBindingModel.setDragTool(new MouseMode(0, ModifierKeys.NONE), DragToolType.ORBIT);
-            toolBindingModel.setDragTool(new MouseMode(1, ModifierKeys.NONE), DragToolType.PAN);
-            toolBindingModel.setDragTool(new MouseMode(2, ModifierKeys.NONE), DragToolType.PAN);
-            toolBindingModel.setDragTool(new MouseMode(0, ModifierKeysBuilder.begin().alt().end()), DragToolType.TWIST);
-            toolBindingModel.setDragTool(new MouseMode(1, ModifierKeysBuilder.begin().alt().end()), DragToolType.DOLLY);
-            toolBindingModel.setDragTool(new MouseMode(2, ModifierKeysBuilder.begin().alt().end()), DragToolType.DOLLY);
-            toolBindingModel.setDragTool(new MouseMode(0, ModifierKeysBuilder.begin().shift().end()), DragToolType.ROTATE_ENVIRONMENT);
-            toolBindingModel.setDragTool(new MouseMode(1, ModifierKeysBuilder.begin().shift().end()), DragToolType.FOCAL_LENGTH);
-            toolBindingModel.setDragTool(new MouseMode(2, ModifierKeysBuilder.begin().shift().end()), DragToolType.FOCAL_LENGTH);
-            toolBindingModel.setDragTool(new MouseMode(1, ModifierKeysBuilder.begin().control().shift().end()), DragToolType.LOOK_AT_POINT);
-            toolBindingModel.setDragTool(new MouseMode(2, ModifierKeysBuilder.begin().control().shift().end()), DragToolType.LOOK_AT_POINT);
-            toolBindingModel.setDragTool(new MouseMode(0, ModifierKeysBuilder.begin().control().end()), DragToolType.OBJECT_ROTATION);
-            toolBindingModel.setDragTool(new MouseMode(1, ModifierKeysBuilder.begin().control().end()), DragToolType.OBJECT_CENTER);
-            toolBindingModel.setDragTool(new MouseMode(2, ModifierKeysBuilder.begin().control().end()), DragToolType.OBJECT_CENTER);
-            toolBindingModel.setDragTool(new MouseMode(0, ModifierKeysBuilder.begin().control().alt().end()), DragToolType.OBJECT_TWIST);
+        toolBindingModel.setDragTool(new MouseMode(0, ModifierKeys.NONE), DragToolType.ORBIT);
+        toolBindingModel.setDragTool(new MouseMode(1, ModifierKeys.NONE), DragToolType.PAN);
+        toolBindingModel.setDragTool(new MouseMode(2, ModifierKeys.NONE), DragToolType.PAN);
+        toolBindingModel.setDragTool(new MouseMode(0, ModifierKeysBuilder.begin().alt().end()), DragToolType.TWIST);
+        toolBindingModel.setDragTool(new MouseMode(1, ModifierKeysBuilder.begin().alt().end()), DragToolType.DOLLY);
+        toolBindingModel.setDragTool(new MouseMode(2, ModifierKeysBuilder.begin().alt().end()), DragToolType.DOLLY);
+        toolBindingModel.setDragTool(new MouseMode(0, ModifierKeysBuilder.begin().shift().end()), DragToolType.ROTATE_ENVIRONMENT);
+        toolBindingModel.setDragTool(new MouseMode(1, ModifierKeysBuilder.begin().shift().end()), DragToolType.FOCAL_LENGTH);
+        toolBindingModel.setDragTool(new MouseMode(2, ModifierKeysBuilder.begin().shift().end()), DragToolType.FOCAL_LENGTH);
+        toolBindingModel.setDragTool(new MouseMode(1, ModifierKeysBuilder.begin().control().shift().end()), DragToolType.LOOK_AT_POINT);
+        toolBindingModel.setDragTool(new MouseMode(2, ModifierKeysBuilder.begin().control().shift().end()), DragToolType.LOOK_AT_POINT);
+        toolBindingModel.setDragTool(new MouseMode(0, ModifierKeysBuilder.begin().control().end()), DragToolType.OBJECT_ROTATION);
+        toolBindingModel.setDragTool(new MouseMode(1, ModifierKeysBuilder.begin().control().end()), DragToolType.OBJECT_CENTER);
+        toolBindingModel.setDragTool(new MouseMode(2, ModifierKeysBuilder.begin().control().end()), DragToolType.OBJECT_CENTER);
+        toolBindingModel.setDragTool(new MouseMode(0, ModifierKeysBuilder.begin().control().alt().end()), DragToolType.OBJECT_TWIST);
 
-            toolBindingModel.setKeyPressTool(new KeyPress(Key.UP, ModifierKeys.NONE), KeyPressToolType.ENVIRONMENT_BRIGHTNESS_UP_LARGE);
-            toolBindingModel.setKeyPressTool(new KeyPress(Key.DOWN, ModifierKeys.NONE), KeyPressToolType.ENVIRONMENT_BRIGHTNESS_DOWN_LARGE);
-            toolBindingModel.setKeyPressTool(new KeyPress(Key.RIGHT, ModifierKeys.NONE), KeyPressToolType.ENVIRONMENT_BRIGHTNESS_UP_SMALL);
-            toolBindingModel.setKeyPressTool(new KeyPress(Key.LEFT, ModifierKeys.NONE), KeyPressToolType.ENVIRONMENT_BRIGHTNESS_DOWN_SMALL);
-            toolBindingModel.setKeyPressTool(new KeyPress(Key.UP, ModifierKeysBuilder.begin().shift().end()), KeyPressToolType.BACKGROUND_BRIGHTNESS_UP_LARGE);
-            toolBindingModel.setKeyPressTool(new KeyPress(Key.DOWN, ModifierKeysBuilder.begin().shift().end()), KeyPressToolType.BACKGROUND_BRIGHTNESS_DOWN_LARGE);
-            toolBindingModel.setKeyPressTool(new KeyPress(Key.RIGHT, ModifierKeysBuilder.begin().shift().end()), KeyPressToolType.BACKGROUND_BRIGHTNESS_UP_SMALL);
-            toolBindingModel.setKeyPressTool(new KeyPress(Key.LEFT, ModifierKeysBuilder.begin().shift().end()), KeyPressToolType.BACKGROUND_BRIGHTNESS_DOWN_SMALL);
-            toolBindingModel.setKeyPressTool(new KeyPress(Key.L, ModifierKeys.NONE), KeyPressToolType.TOGGLE_LIGHTS);
-            toolBindingModel.setKeyPressTool(new KeyPress(Key.L, ModifierKeysBuilder.begin().control().end()), KeyPressToolType.TOGGLE_LIGHT_WIDGETS);
+        toolBindingModel.setKeyPressTool(new KeyPress(Key.UP, ModifierKeys.NONE), KeyPressToolType.ENVIRONMENT_BRIGHTNESS_UP_LARGE);
+        toolBindingModel.setKeyPressTool(new KeyPress(Key.DOWN, ModifierKeys.NONE), KeyPressToolType.ENVIRONMENT_BRIGHTNESS_DOWN_LARGE);
+        toolBindingModel.setKeyPressTool(new KeyPress(Key.RIGHT, ModifierKeys.NONE), KeyPressToolType.ENVIRONMENT_BRIGHTNESS_UP_SMALL);
+        toolBindingModel.setKeyPressTool(new KeyPress(Key.LEFT, ModifierKeys.NONE), KeyPressToolType.ENVIRONMENT_BRIGHTNESS_DOWN_SMALL);
+        toolBindingModel.setKeyPressTool(new KeyPress(Key.UP, ModifierKeysBuilder.begin().shift().end()), KeyPressToolType.BACKGROUND_BRIGHTNESS_UP_LARGE);
+        toolBindingModel.setKeyPressTool(new KeyPress(Key.DOWN, ModifierKeysBuilder.begin().shift().end()), KeyPressToolType.BACKGROUND_BRIGHTNESS_DOWN_LARGE);
+        toolBindingModel.setKeyPressTool(new KeyPress(Key.RIGHT, ModifierKeysBuilder.begin().shift().end()), KeyPressToolType.BACKGROUND_BRIGHTNESS_UP_SMALL);
+        toolBindingModel.setKeyPressTool(new KeyPress(Key.LEFT, ModifierKeysBuilder.begin().shift().end()), KeyPressToolType.BACKGROUND_BRIGHTNESS_DOWN_SMALL);
+        toolBindingModel.setKeyPressTool(new KeyPress(Key.L, ModifierKeys.NONE), KeyPressToolType.TOGGLE_LIGHTS);
+        toolBindingModel.setKeyPressTool(new KeyPress(Key.L, ModifierKeysBuilder.begin().control().end()), KeyPressToolType.TOGGLE_LIGHT_WIDGETS);
 
-            IBRInstanceManager<OpenGLContext> instanceManager = new IBRInstanceManager<>(context);
+        IBRInstanceManager<OpenGLContext> instanceManager = new IBRInstanceManager<>(context);
 
-            SceneViewportModel sceneViewportModel = MultithreadModels.getInstance().getSceneViewportModel();
+        SceneViewportModel sceneViewportModel = MultithreadModels.getInstance().getSceneViewportModel();
 
-            sceneViewportModel.setSceneViewport(new SceneViewport()
+        sceneViewportModel.setSceneViewport(new SceneViewport()
+        {
+            @Override
+            public Object getObjectAtCoordinates(double x, double y)
             {
-                @Override
-                public Object getObjectAtCoordinates(double x, double y)
+                if (instanceManager.getLoadedInstance() != null)
                 {
-                    if (instanceManager.getLoadedInstance() != null)
-                    {
-                        return instanceManager.getLoadedInstance().getSceneViewportModel().getObjectAtCoordinates(x, y);
-                    }
-                    else
-                    {
-                        return null;
-                    }
+                    return instanceManager.getLoadedInstance().getSceneViewportModel().getObjectAtCoordinates(x, y);
                 }
-
-                @Override
-                public Vector3 get3DPositionAtCoordinates(double x, double y)
+                else
                 {
-                    if (instanceManager.getLoadedInstance() != null)
-                    {
-                        return instanceManager.getLoadedInstance().getSceneViewportModel().get3DPositionAtCoordinates(x, y);
-                    }
-                    else
-                    {
-                        return Vector3.ZERO;
-                    }
+                    return null;
                 }
+            }
 
-                @Override
-                public Vector3 getViewingDirection(double x, double y)
-                {
-                    if (instanceManager.getLoadedInstance() != null)
-                    {
-                        return instanceManager.getLoadedInstance().getSceneViewportModel().getViewingDirection(x, y);
-                    }
-                    else
-                    {
-                        return Vector3.ZERO;
-                    }
-                }
-
-                @Override
-                public Vector3 getViewportCenter()
-                {
-                    if (instanceManager.getLoadedInstance() != null)
-                    {
-                        return instanceManager.getLoadedInstance().getSceneViewportModel().getViewportCenter();
-                    }
-                    else
-                    {
-                        return Vector3.ZERO;
-                    }
-                }
-
-                @Override
-                public Vector2 projectPoint(Vector3 point)
-                {
-                    if (instanceManager.getLoadedInstance() != null)
-                    {
-                        return instanceManager.getLoadedInstance().getSceneViewportModel().projectPoint(point);
-                    }
-                    else
-                    {
-                        return Vector2.ZERO;
-                    }
-                }
-
-                @Override
-                public float getLightWidgetScale()
-                {
-                    if (instanceManager.getLoadedInstance() != null)
-                    {
-                        return instanceManager.getLoadedInstance().getSceneViewportModel().getLightWidgetScale();
-                    }
-                    else
-                    {
-                        return 1.0f;
-                    }
-                }
-            });
-
-            WindowBasedController windowBasedController = Builder.create()
-                .setCameraModel(cameraModel)
-                .setEnvironmentModel(environmentModel)
-                .setLightingModel(lightingModel)
-                .setObjectModel(objectModel)
-                .setSettingsModel(settingsModel)
-                .setToolBindingModel(toolBindingModel)
-                .setSceneViewportModel(sceneViewportModel)
-                .build();
-
-            windowBasedController.addAsWindowListener(window);
-
-            loadingModel.setLoadingHandler(instanceManager);
-            
-            instanceManager.setObjectModel(() -> Matrix4.IDENTITY);
-            instanceManager.setCameraModel(cameraModel);
-            instanceManager.setLightingModel(lightingModel);
-            instanceManager.setObjectModel(objectModel);
-            instanceManager.setSettingsModel(settingsModel);
-
-            window.addKeyPressListener((win, key, modifierKeys) ->
+            @Override
+            public Vector3 get3DPositionAtCoordinates(double x, double y)
             {
-                if (key == Key.F11)
+                if (instanceManager.getLoadedInstance() != null)
                 {
-                    System.out.println("reloading program...");
-
-                    try
-                    {
-                        // reload program
-                        instanceManager.getLoadedInstance().reloadShaders();
-                    }
-                    catch (RuntimeException e)
-                    {
-                        e.printStackTrace();
-                    }
+                    return instanceManager.getLoadedInstance().getSceneViewportModel().get3DPositionAtCoordinates(x, y);
                 }
-            });
+                else
+                {
+                    return Vector3.ZERO;
+                }
+            }
 
-            // Create a new application to run our event loop and give it the WindowImpl for polling
-            // of events and the OpenGL context.  The ULFRendererList provides the renderable.
-            InteractiveApplication app = InteractiveGraphics.createApplication(window, context, instanceManager);
-
-            requestQueue.setInstanceManager(instanceManager);
-            requestQueue.setLoadingMonitor(new LoadingMonitor()
+            @Override
+            public Vector3 getViewingDirection(double x, double y)
             {
-                @Override
-                public void startLoading()
+                if (instanceManager.getLoadedInstance() != null)
                 {
-                    loadingModel.getLoadingMonitor().startLoading();
+                    return instanceManager.getLoadedInstance().getSceneViewportModel().getViewingDirection(x, y);
                 }
-
-                @Override
-                public void setMaximum(double maximum)
+                else
                 {
-                    loadingModel.getLoadingMonitor().setMaximum(maximum);
+                    return Vector3.ZERO;
                 }
+            }
 
-                @Override
-                public void setProgress(double progress)
-                {
-                    loadingModel.getLoadingMonitor().setProgress(progress);
-                }
-
-                @Override
-                public void loadingComplete()
-                {
-                    loadingModel.getLoadingMonitor().loadingComplete();
-                }
-
-                @Override
-                public void loadingFailed(Exception e)
-                {
-                    loadingModel.getLoadingMonitor().loadingFailed(e);
-                }
-            });
-
-            app.addRefreshable(new Refreshable()
+            @Override
+            public Vector3 getViewportCenter()
             {
-                @Override
-                public void initialize()
+                if (instanceManager.getLoadedInstance() != null)
                 {
+                    return instanceManager.getLoadedInstance().getSceneViewportModel().getViewportCenter();
                 }
-
-                @Override
-                public void refresh()
+                else
                 {
-                    requestQueue.executeQueue();
+                    return Vector3.ZERO;
                 }
+            }
 
-                @Override
-                public void terminate()
+            @Override
+            public Vector2 projectPoint(Vector3 point)
+            {
+                if (instanceManager.getLoadedInstance() != null)
                 {
+                    return instanceManager.getLoadedInstance().getSceneViewportModel().projectPoint(point);
                 }
-            });
+                else
+                {
+                    return Vector2.ZERO;
+                }
+            }
 
-            window.show();
+            @Override
+            public float getLightWidgetScale()
+            {
+                if (instanceManager.getLoadedInstance() != null)
+                {
+                    return instanceManager.getLoadedInstance().getSceneViewportModel().getLightWidgetScale();
+                }
+                else
+                {
+                    return 1.0f;
+                }
+            }
+        });
 
-            // Keep the graphics thread paused while the window is minimized.
+        CanvasInputController canvasInputController = Builder.create()
+            .setCameraModel(cameraModel)
+            .setEnvironmentModel(environmentModel)
+            .setLightingModel(lightingModel)
+            .setObjectModel(objectModel)
+            .setSettingsModel(settingsModel)
+            .setToolBindingModel(toolBindingModel)
+            .setSceneViewportModel(sceneViewportModel)
+            .build();
+
+        canvasInputController.addAsCanvasListener(canvas);
+
+        loadingModel.setLoadingHandler(instanceManager);
+
+        instanceManager.setObjectModel(() -> Matrix4.IDENTITY);
+        instanceManager.setCameraModel(cameraModel);
+        instanceManager.setLightingModel(lightingModel);
+        instanceManager.setObjectModel(objectModel);
+        instanceManager.setSettingsModel(settingsModel);
+
+        canvas.addKeyPressListener((win, key, modifierKeys) ->
+        {
+            if (key == Key.F11)
+            {
+                System.out.println("reloading program...");
+
+                try
+                {
+                    // reload program
+                    instanceManager.getLoadedInstance().reloadShaders();
+                }
+                catch (RuntimeException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        // Create a new application to run our event loop and give it the WindowImpl for polling
+        // of events and the OpenGL context.  The ULFRendererList provides the renderable.
+        InteractiveApplication app = InteractiveGraphics.createApplication(canvas, context, instanceManager);
+        app.setFPSCap(60.0); // TODO make this configurable
+
+        requestQueue.setInstanceManager(instanceManager);
+        requestQueue.setLoadingMonitor(new LoadingMonitor()
+        {
+            @Override
+            public void startLoading()
+            {
+                loadingModel.getLoadingMonitor().startLoading();
+            }
+
+            @Override
+            public void setMaximum(double maximum)
+            {
+                loadingModel.getLoadingMonitor().setMaximum(maximum);
+            }
+
+            @Override
+            public void setProgress(double progress)
+            {
+                loadingModel.getLoadingMonitor().setProgress(progress);
+            }
+
+            @Override
+            public void loadingComplete()
+            {
+                loadingModel.getLoadingMonitor().loadingComplete();
+            }
+
+            @Override
+            public void loadingFailed(Exception e)
+            {
+                loadingModel.getLoadingMonitor().loadingFailed(e);
+            }
+        });
+
+        app.addRefreshable(new Refreshable()
+        {
+            @Override
+            public void initialize()
+            {
+            }
+
+            @Override
+            public void refresh()
+            {
+                requestQueue.executeQueue();
+            }
+
+            @Override
+            public void terminate()
+            {
+            }
+        });
+
+        // Keep the graphics thread paused while the window is minimized.
+        if (stage != null)
+        {
             app.addPollable(new EventPollable()
             {
                 @Override
                 public void pollEvents()
                 {
-                    while (stage != null && stage.isIconified() && requestQueue.isEmpty())
+                    while (stage.isIconified() && requestQueue.isEmpty())
                     {
                         try
                         {
@@ -375,38 +407,33 @@ public final class Rendering
                     return false;
                 }
             });
-
-            // Wake the graphics thread up when the window is un-minimized.
-            if (stage != null)
-            {
-                Thread graphicsThread = Thread.currentThread();
-
-                stage.iconifiedProperty().addListener((observable, wasIconified, isIconified) ->
-                {
-                    if (wasIconified && !isIconified && requestQueue.isEmpty())
-                    {
-                        graphicsThread.interrupt();
-                    }
-                });
-            }
-
-            // Process CLI args after the main window has loaded.
-            MainApplication.addStartListener(st -> processArgs(args));
-
-            try
-            {
-                app.run();
-            }
-            catch(RuntimeException|InitializationException e)
-            {
-                Optional.ofNullable(loadingModel.getLoadingMonitor()).ifPresent(loadingMonitor -> loadingMonitor.loadingFailed(e));
-                throw e;
-            }
         }
-        finally
+
+        // Wake the graphics thread up when the window is un-minimized.
+        if (stage != null)
         {
-            // The event loop has terminated so cleanup the windows and exit with a successful return code.
-            WindowImpl.closeAllWindows();
+            Thread graphicsThread = Thread.currentThread();
+
+            stage.iconifiedProperty().addListener((observable, wasIconified, isIconified) ->
+            {
+                if (wasIconified && !isIconified && requestQueue.isEmpty())
+                {
+                    graphicsThread.interrupt();
+                }
+            });
+        }
+
+        // Process CLI args after the main window has loaded.
+        MainApplication.addStartListener(st -> processArgs(args));
+
+        try
+        {
+            app.run();
+        }
+        catch(RuntimeException|InitializationException e)
+        {
+            Optional.ofNullable(loadingModel.getLoadingMonitor()).ifPresent(loadingMonitor -> loadingMonitor.loadingFailed(e));
+            throw e;
         }
     }
 

@@ -93,7 +93,7 @@ public final class MultiplierTool implements KeyPressTool
         }
 
         @Override
-        public MultiplierTool build()
+        public MultiplierTool create()
         {
             return new MultiplierTool(getter, setter, factor);
         }

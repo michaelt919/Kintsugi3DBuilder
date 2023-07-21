@@ -14,9 +14,16 @@ package tetzlaff.gl.glfw;
 import java.util.function.Function;
 
 import tetzlaff.gl.core.DoubleFramebuffer;
+import tetzlaff.gl.opengl.OpenGLContext;
+import tetzlaff.gl.opengl.OpenGLContextFactory;
 
 public interface ContextFactory<ContextType extends WindowContextBase<ContextType>>
 {
     ContextType createContext(long glfwHandle);
     ContextType createContext(long glfwHandle, Function<ContextType, DoubleFramebuffer<ContextType>> createDefaultFramebuffer);
+
+    default CanvasWindowBuilder<ContextType> buildWindow(String title, int width, int height)
+    {
+        return new CanvasWindowBuilder<>(this, title, width, height);
+    }
 }

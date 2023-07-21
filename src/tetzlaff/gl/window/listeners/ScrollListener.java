@@ -11,10 +11,10 @@
 
 package tetzlaff.gl.window.listeners;
 
-import tetzlaff.gl.window.Window;
+import tetzlaff.gl.window.Canvas3D;
 
 @FunctionalInterface
 public interface ScrollListener
 {
-    void scroll(Window<?> window, double xOffset, double yOffset);
+    void scroll(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, double xOffset, double yOffset);
 }

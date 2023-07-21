@@ -13,7 +13,7 @@ package tetzlaff.gl.window;
 
 import tetzlaff.gl.core.Context;
 
-public abstract class WindowBuilderBase<ContextType extends Context<ContextType>> implements WindowBuilder<ContextType>
+public abstract class WindowBuilderBase<WindowType extends PollableWindow> implements WindowBuilder<WindowType>
 {
     private final String title;
     private final int width;
@@ -75,28 +75,28 @@ public abstract class WindowBuilderBase<ContextType extends Context<ContextType>
     }
 
     @Override
-    public WindowBuilderBase<ContextType> setX(int x)
+    public WindowBuilderBase<WindowType> setX(int x)
     {
         this.x = x;
         return this;
     }
 
     @Override
-    public WindowBuilderBase<ContextType> setY(int y)
+    public WindowBuilderBase<WindowType> setY(int y)
     {
         this.y = y;
         return this;
     }
 
     @Override
-    public WindowBuilderBase<ContextType> setResizable(boolean resizable)
+    public WindowBuilderBase<WindowType> setResizable(boolean resizable)
     {
         this.resizable = resizable;
         return this;
     }
 
     @Override
-    public WindowBuilderBase<ContextType> setMultisamples(int multisamples)
+    public WindowBuilderBase<WindowType> setMultisamples(int multisamples)
     {
         this.multisamples = multisamples;
         return this;

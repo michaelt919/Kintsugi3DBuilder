@@ -26,6 +26,8 @@ public interface IBRelightModels
      */
     SettingsModel getSettingsModel();
 
+    CanvasModel getCanvasModel();
+
     SceneViewportModel getSceneViewportModel();
     ReadonlyLoadOptionsModel getLoadOptionsModel();
     LoadingModel getLoadingModel();

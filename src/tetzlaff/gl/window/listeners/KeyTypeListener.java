@@ -11,12 +11,12 @@
 
 package tetzlaff.gl.window.listeners;
 
+import tetzlaff.gl.window.Canvas3D;
 import tetzlaff.gl.window.Key;
 import tetzlaff.gl.window.ModifierKeys;
-import tetzlaff.gl.window.Window;
 
 @FunctionalInterface
 public interface KeyTypeListener
 {
-    void keyTyped(Window<?> window, Key key, ModifierKeys mods);
+    void keyTyped(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, Key key, ModifierKeys mods);
 }

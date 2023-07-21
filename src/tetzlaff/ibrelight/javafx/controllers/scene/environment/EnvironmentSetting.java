@@ -23,7 +23,7 @@ import tetzlaff.ibrelight.javafx.util.StaticUtilities;
 public class EnvironmentSetting implements DOMConvertable
 {
     private final BooleanProperty envUseImage = new SimpleBooleanProperty();
-    private final BooleanProperty envUseColor = new SimpleBooleanProperty();
+    private final BooleanProperty envUseColor = new SimpleBooleanProperty(true);
     private final BooleanProperty bpUseImage = new SimpleBooleanProperty();
     private final BooleanProperty bpUseColor = new SimpleBooleanProperty();
     private final BooleanProperty imagePathsRelative = new SimpleBooleanProperty();
@@ -35,8 +35,8 @@ public class EnvironmentSetting implements DOMConvertable
     private final DoubleProperty backgroundIntensity = StaticUtilities.clamp(0, Double.MAX_VALUE, new SimpleDoubleProperty(1.0));
     private final DoubleProperty envRotation = StaticUtilities.wrapAround(-180, 180, new SimpleDoubleProperty());
     private final DoubleProperty envFilteringBias = new SimpleDoubleProperty(0);
-    private final Property<Color> envColor = new SimpleObjectProperty<>(Color.WHITE);
-    private final Property<Color> bpColor = new SimpleObjectProperty<>(Color.WHITE);
+    private final Property<Color> envColor = new SimpleObjectProperty<>(Color.GRAY);
+    private final Property<Color> bpColor = new SimpleObjectProperty<>(Color.GRAY);
     private final StringProperty name = new SimpleStringProperty("New Environment Map");
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final BooleanProperty envLoaded = new SimpleBooleanProperty();
@@ -108,17 +108,17 @@ public class EnvironmentSetting implements DOMConvertable
         newEnvironment.envRotation.setValue(Double.valueOf(element.getAttribute("envRotation")));
         newEnvironment.envColor.setValue(Color.valueOf(element.getAttribute("envColor")));
         newEnvironment.envFilteringBias.setValue(element.hasAttribute("envFilteringBias") ?
-            Double.valueOf(element.getAttribute("envFilteringBias")) : 0);
+            Double.parseDouble(element.getAttribute("envFilteringBias")) : 0);
         newEnvironment.bpColor.setValue(Color.valueOf(element.getAttribute("bpColor")));
-        newEnvironment.name.setValue(String.valueOf(element.getAttribute("name")));
+        newEnvironment.name.setValue(element.getAttribute("name"));
         newEnvironment.locked.setValue(Boolean.valueOf(element.getAttribute("locked")));
         newEnvironment.envLoaded.setValue(Boolean.valueOf(element.getAttribute("envLoaded")));
         newEnvironment.bpLoaded.setValue(Boolean.valueOf(element.getAttribute("bpLoaded")));
-        newEnvironment.gpEnabled.setValue(element.hasAttribute("gpEnabled") && Boolean.valueOf(element.getAttribute("gpEnabled")));
+        newEnvironment.gpEnabled.setValue(element.hasAttribute("gpEnabled") && Boolean.parseBoolean(element.getAttribute("gpEnabled")));
         newEnvironment.gpColor.setValue(element.hasAttribute("gpColor") ?
             Color.valueOf(element.getAttribute("gpColor")) : Color.WHITE);
-        newEnvironment.gpHeight.setValue(element.hasAttribute("gpHeight") ? Double.valueOf(element.getAttribute("gpHeight")) : 0.0);
-        newEnvironment.gpSize.setValue(element.hasAttribute("gpSize") ? Double.valueOf(element.getAttribute("gpSize")) : 0.0);
+        newEnvironment.gpHeight.setValue(element.hasAttribute("gpHeight") ? Double.parseDouble(element.getAttribute("gpHeight")) : 0.0);
+        newEnvironment.gpSize.setValue(element.hasAttribute("gpSize") ? Double.parseDouble(element.getAttribute("gpSize")) : 0.0);
         return newEnvironment;
     }
 

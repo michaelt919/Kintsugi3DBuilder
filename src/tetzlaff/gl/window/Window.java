@@ -12,10 +12,13 @@
 package tetzlaff.gl.window;
 
 import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Resource;
 
-public interface Window<ContextType extends Context<ContextType>> extends WindowListenerManager, AutoCloseable
+import java.io.Closeable;
+
+public interface Window
 {
-    ContextType getContext();
+    Canvas3D<? extends Context<?>> getCanvas();
 
     void show();
 
@@ -23,7 +26,7 @@ public interface Window<ContextType extends Context<ContextType>> extends Window
 
     void focus();
 
-    boolean isHighDPI();
+    void close();
 
     boolean isWindowClosing();
 
@@ -31,26 +34,11 @@ public interface Window<ContextType extends Context<ContextType>> extends Window
 
     void cancelWindowClose();
 
-    @Override
-    void close();
-
-    WindowSize getWindowSize();
-
-    WindowPosition getWindowPosition();
-
     void setWindowTitle(String title);
 
-    void setWindowSize(int width, int height);
+    void setSize(int width, int height);
 
-    void setWindowPosition(int x, int y);
-
-    MouseButtonState getMouseButtonState(int buttonIndex);
-
-    KeyState getKeyState(Key key);
-
-    CursorPosition getCursorPosition();
-
-    ModifierKeys getModifierKeys();
+    void setPosition(int x, int y);
 
     boolean isFocused();
 }

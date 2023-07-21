@@ -11,8 +11,11 @@
 
 package tetzlaff.ibrelight.tools;//Created by alexk on 7/24/2017.
 
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.window.Canvas3D;
+import tetzlaff.gl.window.CanvasSize;
 import tetzlaff.gl.window.CursorPosition;
-import tetzlaff.gl.window.WindowSize;
+import tetzlaff.gl.window.listeners.ScrollListener;
 import tetzlaff.models.ExtendedCameraModel;
 
 final class DollyTool implements DragTool
@@ -29,7 +32,7 @@ final class DollyTool implements DragTool
     private static class Builder extends ToolBuilderBase<DollyTool>
     {
         @Override
-        public DollyTool build()
+        public DollyTool create()
         {
             return new DollyTool(getCameraModel());
         }
@@ -46,15 +49,15 @@ final class DollyTool implements DragTool
     }
 
     @Override
-    public void mouseButtonPressed(CursorPosition cursorPosition, WindowSize windowSize)
+    public void mouseButtonPressed(CursorPosition cursorPosition, CanvasSize canvasSize)
     {
         this.mouseStart = cursorPosition;
         oldLog10Distance = cameraModel.getLog10Distance();
-        dollySensitivityAdjusted = DOLLY_SENSITIVITY / windowSize.height;
+        dollySensitivityAdjusted = DOLLY_SENSITIVITY / canvasSize.height;
     }
 
     @Override
-    public void cursorDragged(CursorPosition cursorPosition, WindowSize windowSize)
+    public void cursorDragged(CursorPosition cursorPosition, CanvasSize canvasSize)
     {
         cameraModel.setLog10Distance((float) (oldLog10Distance - 0.5 * dollySensitivityAdjusted * (this.mouseStart.y - cursorPosition.y)));
     }

@@ -16,6 +16,7 @@ import tetzlaff.ibrelight.core.LoadingModel;
 import tetzlaff.ibrelight.core.ReadonlyLoadOptionsModel;
 import tetzlaff.ibrelight.javafx.multithread.*;
 import tetzlaff.models.*;
+import tetzlaff.models.impl.CanvasModelImpl;
 import tetzlaff.models.impl.SceneViewportModelImpl;
 
 public final class MultithreadModels implements IBRelightModels
@@ -29,6 +30,7 @@ public final class MultithreadModels implements IBRelightModels
     private final SettingsModel settingsModel;
     private final ReadonlyLoadOptionsModel loadOptionsModel;
     private final SceneViewportModel sceneViewportModel;
+    private final CanvasModel canvasModel;
     private final LoadingModel loadingModel;
 
     private static final MultithreadModels INSTANCE = new MultithreadModels();
@@ -48,6 +50,7 @@ public final class MultithreadModels implements IBRelightModels
         settingsModel = new SettingsModelWrapper(InternalModels.getInstance().getSettingsModel());
         sceneViewportModel = new SceneViewportModelImpl();
         loadOptionsModel = InternalModels.getInstance().getLoadOptionsModel();
+        canvasModel = new CanvasModelImpl();
         loadingModel = new LoadingModel();
         loadingModel.setLoadOptionsModel(loadOptionsModel);
     }
@@ -92,6 +95,12 @@ public final class MultithreadModels implements IBRelightModels
     public LoadingModel getLoadingModel()
     {
         return loadingModel;
+    }
+
+    @Override
+    public CanvasModel getCanvasModel()
+    {
+        return canvasModel;
     }
 
     @Override

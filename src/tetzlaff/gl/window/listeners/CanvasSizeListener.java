@@ -9,9 +9,13 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.gl.window;
+package tetzlaff.gl.window.listeners;
 
-public interface WindowFactory<WindowType extends Window<?>>
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.window.Canvas3D;
+
+@FunctionalInterface
+public interface CanvasSizeListener
 {
-    WindowBuilder<? extends WindowType> getWindowBuilder(int width, int height, String title);
+    void canvasResized(Canvas3D<? extends Context<?>> canvas, int width, int height);
 }
