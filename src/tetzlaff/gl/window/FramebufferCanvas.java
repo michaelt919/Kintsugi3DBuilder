@@ -12,24 +12,21 @@
 
 package tetzlaff.gl.window;
 
-import tetzlaff.gl.core.Context;
-import tetzlaff.gl.core.DoubleFramebufferObject;
-import tetzlaff.gl.core.Framebuffer;
-import tetzlaff.gl.core.SwapObservable;
-
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class FramebufferCanvas<ContextType extends Context<ContextType>>
+import tetzlaff.gl.core.*;
+
+public final class FramebufferCanvas<ContextType extends Context<ContextType>>
     extends CanvasBase<ContextType>
     implements ControllableCanvas3D<ContextType>, PollableCanvas3D<ContextType>, SwapObservable<Framebuffer<ContextType>>
 {
     private final DoubleFramebufferObject<ContextType> framebuffer;
 
     private CanvasSize canvasSize;
-    private CanvasPosition canvasPosition;
+    private CanvasPosition canvasPosition = new CanvasPosition(0, 0);
 
     private final Map<Key, KeyState> keyStates = new EnumMap<>(Key.class);
     private ModifierKeys modifierKeys = ModifierKeys.NONE;
@@ -52,6 +49,8 @@ public class FramebufferCanvas<ContextType extends Context<ContextType>>
     private FramebufferCanvas(DoubleFramebufferObject<ContextType> framebuffer)
     {
         this.framebuffer = framebuffer;
+        FramebufferSize fboSize = framebuffer.getSize();
+        this.canvasSize = new CanvasSize(fboSize.width, fboSize.height);
         Arrays.fill(buttonStates, MouseButtonState.RELEASED);
     }
 

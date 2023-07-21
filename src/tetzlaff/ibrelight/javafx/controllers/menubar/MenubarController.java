@@ -42,7 +42,10 @@ import tetzlaff.gl.javafx.FramebufferView;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.ibrelight.app.Rendering;
 import tetzlaff.ibrelight.app.WindowSynchronization;
-import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.core.IBRRequestUI;
+import tetzlaff.ibrelight.core.IBRelightModels;
+import tetzlaff.ibrelight.core.LoadingMonitor;
+import tetzlaff.ibrelight.core.StandardRenderingMode;
 import tetzlaff.ibrelight.export.specularfit.SpecularFitRequestUI;
 import tetzlaff.ibrelight.javafx.InternalModels;
 import tetzlaff.ibrelight.javafx.MultithreadModels;
@@ -71,6 +74,7 @@ public class MenubarController
     @FXML private CheckMenuItem compassCheckMenuItem;
     @FXML private CheckMenuItem halfResolutionCheckMenuItem;
     @FXML private CheckMenuItem multiSamplingCheckMenuItem;
+    @FXML private CheckMenuItem sceneWindowMenuItem;
     @FXML private CheckMenuItem relightingCheckMenuItem;
     @FXML private CheckMenuItem environmentMappingCheckMenuItem; //TODO imp. this
     @FXML private CheckMenuItem shadowsCheckMenuItem;
@@ -101,7 +105,7 @@ public class MenubarController
         Stage injectedStage, InternalModels injectedInternalModels, Runnable injectedUserDocumentationHandler)
     {
         this.stage = injectedStage;
-        this.framebufferView.setStage(injectedStage);
+        this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
 
         this.internalModels = injectedInternalModels;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
@@ -276,6 +280,8 @@ public class MenubarController
             internalModels.getSettingsModel().getBooleanProperty("halfResolutionEnabled"));
         multiSamplingCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("multisamplingEnabled"));
+        sceneWindowMenuItem.selectedProperty().bindBidirectional(
+            internalModels.getSettingsModel().getBooleanProperty("sceneWindowOpen"));
     }
 
     //Menubar->File

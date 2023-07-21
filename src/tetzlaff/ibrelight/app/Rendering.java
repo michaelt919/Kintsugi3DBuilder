@@ -31,7 +31,6 @@ import tetzlaff.gl.builders.framebuffer.DefaultFramebufferFactory;
 import tetzlaff.gl.core.DoubleFramebufferObject;
 import tetzlaff.gl.glfw.CanvasWindow;
 import tetzlaff.gl.interactive.InteractiveGraphics;
-import tetzlaff.gl.javafx.CopyWindowBuilder;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.opengl.OpenGLContextFactory;
 import tetzlaff.gl.vecmath.Matrix4;

@@ -11,14 +11,13 @@
   ~  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<?import javafx.geometry.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
 <?import tetzlaff.ibrelight.core.*?>
-
-<VBox prefHeight="720.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.MenubarController">
-<MenuBar>
+<AnchorPane prefHeight="720.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.MenubarController">
+<MenuBar AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
       <Menu mnemonicParsing="false" text="File">
          <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="Create project">
             <accelerator>
@@ -56,11 +55,12 @@
           <SeparatorMenuItem />
          <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
       </Menu>
-      <Menu mnemonicParsing="false" text="Viewport">
+      <Menu mnemonicParsing="false" text="View">
          <CheckMenuItem fx:id="is3DGridCheckMenuItem" mnemonicParsing="false" text="3D grid" />
          <CheckMenuItem fx:id="compassCheckMenuItem" mnemonicParsing="false" text="Compass" visible="false" />
          <CheckMenuItem fx:id="halfResolutionCheckMenuItem" mnemonicParsing="false" selected="true" text="Half resolution" />
          <CheckMenuItem fx:id="multiSamplingCheckMenuItem" mnemonicParsing="false" text="Multi-sampling" visible="false" />
+         <CheckMenuItem fx:id="sceneWindowMenuItem" mnemonicParsing="false" selected="true" text="Scene window" />
       </Menu>
       <Menu mnemonicParsing="false" text="Lighting">
          <CheckMenuItem fx:id="relightingCheckMenuItem" mnemonicParsing="false" selected="true" text="Relighting" />
@@ -142,13 +142,10 @@
           <MenuItem mnemonicParsing="false" onAction="#help_about" text="About" />
       </Menu>
    </MenuBar>
-   <ProgressBar fx:id="progressBar" prefWidth="0.0" progress="0.0" visible="false" VBox.vgrow="ALWAYS">
+   <ProgressBar fx:id="progressBar" layoutY="25.0" prefWidth="1280.0" progress="0.0" visible="false" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="25.0" VBox.vgrow="ALWAYS">
        <VBox.margin>
-           <Insets>
-               <right>-10</right>
-               <bottom>-10</bottom>
-           </Insets>
+           <Insets />
        </VBox.margin>
    </ProgressBar>
-    <fx:include fx:id="framebufferView" prefWidth="1280.0" source="FramebufferView.fxml" VBox.vgrow="ALWAYS" />
-</VBox>
+    <fx:include fx:id="framebufferView" source="FramebufferView.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="25.0" VBox.vgrow="ALWAYS" />
+</AnchorPane>

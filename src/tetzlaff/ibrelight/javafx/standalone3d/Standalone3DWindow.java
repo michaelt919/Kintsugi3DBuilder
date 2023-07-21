@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2022
+ *  Copyright (c) Michael Tetzlaff 2023
  *
  *  Licensed under GPLv3
  *  ( http://www.gnu.org/licenses/gpl-3.0.html )
@@ -9,15 +9,19 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.gl.javafx;
+package tetzlaff.ibrelight.javafx.standalone3d;
 
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import tetzlaff.gl.core.Context;
-import tetzlaff.gl.window.*;
+import tetzlaff.gl.javafx.FramebufferView;
+import tetzlaff.gl.window.FramebufferCanvas;
+import tetzlaff.gl.window.PollableCanvas3D;
+import tetzlaff.gl.window.PollableWindow;
+import tetzlaff.gl.window.WindowSpecification;
 
-public class WindowImpl<ContextType extends Context<ContextType>> implements PollableWindow
+public class Standalone3DWindow<ContextType extends Context<ContextType>> implements PollableWindow
 {
     private final Stage stage;
     private final FramebufferView framebufferView;
@@ -25,7 +29,7 @@ public class WindowImpl<ContextType extends Context<ContextType>> implements Pol
     private boolean windowClosing = false;
     private boolean focused;
 
-    WindowImpl(Stage primaryStage, FramebufferCanvas<ContextType> canvas, WindowSpecification windowSpec)
+    Standalone3DWindow(Stage primaryStage, FramebufferCanvas<ContextType> canvas, WindowSpecification windowSpec)
     {
         this.canvas = canvas;
 
@@ -50,7 +54,7 @@ public class WindowImpl<ContextType extends Context<ContextType>> implements Pol
 
         Scene scene = new Scene(framebufferView);
         stage.setScene(scene);
-        framebufferView.setStage(stage);
+        framebufferView.registerKeyAndWindowEventsFromStage(stage);
 
         framebufferView.setCanvas(canvas);
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2022
+ *  Copyright (c) Michael Tetzlaff 2023
  *
  *  Licensed under GPLv3
  *  ( http://www.gnu.org/licenses/gpl-3.0.html )
@@ -9,28 +9,22 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.gl.javafx;
-
-import java.util.function.Function;
+package tetzlaff.ibrelight.javafx.standalone3d;
 
 import javafx.application.Platform;
 import javafx.stage.Stage;
-import tetzlaff.gl.builders.framebuffer.DefaultFramebufferFactory;
 import tetzlaff.gl.core.Context;
-import tetzlaff.gl.core.DoubleFramebuffer;
-import tetzlaff.gl.core.DoubleFramebufferObject;
-import tetzlaff.gl.glfw.WindowContextBase;
 import tetzlaff.gl.window.FramebufferCanvas;
 import tetzlaff.gl.window.PollableWindow;
 import tetzlaff.gl.window.WindowBuilderBase;
 
-public class CopyWindowBuilder extends WindowBuilderBase<PollableWindow>
+public class Standalone3DWindowBuilder extends WindowBuilderBase<PollableWindow>
 {
     private final Stage primaryStage;
     private FramebufferCanvas<? extends Context<?>> canvas;
     private volatile PollableWindow result;
 
-    public CopyWindowBuilder(Stage primaryStage,
+    public Standalone3DWindowBuilder(Stage primaryStage,
         String title, int width, int height)
     {
         // (-1, -1) is the GLFW convention for default window position
@@ -39,7 +33,7 @@ public class CopyWindowBuilder extends WindowBuilderBase<PollableWindow>
         this.primaryStage = primaryStage;
     }
 
-    public CopyWindowBuilder setCanvas(FramebufferCanvas<? extends Context<?>> canvas)
+    public Standalone3DWindowBuilder setCanvas(FramebufferCanvas<? extends Context<?>> canvas)
     {
         this.canvas = canvas;
         return this;
@@ -48,7 +42,7 @@ public class CopyWindowBuilder extends WindowBuilderBase<PollableWindow>
     @Override
     public PollableWindow create()
     {
-        Platform.runLater(() -> result = new WindowImpl<>(primaryStage, canvas, this));
+        Platform.runLater(() -> result = new Standalone3DWindow<>(primaryStage, canvas, this));
 
         while (result == null)
         {

@@ -36,7 +36,6 @@ import javafx.scene.image.Image;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import tetzlaff.gl.vecmath.Vector2;
-import tetzlaff.ibrelight.app.Rendering;
 import tetzlaff.ibrelight.app.SynchronizedWindow;
 import tetzlaff.ibrelight.app.WindowSynchronization;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
@@ -137,8 +136,9 @@ public class MainApplication extends Application
         MenubarController menuBarController = menuBarFXMLLoader.getController();
 
         //load stages
-        primaryStage.setTitle("IBRelight");
+        primaryStage.setTitle("Kintsugi Builder");
         primaryStage.setScene(new Scene(menuBarRoot));
+        primaryStage.setMaximized(true);
 
         Stage sceneStage = new Stage();
         sceneStage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
@@ -158,9 +158,9 @@ public class MainApplication extends Application
         sceneStage.setY(primaryScreenBounds.getMinY() + 10);
         sceneStage.initOwner(primaryStage.getScene().getWindow());
 
-        sceneStage.show();
-        sceneStage.setMinWidth(sceneStage.getWidth());
-        sceneStage.setMaxWidth(sceneStage.getWidth());
+//        sceneStage.show();
+//        sceneStage.setMinWidth(sceneStage.getWidth());
+//        sceneStage.setMaxWidth(sceneStage.getWidth());
 
 //        String libraryFXMLFileName = "fxml/library/Library.fxml";
 //        URL libraryURL = getClass().getClassLoader().getResource(libraryFXMLFileName);
@@ -210,6 +210,7 @@ public class MainApplication extends Application
         settingsModel.createBooleanSetting("compassEnabled", false);
         settingsModel.createBooleanSetting("multisamplingEnabled", false);
         settingsModel.createBooleanSetting("halfResolutionEnabled", false);
+        settingsModel.createBooleanSetting("sceneWindowOpen", false);
         settingsModel.createBooleanSetting("buehlerAlgorithm", true);
         settingsModel.createNumericSetting("buehlerViewCount", 5);
 
@@ -225,17 +226,34 @@ public class MainApplication extends Application
         menuBarController.init(primaryStage, InternalModels.getInstance(),
             () -> getHostServices().showDocument("https://docs.google.com/document/d/1jM4sr359-oacpom0TrGLYSqCUdHFEprnvsCn5oVwTEI/edit?usp=sharing"));
 
+        // Open scene window from the menu
+        settingsModel.getBooleanProperty("sceneWindowOpen").addListener(sceneWindowOpen ->
+        {
+            boolean shouldOpen = settingsModel.getBoolean("sceneWindowOpen");
+            if (shouldOpen && !sceneStage.isShowing())
+            {
+                sceneStage.show();
+            }
+            else if (!shouldOpen && sceneStage.isShowing())
+            {
+                sceneStage.hide();
+            }
+        });
+
+        // Synchronize menu state if the scene window is closed using the "X"
+        sceneStage.setOnCloseRequest(event ->
+        {
+            if (settingsModel.getBoolean("sceneWindowOpen"))
+            {
+                settingsModel.set("sceneWindowOpen", false);
+            }
+        });
+
         SynchronizedWindow menuBarWindow = new StageSynchronization(primaryStage);
 
         //set up close and focusGained
         WindowSynchronization.getInstance().addListener(menuBarWindow);
 
-        sceneStage.setOnCloseRequest(event ->
-        {
-            // Consume the event and let the window synchronization system close the stage later if the user confirms that they want to exit.
-            event.consume();
-            WindowSynchronization.getInstance().quit();
-        });
 
         primaryStage.setOnCloseRequest(event ->
         {

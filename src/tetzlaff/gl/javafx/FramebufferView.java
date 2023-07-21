@@ -12,6 +12,10 @@
 
 package tetzlaff.gl.javafx;
 
+import java.nio.ByteBuffer;
+import java.util.OptionalInt;
+
+import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.event.EventHandler;
@@ -28,31 +32,26 @@ import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.converter.CharacterStringConverter;
-import org.lwjgl.BufferUtils;
+import org.lwjgl.*;
 import tetzlaff.gl.core.FramebufferSize;
 import tetzlaff.gl.window.*;
 
-import java.nio.ByteBuffer;
-import java.util.OptionalInt;
-
-public class FramebufferView extends Region
+public final class FramebufferView extends Region
 {
     private final ImageView imageView;
-    private Stage stage;
     private FramebufferCanvas<?> canvas;
 
     private WritableImage frontImage;
     private WritableImage backImage;
     private boolean copyThreadRunning = false;
-    private Thread nextCopyThread = null;
+    private Thread nextCopyThread;
     private final Object nextCopyThreadLock = new Object();
     private volatile boolean frontImagePending = false;
 
+    private volatile ByteBuffer frontCopyBuffer;
     private ByteBuffer backCopyBuffer;
-    private ByteBuffer frontCopyBuffer;
     private final Object backCopyBufferLock = new Object();
     private boolean copyBufferSwapReady = false;
-    private FramebufferSize fboCopyBufferDimensions;
 
     private static class ModifierKeysInstance extends ModifierKeysBase
     {
@@ -96,14 +95,14 @@ public class FramebufferView extends Region
 
     public FramebufferView()
     {
-        this.imageView = new ImageView(frontImage);
+        this.imageView = new ImageView();
         this.getChildren().add(imageView);
         this.widthProperty().addListener(width -> imageView.setFitWidth(this.getWidth()));
         this.heightProperty().addListener(height -> imageView.setFitHeight(this.getHeight()));
 
         // use timeline to set up 60Hz refresh cycle for onscreen framebuffer
         Timeline refresh = new Timeline();
-        refresh.setCycleCount(Timeline.INDEFINITE);
+        refresh.setCycleCount(Animation.INDEFINITE);
         refresh.getKeyFrames().add(new KeyFrame(Duration.seconds(1.0 / 60.0), // 60 Hz refresh rate
             event ->
             {
@@ -116,7 +115,7 @@ public class FramebufferView extends Region
                         frontImagePending = false;
                     }
                 }
-                catch(Exception e)
+                catch(RuntimeException e)
                 {
                     e.printStackTrace();
                 }
@@ -187,9 +186,12 @@ public class FramebufferView extends Region
         this.heightProperty().addListener((event, oldValue, newValue) -> handleWindowEvent());
     }
 
-    public void setStage(Stage stage)
+    /**
+     * Registers for key and window events from the stage
+     * @param stage
+     */
+    public void registerKeyAndWindowEventsFromStage(Stage stage)
     {
-        this.stage = stage;
         stage.getScene().setOnKeyPressed(event ->
         {
             if (canvas != null)
@@ -272,20 +274,16 @@ public class FramebufferView extends Region
 
         if (canvas != null)
         {
-            canvas.changeBounds(new CanvasPosition((int) Math.round(this.stage.getX()), (int) Math.round(this.stage.getY())),
-                imageView.getImage() == null ? new CanvasSize(1, 1)
-                    : new CanvasSize((int) Math.round(imageView.getImage().getWidth()), (int) Math.round(imageView.getImage().getHeight())));
-
+            handleWindowEvent(); // sets canvas size and applies vertical flip to imageView
             CanvasSize canvasSize = canvas.getSize();
             frontImage = new WritableImage(canvasSize.width, canvasSize.height);
             backImage = new WritableImage(canvasSize.width, canvasSize.height);
-            imageView.getTransforms().add(new Scale(1, -1));
-            imageView.getTransforms().add(new Translate(0, -frontImage.getHeight()));
+            imageView.setImage(frontImage);
 
             canvas.addSwapListener(frontFBO ->
             {
                 // Read from FBO
-                fboCopyBufferDimensions = frontFBO.getSize();
+                FramebufferSize fboCopyBufferDimensions = frontFBO.getSize();
 
                 // Three threads need to be coordinated:
                 // 1) the graphics thread (copying data off the framebuffer)
