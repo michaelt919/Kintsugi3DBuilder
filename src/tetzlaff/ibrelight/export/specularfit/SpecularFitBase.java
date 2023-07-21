@@ -15,6 +15,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Texture2D;
 import tetzlaff.gl.vecmath.Matrix4;
@@ -25,6 +27,8 @@ import tetzlaff.ibrelight.rendering.resources.IBRResources;
 
 public abstract class SpecularFitBase<ContextType extends Context<ContextType>> implements SpecularResources<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(SpecularFitBase.class);
+
     private final BasisResources<ContextType> basisResources;
     private final BasisWeightResources<ContextType> basisWeightResources;
     private final boolean basisResourcesOwned;
@@ -138,7 +142,7 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred saving diffuse map:", e);
         }
     }
 
@@ -150,7 +154,7 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred saving normal map:", e);
         }
     }
 }

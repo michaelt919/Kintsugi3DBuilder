@@ -194,7 +194,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred saving normal map estimate:", e);
         }
     }
 

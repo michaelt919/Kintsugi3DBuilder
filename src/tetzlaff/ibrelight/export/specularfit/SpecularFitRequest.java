@@ -82,7 +82,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
         }
         catch(IOException e)
         {
-            e.printStackTrace();
+            log.error("Error executing specular fit request:", e);
         }
     }
 
@@ -107,7 +107,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
         }
         catch(IOException e) // thrown by createReflectanceProgram
         {
-            e.printStackTrace();
+            log.error("Error executing specular fit request:", e);
         }
     }
 

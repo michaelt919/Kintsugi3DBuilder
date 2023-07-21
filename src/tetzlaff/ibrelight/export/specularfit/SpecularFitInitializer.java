@@ -95,7 +95,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
         }
         catch (FileNotFoundException e)
         {
-            e.printStackTrace();
+            log.error("Error occurred while initializing specular fit:", e);
         }
     }
 
@@ -164,7 +164,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred saving debug image:", e);
         }
     }
 }

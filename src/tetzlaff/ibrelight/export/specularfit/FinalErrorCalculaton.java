@@ -100,7 +100,7 @@ public final class FinalErrorCalculaton
             }
             catch (FileNotFoundException e)
             {
-                e.printStackTrace();
+                log.error("An error occurred while validating normal map:", e);
             }
         }
     }
@@ -145,7 +145,7 @@ public final class FinalErrorCalculaton
         }
         catch (FileNotFoundException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred while calculating error metrics:", e);
         }
     }
 

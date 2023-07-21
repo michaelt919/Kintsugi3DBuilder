@@ -278,7 +278,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
             }
             catch (IOException e)
             {
-                e.printStackTrace();
+                log.error("Error occurred while creating basis images:", e);
             }
 
             // write out diffuse texture for debugging

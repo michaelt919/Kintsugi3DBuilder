@@ -204,7 +204,7 @@ public class SpecularOptimization
             }
             catch (FileNotFoundException e)
             {
-                e.printStackTrace();
+                log.error("An error occurred writing time file:", e);
             }
 
             // Save the final diffuse and normal maps
@@ -359,7 +359,7 @@ public class SpecularOptimization
         }
         catch (FileNotFoundException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred creating error calculation shader:", e);
             return null;
         }
     }

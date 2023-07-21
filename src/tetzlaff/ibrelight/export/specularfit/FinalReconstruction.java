@@ -152,7 +152,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred during reconstruction:", e);
             return Double.NaN;
         }
     }
@@ -167,7 +167,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred while saving image:", e);
         }
     }
 
@@ -180,7 +180,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred while saving image:", e);
         }
     }
 }
