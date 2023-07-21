@@ -11,15 +11,23 @@
 
 package tetzlaff.ibrelight.export.specularfit;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
 
 import tetzlaff.gl.builders.ProgramBuilder;
-import tetzlaff.gl.core.*;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.geometry.ReadonlyVertexGeometry;
+import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.export.specularfit.gltf.SpecularFitGltfExporter;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 import tetzlaff.interactive.GraphicsRequest;
+import tetzlaff.models.ReadonlyObjectModel;
 
 public class SpecularFitRequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>, GraphicsRequest<ContextType>
 {
@@ -72,9 +80,16 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
                 .useExistingViewSet(settings.getReconstructionSettings().getReconstructionViewSet().copy())
                 .create())
             {
-                // Perform the specular fit
-                executeRequest(resources, specularFit);
-                specularFit.close(); // Close immediately when this is just an export operation.
+                if (settings.getExportSettings().isGlTFEnabled())
+                {
+                    saveGlTF(resources.getGeometry(), resources.getViewSet(), null);
+                }
+
+                // Reconstruct if requested
+                performReconstruction(resources, specularFit);
+
+                // Close specular fit immediately when this is just an export operation.
+                specularFit.close();
             }
         }
         catch(IOException e)
@@ -98,9 +113,18 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
         {
             // Perform the specular fit
             SpecularResources<ContextType> specularFit = new SpecularOptimization(settings)
-                .createFit(renderable.getIBRResources());
-            executeRequest(renderable.getIBRResources(), specularFit);
-            specularFit.close(); // Close immediately when this is just an export operation.
+                .optimizeFit(renderable.getIBRResources());
+
+            if (settings.getExportSettings().isGlTFEnabled())
+            {
+                saveGlTF(renderable.getActiveGeometry(), renderable.getActiveViewSet(), renderable.getSceneModel().getObjectModel());
+            }
+
+            // Reconstruct if requested
+            performReconstruction(renderable.getIBRResources(), specularFit);
+
+            // Close immediately when this is just an export operation.
+            specularFit.close();
         }
         catch(IOException e) // thrown by createReflectanceProgram
         {
@@ -108,7 +132,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
         }
     }
 
-    private void executeRequest(ReadonlyIBRResources<ContextType> resources, SpecularResources<ContextType> specularFit)
+    private void performReconstruction(ReadonlyIBRResources<ContextType> resources, SpecularResources<ContextType> specularFit)
         throws FileNotFoundException
     {
         // Create output directory
@@ -162,5 +186,44 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
         return programFactory.getShaderProgramBuilder(resources,
                 new File("shaders/common/imgspace.vert"),
                 new File("shaders/specularfit/renderFit.frag"));
+    }
+
+    public void saveGlTF(ReadonlyVertexGeometry geometry, ReadonlyViewSet viewSet, ReadonlyObjectModel objectModel)
+    {
+        if (geometry == null)
+        {
+            throw new IllegalArgumentException("Geometry is null; cannot export GLTF.");
+        }
+
+        System.out.println("Starting glTF export...");
+
+        try
+        {
+
+            Matrix4 rotation = viewSet.getCameraPose(viewSet.getPrimaryViewIndex());
+            Vector3 translation = rotation.getUpperLeft3x3().times(geometry.getCentroid().times(-1.0f));
+            Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2), translation.asVector4(1.0f));
+
+            SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(geometry, transform);
+            exporter.setDefaultNames();
+            exporter.addWeightImages(settings.getSpecularBasisSettings().getBasisCount(), settings.getExportSettings().isCombineWeights());
+
+            // Deal with LODs if enabled
+            if (settings.getExportSettings().isGenerateLowResTextures())
+            {
+                exporter.addAllDefaultLods(settings.getTextureFitSettings().height,
+                    settings.getExportSettings().getMinimumTextureResolution());
+                exporter.addWeightImageLods(settings.getSpecularBasisSettings().getBasisCount(),
+                    settings.getTextureFitSettings().height, settings.getExportSettings().getMinimumTextureResolution());
+            }
+
+            exporter.write(new File(settings.getOutputDirectory(), "model.glb"));
+            System.out.println("DONE!");
+        }
+        catch (IOException e)
+        {
+            System.out.println("Error occurred during glTF export:");
+            e.printStackTrace();
+        }
     }
 }

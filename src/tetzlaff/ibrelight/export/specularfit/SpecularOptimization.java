@@ -21,12 +21,9 @@ import java.util.function.BiConsumer;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.vecmath.Matrix4;
-import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.Projection;
 import tetzlaff.ibrelight.core.ReadonlyViewSet;
 import tetzlaff.ibrelight.core.TextureFitSettings;
-import tetzlaff.ibrelight.export.specularfit.gltf.SpecularFitGltfExporter;
 import tetzlaff.ibrelight.rendering.resources.*;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
 
@@ -80,7 +77,7 @@ public class SpecularOptimization
             settings.getIbrSettings(), settings.getSpecularBasisSettings());
     }
 
-    public <ContextType extends Context<ContextType>> SpecularResources<ContextType> createFit(IBRResourcesImageSpace<ContextType> resources)
+    public <ContextType extends Context<ContextType>> SpecularResources<ContextType> optimizeFit(IBRResourcesImageSpace<ContextType> resources)
         throws IOException
     {
         Instant start = Instant.now();
@@ -91,7 +88,7 @@ public class SpecularOptimization
         Duration duration = Duration.between(start, Instant.now());
         System.out.println("Cache generated / loaded in: " + duration);
 
-        SpecularResources<ContextType> specularFit = createFit(cache);
+        SpecularResources<ContextType> specularFit = optimizeFit(cache);
 
         // Save basis image visualization for reference and debugging
         try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(cache.getContext(), settings.getSpecularBasisSettings()))
@@ -134,15 +131,10 @@ public class SpecularOptimization
 
         rescaleTextures();
 
-        if (settings.getExportSettings().isGlTFEnabled())
-        {
-            saveGlTF(resources);
-        }
-
         return specularFit;
     }
 
-    public <ContextType extends Context<ContextType>> SpecularResources<ContextType> createFit(ImageCache<ContextType> cache)
+    public <ContextType extends Context<ContextType>> SpecularResources<ContextType> optimizeFit(ImageCache<ContextType> cache)
         throws IOException
     {
         Instant start = Instant.now();
@@ -180,10 +172,10 @@ public class SpecularOptimization
             )
             {
                 // Preliminary optimization at low resolution to determine basis functions
-                optimizeTexSpaceFit(sampled, sampledFit,
-                    (stream, errorCalculator) -> sampledFit.optimizeFromScratch(
-                        sampledDecomposition, stream, settings.getPreliminaryConvergenceTolerance(),
-                        errorCalculator, DEBUG ? settings.getOutputDirectory() : null));
+                optimizeTexSpaceFit(sampled, (stream, errorCalculator) -> sampledFit.optimizeFromScratch(
+                    sampledDecomposition, stream, settings.getPreliminaryConvergenceTolerance(),
+                    errorCalculator, DEBUG ? settings.getOutputDirectory() : null), sampledFit
+                );
 
                 // Save the final basis functions
                 sampledDecomposition.saveBasisFunctions(settings.getOutputDirectory());
@@ -220,7 +212,7 @@ public class SpecularOptimization
     }
 
     private <ContextType extends Context<ContextType>> void optimizeBlocks(
-        SpecularFitFinal<ContextType> fullResolutionSolution,
+        Blittable<SpecularResources<ContextType>> fullResolutionDestination,
         ImageCache<ContextType> cache,
         SpecularDecompositionFromScratch sampledDecomposition)
         throws IOException
@@ -249,10 +241,10 @@ public class SpecularOptimization
                                 new SpecularDecompositionFromExistingBasis(blockSettings, sampledDecomposition);
 
                             // Optimize weights and normals
-                            optimizeTexSpaceFit(blockResources, blockOptimization,
-                                (stream, errorCalculator) -> blockOptimization.optimizeFromExistingBasis(
-                                    blockDecomposition, stream, settings.getConvergenceTolerance(),
-                                    errorCalculator, DEBUG ? settings.getOutputDirectory() : null));
+                            optimizeTexSpaceFit(blockResources, (stream, errorCalculator) -> blockOptimization.optimizeFromExistingBasis(
+                                blockDecomposition, stream, settings.getConvergenceTolerance(),
+                                errorCalculator, DEBUG ? settings.getOutputDirectory() : null), blockOptimization
+                            );
 
                             // Fill holes in the weight map
                             blockDecomposition.fillHoles();
@@ -267,7 +259,7 @@ public class SpecularOptimization
                             blockOptimization.getRoughnessOptimization().execute();
 
                             // Copy partial solution into the full solution.
-                            fullResolutionSolution.blit(cache.getSettings().getBlockStartX(i), cache.getSettings().getBlockStartY(j), blockOptimization);
+                            fullResolutionDestination.blit(cache.getSettings().getBlockStartX(i), cache.getSettings().getBlockStartY(j), blockOptimization);
                         }
                     }
                 }
@@ -277,8 +269,8 @@ public class SpecularOptimization
 
     private <ContextType extends Context<ContextType>> void optimizeTexSpaceFit(
         IBRResourcesTextureSpace<ContextType> resources,
-        SpecularFitOptimizable<ContextType> specularFit,
-        BiConsumer<GraphicsStreamResource<ContextType>, ShaderBasedErrorCalculator<ContextType>> optimizeFunc) throws IOException
+        BiConsumer<GraphicsStreamResource<ContextType>, ShaderBasedErrorCalculator<ContextType>> optimizeFunc,
+        SpecularResources<ContextType> resultsForErrorCalc) throws IOException
     {
         SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
 
@@ -296,7 +288,7 @@ public class SpecularOptimization
 
             ShaderBasedErrorCalculator<ContextType> errorCalculator = ShaderBasedErrorCalculator.create(resources.getContext(),
                 () -> createErrorCalcProgram(resources, programFactory),
-                program -> createErrorCalcDrawable(specularFit, resources, program),
+                program -> createErrorCalcDrawable(resultsForErrorCalc, resources, program),
                 texFitSettings.width, texFitSettings.height)
         )
         {
@@ -371,44 +363,6 @@ public class SpecularOptimization
         errorCalcProgram.setTexture("normalEstimate", specularFit.getNormalMap());
         errorCalcProgram.setUniform("errorGamma", 1.0f);
         return errorCalcDrawable;
-    }
-
-    public <ContextType extends Context<ContextType>> void saveGlTF(ReadonlyIBRResources<ContextType> resources)
-    {
-        if (resources.getGeometry() == null)
-        {
-            throw new IllegalArgumentException("Geometry is null; cannot export GLTF.");
-        }
-
-        System.out.println("Starting glTF export...");
-        try
-        {
-
-            Matrix4 rotation = resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex());
-            Vector3 translation = rotation.getUpperLeft3x3().times(resources.getGeometry().getCentroid().times(-1.f));
-            Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2), translation.asVector4(1.0f));
-
-            SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(resources.getGeometry(), transform);
-            exporter.setDefaultNames();
-            exporter.addWeightImages(settings.getSpecularBasisSettings().getBasisCount(), settings.getExportSettings().isCombineWeights());
-
-            // Deal with LODs if enabled
-            if (settings.getExportSettings().isGenerateLowResTextures())
-            {
-                exporter.addAllDefaultLods(settings.getTextureFitSettings().height,
-                    settings.getExportSettings().getMinimumTextureResolution());
-                exporter.addWeightImageLods(settings.getSpecularBasisSettings().getBasisCount(),
-                    settings.getTextureFitSettings().height, settings.getExportSettings().getMinimumTextureResolution());
-            }
-
-            exporter.write(new File(settings.getOutputDirectory(), "model.glb"));
-            System.out.println("DONE!");
-        }
-        catch (IOException e)
-        {
-            System.out.println("Error occurred during glTF export:");
-            e.printStackTrace();
-        }
     }
 
     public void rescaleTextures()
