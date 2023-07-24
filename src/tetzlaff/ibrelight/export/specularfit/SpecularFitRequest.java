@@ -24,6 +24,7 @@ import tetzlaff.interactive.GraphicsRequest;
 public class SpecularFitRequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>, GraphicsRequest<ContextType>
 {
     private final SpecularFitRequestParams settings;
+    private final IBRelightModels modelAccess;
 
     /**
      * Default constructor for CLI args requests
@@ -36,12 +37,13 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
     {
         return new SpecularFitRequest<>(new SpecularFitRequestParams(
             new TextureFitSettings(2048, 2048, modelAccess.getSettingsModel().getFloat("gamma")),
-            modelAccess.getSettingsModel(), new File(args[2])));
+            modelAccess.getSettingsModel(), new File(args[2])), modelAccess);
     }
 
-    public SpecularFitRequest(SpecularFitRequestParams settings)
+    public SpecularFitRequest(SpecularFitRequestParams settings, IBRelightModels modelAccess)
     {
         this.settings = settings;
+        this.modelAccess = modelAccess;
     }
 
     /**
@@ -98,7 +100,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
         {
             // Perform the specular fit
             SpecularResources<ContextType> specularFit = new SpecularOptimization(settings)
-                .createFit(renderable.getIBRResources());
+                .createFit(renderable.getIBRResources(), modelAccess);
             executeRequest(renderable.getIBRResources(), specularFit);
             specularFit.close(); // Close immediately when this is just an export operation.
         }

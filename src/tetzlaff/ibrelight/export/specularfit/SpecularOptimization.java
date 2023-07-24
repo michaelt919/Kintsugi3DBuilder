@@ -23,11 +23,14 @@ import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.ibrelight.core.IBRelightModels;
 import tetzlaff.ibrelight.core.Projection;
 import tetzlaff.ibrelight.core.ReadonlyViewSet;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.export.specularfit.gltf.SpecularFitGltfExporter;
 import tetzlaff.ibrelight.rendering.resources.*;
+import tetzlaff.models.ReadonlyExtendedObjectModel;
+import tetzlaff.models.ReadonlyObjectModel;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
 
 /**
@@ -80,7 +83,7 @@ public class SpecularOptimization
             settings.getIbrSettings(), settings.getSpecularBasisSettings());
     }
 
-    public <ContextType extends Context<ContextType>> SpecularResources<ContextType> createFit(IBRResourcesImageSpace<ContextType> resources)
+    public <ContextType extends Context<ContextType>> SpecularResources<ContextType> createFit(IBRResourcesImageSpace<ContextType> resources, IBRelightModels modelAccess)
         throws IOException
     {
         Instant start = Instant.now();
@@ -133,7 +136,7 @@ public class SpecularOptimization
 
         if (settings.getExportSettings().isGlTFEnabled())
         {
-            saveGlTF(resources);
+            saveGlTF(resources, modelAccess.getObjectModel());
         }
 
         return specularFit;
@@ -376,7 +379,7 @@ public class SpecularOptimization
         return errorCalcDrawable;
     }
 
-    public <ContextType extends Context<ContextType>> void saveGlTF(ReadonlyIBRResources<ContextType> resources)
+    public <ContextType extends Context<ContextType>> void saveGlTF(ReadonlyIBRResources<ContextType> resources, ReadonlyObjectModel objectModel)
     {
         if (resources.getGeometry() == null)
         {
@@ -386,10 +389,13 @@ public class SpecularOptimization
         System.out.println("Starting glTF export...");
         try
         {
-
+            // Compute transformation pose based on primary view orientation
             Matrix4 rotation = resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex());
             Vector3 translation = rotation.getUpperLeft3x3().times(resources.getGeometry().getCentroid().times(-1.f));
             Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2), translation.asVector4(1.0f));
+
+            // Apply user-defined object pose
+            transform = objectModel.getTransformationMatrix().times(transform);
 
             SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(resources.getGeometry(), transform);
             exporter.setDefaultNames();
