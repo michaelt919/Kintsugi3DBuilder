@@ -17,12 +17,16 @@
                 <SizeBasedTriggeringPolicy size="10MB" />
             </Policies>
         </RollingFile>
+        <RecentLogMessageAppender name="guiConsole">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </RecentLogMessageAppender>
     </Appenders>
 
     <Loggers>
         <Root level="debug">
             <AppenderRef ref="console" />
             <AppenderRef ref="fileLogger" />
+            <AppenderRef ref="guiConsole" />
         </Root>
     </Loggers>
 </Configuration>
