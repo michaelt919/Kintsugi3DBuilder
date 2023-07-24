@@ -15,6 +15,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.appender.RollingFileAppender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tetzlaff.ibrelight.javafx.MainApplication;
@@ -22,7 +25,6 @@ import tetzlaff.interactive.InitializationException;
 
 public final class IBRelight
 {
-    private static final Logger log = LoggerFactory.getLogger(IBRelight.class);
     private static final boolean DEBUG = true;
     private static final boolean GRAPHICS_WINDOW_ENABLED = true;
 
@@ -32,13 +34,13 @@ public final class IBRelight
 
     public static void main(String... args) throws IOException, InitializationException
     {
-        if (!DEBUG)
+        // Dynamically set the log directory based on the OS before instantiating a logger
+        if (System.getProperty("IBRelight.logDir") == null)
         {
-            PrintStream out = new PrintStream("out.log");
-            PrintStream err = new PrintStream("err.log");
-            System.setOut(out);
-            System.setErr(err);
+            System.setProperty("IBRelight.logDir", getUserAppDirectory() + "/logs");
         }
+
+        Logger log = LoggerFactory.getLogger(IBRelight.class);
 
         //allow render thread to modify user interface thread
         System.setProperty("glass.disableThreadChecks", "true");
@@ -73,5 +75,30 @@ public final class IBRelight
             log.info("Starting JavaFX UI");
             MainApplication.launchWrapper("");
         }
+    }
+
+    private static String getUserAppDirectory()
+    {
+        String os = System.getProperty("os.name").toLowerCase();
+
+        // Windows
+        if (os.indexOf("win") >= 0)
+        {
+            return System.getenv("APPDATA") + "/IBRelight";
+        }
+
+        // Mac OS
+        if (os.indexOf("mac") >= 0)
+        {
+            return System.getProperty("user.home") + "/Library/Application Support/IBRelight";
+        }
+
+        // Linux and Unix
+        if (os.indexOf("nix") >= 0 || os.indexOf("nux") >= 0 || os.indexOf("aix") >= 0)
+        {
+            return System.getProperty("user.home") + "/.IBRelight";
+        }
+
+        return ".";
     }
 }
