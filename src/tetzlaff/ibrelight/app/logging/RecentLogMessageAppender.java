@@ -7,8 +7,12 @@ import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
+import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
+import org.apache.logging.log4j.core.layout.PatternLayout;
+import org.slf4j.event.Level;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,21 +24,25 @@ import java.util.List;
 public class RecentLogMessageAppender extends AbstractAppender
 {
     private static RecentLogMessageAppender INSTANCE;
-    private final List<String> messages = new ArrayList<>();
+    private final List<LogMessage> messages = new ArrayList<>();
     private final List<LogMessageListener> listeners = new ArrayList<>();
+    private final PatternLayout layout;
 
-    protected RecentLogMessageAppender(String name, Filter filter)
+    protected RecentLogMessageAppender(String name, Filter filter, PatternLayout layout)
     {
-        super(name, filter, null);
+        super(name, filter, layout);
+        this.layout = layout;
         INSTANCE = this;
     }
 
     @PluginFactory
     public static RecentLogMessageAppender createAppender(
-            @PluginAttribute("name") String name
-    )
+            @PluginAttribute("name") String name,
+            @PluginElement("Filter") Filter filter,
+            @PluginElement("PatternLayout") PatternLayout layout
+            )
     {
-        return new RecentLogMessageAppender(name, null);
+        return new RecentLogMessageAppender(name, filter, layout);
     }
 
     public static RecentLogMessageAppender getInstance()
@@ -45,12 +53,19 @@ public class RecentLogMessageAppender extends AbstractAppender
     @Override
     public void append(LogEvent event)
     {
-        messages.add(event.getMessage().getFormattedMessage());
-        dispatchEvents(event);
+        LogMessage message = new LogMessage(
+                Instant.ofEpochMilli(event.getTimeMillis()),
+                Level.valueOf(event.getLevel().name()),
+                event.getLoggerName(),
+                event.getMessage().getFormattedMessage()
+        );
+
+        messages.add(message);
+        dispatchEvents(message);
         clearOldMessages();
     }
 
-    public List<String> getMessages()
+    public List<LogMessage> getMessages()
     {
         return messages;
     }
@@ -70,11 +85,11 @@ public class RecentLogMessageAppender extends AbstractAppender
         //TODO
     }
 
-    private void dispatchEvents(LogEvent event)
+    private void dispatchEvents(LogMessage message)
     {
         for (LogMessageListener listener : listeners)
         {
-            listener.newLogMessage(event);
+            listener.newLogMessage(message);
         }
     }
 }

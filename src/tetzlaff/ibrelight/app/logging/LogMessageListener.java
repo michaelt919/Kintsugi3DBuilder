@@ -5,15 +5,5 @@ import org.apache.logging.log4j.core.LogEvent;
 
 public abstract class LogMessageListener
 {
-    public Level getMinLevel()
-    {
-        return Level.DEBUG;
-    }
-
-    public Level getMaxLevel()
-    {
-        return Level.FATAL;
-    }
-
-    public abstract void newLogMessage(LogEvent logEvent);
+    public abstract void newLogMessage(LogMessage logMessage);
 }

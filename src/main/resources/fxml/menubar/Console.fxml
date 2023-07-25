@@ -1,10 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
 
 <AnchorPane fx:id="root" prefHeight="500.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.ConsoleController">
    <children>
-      <ListView fx:id="messageListView" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+      <ListView fx:id="messageListView" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="50.0" />
+      <HBox spacing="15.0">
+         <children>
+            <CheckBox fx:id="checkboxFatal" mnemonicParsing="false" text="Fatal" />
+            <CheckBox fx:id="checkboxError" mnemonicParsing="false" text="Error" />
+            <CheckBox fx:id="checkboxInfo" mnemonicParsing="false" text="Info" />
+            <CheckBox fx:id="checkboxDebug" mnemonicParsing="false" text="Debug" />
+            <CheckBox fx:id="checkboxTrace" mnemonicParsing="false" text="Trace" />
+         </children>
+         <opaqueInsets>
+            <Insets />
+         </opaqueInsets>
+         <padding>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+         </padding>
+      </HBox>
    </children>
 </AnchorPane>
