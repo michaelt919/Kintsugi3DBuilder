@@ -159,7 +159,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, String primaryViewName,
+    public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory, String primaryViewName,
         ReadonlyLoadOptionsModel loadOptions)
     {
         this.loadingMonitor.startLoading();
@@ -171,7 +171,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                     IBRResourcesImageSpace.getBuilderForContext(this.context)
                         .setLoadingMonitor(this.loadingMonitor)
                         .setLoadOptions(loadOptions)
-                        .loadAgisoftFiles(xmlFile, meshFile, undistortedImageDirectory)
+                        .loadAgisoftFiles(xmlFile, meshFile, imageDirectory)
                         .setPrimaryView(primaryViewName)
                         .generatePreviewImages(loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight(),
                             String.format("_%dx%d", loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight())));
