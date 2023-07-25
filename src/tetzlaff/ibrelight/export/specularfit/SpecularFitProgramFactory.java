@@ -21,6 +21,7 @@ import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Program;
 import tetzlaff.gl.core.ShaderType;
+import tetzlaff.ibrelight.export.specularfit.settings.SpecularBasisSettings;
 import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 import tetzlaff.models.ReadonlySettingsModel;
 

@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.ibrelight.export.specularfit.settings.SpecularBasisSettings;
 import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 import tetzlaff.util.ColorArrayList;
 import tetzlaff.optimization.KMeansClustering;

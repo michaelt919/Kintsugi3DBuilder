@@ -2,6 +2,7 @@ package tetzlaff.ibrelight.export.specularfit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tetzlaff.ibrelight.export.specularfit.settings.ExportSettings;
 import tetzlaff.util.ImageLodResizer;
 
 import java.io.File;

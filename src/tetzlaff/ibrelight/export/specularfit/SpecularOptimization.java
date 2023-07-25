@@ -26,6 +26,7 @@ import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.Projection;
 import tetzlaff.ibrelight.core.ReadonlyViewSet;
 import tetzlaff.ibrelight.core.TextureFitSettings;
+import tetzlaff.ibrelight.export.specularfit.settings.SpecularFitRequestParams;
 import tetzlaff.ibrelight.rendering.resources.*;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
 

@@ -25,6 +25,7 @@ import tetzlaff.gl.core.Framebuffer;
 import tetzlaff.ibrelight.core.Projection;
 import tetzlaff.ibrelight.core.ReadonlyViewSet;
 import tetzlaff.ibrelight.core.TextureFitSettings;
+import tetzlaff.ibrelight.export.specularfit.settings.ReconstructionSettings;
 import tetzlaff.ibrelight.rendering.ImageReconstruction;
 import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 

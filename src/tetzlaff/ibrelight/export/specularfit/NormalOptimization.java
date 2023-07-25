@@ -22,6 +22,7 @@ import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.TextureFitSettings;
+import tetzlaff.ibrelight.export.specularfit.settings.NormalOptimizationSettings;
 import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 import tetzlaff.optimization.ReadonlyErrorReport;
 import tetzlaff.optimization.ShaderBasedOptimization;

@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.gl.vecmath.DoubleVector4;
 import tetzlaff.ibrelight.core.TextureFitSettings;
+import tetzlaff.ibrelight.export.specularfit.settings.SpecularBasisSettings;
 
 public class SpecularDecompositionFromScratch extends SpecularDecompositionBase {
     private static final Logger log = LoggerFactory.getLogger(SpecularDecompositionFromScratch.class);

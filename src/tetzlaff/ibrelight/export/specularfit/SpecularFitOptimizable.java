@@ -23,6 +23,8 @@ import tetzlaff.gl.core.Drawable;
 import tetzlaff.gl.core.Program;
 import tetzlaff.gl.core.Texture2D;
 import tetzlaff.ibrelight.core.TextureFitSettings;
+import tetzlaff.ibrelight.export.specularfit.settings.NormalOptimizationSettings;
+import tetzlaff.ibrelight.export.specularfit.settings.SpecularBasisSettings;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStreamResource;
 import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;

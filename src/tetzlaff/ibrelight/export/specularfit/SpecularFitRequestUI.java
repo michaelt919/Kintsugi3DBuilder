@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.Context;
 import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.export.specularfit.settings.SpecularFitRequestParams;
 import tetzlaff.ibrelight.io.ViewSetReaderFromVSET;
 
 public class SpecularFitRequestUI implements IBRRequestUI

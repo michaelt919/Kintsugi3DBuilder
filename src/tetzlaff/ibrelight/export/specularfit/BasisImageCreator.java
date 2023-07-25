@@ -16,6 +16,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import tetzlaff.gl.core.*;
+import tetzlaff.ibrelight.export.specularfit.settings.SpecularBasisSettings;
 
 public class BasisImageCreator<ContextType extends Context<ContextType>> implements AutoCloseable
 {

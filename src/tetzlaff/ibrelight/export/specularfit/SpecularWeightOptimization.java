@@ -16,6 +16,7 @@ import java.util.Collections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tetzlaff.ibrelight.core.TextureFitSettings;
+import tetzlaff.ibrelight.export.specularfit.settings.SpecularBasisSettings;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.optimization.NonNegativeWeightOptimization;
 
