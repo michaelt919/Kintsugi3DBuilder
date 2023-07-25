@@ -14,8 +14,8 @@ package tetzlaff.ibrelight.tools;//Created by alexk on 7/24/2017.
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.window.CanvasSize;
 import tetzlaff.gl.window.CursorPosition;
-import tetzlaff.gl.window.WindowSize;
 import tetzlaff.models.ExtendedCameraModel;
 import tetzlaff.models.SettingsModel;
 
@@ -39,7 +39,7 @@ final class PanTool implements DragTool
     private static class Builder extends ToolBuilderBase<PanTool>
     {
         @Override
-        public PanTool build()
+        public PanTool create()
         {
             return new PanTool(getCameraModel(), getSettingsModel());
         }
@@ -57,7 +57,7 @@ final class PanTool implements DragTool
     }
 
     @Override
-    public void mouseButtonPressed(CursorPosition cursorPosition, WindowSize windowSize)
+    public void mouseButtonPressed(CursorPosition cursorPosition, CanvasSize canvasSize)
     {
         this.mouseStart = cursorPosition;
 
@@ -65,11 +65,11 @@ final class PanTool implements DragTool
         orbit = cameraModel.getOrbit();
         oldLightCenter = settingsModel.get("currentLightCalibration", Vector2.class);
 
-        panSensitivityAdjusted = PAN_SENSITIVITY / Math.min(windowSize.width, windowSize.height);
+        panSensitivityAdjusted = PAN_SENSITIVITY / Math.min(canvasSize.width, canvasSize.height);
     }
 
     @Override
-    public void cursorDragged(CursorPosition cursorPosition, WindowSize windowSize)
+    public void cursorDragged(CursorPosition cursorPosition, CanvasSize canvasSize)
     {
         Vector2 moveVector = new Vector2(
             (float) (cursorPosition.x - mouseStart.x) * panSensitivityAdjusted,

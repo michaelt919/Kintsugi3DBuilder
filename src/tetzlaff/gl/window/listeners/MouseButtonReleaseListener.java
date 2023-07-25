@@ -11,11 +11,11 @@
 
 package tetzlaff.gl.window.listeners;
 
+import tetzlaff.gl.window.Canvas3D;
 import tetzlaff.gl.window.ModifierKeys;
-import tetzlaff.gl.window.Window;
 
 @FunctionalInterface
 public interface MouseButtonReleaseListener
 {
-    void mouseButtonReleased(Window<?> window, int buttonIndex, ModifierKeys mods);
+    void mouseButtonReleased(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, int buttonIndex, ModifierKeys mods);
 }

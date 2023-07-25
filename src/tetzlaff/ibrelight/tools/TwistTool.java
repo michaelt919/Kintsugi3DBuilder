@@ -11,8 +11,8 @@
 
 package tetzlaff.ibrelight.tools;//Created by alexk on 7/24/2017.
 
+import tetzlaff.gl.window.CanvasSize;
 import tetzlaff.gl.window.CursorPosition;
-import tetzlaff.gl.window.WindowSize;
 import tetzlaff.models.ExtendedCameraModel;
 
 final class TwistTool implements DragTool
@@ -29,7 +29,7 @@ final class TwistTool implements DragTool
     private static class Builder extends ToolBuilderBase<TwistTool>
     {
         @Override
-        public TwistTool build()
+        public TwistTool create()
         {
             return new TwistTool(getCameraModel());
         }
@@ -46,15 +46,15 @@ final class TwistTool implements DragTool
     }
 
     @Override
-    public void mouseButtonPressed(CursorPosition cursorPosition, WindowSize windowSize)
+    public void mouseButtonPressed(CursorPosition cursorPosition, CanvasSize canvasSize)
     {
         this.mouseStart = cursorPosition;
         oldTwist = cameraModel.getTwist();
-        twistSensitivityAdjusted = TWIST_SENSITIVITY / windowSize.width;
+        twistSensitivityAdjusted = TWIST_SENSITIVITY / canvasSize.width;
     }
 
     @Override
-    public void cursorDragged(CursorPosition cursorPosition, WindowSize windowSize)
+    public void cursorDragged(CursorPosition cursorPosition, CanvasSize canvasSize)
     {
         cameraModel.setTwist(oldTwist + (float) Math.toDegrees((cursorPosition.x - this.mouseStart.x) * twistSensitivityAdjusted));
     }

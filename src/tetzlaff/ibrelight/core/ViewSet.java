@@ -11,7 +11,9 @@
 
 package tetzlaff.ibrelight.core;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -573,6 +575,24 @@ public final class ViewSet implements ReadonlyViewSet
         return new File(this.getPreviewImageFilePath(), this.getImageFileNameWithFormat(poseIndex, "PNG"));
     }
 
+    private void generatePreviewImage(int poseIndex, int width, int height) throws IOException
+    {
+        if (Objects.equals(this.relativePreviewImagePathName, this.relativeFullResImagePathName))
+        {
+            throw new IllegalStateException("Preview directory is the same as the full res directory; generating preview images would overwrite full resolution images.");
+        }
+        else
+        {
+            System.out.println("Generating preview image...");
+
+            // Make sure the preview image directory exists; create it if not
+            this.getPreviewImageFilePath().mkdirs();
+
+            ImageLodResizer resizer = new ImageLodResizer(this.findFullResImageFile(poseIndex));
+            resizer.saveAtResolution(this.getPreviewImageFile(poseIndex), width, height);
+        }
+    }
+
     @Override
     public void generatePreviewImages(int width, int height) throws IOException
     {
@@ -594,7 +614,7 @@ public final class ViewSet implements ReadonlyViewSet
             {
                 System.out.printf("%d/%d", i, this.getCameraPoseCount());
                 System.out.println();
-                ImageLodResizer resizer = new ImageLodResizer(this.getFullResImageFile(i));
+                ImageLodResizer resizer = new ImageLodResizer(this.findFullResImageFile(i));
                 resizer.saveAtResolution(this.getPreviewImageFile(i), width, height);
             }
 
@@ -774,6 +794,21 @@ public final class ViewSet implements ReadonlyViewSet
     public File findPreviewImageFile(int index) throws FileNotFoundException
     {
         return ImageFinder.getInstance().findImageFile(getPreviewImageFile(index));
+    }
+
+    @Override
+    public File findOrGeneratePreviewImageFile(int index, int width, int height) throws IOException
+    {
+        try
+        {
+            return ImageFinder.getInstance().findImageFile(getPreviewImageFile(index));
+        }
+        catch (FileNotFoundException e)
+        {
+            // Generate file if necessary
+            generatePreviewImage(index, width, height);
+            return ImageFinder.getInstance().findImageFile(getPreviewImageFile(index));
+        }
     }
 
     @Override

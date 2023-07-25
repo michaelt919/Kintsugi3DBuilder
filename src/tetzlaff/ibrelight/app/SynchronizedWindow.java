@@ -11,10 +11,18 @@
 
 package tetzlaff.ibrelight.app;//Created by alexk on 8/11/2017.
 
+@FunctionalInterface
 public interface SynchronizedWindow
 {
-    boolean isFocused();
-    void focus();
+    default boolean isFocused()
+    {
+        return false;
+    }
+
+    default void focus()
+    {
+    }
+
     void quit();
 
     default boolean confirmQuit()

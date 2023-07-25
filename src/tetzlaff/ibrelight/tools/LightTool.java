@@ -37,7 +37,7 @@ final class LightTool implements PickerTool
     private static class Builder extends ToolBuilderBase<LightTool>
     {
         @Override
-        public LightTool build()
+        public LightTool create()
         {
             return new LightTool(getLightingModel(), getSceneViewportModel());
         }
@@ -55,17 +55,17 @@ final class LightTool implements PickerTool
     }
 
     @Override
-    public boolean mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods)
+    public boolean mouseButtonPressed(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, int buttonIndex, ModifierKeys mods)
     {
         if (buttonIndex == 0)
         {
             updateFunction = null;
 
-            CursorPosition cursorPosition = window.getCursorPosition();
-            WindowSize windowSize = window.getWindowSize();
+            CursorPosition cursorPosition = canvas.getCursorPosition();
+            CanvasSize canvasSize = canvas.getSize();
 
-            double normalizedX = cursorPosition.x / windowSize.width;
-            double normalizedY = cursorPosition.y / windowSize.height;
+            double normalizedX = cursorPosition.x / canvasSize.width;
+            double normalizedY = cursorPosition.y / canvasSize.height;
 
             Object clickedObject = sceneViewportModel.getSceneViewport().getObjectAtCoordinates(normalizedX, normalizedY);
             if (clickedObject instanceof String)
@@ -144,7 +144,7 @@ final class LightTool implements PickerTool
     }
 
     @Override
-    public boolean mouseButtonReleased(Window<?> window, int buttonIndex, ModifierKeys mods)
+    public boolean mouseButtonReleased(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, int buttonIndex, ModifierKeys mods)
     {
         if (buttonIndex == 0)
         {
@@ -156,8 +156,8 @@ final class LightTool implements PickerTool
 
             lightingModel.setLightWidgetsEthereal(false);
 
-            WindowPosition position = window.getWindowPosition();
-            updateForHoverState(window, position.x, position.y);
+            CanvasPosition position = canvas.getPosition();
+            updateForHoverState(canvas, position.x, position.y);
 
             updateFunction = null;
         }
@@ -165,7 +165,7 @@ final class LightTool implements PickerTool
         return updateFunction != null;
     }
 
-    private void updateForHoverState(Window<?> window, double xPos, double yPos)
+    private void updateForHoverState(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, double xPos, double yPos)
     {
         for (int i = 0; i < lightingModel.getLightCount(); i++)
         {
@@ -176,10 +176,10 @@ final class LightTool implements PickerTool
             lightWidgetModel.setCenterWidgetSelected(false);
         }
 
-        WindowSize windowSize = window.getWindowSize();
+        CanvasSize canvasSize = canvas.getSize();
 
-        double normalizedX = xPos / windowSize.width;
-        double normalizedY = yPos / windowSize.height;
+        double normalizedX = xPos / canvasSize.width;
+        double normalizedY = yPos / canvasSize.height;
 
         Object hoverObject = sceneViewportModel.getSceneViewport().getObjectAtCoordinates(normalizedX, normalizedY);
         if (hoverObject instanceof String)
@@ -300,17 +300,17 @@ final class LightTool implements PickerTool
     }
 
     @Override
-    public boolean cursorMoved(Window<?> window, double xPos, double yPos)
+    public boolean cursorMoved(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, double xPos, double yPos)
     {
         if (updateFunction == null)
         {
-            updateForHoverState(window, xPos, yPos);
+            updateForHoverState(canvas, xPos, yPos);
             return false;
         }
         else
         {
-            WindowSize windowSize = window.getWindowSize();
-            updateFunction.accept(new DoubleVector2(xPos / windowSize.width, yPos / windowSize.height));
+            CanvasSize canvasSize = canvas.getSize();
+            updateFunction.accept(new DoubleVector2(xPos / canvasSize.width, yPos / canvasSize.height));
             return true;
         }
     }

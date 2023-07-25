@@ -11,10 +11,10 @@
 
 package tetzlaff.gl.window.listeners;
 
-import tetzlaff.gl.window.Window;
+import tetzlaff.gl.window.Canvas3D;
 
 @FunctionalInterface
 public interface CharacterListener
 {
-    void characterTyped(Window<?> window, char c);
+    void characterTyped(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, char c);
 }

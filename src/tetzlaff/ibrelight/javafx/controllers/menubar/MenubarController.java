@@ -38,9 +38,14 @@ import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
 import org.xml.sax.SAXException;
 import tetzlaff.gl.core.Context;
+import tetzlaff.gl.javafx.FramebufferView;
 import tetzlaff.gl.vecmath.Vector2;
+import tetzlaff.ibrelight.app.Rendering;
 import tetzlaff.ibrelight.app.WindowSynchronization;
-import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.core.IBRRequestUI;
+import tetzlaff.ibrelight.core.IBRelightModels;
+import tetzlaff.ibrelight.core.LoadingMonitor;
+import tetzlaff.ibrelight.core.StandardRenderingMode;
 import tetzlaff.ibrelight.export.specularfit.SpecularFitRequestUI;
 import tetzlaff.ibrelight.javafx.InternalModels;
 import tetzlaff.ibrelight.javafx.MultithreadModels;
@@ -69,6 +74,7 @@ public class MenubarController
     @FXML private CheckMenuItem compassCheckMenuItem;
     @FXML private CheckMenuItem halfResolutionCheckMenuItem;
     @FXML private CheckMenuItem multiSamplingCheckMenuItem;
+    @FXML private CheckMenuItem sceneWindowMenuItem;
     @FXML private CheckMenuItem relightingCheckMenuItem;
     @FXML private CheckMenuItem environmentMappingCheckMenuItem; //TODO imp. this
     @FXML private CheckMenuItem shadowsCheckMenuItem;
@@ -84,7 +90,9 @@ public class MenubarController
 
     @FXML private Menu exportMenu;
 
-    private Window parentWindow;
+    @FXML private FramebufferView framebufferView;
+
+    private Window stage;
 
     private File projectFile;
     private File vsetFile;
@@ -92,20 +100,17 @@ public class MenubarController
 
     private Runnable userDocumentationHandler;
 
-    private IBRRequestManager<?> requestQueue;
-
 
     public <ContextType extends Context<ContextType>> void init(
-        Window injectedParentWindow, IBRRequestManager<ContextType> requestQueue, InternalModels injectedInternalModels,
-        Runnable injectedUserDocumentationHandler)
+        Stage injectedStage, InternalModels injectedInternalModels, Runnable injectedUserDocumentationHandler)
     {
-        this.parentWindow = injectedParentWindow;
+        this.stage = injectedStage;
+        this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
+
         this.internalModels = injectedInternalModels;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
 
         projectFileChooser = new FileChooser();
-
-        this.requestQueue = requestQueue;
 
         projectFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
         projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Full projects", "*.ibr"));
@@ -182,9 +187,9 @@ public class MenubarController
                                 {
                                     try
                                     {
-                                        IBRRequestUI requestUI = (IBRRequestUI) createMethod.invoke(null, injectedParentWindow, MultithreadModels.getInstance());
+                                        IBRRequestUI requestUI = (IBRRequestUI) createMethod.invoke(null, injectedStage, MultithreadModels.getInstance());
                                         requestUI.bind(internalModels.getSettingsModel());
-                                        requestUI.prompt(requestQueue);
+                                        requestUI.prompt(Rendering.getRequestQueue());
                                     }
                                     catch (IllegalAccessException | InvocationTargetException e)
                                     {
@@ -230,6 +235,11 @@ public class MenubarController
         });
     }
 
+    public FramebufferView getFramebufferView()
+    {
+        return framebufferView;
+    }
+
     private void initToggleGroups()
     {
         renderGroup.selectedToggleProperty().addListener((ob, o, n) ->
@@ -270,6 +280,8 @@ public class MenubarController
             internalModels.getSettingsModel().getBooleanProperty("halfResolutionEnabled"));
         multiSamplingCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("multisamplingEnabled"));
+        sceneWindowMenuItem.selectedProperty().bindBidirectional(
+            internalModels.getSettingsModel().getBooleanProperty("sceneWindowOpen"));
     }
 
     //Menubar->File
@@ -324,7 +336,7 @@ public class MenubarController
         if (confirmClose("Are you sure you want to open another project?"))
         {
             projectFileChooser.setTitle("Open project");
-            File selectedFile = projectFileChooser.showOpenDialog(parentWindow);
+            File selectedFile = projectFileChooser.showOpenDialog(stage);
             if (selectedFile != null)
             {
                 this.projectFile = selectedFile;
@@ -407,7 +419,7 @@ public class MenubarController
             projectFileChooser.setInitialFileName("");
             projectFileChooser.setInitialDirectory(vsetFile.getParentFile());
         }
-        File selectedFile = projectFileChooser.showSaveDialog(parentWindow);
+        File selectedFile = projectFileChooser.showSaveDialog(stage);
         if (selectedFile != null)
         {
             this.projectFile = selectedFile;
@@ -431,9 +443,9 @@ public class MenubarController
     @FXML
     private void exportSpecularFit(){
         try {
-            IBRRequestUI requestUI = SpecularFitRequestUI.create(this.parentWindow, MultithreadModels.getInstance());
+            IBRRequestUI requestUI = SpecularFitRequestUI.create(this.stage, MultithreadModels.getInstance());
             requestUI.bind(internalModels.getSettingsModel());
-            requestUI.prompt(requestQueue);
+            requestUI.prompt(Rendering.getRequestQueue());
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -479,7 +491,7 @@ public class MenubarController
             Alert alert = new Alert(AlertType.INFORMATION, String.join(System.lineSeparator(), lines));
             alert.setTitle("About IBRelight");
             alert.setHeaderText("About IBRelight");
-            alert.initOwner(this.parentWindow);
+            alert.initOwner(this.stage);
             alert.initModality(Modality.NONE);
             alert.show();
             alert.setY(100.0);
@@ -523,7 +535,7 @@ public class MenubarController
         stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
         stage.setTitle(title);
         stage.setScene(new Scene(root));
-        stage.initOwner(parentWindow);
+        stage.initOwner(this.stage);
 
         stage.setResizable(false);
 
@@ -549,7 +561,7 @@ public class MenubarController
         stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
         stage.setTitle(title);
         stage.setScene(new Scene(root, width, height));
-        stage.initOwner(parentWindow);
+        stage.initOwner(this.stage);
         stage.setResizable(false);
         flag.set(true);
         stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));

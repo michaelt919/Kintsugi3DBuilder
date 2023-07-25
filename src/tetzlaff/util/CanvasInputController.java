@@ -9,13 +9,12 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.gl.window.listeners;
+package tetzlaff.util;//Created by alexk on 7/24/2017.
 
-import tetzlaff.gl.core.Context;
 import tetzlaff.gl.window.Canvas3D;
 
 @FunctionalInterface
-public interface WindowRestoredListener
+public interface CanvasInputController
 {
-    void windowRestored(Canvas3D<? extends Context<?>> canvas);
+    void addAsCanvasListener(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas);
 }

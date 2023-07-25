@@ -226,8 +226,9 @@ public final class DefaultFramebufferFactory
         @Override
         public void requestResize(int width, int height)
         {
-            this.newWidth = width;
-            this.newHeight = height;
+            // Framebuffer size cannot be smaller than 1x1.
+            this.newWidth = Math.max(1, width);
+            this.newHeight = Math.max(1, height);
         }
 
         @Override

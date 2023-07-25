@@ -16,19 +16,19 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 
+import tetzlaff.gl.window.Canvas3D;
 import tetzlaff.gl.window.CursorPosition;
 import tetzlaff.gl.window.Key;
 import tetzlaff.gl.window.ModifierKeys;
-import tetzlaff.gl.window.Window;
 import tetzlaff.gl.window.listeners.*;
 import tetzlaff.ibrelight.tools.MultiplierTool.Type;
 import tetzlaff.models.*;
+import tetzlaff.util.CanvasInputController;
 import tetzlaff.util.KeyPress;
 import tetzlaff.util.MouseMode;
-import tetzlaff.util.WindowBasedController;
 
 public final class ToolBox
-    implements CursorPositionListener, MouseButtonPressListener, MouseButtonReleaseListener, ScrollListener, KeyPressListener, WindowBasedController
+    implements CursorPositionListener, MouseButtonPressListener, MouseButtonReleaseListener, ScrollListener, KeyPressListener, CanvasInputController
 {
     private MouseMode currentMode;
     private final ToolBindingModel toolBindingModel;
@@ -37,15 +37,17 @@ public final class ToolBox
     private final Map<KeyPressToolType, KeyPressTool> keyPressTools;
     private final LightTool lightTool;
 
+    private final ScrollListener scrollTool;
+
     //window listener
     @Override
-    public void addAsWindowListener(Window<?> window)
+    public void addAsCanvasListener(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas)
     {
-        window.addCursorPositionListener(this);
-        window.addMouseButtonPressListener(this);
-        window.addMouseButtonReleaseListener(this);
-        window.addScrollListener(this);
-        window.addKeyPressListener(this);
+        canvas.addCursorPositionListener(this);
+        canvas.addMouseButtonPressListener(this);
+        canvas.addMouseButtonReleaseListener(this);
+        canvas.addScrollListener(this);
+        canvas.addKeyPressListener(this);
     }
 
     private DragTool getSelectedDragTool()
@@ -66,29 +68,29 @@ public final class ToolBox
 
     //pass methods to selected tool
     @Override
-    public void scroll(Window<?> window, double xOffset, double yOffset)
-    {
-//        try
-//        {
-//            getSelectedDragTool().scroll(window, xOffset, yOffset);
-//        }
-//        catch(RuntimeException e)
-//        {
-//            e.printStackTrace();
-//        }
-    }
-
-    @Override
-    public void cursorMoved(Window<?> window, double xPos, double yPos)
+    public void scroll(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, double xOffset, double yOffset)
     {
         try
         {
-            if (!lightTool.cursorMoved(window, xPos, yPos))
+            scrollTool.scroll(canvas, xOffset, yOffset);
+        }
+        catch(RuntimeException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void cursorMoved(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, double xPos, double yPos)
+    {
+        try
+        {
+            if (!lightTool.cursorMoved(canvas, xPos, yPos))
             {
                 DragTool selectedTool = getSelectedDragTool();
                 if (selectedTool != null)
                 {
-                    selectedTool.cursorDragged(new CursorPosition(xPos, yPos), window.getWindowSize());
+                    selectedTool.cursorDragged(new CursorPosition(xPos, yPos), canvas.getSize());
                 }
             }
         }
@@ -99,7 +101,7 @@ public final class ToolBox
     }
 
     @Override
-    public void keyPressed(Window<?> window, Key key, ModifierKeys mods)
+    public void keyPressed(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, Key key, ModifierKeys mods)
     {
         try
         {
@@ -116,19 +118,19 @@ public final class ToolBox
     }
 
     @Override
-    public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods)
+    public void mouseButtonPressed(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, int buttonIndex, ModifierKeys mods)
     {
         if (getSelectedDragTool() == null) // Only do something if another drag isn't already in progress.
         {
             try
             {
-                if (!lightTool.mouseButtonPressed(window, buttonIndex, mods))
+                if (!lightTool.mouseButtonPressed(canvas, buttonIndex, mods))
                 {
                     currentMode = new MouseMode(buttonIndex, mods);
                     DragTool selectedTool = getSelectedDragTool();
                     if (selectedTool != null)
                     {
-                        selectedTool.mouseButtonPressed(window.getCursorPosition(), window.getWindowSize());
+                        selectedTool.mouseButtonPressed(canvas.getCursorPosition(), canvas.getSize());
                     }
                 }
             }
@@ -140,23 +142,23 @@ public final class ToolBox
     }
 
     @Override
-    public void mouseButtonReleased(Window<?> window, int buttonIndex, ModifierKeys mods)
+    public void mouseButtonReleased(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, int buttonIndex, ModifierKeys mods)
     {
         try
         {
             if (Objects.equals(currentMode, new MouseMode(buttonIndex, mods)))
             {
-                lightTool.mouseButtonReleased(window, buttonIndex, mods);
+                lightTool.mouseButtonReleased(canvas, buttonIndex, mods);
                 DragTool selectedTool = getSelectedDragTool();
                 if (selectedTool != null)
                 {
-                    selectedTool.mouseButtonReleased(window.getCursorPosition(), window.getWindowSize());
+                    selectedTool.mouseButtonReleased(canvas.getCursorPosition(), canvas.getSize());
                 }
                 currentMode = null;
             }
             else
             {
-                lightTool.mouseButtonReleased(window, buttonIndex, mods);
+                lightTool.mouseButtonReleased(canvas, buttonIndex, mods);
             }
         }
         catch (RuntimeException e)
@@ -186,18 +188,25 @@ public final class ToolBox
         dragToolBuilders.put(DragToolType.OBJECT_TWIST, ObjectTwistTool.getBuilder());
         dragToolBuilders.put(DragToolType.LOOK_AT_POINT, LookAtPointTool.getBuilder());
 
-        for (Entry<DragToolType, ToolBuilder<? extends DragTool>> entries : dragToolBuilders.entrySet())
+        // A little bit weird but using a closure here simultaneously avoids copy-pasting code and boilerplate classes
+        var dependencies = new Object()
         {
-            dragTools.put(entries.getKey(),
-                entries.getValue()
+            <ToolType> ToolBuilder<? extends ToolType> inject(ToolBuilder<ToolType> builder)
+            {
+                return builder
                     .setCameraModel(cameraModel)
                     .setEnvironmentMapModel(environmentModel)
                     .setLightingModel(lightingModel)
                     .setObjectModel(objectModel)
                     .setSettingsModel(settingsModel)
                     .setSceneViewportModel(sceneViewportModel)
-                    .setToolBindingModel(toolBindingModel)
-                    .build());
+                    .setToolBindingModel(toolBindingModel);
+            }
+        };
+
+        for (Entry<DragToolType, ToolBuilder<? extends DragTool>> entries : dragToolBuilders.entrySet())
+        {
+            dragTools.put(entries.getKey(), dependencies.inject(entries.getValue()).create());
         }
 
         Map<KeyPressToolType, ToolBuilder<? extends KeyPressTool>> keyPressToolBuilders = new EnumMap<>(KeyPressToolType.class);
@@ -241,27 +250,12 @@ public final class ToolBox
 
         for (Entry<KeyPressToolType, ToolBuilder<? extends KeyPressTool>> entries : keyPressToolBuilders.entrySet())
         {
-            keyPressTools.put(entries.getKey(),
-                entries.getValue()
-                    .setCameraModel(cameraModel)
-                    .setEnvironmentMapModel(environmentModel)
-                    .setLightingModel(lightingModel)
-                    .setObjectModel(objectModel)
-                    .setSettingsModel(settingsModel)
-                    .setSceneViewportModel(sceneViewportModel)
-                    .setToolBindingModel(toolBindingModel)
-                    .build());
+            keyPressTools.put(entries.getKey(), dependencies.inject(entries.getValue()).create());
         }
 
-        lightTool = LightTool.getBuilder()
-            .setCameraModel(cameraModel)
-            .setEnvironmentMapModel(environmentModel)
-            .setLightingModel(lightingModel)
-            .setObjectModel(objectModel)
-            .setSettingsModel(settingsModel)
-            .setSceneViewportModel(sceneViewportModel)
-            .setToolBindingModel(toolBindingModel)
-            .build();
+        scrollTool = dependencies.inject(ScrollDollyTool.getBuilder()).create();
+
+        lightTool = dependencies.inject(LightTool.getBuilder()).create();
     }
 
     public static final class Builder
@@ -325,7 +319,7 @@ public final class ToolBox
             return this;
         }
 
-        public WindowBasedController build()
+        public CanvasInputController build()
         {
             return new ToolBox(cameraModel, environmentModel, lightingModel, objectModel, settingsModel, toolBindingModel, sceneViewportModel);
         }
