@@ -13,6 +13,8 @@ package tetzlaff.ibrelight.export.PTMfit;
 
 import org.ejml.data.SingularMatrixException;
 import org.ejml.simple.SimpleMatrix;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
@@ -32,6 +34,7 @@ import java.util.stream.IntStream;
 
 public class PTMOptimization<ContextType extends Context<ContextType>>
 {
+    private static final Logger log = LoggerFactory.getLogger(PTMOptimization.class);
     private TextureFitSettings settings;
     private PolynomialTextureMapBuilder mapBuilder;
 
@@ -78,7 +81,7 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
             }
 
             resources.setupShaderProgram(luminanceStream.getProgram());
-            System.out.println("Building weight fitting matrices...");
+            log.info("Building weight fitting matrices...");
             PTMsolution solution = new PTMsolution(settings);
 
             mapBuilder.buildMatrices(luminanceStream.map(framebufferData ->
@@ -94,9 +97,9 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
                 return new LuminanceData(framebufferData[0], framebufferData[1]);
             }), solution.getPTMmodel(), solution);
 
-            System.out.println("Finished building matrices; solving now...");
+            log.info("Finished building matrices; solving now...");
             optimizeWeights(p -> settings.height * settings.width != 0, solution::setWeights);
-            System.out.println("DONE!");
+            log.info("DONE!");
 
             // write out weight textures for debugging
             fillHoles(solution);
@@ -118,7 +121,7 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
     {
         // Fill holes
         // TODO Quick hack; should be replaced with something more robust.
-        System.out.println("Filling holes...");
+        log.info("Filling holes...");
 
         int texelCount = settings.width * settings.height;
 
@@ -187,7 +190,7 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
             }
         }
 
-        System.out.println("DONE!");
+        log.info("DONE!");
     }
     public void optimizeWeights(IntPredicate areWeightsValid, BiConsumer<Integer, SimpleMatrix> weightSolutionConsumer, double toleranceScale)
     {
@@ -244,7 +247,7 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
                 {
                     if (!suppressErrors)
                     {
-                        e.printStackTrace();
+                        log.error("Error occurred optimizing weights:", e);
                         suppressErrors = true;
                     }
                 }

@@ -30,7 +30,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.Context;
+import tetzlaff.ibrelight.core.IBRRequestManager;
 import tetzlaff.ibrelight.core.IBRRequestQueue;
 import tetzlaff.ibrelight.core.IBRRequestUI;
 import tetzlaff.ibrelight.core.IBRelightModels;
@@ -54,6 +57,8 @@ public class GeneralRenderRequestUI implements IBRRequestUI
     @FXML private TextField widthTextField;
     @FXML private TextField heightTextField;
     @FXML private Button runButton;
+
+    private static final Logger log = LoggerFactory.getLogger(GeneralRenderRequestUI.class);
 
     private final FileChooser fileChooser = new FileChooser();
     private final DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -81,7 +86,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
         }
         catch(IOException e)
         {
-            e.printStackTrace();
+            log.error("Error occurred loading fxml file:", e);
         }
 
         if (parent != null)
@@ -109,7 +114,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
         }
         catch (MalformedURLException e)
         {
-            e.printStackTrace();
+            log.error("Error loading window icon:", e);
         }
 
         INSTANCE.stage.setScene(SCENE);

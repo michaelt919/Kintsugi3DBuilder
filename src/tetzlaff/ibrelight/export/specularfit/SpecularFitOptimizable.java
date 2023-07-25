@@ -16,6 +16,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Drawable;
 import tetzlaff.gl.core.Program;
@@ -35,6 +37,8 @@ import tetzlaff.util.ColorList;
  */
 public final class SpecularFitOptimizable<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(SpecularFitOptimizable.class);
+
     private final ContextType context;
 
     private final ReadonlyIBRResources<ContextType> resources;
@@ -219,7 +223,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     {
         if (SpecularOptimization.DEBUG)
         {
-            System.out.println("Calculating error...");
+            log.info("Calculating error...");
         }
 
         // Calculate the error in preparation for normal estimation.
@@ -263,7 +267,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
             // Basis functions will have changed.
             getBasisResources().updateFromSolution(specularDecomposition);
 
-            System.out.println("Calculating error...");
+            log.info("Calculating error...");
             errorCalculator.update();
             logError(errorCalculator.getReport());
 
@@ -274,7 +278,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
             }
             catch (IOException e)
             {
-                e.printStackTrace();
+                log.error("Error occurred while creating basis images:", e);
             }
 
             // write out diffuse texture for debugging
@@ -297,7 +301,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         {
             if (blockCount > 1)
             {
-                System.out.println("Starting block " + i + "...");
+                log.info("Starting block " + i + "...");
             }
 
             weightOptimization.execute(
@@ -318,7 +322,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
     private void normalOptimizationIteration(double convergenceTolerance, ShaderBasedErrorCalculator<ContextType> errorCalculator, File debugDirectory)
     {
-        System.out.println("Optimizing normals...");
+        log.info("Optimizing normals...");
 
         normalOptimization.execute(normalMap ->
             {
@@ -343,11 +347,11 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
     private static void logError(ReadonlyErrorReport report)
     {
-        System.out.println("--------------------------------------------------");
-        System.out.println("Error: " + report.getError());
-        System.out.println("(Previous error: " + report.getPreviousError() + ')');
-        System.out.println("--------------------------------------------------");
-        System.out.println();
+        log.info("--------------------------------------------------");
+        log.info("Error: " + report.getError());
+        log.info("(Previous error: " + report.getPreviousError() + ')');
+        log.info("--------------------------------------------------");
+        log.info("");
     }
 
     @Override

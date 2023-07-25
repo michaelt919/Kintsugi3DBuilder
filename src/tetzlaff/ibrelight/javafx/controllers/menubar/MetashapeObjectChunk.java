@@ -1,6 +1,8 @@
 package tetzlaff.ibrelight.javafx.controllers.menubar;
 
 import javafx.scene.image.Image;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -14,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 public class MetashapeObjectChunk {
+    private static final Logger log = LoggerFactory.getLogger(MetashapeObjectChunk.class);
+
     //contains a metashape object and a specific chunk
     private MetashapeObject metashapeObject;
     private String chunkZipPath;
@@ -59,7 +63,7 @@ public class MetashapeObjectChunk {
         try {
             this.frameZip = UnzipHelper.unzipToDocument(frameZipPath);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("An error occurred loading Metashape chunk:", e);
         }
     }
 
@@ -80,7 +84,7 @@ public class MetashapeObjectChunk {
             return Integer.parseInt(parentFile.getName());
         }
         catch (NumberFormatException nfe){
-            nfe.printStackTrace();
+            log.error("An error occurred parsing chunk:", nfe);
             return -1;
         }
     }

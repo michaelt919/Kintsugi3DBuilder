@@ -1,5 +1,7 @@
 package tetzlaff.ibrelight.javafx.controllers.menubar;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -18,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 
 public class MetashapeObject {
+    private static final Logger log = LoggerFactory.getLogger(MetashapeObject.class);
+
     private String psxFilePath;
 
     //key is chunk name, value is path to chunk's zip file
@@ -99,7 +103,7 @@ public class MetashapeObject {
                     }
                 }
             } catch (ParserConfigurationException | IOException | SAXException e) {
-                e.printStackTrace();
+                log.error("An error occurred:", e);
             }
         }
         return chunkNames;

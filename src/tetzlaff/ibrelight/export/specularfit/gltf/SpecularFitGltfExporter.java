@@ -11,6 +11,8 @@ import de.javagl.jgltf.model.io.v2.GltfAssetV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetWriterV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetsV2;
 import de.javagl.jgltf.model.v2.MaterialModelV2;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.geometry.ReadonlyVertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
@@ -24,6 +26,7 @@ import java.nio.FloatBuffer;
 
 public class SpecularFitGltfExporter
 {
+    private static final Logger log = LoggerFactory.getLogger(SpecularFitGltfExporter.class);
 
     private final GltfAssetV2 asset;
 
@@ -257,7 +260,7 @@ public class SpecularFitGltfExporter
         try {
             write(file);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Error writing glTF to disk:", e);
         }
     }
 

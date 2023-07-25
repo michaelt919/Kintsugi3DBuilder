@@ -36,6 +36,8 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.javafx.FramebufferView;
@@ -53,6 +55,8 @@ import tetzlaff.util.Flag;
 
 public class MenubarController
 {
+    private static final Logger log = LoggerFactory.getLogger(MenubarController.class);
+
     private InternalModels internalModels;
 
     //Window open flags
@@ -193,7 +197,7 @@ public class MenubarController
                                     }
                                     catch (IllegalAccessException | InvocationTargetException e)
                                     {
-                                        e.printStackTrace();
+                                        log.error("An error has occurred:", e);
                                     }
                                 });
                                 exportMenu.getItems().add(newItem);
@@ -206,14 +210,14 @@ public class MenubarController
                         }
                         catch (ClassNotFoundException | NoSuchMethodException e)
                         {
-                            e.printStackTrace();
+                            log.error("An error has occurred:", e);
                         }
                     }
                 }
             }
             catch (FileNotFoundException e)
             {
-                e.printStackTrace();
+                log.error("Failed to find export classes file:", e);
             }
         }
 
@@ -307,7 +311,7 @@ public class MenubarController
             }
             catch (IOException e)
             {
-                e.printStackTrace();
+                log.error("An error occurred creating project:", e);
             }
         }
     }
@@ -354,7 +358,7 @@ public class MenubarController
                     }
                     catch (IOException | ParserConfigurationException | SAXException e)
                     {
-                        e.printStackTrace();
+                        log.error("An error occurred opening project:", e);
                     }
                 }
 
@@ -399,7 +403,7 @@ public class MenubarController
             }
             catch(IOException | TransformerException | ParserConfigurationException e)
             {
-                e.printStackTrace();
+                log.error("An error occurred saving project:", e);
             }
         }
     }
@@ -448,7 +452,7 @@ public class MenubarController
             requestUI.prompt(Rendering.getRequestQueue());
 
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("An error occurred handling request:", e);
         }
     }
 
@@ -467,7 +471,7 @@ public class MenubarController
         }
         catch(IOException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred opening load options:", e);
         }
     }
 
@@ -498,7 +502,7 @@ public class MenubarController
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred showing help and about:", e);
         }
     }
 
@@ -517,7 +521,7 @@ public class MenubarController
         }
         catch(IOException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred opening IBR settings:", e);
         }
     }
 
@@ -586,7 +590,7 @@ public class MenubarController
         }
         catch(IOException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred opening color checker:", e);
         }
     }
 
@@ -598,7 +602,7 @@ public class MenubarController
         }
         catch(IOException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred opening file unzipper:", e);
         }
     }
           
@@ -618,7 +622,7 @@ public class MenubarController
         }
         catch(IOException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred opening color checker window:", e);
         }
     }
 
@@ -635,7 +639,7 @@ public class MenubarController
         }
         catch(IOException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred opening jvm settings window:", e);
         }
     }
 }

@@ -12,6 +12,8 @@
 package tetzlaff.ibrelight.export.specularfit;
 
 import org.ejml.data.DMatrixRMaj;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.optimization.function.BasisFunctions;
@@ -21,6 +23,7 @@ import tetzlaff.util.Counter;
 
 public class BRDFReconstruction
 {
+    private static final Logger log = LoggerFactory.getLogger(BRDFReconstruction.class);
     private static final double NNLS_TOLERANCE_SCALE = 0.000000000001;
     private final BasisFunctions stepBasis;
     private final int matrixSize;
@@ -35,14 +38,14 @@ public class BRDFReconstruction
 
     public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularDecompositionFromScratch solution)
     {
-        System.out.println("Building reflectance fitting matrix...");
+        log.info("Building reflectance fitting matrix...");
         MatrixSystem system = buildReflectanceMatrix(viewStream, solution);
 
-        System.out.println("Finished building matrix; solving now...");
+        log.info("Finished building matrix; solving now...");
 
         OptimizedFunctions brdfSolution = OptimizedFunctions.solveSystemNonNegative(stepBasis, system, NNLS_TOLERANCE_SCALE);
 
-        System.out.println("DONE!");
+        log.info("DONE!");
 
         for (int b = 0; b < settings.getBasisCount(); b++)
         {
@@ -131,7 +134,7 @@ public class BRDFReconstruction
 
                 synchronized (counter)
                 {
-                    System.out.println("Finished view " + counter.get() + '.');
+                    log.info("Finished view " + counter.get() + '.');
                     counter.increment();
                 }
 
@@ -141,41 +144,42 @@ public class BRDFReconstruction
 
         if (SpecularOptimization.DEBUG)
         {
-            System.out.println();
+            log.info("");
 
             for (int b = 0; b < settings.getBasisCount(); b++)
             {
-                System.out.print("RHS, red for BRDF #" + b + ": ");
+                StringBuilder sb = new StringBuilder();
+                sb.append("RHS, red for BRDF #" + b + ": ");
 
-                System.out.print(system.rhs[0].get(b));
+                sb.append(system.rhs[0].get(b));
                 for (int m = 0; m < settings.getMicrofacetDistributionResolution(); m++)
                 {
-                    System.out.print(", ");
-                    System.out.print(system.rhs[0].get((m + 1) * settings.getBasisCount() + b));
+                    sb.append(", ");
+                    sb.append(system.rhs[0].get((m + 1) * settings.getBasisCount() + b));
                 }
-                System.out.println();
+                log.info(sb.toString());
 
-                System.out.print("RHS, green for BRDF #" + b + ": ");
+                sb = new StringBuilder("RHS, green for BRDF #" + b + ": ");
 
-                System.out.print(system.rhs[1].get(b));
+                sb.append(system.rhs[1].get(b));
                 for (int m = 0; m < settings.getMicrofacetDistributionResolution(); m++)
                 {
-                    System.out.print(", ");
-                    System.out.print(system.rhs[1].get((m + 1) * settings.getBasisCount() + b));
+                    sb.append(", ");
+                    sb.append(system.rhs[1].get((m + 1) * settings.getBasisCount() + b));
                 }
-                System.out.println();
+                log.info(sb.toString());
 
-                System.out.print("RHS, blue for BRDF #" + b + ": ");
+                sb = new StringBuilder("RHS, blue for BRDF #" + b + ": ");
 
-                System.out.print(system.rhs[2].get(b));
+                sb.append(system.rhs[2].get(b));
                 for (int m = 0; m < settings.getMicrofacetDistributionResolution(); m++)
                 {
-                    System.out.print(", ");
-                    System.out.print(system.rhs[2].get((m + 1) * settings.getBasisCount() + b));
+                    sb.append(", ");
+                    sb.append(system.rhs[2].get((m + 1) * settings.getBasisCount() + b));
                 }
-                System.out.println();
+                log.info(sb.toString());
 
-                System.out.println();
+                log.info("");
             }
         }
 

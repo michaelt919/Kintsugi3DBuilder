@@ -18,6 +18,8 @@ import java.nio.FloatBuffer;
 import java.util.stream.IntStream;
 
 import org.lwjgl.BufferUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.DoubleVector2;
 import tetzlaff.gl.vecmath.DoubleVector3;
@@ -31,6 +33,7 @@ import tetzlaff.optimization.ShaderBasedErrorCalculator;
  */
 public final class FinalErrorCalculaton
 {
+    private static final Logger log = LoggerFactory.getLogger(FinalErrorCalculaton.class);
     private static final FinalErrorCalculaton INSTANCE = new FinalErrorCalculaton();
 
     public static FinalErrorCalculaton getInstance()
@@ -90,14 +93,14 @@ public final class FinalErrorCalculaton
                         })
                         .average().orElse(0.0)); // mean
 
-                System.out.println("Normal map ground truth RMSE: " + rmse);
+                log.info("Normal map ground truth RMSE: " + rmse);
 
                 // Print out RMSE for normal map ground truth
                 rmseOut.println("Normal map ground truth RMSE: " + rmse);
             }
             catch (FileNotFoundException e)
             {
-                e.printStackTrace();
+                log.error("An error occurred while validating normal map:", e);
             }
         }
     }
@@ -142,7 +145,7 @@ public final class FinalErrorCalculaton
         }
         catch (FileNotFoundException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred while calculating error metrics:", e);
         }
     }
 

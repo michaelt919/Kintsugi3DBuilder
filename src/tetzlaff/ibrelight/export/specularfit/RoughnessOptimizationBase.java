@@ -1,5 +1,7 @@
 package tetzlaff.ibrelight.export.specularfit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.*;
 
 import java.io.File;
@@ -9,6 +11,8 @@ import java.io.IOException;
 public abstract class RoughnessOptimizationBase<ContextType extends Context<ContextType>>
         implements RoughnessOptimization<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(RoughnessOptimizationBase.class);
+
     protected final Program<ContextType> specularRoughnessFitProgram;
     protected final VertexBuffer<ContextType> rect;
     protected final Drawable<ContextType> specularRoughnessFitDrawable;
@@ -79,7 +83,7 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred while saving textures:", e);
         }
     }
 

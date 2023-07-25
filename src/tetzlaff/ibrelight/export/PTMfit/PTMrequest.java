@@ -11,6 +11,8 @@
 
 package tetzlaff.ibrelight.export.PTMfit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.Context;
 import tetzlaff.ibrelight.core.IBRInstance;
 import tetzlaff.ibrelight.core.IBRRequest;
@@ -21,6 +23,8 @@ import java.io.File;
 import java.io.IOException;
 
 public class PTMrequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType> {
+
+    private static final Logger log = LoggerFactory.getLogger(PTMrequest.class);
 
     private final TextureFitSettings setting;
     private final File outputDirectory;
@@ -46,7 +50,7 @@ public class PTMrequest<ContextType extends Context<ContextType>> implements IBR
         }
         catch(IOException e) // thrown by createReflectanceProgram
         {
-            e.printStackTrace();
+            log.error("Error occurred executing request:", e);
         }
     }
 }
