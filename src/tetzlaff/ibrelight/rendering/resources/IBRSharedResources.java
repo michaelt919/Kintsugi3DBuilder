@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.IntStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.geometry.GeometryResources;
@@ -33,6 +35,7 @@ import tetzlaff.ibrelight.core.ViewSet;
 
 final class IBRSharedResources<ContextType extends Context<ContextType>>
 {
+    private static final Logger log = LoggerFactory.getLogger(IBRSharedResources.class);
     /**
      * A GPU buffer containing the camera poses defining the transformation from object space to camera space for each view.
      * These are necessary to determine view vectors, and for performing projective texture mapping with an image-space implementation.
@@ -274,16 +277,16 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
             }
         }
 
-        System.out.println("---");
-        System.out.println("View weights:");
+        log.info("---");
+        log.info("View weights:");
 
         for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
         {
             cameraWeights[k] = (float)totals[k] / (float)actualSampleCount;
-            System.out.println(viewSet.getImageFileName(k) + '\t' + cameraWeights[k]);
+            log.info(viewSet.getImageFileName(k) + '\t' + cameraWeights[k]);
         }
 
-        System.out.println("---");
+        log.info("---");
 
         return cameraWeights;
     }

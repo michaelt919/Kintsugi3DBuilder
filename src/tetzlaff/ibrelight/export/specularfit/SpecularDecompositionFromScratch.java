@@ -20,11 +20,15 @@ import javax.imageio.ImageIO;
 
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.gl.vecmath.DoubleVector4;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 
 public class SpecularDecompositionFromScratch extends SpecularDecompositionBase {
+    private static final Logger log = LoggerFactory.getLogger(SpecularDecompositionFromScratch.class);
+
     private final DoubleVector3[] diffuseAlbedos;
     private final SimpleMatrix specularRed;
     private final SimpleMatrix specularGreen;
@@ -139,7 +143,7 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase 
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred while saving diffuse map:", e);
         }
     }
 

@@ -16,12 +16,15 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 import org.ejml.simple.SimpleMatrix;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.util.ColorArrayList;
 
 public class KMeansClustering
 {
+    private static final Logger log = LoggerFactory.getLogger(KMeansClustering.class);
     private static final double TOLERANCE = 0.0001;
 
     private final ColorArrayList colorMap;
@@ -118,10 +121,10 @@ public class KMeansClustering
             centers[b] = colorMap.getRGB(index);
         }
 
-        System.out.println("Initial centers:");
+        log.info("Initial centers:");
         for (int b = 0; b < basisCount; b++)
         {
-            System.out.println(centers[b]);
+            log.info(centers[b].toString());
         }
 
         // Initialization is done; now it's time to iterate.

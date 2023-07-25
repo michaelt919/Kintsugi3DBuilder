@@ -15,6 +15,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.core.*;
@@ -23,6 +25,10 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.rendering.components.StandardScene;
+import tetzlaff.ibrelight.javafx.internal.EnvironmentModelImpl;
+import tetzlaff.ibrelight.rendering.resources.DynamicResourceLoader;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace.Builder;
+import tetzlaff.ibrelight.rendering.components.*;
 import tetzlaff.ibrelight.rendering.components.lightcalibration.LightCalibrationRoot;
 import tetzlaff.ibrelight.rendering.components.lit.LitRoot;
 import tetzlaff.ibrelight.rendering.resources.DynamicResourceLoader;
@@ -33,6 +39,8 @@ import tetzlaff.models.SceneViewport;
 
 public class IBREngine<ContextType extends Context<ContextType>> implements IBRInstance<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(IBREngine.class);
+
     private final ContextType context;
 
     private volatile LoadingMonitor loadingMonitor;
@@ -143,7 +151,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            log.error("Error occurred initializing IBREngine:", e);
             this.close();
             if (this.loadingMonitor != null)
             {
@@ -164,7 +172,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            log.error("Error occurred during update:", e);
         }
 
         this.updateWorldSpaceDefinition();
@@ -272,7 +280,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         {
             if (!suppressErrors)
             {
-                e.printStackTrace();
+                log.error("Error during draw call:", e);
                 suppressErrors = true; // Prevent excessive errors
             }
         }
@@ -322,7 +330,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            log.error("Error closing IBREngine:", e);
         }
     }
 
@@ -364,7 +372,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            log.error("Error reloading shaders:", e);
         }
     }
 

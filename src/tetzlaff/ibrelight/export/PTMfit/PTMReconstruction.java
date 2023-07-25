@@ -10,6 +10,8 @@
  */
 
 package tetzlaff.ibrelight.export.PTMfit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
@@ -26,6 +28,7 @@ import tetzlaff.ibrelight.rendering.ImageReconstruction;
 import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 
 public class PTMReconstruction <ContextType extends Context<ContextType>> implements AutoCloseable {
+    private static final Logger log = LoggerFactory.getLogger(PTMReconstruction.class);
     private final IBRResourcesImageSpace<ContextType> resources;
     private final TextureFitSettings settings;
     private final int imageWidth;
@@ -121,7 +124,7 @@ public class PTMReconstruction <ContextType extends Context<ContextType>> implem
 
         catch (FileNotFoundException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred during reconstruction:", e);
         }
 
     }
@@ -142,7 +145,7 @@ public class PTMReconstruction <ContextType extends Context<ContextType>> implem
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            log.error("Error occurred while saving reconstruction:", e);
         }
     }
 }

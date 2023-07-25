@@ -11,6 +11,8 @@
 
 package tetzlaff.ibrelight.rendering.components.scene;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
@@ -30,6 +32,7 @@ import java.util.Optional;
 
 public class GroundPlane<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(GroundPlane.class);
     private final ContextType context;
     private final SceneModel sceneModel;
     private final SceneViewportModel<ContextType> sceneViewportModel;
@@ -67,7 +70,7 @@ public class GroundPlane<ContextType extends Context<ContextType>> implements Re
         if (defineMap.entrySet().stream().anyMatch(
                 defineEntry -> !Objects.equals(groundPlaneDrawable.program().getDefine(defineEntry.getKey()), defineEntry.getValue())))
         {
-            System.out.println("Updating compiled render settings.");
+            log.info("Updating compiled render settings.");
             reloadShaders();
         }
     }

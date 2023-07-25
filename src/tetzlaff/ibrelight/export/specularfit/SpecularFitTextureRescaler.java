@@ -1,5 +1,7 @@
 package tetzlaff.ibrelight.export.specularfit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.util.ImageLodResizer;
 
 import java.io.File;
@@ -9,6 +11,7 @@ import java.util.List;
 
 public class SpecularFitTextureRescaler
 {
+    private static final Logger log = LoggerFactory.getLogger(SpecularFitTextureRescaler.class);
     private final ExportSettings settings;
 
     public SpecularFitTextureRescaler(ExportSettings settings)
@@ -43,8 +46,7 @@ public class SpecularFitTextureRescaler
             }
             catch (IOException e)
             {
-                System.out.println("Failed to generate LODs for file: " + file);
-                e.printStackTrace();
+                log.error("Error generating LODs for file '{}':", file, e);
             }
         }
     }

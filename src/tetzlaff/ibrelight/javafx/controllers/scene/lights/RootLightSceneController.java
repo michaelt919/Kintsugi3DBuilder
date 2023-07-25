@@ -32,6 +32,8 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.layout.VBox;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.javafx.internal.ObservableProjectModel;
@@ -41,6 +43,7 @@ import tetzlaff.models.SceneViewportModel;
 
 public class RootLightSceneController implements Initializable
 {
+    private static final Logger log = LoggerFactory.getLogger(RootLightSceneController.class);
     @FXML private VBox settings;
     @FXML private SettingsLightSceneController settingsController;
     @FXML private TableView<LightGroupSetting> tableView;
@@ -209,7 +212,7 @@ public class RootLightSceneController implements Initializable
     @FXML
     private void saveGroup()
     {
-        System.out.println("TODO saveGroup");//TODO
+        log.debug("TODO saveGroup");//TODO
     }
 
     @FXML
@@ -308,7 +311,7 @@ public class RootLightSceneController implements Initializable
     @FXML
     private void keyframeGroup()
     {
-        System.out.println("TODO keyframeGroup");//TODO
+        log.debug("TODO keyframeGroup");//TODO
     }
 
     @FXML
@@ -386,7 +389,7 @@ public class RootLightSceneController implements Initializable
     @FXML
     private void saveLight()
     {
-        System.out.println("TODO saveLight");//TODO
+        log.debug("TODO saveLight");//TODO
     }
 
     @FXML

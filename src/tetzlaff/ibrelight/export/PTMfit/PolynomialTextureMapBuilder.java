@@ -15,12 +15,15 @@ import java.util.Collections;
 import java.util.function.*;
 import java.util.stream.IntStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.optimization.LeastSquaresMatrixBuilder;
 import tetzlaff.util.Counter;
 
 public class PolynomialTextureMapBuilder
 {
+    private static final Logger log = LoggerFactory.getLogger(PolynomialTextureMapBuilder.class);
     private LeastSquaresMatrixBuilder matrixBuilder;
     private int weightCount;
     private final int sampleCount;
@@ -48,7 +51,7 @@ public class PolynomialTextureMapBuilder
             });
             synchronized (counter)
             {
-                System.out.println("Finished storing color of view " + counter.get() + '.');
+                log.info("Finished storing color of view " + counter.get() + '.');
                 counter.increment();
             }
         });

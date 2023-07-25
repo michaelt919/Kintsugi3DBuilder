@@ -21,6 +21,8 @@ import java.util.stream.IntStream;
 
 import javax.imageio.ImageIO;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.geometry.GeometryFramebuffer;
 import tetzlaff.gl.geometry.GeometryTextures;
@@ -36,6 +38,7 @@ import tetzlaff.util.BufferedImageBuilder;
 
 public class ImageCache<ContextType extends Context<ContextType>>
 {
+    private static final Logger log = LoggerFactory.getLogger(ImageCache.class);
     private final ContextType context;
     private final IBRResourcesImageSpace<ContextType> resources;
     private final ImageCacheSettings settings;
@@ -68,7 +71,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
             }
             catch (IOException | RuntimeException e)
             {
-                e.printStackTrace();
+                log.error("Error initializing image cache:", e);
 
                 // Reset in case it partially succeeded.
                 Arrays.stream(this.sampledPixelCoords).forEach(column -> Arrays.fill(column, null));

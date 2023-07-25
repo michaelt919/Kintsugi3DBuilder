@@ -13,6 +13,8 @@ package tetzlaff.ibrelight.export.PTMfit;
 
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 
@@ -26,6 +28,7 @@ import java.util.function.BiConsumer;
 import java.util.stream.IntStream;
 
 public class PTMsolution {
+    private static final Logger log = LoggerFactory.getLogger(PTMsolution.class);
     public BiConsumer<Integer, SimpleMatrix> setWeights;
     private PolynomialTextureMapModel PTMmodel;
     private TextureFitSettings settings;
@@ -94,7 +97,7 @@ public class PTMsolution {
             }
             catch (IOException e)
             {
-                e.printStackTrace();
+                log.error("An error occurred writing weight maps:", e);
             }
         }
 

@@ -18,12 +18,16 @@ import java.util.stream.IntStream;
 import org.ejml.data.SingularMatrixException;
 import org.ejml.dense.row.CommonOps_DDRM;
 import org.ejml.simple.SimpleMatrix;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.ejml.dense.row.CommonOps_DDRM.elementMin;
 import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
 
 public final class NonNegativeLeastSquares
 {
+    private static final Logger log = LoggerFactory.getLogger(NonNegativeLeastSquares.class);
+
     private static SimpleMatrix solvePartial(
         SimpleMatrix mATA, SimpleMatrix vATb, boolean[] p, List<Integer> mapping, SimpleMatrix sOut, int constraintCount)
     {
@@ -260,7 +264,7 @@ public final class NonNegativeLeastSquares
                 }
                 catch(SingularMatrixException e)
                 {
-                    e.printStackTrace();
+                    log.error("An error occurred:", e);
 
                     // Roll back and finish.
                     p[k] = false;

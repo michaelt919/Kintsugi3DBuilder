@@ -17,6 +17,8 @@ import java.util.Arrays;
 import java.util.Date;
 import javax.imageio.ImageIO;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
@@ -39,6 +41,7 @@ import tetzlaff.ibrelight.io.ViewSetReaderFromVSET;
  */
 public final class IBRResourcesImageSpace<ContextType extends Context<ContextType>> extends IBRResourcesBase<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(IBRResourcesImageSpace.class);
     /**
      * A GPU buffer containing projection transformations defining the intrinsic properties of each camera.
      */
@@ -260,8 +263,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             int m = viewSet.getCameraPoseCount();
             for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
             {
-                System.out.printf("%d/%d", i, m);
-                System.out.println();
+                log.info("Loading camera pose {}/{}", i, m);
                 File imageFile = viewSet.findOrGeneratePreviewImageFile(i, width, height);
 
                 this.colorTextures.loadLayer(i, imageFile, true);
@@ -272,7 +274,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 }
             }
 
-            System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+            log.info("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
         }
         else
         {
@@ -471,7 +473,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         }
         catch (FileNotFoundException e)
         {
-            e.printStackTrace();
+            log.error("Error updating light calibration:", e);
         }
     }
 

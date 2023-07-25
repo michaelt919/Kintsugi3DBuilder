@@ -17,6 +17,8 @@ import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 import javax.xml.stream.XMLStreamException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Framebuffer;
 import tetzlaff.gl.interactive.InteractiveRenderable;
@@ -24,6 +26,7 @@ import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.io.ViewSetWriterToVSET;
+import tetzlaff.ibrelight.javafx.internal.EnvironmentModelImpl;
 import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.interactive.InitializationException;
 import tetzlaff.models.ReadonlyCameraModel;
@@ -34,6 +37,8 @@ import tetzlaff.util.AbstractImage;
 
 public class IBRInstanceManager<ContextType extends Context<ContextType>> implements LoadingHandler, InteractiveRenderable<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(IBRInstanceManager.class);
+
     private final ContextType context;
 
     private IBRInstance<ContextType> ibrInstance = null;
@@ -65,7 +70,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
     private void handleMissingFiles(Exception e)
     {
-        e.printStackTrace();
+        log.error("An error occurred:", e);
         if (loadingMonitor != null)
         {
             loadingMonitor.loadingFailed(e);
@@ -368,7 +373,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             }
             catch (InitializationException e)
             {
-                e.printStackTrace();
+                log.error("Error occurred initializing new instance:", e);
             }
 
             newInstance = null;

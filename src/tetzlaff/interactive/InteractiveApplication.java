@@ -11,6 +11,9 @@
 
 package tetzlaff.interactive;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -18,6 +21,7 @@ import java.util.List;
 
 public class InteractiveApplication
 {
+    private static final Logger log = LoggerFactory.getLogger(InteractiveApplication.class);
     private final List<EventPollable> pollables;
     private final List<Refreshable> refreshables;
 
@@ -51,7 +55,7 @@ public class InteractiveApplication
         }
         Date startTimestamp = new Date();
         Date timestampA = startTimestamp;
-        System.out.println("Main loop started.");
+        log.info("Main loop started.");
         boolean shouldTerminate = false;
         int refreshTime = 0;
         int pollingTime = 0;
@@ -71,7 +75,7 @@ public class InteractiveApplication
                 }
                 catch(RuntimeException e)
                 {
-                    e.printStackTrace();
+                    log.error("Runtime error occurred:", e);
                 }
             }
             Date timestampB = new Date();
@@ -86,7 +90,7 @@ public class InteractiveApplication
                 }
                 catch(RuntimeException e)
                 {
-                    e.printStackTrace();
+                    log.error("An error occurred while polling events:", e);
                 }
             }
             timestampA = new Date();
@@ -97,7 +101,7 @@ public class InteractiveApplication
             {
                 if (timestampA.getTime() - lastSecond > 1000)
                 {
-                    System.out.println("FPS: " + frames);
+                    log.info("FPS: " + frames);
                     lastSecond = timestampA.getTime();
                     frames = 0;
                 }
@@ -122,11 +126,10 @@ public class InteractiveApplication
             }
         }
 
-        System.out.println("Main loop terminated.");
-        System.out.println("Total time elapsed: " + (timestampA.getTime() - startTimestamp.getTime()) + " milliseconds");
-        System.out.println("Time spent polling for events: " + pollingTime + " milliseconds");
-        System.out.println("Time spent on refreshes: " + refreshTime + " milliseconds");
-
+        log.info("Main loop terminated.");
+        log.info("Total time elapsed: " + (timestampA.getTime() - startTimestamp.getTime()) + " milliseconds");
+        log.info("Time spent polling for events: " + pollingTime + " milliseconds");
+        log.info("Time spent on refreshes: " + refreshTime + " milliseconds");
         for (Refreshable refreshable : this.refreshables)
         {
             try
@@ -135,7 +138,7 @@ public class InteractiveApplication
             }
             catch(RuntimeException e)
             {
-                e.printStackTrace();
+                log.error("Error terminating refreshable:", e);
             }
         }
     }
@@ -166,7 +169,7 @@ public class InteractiveApplication
                     }
                     catch(RuntimeException e)
                     {
-                        e.printStackTrace();
+                        log.error("An error occurred:", e);
                     }
                 }
 
@@ -185,7 +188,7 @@ public class InteractiveApplication
                     }
                     catch(RuntimeException e)
                     {
-                        e.printStackTrace();
+                        log.error("An error has occurred:", e);
                     }
                 }
             }
@@ -201,7 +204,7 @@ public class InteractiveApplication
                     }
                     catch(RuntimeException e)
                     {
-                        e.printStackTrace();
+                        log.error("An error has occurred:", e);
                     }
                 }
             }
@@ -216,7 +219,7 @@ public class InteractiveApplication
                     }
                     catch(RuntimeException e)
                     {
-                        e.printStackTrace();
+                        log.error("An error has occurred:", e);
                     }
                 }
             }
