@@ -139,6 +139,7 @@
       </Menu>
       <Menu text="Help">
           <MenuItem mnemonicParsing="false" onAction="#help_userManual" text="User Manual" />
+          <MenuItem mnemonicParsing="false" onAction="#help_console" text="Console" />
           <MenuItem mnemonicParsing="false" onAction="#help_about" text="About" />
       </Menu>
    </MenuBar>

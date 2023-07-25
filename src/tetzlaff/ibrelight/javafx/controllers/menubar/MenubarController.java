@@ -61,6 +61,7 @@ public class MenubarController
     private final Flag loaderWindowOpen = new Flag(false);
     private final Flag colorCheckerWindowOpen = new Flag(false);
     private final Flag unzipperOpen = new Flag(false);
+    private final Flag consoleWindowOpen = new Flag(false);
 
     @FXML private ProgressBar progressBar;
 
@@ -628,6 +629,23 @@ public class MenubarController
         catch(IOException e)
         {
             log.error("An error occurred opening jvm settings window:", e);
+        }
+    }
+
+    public void help_console(ActionEvent actionEvent)
+    {
+        if (consoleWindowOpen.get())
+        {
+            return;
+        }
+
+        try
+        {
+            makeWindow("Console", consoleWindowOpen, "fxml/menubar/Console.fxml");
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred opening console window:", e);
         }
     }
 }
