@@ -28,6 +28,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import tetzlaff.gl.core.Context;
+import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.IBRRequestQueue;
 import tetzlaff.ibrelight.core.IBRRequestUI;
 import tetzlaff.ibrelight.core.IBRelightModels;
@@ -44,7 +45,7 @@ public class SimpleAnimationUI implements IBRRequestUI
     private final DirectoryChooser directoryChooser = new DirectoryChooser();
     private File lastDirectory;
 
-    private Supplier<Builder<?>> builderSupplier;
+    private Supplier<Builder> builderSupplier;
 
     private Stage stage;
 
@@ -67,7 +68,7 @@ public class SimpleAnimationUI implements IBRRequestUI
         return simpleAnimationUI;
     }
 
-    public void setBuilderSupplier(Supplier<Builder<?>> builderSupplier)
+    public void setBuilderSupplier(Supplier<Builder> builderSupplier)
     {
         this.builderSupplier = builderSupplier;
     }

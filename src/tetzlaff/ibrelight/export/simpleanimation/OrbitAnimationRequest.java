@@ -18,10 +18,10 @@ import tetzlaff.gl.vecmath.Matrix4;
 
 public final class OrbitAnimationRequest<ContextType extends Context<ContextType>> extends SimpleAnimationRequestBase<ContextType>
 {
-    protected static class BuilderImplementation<ContextType extends Context<ContextType>> extends BuilderBase<OrbitAnimationRequest<ContextType>>
+    protected static class BuilderImplementation extends BuilderBase
     {
         @Override
-        public OrbitAnimationRequest<ContextType> create()
+        public <ContextType extends Context<ContextType>> OrbitAnimationRequest<ContextType> create()
         {
             return new OrbitAnimationRequest<>(getWidth(), getHeight(), getFrameCount(), getExportPath());
         }
