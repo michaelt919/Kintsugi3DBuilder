@@ -45,36 +45,7 @@ public class ConsoleController implements Initializable
         logMessages = RecentLogMessageAppender.getInstance();
 
         messageListView.setCellFactory(new LogMessageCellFactory());
-
-        populateListFromCache();
-
-        logMessages.addListener(new LogMessageListener()
-        {
-            @Override
-            public void newLogMessage(LogMessage logMessage)
-            {
-                if (logMessagePassesFilter(logMessage))
-                {
-                    Platform.runLater(() -> {
-                        messageListView.getItems().add(logMessage);
-                    });
-                }
-            }
-        });
-    }
-
-    private void populateListFromCache()
-    {
-        messageListView.getItems().clear();
-        messageListView.getSelectionModel().clearSelection();
-
-        for (LogMessage msg : logMessages.getMessages())
-        {
-            if (logMessagePassesFilter(msg))
-            {
-                messageListView.getItems().add(msg);
-            }
-        }
+        messageListView.setItems(logMessages.getMessages().filtered(this::logMessagePassesFilter));
     }
 
     public void buttonOpenLogDir(ActionEvent actionEvent)
@@ -84,7 +55,11 @@ public class ConsoleController implements Initializable
 
     public void buttonChangeLogLevel(ActionEvent actionEvent)
     {
-        populateListFromCache();
+        FilteredList<LogMessage> filteredList = (FilteredList<LogMessage>) messageListView.getItems();
+        if (filteredList == null)
+            return;
+        filteredList.setPredicate(this::logMessagePassesFilter);
+        messageListView.setItems(filteredList);
     }
 
     private boolean logMessagePassesFilter(LogMessage message)
@@ -130,6 +105,8 @@ public class ConsoleController implements Initializable
                     if (empty || message == null)
                     {
                         setText(null);
+                        setGraphic(null);
+                        setStyle(null);
                     } else
                     {
                         setText(null);

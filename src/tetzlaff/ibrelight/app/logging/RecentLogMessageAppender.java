@@ -1,5 +1,7 @@
 package tetzlaff.ibrelight.app.logging;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Core;
 import org.apache.logging.log4j.core.Filter;
@@ -24,7 +26,7 @@ import java.util.List;
 public class RecentLogMessageAppender extends AbstractAppender
 {
     private static RecentLogMessageAppender INSTANCE;
-    private final List<LogMessage> messages = new ArrayList<>();
+    private final ObservableList<LogMessage> messages = FXCollections.observableArrayList();
     private final List<LogMessageListener> listeners = new ArrayList<>();
     private final PatternLayout layout;
 
@@ -65,7 +67,7 @@ public class RecentLogMessageAppender extends AbstractAppender
         clearOldMessages();
     }
 
-    public List<LogMessage> getMessages()
+    public ObservableList<LogMessage> getMessages()
     {
         return messages;
     }
