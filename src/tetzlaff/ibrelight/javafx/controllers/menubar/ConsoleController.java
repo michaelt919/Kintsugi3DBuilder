@@ -1,34 +1,19 @@
 package tetzlaff.ibrelight.javafx.controllers.menubar;
 
-import com.sun.javafx.collections.ObservableListWrapper;
-import javafx.application.HostServices;
-import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.collections.ObservableListBase;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
-import org.apache.logging.log4j.core.LogEvent;
 import org.slf4j.event.Level;
-import tetzlaff.ibrelight.app.IBRelight;
 import tetzlaff.ibrelight.app.logging.LogMessage;
-import tetzlaff.ibrelight.app.logging.LogMessageListener;
 import tetzlaff.ibrelight.app.logging.RecentLogMessageAppender;
-import tetzlaff.ibrelight.javafx.MainApplication;
 
 import java.net.URL;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.ResourceBundle;
 
 public class ConsoleController implements Initializable
@@ -49,6 +34,33 @@ public class ConsoleController implements Initializable
 
         messageListView.setCellFactory(new LogMessageCellFactory());
         messageListView.setItems(logMessages.getMessages().filtered(this::logMessagePassesFilter));
+
+        // If the logger cannot log a level, disable a filter button
+        if (! logMessages.isLevelAvailable(Level.ERROR))
+        {
+            toggleButtonError.setSelected(false);
+            toggleButtonError.setDisable(true);
+        }
+        if (! logMessages.isLevelAvailable(Level.WARN))
+        {
+            toggleButtonWarn.setSelected(false);
+            toggleButtonWarn.setDisable(true);
+        }
+        if (! logMessages.isLevelAvailable(Level.INFO))
+        {
+            toggleButtonInfo.setSelected(false);
+            toggleButtonInfo.setDisable(true);
+        }
+        if (! logMessages.isLevelAvailable(Level.DEBUG))
+        {
+            toggleButtonDebug.setSelected(false);
+            toggleButtonDebug.setDisable(true);
+        }
+        if (! logMessages.isLevelAvailable(Level.TRACE))
+        {
+            toggleButtonTrace.setSelected(false);
+            toggleButtonTrace.setDisable(true);
+        }
     }
 
     public void buttonOpenLogDir(ActionEvent actionEvent)

@@ -41,13 +41,6 @@ public final class IBRelight
         }
 
         Logger log = LoggerFactory.getLogger(IBRelight.class);
-        log.trace("This is a TRACE log example");
-        log.debug("This is a DEBUG log example");
-        log.info("This is a INFO log example");
-        log.warn("This is a WARN log example");
-        log.error("This is a ERROR log example");
-
-        log.warn("THIS\nIs a multi-line warn message");
 
         //allow render thread to modify user interface thread
         System.setProperty("glass.disableThreadChecks", "true");

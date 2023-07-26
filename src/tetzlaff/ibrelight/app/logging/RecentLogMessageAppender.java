@@ -12,6 +12,8 @@ import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.core.layout.PatternLayout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 import java.time.Instant;
@@ -25,6 +27,7 @@ import java.util.List;
 )
 public class RecentLogMessageAppender extends AbstractAppender
 {
+    private static final Logger logger = LoggerFactory.getLogger(RecentLogMessageAppender.class);
     private static RecentLogMessageAppender INSTANCE;
     private final ObservableList<LogMessage> messages = FXCollections.observableArrayList();
     private final List<LogMessageListener> listeners = new ArrayList<>();
@@ -80,6 +83,11 @@ public class RecentLogMessageAppender extends AbstractAppender
     public void removeListener(LogMessageListener listener)
     {
         listeners.remove(listener);
+    }
+
+    public boolean isLevelAvailable(Level level)
+    {
+        return logger.isEnabledForLevel(level);
     }
 
     private void clearOldMessages()
