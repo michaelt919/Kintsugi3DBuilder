@@ -1,5 +1,6 @@
 package tetzlaff.ibrelight.javafx.controllers.menubar;
 
+import com.sun.javafx.application.HostServicesDelegate;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -7,10 +8,15 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
+import tetzlaff.ibrelight.app.IBRelight;
 import tetzlaff.ibrelight.app.logging.LogMessage;
 import tetzlaff.ibrelight.app.logging.RecentLogMessageAppender;
+import tetzlaff.ibrelight.javafx.MainApplication;
 
+import java.io.File;
 import java.net.URL;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -18,6 +24,8 @@ import java.util.ResourceBundle;
 
 public class ConsoleController implements Initializable
 {
+    private static final Logger log = LoggerFactory.getLogger(ConsoleController.class);
+
     @FXML private ToggleButton toggleButtonError;
     @FXML private ToggleButton toggleButtonInfo;
     @FXML private ToggleButton toggleButtonDebug;
@@ -65,7 +73,15 @@ public class ConsoleController implements Initializable
 
     public void buttonOpenLogDir(ActionEvent actionEvent)
     {
-        //TODO
+        try
+        {
+            File logDir = new File(System.getProperty("IBRelight.logDir"));
+            MainApplication.getAppInstance().getHostServices().showDocument(logDir.getAbsolutePath());
+        }
+        catch (Exception e)
+        {
+            log.error("An error occurred while opening log directory:", e);
+        }
     }
 
     public void buttonChangeLogLevel(ActionEvent actionEvent)

@@ -53,6 +53,18 @@ public class MainApplication extends Application
 {
     private static final Logger log = LoggerFactory.getLogger(MainApplication.class);
 
+    private static MainApplication appInstance;
+
+    public MainApplication()
+    {
+        appInstance = this;
+    }
+
+    public static MainApplication getAppInstance()
+    {
+        return appInstance;
+    }
+
     private static class StageSynchronization implements SynchronizedWindow
     {
         private final Stage stage;

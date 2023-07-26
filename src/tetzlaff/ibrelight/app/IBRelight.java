@@ -11,6 +11,7 @@
 
 package tetzlaff.ibrelight.app;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -77,28 +78,28 @@ public final class IBRelight
         }
     }
 
-    private static String getUserAppDirectory()
+    public static File getUserAppDirectory()
     {
         String os = System.getProperty("os.name").toLowerCase();
 
         // Windows
         if (os.indexOf("win") >= 0)
         {
-            return System.getenv("APPDATA") + "/IBRelight";
+            return new File(new File(System.getenv("APPDATA")), "IBRelight");
         }
 
         // Mac OS
         if (os.indexOf("mac") >= 0)
         {
-            return System.getProperty("user.home") + "/Library/Application Support/IBRelight";
+            return new File(new File(System.getProperty("user.home")), "Library/Application Support/IBRelight");
         }
 
         // Linux and Unix
         if (os.indexOf("nix") >= 0 || os.indexOf("nux") >= 0 || os.indexOf("aix") >= 0)
         {
-            return System.getProperty("user.home") + "/.IBRelight";
+            return new File(new File(System.getProperty("user.home")), ".IBRelight");
         }
 
-        return ".";
+        return new File(".");
     }
 }
