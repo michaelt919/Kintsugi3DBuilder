@@ -14,10 +14,7 @@ package tetzlaff.ibrelight.export.general;
 import java.io.File;
 import java.util.function.Consumer;
 
-import tetzlaff.gl.core.Context;
-import tetzlaff.gl.core.Drawable;
-import tetzlaff.gl.core.FramebufferObject;
-import tetzlaff.gl.core.Program;
+import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.io.ViewSetReaderFromVSET;
 import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
@@ -87,7 +84,7 @@ class MultiviewRetargetRenderRequest<ContextType extends Context<ContextType>> e
 
                 File exportFile = new File(getOutputDirectory(), fileName);
                 getOutputDirectory().mkdirs();
-                framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
+                framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", exportFile);
 
                 if (callback != null)
                 {

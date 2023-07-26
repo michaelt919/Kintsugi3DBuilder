@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Drawable;
 import tetzlaff.gl.core.Framebuffer;
-import tetzlaff.gl.core.PrimitiveMode;
 import tetzlaff.util.ColorList;
 import tetzlaff.util.ColorNativeBufferList;
 
@@ -133,7 +132,7 @@ public class ParallelViewRenderStream<ContextType extends Context<ContextType>> 
 
 
             // Copy framebuffer from GPU to main memory.
-            IntStream.range(0, attachmentCount).forEach(i -> framebuffer.readFloatingPointColorBufferRGBA(i, colorBuffers[i].buffer));
+            IntStream.range(0, attachmentCount).forEach(i -> framebuffer.getTextureReaderForColorAttachment(i).readFloatingPointRGBA(colorBuffers[i].buffer));
 
             synchronized (threadsRunningLock)
             {

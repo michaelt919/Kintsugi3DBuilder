@@ -73,7 +73,7 @@ public final class FinalErrorCalculaton
                 textureRect.draw(PrimitiveMode.TRIANGLE_FAN, textureRectFBO);
 //                    textureRectFBO.saveColorBufferToFile(0, "PNG", new File(textureFitSettings.outputDirectory, "test_normalGT.png"));
 
-                float[] groundTruth = textureRectFBO.readFloatingPointColorBufferRGBA(0);
+                float[] groundTruth = textureRectFBO.getTextureReaderForColorAttachment(0).readFloatingPointRGBA();
                 float[] estimate = specularFit.getNormalMap().getColorTextureReader().readFloatingPointRGBA();
 
                 double rmse = Math.sqrt( // root
@@ -214,8 +214,8 @@ public final class FinalErrorCalculaton
             drawable.draw(framebuffer);
 
             // Copy framebuffer from GPU to main memory.
-            framebuffer.readFloatingPointColorBufferRGBA(0, pixelErrors);
-//            float[] pixelErrors = framebuffer.readFloatingPointColorBufferRGBA(0);
+            framebuffer.getTextureReaderForColorAttachment(0).readFloatingPointRGBA(pixelErrors);
+            //            float[] pixelErrors = framebuffer.readFloatingPointColorBufferRGBA(0);
 
             // Add up per-pixel error.
             WeightedError errorViewTotal = IntStream.range(0, pixelErrors.limit() / 4)

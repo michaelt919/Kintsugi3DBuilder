@@ -78,7 +78,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
 //                }
 //            }
 
-            float[] averages = framebuffer.readFloatingPointColorBufferRGBA(0);
+            float[] averages = framebuffer.getTextureReaderForColorAttachment(0).readFloatingPointRGBA();
 
             List<Vector3> centers = new KMeansClustering(new ColorArrayList(averages)).makeClusters(solution.getWeightsList());
 

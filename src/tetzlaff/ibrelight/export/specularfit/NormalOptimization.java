@@ -193,8 +193,8 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     {
         try
         {
-            estimateNormals.getFrontFramebuffer().saveColorBufferToFile(0, "PNG",
-                new File(outputDirectory, "normal.png"));
+            Framebuffer<ContextType> contextTypeFramebuffer = estimateNormals.getFrontFramebuffer();
+            contextTypeFramebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(outputDirectory, "normal.png"));
         }
         catch (IOException e)
         {

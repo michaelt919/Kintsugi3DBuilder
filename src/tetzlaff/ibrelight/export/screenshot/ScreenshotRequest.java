@@ -112,11 +112,11 @@ public class ScreenshotRequest<ContextType extends Context<ContextType>> impleme
             String fileNameLowerCase = exportFile.getName().toLowerCase();
             if (fileNameLowerCase.endsWith(".png"))
             {
-                framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
+                framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", exportFile);
             }
             else if (fileNameLowerCase.endsWith(".jpg") || fileNameLowerCase.endsWith(".jpeg"))
             {
-                framebuffer.saveColorBufferToFile(0, "JPEG", exportFile);
+                framebuffer.getTextureReaderForColorAttachment(0).saveToFile("JPEG", exportFile);
             }
 
             if (callback != null)

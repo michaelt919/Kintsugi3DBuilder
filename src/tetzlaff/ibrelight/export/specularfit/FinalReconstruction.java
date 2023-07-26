@@ -33,7 +33,6 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
 {
     private static final Logger log = LoggerFactory.getLogger(FinalReconstruction.class);
     private final ReadonlyIBRResources<ContextType> resources;
-    private final TextureFitSettings textureFitSettings;
     private final ReconstructionSettings reconstructionSettings;
 
     private final int imageWidth;
@@ -42,7 +41,6 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
     public FinalReconstruction(ReadonlyIBRResources<ContextType> resources, TextureFitSettings textureFitSettings, ReconstructionSettings reconstructionSettings)
     {
         this.resources = resources;
-        this.textureFitSettings = textureFitSettings;
         this.reconstructionSettings = reconstructionSettings;
 
         // Calculate reasonable image resolution for reconstructed images (supplemental output)
@@ -50,12 +48,12 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
             resources.getViewSet().getPrimaryViewIndex()));
         if (defaultProj.getAspectRatio() < 1.0)
         {
-            imageWidth = this.textureFitSettings.width;
+            imageWidth = textureFitSettings.width;
             imageHeight = Math.round(imageWidth / defaultProj.getAspectRatio());
         }
         else
         {
-            imageHeight = this.textureFitSettings.height;
+            imageHeight = textureFitSettings.height;
             imageWidth = Math.round(imageHeight * defaultProj.getAspectRatio());
         }
     }
@@ -163,8 +161,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         try
         {
             String filename = String.format("%04d.png", k);
-            framebuffer.saveColorBufferToFile(0, "PNG",
-                new File(new File(outputDirectory, directoryName), filename));
+            framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(new File(outputDirectory, directoryName), filename));
         }
         catch (IOException e)
         {
@@ -176,8 +173,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
     {
         try
         {
-            framebuffer.saveColorBufferToFile(0, "PNG",
-                new File(outputDirectory, filename));
+            framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(outputDirectory, filename));
         }
         catch (IOException e)
         {

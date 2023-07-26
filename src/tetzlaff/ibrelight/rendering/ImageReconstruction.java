@@ -102,7 +102,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
             reconstructionAction.accept(framebuffer);
         }
 
-        float[] reconstruction = framebuffer.readFloatingPointColorBufferRGBA(0);
+        float[] reconstruction = framebuffer.getTextureReaderForColorAttachment(0).readFloatingPointRGBA();
 
         log.info("View " + viewIndex + ':');
 
@@ -142,7 +142,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                 groundTruthAction.accept(framebuffer);
             }
 
-            float[] groundTruth = framebuffer.readFloatingPointColorBufferRGBA(0);
+            float[] groundTruth = framebuffer.getTextureReaderForColorAttachment(0).readFloatingPointRGBA();
 
             long sampleCount = IntStream.range(0, groundTruth.length / 4)
                 .parallel()
