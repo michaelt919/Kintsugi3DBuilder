@@ -5,12 +5,13 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.util.Callback;
 import org.apache.logging.log4j.core.LogEvent;
+import org.slf4j.event.Level;
 import tetzlaff.ibrelight.app.IBRelight;
 import tetzlaff.ibrelight.app.logging.LogMessage;
 import tetzlaff.ibrelight.app.logging.LogMessageListener;
@@ -84,7 +85,26 @@ public class ConsoleController implements Initializable
                         setText(null);
                     } else
                     {
-                        setText(message.getMessage());
+                        setText(null);
+
+                        Label levelLabel = new Label(message.getLogLevel().toString());
+                        levelLabel.setPrefWidth(40);
+                        Label messageLabel = new Label(message.getMessage());
+
+                        HBox box = new HBox(levelLabel, messageLabel);
+
+                        box.setSpacing(10);
+
+                        if (message.getLogLevel() == Level.ERROR)
+                        {
+                            setStyle("-fx-background-color: #fa6d6d");
+                        }
+                        else if (message.getLogLevel() == Level.WARN)
+                        {
+                            setStyle("-fx-background-color: #fab66d");
+                        }
+
+                        setGraphic(box);
                     }
                 }
             };
