@@ -2,8 +2,8 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 
@@ -12,11 +12,11 @@
       <ListView fx:id="messageListView" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="50.0" />
       <HBox spacing="15.0">
          <children>
-            <CheckBox fx:id="checkboxFatal" mnemonicParsing="false" text="Fatal" />
-            <CheckBox fx:id="checkboxError" mnemonicParsing="false" text="Error" />
-            <CheckBox fx:id="checkboxInfo" mnemonicParsing="false" text="Info" />
-            <CheckBox fx:id="checkboxDebug" mnemonicParsing="false" text="Debug" />
-            <CheckBox fx:id="checkboxTrace" mnemonicParsing="false" text="Trace" />
+            <ToggleButton fx:id="toggleButtonError" mnemonicParsing="false" onAction="#buttonChangeLogLevel" selected="true" text="Show Errors" />
+            <ToggleButton fx:id="toggleButtonWarn" mnemonicParsing="false" onAction="#buttonChangeLogLevel" selected="true" text="Show Warnings" />
+            <ToggleButton fx:id="toggleButtonInfo" mnemonicParsing="false" onAction="#buttonChangeLogLevel" selected="true" text="Show Info" />
+            <ToggleButton fx:id="toggleButtonDebug" mnemonicParsing="false" onAction="#buttonChangeLogLevel" selected="true" text="Show Debug" />
+            <ToggleButton fx:id="toggleButtonTrace" mnemonicParsing="false" onAction="#buttonChangeLogLevel" selected="true" text="Show Trace" />
             <Button mnemonicParsing="false" onAction="#buttonOpenLogDir" text="Open Logs Directory" />
          </children>
          <opaqueInsets>

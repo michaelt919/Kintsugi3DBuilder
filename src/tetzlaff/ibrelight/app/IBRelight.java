@@ -47,6 +47,8 @@ public final class IBRelight
         log.warn("This is a WARN log example");
         log.error("This is a ERROR log example");
 
+        log.warn("THIS\nIs a multi-line warn message");
+
         //allow render thread to modify user interface thread
         System.setProperty("glass.disableThreadChecks", "true");
         //TODO see com.sun.glass.ui.Application.java line 434

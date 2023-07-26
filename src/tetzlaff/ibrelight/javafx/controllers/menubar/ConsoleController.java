@@ -1,7 +1,12 @@
 package tetzlaff.ibrelight.javafx.controllers.menubar;
 
+import com.sun.javafx.collections.ObservableListWrapper;
 import javafx.application.HostServices;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.ObservableListBase;
+import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -19,16 +24,17 @@ import tetzlaff.ibrelight.app.logging.RecentLogMessageAppender;
 import tetzlaff.ibrelight.javafx.MainApplication;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
 public class ConsoleController implements Initializable
 {
-    @FXML private CheckBox checkboxError;
-    @FXML private CheckBox checkboxInfo;
-    @FXML private CheckBox checkboxDebug;
-    @FXML private CheckBox checkboxTrace;
-    @FXML private CheckBox checkboxFatal;
+    @FXML private ToggleButton toggleButtonError;
+    @FXML private ToggleButton toggleButtonInfo;
+    @FXML private ToggleButton toggleButtonDebug;
+    @FXML private ToggleButton toggleButtonTrace;
+    @FXML private ToggleButton toggleButtonWarn;
     @FXML private ListView<LogMessage> messageListView;
 
     private RecentLogMessageAppender logMessages;
@@ -47,9 +53,12 @@ public class ConsoleController implements Initializable
             @Override
             public void newLogMessage(LogMessage logMessage)
             {
-                Platform.runLater(() -> {
-                    messageListView.getItems().add(logMessage);
-                });
+                if (logMessagePassesFilter(logMessage))
+                {
+                    Platform.runLater(() -> {
+                        messageListView.getItems().add(logMessage);
+                    });
+                }
             }
         });
     }
@@ -57,10 +66,14 @@ public class ConsoleController implements Initializable
     private void populateListFromCache()
     {
         messageListView.getItems().clear();
+        messageListView.getSelectionModel().clearSelection();
 
         for (LogMessage msg : logMessages.getMessages())
         {
-            messageListView.getItems().add(msg);
+            if (logMessagePassesFilter(msg))
+            {
+                messageListView.getItems().add(msg);
+            }
         }
     }
 
@@ -69,7 +82,41 @@ public class ConsoleController implements Initializable
         //TODO
     }
 
-    private class LogMessageCellFactory implements Callback<ListView<LogMessage>, ListCell<LogMessage>>
+    public void buttonChangeLogLevel(ActionEvent actionEvent)
+    {
+        populateListFromCache();
+    }
+
+    private boolean logMessagePassesFilter(LogMessage message)
+    {
+        switch (message.getLogLevel())
+        {
+            case ERROR:
+                if (! toggleButtonError.isSelected())
+                    return false;
+                break;
+            case WARN:
+                if (! toggleButtonWarn.isSelected())
+                    return false;
+                break;
+            case INFO:
+                if (! toggleButtonInfo.isSelected())
+                    return false;
+                break;
+            case DEBUG:
+                if (! toggleButtonDebug.isSelected())
+                    return false;
+                break;
+            case TRACE:
+                if (! toggleButtonTrace.isSelected())
+                    return false;
+                break;
+        }
+
+        return true;
+    }
+
+    private static class LogMessageCellFactory implements Callback<ListView<LogMessage>, ListCell<LogMessage>>
     {
         @Override
         public ListCell<LogMessage> call(ListView<LogMessage> logMessageListView)
