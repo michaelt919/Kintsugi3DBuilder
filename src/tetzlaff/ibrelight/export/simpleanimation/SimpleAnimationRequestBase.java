@@ -28,7 +28,7 @@ public abstract class SimpleAnimationRequestBase<ContextType extends Context<Con
     private final int frameCount;
     private final File exportPath;
 
-    public interface Builder<RequestType extends SimpleAnimationRequestBase>
+    public interface Builder<RequestType extends SimpleAnimationRequestBase<?>>
     {
         Builder<RequestType> setWidth(int width);
         Builder<RequestType> setHeight(int height);
@@ -37,7 +37,7 @@ public abstract class SimpleAnimationRequestBase<ContextType extends Context<Con
         RequestType create();
     }
 
-    protected abstract static class BuilderBase<RequestType extends SimpleAnimationRequestBase> implements  Builder<RequestType>
+    protected abstract static class BuilderBase<RequestType extends SimpleAnimationRequestBase<?>> implements  Builder<RequestType>
     {
         private int width;
         private int height;
@@ -132,7 +132,7 @@ public abstract class SimpleAnimationRequestBase<ContextType extends Context<Con
 
                 File exportFile = new File(exportPath, String.format("%04d.png", i));
                 exportFile.getParentFile().mkdirs();
-                framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
+                framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", exportFile);
 
                 if (callback != null)
                 {

@@ -140,8 +140,7 @@ public class PTMReconstruction <ContextType extends Context<ContextType>> implem
         try
         {
             String filename = String.format("%04d.png", k);
-            framebuffer.saveColorBufferToFile(0, "PNG",
-                    new File(new File(outputParentDirectory, directoryName), filename));
+            framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(new File(outputParentDirectory, directoryName), filename));
         }
         catch (IOException e)
         {

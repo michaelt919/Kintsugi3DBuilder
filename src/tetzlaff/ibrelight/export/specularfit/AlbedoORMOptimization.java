@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.TextureFitSettings;
-import tetzlaff.util.ShaderHoleFill;
 
 public final class AlbedoORMOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -124,8 +123,8 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
     {
         try
         {
-            framebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, "albedo.png"));
-            framebuffer.saveColorBufferToFile(1, "PNG", new File(outputDirectory, "orm.png"));
+            framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(outputDirectory, "albedo.png"));
+            framebuffer.getTextureReaderForColorAttachment(1).saveToFile("PNG", new File(outputDirectory, "orm.png"));
         }
         catch (IOException e)
         {

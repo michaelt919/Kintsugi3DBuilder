@@ -228,7 +228,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 File imageFile = viewSet.findPreviewPrimaryImageFile();
 
                 // Read a single image to get the dimensions for the texture array
-                BufferedImage img = null;
+                BufferedImage img;
                 try (InputStream input = new FileInputStream(imageFile)) // myZip.retrieveFile(imageFile);
                 {
                     img = ImageIO.read(input);
@@ -320,7 +320,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
                     // Create a depth map generator -- includes the depth map program and drawable
                     DepthMapGenerator<ContextType> depthMapGenerator =
-                        DepthMapGenerator.createFromGeometryResources(getGeometryResources());
+                        DepthMapGenerator.createFromGeometryResources(getGeometryResources())
                 )
                 {
                     double minDepth = viewSet.getRecommendedFarPlane();
@@ -395,7 +395,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     {
         double minDepth = farPlane;
 
-        short[] depthBufferData = depthFramebuffer.readDepthBuffer();
+        short[] depthBufferData = depthFramebuffer.getTextureReaderForDepthAttachment().read();
         for (short encodedDepth : depthBufferData)
         {
             int nonlinearDepth = 0xFFFF & (int) encodedDepth;

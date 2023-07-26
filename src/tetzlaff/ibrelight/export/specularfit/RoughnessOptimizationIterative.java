@@ -124,7 +124,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
         roughnessOptimization.runUntilConvergence(
             framebuffer ->
             {
-                float[] dampingError = framebuffer.readFloatingPointColorBufferRGBA(2);
+                float[] dampingError = framebuffer.getTextureReaderForColorAttachment(2).readFloatingPointRGBA();
                 errorReport.setError(IntStream.range(0, settings.width * settings.height)
                     .parallel()
                     .mapToDouble(p -> dampingError[4 * p + 1])

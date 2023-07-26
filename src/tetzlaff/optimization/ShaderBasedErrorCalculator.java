@@ -91,7 +91,7 @@ public class ShaderBasedErrorCalculator<ContextType extends Context<ContextType>
         drawable.draw(framebuffer);
 
         // Copy framebuffer from GPU to main memory.
-        float[] pixelErrors = framebuffer.readFloatingPointColorBufferRGBA(0);
+        float[] pixelErrors = framebuffer.getTextureReaderForColorAttachment(0).readFloatingPointRGBA();
 
         // Add up per-pixel error.
         WeightedError errorTotal = IntStream.range(0, report.getSampleCount())

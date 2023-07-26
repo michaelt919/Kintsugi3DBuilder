@@ -86,8 +86,8 @@ public class SceneViewportModel<ContextType extends Context<ContextType>> implem
             pixelDepthBuffer.clear();
         }
 
-        offscreenFBO.readIntegerColorBufferRGBA(1, pixelObjectIDBuffer);
-        offscreenFBO.readDepthBuffer(pixelDepthBuffer);
+        offscreenFBO.getTextureReaderForColorAttachment(1).readIntegerRGBA(pixelObjectIDBuffer);
+        offscreenFBO.getTextureReaderForDepthAttachment().read(pixelDepthBuffer);
     }
 
     @Override

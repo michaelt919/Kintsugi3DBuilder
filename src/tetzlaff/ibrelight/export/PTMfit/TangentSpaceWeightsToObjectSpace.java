@@ -107,8 +107,7 @@ public class TangentSpaceWeightsToObjectSpace <ContextType extends Context<Conte
             for (int i = 0; i < weightCount; i++)
             {
                 String filename = String.format("objWeights%02d.png", weightStart + i);
-                framebuffer.saveColorBufferToFile(i, "PNG",
-                        new File(outputDirectory, filename));
+                framebuffer.getTextureReaderForColorAttachment(i).saveToFile("PNG", new File(outputDirectory, filename));
             }
         }
         catch (IOException e)

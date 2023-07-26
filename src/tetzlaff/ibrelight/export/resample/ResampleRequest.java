@@ -67,7 +67,7 @@ public class ResampleRequest<ContextType extends Context<ContextType>> implement
                         .collect(Collectors.joining(".")));
 
                 exportFile.getParentFile().mkdirs();
-                framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
+                framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", exportFile);
 
                 if (callback != null)
                 {
