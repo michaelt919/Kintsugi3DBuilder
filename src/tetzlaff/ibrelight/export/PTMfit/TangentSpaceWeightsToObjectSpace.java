@@ -40,7 +40,7 @@ public class TangentSpaceWeightsToObjectSpace <ContextType extends Context<Conte
 
     public void run(PTMsolution solutions, ProgramBuilder<ContextType> programBuilder, int weightStart, int weightCount, File outputDirectory)
     {
-        try (Program<ContextType> program = programBuilder.createProgram();
+        try (ProgramObject<ContextType> program = programBuilder.createProgram();
              FramebufferObject<ContextType> fbo = resources.getContext().buildFramebufferObject(settings.width, settings.height)
                  .addColorAttachments(ColorFormat.RGBA8, weightCount)
                  .createFramebufferObject();

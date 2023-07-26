@@ -25,7 +25,7 @@ import tetzlaff.ibrelight.core.ReadonlyViewSet;
  */
 public class DepthMapGenerator<ContextType extends Context<ContextType>> implements Resource
 {
-    private final Program<ContextType> depthRenderingProgram;
+    private final ProgramObject<ContextType> depthRenderingProgram;
     private final Drawable<ContextType> depthDrawable;
     private final GeometryResources<ContextType> geometryResources;
 

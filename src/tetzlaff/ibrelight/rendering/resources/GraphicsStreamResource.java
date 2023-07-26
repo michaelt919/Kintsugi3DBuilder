@@ -17,7 +17,6 @@ import java.util.function.*;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
-import tetzlaff.util.ColorArrayList;
 import tetzlaff.util.ColorList;
 
 /**
@@ -27,7 +26,7 @@ import tetzlaff.util.ColorList;
  */
 public class GraphicsStreamResource<ContextType extends Context<ContextType>> implements GraphicsStream<ColorList[]>, AutoCloseable
 {
-    private final Program<ContextType> program;
+    private final ProgramObject<ContextType> program;
     private final FramebufferObject<ContextType> framebuffer;
     private final GraphicsStream<ColorList[]> base;
 

@@ -68,7 +68,7 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
                     .addColorAttachment(ColorFormat.RGBA32F) // color
                     .addColorAttachment(ColorFormat.RGBA32F) // color
                     .createFramebufferObject();
-                Program<ContextType> averageProgram = getColorAverageProgramBuilder(programFactory).createProgram())
+                ProgramObject<ContextType> averageProgram = getColorAverageProgramBuilder(programFactory).createProgram())
             {
                 resources.setupShaderProgram(averageProgram);
                 Drawable<ContextType> averageDrawable = resources.createDrawable(averageProgram);

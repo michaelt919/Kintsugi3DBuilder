@@ -27,7 +27,7 @@ public class Grid<ContextType extends Context<ContextType>> implements RenderedC
     private final ContextType context;
     private final SceneModel sceneModel;
 
-    private Program<ContextType> solidProgram;
+    private ProgramObject<ContextType> solidProgram;
     private VertexBuffer<ContextType> gridVertices;
     private Drawable<ContextType> gridDrawable;
 
@@ -77,7 +77,7 @@ public class Grid<ContextType extends Context<ContextType>> implements RenderedC
     public void reloadShaders() throws FileNotFoundException
     {
 
-        Program<ContextType> newSolidProgram = context.getShaderProgramBuilder()
+        ProgramObject<ContextType> newSolidProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
                 .createProgram();

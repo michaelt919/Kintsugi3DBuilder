@@ -20,27 +20,22 @@ import tetzlaff.gl.core.*;
 public class ShaderBasedErrorCalculator<ContextType extends Context<ContextType>> implements Resource
 {
     // Compare fitted models against actual photographs
-    private Program<ContextType> program;
-    private Drawable<ContextType> drawable;
+    private ProgramObject<ContextType> program;
+    private final Drawable<ContextType> drawable;
 
     // Framebuffer for calculating error and reconstructing 3D renderings of the object
     private FramebufferObject<ContextType> framebuffer;
 
     private final ErrorReport report;
 
-    public ShaderBasedErrorCalculator(int sampleCount)
-    {
-        this.report = new ErrorReport(sampleCount);
-    }
-
     public static <ContextType extends Context<ContextType>> ShaderBasedErrorCalculator<ContextType> create(
-            ContextType context, Supplier<Program<ContextType>> programFactory,
+            ContextType context, Supplier<ProgramObject<ContextType>> programFactory,
             Function<Program<ContextType>, Drawable<ContextType>> drawableFactory, int imageWidth, int imageHeight)
     {
         return new ShaderBasedErrorCalculator<>(context, programFactory, drawableFactory, imageWidth, imageHeight);
     }
 
-    private ShaderBasedErrorCalculator(ContextType context, Supplier<Program<ContextType>> programFactory,
+    private ShaderBasedErrorCalculator(ContextType context, Supplier<ProgramObject<ContextType>> programFactory,
         Function<Program<ContextType>, Drawable<ContextType>> drawableFactory, int imageWidth, int imageHeight)
     {
         this.program = programFactory.get();

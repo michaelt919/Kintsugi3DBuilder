@@ -29,7 +29,7 @@ public class Environment<ContextType extends Context<ContextType>> implements Re
     private final SceneModel sceneModel;
     private final SceneViewportModel<ContextType> sceneViewportModel;
 
-    private Program<ContextType> environmentBackgroundProgram;
+    private ProgramObject<ContextType> environmentBackgroundProgram;
     private Drawable<ContextType> environmentBackgroundDrawable;
     private VertexBuffer<ContextType> rectangleVertices;
 
@@ -60,7 +60,7 @@ public class Environment<ContextType extends Context<ContextType>> implements Re
     @Override
     public void reloadShaders() throws Exception
     {
-        Program<ContextType> newEnvironmentBackgroundProgram = context.getShaderProgramBuilder()
+        ProgramObject<ContextType> newEnvironmentBackgroundProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
                 .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
                 .createProgram();

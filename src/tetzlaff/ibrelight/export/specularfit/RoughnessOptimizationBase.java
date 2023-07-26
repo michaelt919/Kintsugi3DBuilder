@@ -13,7 +13,7 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
 {
     private static final Logger log = LoggerFactory.getLogger(RoughnessOptimizationBase.class);
 
-    protected final Program<ContextType> specularRoughnessFitProgram;
+    protected final ProgramObject<ContextType> specularRoughnessFitProgram;
     protected final VertexBuffer<ContextType> rect;
     protected final Drawable<ContextType> specularRoughnessFitDrawable;
 

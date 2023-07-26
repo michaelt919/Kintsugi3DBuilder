@@ -41,7 +41,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
         this.specularBasisSettings = specularBasisSettings;
     }
 
-    private Program<ContextType> createAverageProgram(SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
+    private ProgramObject<ContextType> createAverageProgram(SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {
         return programFactory.createProgram(resources,
             new File("shaders/common/texspace_dynamic.vert"),
@@ -50,8 +50,8 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
 
     public void initialize(SpecularFitProgramFactory<ContextType> programFactory, SpecularDecomposition solution)
     {
-        try (Program<ContextType> averageProgram = createAverageProgram(programFactory);
-            FramebufferObject<ContextType> framebuffer =
+        try (ProgramObject<ContextType> averageProgram = createAverageProgram(programFactory);
+             FramebufferObject<ContextType> framebuffer =
                 resources.getContext().buildFramebufferObject(solution.getTextureFitSettings().width, solution.getTextureFitSettings().height)
                     .addColorAttachment(ColorFormat.RGBA32F)
                     .createFramebufferObject())

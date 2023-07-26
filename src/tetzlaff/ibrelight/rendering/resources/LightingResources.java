@@ -26,7 +26,7 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
     private final ContextType context;
     private final SceneModel sceneModel;
 
-    private Program<ContextType> shadowProgram;
+    private ProgramObject<ContextType> shadowProgram;
 
     private Texture3D<ContextType> shadowMaps;
     private FramebufferObject<ContextType> shadowFramebuffer;

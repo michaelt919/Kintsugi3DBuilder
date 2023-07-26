@@ -384,7 +384,7 @@ public class SpecularOptimization
     }
 
     private static <ContextType extends Context<ContextType>>
-    Program<ContextType> createErrorCalcProgram(
+    ProgramObject<ContextType> createErrorCalcProgram(
         ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
         try

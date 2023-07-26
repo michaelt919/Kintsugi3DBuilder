@@ -12,10 +12,7 @@
 package tetzlaff.ibrelight.rendering;
 
 import tetzlaff.gl.builders.ProgramBuilder;
-import tetzlaff.gl.core.Context;
-import tetzlaff.gl.core.Program;
-import tetzlaff.gl.core.SamplerType;
-import tetzlaff.gl.core.ShaderType;
+import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
@@ -38,7 +35,7 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
     private final LightingResources<ContextType> lightingResources;
     private final SceneModel sceneModel;
 
-    private Program<ContextType> program;
+    private ProgramObject<ContextType> program;
 
     public StandardShader(IBRResourcesImageSpace<ContextType> resources, LightingResources<ContextType> lightingResources,
                           SceneModel sceneModel)
@@ -63,7 +60,7 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
 
     public void reload(StandardRenderingMode newRenderingMode) throws FileNotFoundException
     {
-        Program<ContextType> newProgram = loadMainProgram(getPreprocessorDefines(), newRenderingMode);
+        ProgramObject<ContextType> newProgram = loadMainProgram(getPreprocessorDefines(), newRenderingMode);
 
         if (this.program != null)
         {
@@ -88,7 +85,7 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
         return programBuilder;
     }
 
-    private Program<ContextType> loadMainProgram(Map<String, Optional<Object>> defineMap, StandardRenderingMode renderingMode) throws FileNotFoundException
+    private ProgramObject<ContextType> loadMainProgram(Map<String, Optional<Object>> defineMap, StandardRenderingMode renderingMode) throws FileNotFoundException
     {
         return this.getProgramBuilder(defineMap, renderingMode)
                 .define("SPOTLIGHTS_ENABLED", true)

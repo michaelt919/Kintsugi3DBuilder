@@ -58,7 +58,7 @@ class MultiframeRenderRequest<ContextType extends Context<ContextType>> extends 
 
         try
         (
-            Program<ContextType> program = createProgram(resources);
+            ProgramObject<ContextType> program = createProgram(resources);
             FramebufferObject<ContextType> framebuffer = createFramebuffer(resources.getContext())
         )
         {

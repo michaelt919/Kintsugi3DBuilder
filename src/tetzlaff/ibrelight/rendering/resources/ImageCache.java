@@ -127,7 +127,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
     private void selectSampleLocations(Framebuffer<ContextType> fbo) throws IOException
     {
 
-        try (Program<ContextType> maskProgram = context.getShaderProgramBuilder()
+        try (ProgramObject<ContextType> maskProgram = context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_dynamic.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/common/solid.frag"))
             .createProgram())
@@ -270,7 +270,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         loadOptions.setMipmapsRequested(false);
         loadOptions.setDepthImagesRequested(true);
 
-        try(Program<ContextType> texSpaceProgram = SingleCalibratedImageResource.getShaderProgramBuilder(context, resources.getViewSet(), loadOptions)
+        try(ProgramObject<ContextType> texSpaceProgram = SingleCalibratedImageResource.getShaderProgramBuilder(context, resources.getViewSet(), loadOptions)
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_dynamic.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/colorappearance/projtex_single.frag"))
             .createProgram())

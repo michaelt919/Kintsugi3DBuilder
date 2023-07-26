@@ -30,7 +30,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
     private final ContextType context;
 
     // Final diffuse estimation program
-    private final Program<ContextType> estimationProgram;
+    private final ProgramObject<ContextType> estimationProgram;
     private final TextureFitSettings textureFitSettings;
 
     // Framebuffer for storing the diffuse solution
@@ -112,7 +112,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
     }
 
     private static <ContextType extends Context<ContextType>>
-        Program<ContextType> createDiffuseEstimationProgram(
+    ProgramObject<ContextType> createDiffuseEstimationProgram(
             ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {
         return programFactory.createProgram(resources,

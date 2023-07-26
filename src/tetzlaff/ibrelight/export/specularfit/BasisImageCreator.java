@@ -21,7 +21,7 @@ import tetzlaff.ibrelight.export.specularfit.settings.SpecularBasisSettings;
 public class BasisImageCreator<ContextType extends Context<ContextType>> implements AutoCloseable
 {
     // Program for drawing basis functions as supplemental output
-    private final Program<ContextType> program;
+    private final ProgramObject<ContextType> program;
 
     // Rectangle vertex buffer
     private final VertexBuffer<ContextType> rect;

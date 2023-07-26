@@ -31,8 +31,8 @@ import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable
 {
     private static final Logger log = LoggerFactory.getLogger(ImageReconstruction.class);
-    private final Program<ContextType> program;
-    private final Program<ContextType> groundTruthProgram;
+    private final ProgramObject<ContextType> program;
+    private final ProgramObject<ContextType> groundTruthProgram;
 
     private final Drawable<ContextType> drawable;
     private final Drawable<ContextType> groundTruthDrawable;

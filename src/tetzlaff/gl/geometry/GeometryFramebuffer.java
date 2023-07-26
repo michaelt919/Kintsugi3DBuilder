@@ -55,7 +55,7 @@ public class GeometryFramebuffer<ContextType extends Context<ContextType>> imple
         this(geometry.context, width, height);
 
         // Use a shader program to initialize the framebuffer once
-        try(Program<ContextType> program = geometry.context.getShaderProgramBuilder()
+        try(ProgramObject<ContextType> program = geometry.context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/common/geomBuffers.frag"))
             .createProgram())

@@ -51,7 +51,7 @@ class MultiviewRenderRequest<ContextType extends Context<ContextType>> extends R
 
         try
         (
-            Program<ContextType> program = createProgram(resources);
+            ProgramObject<ContextType> program = createProgram(resources);
             FramebufferObject<ContextType> framebuffer = createFramebuffer(resources.getContext())
         )
         {

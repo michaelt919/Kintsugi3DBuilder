@@ -58,7 +58,7 @@ class MultiviewRetargetRenderRequest<ContextType extends Context<ContextType>> e
 
         try
         (
-            Program<ContextType> program = createProgram(resources);
+            ProgramObject<ContextType> program = createProgram(resources);
             FramebufferObject<ContextType> framebuffer = createFramebuffer(resources.getContext())
         )
         {

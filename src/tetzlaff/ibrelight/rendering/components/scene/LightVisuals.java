@@ -37,17 +37,17 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
     private final SceneModel sceneModel;
     private final SceneViewportModel<ContextType> sceneViewportModel;
 
-    private Program<ContextType> lightProgram;
+    private ProgramObject<ContextType> lightProgram;
     private VertexBuffer<ContextType> rectangleVertices;
     private Texture2D<ContextType> lightTexture;
     private Texture2D<ContextType> lightCenterTexture;
     private Drawable<ContextType> lightDrawable;
 
-    private Program<ContextType> solidProgram;
+    private ProgramObject<ContextType> solidProgram;
     private VertexBuffer<ContextType> widgetVertices;
     private Drawable<ContextType> widgetDrawable;
 
-    private Program<ContextType> circleProgram;
+    private ProgramObject<ContextType> circleProgram;
     private Drawable<ContextType> circleDrawable;
 
     public LightVisuals(ContextType context, SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
@@ -137,7 +137,7 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
     @Override
     public void reloadShaders() throws FileNotFoundException
     {
-        Program<ContextType> newLightProgram = context.getShaderProgramBuilder()
+        ProgramObject<ContextType> newLightProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "light.frag"))
                 .createProgram();
@@ -151,7 +151,7 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
         this.lightDrawable = context.createDrawable(this.lightProgram);
         this.lightDrawable.addVertexBuffer("position", rectangleVertices);
 
-        Program<ContextType> newWidgetProgram = context.getShaderProgramBuilder()
+        ProgramObject<ContextType> newWidgetProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
                 .createProgram();
@@ -166,7 +166,7 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
         this.widgetDrawable = context.createDrawable(this.solidProgram);
         this.widgetDrawable.addVertexBuffer("position", widgetVertices);
 
-        Program<ContextType> newCircleProgram = context.getShaderProgramBuilder()
+        ProgramObject<ContextType> newCircleProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "circle.frag"))
                 .createProgram();

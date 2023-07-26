@@ -20,6 +20,7 @@ import java.util.Map.Entry;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Program;
+import tetzlaff.gl.core.ProgramObject;
 import tetzlaff.gl.core.ShaderType;
 import tetzlaff.ibrelight.export.specularfit.settings.SpecularBasisSettings;
 import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
@@ -68,7 +69,7 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
         return getShaderProgramBuilder(resources, vertexShader, fragmentShader, true);
     }
 
-    public Program<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader,
+    public ProgramObject<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader,
         boolean visibilityAndShadowTests, Map<String, Object> additionalDefines)
         throws FileNotFoundException
     {
@@ -82,7 +83,7 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
         }
 
         // Actually create the program.
-        Program<ContextType> program = programBuilder.createProgram();
+        ProgramObject<ContextType> program = programBuilder.createProgram();
 
         // Setup uniforms.
         setupShaderProgram(resources, program);
@@ -90,12 +91,12 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
         return program;
     }
 
-    public Program<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader, boolean visibilityAndShadowTests) throws FileNotFoundException
+    public ProgramObject<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader, boolean visibilityAndShadowTests) throws FileNotFoundException
     {
         return createProgram(resources, vertexShader, fragmentShader, visibilityAndShadowTests, Collections.emptyMap());
     }
 
-    public Program<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader) throws FileNotFoundException
+    public ProgramObject<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader) throws FileNotFoundException
     {
         return createProgram(resources, vertexShader, fragmentShader, true);
     }

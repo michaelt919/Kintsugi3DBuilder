@@ -25,7 +25,7 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
     private static final Logger log = LoggerFactory.getLogger(AlbedoORMOptimization.class);
 
     // Estimation program
-    private Program<ContextType> estimationProgram;
+    private ProgramObject<ContextType> estimationProgram;
 
     // Framebuffer for storing the diffuse solution
     private FramebufferObject<ContextType> framebuffer;
@@ -133,7 +133,7 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
     }
 
     private static <ContextType extends Context<ContextType>>
-        Program<ContextType> createProgram(ContextType context, boolean occlusionTextureEnabled) throws FileNotFoundException
+    ProgramObject<ContextType> createProgram(ContextType context, boolean occlusionTextureEnabled) throws FileNotFoundException
     {
         return context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))

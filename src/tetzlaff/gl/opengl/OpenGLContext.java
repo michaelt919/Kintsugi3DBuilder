@@ -25,7 +25,7 @@ import tetzlaff.gl.exceptions.*;
 import tetzlaff.gl.glfw.WindowContextBase;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject.OpenGLFramebufferObjectBuilder;
-import tetzlaff.gl.opengl.OpenGLProgram.OpenGLProgramBuilder;
+import tetzlaff.gl.opengl.OpenGLProgramObject.OpenGLProgramBuilder;
 import tetzlaff.gl.types.AbstractDataType;
 import tetzlaff.gl.types.PackedDataType;
 
@@ -135,9 +135,9 @@ public class OpenGLContext extends WindowContextBase<OpenGLContext>
     @Override
     public Drawable<OpenGLContext> createDrawable(Program<OpenGLContext> program)
     {
-        if (program instanceof OpenGLProgram)
+        if (program instanceof OpenGLProgramObject)
         {
-            return new OpenGLDrawable(this, (OpenGLProgram)program);
+            return new OpenGLDrawable(this, (OpenGLProgramObject)program);
         }
         else
         {
@@ -267,7 +267,7 @@ public class OpenGLContext extends WindowContextBase<OpenGLContext>
             T objectToUnbind = oldBinding.getValue();
             Optional<? extends T> newObjectToBind = newBindings.get(bindingIndex);
 
-            if (!newObjectToBind.isPresent() || needsUnbindPredicate.test(objectToUnbind, newObjectToBind.get()))
+            if (newObjectToBind.isEmpty() || needsUnbindPredicate.test(objectToUnbind, newObjectToBind.get()))
             {
                 unbindFunction.accept(bindingIndex, objectToUnbind);
                 iterator.remove();
