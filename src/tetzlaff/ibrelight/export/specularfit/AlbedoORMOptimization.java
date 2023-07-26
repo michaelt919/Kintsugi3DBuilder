@@ -21,12 +21,9 @@ import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.util.ShaderHoleFill;
 
-public class AlbedoORMOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
+public final class AlbedoORMOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
 {
     private static final Logger log = LoggerFactory.getLogger(AlbedoORMOptimization.class);
-
-    // Graphics context
-    private final ContextType context;
 
     // Estimation program
     private Program<ContextType> estimationProgram;
@@ -36,12 +33,28 @@ public class AlbedoORMOptimization<ContextType extends Context<ContextType>> imp
 
     private VertexBuffer<ContextType> rect;
     private final Drawable<ContextType> drawable;
+    private final Texture2D<ContextType> occlusionMap;
 
-    public AlbedoORMOptimization(ContextType context, TextureFitSettings settings)
+    public static <ContextType extends Context<ContextType>> AlbedoORMOptimization<ContextType> createWithOcclusion(
+        Texture2D<ContextType> occlusionMap, TextureFitSettings settings)
         throws FileNotFoundException
     {
-        this.context = context;
-        estimationProgram = createProgram(context);
+        return new AlbedoORMOptimization<>(occlusionMap.getContext(), occlusionMap, settings);
+    }
+
+    public static <ContextType extends Context<ContextType>> AlbedoORMOptimization<ContextType> createWithoutOcclusion(
+        ContextType context, TextureFitSettings settings)
+        throws FileNotFoundException
+    {
+        return new AlbedoORMOptimization<>(context, null, settings);
+    }
+
+    private AlbedoORMOptimization(ContextType context, Texture2D<ContextType> occlusionMap, TextureFitSettings settings)
+        throws FileNotFoundException
+    {
+        // Graphics context
+        this.occlusionMap = occlusionMap;
+        estimationProgram = createProgram(context, occlusionMap != null);
         framebuffer = context.buildFramebufferObject(settings.width, settings.height)
             .addColorAttachment(ColorFormat.RGBA32F) // total albedo
             .addColorAttachment(ColorFormat.RGBA32F) // ORM
@@ -63,46 +76,16 @@ public class AlbedoORMOptimization<ContextType extends Context<ContextType>> imp
         estimationProgram.setTexture("specularEstimate", specularFit.getSpecularReflectivityMap());
         estimationProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
 
-//        // Second framebuffer for filling holes (used to double-buffer the first framebuffer)
-//        // Placed outside of try-with-resources since it might end up being the primary framebuffer after filling holes.
-//        FramebufferObject<ContextType> framebuffer2 = context.buildFramebufferObject(settings.width, settings.height)
-//            .addColorAttachment(ColorFormat.RGBA32F)
-//            .createFramebufferObject();
-
-//        // Will reference the framebuffer that is in front after hole filling if everything is successful.
-//        FramebufferObject<ContextType> finalDiffuse = null;
-
-        try (ShaderHoleFill<ContextType> holeFill = new ShaderHoleFill<>(context))
+        if (occlusionMap != null)
         {
-            // Perform diffuse fit
-            framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-            framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-            framebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
-            drawable.draw(framebuffer);
+            estimationProgram.setTexture("occlusionTexture", occlusionMap);
+        }
 
-//            // Fill holes
-//            finalDiffuse = holeFill.execute(framebuffer, framebuffer2);
-        }
-        catch (FileNotFoundException e)
-        {
-            log.error("An error occurred:", e);
-        }
-//        finally
-//        {
-//            if (Objects.equals(finalDiffuse, framebuffer2))
-//            {
-                // New framebuffer is the front framebuffer after filling holes;
-                // close the old one and make the new one the primary framebuffer
-//                framebuffer.close();
-//                framebuffer = framebuffer2;
-//            }
-//            else
-//            {
-//                // New framebuffer is the back framebuffer after filling holes (or an exception occurred);
-//                // either way; just close it and leave the primary framebuffer the same.
-//                framebuffer2.close();
-//            }
-//        }
+        // Estimate albedo and roughness; passthrough occlusion if it is present
+        framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+        framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+        framebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
+        drawable.draw(framebuffer);
     }
 
     @Override
@@ -151,11 +134,12 @@ public class AlbedoORMOptimization<ContextType extends Context<ContextType>> imp
     }
 
     private static <ContextType extends Context<ContextType>>
-        Program<ContextType> createProgram(ContextType context) throws FileNotFoundException
+        Program<ContextType> createProgram(ContextType context, boolean occlusionTextureEnabled) throws FileNotFoundException
     {
         return context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/estimateAlbedoORM.frag"))
+            .define("OCCLUSION_TEXTURE_ENABLED", occlusionTextureEnabled)
             .createProgram();
     }
 }

@@ -74,7 +74,7 @@ public class MaterialResources<ContextType extends Context<ContextType>> impleme
      */
     public Texture2D<ContextType> getOcclusionTexture()
     {
-        return roughnessTexture;
+        return occlusionTexture;
     }
 
     public static <ContextType extends Context<ContextType>>  MaterialResources<ContextType> createNull()

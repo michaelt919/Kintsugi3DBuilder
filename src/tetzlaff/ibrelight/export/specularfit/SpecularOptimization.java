@@ -128,7 +128,9 @@ public class SpecularOptimization
 //        }
 
         // Generate albedo / ORM maps at full resolution (does not require loaded source images)
-        try (AlbedoORMOptimization<ContextType> albedoORM = new AlbedoORMOptimization<>(cache.getContext(), settings.getTextureFitSettings()))
+        try (AlbedoORMOptimization<ContextType> albedoORM = resources.getMaterialResources().getOcclusionTexture() == null ?
+                AlbedoORMOptimization.createWithoutOcclusion(resources.getContext(), settings.getTextureFitSettings()) :
+                AlbedoORMOptimization.createWithOcclusion(resources.getMaterialResources().getOcclusionTexture(), settings.getTextureFitSettings()))
         {
             albedoORM.execute(specularFit);
             albedoORM.saveTextures(settings.getOutputDirectory());
@@ -362,7 +364,8 @@ public class SpecularOptimization
         solution.getRoughnessOptimization().saveTextures(settings.getOutputDirectory());
 
         // Generate albedo / ORM maps
-        try(AlbedoORMOptimization<ContextType> albedoORM = new AlbedoORMOptimization<>(context, settings.getTextureFitSettings()))
+        try(AlbedoORMOptimization<ContextType> albedoORM = /* TODO: load occlusion map from Metashape project if this function continues to be needed */
+                AlbedoORMOptimization.createWithoutOcclusion(context, settings.getTextureFitSettings()))
         {
             albedoORM.execute(solution);
             albedoORM.saveTextures(settings.getOutputDirectory());

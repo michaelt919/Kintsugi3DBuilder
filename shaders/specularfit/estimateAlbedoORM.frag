@@ -15,7 +15,15 @@
 #include <shaders/colorappearance/linearize.glsl>
 #line 17 0
 
+#ifndef OCCLUSION_TEXTURE_ENABLED
+#define OCCLUSION_TEXTURE_ENABLED 0
+#endif
+
 in vec2 fTexCoord;
+
+#if OCCLUSION_TEXTURE_ENABLED
+uniform sampler2D occlusionTexture; // pass-through occlusion
+#endif
 
 uniform sampler2D diffuseEstimate;
 uniform sampler2D roughnessEstimate;
@@ -74,5 +82,12 @@ void main()
     albedoLinear = diffusePlusSpecular - 0.04 * (1 - maxMetallicity);
 
     totalAlbedoOut = vec4(pow(albedoLinear, vec3(1.0 / gamma)), 1.0);
-    ormOut = vec4(/* occlusion: */ 1.0, sqrtRoughness, maxMetallicity, 1.0);
+
+#if OCCLUSION_TEXTURE_ENABLED
+    float occlusion = texture(occlusionTexture, fTexCoord).r;
+#else
+    float occlusion = 1.0;
+#endif
+
+    ormOut = vec4(occlusion, sqrtRoughness, maxMetallicity, 1.0);
 }
