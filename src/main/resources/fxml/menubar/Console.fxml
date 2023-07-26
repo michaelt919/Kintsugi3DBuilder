@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -16,6 +17,7 @@
             <CheckBox fx:id="checkboxInfo" mnemonicParsing="false" text="Info" />
             <CheckBox fx:id="checkboxDebug" mnemonicParsing="false" text="Debug" />
             <CheckBox fx:id="checkboxTrace" mnemonicParsing="false" text="Trace" />
+            <Button mnemonicParsing="false" onAction="#buttonOpenLogDir" text="Open Logs Directory" />
          </children>
          <opaqueInsets>
             <Insets />
