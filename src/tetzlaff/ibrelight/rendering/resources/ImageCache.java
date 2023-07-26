@@ -238,10 +238,25 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
     private String getPNGFilename(int viewIndex)
     {
-        // Change file extension to .png
-        String[] filenameParts = resources.getViewSet().getImageFileName(viewIndex).split("\\.");
-        filenameParts[filenameParts.length - 1] = "png";
-        return String.join(".", filenameParts);
+        String originalFilename = resources.getViewSet().getImageFileName(viewIndex);
+        String originalFilenameLowercase = originalFilename.toLowerCase();
+        if (originalFilenameLowercase.endsWith("png"))
+        {
+            return originalFilename;
+        }
+        else if (originalFilenameLowercase.endsWith("jpeg") || originalFilenameLowercase.endsWith("jpg")
+            || originalFilenameLowercase.endsWith("tif") || originalFilenameLowercase.endsWith("tiff"))
+        {
+            // Change file extension to .png
+            String[] filenameParts = resources.getViewSet().getImageFileName(viewIndex).split("\\.");
+            filenameParts[filenameParts.length - 1] = "png";
+            return String.join(".", filenameParts);
+        }
+        else
+        {
+            // Append .png
+            return originalFilename + ".png";
+        }
     }
 
     private void buildCache(Framebuffer<ContextType> fbo)
@@ -324,8 +339,8 @@ public class ImageCache<ContextType extends Context<ContextType>>
                                 new File(new File(settings.getCacheDirectory(), String.format("%d_%d", i, j)), pngFilename));
 
                             // See derivations for x above
-                            int ySampleStart = (int) Math.ceil((double) (y + 0.5) * (double) settings.getSampledSize() / (double) settings.getTextureHeight()) - 1;
-                            int ySampleEnd = (int) Math.ceil((double) (yNext - 0.5) * (double) settings.getSampledSize() / (double) settings.getTextureHeight());
+                            int ySampleStart = (int) Math.ceil((y + 0.5) * (double) settings.getSampledSize() / (double) settings.getTextureHeight()) - 1;
+                            int ySampleEnd = (int) Math.ceil((yNext - 0.5) * (double) settings.getSampledSize() / (double) settings.getTextureHeight());
 
                             // Fill in any pixels in the "sampled" image that come from this block, using the pixel coordinates selected randomly earlier.
                             for (int xSample = xSampleStart; xSample < xSampleEnd; xSample++)

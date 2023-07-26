@@ -362,6 +362,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         clearColorBuffer(attachmentIndex, r, g, b, a);
 
         glDisable(GL_SCISSOR_TEST);
+        OpenGLContext.errorCheck();
     }
 
     @Override
@@ -377,6 +378,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         clearIntegerColorBuffer(attachmentIndex, r, g, b, a);
 
         glDisable(GL_SCISSOR_TEST);
+        OpenGLContext.errorCheck();
     }
 
     @Override
@@ -392,6 +394,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         clearDepthBuffer(depth);
 
         glDisable(GL_SCISSOR_TEST);
+        OpenGLContext.errorCheck();
     }
 
     @Override
@@ -407,6 +410,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         clearStencilBuffer(stencilIndex);
 
         glDisable(GL_SCISSOR_TEST);
+        OpenGLContext.errorCheck();
     }
 
     @Override
@@ -422,6 +426,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         glBlitFramebuffer(srcOffset.x, srcOffset.y, srcOffset.x + srcSize.width, srcOffset.y + srcSize.height,
             destX, destY, destX + destWidth, destY + destHeight,
             GL_COLOR_BUFFER_BIT, linearFiltering ? GL_LINEAR : GL_NEAREST);
+        OpenGLContext.errorCheck();
     }
 
     @Override
@@ -436,6 +441,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         glBlitFramebuffer(srcOffset.x, srcOffset.y, srcOffset.x + srcSize.width, srcOffset.y + srcSize.height,
             destX, destY, destX + destWidth, destY + destHeight,
             GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+        OpenGLContext.errorCheck();
     }
 
     @Override
@@ -450,6 +456,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         glBlitFramebuffer(srcOffset.x, srcOffset.y, srcOffset.x + srcSize.width, srcOffset.y + srcSize.height,
             destX, destY, destX + destWidth, destY + destHeight,
             GL_STENCIL_BUFFER_BIT, GL_NEAREST);
+        OpenGLContext.errorCheck();
     }
 
     @Override
@@ -464,5 +471,6 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         glBlitFramebuffer(srcOffset.x, srcOffset.y, srcOffset.x + srcSize.width, srcOffset.y + srcSize.height,
             destX, destY, destX + destWidth, destY + destHeight,
             GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST);
+        OpenGLContext.errorCheck();
     }
 }

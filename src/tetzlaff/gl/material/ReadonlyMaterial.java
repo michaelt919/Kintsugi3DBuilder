@@ -80,6 +80,8 @@ public interface ReadonlyMaterial
 
     ReadonlyMaterialScalarMap getDisplacementMap();
 
+    ReadonlyMaterialScalarMap getAmbientOcclusionMap();
+
     <ContextType extends Context<ContextType>> MaterialResources<ContextType> createResources(
         ContextType context, File textureDirectory, TextureLoadOptions loadOptions) throws IOException;
 }

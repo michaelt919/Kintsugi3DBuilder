@@ -172,11 +172,15 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
             smoothNormals.runOnce();
             firstSmooth = false;
         }
+
+        // Copy smoothed result back into normal estimate
+        estimateNormals.getFrontFramebuffer().blitColorAttachmentFromFramebuffer(0,
+            smoothNormals.getFrontFramebuffer(), 0);
     }
 
     private FramebufferObject<ContextType> getNormalMapFBO()
     {
-        return (normalOptimizationSettings.getNormalSmoothingIterations() > 0 ? smoothNormals : estimateNormals).getFrontFramebuffer();
+        return estimateNormals.getFrontFramebuffer();
     }
 
 
@@ -190,8 +194,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         try
         {
             estimateNormals.getFrontFramebuffer().saveColorBufferToFile(0, "PNG",
-                new File(outputDirectory, normalOptimizationSettings.getNormalSmoothingIterations() > 0 ?
-                        "normalPreSmooth.png" : "normal.png"));
+                new File(outputDirectory, "normal.png"));
         }
         catch (IOException e)
         {
