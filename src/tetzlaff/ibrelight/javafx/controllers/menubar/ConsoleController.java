@@ -24,6 +24,9 @@ import tetzlaff.ibrelight.app.logging.RecentLogMessageAppender;
 import tetzlaff.ibrelight.javafx.MainApplication;
 
 import java.net.URL;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -59,7 +62,6 @@ public class ConsoleController implements Initializable
         if (filteredList == null)
             return;
         filteredList.setPredicate(this::logMessagePassesFilter);
-        messageListView.setItems(filteredList);
     }
 
     private boolean logMessagePassesFilter(LogMessage message)
@@ -119,6 +121,8 @@ public class ConsoleController implements Initializable
 
                         box.setSpacing(10);
 
+                        Tooltip.install(box, new Tooltip(formatTooltip(message)));
+
                         if (message.getLogLevel() == Level.ERROR)
                         {
                             setStyle("-fx-background-color: #fa6d6d");
@@ -132,6 +136,16 @@ public class ConsoleController implements Initializable
                     }
                 }
             };
+        }
+
+        private String formatTooltip(LogMessage message)
+        {
+            StringBuilder sb = new StringBuilder("Logged by ");
+            sb.append(message.getSourceClassName());
+            sb.append(" at ");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyy hh:mm:ss").withZone(ZoneId.systemDefault());
+            sb.append(formatter.format(message.getTimestamp()));
+            return sb.toString();
         }
     }
 }
