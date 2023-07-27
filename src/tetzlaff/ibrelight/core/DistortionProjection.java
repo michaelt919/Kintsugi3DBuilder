@@ -12,6 +12,7 @@
 package tetzlaff.ibrelight.core;
 
 import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector2;
 
 /**
  * Creates a perspective projection that also maintains camera distortion parameters (for Brown's distortion model).
@@ -172,7 +173,14 @@ public class DistortionProjection implements Projection
     @Override
     public Matrix4 getProjectionMatrix(float nearPlane, float farPlane)
     {
-        return Matrix4.perspective(this.getVerticalFieldOfView(), this.getAspectRatio(), nearPlane, farPlane);
+        return Matrix4.translate(getCenter().asVector3())
+            .times(Matrix4.perspective(this.getVerticalFieldOfView(), this.getAspectRatio(), nearPlane, farPlane));
+    }
+
+    @Override
+    public Vector2 getCenter()
+    {
+        return new Vector2(cx / width - 0.5f, 0.5f - cy / height); // Vertical axis is flipped in Metashape coordinates
     }
     
     @Override
@@ -187,6 +195,8 @@ public class DistortionProjection implements Projection
         float ratioX = newWidth / width;
         float ratioY = newHeight / height;
 
-        return new DistortionProjection(newWidth, newHeight, fx * ratioX, fy * ratioY, cx * ratioX, cy * ratioY, k1, k2, k3, k4, p1, p2, skew);
+        return new DistortionProjection(newWidth, newHeight,
+            fx * ratioX, fy * ratioY, cx * ratioX, cy * ratioY,
+            k1, k2, k3, k4, p1, p2, skew);
     }
 }

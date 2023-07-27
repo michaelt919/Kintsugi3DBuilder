@@ -583,84 +583,20 @@ public final class ViewSet implements ReadonlyViewSet
         return new File(this.getPreviewImageFilePath(), this.getImageFileNameWithFormat(poseIndex, "PNG"));
     }
 
-    private void generatePreviewImage(int poseIndex, int width, int height) throws IOException
+    public int getPreviewWidth()
     {
-        if (Objects.equals(this.relativePreviewImagePathName, this.relativeFullResImagePathName))
-        {
-            throw new IllegalStateException("Preview directory is the same as the full res directory; generating preview images would overwrite full resolution images.");
-        }
-        else
-        {
-            log.info("Generating preview image...");
-
-            // Make sure the preview image directory exists; create it if not
-            this.getPreviewImageFilePath().mkdirs();
-
-            ImageLodResizer resizer = new ImageLodResizer(this.findFullResImageFile(poseIndex));
-            resizer.saveAtResolution(this.getPreviewImageFile(poseIndex), width, height);
-        }
+        return previewWidth;
     }
 
-    @Override
-    public void generatePreviewImages(int width, int height) throws IOException
+    public int getPreviewHeight()
+    {
+        return previewHeight;
+    }
+
+    public void setPreviewImageResolution(int width, int height)
     {
         this.previewWidth = width;
         this.previewHeight = height;
-
-        if (Objects.equals(this.relativePreviewImagePathName, this.relativeFullResImagePathName))
-        {
-            throw new IllegalStateException("Preview directory is the same as the full res directory; generating preview images would overwrite full resolution images.");
-        }
-        else
-        {
-            Date timestamp = new Date();
-
-            log.info("Generating preview images...");
-
-            // Make sure the preview image directory exists; create it if not
-            this.getPreviewImageFilePath().mkdirs();
-
-            // Resize and save the preview images
-            for (int i = 0; i < this.getCameraPoseCount(); i++)
-            {
-                log.info("Resizing image {}/{}", i, this.getCameraPoseCount());
-                ImageLodResizer resizer = new ImageLodResizer(this.findFullResImageFile(i));
-                resizer.saveAtResolution(this.getPreviewImageFile(i), width, height);
-            }
-
-            log.info("Preview images generated in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-        }
-    }
-
-    @Override
-    public void undistortPreviewImages(Context<?> context) throws IOException
-    {
-        if (!this.getPreviewImageFilePath().exists())
-        {
-            throw new IllegalStateException("Preview images directory does not exist, cannot undistort!");
-        }
-
-        ImageUndistorter<?> undistort = new ImageUndistorter<>(context);
-
-        // Undistort and resave preview images
-        for (int i = 0; i < this.getCameraPoseCount(); i++)
-        {
-            System.out.printf("Undistorting image %d/%d", i, this.getCameraPoseCount());
-            System.out.println();
-            // If there is only one projection, use it for all images
-            int projectionIndex = this.getCameraProjectionCount() > 1 ? i : 0;
-            if (this.getCameraProjection(projectionIndex) instanceof DistortionProjection)
-            {
-                DistortionProjection distortion = (DistortionProjection) this.getCameraProjection(projectionIndex);
-                distortion = distortion.scaledTo(previewWidth, previewHeight);
-                undistort.undistortFile(this.getPreviewImageFile(i), distortion);
-            }
-            else
-            {
-                System.out.printf("Skipping image #%d: No distortion parameters", i);
-                System.out.println();
-            }
-        }
     }
 
     @Override
@@ -835,21 +771,6 @@ public final class ViewSet implements ReadonlyViewSet
     public File findPreviewImageFile(int index) throws FileNotFoundException
     {
         return ImageFinder.getInstance().findImageFile(getPreviewImageFile(index));
-    }
-
-    @Override
-    public File findOrGeneratePreviewImageFile(int index, int width, int height) throws IOException
-    {
-        try
-        {
-            return ImageFinder.getInstance().findImageFile(getPreviewImageFile(index));
-        }
-        catch (FileNotFoundException e)
-        {
-            // Generate file if necessary
-            generatePreviewImage(index, width, height);
-            return ImageFinder.getInstance().findImageFile(getPreviewImageFile(index));
-        }
     }
 
     @Override

@@ -22,6 +22,10 @@ import tetzlaff.ibrelight.core.DistortionProjection;
 import tetzlaff.ibrelight.core.SimpleProjection;
 import tetzlaff.ibrelight.core.ViewSet;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 

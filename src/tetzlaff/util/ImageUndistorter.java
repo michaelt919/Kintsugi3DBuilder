@@ -12,11 +12,8 @@
 package tetzlaff.util;
 
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.glfw.WindowFactory;
-import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector4;
-import tetzlaff.gl.window.PollableWindow;
 import tetzlaff.ibrelight.core.DistortionProjection;
 
 import javax.imageio.ImageIO;
@@ -51,7 +48,7 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
     public Texture2D<ContextType> undistort(Texture2D<ContextType> inputImage, DistortionProjection distortion)
     {
         drawable.program().setTexture("inputImage", inputImage);
-        drawable.program().setUniform("viewportSize", new Vector2(inputImage.getWidth(), inputImage.getHeight()));
+        drawable.program().setUniform("viewportSize", new Vector2(distortion.width, distortion.height));
 
         drawable.program().setUniform("focalLength", new Vector2(distortion.fx, distortion.fy));
         drawable.program().setUniform("opticalCenter", new Vector2(distortion.cx, distortion.cy));
@@ -59,11 +56,14 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
         drawable.program().setUniform("coefficientsP", new Vector2(distortion.p1, distortion.p2));
         drawable.program().setUniform("skew", distortion.skew);
 
-        try (FramebufferObject<ContextType> framebuffer = context.buildFramebufferObject(inputImage.getWidth(), inputImage.getHeight())
+        try (FramebufferObject<ContextType> framebuffer = context
+                .buildFramebufferObject(Math.round(distortion.width), Math.round(distortion.height))
                 .addEmptyColorAttachment()
                 .createFramebufferObject())
         {
-            Texture2D<ContextType> outputTexture = context.getTextureFactory().build2DColorTexture(inputImage.getWidth(), inputImage.getHeight()).createTexture();
+            Texture2D<ContextType> outputTexture = context.getTextureFactory()
+                .build2DColorTexture(framebuffer.getSize().width, framebuffer.getSize().height)
+                .createTexture();
             framebuffer.setColorAttachment(0, outputTexture);
 
             drawable.draw(framebuffer);
@@ -74,20 +74,25 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
 
     public BufferedImage undistort(BufferedImage inputImage, DistortionProjection distortion)
     {
-        Texture2D<ContextType> inTex = context.getTextureFactory().build2DColorTextureFromImage(inputImage, true).createTexture();
-        Texture2D<ContextType> outTex = undistort(inTex, distortion);
-
-        return BufferedImageBuilder.build()
-                .setDataFromArray(outTex.getColorTextureReader().readARGB(), inputImage.getWidth(), inputImage.getHeight())
+        try(Texture2D<ContextType> inTex = context.getTextureFactory()
+            .build2DColorTextureFromImage(inputImage, true)
+            .setLinearFilteringEnabled(true)
+            .setMipmapsEnabled(true)
+            .createTexture();
+            Texture2D<ContextType> outTex = undistort(inTex, distortion))
+        {
+            return BufferedImageBuilder.build()
+                .setDataFromArray(outTex.getColorTextureReader().readARGB(), outTex.getWidth(), outTex.getHeight())
                 .flipVertical()
                 .create();
+        }
     }
 
-    public void undistortFile(File inputImage, DistortionProjection distortion) throws IOException
+    public void undistortFile(File inputImage, DistortionProjection distortion, File outputImage) throws IOException
     {
         BufferedImage imageIn = ImageIO.read(inputImage);
         BufferedImage imageOut = undistort(imageIn, distortion);
-        ImageIO.write(imageOut, "PNG", inputImage);
+        ImageIO.write(imageOut, "PNG", outputImage);
     }
 
     @Override
@@ -97,25 +102,25 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
         rect.close();
     }
 
-    //Testing bootstrap
-    public static void main(String[] args) throws Exception
-    {
-        PollableWindow<OpenGLContext> window = WindowFactory.buildOpenGLWindow("Test", 100, 100)
-                .setResizable(true)
-                .setMultisamples(4)
-                .create();
-
-        Context<OpenGLContext> context = window.getContext();
-        window.show();
-
-        ImageUndistorter<OpenGLContext> iu = new ImageUndistorter<OpenGLContext>(context);
-
-        //DistortionProjection proj = new DistortionProjection(480f, 360f, 480f, 480f, 240f, 180f, 0.18f, 0.29f, 0.67f, -0.41f, -0.06f, 0.11f, 0);
-        DistortionProjection proj = new DistortionProjection(480f, 360f, 480f, 480f, 240f, 180f,  0.7f, 0.78f, -0.83f, 0, 0,0,0);
-
-        BufferedImage in = ImageIO.read(new File("X:\\CHViewer\\tmp\\canvas2.png"));
-        Texture2D<OpenGLContext> inTex = context.getTextureFactory().build2DColorTextureFromImage(in, true).createTexture();
-        Texture2D<OpenGLContext> out = iu.undistort(inTex, proj);
-        out.getColorTextureReader().saveToFile("PNG", new File("X:\\CHViewer\\tmp\\out.png"));
-    }
+//    //Testing bootstrap
+//    public static void main(String[] args) throws Exception
+//    {
+//        PollableWindow<OpenGLContext> window = WindowFactory.buildOpenGLWindow("Test", 100, 100)
+//                .setResizable(true)
+//                .setMultisamples(4)
+//                .create();
+//
+//        Context<OpenGLContext> context = window.getContext();
+//        window.show();
+//
+//        ImageUndistorter<OpenGLContext> iu = new ImageUndistorter<OpenGLContext>(context);
+//
+//        //DistortionProjection proj = new DistortionProjection(480f, 360f, 480f, 480f, 240f, 180f, 0.18f, 0.29f, 0.67f, -0.41f, -0.06f, 0.11f, 0);
+//        DistortionProjection proj = new DistortionProjection(480f, 360f, 480f, 480f, 240f, 180f,  0.7f, 0.78f, -0.83f, 0, 0,0,0);
+//
+//        BufferedImage in = ImageIO.read(new File("X:\\CHViewer\\tmp\\canvas2.png"));
+//        Texture2D<OpenGLContext> inTex = context.getTextureFactory().build2DColorTextureFromImage(in, true).createTexture();
+//        Texture2D<OpenGLContext> out = iu.undistort(inTex, proj);
+//        out.getColorTextureReader().saveToFile("PNG", new File("X:\\CHViewer\\tmp\\out.png"));
+//    }
 }

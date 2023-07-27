@@ -177,9 +177,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                         .setLoadingMonitor(this.loadingMonitor)
                         .setLoadOptions(loadOptions)
                         .loadAgisoftFiles(xmlFile, meshFile, imageDirectory)
-                        .setPrimaryView(primaryViewName)
-                        .generatePreviewImages(loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight(),
-                            String.format("_%dx%d", loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight())));
+                        .setPrimaryView(primaryViewName));
 
             newItem.getSceneModel().setObjectModel(this.objectModel);
             newItem.getSceneModel().setCameraModel(this.cameraModel);

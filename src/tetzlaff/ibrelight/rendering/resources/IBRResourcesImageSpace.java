@@ -15,6 +15,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
 import javax.imageio.ImageIO;
 
 import org.slf4j.Logger;
@@ -33,6 +34,9 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.io.ViewSetReaderFromAgisoftXML;
 import tetzlaff.ibrelight.io.ViewSetReaderFromVSET;
+import tetzlaff.util.ImageFinder;
+import tetzlaff.util.ImageLodResizer;
+import tetzlaff.util.ImageUndistorter;
 
 /**
  * A class that encapsulates all of the GPU resources like vertex buffers, uniform buffers, and textures for a given
@@ -93,6 +97,13 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             this.context = context;
         }
 
+        private void updateViewSetFromLoadOptions()
+        {
+            this.viewSet.setPreviewImageResolution(loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
+            this.viewSet.setRelativePreviewImagePathName(
+                String.format("_%dx%d", loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight()));
+        }
+
         public Builder<ContextType> setPrimaryView(String primaryViewName)
         {
             this.primaryViewName = primaryViewName;
@@ -102,6 +113,12 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         public Builder<ContextType> setLoadOptions(ReadonlyLoadOptionsModel loadOptions)
         {
             this.loadOptions = loadOptions;
+
+            if (this.viewSet != null)
+            {
+                updateViewSetFromLoadOptions();
+            }
+
             return this;
         }
 
@@ -123,6 +140,12 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         {
             this.viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile);
             this.geometry = VertexGeometry.createFromOBJFile(this.viewSet.getGeometryFile());
+
+            if (this.loadOptions != null)
+            {
+                updateViewSetFromLoadOptions();
+            }
+
             return this;
         }
 
@@ -139,6 +162,12 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 this.imageDirectoryOverride = undistortedImageDirectory;
                 this.viewSet.setRelativeFullResImagePathName(cameraFile.getParentFile().toPath().relativize(undistortedImageDirectory.toPath()).toString());
             }
+
+            if (this.loadOptions != null)
+            {
+                updateViewSetFromLoadOptions();
+            }
+
             return this;
         }
 
@@ -160,20 +189,12 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
-        public Builder<ContextType> generatePreviewImages(int width, int height, String previewDirectoryName) throws IOException
+        public Builder<ContextType> generateUndistortedPreviewImages() throws IOException
         {
             if (this.viewSet != null)
             {
-                this.viewSet.setRelativePreviewImagePathName(previewDirectoryName);
-                this.viewSet.generatePreviewImages(width, height);
+                IBRResourcesImageSpace.generateUndistortedPreviewImages(this.viewSet, this.context);
             }
-
-            return this;
-        }
-
-        public Builder<ContextType> undistortPreviewImages() throws IOException
-        {
-            this.viewSet.undistortPreviewImages(this.context);
 
             return this;
         }
@@ -271,7 +292,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
             {
                 log.info("Loading camera pose {}/{}", i, m);
-                File imageFile = viewSet.findOrGeneratePreviewImageFile(i, width, height);
+                File imageFile = findOrGeneratePreviewImageFile(i);
 
                 this.colorTextures.loadLayer(i, imageFile, true);
 
@@ -610,6 +631,146 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         }
 
         return cache;
+    }
+
+    /**
+     * Used to generate all preview images in bulk
+     * @param viewSet
+     * @param context
+     * @throws IOException
+     */
+    private static void generateUndistortedPreviewImages(ViewSet viewSet, Context<?> context) throws IOException
+    {
+        if (Objects.equals(viewSet.getRelativePreviewImagePathName(), viewSet.getRelativeFullResImagePathName()))
+        {
+            throw new IllegalStateException("Preview directory is the same as the full res directory; generating preview images would overwrite full resolution images.");
+        }
+        else if (viewSet.getPreviewWidth() == 0 || viewSet.getPreviewHeight() == 0)
+        {
+            log.warn("Preview width or preview height are 0; skipping preview images");
+        }
+        else
+        {
+            Date timestamp = new Date();
+
+            log.info("Generating undistorted preview images...");
+
+            viewSet.getPreviewImageFilePath().mkdirs();
+
+            try(ImageUndistorter<?> undistort = new ImageUndistorter<>(context))
+            {
+                // Undistort and resave preview images
+                for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+                {
+                    try
+                    {
+                        // Check if the image is there first
+                        ImageFinder.getInstance().findImageFile(viewSet.getPreviewImageFile(i));
+                        log.info("Skipping image {}/{} : Already exists", i, viewSet.getCameraPoseCount());
+                    }
+                    catch (FileNotFoundException e)
+                    {
+                        // Only generate the image if it wasn't found
+                        int projectionIndex = viewSet.getCameraProjectionIndex(i);
+                        if (viewSet.getCameraProjection(projectionIndex) instanceof DistortionProjection)
+                        {
+                            log.info("Undistorting image {}/{}", i, viewSet.getCameraPoseCount());
+
+                            DistortionProjection distortion = (DistortionProjection) viewSet.getCameraProjection(projectionIndex);
+                            distortion = distortion.scaledTo(viewSet.getPreviewWidth(), viewSet.getPreviewHeight());
+                            undistort.undistortFile(viewSet.findFullResImageFile(i), distortion, viewSet.getPreviewImageFile(i));
+                        }
+                        else
+                        {
+                            log.info("Resizing image {}/{} : No distortion parameters", i, viewSet.getCameraPoseCount());
+
+                            // Fallback to simply resizing without undistorting
+                            ImageLodResizer resizer = new ImageLodResizer(viewSet.findFullResImageFile(i));
+                            resizer.saveAtResolution(viewSet.getPreviewImageFile(i), viewSet.getPreviewWidth(), viewSet.getPreviewHeight());
+                        }
+                    }
+                }
+            }
+
+            log.info("Undistorted preview images generated in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+        }
+    }
+
+    /**
+     * Used to generate a single preview image if one is missing
+     * @param poseIndex
+     * @throws IOException
+     */
+    private boolean generateUndistortedPreviewImage(int poseIndex) throws IOException
+    {
+        if (Objects.equals(getViewSet().getRelativePreviewImagePathName(), getViewSet().getRelativeFullResImagePathName()))
+        {
+            throw new IllegalStateException("Preview directory is the same as the full res directory; generating preview images would overwrite full resolution images.");
+        }
+        else
+        {
+            // Make sure the preview image directory exists; create it if not
+            getViewSet().getPreviewImageFilePath().mkdirs();
+
+            int projectionIndex = getViewSet().getCameraProjectionIndex(poseIndex);
+            if (getViewSet().getCameraProjection(projectionIndex) instanceof DistortionProjection)
+            {
+                // Distortion exists; undistort
+                log.info("Undistorting image {}/{}", poseIndex, getViewSet().getCameraPoseCount());
+
+                DistortionProjection distortion = (DistortionProjection) getViewSet().getCameraProjection(projectionIndex);
+
+                // If no preview width / height is specified, just use whatever was originally in the distortion model
+                if (getViewSet().getPreviewWidth() > 0 && getViewSet().getPreviewHeight() > 0)
+                {
+                    distortion = distortion.scaledTo(getViewSet().getPreviewWidth(), getViewSet().getPreviewHeight());
+                }
+
+                try (ImageUndistorter<?> undistort = new ImageUndistorter<>(getContext()))
+                {
+                    undistort.undistortFile(getViewSet().findFullResImageFile(poseIndex), distortion, getViewSet().getPreviewImageFile(poseIndex));
+                }
+
+                return true;
+            }
+            else if (getViewSet().getPreviewWidth() > 0 && getViewSet().getPreviewHeight() > 0)
+            {
+                log.info("Resizing image {}/{} : No distortion parameters", poseIndex, getViewSet().getCameraPoseCount());
+
+                // Fallback to simply resizing without undistorting
+                ImageLodResizer resizer = new ImageLodResizer(getViewSet().findFullResImageFile(poseIndex));
+                resizer.saveAtResolution(getViewSet().getPreviewImageFile(poseIndex), getViewSet().getPreviewWidth(), getViewSet().getPreviewHeight());
+
+                return true;
+            }
+            else
+            {
+                // No distortion or preview dimensions, just use the original image
+                log.warn("Using full resolution image {}/{} : No distortion and preview width and/or preview height are 0",
+                    poseIndex, getViewSet().getCameraPoseCount());
+                return false;
+            }
+        }
+    }
+
+    private File findOrGeneratePreviewImageFile(int index) throws IOException
+    {
+        try
+        {
+            // See if the preview image is already there
+            return ImageFinder.getInstance().findImageFile(getViewSet().getPreviewImageFile(index));
+        }
+        catch (FileNotFoundException e)
+        {
+            if (generateUndistortedPreviewImage(index)) // Generate file if necessary
+            {
+                return ImageFinder.getInstance().findImageFile(getViewSet().getPreviewImageFile(index));
+            }
+            else // File was not generated: no distortion and preview dimensions are zero.
+            {
+                return ImageFinder.getInstance().findImageFile(getViewSet().getFullResImageFile(index));
+            }
+        }
     }
 
     @Override
