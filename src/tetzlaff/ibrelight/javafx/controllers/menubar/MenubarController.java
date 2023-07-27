@@ -662,7 +662,7 @@ public class MenubarController
 
         try
         {
-            Stage stage = makeStage("Console", consoleWindowOpen, "fxml/menubar/Console.fxml");
+            Stage stage = makeStage("Log", consoleWindowOpen, "fxml/menubar/Console.fxml");
             stage.setResizable(true);
             stage.initStyle(StageStyle.DECORATED);
             stage.show();
