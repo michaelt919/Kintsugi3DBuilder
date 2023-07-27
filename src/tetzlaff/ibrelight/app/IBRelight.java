@@ -26,8 +26,8 @@ import tetzlaff.interactive.InitializationException;
 
 public final class IBRelight
 {
-    private static final boolean DEBUG = true;
     private static final boolean GRAPHICS_WINDOW_ENABLED = true;
+    public static final String APP_FOLDER_NAME = "Kintsugi3DBuilder";
 
     private IBRelight()
     {
@@ -36,9 +36,9 @@ public final class IBRelight
     public static void main(String... args) throws IOException, InitializationException
     {
         // Dynamically set the log directory based on the OS before instantiating a logger
-        if (System.getProperty("IBRelight.logDir") == null)
+        if (System.getProperty("Kintsugi3D.logDir") == null)
         {
-            System.setProperty("IBRelight.logDir", getUserAppDirectory() + "/logs");
+            System.setProperty("Kintsugi3D.logDir", getUserAppDirectory() + "/logs");
         }
 
         Logger log = LoggerFactory.getLogger(IBRelight.class);
@@ -85,19 +85,19 @@ public final class IBRelight
         // Windows
         if (os.indexOf("win") >= 0)
         {
-            return new File(new File(System.getenv("APPDATA")), "IBRelight");
+            return new File(new File(System.getenv("APPDATA")), APP_FOLDER_NAME);
         }
 
         // Mac OS
         if (os.indexOf("mac") >= 0)
         {
-            return new File(new File(System.getProperty("user.home")), "Library/Application Support/IBRelight");
+            return new File(new File(System.getProperty("user.home")), "Library/Application Support/" + APP_FOLDER_NAME);
         }
 
         // Linux and Unix
         if (os.indexOf("nix") >= 0 || os.indexOf("nux") >= 0 || os.indexOf("aix") >= 0)
         {
-            return new File(new File(System.getProperty("user.home")), ".IBRelight");
+            return new File(new File(System.getProperty("user.home")), "." + APP_FOLDER_NAME);
         }
 
         return new File(".");

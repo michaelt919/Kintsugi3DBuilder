@@ -73,7 +73,7 @@ public class ConsoleController implements Initializable
     {
         try
         {
-            File logDir = new File(System.getProperty("IBRelight.logDir"));
+            File logDir = new File(System.getProperty("Kintsugi3D.logDir"));
             MainApplication.getAppInstance().getHostServices().showDocument(logDir.getAbsolutePath());
         }
         catch (Exception e)
@@ -156,6 +156,10 @@ public class ConsoleController implements Initializable
                         else if (message.getLogLevel() == Level.WARN)
                         {
                             setStyle("-fx-background-color: #fab66d");
+                        }
+                        else
+                        {
+                            setStyle(null);
                         }
 
                         setGraphic(box);

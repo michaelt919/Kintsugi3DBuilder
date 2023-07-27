@@ -10,8 +10,8 @@
         </Console>
         <RollingFile name="fileLogger">
             <PatternLayout pattern="${LOG_PATTERN}"/>
-            <FileName>${sys:IBRelight.logDir:-.}/IBRelight.log</FileName>
-            <FilePattern>${sys:IBRelight.logDir:-.}/IBRelight-%d{yyyy-MM-dd}.log</FilePattern>
+            <FileName>${sys:Kintsugi.logDir:-.}/KintsugiBuilder.log</FileName>
+            <FilePattern>${sys:Kintsugi.logDir:-.}/KintsugiBuilder-%d{yyyy-MM-dd}.log</FilePattern>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1" modulate="true" />
                 <SizeBasedTriggeringPolicy size="10MB" />
