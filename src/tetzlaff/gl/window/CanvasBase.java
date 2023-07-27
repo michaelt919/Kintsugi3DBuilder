@@ -14,21 +14,21 @@ package tetzlaff.gl.window;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.window.listeners.*;
 
-public abstract class WindowBase<ContextType extends Context<ContextType>>
-    implements Window<ContextType>
+public abstract class CanvasBase<ContextType extends Context<ContextType>>
+    implements Canvas3D<ContextType>
 {
     protected abstract WindowListenerManager getListenerManager();
 
     @Override
-    public void addWindowPositionListener(WindowPositionListener listener)
+    public void addCanvasPositionListener(CanvasPositionListener listener)
     {
-        getListenerManager().addWindowPositionListener(listener);
+        getListenerManager().addCanvasPositionListener(listener);
     }
 
     @Override
-    public void addWindowSizeListener(WindowSizeListener listener)
+    public void addCanvasSizeListener(CanvasSizeListener listener)
     {
-        getListenerManager().addWindowSizeListener(listener);
+        getListenerManager().addCanvasSizeListener(listener);
     }
 
     @Override
@@ -38,9 +38,9 @@ public abstract class WindowBase<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public void addWindowRefreshListener(WindowRefreshListener listener)
+    public void addCanvasRefreshListener(CanvasRefreshListener listener)
     {
-        getListenerManager().addWindowRefreshListener(listener);
+        getListenerManager().addCanvasRefreshListener(listener);
     }
 
     @Override

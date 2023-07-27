@@ -11,12 +11,15 @@
 
 package tetzlaff.ibrelight.rendering.components;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.FramebufferObject;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.CameraViewport;
 import tetzlaff.ibrelight.core.RenderedComponent;
 import tetzlaff.ibrelight.core.SceneModel;
+import tetzlaff.ibrelight.javafx.internal.EnvironmentModelImpl;
 import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.ibrelight.rendering.resources.LightingResources;
 import tetzlaff.ibrelight.rendering.SceneViewportModel;
@@ -29,6 +32,7 @@ import java.util.stream.IntStream;
 
 public class StandardScene<ContextType extends Context<ContextType>> extends LitContent<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(StandardScene.class);
     private final ContextType context;
     private final SceneModel sceneModel;
     private final SceneViewportModel<ContextType> sceneViewportModel;
@@ -160,7 +164,7 @@ public class StandardScene<ContextType extends Context<ContextType>> extends Lit
             }
             catch (Exception e)
             {
-                e.printStackTrace();
+                log.error("Error occurred while closing scene:", e);
             }
         }
     }

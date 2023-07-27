@@ -38,7 +38,7 @@
                         <goals><goal>launch4j</goal></goals>
                         <configuration>
                             <headerType>gui</headerType>
-                            <outFile>target/IBRelight.exe</outFile>
+                            <outfile>target/IBRelight.exe</outfile>
                             <jar>target/${project.artifactId}-${project.version}-jar-with-dependencies.jar</jar>
                             <icon>ibr.ico</icon>
                             <downloadUrl>https://adoptium.net/temurin/releases/?version=11</downloadUrl>
@@ -121,10 +121,31 @@
             <artifactId>jgltf-model</artifactId>
             <version>2.0.3</version>
         </dependency>
+        <!-- Use a non-vulnerable version of jackson-databind instead of version transitive of jgltf-model -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.14.3</version>
+        </dependency>
         <dependency>
             <groupId>de.javagl</groupId>
             <artifactId>jgltf-obj</artifactId>
             <version>2.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.20.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.20.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j2-impl</artifactId>
+            <version>2.20.0</version>
         </dependency>
     </dependencies>
 </project>

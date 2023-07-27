@@ -11,8 +11,8 @@
 
 package tetzlaff.ibrelight.tools;//Created by alexk on 7/24/2017.
 
+import tetzlaff.gl.window.CanvasSize;
 import tetzlaff.gl.window.CursorPosition;
-import tetzlaff.gl.window.WindowSize;
 import tetzlaff.models.EnvironmentModel;
 
 final class RotateEnvironmentTool implements DragTool
@@ -29,7 +29,7 @@ final class RotateEnvironmentTool implements DragTool
     private static class Builder extends ToolBuilderBase<RotateEnvironmentTool>
     {
         @Override
-        public RotateEnvironmentTool build()
+        public RotateEnvironmentTool create()
         {
             return new RotateEnvironmentTool(getEnvironmentModel());
         }
@@ -46,16 +46,16 @@ final class RotateEnvironmentTool implements DragTool
     }
 
     @Override
-    public void mouseButtonPressed(CursorPosition cursorPosition, WindowSize windowSize)
+    public void mouseButtonPressed(CursorPosition cursorPosition, CanvasSize canvasSize)
     {
         this.mouseStart = cursorPosition;
 
         oldEnvironmentRotation = environmentModel.getEnvironmentRotation();
-        rotateSensitivityAdjusted = ROTATE_SENSITIVITY / Math.min(windowSize.width, windowSize.height);
+        rotateSensitivityAdjusted = ROTATE_SENSITIVITY / Math.min(canvasSize.width, canvasSize.height);
     }
 
     @Override
-    public void cursorDragged(CursorPosition cursorPosition, WindowSize windowSize)
+    public void cursorDragged(CursorPosition cursorPosition, CanvasSize canvasSize)
     {
         environmentModel.setEnvironmentRotation((float)(oldEnvironmentRotation + (cursorPosition.x - mouseStart.x) * rotateSensitivityAdjusted));
     }

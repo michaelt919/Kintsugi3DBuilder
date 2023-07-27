@@ -12,6 +12,8 @@
 
 package tetzlaff.gl.material;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.core.*;
 
@@ -22,6 +24,7 @@ import java.io.IOException;
 // TODO use glTF instead of / in addition to OBJ material?
 public class MaterialResources<ContextType extends Context<ContextType>> implements Resource
 {
+    private static final Logger log = LoggerFactory.getLogger(MaterialResources.class);
     private Texture2D<ContextType> diffuseTexture;
 
     private Texture2D<ContextType> normalTexture;
@@ -80,7 +83,7 @@ public class MaterialResources<ContextType extends Context<ContextType>> impleme
         File diffuseFile = new File(textureDirectory, material.getDiffuseMap().getMapName());
         if (diffuseFile.exists())
         {
-            System.out.println("Diffuse texture found.");
+            log.info("Diffuse texture found.");
             ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> diffuseTextureBuilder =
                     context.getTextureFactory().build2DColorTextureFromFile(diffuseFile, true);
 
@@ -106,7 +109,7 @@ public class MaterialResources<ContextType extends Context<ContextType>> impleme
         File normalFile = new File(textureDirectory, material.getNormalMap().getMapName());
         if (normalFile.exists())
         {
-            System.out.println("Normal texture found.");
+            log.info("Normal texture found.");
             ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> normalTextureBuilder =
                     context.getTextureFactory().build2DColorTextureFromFile(normalFile, true);
 
@@ -132,7 +135,7 @@ public class MaterialResources<ContextType extends Context<ContextType>> impleme
         File specularFile = new File(textureDirectory, material.getSpecularMap().getMapName());
         if (specularFile.exists())
         {
-            System.out.println("Specular texture found.");
+            log.info("Specular texture found.");
             ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> specularTextureBuilder =
                     context.getTextureFactory().build2DColorTextureFromFile(specularFile, true);
             if (loadOptions.isCompressionRequested())
@@ -157,7 +160,7 @@ public class MaterialResources<ContextType extends Context<ContextType>> impleme
         File roughnessFile = new File(textureDirectory, material.getRoughnessMap().getMapName());
         if (roughnessFile.exists())
         {
-            System.out.println("Roughness texture found.");
+            log.info("Roughness texture found.");
             ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> roughnessTextureBuilder
                 = context.getTextureFactory().build2DColorTextureFromFile(roughnessFile, true);
             if (loadOptions.isCompressionRequested())

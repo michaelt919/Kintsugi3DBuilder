@@ -18,6 +18,9 @@ import org.lwjgl.*;
 import org.lwjgl.Version.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
+import tetzlaff.gl.core.Context;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.DoubleFramebuffer;
 import tetzlaff.gl.core.FramebufferSize;
 import tetzlaff.gl.exceptions.GLFWException;
@@ -27,15 +30,16 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
-public class WindowImpl<ContextType extends WindowContextBase<ContextType>>
-    extends WindowBase<ContextType> implements PollableWindow<ContextType>
+public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
+    extends CanvasBase<ContextType> implements PollableWindow, PollableCanvas3D<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(CanvasWindow.class);
     private final long handle;
     private final WindowListenerManager listenerManager;
 
     private final ContextType context;
 
-    WindowImpl(ContextFactory<ContextType> contextFactory,
+    CanvasWindow(ContextFactory<ContextType> contextFactory,
         Function<ContextType, DoubleFramebuffer<ContextType>> createDefaultFramebuffer,
         WindowSpecification windowSpec)
     {
@@ -89,12 +93,12 @@ public class WindowImpl<ContextType extends WindowContextBase<ContextType>>
         glfwSwapInterval(1);
 
         GL.createCapabilities(); // Make a valid OpenGL Context
-        System.out.println("OpenGL version: " + glGetString(GL_VERSION));
-        System.out.println("LWJGL version: " +
+        log.info("OpenGL version: " + glGetString(GL_VERSION));
+        log.info("LWJGL version: " +
                 String.valueOf(Version.VERSION_MAJOR) + '.' + Version.VERSION_MINOR + '.' + Version.VERSION_REVISION +
                 (Version.BUILD_TYPE == BuildType.ALPHA ? "a" : Version.BUILD_TYPE == BuildType.BETA ? "b" : "")
                 /*Version.getVersion()*/ /* <== causes annoying exception breakpoints in Eclipse */);
-        System.out.println("GLFW version: " + glfwGetVersionString());
+        log.info("GLFW version: " + glfwGetVersionString());
 
         this.context = createDefaultFramebuffer == null ?
             contextFactory.createContext(handle) : contextFactory.createContext(handle, createDefaultFramebuffer);
@@ -119,6 +123,12 @@ public class WindowImpl<ContextType extends WindowContextBase<ContextType>>
     public ContextType getContext()
     {
         return this.context;
+    }
+
+    @Override
+    public PollableCanvas3D<ContextType> getCanvas()
+    {
+        return this;
     }
 
     @Override
@@ -161,7 +171,7 @@ public class WindowImpl<ContextType extends WindowContextBase<ContextType>>
     @Override
     public boolean isHighDPI()
     {
-        WindowSize winSize = getWindowSize();
+        CanvasSize winSize = getSize();
         FramebufferSize fbSize = context.getDefaultFramebufferSize();
         return winSize.width != fbSize.width || winSize.height != fbSize.height;
     }
@@ -191,35 +201,35 @@ public class WindowImpl<ContextType extends WindowContextBase<ContextType>>
     }
 
     @Override
-    public WindowSize getWindowSize()
+    public CanvasSize getSize()
     {
         ByteBuffer widthBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
         ByteBuffer heightBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
         glfwGetWindowSize(handle, widthBuffer, heightBuffer);
         int width = widthBuffer.asIntBuffer().get(0);
         int height = heightBuffer.asIntBuffer().get(0);
-        return new WindowSize(width, height);
+        return new CanvasSize(width, height);
     }
 
     @Override
-    public WindowPosition getWindowPosition()
+    public CanvasPosition getPosition()
     {
         ByteBuffer xBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
         ByteBuffer yBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
         glfwGetWindowPos(handle, xBuffer, yBuffer);
         int x = xBuffer.asIntBuffer().get(0);
         int y = yBuffer.asIntBuffer().get(0);
-        return new WindowPosition(x, y);
+        return new CanvasPosition(x, y);
     }
 
     @Override
-    public void setWindowSize(int width, int height)
+    public void setSize(int width, int height)
     {
         glfwSetWindowSize(handle, width, height);
     }
 
     @Override
-    public void setWindowPosition(int x, int y)
+    public void setPosition(int x, int y)
     {
         glfwSetWindowPos(handle, x, y);
     }

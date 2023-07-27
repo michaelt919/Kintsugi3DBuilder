@@ -11,12 +11,12 @@
 
 package tetzlaff.ibrelight.tools;
 
+import tetzlaff.gl.window.Canvas3D;
 import tetzlaff.gl.window.ModifierKeys;
-import tetzlaff.gl.window.Window;
 
 public interface PickerTool
 {
-    boolean mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods);
-    boolean mouseButtonReleased(Window<?> window, int buttonIndex, ModifierKeys mods);
-    boolean cursorMoved(Window<?> window, double xPos, double yPos);
+    boolean mouseButtonPressed(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, int buttonIndex, ModifierKeys mods);
+    boolean mouseButtonReleased(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, int buttonIndex, ModifierKeys mods);
+    boolean cursorMoved(Canvas3D<? extends tetzlaff.gl.core.Context<?>> canvas, double xPos, double yPos);
 }

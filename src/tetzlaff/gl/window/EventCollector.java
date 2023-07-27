@@ -1,15 +1,16 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2022
+ * Copyright (c) 2023 Seth Berrier, Michael Tetzlaff, Josh Lyu, Luke Denney, Jacob Buelow
+ * Copyright (c) 2019 The Regents of the University of Minnesota
  *
- *  Licensed under GPLv3
- *  ( http://www.gnu.org/licenses/gpl-3.0.html )
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
  *
- *  This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  *
- *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.gl.javafx;
+package tetzlaff.gl.window;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -21,10 +22,10 @@ import tetzlaff.gl.window.listeners.*;
 
 class EventCollector
 {
-    private final Queue<Consumer<WindowPositionListener>> windowPos = new LinkedList<>();
-    private final Queue<Consumer<WindowSizeListener>> windowSize = new LinkedList<>();
+    private final Queue<Consumer<CanvasPositionListener>> canvasPos = new LinkedList<>();
+    private final Queue<Consumer<CanvasSizeListener>> canvasSize = new LinkedList<>();
     private final Queue<Consumer<WindowCloseListener>> windowClose = new LinkedList<>();
-    private final Queue<Consumer<WindowRefreshListener>> windowRefresh = new LinkedList<>();
+    private final Queue<Consumer<CanvasRefreshListener>> canvasRefresh = new LinkedList<>();
     private final Queue<Consumer<WindowFocusLostListener>> windowFocusLost = new LinkedList<>();
     private final Queue<Consumer<WindowFocusGainedListener>> windowFocusGained = new LinkedList<>();
     private final Queue<Consumer<WindowIconifiedListener>> windowIconified = new LinkedList<>();
@@ -49,14 +50,14 @@ class EventCollector
         return listenerManager;
     }
 
-    void windowPos(Consumer<WindowPositionListener> event)
+    void canvasPos(Consumer<CanvasPositionListener> event)
     {
-        this.windowPos.add(event);
+        this.canvasPos.add(event);
     }
 
-    void windowSize(Consumer<WindowSizeListener> event)
+    void canvasSize(Consumer<CanvasSizeListener> event)
     {
-        this.windowSize.add(event);
+        this.canvasSize.add(event);
     }
 
     void windowClose(Consumer<WindowCloseListener> event)
@@ -64,9 +65,9 @@ class EventCollector
         this.windowClose.add(event);
     }
 
-    void windowRefresh(Consumer<WindowRefreshListener> event)
+    void canvasRefresh(Consumer<CanvasRefreshListener> event)
     {
-        this.windowRefresh.add(event);
+        this.canvasRefresh.add(event);
     }
 
     void windowFocusLost(Consumer<WindowFocusLostListener> event)
@@ -163,10 +164,10 @@ class EventCollector
 
     void pollEvents()
     {
-        pollEvents(windowPos, listenerManager.getWindowPosListeners());
-        pollEvents(windowSize, listenerManager.getWindowSizeListeners());
+        pollEvents(canvasPos, listenerManager.getCanvasPosListeners());
+        pollEvents(canvasSize, listenerManager.getCanvasSizeListeners());
         pollEvents(windowClose, listenerManager.getWindowCloseListeners());
-        pollEvents(windowRefresh, listenerManager.getWindowRefreshListeners());
+        pollEvents(canvasRefresh, listenerManager.getCanvasRefreshListeners());
         pollEvents(windowFocusLost, listenerManager.getWindowFocusLostListeners());
         pollEvents(windowFocusGained, listenerManager.getWindowFocusGainedListeners());
         pollEvents(windowIconified, listenerManager.getWindowIconifiedListeners());

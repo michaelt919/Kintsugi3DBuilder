@@ -15,11 +15,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.vecmath.Vector3;
 
 public class Material implements ReadonlyMaterial
 {
+    private static final Logger log = LoggerFactory.getLogger(Material.class);
     private String name;
 
     private Vector3 ambient;
@@ -248,12 +251,12 @@ public class Material implements ReadonlyMaterial
                         }
                         catch(InputMismatchException e)
                         {
-                            e.printStackTrace();
+                            log.error("Error parsing MTL file:", e);
                             scanner.nextLine();
                         }
                         catch(NoSuchElementException e)
                         {
-                            e.printStackTrace();
+                            log.error("Error parsing MTL file:", e);
                         }
                     }
 
@@ -356,7 +359,7 @@ public class Material implements ReadonlyMaterial
         }
         catch(InputMismatchException e)
         {
-            e.printStackTrace();
+            log.error("Input error:", e);
             scanner.next();
         }
     }

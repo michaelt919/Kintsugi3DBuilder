@@ -12,6 +12,9 @@
 
 package tetzlaff.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 
@@ -20,6 +23,8 @@ import java.io.FileNotFoundException;
  */
 public class ImageFinder
 {
+    private final static Logger log = LoggerFactory.getLogger(ImageFinder.class);
+
     private static final ImageFinder INSTANCE = new ImageFinder();
 
     public static ImageFinder getInstance()
@@ -41,7 +46,7 @@ public class ImageFinder
         else
         {
             // Try some alternate file formats/extensions
-            String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG" };
+            String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "tif", "TIF", "tiff", "TIFF" };
             for(String extension : altFormats)
             {
                 String[] filenameParts = requestedFile.getName().split("\\.");
@@ -59,17 +64,16 @@ public class ImageFinder
 
                 File imageFileGuess = new File(requestedFile.getParentFile(), altFileName);
 
-                System.out.printf("Trying '%s'\n", imageFileGuess.getAbsolutePath());
+                log.info("Trying '{}'", imageFileGuess.getAbsolutePath());
                 if (imageFileGuess.exists())
                 {
-                    System.out.println("Found!!");
+                    log.info("Found!!");
                     return imageFileGuess;
                 }
             }
 
             // Is it still not there?
-            throw new FileNotFoundException(
-                    String.format("'%s' not found.", requestedFile.getName()));
+            throw new FileNotFoundException(String.format("'%s' not found.", requestedFile.getName()));
         }
     }
 }

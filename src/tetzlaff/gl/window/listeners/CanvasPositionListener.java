@@ -9,11 +9,13 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.util;//Created by alexk on 7/24/2017.
+package tetzlaff.gl.window.listeners;
 
-import tetzlaff.gl.window.Window;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.window.Canvas3D;
 
-public interface WindowBasedController 
+@FunctionalInterface
+public interface CanvasPositionListener
 {
-    void addAsWindowListener(Window<?> window);
+    void canvasMoved(Canvas3D<? extends Context<?>> canvas, int xPos, int yPos);
 }

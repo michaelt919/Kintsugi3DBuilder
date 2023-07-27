@@ -9,16 +9,13 @@
  *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package tetzlaff.gl.window;
+package tetzlaff.gl.window.listeners;
 
-public class WindowSize 
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.window.Canvas3D;
+
+@FunctionalInterface
+public interface CanvasRefreshListener
 {
-    public final int width;
-    public final int height;
-
-    public WindowSize(int width, int height)
-    {
-        this.width = width;
-        this.height = height;
-    }
+    void canvasRefreshed(Canvas3D<? extends Context<?>> canvas);
 }

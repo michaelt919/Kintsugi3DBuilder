@@ -15,12 +15,16 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.util.ShaderHoleFill;
 
 public class AlbedoORMOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
 {
+    private static final Logger log = LoggerFactory.getLogger(AlbedoORMOptimization.class);
+
     // Graphics context
     private final ContextType context;
 
@@ -81,7 +85,7 @@ public class AlbedoORMOptimization<ContextType extends Context<ContextType>> imp
         }
         catch (FileNotFoundException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred:", e);
         }
 //        finally
 //        {
@@ -142,7 +146,7 @@ public class AlbedoORMOptimization<ContextType extends Context<ContextType>> imp
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred while saving textures:", e);
         }
     }
 

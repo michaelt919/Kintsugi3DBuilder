@@ -1,6 +1,8 @@
 package tetzlaff.gl.util;
 
 import javafx.scene.image.Image;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
@@ -17,6 +19,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class UnzipHelper {
+    private static final Logger log = LoggerFactory.getLogger(UnzipHelper.class);
     static final String[] validExtensions = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
 
     private UnzipHelper() {
@@ -40,7 +43,7 @@ public class UnzipHelper {
             return s.toString();
         }
         catch(Exception e){
-            e.printStackTrace();
+            log.error("Error unzipping file:", e);
         }
         finally{
             zis.closeEntry();
@@ -57,7 +60,7 @@ public class UnzipHelper {
             builder = factory.newDocumentBuilder();
             return builder.parse(new InputSource(new StringReader(xmlStr)));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error converting document:", e);
         }
         return null;
     }
@@ -72,7 +75,7 @@ public class UnzipHelper {
             transformer.transform(new DOMSource(doc), new StreamResult(writer));
             return writer.getBuffer().toString();
         } catch (TransformerException e) {
-            e.printStackTrace();
+            log.error("Error converting document:", e);
         }
 
         return null;
@@ -93,10 +96,10 @@ public class UnzipHelper {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Error unzipping images:", e);
         }
 
-        System.out.println("Total images extracted: " + images.size());
+        log.info("Total images extracted: " + images.size());
         return images;
     }
 
@@ -124,7 +127,7 @@ public class UnzipHelper {
             return Integer.parseInt(parentFile.getName());
         }
         catch (NumberFormatException nfe){
-            nfe.printStackTrace();
+            log.error("Invalid number format:", nfe);
             return -1;
         }
     }

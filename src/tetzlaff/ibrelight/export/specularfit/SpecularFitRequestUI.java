@@ -28,12 +28,16 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.Context;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.io.ViewSetReaderFromVSET;
 
 public class SpecularFitRequestUI implements IBRRequestUI
 {
+    private static final Logger log = LoggerFactory.getLogger(SpecularFitRequestUI.class);
+
     @FXML private CheckBox smithCheckBox;
     @FXML private CheckBox levenbergMarquardtCheckBox;
     @FXML private TextField unsuccessfulLMIterationsTextField;
@@ -247,7 +251,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
                     alert.setTitle("Invalid view set");
                     alert.setHeaderText("Reconstruction view set is invalid.");
                     alert.setContentText("Please try another view set or leave the field blank to use the view set for the current model.");
-                    e.printStackTrace();
+                    log.error("Invalid view set error:", e);
                 }
             }
 
@@ -272,7 +276,6 @@ public class SpecularFitRequestUI implements IBRRequestUI
                 // Run as an IBR request that optimizes from scratch.
                 requestQueue.addIBRRequest(request);
             }
-
         });
     }
 }

@@ -13,6 +13,8 @@ package tetzlaff.ibrelight.export.specularfit;
 
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 
 import java.io.File;
@@ -24,6 +26,7 @@ import java.util.stream.IntStream;
 
 public abstract class SpecularDecompositionBase implements SpecularDecomposition
 {
+    private static final Logger log = LoggerFactory.getLogger(SpecularDecompositionBase.class);
     private final SimpleMatrix[] weightsByTexel;
     private final boolean[] weightsValidity;
     private final TextureFitSettings textureFitSettings;
@@ -92,7 +95,7 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
     {
         // Fill holes
         // TODO Quick hack; should be replaced with something more robust.
-        System.out.println("Filling holes...");
+        log.info("Filling holes...");
 
         int texelCount = textureFitSettings.width * textureFitSettings.height;
 
@@ -158,7 +161,7 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
             }
         }
 
-        System.out.println("DONE!");
+        log.info("DONE!");
     }
 
     @Override

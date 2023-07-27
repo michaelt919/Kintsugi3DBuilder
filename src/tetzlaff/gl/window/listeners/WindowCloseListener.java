@@ -11,10 +11,11 @@
 
 package tetzlaff.gl.window.listeners;
 
-import tetzlaff.gl.window.Window;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.window.Canvas3D;
 
 @FunctionalInterface
 public interface WindowCloseListener
 {
-    void windowClosing(Window<?> window);
+    void windowClosing(Canvas3D<? extends Context<?>> canvas);
 }

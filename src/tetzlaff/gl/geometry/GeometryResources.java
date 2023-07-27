@@ -13,10 +13,14 @@ package tetzlaff.gl.geometry;
 
 import java.io.FileNotFoundException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.*;
+import tetzlaff.ibrelight.export.specularfit.BRDFReconstruction;
 
 public class GeometryResources<ContextType extends Context<ContextType>> implements Resource
 {
+    private static final Logger log = LoggerFactory.getLogger(GeometryResources.class);
     public final ContextType context;
 
     /**
@@ -122,7 +126,7 @@ public class GeometryResources<ContextType extends Context<ContextType>> impleme
         }
         catch (FileNotFoundException e)
         {
-            e.printStackTrace();
+            log.error("File not found exception while trying to create a geometryFrameBuffer:", e);
             throw new UnsupportedOperationException(e);
         }
     }

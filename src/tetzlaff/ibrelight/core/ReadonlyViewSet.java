@@ -238,5 +238,6 @@ public interface ReadonlyViewSet
      */
     File findFullResPrimaryImageFile() throws FileNotFoundException;
     File findPreviewImageFile(int index) throws FileNotFoundException;
+    File findOrGeneratePreviewImageFile(int index, int width, int height) throws IOException;
     File findPreviewPrimaryImageFile() throws FileNotFoundException;
 }

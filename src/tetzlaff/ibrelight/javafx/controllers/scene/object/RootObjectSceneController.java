@@ -23,11 +23,14 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.VBox;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.ibrelight.javafx.internal.ObservableProjectModel;
 import tetzlaff.ibrelight.javafx.internal.ObjectModelImpl;
 
 public class RootObjectSceneController
 {
+    private static final Logger log = LoggerFactory.getLogger(RootObjectSceneController.class);
     @FXML
     private VBox settings;
     @FXML
@@ -92,7 +95,8 @@ public class RootObjectSceneController
     @FXML
     private void savePoseButton()
     {
-        System.out.println("TODO: saved " + getObjectPoseSelectionModel().getSelectedItem() + " to the library.");
+        //TODO
+        log.debug("TODO: saved " + getObjectPoseSelectionModel().getSelectedItem() + " to the library.");
     }
 
     @FXML
@@ -196,7 +200,7 @@ public class RootObjectSceneController
     void keyframePoseButton()
     {
         //TODO
-        System.out.println("TODO: keyframe added for " + getObjectPoseSelectionModel().getSelectedItem());
+        log.debug("TODO: keyframe added for " + getObjectPoseSelectionModel().getSelectedItem());
     }
 
     @FXML

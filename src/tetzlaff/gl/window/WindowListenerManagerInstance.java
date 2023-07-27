@@ -18,10 +18,10 @@ import tetzlaff.gl.window.listeners.*;
 
 public class WindowListenerManagerInstance implements WindowListenerManager
 {
-    private final List<WindowPositionListener> windowPosListeners;
-    private final List<WindowSizeListener> windowSizeListeners;
+    private final List<CanvasPositionListener> canvasPosListeners;
+    private final List<CanvasSizeListener> canvasSizeListeners;
     private final List<WindowCloseListener> windowCloseListeners;
-    private final List<WindowRefreshListener> windowRefreshListeners;
+    private final List<CanvasRefreshListener> canvasRefreshListeners;
     private final List<WindowFocusLostListener> windowFocusLostListeners;
     private final List<WindowFocusGainedListener> windowFocusGainedListeners;
     private final List<WindowIconifiedListener> windowIconifiedListeners;
@@ -50,29 +50,29 @@ public class WindowListenerManagerInstance implements WindowListenerManager
         mouseButtonPressListeners = new ArrayList<>();
         mouseButtonReleaseListeners = new ArrayList<>();
         characterListeners = new ArrayList<>();
-        windowPosListeners = new ArrayList<>();
+        canvasPosListeners = new ArrayList<>();
         cursorPosListeners = new ArrayList<>();
         cursorEnterListeners = new ArrayList<>();
         windowIconifiedListeners = new ArrayList<>();
         keyReleaseListeners = new ArrayList<>();
         keyTypeListeners = new ArrayList<>();
-        windowRefreshListeners = new ArrayList<>();
+        canvasRefreshListeners = new ArrayList<>();
         keyPressListeners = new ArrayList<>();
         windowRestoredListeners = new ArrayList<>();
-        windowSizeListeners = new ArrayList<>();
+        canvasSizeListeners = new ArrayList<>();
         windowFocusLostListeners = new ArrayList<>();
     }
 
     @Override
-    public void addWindowPositionListener(WindowPositionListener listener)
+    public void addCanvasPositionListener(CanvasPositionListener listener)
     {
-        windowPosListeners.add(listener);
+        canvasPosListeners.add(listener);
     }
 
     @Override
-    public void addWindowSizeListener(WindowSizeListener listener)
+    public void addCanvasSizeListener(CanvasSizeListener listener)
     {
-        windowSizeListeners.add(listener);
+        canvasSizeListeners.add(listener);
     }
 
     @Override
@@ -82,9 +82,9 @@ public class WindowListenerManagerInstance implements WindowListenerManager
     }
 
     @Override
-    public void addWindowRefreshListener(WindowRefreshListener listener)
+    public void addCanvasRefreshListener(CanvasRefreshListener listener)
     {
-        windowRefreshListeners.add(listener);
+        canvasRefreshListeners.add(listener);
     }
 
     @Override
@@ -183,14 +183,14 @@ public class WindowListenerManagerInstance implements WindowListenerManager
         scrollListeners.add(listener);
     }
 
-    public List<WindowPositionListener> getWindowPosListeners()
+    public List<CanvasPositionListener> getCanvasPosListeners()
     {
-        return windowPosListeners;
+        return canvasPosListeners;
     }
 
-    public List<WindowSizeListener> getWindowSizeListeners()
+    public List<CanvasSizeListener> getCanvasSizeListeners()
     {
-        return windowSizeListeners;
+        return canvasSizeListeners;
     }
 
     public List<WindowCloseListener> getWindowCloseListeners()
@@ -198,9 +198,9 @@ public class WindowListenerManagerInstance implements WindowListenerManager
         return windowCloseListeners;
     }
 
-    public List<WindowRefreshListener> getWindowRefreshListeners()
+    public List<CanvasRefreshListener> getCanvasRefreshListeners()
     {
-        return windowRefreshListeners;
+        return canvasRefreshListeners;
     }
 
     public List<WindowFocusLostListener> getWindowFocusLostListeners()

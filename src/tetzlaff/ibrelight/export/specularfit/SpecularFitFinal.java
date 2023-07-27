@@ -23,7 +23,7 @@ import tetzlaff.ibrelight.core.TextureFitSettings;
  * Can do the roughness / ORM map fit, hole fill, etc., but should not need access to the original photographs
  * @param <ContextType>
  */
-public class SpecularFitFinal<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
+public final class SpecularFitFinal<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
 {
     /**
      * Diffuse map from file

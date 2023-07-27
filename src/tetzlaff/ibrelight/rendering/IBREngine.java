@@ -11,26 +11,32 @@
 
 package tetzlaff.ibrelight.rendering;
 
-import java.io.File;
-import java.util.*;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.geometry.ReadonlyVertexGeometry;
-import tetzlaff.gl.vecmath.*;
+import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.*;
-import tetzlaff.ibrelight.rendering.resources.DynamicResourceLoader;
-import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace.Builder;
-import tetzlaff.ibrelight.rendering.components.*;
+import tetzlaff.ibrelight.rendering.components.StandardScene;
 import tetzlaff.ibrelight.rendering.components.lightcalibration.LightCalibrationRoot;
 import tetzlaff.ibrelight.rendering.components.lit.LitRoot;
+import tetzlaff.ibrelight.rendering.resources.DynamicResourceLoader;
 import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace.Builder;
 import tetzlaff.interactive.InitializationException;
-import tetzlaff.models.*;
+import tetzlaff.models.SceneViewport;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class IBREngine<ContextType extends Context<ContextType>> implements IBRInstance<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(IBREngine.class);
+
     private final ContextType context;
 
     private volatile LoadingMonitor loadingMonitor;
@@ -117,9 +123,9 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
             this.updateWorldSpaceDefinition();
 
-            FramebufferSize windowSize = context.getDefaultFramebuffer().getSize();
+            FramebufferSize framebufferSize = context.getDefaultFramebuffer().getSize();
             FramebufferObject<ContextType> firstShadingFBO =
-                context.buildFramebufferObject(windowSize.width, windowSize.height)
+                context.buildFramebufferObject(framebufferSize.width, framebufferSize.height)
                     .addColorAttachment(
                         ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB8)
                             .setLinearFilteringEnabled(true))
@@ -130,7 +136,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
             // Render an entire frame to an offscreen framebuffer before announcing that loading is complete.
             // TODO break this into blocks just in case there's a GPU timeout?
-//            litRoot.draw(firstShadingFBO, sceneModel.getCurrentViewMatrix(), getProjectionMatrix(windowSize));
+//            litRoot.draw(firstShadingFBO, sceneModel.getCurrentViewMatrix(), getProjectionMatrix(framebufferSize));
 //
 //            // Flush to prevent timeout
 //            context.flush();
@@ -142,7 +148,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            log.error("Error occurred initializing IBREngine:", e);
             this.close();
             if (this.loadingMonitor != null)
             {
@@ -163,7 +169,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            log.error("Error occurred during update:", e);
         }
 
         this.updateWorldSpaceDefinition();
@@ -271,7 +277,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         {
             if (!suppressErrors)
             {
-                e.printStackTrace();
+                log.error("Error during draw call:", e);
                 suppressErrors = true; // Prevent excessive errors
             }
         }
@@ -321,7 +327,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            log.error("Error closing IBREngine:", e);
         }
     }
 
@@ -363,7 +369,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            log.error("Error reloading shaders:", e);
         }
     }
 
