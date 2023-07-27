@@ -12,6 +12,8 @@
 
 package tetzlaff.ibrelight.io;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
@@ -28,6 +30,8 @@ import java.util.*;
  */
 public final class ViewSetReaderFromVSET implements ViewSetReader
 {
+    private static final Logger log = LoggerFactory.getLogger(ViewSetReaderFromVSET.class);
+
     private static final ViewSetReader INSTANCE = new ViewSetReaderFromVSET();
 
     public static ViewSetReader getInstance()
@@ -258,7 +262,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
             result.setGeometryFileName("manifold.obj"); // Used by some really old datasets
         }
 
-        System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+        log.info("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
         return result;
     }

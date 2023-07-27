@@ -26,12 +26,15 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.ibrelight.core.ReadonlyViewSet;
 import tetzlaff.ibrelight.javafx.MultithreadModels;
 import tetzlaff.ibrelight.io.ViewSetReaderFromAgisoftXML;
 
 public class LoaderController implements Initializable
 {
+    private static final Logger log = LoggerFactory.getLogger(LoaderController.class);
 
     @FXML private ChoiceBox<String> primaryViewChoiceBox;
     @FXML private Text loadCheckCameras;
@@ -97,7 +100,7 @@ public class LoaderController implements Initializable
             }
             catch (Exception e)
             {
-                e.printStackTrace();
+                log.error("An error occurred reading camera file:", e);
                 new Alert(AlertType.ERROR, e.toString()).show();
             }
         }

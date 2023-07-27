@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1} - %m%n</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT" follow="true">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+        <RollingFile name="fileLogger">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <FileName>${sys:Kintsugi.logDir:-.}/KintsugiBuilder.log</FileName>
+            <FilePattern>${sys:Kintsugi.logDir:-.}/KintsugiBuilder-%d{yyyy-MM-dd}.log</FilePattern>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true" />
+                <SizeBasedTriggeringPolicy size="10MB" />
+            </Policies>
+        </RollingFile>
+        <RecentLogMessageAppender name="guiConsole">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </RecentLogMessageAppender>
+    </Appenders>
+
+    <Loggers>
+        <Root level="debug">
+            <AppenderRef ref="console" />
+            <AppenderRef ref="fileLogger" />
+            <AppenderRef ref="guiConsole" />
+        </Root>
+    </Loggers>
+</Configuration>

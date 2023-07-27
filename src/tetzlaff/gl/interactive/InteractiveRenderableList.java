@@ -13,6 +13,8 @@ package tetzlaff.gl.interactive;
 
 import java.util.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Framebuffer;
 import tetzlaff.interactive.InitializationException;
@@ -30,6 +32,7 @@ import tetzlaff.util.SelectableList;
 public class InteractiveRenderableList<ContextType extends Context<ContextType>, RenderableType extends InteractiveRenderable<ContextType>> 
     implements InteractiveRenderable<ContextType>, SelectableList<RenderableType>
 {
+    private static final Logger log = LoggerFactory.getLogger(InteractiveRenderableList.class);
     private List<RenderableType> renderables;
     private int selectedIndex = -1;
 
@@ -72,8 +75,8 @@ public class InteractiveRenderableList<ContextType extends Context<ContextType>,
             }
             catch (RuntimeException|InitializationException e)
             {
+                log.error("Error while initializing renderable:", e);
                 renderables.remove(r);
-                e.printStackTrace();
             }
         }
 

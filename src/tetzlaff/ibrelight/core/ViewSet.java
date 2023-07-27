@@ -19,6 +19,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
@@ -35,6 +37,8 @@ import tetzlaff.util.ImageLodResizer;
 @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
 public final class ViewSet implements ReadonlyViewSet
 {
+    private static final Logger log = LoggerFactory.getLogger(ViewSet.class);
+
     /**
      * A list of camera poses defining the transformation from object space to camera space for each view.
      * These are necessary to perform projective texture mapping.
@@ -583,7 +587,7 @@ public final class ViewSet implements ReadonlyViewSet
         }
         else
         {
-            System.out.println("Generating preview image...");
+            log.info("Generating preview image...");
 
             // Make sure the preview image directory exists; create it if not
             this.getPreviewImageFilePath().mkdirs();
@@ -604,7 +608,7 @@ public final class ViewSet implements ReadonlyViewSet
         {
             Date timestamp = new Date();
 
-            System.out.println("Generating preview images...");
+            log.info("Generating preview images...");
 
             // Make sure the preview image directory exists; create it if not
             this.getPreviewImageFilePath().mkdirs();
@@ -612,13 +616,12 @@ public final class ViewSet implements ReadonlyViewSet
             // Resize and save the preview images
             for (int i = 0; i < this.getCameraPoseCount(); i++)
             {
-                System.out.printf("%d/%d", i, this.getCameraPoseCount());
-                System.out.println();
+                log.info("Resizing image {}/{}", i, this.getCameraPoseCount());
                 ImageLodResizer resizer = new ImageLodResizer(this.findFullResImageFile(i));
                 resizer.saveAtResolution(this.getPreviewImageFile(i), width, height);
             }
 
-            System.out.println("Preview images generated in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+            log.info("Preview images generated in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
         }
     }
     

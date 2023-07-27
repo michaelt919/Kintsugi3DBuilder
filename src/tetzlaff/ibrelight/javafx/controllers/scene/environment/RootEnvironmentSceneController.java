@@ -24,11 +24,14 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.VBox;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.ibrelight.javafx.internal.ObservableProjectModel;
 import tetzlaff.ibrelight.javafx.internal.EnvironmentModelImpl;
 
 public class RootEnvironmentSceneController
 {
+    private static final Logger log = LoggerFactory.getLogger(RootEnvironmentSceneController.class);
     @FXML
     private VBox settings;
     @FXML
@@ -106,7 +109,8 @@ public class RootEnvironmentSceneController
     @FXML
     private void saveEnvButton()
     {
-        System.out.println("TODO: saved " + environmentListView.getSelectionModel().getSelectedItem() + " to the library.");
+        //TODO
+        log.debug("TODO: saved " + environmentListView.getSelectionModel().getSelectedItem() + " to the library.");
     }
 
     @FXML

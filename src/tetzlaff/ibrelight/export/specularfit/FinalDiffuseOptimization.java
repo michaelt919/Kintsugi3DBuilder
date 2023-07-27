@@ -15,6 +15,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Objects;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
@@ -22,6 +24,8 @@ import tetzlaff.util.ShaderHoleFill;
 
 public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
 {
+    private static final Logger log = LoggerFactory.getLogger(FinalDiffuseOptimization.class);
+
     // Graphics context
     private final ContextType context;
 
@@ -75,7 +79,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         }
         catch (FileNotFoundException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred while filling holes:", e);
         }
         finally
         {

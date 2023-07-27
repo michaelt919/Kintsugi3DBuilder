@@ -13,11 +13,16 @@ import javafx.scene.input.KeyEvent;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
 
 public class UnzipFileSelectionController {
+    private static final Logger log = LoggerFactory.getLogger(UnzipFileSelectionController.class);
+
     @FXML
     public Button unzipPSXButton;
 
@@ -135,7 +140,7 @@ public class UnzipFileSelectionController {
                                     //if chunk selection fails, try unzipping the file again
                                     //this action will also update the chunk selection choice box
                                     //see unzipPSXAndParse()
-            e.printStackTrace();
+            log.error("An error occurred:", e);
             return;//do not load new window for chunk viewer
         }
 

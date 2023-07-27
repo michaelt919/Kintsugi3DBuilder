@@ -26,6 +26,8 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import javafx.application.Platform;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 import tetzlaff.gl.builders.framebuffer.DefaultFramebufferFactory;
 import tetzlaff.gl.core.DoubleFramebufferObject;
@@ -57,6 +59,7 @@ import tetzlaff.util.MouseMode;
 
 public final class Rendering
 {
+    private static final Logger log = LoggerFactory.getLogger(Rendering.class);
     private Rendering()
     {
     }
@@ -309,7 +312,7 @@ public final class Rendering
         {
             if (key == Key.F11)
             {
-                System.out.println("reloading program...");
+                log.info("Reloading program...");
 
                 try
                 {
@@ -318,7 +321,7 @@ public final class Rendering
                 }
                 catch (RuntimeException e)
                 {
-                    e.printStackTrace();
+                    log.error("Error occurred while reloading application:", e);
                 }
             }
         });
@@ -459,7 +462,7 @@ public final class Rendering
                     }
                     catch (IOException | ParserConfigurationException | SAXException e)
                     {
-                        e.printStackTrace();
+                        log.error("Error occurred processing arguments:", e);
                     }
                 });
             }
@@ -489,7 +492,7 @@ public final class Rendering
             }
             catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e)
             {
-                e.printStackTrace();
+                log.error("Reflection error occurred processing arguments:", e);
             }
         }
     }
@@ -503,6 +506,6 @@ public final class Rendering
             .map(String::toLowerCase)
             .collect(Collectors.toCollection(() -> new HashSet<>(formatNames.length)));
 
-        System.out.println("Supported image formats: " + set);
+        log.info("Supported image formats: " + set);
     }
 }

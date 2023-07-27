@@ -11,16 +11,18 @@
 
 package tetzlaff.ibrelight.app;
 
-import java.io.IOException;
-import java.io.PrintStream;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.ibrelight.javafx.MainApplication;
 import tetzlaff.interactive.InitializationException;
 
+import java.io.File;
+import java.io.IOException;
+
 public final class IBRelight
 {
-    private static final boolean DEBUG = true;
     private static final boolean GRAPHICS_WINDOW_ENABLED = false;
+    public static final String APP_FOLDER_NAME = "Kintsugi3DBuilder";
 
     private IBRelight()
     {
@@ -28,13 +30,13 @@ public final class IBRelight
 
     public static void main(String... args) throws IOException, InitializationException
     {
-        if (!DEBUG)
+        // Dynamically set the log directory based on the OS before instantiating a logger
+        if (System.getProperty("Kintsugi3D.logDir") == null)
         {
-            PrintStream out = new PrintStream("out.log");
-            PrintStream err = new PrintStream("err.log");
-            System.setOut(out);
-            System.setErr(err);
+            System.setProperty("Kintsugi3D.logDir", getUserAppDirectory() + "/logs");
         }
+
+        Logger log = LoggerFactory.getLogger(IBRelight.class);
 
         //allow render thread to modify user interface thread
         System.setProperty("glass.disableThreadChecks", "true");
@@ -42,17 +44,17 @@ public final class IBRelight
 
         if (GRAPHICS_WINDOW_ENABLED)
         {
-            System.out.println("Starting JavaFX UI");
+            log.info("Starting JavaFX UI");
             new Thread(() -> MainApplication.launchWrapper("")).start();
 
-            System.out.println("Starting Render Window");
+            log.info("Starting Render Window");
             Rendering.runProgram(args);
         }
         else
         {
             MainApplication.addStartListener(stage ->
             {
-                System.out.println("Starting Render Window");
+                log.info("Starting Render Window");
                 new Thread(() ->
                 {
                     try
@@ -61,13 +63,38 @@ public final class IBRelight
                     }
                     catch (InitializationException e)
                     {
-                        e.printStackTrace();
+                        log.error("Error initializing render window:", e);
                     }
                 }).start();
             });
 
-            System.out.println("Starting JavaFX UI");
+            log.info("Starting JavaFX UI");
             MainApplication.launchWrapper("");
         }
+    }
+
+    public static File getUserAppDirectory()
+    {
+        String os = System.getProperty("os.name").toLowerCase();
+
+        // Windows
+        if (os.indexOf("win") >= 0)
+        {
+            return new File(new File(System.getenv("APPDATA")), APP_FOLDER_NAME);
+        }
+
+        // Mac OS
+        if (os.indexOf("mac") >= 0)
+        {
+            return new File(new File(System.getProperty("user.home")), "Library/Application Support/" + APP_FOLDER_NAME);
+        }
+
+        // Linux and Unix
+        if (os.indexOf("nix") >= 0 || os.indexOf("nux") >= 0 || os.indexOf("aix") >= 0)
+        {
+            return new File(new File(System.getProperty("user.home")), "." + APP_FOLDER_NAME);
+        }
+
+        return new File(".");
     }
 }

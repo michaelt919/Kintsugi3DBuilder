@@ -16,6 +16,8 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import javafx.scene.image.ImageView;
@@ -33,6 +35,7 @@ public class ChunkViewerController implements Initializable {
     //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"
     //suppress warning?
 
+    private static final Logger log = LoggerFactory.getLogger(ChunkViewerController.class);
     @FXML
     public TreeView<String> chunkTreeView;
 
@@ -181,7 +184,7 @@ public class ChunkViewerController implements Initializable {
                 //TODO: .TIF (and maybe other image types) ARE NOT SUPPORTED. CONVERT THESE?
                 //TODO: AFTER SELECTION, PROGRAM WILL FREEZE TO DOWNLOAD IMAGES FROM ONEDRIVE
             } catch (IllegalArgumentException e) {//could not find image
-                e.printStackTrace();
+                log.error("An error occurred: Could not find image:", e);
             }
         }
     }

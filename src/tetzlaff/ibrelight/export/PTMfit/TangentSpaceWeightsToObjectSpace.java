@@ -11,6 +11,8 @@
 
 package tetzlaff.ibrelight.export.PTMfit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.nativebuffer.NativeDataType;
@@ -26,6 +28,7 @@ import java.io.IOException;
 
 public class TangentSpaceWeightsToObjectSpace <ContextType extends Context<ContextType>>
 {
+    private static final Logger log = LoggerFactory.getLogger(TangentSpaceWeightsToObjectSpace.class);
     private final IBRResourcesImageSpace<ContextType> resources;
     private final TextureFitSettings settings;
 
@@ -93,7 +96,7 @@ public class TangentSpaceWeightsToObjectSpace <ContextType extends Context<Conte
 
         catch (FileNotFoundException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred:", e);
         }
 
     }
@@ -110,7 +113,7 @@ public class TangentSpaceWeightsToObjectSpace <ContextType extends Context<Conte
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred saving file:", e);
         }
     }
 }

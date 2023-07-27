@@ -11,6 +11,8 @@
 
 package tetzlaff.ibrelight.export.specularfit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.Texture3D;
 
 import java.awt.*;
@@ -26,6 +28,8 @@ import javax.imageio.ImageIO;
 
 public class SpecularFitSerializer
 {
+    private static final Logger log = LoggerFactory.getLogger(SpecularFitSerializer.class);
+
     public static void saveWeightImages(int basisCount, int width, int height, SpecularBasisWeights basisWeights, File outputDirectory)
     {
         for (int b = 0; b < basisCount; b++)
@@ -50,7 +54,7 @@ public class SpecularFitSerializer
             }
             catch (IOException e)
             {
-                e.printStackTrace();
+                log.error("An error occurred saving weight images:", e);
             }
         }
     }
@@ -64,7 +68,7 @@ public class SpecularFitSerializer
             }
             catch (IOException e)
             {
-                e.printStackTrace();
+                log.error("An error occurred saving weight images:", e);
             }
         }
     }
@@ -104,7 +108,7 @@ public class SpecularFitSerializer
             }
             catch (IOException e)
             {
-                e.printStackTrace();
+                log.error("An error occurred saving weight images:", e);
             }
         }
     }
@@ -156,7 +160,7 @@ public class SpecularFitSerializer
         }
         catch (FileNotFoundException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred saving basis functions:", e);
         }
     }
 

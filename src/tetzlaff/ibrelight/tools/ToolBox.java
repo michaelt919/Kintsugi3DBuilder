@@ -17,6 +17,8 @@ import java.util.Map.Entry;
 import java.util.Objects;
 
 import tetzlaff.gl.window.Canvas3D;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.window.CursorPosition;
 import tetzlaff.gl.window.Key;
 import tetzlaff.gl.window.ModifierKeys;
@@ -30,6 +32,7 @@ import tetzlaff.util.MouseMode;
 public final class ToolBox
     implements CursorPositionListener, MouseButtonPressListener, MouseButtonReleaseListener, ScrollListener, KeyPressListener, CanvasInputController
 {
+    private static final Logger log = LoggerFactory.getLogger(ToolBox.class);
     private MouseMode currentMode;
     private final ToolBindingModel toolBindingModel;
 
@@ -96,7 +99,7 @@ public final class ToolBox
         }
         catch(RuntimeException e)
         {
-            e.printStackTrace();
+            log.error("Error handling event:", e);
         }
     }
 
@@ -113,7 +116,7 @@ public final class ToolBox
         }
         catch(RuntimeException e)
         {
-            e.printStackTrace();
+            log.error("Error handling event:", e);
         }
     }
 
@@ -136,7 +139,7 @@ public final class ToolBox
             }
             catch (RuntimeException e)
             {
-                e.printStackTrace();
+                log.error("Error handling event:", e);
             }
         }
     }
@@ -163,7 +166,7 @@ public final class ToolBox
         }
         catch (RuntimeException e)
         {
-            e.printStackTrace();
+            log.error("Error handling event:", e);
         }
     }
 
