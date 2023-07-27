@@ -1,6 +1,5 @@
 package tetzlaff.ibrelight.javafx.controllers.menubar;
 
-import com.sun.javafx.application.HostServicesDelegate;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -11,7 +10,6 @@ import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
-import tetzlaff.ibrelight.app.IBRelight;
 import tetzlaff.ibrelight.app.logging.LogMessage;
 import tetzlaff.ibrelight.app.logging.RecentLogMessageAppender;
 import tetzlaff.ibrelight.javafx.MainApplication;

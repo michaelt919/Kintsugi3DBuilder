@@ -563,6 +563,27 @@ public class MenubarController
         return fxmlLoader.getController();
     }
 
+    private Stage makeStage(String title, Flag flag, String urlString) throws IOException
+    {
+        URL url = MenubarController.class.getClassLoader().getResource(urlString);
+        if (url == null)
+        {
+            throw new FileNotFoundException(urlString);
+        }
+        FXMLLoader fxmlLoader = new FXMLLoader(url);
+        Parent root = fxmlLoader.load();
+        Stage stage = new Stage();
+        stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+        stage.setTitle(title);
+        stage.setScene(new Scene(root));
+        stage.initOwner(parentWindow);
+
+        flag.set(true);
+        stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
+
+        return stage;
+    }
+
     public void file_colorChecker()
     {
         if (colorCheckerWindowOpen.get())
@@ -641,7 +662,10 @@ public class MenubarController
 
         try
         {
-            makeWindow("Console", consoleWindowOpen, "fxml/menubar/Console.fxml");
+            Stage stage = makeStage("Console", consoleWindowOpen, "fxml/menubar/Console.fxml");
+            stage.setResizable(true);
+            stage.initStyle(StageStyle.DECORATED);
+            stage.show();
         }
         catch (IOException e)
         {
