@@ -79,7 +79,7 @@ public final class ToolBox
         }
         catch(RuntimeException e)
         {
-            e.printStackTrace();
+            log.error("An error occurred handling scroll event:", e);
         }
     }
 

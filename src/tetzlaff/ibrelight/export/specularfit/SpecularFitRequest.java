@@ -198,7 +198,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
             throw new IllegalArgumentException("Geometry is null; cannot export GLTF.");
         }
 
-        System.out.println("Starting glTF export...");
+        log.info("Starting glTF export...");
 
         try
         {
@@ -220,12 +220,11 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
             }
 
             exporter.write(new File(settings.getOutputDirectory(), "model.glb"));
-            System.out.println("DONE!");
+            log.info("DONE!");
         }
         catch (IOException e)
         {
-            System.out.println("Error occurred during glTF export:");
-            e.printStackTrace();
+            log.error("Error occurred during glTF export:", e);
         }
     }
 }

@@ -121,7 +121,7 @@ public class InteractiveApplication
                 }
                 catch (InterruptedException e)
                 {
-                    e.printStackTrace();
+                    log.error("Interrupted while waiting for min frame delta:", e);
                 }
             }
         }

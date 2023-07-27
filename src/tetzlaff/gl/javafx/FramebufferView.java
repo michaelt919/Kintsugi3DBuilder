@@ -33,12 +33,15 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.converter.CharacterStringConverter;
 import org.lwjgl.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.FramebufferSize;
 import tetzlaff.gl.window.*;
 import tetzlaff.ibrelight.app.WindowSynchronization;
 
 public final class FramebufferView extends Region
 {
+    private static final Logger log = LoggerFactory.getLogger(FramebufferView.class);
     private final ImageView imageView;
     private FramebufferCanvas<?> canvas;
 
@@ -118,7 +121,7 @@ public final class FramebufferView extends Region
                 }
                 catch(RuntimeException e)
                 {
-                    e.printStackTrace();
+                    log.error("An error has occurred:", e);
                 }
             }));
         refresh.play();

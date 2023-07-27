@@ -369,9 +369,4 @@ public final class Matrix4
         }
         return s.toString();
     }
-
-    public void print()
-    {
-        System.out.println(this);
-    }
 }
