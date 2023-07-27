@@ -76,4 +76,16 @@ public class ImageFinder
             throw new FileNotFoundException(String.format("'%s' not found.", requestedFile.getName()));
         }
     }
+
+    public File tryFindImageFile(File requestedFile)
+    {
+        try
+        {
+            return findImageFile(requestedFile);
+        }
+        catch (FileNotFoundException e)
+        {
+            return null;
+        }
+    }
 }

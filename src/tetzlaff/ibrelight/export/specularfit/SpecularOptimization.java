@@ -190,7 +190,7 @@ public class SpecularOptimization
                 File geometryFile = sampled.getViewSet().getGeometryFile();
                 File inputNormalMap = geometryFile == null ? null :
                     ImageFinder.getInstance()
-                        .findImageFile(new File(geometryFile.getParentFile(),
+                        .tryFindImageFile(new File(geometryFile.getParentFile(),
                             sampled.getGeometry().getMaterial().getNormalMap().getMapName()));
 
                 // Optimize weight maps and normal maps by blocks to fill the full resolution textures
