@@ -23,11 +23,10 @@ public class WeightImageCreator<ContextType extends Context<ContextType>> implem
 
     private final int weightsPerImage;
 
-    private final Program<ContextType> program;
+    private final ProgramObject<ContextType> program;
     private final VertexBuffer<ContextType> rect;
     private final Drawable<ContextType> drawable;
     private final FramebufferObject<ContextType> framebuffer;
-    private final TextureFitSettings settings;
 
     public WeightImageCreator(ContextType context, TextureFitSettings settings, int weightsPerImage) throws FileNotFoundException
     {
@@ -43,8 +42,6 @@ public class WeightImageCreator<ContextType extends Context<ContextType>> implem
         drawable = context.createDrawable(program);
         drawable.addVertexBuffer("position", rect);
         drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
-
-        this.settings = settings;
 
         framebuffer = context.buildFramebufferObject(settings.width, settings.height)
             .addColorAttachment(ColorFormat.RGBA8)
