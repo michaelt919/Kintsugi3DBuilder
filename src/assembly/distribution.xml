@@ -11,11 +11,11 @@
             <outputDirectory></outputDirectory>
         </file>
         <file>
-            <source>ibrelight-about.txt</source>
+            <source>kintsugi3d-builder-about.txt</source>
             <outputDirectory></outputDirectory>
         </file>
         <file>
-            <source>target/IBRelight.exe</source>
+            <source>target/Kintsugi3DBuilder.exe</source>
             <outputDirectory></outputDirectory>
         </file>
     </files>

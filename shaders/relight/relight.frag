@@ -178,7 +178,7 @@ uniform vec3 viewPos;
 
 #endif
 
-#line 176 0
+#line 182 0
 
 uniform int objectID;
 uniform vec3 holeFillColor;

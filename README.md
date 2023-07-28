@@ -1,4 +1,4 @@
-IBRelight
+Kintsugi 3D Builder
 
 Contributors:
 - Michael Tetzlaff (University of Minnesota / University of Wisconsin - Stout) - primary developer
@@ -7,21 +7,20 @@ Contributors:
 - Michael Ludwig (University of Minnesota) - contributor
 - Sam Steinkamp (University of Minnesota) - contributor
 - Josh Lyu (University of Wisconsin - Stout) - contributor
-- Mey Amor (University of Wisconsin - Stout) - contributor
 - Jacob Buelow (University of Wisconsin - Stout) - contributor
 - Luke Denney (University of Wisconsin - Stout) - contributor
 - Darcy Hannen (University of Wisconsin - Stout) - UX designer
 - Gary Meyer (University of Minnesota) - designer and advisor
 
-Copyright (c) Seth Berrier, Michael Tetzlaff, Zhangchi (Josh) Lyu, Mey Amor, Jacob Buelow, Luke Denney 2023
+Copyright (c) Seth Berrier, Michael Tetzlaff, Zhangchi (Josh) Lyu, Jacob Buelow, Luke Denney 2023
 
 Copyright (c) The Regents of the University of Minnesota 2019
 
 Licensed under GPLv3 
 ( http://www.gnu.org/licenses/gpl-3.0.html )
 
-IBRelight is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-IBRelight is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+Kintsugi 3D Builder is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+Kintsugi 3D Builder is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  
 Requests for source code, comments, or bug reports should be sent to
 Michael Tetzlaff ( tetzlaffm@uwstout.edu )

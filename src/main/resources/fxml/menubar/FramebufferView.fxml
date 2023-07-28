@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import tetzlaff.gl.javafx.*?>
+<?import kintsugi3d.gl.javafx.*?>
 
 <!--
   ~ Copyright (c) 2023 Seth Berrier, Michael Tetzlaff, Josh Lyu, Luke Denney, Jacob Buelow
