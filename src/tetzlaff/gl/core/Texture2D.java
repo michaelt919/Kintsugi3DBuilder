@@ -81,6 +81,15 @@ public interface Texture2D<ContextType extends Context<ContextType>>
     default void blitCroppedAndScaled(int destX, int destY, int destWidth, int destHeight,
         Texture2D<ContextType> readSource, int srcX, int srcY, int srcWidth, int srcHeight, boolean linearFiltering)
     {
+        if (this.isInternalFormatCompressed())
+        {
+            throw new UnsupportedOperationException("Cannot blit to a compressed texture.");
+        }
+        else if (readSource.isInternalFormatCompressed())
+        {
+            throw new UnsupportedOperationException("Cannot blit from a compressed texture.");
+        }
+
         FramebufferObjectBuilder<ContextType> fboBuilder = getContext().buildFramebufferObject(readSource.getWidth(), readSource.getHeight());
 
         if (this.getTextureType() == TextureType.COLOR)

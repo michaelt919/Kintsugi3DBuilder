@@ -54,6 +54,7 @@ public class Material implements ReadonlyMaterial
     private ReadonlyMaterialBumpMap bumpMap;
     private ReadonlyMaterialTextureMap normalMap;
     private ReadonlyMaterialScalarMap displacementMap;
+    private ReadonlyMaterialScalarMap ambientOcclusionMap;
 
     public Material(String name)
     {
@@ -244,8 +245,13 @@ public class Material implements ReadonlyMaterial
                                     break;
                                 case "normal":
                                 case "norm":
+                                case "map_bump": // Metashape convention
                                     ReadonlyMaterialTextureMap normalMap = parseTextureStatement(scanner);
                                     currentMaterial.setNormalMap(normalMap);
+                                    break;
+                                case "map_ao": // Metashape convention
+                                    ReadonlyMaterialScalarMap aoMap = parseScalarMapStatement(scanner);
+                                    currentMaterial.setAmbientOcclusionMap(aoMap);
                                     break;
                             }
                         }
@@ -883,6 +889,17 @@ public class Material implements ReadonlyMaterial
     public void setDisplacementMap(ReadonlyMaterialScalarMap displacmentMap)
     {
         this.displacementMap = displacmentMap;
+    }
+
+    @Override
+    public ReadonlyMaterialScalarMap getAmbientOcclusionMap()
+    {
+        return ambientOcclusionMap;
+    }
+
+    public void setAmbientOcclusionMap(ReadonlyMaterialScalarMap ambientOcclusionMap)
+    {
+        this.ambientOcclusionMap = ambientOcclusionMap;
     }
 
     @Override

@@ -95,7 +95,7 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         GL.createCapabilities(); // Make a valid OpenGL Context
         log.info("OpenGL version: " + glGetString(GL_VERSION));
         log.info("LWJGL version: " +
-                String.valueOf(Version.VERSION_MAJOR) + '.' + Version.VERSION_MINOR + '.' + Version.VERSION_REVISION +
+                Version.VERSION_MAJOR + '.' + Version.VERSION_MINOR + '.' + Version.VERSION_REVISION +
                 (Version.BUILD_TYPE == BuildType.ALPHA ? "a" : Version.BUILD_TYPE == BuildType.BETA ? "b" : "")
                 /*Version.getVersion()*/ /* <== causes annoying exception breakpoints in Eclipse */);
         log.info("GLFW version: " + glfwGetVersionString());

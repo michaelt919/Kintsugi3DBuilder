@@ -17,7 +17,6 @@ import java.util.stream.IntStream;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Drawable;
 import tetzlaff.gl.core.Framebuffer;
-import tetzlaff.gl.core.PrimitiveMode;
 import tetzlaff.util.ColorList;
 import tetzlaff.util.ColorNativeBufferList;
 
@@ -80,7 +79,7 @@ public class SequentialViewRenderStream<ContextType extends Context<ContextType>
             drawable.draw(framebuffer);
 
             // Copy framebuffer from GPU to main memory.
-            IntStream.range(0, attachmentCount).forEach(i -> framebuffer.readFloatingPointColorBufferRGBA(i, framebufferData[i].buffer));
+            IntStream.range(0, attachmentCount).forEach(i -> framebuffer.getTextureReaderForColorAttachment(i).readFloatingPointRGBA(framebufferData[i].buffer));
             action.accept(framebufferData);
         }
     }

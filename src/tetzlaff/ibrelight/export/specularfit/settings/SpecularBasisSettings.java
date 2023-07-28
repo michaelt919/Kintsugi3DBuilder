@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Seth Berrier, Michael Tetzlaff, Josh Lyu, Luke Denney, Jacob Buelow
+ * Copyright (c) 2019-2023 Seth Berrier, Michael Tetzlaff, Josh Lyu, Luke Denney, Jacob Buelow
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -10,7 +10,7 @@
  *
  */
 
-package tetzlaff.ibrelight.export.specularfit;
+package tetzlaff.ibrelight.export.specularfit.settings;
 
 public class SpecularBasisSettings
 {

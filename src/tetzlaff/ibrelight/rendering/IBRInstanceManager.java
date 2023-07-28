@@ -41,6 +41,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
     private final ContextType context;
 
+    private boolean unloadRequested = false;
     private IBRInstance<ContextType> ibrInstance = null;
     private IBRInstance<ContextType> newInstance = null;
     private LoadingMonitor loadingMonitor;
@@ -339,11 +340,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     @Override
     public void unload()
     {
-        if (ibrInstance != null)
-        {
-            ibrInstance.close();
-            ibrInstance = null;
-        }
+        unloadRequested = true;
     }
 
     @Override
@@ -358,25 +355,45 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     @Override
     public void update()
     {
+        if (unloadRequested)
+        {
+            if (ibrInstance != null)
+            {
+                ibrInstance.close();
+                ibrInstance = null;
+            }
+
+            unloadRequested = false;
+        }
+
         if (newInstance != null)
         {
             // If a new instance was just loaded, initialize it.
             try
             {
                 newInstance.initialize();
-
-                // Check for an old instance just to be safe
-                unload();
-
-                // Use the new instance as the active instance if initialization was successful
-                ibrInstance = newInstance;
             }
             catch (InitializationException e)
             {
                 log.error("Error occurred initializing new instance:", e);
+
+                newInstance.close();
+                newInstance = null;
             }
 
-            newInstance = null;
+            if (newInstance != null)
+            {
+                // Check for an old instance just to be safe
+                if (ibrInstance != null)
+                {
+                    ibrInstance.close();
+                }
+
+                // Use the new instance as the active instance if initialization was successful
+                ibrInstance = newInstance;
+
+                newInstance = null;
+            }
 
             // Invoke callbacks
             for (Consumer<IBRInstance<ContextType>> callback : instanceLoadCallbacks)

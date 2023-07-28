@@ -16,7 +16,6 @@ import org.ejml.simple.SimpleMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tetzlaff.gl.builders.ProgramBuilder;
-import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 
@@ -35,8 +34,8 @@ import java.util.stream.IntStream;
 public class PTMOptimization<ContextType extends Context<ContextType>>
 {
     private static final Logger log = LoggerFactory.getLogger(PTMOptimization.class);
-    private TextureFitSettings settings;
-    private PolynomialTextureMapBuilder mapBuilder;
+    private final TextureFitSettings settings;
+    private final PolynomialTextureMapBuilder mapBuilder;
 
     private float[] averageColors;
     private float[] unlitColors;
@@ -69,15 +68,15 @@ public class PTMOptimization<ContextType extends Context<ContextType>>
                     .addColorAttachment(ColorFormat.RGBA32F) // color
                     .addColorAttachment(ColorFormat.RGBA32F) // color
                     .createFramebufferObject();
-                Program<ContextType> averageProgram = getColorAverageProgramBuilder(programFactory).createProgram())
+                ProgramObject<ContextType> averageProgram = getColorAverageProgramBuilder(programFactory).createProgram())
             {
                 resources.setupShaderProgram(averageProgram);
                 Drawable<ContextType> averageDrawable = resources.createDrawable(averageProgram);
                 averageFBO.clearColorBuffer(0, 0, 0, 0, 0);
                 averageFBO.clearColorBuffer(1, 0, 0, 0, 0);
                 averageDrawable.draw(PrimitiveMode.TRIANGLES, averageFBO);
-                averageColors = averageFBO.readFloatingPointColorBufferRGBA(0);
-                unlitColors = averageFBO.readFloatingPointColorBufferRGBA(1);
+                averageColors = averageFBO.getTextureReaderForColorAttachment(0).readFloatingPointRGBA();
+                unlitColors = averageFBO.getTextureReaderForColorAttachment(1).readFloatingPointRGBA();
             }
 
             resources.setupShaderProgram(luminanceStream.getProgram());

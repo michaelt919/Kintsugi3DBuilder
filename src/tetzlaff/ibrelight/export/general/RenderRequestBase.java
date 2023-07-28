@@ -143,10 +143,9 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
         }
     }
 
-    protected
-    Program<ContextType> createProgram(IBRResourcesImageSpace<ContextType> resources) throws FileNotFoundException
+    protected ProgramObject<ContextType> createProgram(IBRResourcesImageSpace<ContextType> resources) throws FileNotFoundException
     {
-        Program<ContextType> program =
+        ProgramObject<ContextType> program =
             resources.getShaderProgramBuilder(this.settingsModel.get("renderingMode", StandardRenderingMode.class))
                 .define("VISIBILITY_TEST_ENABLED", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"))
                 .define("SHADOW_TEST_ENABLED", resources.shadowTextures != null && this.settingsModel.getBoolean("occlusionEnabled"))

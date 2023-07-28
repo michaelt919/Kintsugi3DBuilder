@@ -15,6 +15,7 @@ import java.util.stream.IntStream;
 
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
+import tetzlaff.ibrelight.export.specularfit.settings.SpecularBasisSettings;
 import tetzlaff.optimization.function.BasisFunctions;
 import tetzlaff.optimization.function.MatrixBuilder;
 import tetzlaff.optimization.function.MatrixBuilderSample;

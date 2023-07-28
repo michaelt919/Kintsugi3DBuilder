@@ -31,8 +31,8 @@ import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable
 {
     private static final Logger log = LoggerFactory.getLogger(ImageReconstruction.class);
-    private final Program<ContextType> program;
-    private final Program<ContextType> groundTruthProgram;
+    private final ProgramObject<ContextType> program;
+    private final ProgramObject<ContextType> groundTruthProgram;
 
     private final Drawable<ContextType> drawable;
     private final Drawable<ContextType> groundTruthDrawable;
@@ -102,7 +102,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
             reconstructionAction.accept(framebuffer);
         }
 
-        float[] reconstruction = framebuffer.readFloatingPointColorBufferRGBA(0);
+        float[] reconstruction = framebuffer.getTextureReaderForColorAttachment(0).readFloatingPointRGBA();
 
         log.info("View " + viewIndex + ':');
 
@@ -142,7 +142,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                 groundTruthAction.accept(framebuffer);
             }
 
-            float[] groundTruth = framebuffer.readFloatingPointColorBufferRGBA(0);
+            float[] groundTruth = framebuffer.getTextureReaderForColorAttachment(0).readFloatingPointRGBA();
 
             long sampleCount = IntStream.range(0, groundTruth.length / 4)
                 .parallel()

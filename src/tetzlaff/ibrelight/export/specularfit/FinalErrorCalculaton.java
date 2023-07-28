@@ -59,11 +59,11 @@ public final class FinalErrorCalculaton
     {
         if (CALCULATE_NORMAL_RMSE && resources.getMaterialResources().getNormalTexture() != null)
         {
-            try (Program<ContextType> textureRectProgram = resources.getContext().getShaderProgramBuilder()
+            try (ProgramObject<ContextType> textureRectProgram = resources.getContext().getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_dynamic.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/common/texture.frag"))
                 .createProgram();
-                FramebufferObject<ContextType> textureRectFBO =
+                 FramebufferObject<ContextType> textureRectFBO =
                     resources.getContext().buildFramebufferObject(specularFit.getWidth(), specularFit.getHeight()).addColorAttachment().createFramebufferObject())
             {
                 // Use the real geometry rather than a rectangle so that the normal map is masked properly for the part of the normal map used.
@@ -73,7 +73,7 @@ public final class FinalErrorCalculaton
                 textureRect.draw(PrimitiveMode.TRIANGLE_FAN, textureRectFBO);
 //                    textureRectFBO.saveColorBufferToFile(0, "PNG", new File(textureFitSettings.outputDirectory, "test_normalGT.png"));
 
-                float[] groundTruth = textureRectFBO.readFloatingPointColorBufferRGBA(0);
+                float[] groundTruth = textureRectFBO.getTextureReaderForColorAttachment(0).readFloatingPointRGBA();
                 float[] estimate = specularFit.getNormalMap().getColorTextureReader().readFloatingPointRGBA();
 
                 double rmse = Math.sqrt( // root
@@ -110,7 +110,7 @@ public final class FinalErrorCalculaton
         SpecularResources<ContextType> specularFit, ShaderBasedErrorCalculator<ContextType> basisErrorCalculator,
         PrintStream rmseOut)
     {
-        try (Program<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(resources, programFactory))
+        try (ProgramObject<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(resources, programFactory))
         {
             // Calculate RMSE using basis diffuse
             basisErrorCalculator.update();
@@ -164,7 +164,7 @@ public final class FinalErrorCalculaton
             SpecularResources<ContextType> specularFit, Framebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
         throws FileNotFoundException
     {
-        try (Program<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(resources, programFactory))
+        try (ProgramObject<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(resources, programFactory))
         {
             Drawable<ContextType> ggxErrorCalcDrawable = resources.createDrawable(ggxErrorCalcProgram);
             ggxErrorCalcProgram.setTexture("normalEstimate", specularFit.getNormalMap());
@@ -214,8 +214,8 @@ public final class FinalErrorCalculaton
             drawable.draw(framebuffer);
 
             // Copy framebuffer from GPU to main memory.
-            framebuffer.readFloatingPointColorBufferRGBA(0, pixelErrors);
-//            float[] pixelErrors = framebuffer.readFloatingPointColorBufferRGBA(0);
+            framebuffer.getTextureReaderForColorAttachment(0).readFloatingPointRGBA(pixelErrors);
+            //            float[] pixelErrors = framebuffer.readFloatingPointColorBufferRGBA(0);
 
             // Add up per-pixel error.
             WeightedError errorViewTotal = IntStream.range(0, pixelErrors.limit() / 4)
@@ -242,7 +242,7 @@ public final class FinalErrorCalculaton
     }
 
     private static <ContextType extends Context<ContextType>>
-    Program<ContextType> createFinalErrorCalcProgram(
+    ProgramObject<ContextType> createFinalErrorCalcProgram(
         ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {
         return programFactory.createProgram(resources,
@@ -252,7 +252,7 @@ public final class FinalErrorCalculaton
     }
 
     private static <ContextType extends Context<ContextType>>
-    Program<ContextType> createGGXErrorCalcProgram(
+    ProgramObject<ContextType> createGGXErrorCalcProgram(
         ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {
         return programFactory.createProgram(resources,

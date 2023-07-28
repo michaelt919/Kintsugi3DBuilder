@@ -15,6 +15,7 @@ import tetzlaff.gl.core.*;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
+import tetzlaff.ibrelight.export.specularfit.settings.SpecularBasisSettings;
 
 import java.io.File;
 import java.io.IOException;

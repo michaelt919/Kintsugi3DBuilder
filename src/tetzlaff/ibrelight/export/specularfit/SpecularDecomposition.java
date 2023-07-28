@@ -14,6 +14,7 @@ package tetzlaff.ibrelight.export.specularfit;
 import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.ibrelight.core.TextureFitSettings;
+import tetzlaff.ibrelight.export.specularfit.settings.SpecularBasisSettings;
 
 import java.io.File;
 import java.util.List;

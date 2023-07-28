@@ -127,7 +127,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
     private void selectSampleLocations(Framebuffer<ContextType> fbo) throws IOException
     {
 
-        try (Program<ContextType> maskProgram = context.getShaderProgramBuilder()
+        try (ProgramObject<ContextType> maskProgram = context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_dynamic.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/common/solid.frag"))
             .createProgram())
@@ -138,9 +138,10 @@ public class ImageCache<ContextType extends Context<ContextType>>
             maskDrawable.draw(fbo);
 
             // Debugging
-            fbo.saveColorBufferToFile(0, "PNG", new File(settings.getCacheDirectory(), "debug.png"));
+            File file = new File(settings.getCacheDirectory(), "debug.png");
+            fbo.getTextureReaderForColorAttachment(0).saveToFile("PNG", file);
 
-            int[] mask = fbo.readColorBufferARGB(0);
+            int[] mask = fbo.getTextureReaderForColorAttachment(0).readARGB();
             BufferedImage maskImg = BufferedImageBuilder.build()
                 .setDataFromArray(mask, settings.getTextureWidth(), settings.getTextureHeight())
                 .flipVertical()
@@ -238,10 +239,25 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
     private String getPNGFilename(int viewIndex)
     {
-        // Change file extension to .png
-        String[] filenameParts = resources.getViewSet().getImageFileName(viewIndex).split("\\.");
-        filenameParts[filenameParts.length - 1] = "png";
-        return String.join(".", filenameParts);
+        String originalFilename = resources.getViewSet().getImageFileName(viewIndex);
+        String originalFilenameLowercase = originalFilename.toLowerCase();
+        if (originalFilenameLowercase.endsWith("png"))
+        {
+            return originalFilename;
+        }
+        else if (originalFilenameLowercase.endsWith("jpeg") || originalFilenameLowercase.endsWith("jpg")
+            || originalFilenameLowercase.endsWith("tif") || originalFilenameLowercase.endsWith("tiff"))
+        {
+            // Change file extension to .png
+            String[] filenameParts = resources.getViewSet().getImageFileName(viewIndex).split("\\.");
+            filenameParts[filenameParts.length - 1] = "png";
+            return String.join(".", filenameParts);
+        }
+        else
+        {
+            // Append .png
+            return originalFilename + ".png";
+        }
     }
 
     private void buildCache(Framebuffer<ContextType> fbo)
@@ -254,7 +270,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         loadOptions.setMipmapsRequested(false);
         loadOptions.setDepthImagesRequested(true);
 
-        try(Program<ContextType> texSpaceProgram = SingleCalibratedImageResource.getShaderProgramBuilder(context, resources.getViewSet(), loadOptions)
+        try(ProgramObject<ContextType> texSpaceProgram = SingleCalibratedImageResource.getShaderProgramBuilder(context, resources.getViewSet(), loadOptions)
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_dynamic.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/colorappearance/projtex_single.frag"))
             .createProgram())
@@ -324,8 +340,8 @@ public class ImageCache<ContextType extends Context<ContextType>>
                                 new File(new File(settings.getCacheDirectory(), String.format("%d_%d", i, j)), pngFilename));
 
                             // See derivations for x above
-                            int ySampleStart = (int) Math.ceil((double) (y + 0.5) * (double) settings.getSampledSize() / (double) settings.getTextureHeight()) - 1;
-                            int ySampleEnd = (int) Math.ceil((double) (yNext - 0.5) * (double) settings.getSampledSize() / (double) settings.getTextureHeight());
+                            int ySampleStart = (int) Math.ceil((y + 0.5) * (double) settings.getSampledSize() / (double) settings.getTextureHeight()) - 1;
+                            int ySampleEnd = (int) Math.ceil((yNext - 0.5) * (double) settings.getSampledSize() / (double) settings.getTextureHeight());
 
                             // Fill in any pixels in the "sampled" image that come from this block, using the pixel coordinates selected randomly earlier.
                             for (int xSample = xSampleStart; xSample < xSampleEnd; xSample++)
@@ -413,22 +429,25 @@ public class ImageCache<ContextType extends Context<ContextType>>
                 GeometryFramebuffer.createEmpty(context, settings.getSampledSize(), settings.getSampledSize());
 
             // Sample position buffer
+            Framebuffer<ContextType> contextTypeFramebuffer2 = geomTexturesFullRes.getFramebuffer();
             sampledGeometryTextures.getPositionTexture().load(
                 sampleHighResBuffer(NativeVectorBufferFactory.getInstance()
                     .createFromFloatArray(4, settings.getTextureWidth() * settings.getTextureHeight(),
-                        geomTexturesFullRes.getFramebuffer().readFloatingPointColorBufferRGBA(0))));
+                        contextTypeFramebuffer2.getTextureReaderForColorAttachment(0).readFloatingPointRGBA())));
 
             // Sample normal buffer
+            Framebuffer<ContextType> contextTypeFramebuffer1 = geomTexturesFullRes.getFramebuffer();
             sampledGeometryTextures.getNormalTexture().load(
                 sampleHighResBuffer(NativeVectorBufferFactory.getInstance()
                     .createFromFloatArray(4, settings.getTextureWidth() * settings.getTextureHeight(),
-                        geomTexturesFullRes.getFramebuffer().readFloatingPointColorBufferRGBA(1))));
+                        contextTypeFramebuffer1.getTextureReaderForColorAttachment(1).readFloatingPointRGBA())));
 
             // Sample tangent buffer
+            Framebuffer<ContextType> contextTypeFramebuffer = geomTexturesFullRes.getFramebuffer();
             sampledGeometryTextures.getTangentTexture().load(
                 sampleHighResBuffer(NativeVectorBufferFactory.getInstance()
                     .createFromFloatArray(4, settings.getTextureWidth() * settings.getTextureHeight(),
-                        geomTexturesFullRes.getFramebuffer().readFloatingPointColorBufferRGBA(2))));
+                        contextTypeFramebuffer.getTextureReaderForColorAttachment(2).readFloatingPointRGBA())));
 
             return sampledGeometryTextures;
         }

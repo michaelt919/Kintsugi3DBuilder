@@ -207,6 +207,15 @@ public interface Texture3D<ContextType extends Context<ContextType>>
         Texture3D<ContextType> readSource, int srcX, int srcY, int srcZ, int srcWidth, int srcHeight, int srcDepth,
         boolean linearFiltering)
     {
+        if (this.isInternalFormatCompressed())
+        {
+            throw new UnsupportedOperationException("Cannot blit to a compressed texture.");
+        }
+        else if (readSource.isInternalFormatCompressed())
+        {
+            throw new UnsupportedOperationException("Cannot blit from a compressed texture.");
+        }
+
         FramebufferObjectBuilder<ContextType> fboBuilder = getContext().buildFramebufferObject(readSource.getWidth(), readSource.getHeight());
 
         if (this.getTextureType() == TextureType.COLOR)

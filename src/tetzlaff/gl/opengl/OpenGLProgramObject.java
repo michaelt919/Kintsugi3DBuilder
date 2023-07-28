@@ -15,7 +15,7 @@ import java.io.FileNotFoundException;
 import java.util.*;
 
 import tetzlaff.gl.builders.base.ProgramBuilderBase;
-import tetzlaff.gl.core.Program;
+import tetzlaff.gl.core.ProgramObject;
 import tetzlaff.gl.core.Shader;
 import tetzlaff.gl.core.Texture;
 import tetzlaff.gl.core.UniformBuffer;
@@ -29,7 +29,7 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL31.*;
 
-final class OpenGLProgram implements Program<OpenGLContext>
+final class OpenGLProgramObject implements ProgramObject<OpenGLContext>
 {
     final OpenGLContext context;
     private final Map<String, Object> defines;
@@ -47,9 +47,9 @@ final class OpenGLProgram implements Program<OpenGLContext>
         }
 
         @Override
-        public OpenGLProgram createProgram() throws FileNotFoundException
+        public OpenGLProgramObject createProgram() throws FileNotFoundException
         {
-            OpenGLProgram program = new OpenGLProgram(this.context, this.getDefines());
+            OpenGLProgramObject program = new OpenGLProgramObject(this.context, this.getDefines());
             Iterable<Shader<OpenGLContext>> compiledShaders = this.compileShaders();
             for (Shader<OpenGLContext> shader : compiledShaders)
             {
@@ -60,7 +60,7 @@ final class OpenGLProgram implements Program<OpenGLContext>
         }
     }
 
-    private OpenGLProgram(OpenGLContext context, Map<String, Object> defines)
+    private OpenGLProgramObject(OpenGLContext context, Map<String, Object> defines)
     {
         this.context = context;
         this.defines = defines;
@@ -77,7 +77,7 @@ final class OpenGLProgram implements Program<OpenGLContext>
         uniformBufferManager = new ResourceManager<>(this.context.getState().getMaxCombinedUniformBlocks());
     }
 
-    private OpenGLProgram attachShader(Shader<OpenGLContext> shader)
+    private void attachShader(Shader<OpenGLContext> shader)
     {
         if (shader instanceof OpenGLShader)
         {
@@ -85,7 +85,6 @@ final class OpenGLProgram implements Program<OpenGLContext>
             glAttachShader(programId, shaderCast.getShaderId());
             OpenGLContext.errorCheck();
             ownedShaders.add(shaderCast);
-            return this;
         }
         else
         {

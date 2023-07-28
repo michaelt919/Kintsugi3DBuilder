@@ -16,11 +16,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import tetzlaff.gl.core.*;
+import tetzlaff.ibrelight.export.specularfit.settings.SpecularBasisSettings;
 
 public class BasisImageCreator<ContextType extends Context<ContextType>> implements AutoCloseable
 {
     // Program for drawing basis functions as supplemental output
-    private final Program<ContextType> program;
+    private final ProgramObject<ContextType> program;
 
     // Rectangle vertex buffer
     private final VertexBuffer<ContextType> rect;
@@ -64,7 +65,7 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
         {
             drawable.program().setUniform("basisIndex", i);
             drawable.draw(framebuffer);
-            framebuffer.saveColorBufferToFile(0, "PNG", new File(outputDirectory, String.format("basis_%02d.png", i)));
+            framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(outputDirectory, String.format("basis_%02d.png", i)));
         }
     }
 

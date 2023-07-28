@@ -19,7 +19,7 @@ import tetzlaff.gl.core.*;
 public class ShaderHoleFill<ContextType extends Context<ContextType>> implements AutoCloseable
 {
     // Hole fill program
-    private final Program<ContextType> program;
+    private final ProgramObject<ContextType> program;
 
     // Rectangle vertex buffer
     private final VertexBuffer<ContextType> rect;

@@ -15,10 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-import tetzlaff.gl.core.Context;
-import tetzlaff.gl.core.Drawable;
-import tetzlaff.gl.core.FramebufferObject;
-import tetzlaff.gl.core.Program;
+import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.IBRInstance;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
@@ -61,7 +58,7 @@ class MultiframeRenderRequest<ContextType extends Context<ContextType>> extends 
 
         try
         (
-            Program<ContextType> program = createProgram(resources);
+            ProgramObject<ContextType> program = createProgram(resources);
             FramebufferObject<ContextType> framebuffer = createFramebuffer(resources.getContext())
         )
         {
@@ -82,7 +79,7 @@ class MultiframeRenderRequest<ContextType extends Context<ContextType>> extends 
 
                 File exportFile = new File(getOutputDirectory(), String.format("%04d.png", i));
                 getOutputDirectory().mkdirs();
-                framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
+                framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", exportFile);
 
                 if (callback != null)
                 {

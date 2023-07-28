@@ -18,6 +18,7 @@ import tetzlaff.gl.core.ColorFormat;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Texture2D;
 import tetzlaff.ibrelight.core.TextureFitSettings;
+import tetzlaff.ibrelight.export.specularfit.settings.SpecularBasisSettings;
 
 /**
  * Can do the roughness / ORM map fit, hole fill, etc., but should not need access to the original photographs

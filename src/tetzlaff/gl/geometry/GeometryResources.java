@@ -16,7 +16,6 @@ import java.io.FileNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.*;
-import tetzlaff.ibrelight.export.specularfit.BRDFReconstruction;
 
 public class GeometryResources<ContextType extends Context<ContextType>> implements Resource
 {

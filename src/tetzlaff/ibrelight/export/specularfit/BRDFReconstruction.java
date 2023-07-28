@@ -15,6 +15,7 @@ import org.ejml.data.DMatrixRMaj;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tetzlaff.gl.vecmath.DoubleVector3;
+import tetzlaff.ibrelight.export.specularfit.settings.SpecularBasisSettings;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.optimization.function.BasisFunctions;
 import tetzlaff.optimization.MatrixSystem;

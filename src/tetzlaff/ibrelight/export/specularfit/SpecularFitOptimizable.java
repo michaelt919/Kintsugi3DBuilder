@@ -18,11 +18,10 @@ import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tetzlaff.gl.core.Context;
-import tetzlaff.gl.core.Drawable;
-import tetzlaff.gl.core.Program;
-import tetzlaff.gl.core.Texture2D;
+import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.TextureFitSettings;
+import tetzlaff.ibrelight.export.specularfit.settings.NormalOptimizationSettings;
+import tetzlaff.ibrelight.export.specularfit.settings.SpecularBasisSettings;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStream;
 import tetzlaff.ibrelight.rendering.resources.GraphicsStreamResource;
 import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;

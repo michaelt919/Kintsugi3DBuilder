@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.ibrelight.export.specularfit.settings.SpecularBasisSettings;
 import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 import tetzlaff.util.ColorArrayList;
 import tetzlaff.optimization.KMeansClustering;
@@ -40,7 +41,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
         this.specularBasisSettings = specularBasisSettings;
     }
 
-    private Program<ContextType> createAverageProgram(SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
+    private ProgramObject<ContextType> createAverageProgram(SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {
         return programFactory.createProgram(resources,
             new File("shaders/common/texspace_dynamic.vert"),
@@ -49,8 +50,8 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
 
     public void initialize(SpecularFitProgramFactory<ContextType> programFactory, SpecularDecomposition solution)
     {
-        try (Program<ContextType> averageProgram = createAverageProgram(programFactory);
-            FramebufferObject<ContextType> framebuffer =
+        try (ProgramObject<ContextType> averageProgram = createAverageProgram(programFactory);
+             FramebufferObject<ContextType> framebuffer =
                 resources.getContext().buildFramebufferObject(solution.getTextureFitSettings().width, solution.getTextureFitSettings().height)
                     .addColorAttachment(ColorFormat.RGBA32F)
                     .createFramebufferObject())
@@ -77,7 +78,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
 //                }
 //            }
 
-            float[] averages = framebuffer.readFloatingPointColorBufferRGBA(0);
+            float[] averages = framebuffer.getTextureReaderForColorAttachment(0).readFloatingPointRGBA();
 
             List<Vector3> centers = new KMeansClustering(new ColorArrayList(averages)).makeClusters(solution.getWeightsList());
 

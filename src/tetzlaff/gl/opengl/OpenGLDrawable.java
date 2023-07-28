@@ -32,11 +32,11 @@ class OpenGLDrawable extends DrawableBase<OpenGLContext> implements Drawable<Ope
 
     protected final OpenGLContext context;
 
-    private final OpenGLProgram program;
+    private final OpenGLProgramObject program;
     private final OpenGLVertexArray vao;
     private final Map<Integer, VertexAttributeSetting> settings;
 
-    OpenGLDrawable(OpenGLContext context, OpenGLProgram program)
+    OpenGLDrawable(OpenGLContext context, OpenGLProgramObject program)
     {
         this.context = context;
         this.program = program;
@@ -51,13 +51,13 @@ class OpenGLDrawable extends DrawableBase<OpenGLContext> implements Drawable<Ope
     }
 
     @Override
-    public void finalize()
+    protected void finalize()
     {
         vao.close();
     }
 
     @Override
-    public OpenGLProgram program()
+    public OpenGLProgramObject program()
     {
         return this.program;
     }

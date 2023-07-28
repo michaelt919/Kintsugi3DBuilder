@@ -13,7 +13,7 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
 {
     private static final Logger log = LoggerFactory.getLogger(RoughnessOptimizationBase.class);
 
-    protected final Program<ContextType> specularRoughnessFitProgram;
+    protected final ProgramObject<ContextType> specularRoughnessFitProgram;
     protected final VertexBuffer<ContextType> rect;
     protected final Drawable<ContextType> specularRoughnessFitDrawable;
 
@@ -34,7 +34,7 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
         specularRoughnessFitDrawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
 
         // Set up shader program
-        specularRoughnessFitDrawable.addVertexBuffer("position", rect);;
+        specularRoughnessFitDrawable.addVertexBuffer("position", rect);
         basisResources.useWithShaderProgram(specularRoughnessFitProgram);
         weightResources.useWithShaderProgram(specularRoughnessFitProgram);
         specularRoughnessFitProgram.setUniform("gamma", gamma);
@@ -78,8 +78,10 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
     {
         try
         {
-            getFramebuffer().saveColorBufferToFile(0, "PNG", new File(outputDirectory, "specular.png"));
-            getFramebuffer().saveColorBufferToFile(1, "PNG", new File(outputDirectory, "roughness.png"));
+            Framebuffer<ContextType> contextTypeFramebuffer1 = getFramebuffer();
+            contextTypeFramebuffer1.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(outputDirectory, "specular.png"));
+            Framebuffer<ContextType> contextTypeFramebuffer = getFramebuffer();
+            contextTypeFramebuffer.getTextureReaderForColorAttachment(1).saveToFile("PNG", new File(outputDirectory, "roughness.png"));
         }
         catch (IOException e)
         {

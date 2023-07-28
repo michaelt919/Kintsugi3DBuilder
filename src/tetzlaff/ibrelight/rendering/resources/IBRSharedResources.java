@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.util.AbstractList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
@@ -161,15 +160,22 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
                     if (material.getDiffuseMap() == null || material.getDiffuseMap().getMapName() == null)
                     {
                         MaterialColorMap diffuseMap = new MaterialColorMap();
-                        diffuseMap.setMapName(prefix + "_Kd.png");
+                        diffuseMap.setMapName(prefix + ".png");
                         material.setDiffuseMap(diffuseMap);
                     }
 
                     if (material.getNormalMap() == null || material.getNormalMap().getMapName() == null)
                     {
                         MaterialTextureMap normalMap = new MaterialTextureMap();
-                        normalMap.setMapName(prefix + "_norm.png");
+                        normalMap.setMapName(prefix + "_normal.png");
                         material.setNormalMap(normalMap);
+                    }
+
+                    if (material.getAmbientOcclusionMap() == null || material.getAmbientOcclusionMap().getMapName() == null)
+                    {
+                        MaterialScalarMap aoMap = new MaterialScalarMap();
+                        aoMap.setMapName(prefix + "_occlusion.png");
+                        material.setAmbientOcclusionMap(aoMap);
                     }
 
                     if (material.getSpecularMap() == null || material.getSpecularMap().getMapName() == null)

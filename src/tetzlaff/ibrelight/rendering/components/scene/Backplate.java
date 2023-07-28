@@ -26,7 +26,7 @@ public class Backplate<ContextType extends Context<ContextType>> implements Rend
     private final LightingResources<ContextType> lightingResources;
     private final SceneModel sceneModel;
 
-    private Program<ContextType> tintedTexProgram;
+    private ProgramObject<ContextType> tintedTexProgram;
     private Drawable<ContextType> tintedTexDrawable;
     private VertexBuffer<ContextType> rectangleVertices;
 

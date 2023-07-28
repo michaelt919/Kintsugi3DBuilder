@@ -28,16 +28,16 @@ public abstract class SimpleAnimationRequestBase<ContextType extends Context<Con
     private final int frameCount;
     private final File exportPath;
 
-    public interface Builder<RequestType extends SimpleAnimationRequestBase>
+    public interface Builder
     {
-        Builder<RequestType> setWidth(int width);
-        Builder<RequestType> setHeight(int height);
-        Builder<RequestType> setFrameCount(int frameCount);
-        Builder<RequestType> setExportPath(File exportPath);
-        RequestType create();
+        Builder setWidth(int width);
+        Builder setHeight(int height);
+        Builder setFrameCount(int frameCount);
+        Builder setExportPath(File exportPath);
+        <ContextType extends Context<ContextType>> IBRRequest<ContextType> create();
     }
 
-    protected abstract static class BuilderBase<RequestType extends SimpleAnimationRequestBase> implements  Builder<RequestType>
+    protected abstract static class BuilderBase implements Builder
     {
         private int width;
         private int height;
@@ -65,28 +65,28 @@ public abstract class SimpleAnimationRequestBase<ContextType extends Context<Con
         }
 
         @Override
-        public Builder<RequestType> setWidth(int width)
+        public Builder setWidth(int width)
         {
             this.width = width;
             return this;
         }
 
         @Override
-        public Builder<RequestType> setHeight(int height)
+        public Builder setHeight(int height)
         {
             this.height = height;
             return this;
         }
 
         @Override
-        public Builder<RequestType> setFrameCount(int frameCount)
+        public Builder setFrameCount(int frameCount)
         {
             this.frameCount = frameCount;
             return this;
         }
 
         @Override
-        public Builder<RequestType> setExportPath(File exportPath)
+        public Builder setExportPath(File exportPath)
         {
             this.exportPath = exportPath;
             return this;
@@ -132,7 +132,7 @@ public abstract class SimpleAnimationRequestBase<ContextType extends Context<Con
 
                 File exportFile = new File(exportPath, String.format("%04d.png", i));
                 exportFile.getParentFile().mkdirs();
-                framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
+                framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", exportFile);
 
                 if (callback != null)
                 {

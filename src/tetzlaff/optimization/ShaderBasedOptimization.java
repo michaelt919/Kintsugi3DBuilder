@@ -14,13 +14,10 @@ package tetzlaff.optimization;
 import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
@@ -33,7 +30,7 @@ import tetzlaff.gl.core.*;
  */
 public class ShaderBasedOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
 {
-    private final Program<ContextType> estimationProgram;
+    private final ProgramObject<ContextType> estimationProgram;
     private final FramebufferObject<ContextType> framebuffer1;
     private final FramebufferObject<ContextType> framebuffer2;
 
@@ -88,17 +85,18 @@ public class ShaderBasedOptimization<ContextType extends Context<ContextType>> i
     @Override
     public void close()
     {
-        if (!finished)
+        if (!finished) // program will be already closed if finished
         {
             estimationProgram.close();
         }
 
         // Make sure that if the object is "finished", the framebuffer to close is not the back framebuffer.
+        // back framebuffer will be already closed if finished
         if (!finished || !Objects.equals(framebuffer1, backFramebuffer))
         {
             framebuffer1.close();
         }
-        else if (!finished || !Objects.equals(framebuffer2, backFramebuffer))
+        if (!finished || !Objects.equals(framebuffer2, backFramebuffer))
         {
             framebuffer2.close();
         }

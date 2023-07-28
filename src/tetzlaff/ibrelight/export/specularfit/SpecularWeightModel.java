@@ -14,6 +14,7 @@ package tetzlaff.ibrelight.export.specularfit;
 import java.util.function.IntFunction;
 
 import tetzlaff.gl.vecmath.DoubleVector3;
+import tetzlaff.ibrelight.export.specularfit.settings.SpecularBasisSettings;
 import tetzlaff.optimization.LeastSquaresModel;
 
 import static java.lang.Math.PI;

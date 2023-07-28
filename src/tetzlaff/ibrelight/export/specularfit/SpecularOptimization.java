@@ -26,8 +26,10 @@ import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.Projection;
 import tetzlaff.ibrelight.core.ReadonlyViewSet;
 import tetzlaff.ibrelight.core.TextureFitSettings;
+import tetzlaff.ibrelight.export.specularfit.settings.SpecularFitRequestParams;
 import tetzlaff.ibrelight.rendering.resources.*;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
+import tetzlaff.util.ImageFinder;
 
 /**
  * Implement specular fit using algorithm described by Nam et al., 2018
@@ -126,7 +128,9 @@ public class SpecularOptimization
 //        }
 
         // Generate albedo / ORM maps at full resolution (does not require loaded source images)
-        try (AlbedoORMOptimization<ContextType> albedoORM = new AlbedoORMOptimization<>(cache.getContext(), settings.getTextureFitSettings()))
+        try (AlbedoORMOptimization<ContextType> albedoORM = resources.getMaterialResources().getOcclusionTexture() == null ?
+                AlbedoORMOptimization.createWithoutOcclusion(resources.getContext(), settings.getTextureFitSettings()) :
+                AlbedoORMOptimization.createWithOcclusion(resources.getMaterialResources().getOcclusionTexture(), settings.getTextureFitSettings()))
         {
             albedoORM.execute(specularFit);
             albedoORM.saveTextures(settings.getOutputDirectory());
@@ -183,8 +187,14 @@ public class SpecularOptimization
                 // Save the final basis functions
                 sampledDecomposition.saveBasisFunctions(settings.getOutputDirectory());
 
+                File geometryFile = sampled.getViewSet().getGeometryFile();
+                File inputNormalMap = geometryFile == null ? null :
+                    ImageFinder.getInstance()
+                        .tryFindImageFile(new File(geometryFile.getParentFile(),
+                            sampled.getGeometry().getMaterial().getNormalMap().getMapName()));
+
                 // Optimize weight maps and normal maps by blocks to fill the full resolution textures
-                optimizeBlocks(fullResolution, cache, sampledDecomposition);
+                optimizeBlocks(fullResolution, cache, sampledDecomposition, inputNormalMap);
             }
 
             Duration duration = Duration.between(start, Instant.now());
@@ -217,13 +227,35 @@ public class SpecularOptimization
     private <ContextType extends Context<ContextType>> void optimizeBlocks(
         Blittable<SpecularResources<ContextType>> fullResolutionDestination,
         ImageCache<ContextType> cache,
-        SpecularDecompositionFromScratch sampledDecomposition)
+        SpecularDecompositionFromScratch sampledDecomposition,
+        File inputNormalMapFile)
         throws IOException
     {
         SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
 
-        try(TextureBlockResourceFactory<ContextType> blockResourceFactory = cache.createBlockResourceFactory())
+        try(TextureBlockResourceFactory<ContextType> blockResourceFactory = cache.createBlockResourceFactory();
+            Texture2D<ContextType> initialNormalMap = cache.getContext().getTextureFactory()
+                .build2DColorTexture(fullResolutionDestination.getWidth(), fullResolutionDestination.getHeight())
+                .setInternalFormat(ColorFormat.RGBA8)
+                .setMipmapsEnabled(false)
+                .setLinearFilteringEnabled(true)
+                .createTexture())
         {
+            if (inputNormalMapFile != null)
+            {
+                // Reload input normal map since it needs to be uncompressed for blit operations
+                try (Texture2D<ContextType> inputNormalMap = cache.getContext().getTextureFactory()
+                    .build2DColorTextureFromFile(inputNormalMapFile, true)
+                    .setInternalFormat(ColorFormat.RGBA8)
+                    .setMipmapsEnabled(false)
+                    .setLinearFilteringEnabled(true)
+                    .createTexture())
+                {
+                    // May need to rescale to the target resolution
+                    initialNormalMap.blitScaled(inputNormalMap, true);
+                }
+            }
+
             // Optimize each block of the texture map at full resolution.
             for (int i = 0; i < cache.getSettings().getTextureSubdiv(); i++)
             {
@@ -239,6 +271,17 @@ public class SpecularOptimization
                             blockResources, programFactory, blockSettings, settings.getSpecularBasisSettings(),
                             settings.getNormalOptimizationSettings()))
                         {
+                            if (inputNormalMapFile != null)
+                            {
+                                int x = settings.getImageCacheSettings().getBlockStartX(i);
+                                int y = settings.getImageCacheSettings().getBlockStartY(j);
+                                int width = settings.getImageCacheSettings().getBlockStartX(i + 1) - x;
+                                int height = settings.getImageCacheSettings().getBlockStartY(j + 1) - y;
+
+                                blockOptimization.getNormalOptimization().getNormalMap().blitCropped(
+                                    initialNormalMap, x, y, width, height);
+                            }
+
                             // Use basis functions previously optimized at a lower resolution
                             SpecularDecomposition blockDecomposition =
                                 new SpecularDecompositionFromExistingBasis(blockSettings, sampledDecomposition);
@@ -321,7 +364,8 @@ public class SpecularOptimization
         solution.getRoughnessOptimization().saveTextures(settings.getOutputDirectory());
 
         // Generate albedo / ORM maps
-        try(AlbedoORMOptimization<ContextType> albedoORM = new AlbedoORMOptimization<>(context, settings.getTextureFitSettings()))
+        try(AlbedoORMOptimization<ContextType> albedoORM = /* TODO: load occlusion map from Metashape project if this function continues to be needed */
+                AlbedoORMOptimization.createWithoutOcclusion(context, settings.getTextureFitSettings()))
         {
             albedoORM.execute(solution);
             albedoORM.saveTextures(settings.getOutputDirectory());
@@ -340,7 +384,7 @@ public class SpecularOptimization
     }
 
     private static <ContextType extends Context<ContextType>>
-    Program<ContextType> createErrorCalcProgram(
+    ProgramObject<ContextType> createErrorCalcProgram(
         ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
         try

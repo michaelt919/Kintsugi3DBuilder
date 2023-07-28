@@ -22,6 +22,7 @@ import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.TextureFitSettings;
+import tetzlaff.ibrelight.export.specularfit.settings.NormalOptimizationSettings;
 import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
 import tetzlaff.optimization.ReadonlyErrorReport;
 import tetzlaff.optimization.ShaderBasedOptimization;
@@ -171,11 +172,18 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
             smoothNormals.runOnce();
             firstSmooth = false;
         }
+
+        if (normalOptimizationSettings.getNormalSmoothingIterations() > 0)
+        {
+            // Copy smoothed result back into normal estimate
+            estimateNormals.getFrontFramebuffer().blitColorAttachmentFromFramebuffer(0,
+                smoothNormals.getFrontFramebuffer(), 0);
+        }
     }
 
     private FramebufferObject<ContextType> getNormalMapFBO()
     {
-        return (normalOptimizationSettings.getNormalSmoothingIterations() > 0 ? smoothNormals : estimateNormals).getFrontFramebuffer();
+        return estimateNormals.getFrontFramebuffer();
     }
 
 
@@ -188,9 +196,8 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
     {
         try
         {
-            estimateNormals.getFrontFramebuffer().saveColorBufferToFile(0, "PNG",
-                new File(outputDirectory, normalOptimizationSettings.getNormalSmoothingIterations() > 0 ?
-                        "normalPreSmooth.png" : "normal.png"));
+            Framebuffer<ContextType> contextTypeFramebuffer = estimateNormals.getFrontFramebuffer();
+            contextTypeFramebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(outputDirectory, "normal.png"));
         }
         catch (IOException e)
         {

@@ -21,11 +21,11 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.rendering.components.StandardScene;
+import tetzlaff.ibrelight.rendering.resources.DynamicResourceLoader;
+import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace.Builder;
 import tetzlaff.ibrelight.rendering.components.lightcalibration.LightCalibrationRoot;
 import tetzlaff.ibrelight.rendering.components.lit.LitRoot;
-import tetzlaff.ibrelight.rendering.resources.DynamicResourceLoader;
 import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
-import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace.Builder;
 import tetzlaff.interactive.InitializationException;
 import tetzlaff.models.SceneViewport;
 
@@ -51,7 +51,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
     private final SceneModel sceneModel;
 
-    private Program<ContextType> simpleTexProgram;
+    private ProgramObject<ContextType> simpleTexProgram;
     private Drawable<ContextType> simpleTexDrawable;
 
     private LightCalibrationRoot<ContextType> lightCalibration;

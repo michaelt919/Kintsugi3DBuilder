@@ -25,6 +25,7 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.export.specularfit.gltf.SpecularFitGltfExporter;
+import tetzlaff.ibrelight.export.specularfit.settings.SpecularFitRequestParams;
 import tetzlaff.ibrelight.rendering.resources.IBRResources;
 import tetzlaff.ibrelight.rendering.resources.IBRResourcesImageSpace;
 import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
