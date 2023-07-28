@@ -425,11 +425,9 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
         float[] t = {};
 
         int vertexCount = face.size * 3;
-        geometry.vertices = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount);
         if (vertex.properties.keySet().containsAll(List.of(new String[]{"nx", "ny", "nz"})))
         {
             geometry.hasNormals = true;
-            geometry.normals = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount);
 
             vertex.convertProperty("nx", FLOAT32);
             vertex.convertProperty("ny", FLOAT32);
@@ -444,7 +442,6 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
         if (vertexCoords || face.properties.containsKey("texcoord"))
         {
             geometry.hasTexCoords = true;
-            geometry.texCoords = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 2, vertexCount);
         }
 
         if (vertexCoords)
@@ -527,6 +524,38 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
 
         geometry.boundingBoxCenter = new Vector3((boundingBoxMinX + boundingBoxMaxX) / 2, (boundingBoxMinY + boundingBoxMaxY) / 2, (boundingBoxMinZ + boundingBoxMaxZ) / 2);
         geometry.boundingBoxSize = new Vector3(boundingBoxMaxX - boundingBoxMinX, boundingBoxMaxY - boundingBoxMinY, boundingBoxMaxZ - boundingBoxMinZ);
+
+        geometry.vertices = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount);
+        for (int i = 0; i < vertexCount; i++)
+        {
+            Vector3 vert = vertexList.get(i);
+            geometry.vertices.set(i, 0, vert.x);
+            geometry.vertices.set(i, 1, vert.y);
+            geometry.vertices.set(i, 2, vert.z);
+        }
+
+        if (geometry.hasNormals)
+        {
+            geometry.normals = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount);
+            for (int i = 0; i < vertexCount; i++)
+            {
+                Vector3 norm = normalList.get(i);
+                geometry.normals.set(i, 0, norm.x);
+                geometry.normals.set(i, 1, norm.y);
+                geometry.normals.set(i, 2, norm.z);
+            }
+        }
+
+        if (geometry.hasTexCoords)
+        {
+            geometry.texCoords = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 2, vertexCount);
+            for (int i = 0; i < vertexCount; i++)
+            {
+                Vector2 texCoord = texCoordList.get(i);
+                geometry.texCoords.set(i, 0, texCoord.x);
+                geometry.texCoords.set(i, 1, texCoord.y);
+            }
+        }
 
         return geometry;
     }
