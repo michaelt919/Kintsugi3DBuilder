@@ -1,0 +1,28 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.2.0 http://maven.apache.org/xsd/assembly-2.2.0.xsd">
+    <id>distribution</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <files>
+        <file>
+            <source>README.md</source>
+            <outputDirectory></outputDirectory>
+        </file>
+        <file>
+            <source>kintsugi3d-builder-about.txt</source>
+            <outputDirectory></outputDirectory>
+        </file>
+        <file>
+            <source>target/Kintsugi3DBuilder.exe</source>
+            <outputDirectory></outputDirectory>
+        </file>
+    </files>
+    <fileSets>
+        <fileSet>
+            <directory>${project.basedir}/shaders</directory>
+            <outputDirectory>shaders</outputDirectory>
+        </fileSet>
+    </fileSets>
+</assembly>

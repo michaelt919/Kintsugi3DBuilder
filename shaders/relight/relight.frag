@@ -29,10 +29,6 @@ uniform mat4 fullProjection;
 #define MATERIAL_EXPLORATION_MODE 0
 #endif
 
-#ifndef SVD_MODE
-#define SVD_MODE 0
-#endif
-
 #ifndef BUEHLER_ALGORITHM
 #define BUEHLER_ALGORITHM 1
 #endif
@@ -83,10 +79,6 @@ uniform mat4 fullProjection;
 #else
 #define VIRTUAL_LIGHT_COUNT 1
 #endif
-#endif
-
-#ifndef RESIDUAL_IMAGES
-#define RESIDUAL_IMAGES SVD_MODE
 #endif
 
 #ifndef ARCHIVING_2017_ENVIRONMENT_NORMALIZATION
@@ -148,13 +140,6 @@ uniform vec3 defaultDiffuseColor;
 
 #endif // !MATERIAL_EXPLORATION_MODE
 
-#if SVD_MODE
-#ifdef SMITH_MASKING_SHADOWING
-#undef SMITH_MASKING_SHADOWING
-#endif
-#define SMITH_MASKING_SHADOWING 1
-#endif
-
 #ifndef MIPMAPS_ENABLED
 #define MIPMAPS_ENABLED !BUEHLER_ALGORITHM
 #endif
@@ -182,15 +167,8 @@ uniform vec3 viewPos;
 
 #if IMAGE_BASED_RENDERING_ENABLED
 
-#if SVD_MODE
-#include "../colorappearance/svd_unpack.glsl"
-#elif !MATERIAL_EXPLORATION_MODE
+#if !MATERIAL_EXPLORATION_MODE
 #include "../colorappearance/imgspace.glsl"
-#endif
-
-#if SVD_MODE && RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
-//#include "env_svd_alt.glsl"
-#include "env_svd_unpack.glsl"
 #endif
 
 #if BUEHLER_ALGORITHM
@@ -200,7 +178,7 @@ uniform vec3 viewPos;
 
 #endif
 
-#line 176 0
+#line 182 0
 
 uniform int objectID;
 uniform vec3 holeFillColor;
@@ -256,15 +234,6 @@ struct Material
 
 #if IMAGE_BASED_RENDERING_ENABLED
 
-#if RESIDUAL_IMAGES
-
-vec4 getSampleFromResidual(vec4 residual, vec3 peakTimes4Pi)
-{
-    return residual.a * vec4(peakTimes4Pi * (residual.rgb + vec3(0.5)), 1.0);
-}
-
-#else
-
 vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float maxLuminance)
 {
     if (nDotL == 0.0)
@@ -278,8 +247,6 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float m
         return vec4(remainder, originalColor.a);
     }
 }
-
-#endif
 
 #if RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
 
@@ -339,14 +306,6 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 normalDir, Mat
     }
     else
     {
-#if RESIDUAL_IMAGES
-        vec4 residual = getResidual(virtualIndex);
-        if (residual.w > 0)
-        {
-            mfdFresnel = getSampleFromResidual(residual, m.specularColor / m.roughnessRGBSq).rgb * nDotV_sample / geomAttenSample / PI;
-        }
-#else
-
         vec4 sampleColor = getLinearColor(virtualIndex);
 
         if (sampleColor.a == 0.0)
@@ -370,8 +329,6 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 normalDir, Mat
             mfdFresnel = mfdFresnelGeom * 4 / nDotL_sample;
 #endif
         }
-
-#endif // RESIDUAL_IMAGES
 
         mfdMono = getLuminance(mfdFresnel / m.specularColor);
 
@@ -466,13 +423,6 @@ vec4 computeSampleSingle(int virtualIndex, vec3 normalDir, Material m, float max
     {
         float geomAtten = geom(m.roughness, nDotH, nDotV, nDotL, hDotV);
 
-#if RESIDUAL_IMAGES
-        vec4 residual = getResidual(virtualIndex);
-        if (residual.w > 0)
-        {
-            return getSampleFromResidual(residual, m.specularColor / m.roughnessRGBSq) * vec4(vec3(nDotV), geomAtten);
-        }
-#else
         vec4 sampleColor = getLinearColor(virtualIndex);
         if (sampleColor.a > 0.0)
         {
@@ -492,7 +442,6 @@ vec4 computeSampleSingle(int virtualIndex, vec3 normalDir, Material m, float max
             return sampleColor.a * vec4(specularResid.rgb * 4 / lightIntensity, nDotL);
 #endif
         }
-#endif // RESIDUAL_IMAGES
     }
 
     return vec4(0.0);
@@ -570,13 +519,6 @@ vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 normalDir, Materi
 
     float geomAtten = geom(m.roughness, nDotH, nDotV, nDotL, hDotV);
 
-#if RESIDUAL_IMAGES
-    vec4 residual = getResidual(virtualIndex);
-    if (residual.w > 0)
-    {
-        precomputedSample = getSampleFromResidual(residual, m.specularColor / m.roughnessRGBSq) * vec4(vec3(nDotV), geomAtten);
-    }
-#else
     vec4 sampleColor = getLinearColor(virtualIndex);
     if (sampleColor.a > 0.0)
     {
@@ -605,7 +547,6 @@ vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 normalDir, Materi
         }
 #endif
     }
-#endif // RESIDUAL_IMAGES
 
     if (precomputedSample.w != 0)
     {
@@ -811,22 +752,12 @@ void main()
 #if RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
 
 #if IMAGE_BASED_RENDERING_ENABLED
-
-#if SVD_MODE
-    radiance += m.diffuseColor * getEnvironmentDiffuse(normalDir);
-    radiance += getScaledEnvironmentShadingFromSVD(normalDir, m.specularColor, m.roughnessRGB)
-        / (max(0.125, nDotV) * m.roughnessRGBSq);
-#else
 #if !DISCRETE_DIFFUSE_ENVIRONMENT
     radiance += m.diffuseColor * getEnvironmentDiffuse(normalDir);
 #endif
     radiance += getEnvironmentShading(normalDir, m);
-#endif
-
 #else
-
     radiance += getEnvironmentDiffuse(normalDir) * min(vec3(1.0), m.diffuseColor + m.specularColor);
-
 #endif // IMAGE_BASED_RENDERING_ENABLED
 
 #endif // RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED

@@ -19,35 +19,26 @@
 layout(location = 0) out vec4 reflectance_visibility;
 layout(location = 1) out vec4 halfway_geom_weight;
 
-vec3 getNormalEstimate()
+void main()
 {
-    vec3 triangleNormal = normalize(fNormal);
-    vec3 tangent = normalize(fTangent - dot(triangleNormal, fTangent) * triangleNormal);
-    vec3 bitangent = normalize(fBitangent
-        - dot(triangleNormal, fBitangent) * triangleNormal
-        - dot(tangent, fBitangent) * tangent);
-    mat3 tangentToObject = mat3(tangent, bitangent, triangleNormal);
+    vec3 position = getPosition();
+    vec4 imgColor = getLinearColor();
+    vec3 lightDisplacement = getLightVector(position);
+    vec3 light = normalize(lightDisplacement);
+    vec3 view = normalize(getViewVector(position));
+    vec3 halfway = normalize(light + view);
+
+    mat3 tangentToObject = constructTBNExact();
+    vec3 triangleNormal = tangentToObject[2];
 
     vec2 normalDirXY = texture(normalEstimate, fTexCoord).xy * 2 - vec2(1.0);
     vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
-    vec3 normalDir = tangentToObject * normalDirTS;
+    vec3 normal = tangentToObject * normalDirTS;
 
-    return normalDir;
-}
-
-void main()
-{
-
-    vec4 imgColor = getLinearColor();
-    vec3 lightDisplacement = getLightVector();
-    vec3 light = normalize(lightDisplacement);
-    vec3 view = normalize(getViewVector());
-    vec3 halfway = normalize(light + view);
-    vec3 normal = getNormalEstimate();
     float nDotL = max(0.0, dot(normal, light));
     float nDotV = max(0.0, dot(normal, view));
     float nDotH = max(0.0, dot(normal, halfway));
-    float triangleNDotV = max(0.0, dot(normalize(fNormal), view));
+    float triangleNDotV = max(0.0, dot(triangleNormal, view));
 
     if (nDotH > COSINE_CUTOFF && nDotL > COSINE_CUTOFF && nDotV > COSINE_CUTOFF && triangleNDotV > COSINE_CUTOFF)
     {

@@ -22,13 +22,10 @@ void main()
     float sqrtRoughness = texture(roughnessEstimate, fTexCoord)[0];
     float roughness = sqrtRoughness * sqrtRoughness;
 
-    vec3 triangleNormal = normalize(fNormal);
+    vec3 position = getPosition();
 
-    vec3 tangent = normalize(fTangent - dot(triangleNormal, fTangent) * triangleNormal);
-    vec3 bitangent = normalize(fBitangent
-        - dot(triangleNormal, fBitangent) * triangleNormal
-        - dot(tangent, fBitangent) * tangent);
-    mat3 tangentToObject = mat3(tangent, bitangent, triangleNormal);
+    mat3 tangentToObject = constructTBNExact();
+    vec3 triangleNormal = tangentToObject[2];
 
     vec2 fittedNormalXY = texture(normalEstimate, fTexCoord).xy * 2 - vec2(1.0);
     vec3 fittedNormalTS = vec3(fittedNormalXY, sqrt(1 - dot(fittedNormalXY, fittedNormalXY)));
@@ -39,12 +36,12 @@ void main()
     for (int k = 0; k < CAMERA_POSE_COUNT; k++)
     {
         vec4 imgColor = getLinearColor(k);
-        vec3 view = normalize(getViewVector(k));
+        vec3 view = normalize(getViewVector(k, position));
         float triangleNDotV = max(0.0, dot(triangleNormal, view));
 
         if (imgColor.a > 0.0 && triangleNDotV > 0.0)
         {
-            vec3 lightDisplacement = getLightVector(k);
+            vec3 lightDisplacement = getLightVector(k, position);
             vec3 light = normalize(lightDisplacement);
             vec3 halfway = normalize(light + view);
             float nDotH = max(0.0, dot(fittedNormal, halfway));
@@ -72,5 +69,5 @@ void main()
         }
     }
 
-    diffuseOut = vec4(pow(max(vec3(0), diffuseSum.rgb / diffuseSum.a), vec3(1.0 / gamma)), 1.0);
+    diffuseOut = vec4(pow(max(vec3(0), diffuseSum.rgb / max(1.0, diffuseSum.a)), vec3(1.0 / gamma)), min(1.0, diffuseSum.a));
 }

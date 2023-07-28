@@ -11,18 +11,17 @@
   ~  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<?import javafx.geometry.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
-<?import tetzlaff.ibrelight.core.*?>
-
-<VBox xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.MenubarController">
-<MenuBar>
+<?import kintsugi3d.builder.core.*?>
+<AnchorPane prefHeight="720.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.MenubarController">
+<MenuBar AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
       <Menu text="_File">
          <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="Create project">
             <accelerator>
-               <KeyCodeCombination alt="UP" code="W" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+               <KeyCodeCombination alt="UP" code="N" control="ANY" meta="UP" shift="UP" shortcut="UP" />
             </accelerator></MenuItem>
          <MenuItem mnemonicParsing="false" onAction="#file_openProject" text="Open project">
             <accelerator>
@@ -36,8 +35,10 @@
             <accelerator>
                <KeyCodeCombination alt="UP" code="F12" control="ANY" meta="UP" shift="UP" shortcut="UP" />
             </accelerator></MenuItem>
-          <!-- Trying to move Export Specular Fit outside the export submenu for ease of access, not working yet -->
-         <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Export Specular Fit (UNFINISHED)" visible="false" />
+         <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Export Specular Fit">
+            <accelerator>
+               <KeyCodeCombination alt="UP" code="P" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+            </accelerator></MenuItem>
          <MenuItem mnemonicParsing="false" onAction="#file_closeProject" text="Close project">
             <accelerator>
                <KeyCodeCombination alt="UP" code="W" control="ANY" meta="UP" shift="UP" shortcut="UP" />
@@ -45,16 +46,25 @@
          <SeparatorMenuItem />
          <Menu fx:id="exportMenu" mnemonicParsing="false" text="Export" />
           <CheckMenuItem fx:id="lightCalibrationCheckMenuItem" mnemonicParsing="false" text="Light Calibration Mode" />
-          <MenuItem mnemonicParsing="false" onAction="#file_colorChecker" text="Enter Color Checker Values..." />
+          <MenuItem mnemonicParsing="false" onAction="#file_colorChecker" text="Enter Color Checker Values... (DEPRECATED)" visible="false" />
+          <MenuItem mnemonicParsing="false" onAction="#unzip" text="Unzip Metashape File">
+          <accelerator>
+          <KeyCodeCombination alt="UP" code="M" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+          </accelerator></MenuItem>
+          <MenuItem mnemonicParsing="false" onAction="#eyedropperColorChecker" text="Color Calibration">
+            <accelerator>
+               <KeyCodeCombination alt="UP" code="B" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+            </accelerator></MenuItem>
          <MenuItem mnemonicParsing="false" onAction="#file_loadOptions" text="Load Options..." />
           <SeparatorMenuItem />
          <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
       </Menu>
-      <Menu text="_Viewport">
+      <Menu text="_View">
          <CheckMenuItem fx:id="is3DGridCheckMenuItem" mnemonicParsing="false" text="3D grid" />
          <CheckMenuItem fx:id="compassCheckMenuItem" mnemonicParsing="false" text="Compass" visible="false" />
          <CheckMenuItem fx:id="halfResolutionCheckMenuItem" mnemonicParsing="false" selected="true" text="Half resolution" />
          <CheckMenuItem fx:id="multiSamplingCheckMenuItem" mnemonicParsing="false" text="Multi-sampling" visible="false" />
+         <CheckMenuItem fx:id="sceneWindowMenuItem" mnemonicParsing="false" selected="true" text="Scene window" />
       </Menu>
       <Menu text="_Lighting">
          <CheckMenuItem fx:id="relightingCheckMenuItem" mnemonicParsing="false" selected="true" text="Relighting" />
@@ -65,22 +75,19 @@
          <CheckMenuItem fx:id="visibleCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show camera poses for photographs" visible="false" />
          <CheckMenuItem fx:id="visibleSavedCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show saved camera poses" visible="false" />
       </Menu>
-      <Menu text="_Shading">
-         <fx:define>
-            <ToggleGroup fx:id="renderGroup" />
-         </fx:define>
+      <Menu mnemonicParsing="false" text="_Shading">
          <RadioMenuItem mnemonicParsing="false" text="None" userData="None" visible="false">
              <userData>
                  <StandardRenderingMode fx:value="NONE" />
              </userData>
-            <toggleGroup>
-               <ToggleGroup fx:id="renderGroup" />
-            </toggleGroup>
          </RadioMenuItem>
-         <RadioMenuItem mnemonicParsing="false" text="Wireframe" toggleGroup="$renderGroup" visible="false">
+         <RadioMenuItem mnemonicParsing="false" text="Wireframe" visible="false">
              <userData>
                  <StandardRenderingMode fx:value="WIREFRAME" />
              </userData>
+            <toggleGroup>
+               <ToggleGroup fx:id="renderGroup" />
+            </toggleGroup>
          </RadioMenuItem>
          <RadioMenuItem mnemonicParsing="false" text="Simple Lambertian" toggleGroup="$renderGroup" visible="false">
              <userData>
@@ -124,6 +131,7 @@
           </RadioMenuItem>
          <SeparatorMenuItem mnemonicParsing="false" />
          <MenuItem mnemonicParsing="false" onAction="#shading_IBRSettings" text="IBR settings…" />
+         <MenuItem mnemonicParsing="false" onAction="#shading_JVMSettings" text="JVM Settings…" />
          <CheckMenuItem fx:id="phyMaskingCheckMenuItem" mnemonicParsing="false" text="Physically based masking/shadowing" />
          <CheckMenuItem fx:id="fresnelEffectCheckMenuItem" mnemonicParsing="false" text="Fresnel effect" />
       </Menu>
@@ -135,15 +143,14 @@
       </Menu>
       <Menu text="_Help">
           <MenuItem mnemonicParsing="false" onAction="#help_userManual" text="User Manual" />
+          <MenuItem mnemonicParsing="false" onAction="#help_console" text="View Log" />
           <MenuItem mnemonicParsing="false" onAction="#help_about" text="About" />
       </Menu>
    </MenuBar>
-   <ProgressBar fx:id="progressBar" prefWidth="410.0" progress="0.0" visible="false" VBox.vgrow="ALWAYS">
+   <ProgressBar fx:id="progressBar" layoutY="25.0" prefWidth="1280.0" progress="0.0" visible="false" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="25.0" VBox.vgrow="ALWAYS">
        <VBox.margin>
-           <Insets>
-               <right>-10</right>
-               <bottom>-10</bottom>
-           </Insets>
+           <Insets />
        </VBox.margin>
    </ProgressBar>
-</VBox>
+    <fx:include fx:id="framebufferView" source="FramebufferView.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="25.0" VBox.vgrow="ALWAYS" />
+</AnchorPane>

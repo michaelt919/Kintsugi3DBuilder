@@ -12,7 +12,7 @@
   -->
 
 <?import javafx.scene.control.*?>
-<TabPane prefWidth="410.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.scene.RootSceneController">
+<TabPane prefWidth="410.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.RootSceneController">
 
     <Tab text="Camera">
         <ScrollPane fitToWidth="true">

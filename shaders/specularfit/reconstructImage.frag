@@ -24,20 +24,17 @@ layout(location = 0) out vec4 fragColor;
 
 void main()
 {
-    vec3 triangleNormal = normalize(fNormal);
-    vec3 tangent = normalize(fTangent - dot(triangleNormal, fTangent) * triangleNormal);
-    vec3 bitangent = normalize(fBitangent
-        - dot(triangleNormal, fBitangent) * triangleNormal
-        - dot(tangent, fBitangent) * tangent);
-    mat3 tangentToObject = mat3(tangent, bitangent, triangleNormal);
+    mat3 tangentToObject = constructTBNExact();
+    vec3 triangleNormal = tangentToObject[2];
 
     vec2 normalDirXY = texture(normalEstimate, fTexCoord).xy * 2 - vec2(1.0);
     vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
     vec3 normal = tangentToObject * normalDirTS;
 
-    vec3 lightDisplacement = reconstructionLightPos - fPosition;
+    vec3 position = getPosition();
+    vec3 lightDisplacement = reconstructionLightPos - position;
     vec3 light = normalize(lightDisplacement);
-    vec3 view = normalize(reconstructionCameraPos - fPosition);
+    vec3 view = normalize(reconstructionCameraPos - position);
     vec3 halfway = normalize(light + view);
     float nDotH = max(0.0, dot(normal, halfway));
     float nDotL = max(0.0, dot(normal, light));

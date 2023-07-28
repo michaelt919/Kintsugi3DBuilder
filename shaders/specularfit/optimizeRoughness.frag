@@ -39,6 +39,7 @@ uniform sampler2D specularEstimate;
 uniform sampler2D roughnessEstimate;
 uniform sampler2D dampingTex;
 
+// TODO: This is an attempt at implementing Levenberg-Marquardt for GGX roughness estimation, but it doesn't work and hasn't been debugged.
 void main()
 {
     mat4 mJTJ = mat4(0);

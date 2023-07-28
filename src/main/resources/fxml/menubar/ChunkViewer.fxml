@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane prefHeight="400.0" prefWidth="650.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.ChunkViewerController">
+   <children>
+      <HBox spacing="10.0">
+         <children>
+            <TreeView fx:id="chunkTreeView" onContextMenuRequested="#selectImageInTreeView" onMouseClicked="#selectImageInTreeView" prefHeight="400.0" prefWidth="287.0" />
+            <VBox alignment="TOP_CENTER" prefHeight="400.0" prefWidth="326.0">
+               <children>
+                  <TextFlow fx:id="textFlow" lineSpacing="5.0" maxHeight="90.0" minHeight="20.0" prefHeight="20.0" prefWidth="326.0" textAlignment="CENTER" VBox.vgrow="ALWAYS">
+                     <Text fx:id="imgViewLabel" fontSmoothingType="LCD" text="No Image Selected" textOrigin="TOP" wrappingWidth="200" />
+                     <ImageView fx:id="chunkViewerImgView" fitHeight="309.0" fitWidth="299.0" pickOnBounds="true" preserveRatio="true" />
+                     <VBox.margin>
+                        <Insets bottom="15.0" left="5.0" right="5.0" top="5.0" />
+                     </VBox.margin>
+                  </TextFlow>
+               </children>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </VBox>
+            <ChoiceBox fx:id="newChunkSelectionChoiceBox" prefWidth="150.0" />
+            <Button fx:id="selectChunkButton" mnemonicParsing="false" onAction="#selectChunk" text="Select Chunk" />
+         </children>
+         <padding>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+         </padding>
+      </HBox>
+   </children>
+</AnchorPane>
