@@ -36,18 +36,24 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
      */
     private final Texture2D<ContextType> normalMap;
 
+    /**
+     * Constant term map from file
+     */
+    private final Texture2D<ContextType> constantMap;
+
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> createEmpty(
-        ContextType context, TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings) throws IOException
+        ContextType context, TextureFitSettings textureFitSettings,
+        SpecularBasisSettings specularBasisSettings, boolean includeConstant) throws IOException
     {
-        return new SpecularFitFinal<>(context, textureFitSettings, specularBasisSettings);
+        return new SpecularFitFinal<>(context, textureFitSettings, specularBasisSettings, includeConstant);
     }
 
     private SpecularFitFinal(ContextType context, TextureFitSettings textureFitSettings,
-        SpecularBasisSettings specularBasisSettings) throws IOException
+        SpecularBasisSettings specularBasisSettings, boolean includeConstant) throws IOException
     {
         super(context, textureFitSettings, specularBasisSettings);
 
-        // Load normal map
+        // Allocate diffuse map
         diffuseMap = context.getTextureFactory()
             .build2DColorTexture(textureFitSettings.width, textureFitSettings.height)
             .setInternalFormat(ColorFormat.RGB8)
@@ -55,13 +61,23 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
             .setMipmapsEnabled(true)
             .createTexture();
 
-        // Load normal map
+        // Allocate normal map
         normalMap = context.getTextureFactory()
             .build2DColorTexture(textureFitSettings.width, textureFitSettings.height)
             .setInternalFormat(ColorFormat.RGB8)
             .setLinearFilteringEnabled(true)
             .setMipmapsEnabled(true)
             .createTexture();
+
+        // Allocate constant map
+        constantMap = includeConstant ?
+            context.getTextureFactory()
+                .build2DColorTexture(textureFitSettings.width, textureFitSettings.height)
+                .setInternalFormat(ColorFormat.RGB8)
+                .setLinearFilteringEnabled(true)
+                .setMipmapsEnabled(true)
+                .createTexture()
+            : null;
     }
 
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> loadFromPriorSolution(
@@ -76,7 +92,7 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
     {
         super(context, textureFitSettings, specularBasisSettings);
 
-        // Load normal map
+        // Load diffuse map
         diffuseMap = context.getTextureFactory()
             .build2DColorTextureFromFile(new File(priorSolutionDirectory, "diffuse.png"), true)
             .setLinearFilteringEnabled(true)
@@ -88,6 +104,15 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
             .setLinearFilteringEnabled(true)
             .createTexture();
 
+        // Load constant map
+        File constantMapFile = new File(priorSolutionDirectory, "constant.png");
+        constantMap = constantMapFile.exists() ?
+            context.getTextureFactory()
+                .build2DColorTextureFromFile(new File(priorSolutionDirectory, "constant.png"), true)
+                .setLinearFilteringEnabled(true)
+                .createTexture()
+            : null;
+
         getBasisResources().loadFromPriorSolution(priorSolutionDirectory);
         getBasisWeightResources().loadFromPriorSolution(priorSolutionDirectory);
     }
@@ -97,6 +122,7 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
     {
         diffuseMap.close();
         normalMap.close();
+        constantMap.close();
     }
 
     @Override
@@ -109,5 +135,11 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
     public Texture2D<ContextType> getNormalMap()
     {
         return normalMap;
+    }
+
+    @Override
+    public Texture2D<ContextType> getConstantMap()
+    {
+        return constantMap;
     }
 }

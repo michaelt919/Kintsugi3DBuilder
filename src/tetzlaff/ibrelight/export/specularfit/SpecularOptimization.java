@@ -162,7 +162,7 @@ public class SpecularOptimization
         // Create space for the solution.
         // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.
         SpecularFitFinal<ContextType> fullResolution = SpecularFitFinal.createEmpty(cache.getContext(),
-            settings.getTextureFitSettings(), settings.getSpecularBasisSettings());
+            settings.getTextureFitSettings(), settings.getSpecularBasisSettings(), settings.shouldIncludeConstantTerm());
 
         try (IBRResourcesTextureSpace<ContextType> sampled = cache.createSampledResources())
         {
@@ -186,7 +186,8 @@ public class SpecularOptimization
             try
             (
                 SpecularFitOptimizable<ContextType> sampledFit = SpecularFitOptimizable.create(
-                    sampled, programFactory, sampledSettings, settings.getSpecularBasisSettings(), settings.getNormalOptimizationSettings())
+                    sampled, programFactory, sampledSettings, settings.getSpecularBasisSettings(),
+                    settings.getNormalOptimizationSettings(), false)
             )
             {
                 // Preliminary optimization at low resolution to determine basis functions
@@ -223,6 +224,11 @@ public class SpecularOptimization
             // Save the final diffuse and normal maps
             fullResolution.saveDiffuseMap(settings.getOutputDirectory());
             fullResolution.saveNormalMap(settings.getOutputDirectory());
+
+            if (settings.shouldIncludeConstantTerm())
+            {
+                fullResolution.saveConstantMap(settings.getOutputDirectory());
+            }
 
             // Save the final weight maps
             int weightsPerImage = settings.getExportSettings().isCombineWeights() ? 4 : 1;
@@ -286,7 +292,7 @@ public class SpecularOptimization
                         TextureFitSettings blockSettings = blockResources.getTextureFitSettings(settings.getTextureFitSettings().gamma);
                         try (SpecularFitOptimizable<ContextType> blockOptimization = SpecularFitOptimizable.create(
                             blockResources, programFactory, blockSettings, settings.getSpecularBasisSettings(),
-                            settings.getNormalOptimizationSettings()))
+                            settings.getNormalOptimizationSettings(), settings.shouldIncludeConstantTerm()))
                         {
                             if (inputNormalMapFile != null)
                             {

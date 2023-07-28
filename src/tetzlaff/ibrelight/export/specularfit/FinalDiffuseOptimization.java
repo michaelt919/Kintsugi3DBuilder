@@ -17,6 +17,7 @@ import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.rendering.resources.ReadonlyIBRResources;
@@ -33,22 +34,39 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
     private final ProgramObject<ContextType> estimationProgram;
     private final TextureFitSettings textureFitSettings;
 
+    private final boolean includeConstant;
+
     // Framebuffer for storing the diffuse solution
     private FramebufferObject<ContextType> framebuffer;
 
     private final Drawable<ContextType> drawable;
 
     public FinalDiffuseOptimization(ReadonlyIBRResources<ContextType> resources,
-        SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings settings)
+        SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings settings, boolean includeConstant)
         throws FileNotFoundException
     {
         this.context = resources.getContext();
-        estimationProgram = createDiffuseEstimationProgram(resources, programFactory);
-        textureFitSettings = settings;
-        framebuffer = context.buildFramebufferObject(textureFitSettings.width, textureFitSettings.height)
-            .addColorAttachment(ColorFormat.RGBA32F)
-            .createFramebufferObject();
+        this.estimationProgram = createDiffuseEstimationProgram(resources, programFactory);
+        this.textureFitSettings = settings;
+        this.includeConstant = includeConstant;
+
+        framebuffer = createFramebuffer(context, settings, includeConstant);
         drawable = resources.createDrawable(estimationProgram);
+    }
+
+    private static <ContextType extends Context<ContextType>> FramebufferObject<ContextType> createFramebuffer(
+        ContextType context, TextureFitSettings texSettings, boolean includeConstant)
+    {
+        FramebufferObjectBuilder<ContextType> builder = context
+            .buildFramebufferObject(texSettings.width, texSettings.height)
+            .addColorAttachment(ColorFormat.RGBA8);
+
+        if (includeConstant)
+        {
+            builder.addColorAttachment(ColorFormat.RGBA8); // Add attachment for storing constant term texture
+        }
+
+        return builder.createFramebufferObject();
     }
 
     public void execute(SpecularResources<ContextType> specularFit)
@@ -61,15 +79,19 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
 
         // Second framebuffer for filling holes (used to double-buffer the first framebuffer)
         // Placed outside of try-with-resources since it might end up being the primary framebuffer after filling holes.
-        FramebufferObject<ContextType> framebuffer2 = context.buildFramebufferObject(textureFitSettings.width, textureFitSettings.height)
-            .addColorAttachment(ColorFormat.RGBA32F)
-            .createFramebufferObject();
+        FramebufferObject<ContextType> framebuffer2 = createFramebuffer(context, textureFitSettings, includeConstant);
 
         // Will reference the framebuffer that is in front after hole filling if everything is successful.
         FramebufferObject<ContextType> finalDiffuse = null;
 
-        // Perform diffuse fit
         framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+
+        if (includeConstant)
+        {
+            framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+        }
+
+        // Perform diffuse fit
         drawable.draw(framebuffer);
 
         try (ShaderHoleFill<ContextType> holeFill = new ShaderHoleFill<>(context))
@@ -109,6 +131,16 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
     public Texture2D<ContextType> getDiffuseMap()
     {
         return framebuffer.getColorAttachmentTexture(0);
+    }
+
+    public Texture2D<ContextType> getConstantMap()
+    {
+        return framebuffer.getColorAttachmentTexture(1);
+    }
+
+    public boolean includesConstantMap()
+    {
+        return includeConstant;
     }
 
     private static <ContextType extends Context<ContextType>>

@@ -75,6 +75,11 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         estimationProgram.setTexture("specularEstimate", specularFit.getSpecularReflectivityMap());
         estimationProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
 
+        if (specularFit.getConstantMap() != null)
+        {
+            estimationProgram.setTexture("constantEstimate", specularFit.getConstantMap());
+        }
+
         if (occlusionMap != null)
         {
             estimationProgram.setTexture("occlusionTexture", occlusionMap);

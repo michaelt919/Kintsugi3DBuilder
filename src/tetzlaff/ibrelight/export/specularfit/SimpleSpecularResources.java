@@ -19,6 +19,7 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
 {
     private Texture2D<ContextType> diffuseMap;
     private Texture2D<ContextType> normalMap;
+    private Texture2D<ContextType> constantMap;
     private Texture2D<ContextType> specularReflectivityMap;
     private Texture2D<ContextType> specularRoughnessMap;
     private BasisResources<ContextType> basisResources;
@@ -55,6 +56,12 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
     public Texture2D<ContextType> getNormalMap()
     {
         return normalMap;
+    }
+
+    @Override
+    public Texture2D<ContextType> getConstantMap()
+    {
+        return constantMap;
     }
 
     @Override
@@ -100,6 +107,11 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
         this.normalMap = normalMap;
     }
 
+    public void setConstantMap(Texture2D<ContextType> constantMap)
+    {
+        this.constantMap = constantMap;
+    }
+
     /**
      * Sets the specular reflectivity texture.  This object will take ownership of the specular map.
      * @param specularReflectivityMap
@@ -138,6 +150,7 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
     {
         diffuseMap.close();
         normalMap.close();
+        constantMap.close();
         specularReflectivityMap.close();
         specularRoughnessMap.close();
         basisResources.close();

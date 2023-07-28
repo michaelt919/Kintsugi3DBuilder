@@ -19,6 +19,10 @@
 #define OCCLUSION_TEXTURE_ENABLED 0
 #endif
 
+#ifndef CONSTANT_TEXTURE_ENABLED
+#define CONSTANT_TEXTURE_ENABLED 0
+#endif
+
 in vec2 fTexCoord;
 
 #if OCCLUSION_TEXTURE_ENABLED
@@ -28,6 +32,10 @@ uniform sampler2D occlusionTexture; // pass-through occlusion
 uniform sampler2D diffuseEstimate;
 uniform sampler2D roughnessEstimate;
 uniform sampler2D specularEstimate;
+
+#if CONSTANT_TEXTURE_ENABLED
+uniform sampler2D constantTexture; // pass-through occlusion // TODO figure this out after implementing Godot shader
+#endif
 
 layout(location = 0) out vec4 totalAlbedoOut;
 layout(location = 1) out vec4 ormOut;

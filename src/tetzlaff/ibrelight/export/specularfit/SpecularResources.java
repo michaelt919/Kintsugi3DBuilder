@@ -19,6 +19,7 @@ public interface SpecularResources<ContextType extends Context<ContextType>> ext
 {
     Texture2D<ContextType> getDiffuseMap();
     Texture2D<ContextType> getNormalMap();
+    Texture2D<ContextType> getConstantMap();
     Texture2D<ContextType> getSpecularReflectivityMap();
     Texture2D<ContextType> getSpecularRoughnessMap();
     BasisResources<ContextType> getBasisResources();
@@ -49,6 +50,8 @@ public interface SpecularResources<ContextType extends Context<ContextType>> ext
             readSource.getDiffuseMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
         this.getNormalMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,
             readSource.getNormalMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+        this.getConstantMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,
+            readSource.getConstantMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
         this.getSpecularReflectivityMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,
             readSource.getSpecularReflectivityMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
         this.getSpecularRoughnessMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,

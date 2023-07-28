@@ -16,6 +16,7 @@
 #line 18 0
 
 layout(location = 0) out vec4 diffuseOut;
+layout(location = 0) out vec4 constantOut;
 
 void main()
 {
@@ -31,7 +32,9 @@ void main()
     vec3 fittedNormalTS = vec3(fittedNormalXY, sqrt(1 - dot(fittedNormalXY, fittedNormalXY)));
     vec3 fittedNormal = tangentToObject * fittedNormalTS;
 
-    vec4 diffuseSum = vec4(0);
+    float sumWeights = 0.0;
+    vec4 weightedSums = vec4(0);
+    vec4 cosineWeightedSums = vec4(0);
 
     for (int k = 0; k < CAMERA_POSE_COUNT; k++)
     {
@@ -63,10 +66,24 @@ void main()
                 float weight = sqrt(max(0, 1 - nDotH * nDotH));
 
                 vec3 diffuse = PI * (actualReflectanceTimesNDotL - specularEstimate); // could be negative
-                diffuseSum += vec4(weight * diffuse * nDotL * triangleNDotV, weight * nDotL * nDotL * triangleNDotV);
+
+                sumWeights += weight * triangleNDotV;
+                weightedSums += weight * triangleNDotV * vec4(diffuse, nDotL);
+                cosineWeightedSums += weight * triangleNDotV * vec4(diffuse * nDotL, nDotL * nDotL);
             }
         }
     }
 
-    diffuseOut = vec4(pow(max(vec3(0), diffuseSum.rgb / max(1.0, diffuseSum.a)), vec3(1.0 / gamma)), min(1.0, diffuseSum.a));
+    vec3 diffuseColor = max(vec3(0), // just a simple linear regression
+        (sumWeights * cosineWeightedSums.rgb - weightedSums.a * weightedSums.rgb)
+            / (sumWeights * cosineWeightedSums.a - weightedSums.a * weightedSums.a));
+
+    vec3 constantColor = (weightedSums.rgb - diffuseColor * weightedSums.a) / sumWeights;
+
+    vec3 diffuseFallback = cosineWeightedSums.rgb / cosineWeightedSums.a; // Constraining constant term to 0
+
+    diffuseOut = vec4(pow(
+        max(vec3(0), mix(diffuseFallback, diffuseColor, step(0.0, constantColor))), // use fallback if constant color is < 0
+        vec3(1.0 / gamma)), 1.0);
+    constantOut = vec4(pow(constantColor, vec3(1.0 / gamma)), 1.0);
 }
