@@ -11,8 +11,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import org.slf4j.Logger;
@@ -20,27 +18,25 @@ import org.slf4j.LoggerFactory;
 import tetzlaff.ibrelight.core.LoadingModel;
 
 import java.awt.*;
-import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.DoubleUnaryOperator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class EyedropperController implements Initializable {
     private static final Logger log = LoggerFactory.getLogger(EyedropperController.class);
 
     @FXML
-    private Pane colorPickerPane;
-    @FXML
-    private AnchorPane rootPane;
-    @FXML
     private Rectangle selectionRectangle;
 
     @FXML
-    private Rectangle selectedColor0, selectedColor1, selectedColor2, selectedColor3, selectedColor4, selectedColor5, selectedColor6,
-            selectedColor7, selectedColor8, selectedColor9, selectedColor10, selectedColor11, selectedColor12, selectedColor13, selectedColor14;
-    private List<Rectangle> selectedColorRectangles;
+    private Rectangle paletteColor0, paletteColor1, paletteColor2, paletteColor3, paletteColor4, paletteColor5, paletteColor6,
+            paletteColor7, paletteColor8, paletteColor9, paletteColor10, paletteColor11, paletteColor12, paletteColor13, paletteColor14;
+    private List<Rectangle> paletteColorRectangles;
+    private int selectedColorInsertIndex; //first index in color palette which does not have a color assigned to it
 
     @FXML
     private Rectangle finalSelectRect1, finalSelectRect2, finalSelectRect3, finalSelectRect4, finalSelectRect5, finalSelectRect6;
@@ -52,12 +48,15 @@ public class EyedropperController implements Initializable {
 
     @FXML
     private Button cropButton;
+
+    @FXML
+    private Button applyButton;
     private boolean isCropping;//enabled by crop button and disabled when cropping is finished
     private boolean isSelecting;//enabled by "Select Color" buttons and disabled when selection is finished
     private boolean canResetCrop; //enabled when cropping is finished and disabled when crop is reset to default viewport
     private boolean firstColorSelected;
 
-    static final String defaultButtonText = "Select Color";
+    static final String DEFAULT_BUTTON_TEXT = "Select Color";
 
     @FXML
     private TextField txtField1, txtField2, txtField3, txtField4, txtField5, txtField6;
@@ -68,8 +67,8 @@ public class EyedropperController implements Initializable {
 
     private List<Color> selectedColors;
     @FXML private ImageView colorPickerImgView;
-    private File selectedFile;
-    @FXML private Rectangle averageColorDisplay = new Rectangle(); //displays the average color of selection
+    private Image selectedFile;
+    @FXML private Rectangle averageColorPreview = new Rectangle(); //displays the average color of selection
 
 
     private LoadingModel loadingModel = new LoadingModel();
@@ -78,7 +77,7 @@ public class EyedropperController implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         SharedDataModel sharedDataModel = SharedDataModel.getInstance();
         selectedFile = sharedDataModel.getSelectedImage();
-        colorPickerImgView.setImage(new Image(selectedFile.toURI().toString()));
+        colorPickerImgView.setImage(selectedFile);
         colorPickerImgView.setPreserveRatio(true);
         colorPickerImgView.setSmooth(true);
 
@@ -87,23 +86,25 @@ public class EyedropperController implements Initializable {
         canResetCrop = false;
         firstColorSelected = false;
 
+        selectedColorInsertIndex = 0;
+
         selectedColors = new ArrayList<>();
-        selectedColorRectangles = new ArrayList<>();
-        selectedColorRectangles.add(selectedColor0);
-        selectedColorRectangles.add(selectedColor1);
-        selectedColorRectangles.add(selectedColor2);
-        selectedColorRectangles.add(selectedColor3);
-        selectedColorRectangles.add(selectedColor4);
-        selectedColorRectangles.add(selectedColor5);
-        selectedColorRectangles.add(selectedColor6);
-        selectedColorRectangles.add(selectedColor7);
-        selectedColorRectangles.add(selectedColor8);
-        selectedColorRectangles.add(selectedColor9);
-        selectedColorRectangles.add(selectedColor10);
-        selectedColorRectangles.add(selectedColor11);
-        selectedColorRectangles.add(selectedColor12);
-        selectedColorRectangles.add(selectedColor13);
-        selectedColorRectangles.add(selectedColor14);
+        paletteColorRectangles = new ArrayList<>();
+        paletteColorRectangles.add(paletteColor0);
+        paletteColorRectangles.add(paletteColor1);
+        paletteColorRectangles.add(paletteColor2);
+        paletteColorRectangles.add(paletteColor3);
+        paletteColorRectangles.add(paletteColor4);
+        paletteColorRectangles.add(paletteColor5);
+        paletteColorRectangles.add(paletteColor6);
+        paletteColorRectangles.add(paletteColor7);
+        paletteColorRectangles.add(paletteColor8);
+        paletteColorRectangles.add(paletteColor9);
+        paletteColorRectangles.add(paletteColor10);
+        paletteColorRectangles.add(paletteColor11);
+        paletteColorRectangles.add(paletteColor12);
+        paletteColorRectangles.add(paletteColor13);
+        paletteColorRectangles.add(paletteColor14);
 
         colorSelectButtons = new ArrayList<>();
         colorSelectButtons.add(button1);
@@ -128,9 +129,11 @@ public class EyedropperController implements Initializable {
         finalSelectRectangles.add(finalSelectRect4);
         finalSelectRectangles.add(finalSelectRect5);
         finalSelectRectangles.add(finalSelectRect6);
+
+        updateApplyButton();
     }
 
-    private Rectangle2D resetViewport(ImageView imageView) {
+    private static Rectangle2D resetViewport(ImageView imageView) {
         //reset the viewport to default value (view entire image)
         Rectangle2D defaultViewport = getDefaultViewport(imageView);
 
@@ -139,7 +142,7 @@ public class EyedropperController implements Initializable {
         return defaultViewport;
     }
 
-    private Rectangle2D getDefaultViewport(ImageView imageView){
+    private static Rectangle2D getDefaultViewport(ImageView imageView){
         Image image = imageView.getImage();
         return new Rectangle2D(0, 0, image.getWidth(), image.getHeight());
     }
@@ -167,24 +170,6 @@ public class EyedropperController implements Initializable {
             double width = x - selectionRectangle.getX();
             double height = y - selectionRectangle.getY();
 
-            //attempt at detecting when the mouse has left the imageView
-//            Point2D selectionRectangleRelativeCoords = colorPickerImgView.localToScene(new Point2D
-//                    (colorPickerImgView.getX() + colorPickerImgView.getImage().getRequestedWidth(),
-//                            colorPickerImgView.getY() + colorPickerImgView.getImage().getRequestedHeight()));
-//
-//            double relativeX = selectionRectangleRelativeCoords.getX();
-//            double relativeY = selectionRectangleRelativeCoords.getY();
-//
-//            log.debug("x is " + x + ", relativeX is " + relativeX);
-//            log.debug("y is " + y + ", relativeY is " + relativeY);
-//
-//            if (x > relativeX) {
-//                log.debug("X TOO BIG");
-//            }
-//            if (y > relativeY) {
-//                log.debug("Y TOO BIG");
-//            }
-
             selectionRectangle.setWidth(width);
             selectionRectangle.setHeight(height);
         }
@@ -193,24 +178,24 @@ public class EyedropperController implements Initializable {
     @FXML
     private void handleMouseReleased(MouseEvent event) {
         if(isSelecting) {
-            Color averageColor = screenshotAndFindAvgColor();
+            Color averageColor = getAvgColorFromSelection();
 
             // Set the color label text
             colorLabel.setText("Greyscale: " + Math.round(getGreyScaleDouble(averageColor)));
 
             //display average color to user
-            updateAverageColorDisplay(averageColor);
+            updateAverageColorPreview(averageColor);
 
             firstColorSelected = true;
         }
 
         if(isCropping){
             canResetCrop = true;
-            cropImage(event);
+            cropImage();
         }
     }
 
-    public void triggerCropping(ActionEvent actionEvent) {
+    public void enterCropMode() {
         //same button is used for cropping and resetting cropping
         if(canResetCrop){//button text is "Reset Crop"
             resetViewport(colorPickerImgView);
@@ -227,8 +212,7 @@ public class EyedropperController implements Initializable {
         selectionRectangle.setVisible(false);
     }
 
-    private void cropImage(MouseEvent event) {//might be a better way to access this information
-        //this function receives the event from MOUSE RELEASED, so x and y are the bottom right corner, not the top left
+    private void cropImage() {
         //get bounds of selection rectangle
         //crop imageView accordingly
         double scaleFactor = calculateImgViewScaleFactor(colorPickerImgView);
@@ -245,21 +229,22 @@ public class EyedropperController implements Initializable {
         selectionRectangle.setVisible(false);
     }
 
-    private void updateAverageColorDisplay(Color newColor) {
-        Color prevColor = (Color) averageColorDisplay.getFill();
+    private void updateAverageColorPreview(Color newColor) {
+        Color prevColor = (Color) averageColorPreview.getFill();
         if (!prevColor.equals(newColor))//change the stroke of the box to the previous color, if color changes
-            averageColorDisplay.setStroke(prevColor);
-        averageColorDisplay.setFill(newColor);
+            averageColorPreview.setStroke(prevColor);
+
+        averageColorPreview.setFill(newColor);
     }
 
-    @FXML//used so the rectangles in color palette can update the average color display
-    public void updateAverageColorDisplay(MouseEvent mouseEvent){
+    @FXML//used so the rectangles in color palette can update the average color preview
+    public void updateAverageColorPreview(MouseEvent mouseEvent){
         Rectangle sourceRect = (Rectangle) mouseEvent.getSource();
         Color rectColor = (Color) sourceRect.getFill();
-        updateAverageColorDisplay(rectColor);
+        updateAverageColorPreview(rectColor);
     }
 
-    private Color screenshotAndFindAvgColor(){
+    private Color getAvgColorFromSelection(){
         double x = selectionRectangle.getX();//(x, y) is the top left corner of the selectionRectangle in windowspace
         double y = selectionRectangle.getY();
         double width = selectionRectangle.getWidth();
@@ -387,53 +372,99 @@ public class EyedropperController implements Initializable {
     }
 
     //returns false if the color is null or has already been added
-    public boolean addSelectedColor(ActionEvent actionEvent) {
+    public boolean addSelectedColor() {
         //add selected color to palette
         //if color is null, or has already been selected, return false
         //else, find the highest rectangle in the palette which does not have a color
-        //      and change that rectangle's color to the selected color
+        //      and change that rectangle's color to the selected color (kept track of using selectedColorInsertIndex)
         //also, update the text field (to int. greyscale value) and its corresponding color square
-        Color newColor = (Color) averageColorDisplay.getFill();
+        Color newColor = (Color) averageColorPreview.getFill();
 
         if (firstColorSelected) {
-            for (Rectangle rect : selectedColorRectangles) {//add color to color palette in appropriate spot
-                if (rect.getFill().equals(Color.WHITE)) {
-                    if (!colorInList(newColor)) {
-                        rect.setFill(newColor);//only add color to palette if it is not a duplicate
-                    }
-                    Button sourceButton = resetButtonsText();
-                    if (sourceButton != null) {
-                        //modify appropriate text field to average greyscale value
-                        TextField partnerTxtField = getButtonPartnerTxtField(sourceButton);
-
-                        //java would use the wrong overload of round() if it used a double
-                        Integer greyScale = Math.round((float)getGreyScaleDouble(newColor));
-                        partnerTxtField.setText(String.valueOf(greyScale));
-
-                        //without these two lines, text field would not update properly
-                        partnerTxtField.positionCaret(partnerTxtField.getText().length());
-                        partnerTxtField.positionCaret(0);
-
-                        //update square which contains the average color visual for the button
-                        Rectangle partnerRectangle = getButtonPartnerRect(sourceButton);
-                        updateFinalSelectRect(partnerRectangle);
-                    }
-                    else{
-                        Toolkit.getDefaultToolkit().beep();
-                        return false; //source button is null
-                    }
-
-                    isSelecting = false;
-                    return true;//color changed successfully
-                }
+            //get the rectangle for the first empty color slot in palette
+            Rectangle rect = paletteColorRectangles.get(selectedColorInsertIndex);
+            if (!isColorInList(newColor)) {
+                rect.setFill(newColor);//only add color to palette if it is not a duplicate
             }
+
+            Button sourceButton = resetButtonsText();
+            if (sourceButton != null) {
+                //modify appropriate text field to average greyscale value
+                TextField partnerTxtField = getTextFieldForButton(sourceButton);
+
+                //java would use the wrong overload of round() if it used a double
+                Integer greyScale = Math.round((float)getGreyScaleDouble(newColor));
+                partnerTxtField.setText(String.valueOf(greyScale));
+
+                //without these two lines, text field would not update properly
+                partnerTxtField.positionCaret(partnerTxtField.getText().length());
+                partnerTxtField.positionCaret(0);
+
+                //update square which contains the average color visual for the button
+                Rectangle partnerRectangle = getRectangleForButton(sourceButton);
+                updateFinalSelectRect(partnerRectangle);
+
+                //disable/enable apply button as needed
+                updateApplyButton();
+            }
+            else{
+                Toolkit.getDefaultToolkit().beep();
+                return false; //source button is null
+            }
+
+            ++selectedColorInsertIndex;
+            isSelecting = false;
+            return true;//color changed successfully
         }
         Toolkit.getDefaultToolkit().beep();
         return false;//no color has been selected yet
     }
 
-    private void updateFinalSelectRect(Rectangle rect) {
-        TextField txtField = getRectPartnerTxtField(rect);
+    public void removeColor() {
+        if(selectedColorInsertIndex > 0){
+            Rectangle removeRect = null;
+            //find the rectangle which needs to be removed
+            //currently, program finds the rectangle which has the same color as the averageColorPreview
+            //averageColorPreview takes the color of the last selected rectangle
+            //TODO: SHOW HIGHLIGHTING AROUND RECTANGLE WHEN IT IS SELECTED?
+
+            for(Rectangle rect : paletteColorRectangles){
+                if(rect.getFill().equals(averageColorPreview.getFill())){
+                    removeRect = rect;
+                    break;
+                }
+            }
+
+            if (removeRect == null){//no rectangle matches the color of the average color preview
+                Toolkit.getDefaultToolkit().beep();
+                return;
+            }
+
+            //find removeRect's location in palette by getting the number at the end of its name
+            String rectID = removeRect.getId();
+            Pattern pattern = Pattern.compile("\\D*(\\d+)$");
+            Matcher matcher = pattern.matcher(rectID);
+            int startingIndex;
+            if (matcher.find()) {
+                String numberString = matcher.group(1);
+                startingIndex = Integer.parseInt(numberString);
+            }
+            else{
+                Toolkit.getDefaultToolkit().beep();
+                return;//TODO: PROPER SOLUTION?
+                //pretty sure this would only be reached if a rectangle was improperly named
+            }
+
+            //rect 3 color goes to rect 2, rect 2 color goes to rect 1, etc
+            for (int i = startingIndex; i < selectedColorInsertIndex; ++i){//from removed rectangle to last rect w/ assigned color
+                paletteColorRectangles.get(i).setFill(paletteColorRectangles.get(i + 1).getFill());
+            }
+            --selectedColorInsertIndex;
+        }
+    }
+
+    private void updateFinalSelectRect(Rectangle rect) {//when a text field is updated, update the rectangle beside it
+        TextField txtField = getTextFieldForRectangle(rect);
 
         double greyScale;
         try{
@@ -451,22 +482,34 @@ public class EyedropperController implements Initializable {
             greyScale = 0;
         }
 
-        rect.setFill(numToGreyScaleColor(greyScale));
+        double val = greyScale / (255);
+        rect.setFill(new Color(val, val, val, 1));
         rect.setVisible(true);
     }
 
-    public void updateFinalSelectRect(KeyEvent event){
+    public void updatesFromTextField(KeyEvent event){
+        //whenever a text field is updated, update its partner color rectangle and change the visibility of the Apply button
+        //if all text fields contain valid info, make the Apply button functional
+        //if not, make the button not functional
         TextField sourceTxtField = (TextField) event.getSource();
-        updateFinalSelectRect(getTxtFieldPartnerRect(sourceTxtField));
+        updateFinalSelectRect(getRectangleForTextField(sourceTxtField));
+
+        updateApplyButton();
     }
 
-    private Color numToGreyScaleColor(Double greyScale) {
-        double val = greyScale / (255);
-        return new Color(val, val, val, 1);
+    private void updateApplyButton() {
+        //only enable apply button if all fields contain good data (integers) and model is loaded
+        if(areAllFieldsValid() && isGoodLoadingModel()){//TODO: KEEPS BUTTON DISABLED IF NEW MODEL IS LOADED IN
+                                                        //only updates setDisable() when text field is modified
+            applyButton.setDisable(false);
+        }
+        else{
+            applyButton.setDisable(true);
+        }
     }
 
     //returns the text field the button corresponds to
-    private TextField getButtonPartnerTxtField(Button sourceButton) {
+    private TextField getTextFieldForButton(Button sourceButton) {
         switch (sourceButton.getId()){
             case "button1":
                 return txtField1;
@@ -485,7 +528,7 @@ public class EyedropperController implements Initializable {
         }
     }
 
-    private Rectangle getButtonPartnerRect(Button sourceButton) {
+    private Rectangle getRectangleForButton(Button sourceButton) {
         switch (sourceButton.getId()){
             case "button1":
                 return finalSelectRect1;
@@ -504,7 +547,7 @@ public class EyedropperController implements Initializable {
         }
     }
 
-    private TextField getRectPartnerTxtField(Rectangle rect) {
+    private TextField getTextFieldForRectangle(Rectangle rect) {
         switch (rect.getId()){
             case "finalSelectRect1":
                 return txtField1;
@@ -523,7 +566,7 @@ public class EyedropperController implements Initializable {
         }
     }
 
-    private Rectangle getTxtFieldPartnerRect(TextField txtField) {
+    private Rectangle getRectangleForTextField(TextField txtField) {
         switch (txtField.getId()){
             case "txtField1":
                 return finalSelectRect1;
@@ -542,26 +585,18 @@ public class EyedropperController implements Initializable {
         }
     }
 
-    private boolean colorInList(Color newColor) {
-        for (Rectangle rect : selectedColorRectangles) {
+    private boolean isColorInList(Color newColor) {
+        for (Rectangle rect : paletteColorRectangles) {
             if (rect.getFill().equals(newColor))
                 return true;
         }
         return false;
     }
 
-    public void applyButtonPressed()
-    {
-        //only apply color calibration if all text fields are filled with good info (integers)
-        boolean allFieldsFull = true;
-        for (TextField field : colorSelectTxtFields){//TODO: CHECK IF VALS ARE 0-255?
-            if(!field.getText().matches("-?\\d+")){//regex to check if input is integer
-                allFieldsFull = false;
-                break;
-            }
-        }
+    public void applyButtonPressed() {
+        boolean isGoodInput = areAllFieldsValid();//check to see if all text fields contain valid input
 
-        if(allFieldsFull && goodLoadingModel()) {
+        if(isGoodInput && isGoodLoadingModel()) {
             loadingModel.setTonemapping(
                     new double[]{0.031, 0.090, 0.198, 0.362, 0.591, 0.900},
                     new byte[]
@@ -581,7 +616,17 @@ public class EyedropperController implements Initializable {
         }
     }
 
-    public void triggerSelection(ActionEvent actionEvent) {
+    private boolean areAllFieldsValid(){
+        //only apply color calibration if all text fields are filled with good info (integers)
+        for (TextField field : colorSelectTxtFields){//TODO: CHECK IF VALS ARE 0-255?
+            if(!field.getText().matches("-?\\d+")){//regex to check if input is integer
+                return false;
+            }
+        }
+        return this.loadingModel.hasValidHandler();
+    }
+
+    public void enterColorSelectionMode(ActionEvent actionEvent) {
         //change text of button to indicate selection
         Button sourceButton = (Button) actionEvent.getSource();
         resetButtonsText();
@@ -595,10 +640,10 @@ public class EyedropperController implements Initializable {
     private Button resetButtonsText(){
         Button sourceButton = null;
         for (Button button: colorSelectButtons){
-            if (!button.getText().equals(defaultButtonText)) {
+            if (!button.getText().equals(DEFAULT_BUTTON_TEXT)) {
                 sourceButton = button;
             }
-            button.setText(defaultButtonText);
+            button.setText(DEFAULT_BUTTON_TEXT);
         }
 
         return sourceButton;
@@ -611,7 +656,7 @@ public class EyedropperController implements Initializable {
         this.loadingModel = loadingModel;
 
         //initialize txtFields with their respective values
-        if (goodLoadingModel()){
+        if (isGoodLoadingModel()){
             DoubleUnaryOperator luminanceEncoding = loadingModel.getLuminanceEncodingFunction();
             txtField1.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.031))));
             txtField2.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.090))));
@@ -624,6 +669,8 @@ public class EyedropperController implements Initializable {
                 rect.setVisible(true);
                 updateFinalSelectRect(rect);
             }
+
+            updateApplyButton();
         }
         else{
             //TODO: WHAT TO DO IF NO MODEL FOUND?
@@ -631,17 +678,7 @@ public class EyedropperController implements Initializable {
         }
     }
 
-    private boolean goodLoadingModel(){//treat this function as a replacement for (loadingModel == null) b/c that statement doesn't work
-//        //TODO: REMOVE JANKY WORKAROUND
-//        try{
-//            DoubleUnaryOperator luminanceEncoding = loadingModel.getLuminanceEncodingFunction();
-//        }
-//        catch(Exception e){
-//            return false;
-//        }
-//
-//        return true;
-
+    private boolean isGoodLoadingModel(){
         return loadingModel.hasValidHandler();
     }
 }

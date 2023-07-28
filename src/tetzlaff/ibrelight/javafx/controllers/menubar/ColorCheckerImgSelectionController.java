@@ -7,15 +7,19 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import tetzlaff.ibrelight.core.LoadingModel;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import javafx.embed.swing.SwingFXUtils;
 
 public class ColorCheckerImgSelectionController {
     public Button runButton;
@@ -25,14 +29,17 @@ public class ColorCheckerImgSelectionController {
 
     private Stage stage;
     private Scene scene;
-    private Parent root;
+
+
+    static final String[] validExtensions = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
+
 
     private LoadingModel loadingModel;
 
     public void openEyedropper(ActionEvent actionEvent) throws IOException {
-        if(SharedDataModel.getInstance().getSelectedImage()!= null || loadImgFromTxtField()) {//only move on if image is selected.
-                                                                                            // Also, if no image selected, check to see if
-                                                                                            //path was put into text field manually
+        Parent root;
+
+        if(isImagePathInTxtField()) {//only move on if image is selected.
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/menubar/EyedropperColorChecker.fxml"));
             root = fxmlLoader.load();
             EyedropperController eyedropperController = fxmlLoader.getController();
@@ -47,11 +54,26 @@ public class ColorCheckerImgSelectionController {
         }
     }
 
-    private boolean loadImgFromTxtField() {//TODO: TELL USER THAT FILE IS NOT FOUND?
+    private boolean isImagePathInTxtField() {//TODO: TELL USER THAT FILE IS NOT FOUND?
         String path = imgPathTxtField.getText();
         selectedFile = new File(path);
-        if (selectedFile.exists()){
-            SharedDataModel.getInstance().setSelectedImage(selectedFile);
+        if (selectedFile.exists() && isValidImageType(path)){
+
+            Image image;
+            if (path.toLowerCase().matches(".*\\.tiff?")) {//convert image if it is a .tif or .tiff
+                try {
+                    BufferedImage bufferedImage = ImageIO.read(selectedFile);
+                    image = SwingFXUtils.toFXImage(bufferedImage, null);
+
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            else{
+                image = new Image(selectedFile.toURI().toString());
+            }
+
+            SharedDataModel.getInstance().setSelectedImage(image);//used to pass image to EyedropperColorChecker.fxml
             return true;
         }
         else{
@@ -59,17 +81,25 @@ public class ColorCheckerImgSelectionController {
         }
     }
 
-    public void selectImage(ActionEvent actionEvent) {
+    private boolean isValidImageType(String path) {
+        for (String extension : validExtensions) {
+            if (path.matches("." + extension)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void selectImage() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose Image File");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", "*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"));
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", validExtensions));
 
         stage = (Stage) runButton.getScene().getWindow();
         selectedFile = fileChooser.showOpenDialog(stage);
 
         if (selectedFile != null) {
             imgPathTxtField.setText(selectedFile.getAbsolutePath());
-            SharedDataModel.getInstance().setSelectedImage(selectedFile);
         }
     }
 
