@@ -3,7 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="447.0" prefWidth="410.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.scene.WelcomeWindowController">
+<AnchorPane prefHeight="447.0" prefWidth="410.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController">
    <children>
       <ToolBar orientation="VERTICAL" prefHeight="447.0" prefWidth="200.0">
         <items>

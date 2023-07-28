@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
 
-<HBox prefHeight="420.0" prefWidth="907.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.EyedropperController">
+<HBox prefHeight="420.0" prefWidth="907.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.EyedropperController">
    <children>
       <BorderPane prefHeight="421.0" prefWidth="467.0">
          <center>

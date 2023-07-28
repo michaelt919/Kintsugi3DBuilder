@@ -15,8 +15,8 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
-<?import tetzlaff.ibrelight.core.*?>
-<AnchorPane prefHeight="720.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.MenubarController">
+<?import kintsugi3d.builder.core.*?>
+<AnchorPane prefHeight="720.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.MenubarController">
 <MenuBar AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
       <Menu mnemonicParsing="false" text="File">
          <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="Create project">

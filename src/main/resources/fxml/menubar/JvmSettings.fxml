@@ -13,7 +13,7 @@
 
 <?import java.lang.Integer?>
 <AnchorPane fx:id="root" prefHeight="0.0" prefWidth="0.0"
-            fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.JvmSettingsController" xmlns:fx="http://javafx.com/fxml/1">
+            fx:controller="kintsugi3d.builder.javafx.controllers.menubar.JvmSettingsController" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <FlowPane hgap="10.0" prefHeight="200.0" prefWidth="200.0" vgap="10.0">
          <children>

@@ -15,8 +15,8 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import tetzlaff.ibrelight.export.general.*?>
-<GridPane alignment="CENTER_LEFT" hgap="5.0" prefHeight="155.0" prefWidth="555.0" vgap="10.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.export.general.GeneralRenderRequestUI">
+<?import kintsugi3d.builder.export.general.*?>
+<GridPane alignment="CENTER_LEFT" hgap="5.0" prefHeight="155.0" prefWidth="555.0" vgap="10.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.export.general.GeneralRenderRequestUI">
     <padding>
         <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
     </padding>

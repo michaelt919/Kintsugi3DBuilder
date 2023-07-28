@@ -13,7 +13,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox prefWidth="400.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.scene.environment.RootEnvironmentSceneController">
+<VBox prefWidth="400.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.environment.RootEnvironmentSceneController">
     <TitledPane animated="false" text="Environments" VBox.vgrow="ALWAYS">
         <HBox prefHeight="0.0">
             <ListView fx:id="environmentListView" HBox.hgrow="ALWAYS" />

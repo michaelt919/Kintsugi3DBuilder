@@ -64,7 +64,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>tetzlaff.ibrelight.app.IBRelight</mainClass>
+                                    <mainClass>kintsugi3d.builder.app.IBRelight</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>
