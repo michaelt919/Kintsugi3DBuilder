@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tetzlaff.gl.core.Context;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
@@ -29,6 +30,7 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.util.ImageFinder;
 import tetzlaff.util.ImageLodResizer;
+import tetzlaff.util.ImageUndistorter;
 
 /**
  * A class representing a collection of photographs, or views.
@@ -139,6 +141,8 @@ public final class ViewSet implements ReadonlyViewSet
      * The index of the view that sets the initial orientation when viewing, is used for color calibration, etc.
      */
     private int primaryViewIndex = 0;
+    private int previewWidth = 0;
+    private int previewHeight = 0;
 
     /**
      * Creates a new view set object.
@@ -579,52 +583,22 @@ public final class ViewSet implements ReadonlyViewSet
         return new File(this.getPreviewImageFilePath(), this.getImageFileNameWithFormat(poseIndex, "PNG"));
     }
 
-    private void generatePreviewImage(int poseIndex, int width, int height) throws IOException
+    public int getPreviewWidth()
     {
-        if (Objects.equals(this.relativePreviewImagePathName, this.relativeFullResImagePathName))
-        {
-            throw new IllegalStateException("Preview directory is the same as the full res directory; generating preview images would overwrite full resolution images.");
-        }
-        else
-        {
-            log.info("Generating preview image...");
-
-            // Make sure the preview image directory exists; create it if not
-            this.getPreviewImageFilePath().mkdirs();
-
-            ImageLodResizer resizer = new ImageLodResizer(this.findFullResImageFile(poseIndex));
-            resizer.saveAtResolution(this.getPreviewImageFile(poseIndex), width, height);
-        }
+        return previewWidth;
     }
 
-    @Override
-    public void generatePreviewImages(int width, int height) throws IOException
+    public int getPreviewHeight()
     {
-        if (Objects.equals(this.relativePreviewImagePathName, this.relativeFullResImagePathName))
-        {
-            throw new IllegalStateException("Preview directory is the same as the full res directory; generating preview images would overwrite full resolution images.");
-        }
-        else
-        {
-            Date timestamp = new Date();
-
-            log.info("Generating preview images...");
-
-            // Make sure the preview image directory exists; create it if not
-            this.getPreviewImageFilePath().mkdirs();
-
-            // Resize and save the preview images
-            for (int i = 0; i < this.getCameraPoseCount(); i++)
-            {
-                log.info("Resizing image {}/{}", i, this.getCameraPoseCount());
-                ImageLodResizer resizer = new ImageLodResizer(this.findFullResImageFile(i));
-                resizer.saveAtResolution(this.getPreviewImageFile(i), width, height);
-            }
-
-            log.info("Preview images generated in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-        }
+        return previewHeight;
     }
-    
+
+    public void setPreviewImageResolution(int width, int height)
+    {
+        this.previewWidth = width;
+        this.previewHeight = height;
+    }
+
     @Override
     public int getPrimaryViewIndex()
     {
@@ -797,21 +771,6 @@ public final class ViewSet implements ReadonlyViewSet
     public File findPreviewImageFile(int index) throws FileNotFoundException
     {
         return ImageFinder.getInstance().findImageFile(getPreviewImageFile(index));
-    }
-
-    @Override
-    public File findOrGeneratePreviewImageFile(int index, int width, int height) throws IOException
-    {
-        try
-        {
-            return ImageFinder.getInstance().findImageFile(getPreviewImageFile(index));
-        }
-        catch (FileNotFoundException e)
-        {
-            // Generate file if necessary
-            generatePreviewImage(index, width, height);
-            return ImageFinder.getInstance().findImageFile(getPreviewImageFile(index));
-        }
     }
 
     @Override

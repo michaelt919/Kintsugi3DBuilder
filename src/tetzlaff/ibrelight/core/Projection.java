@@ -12,6 +12,7 @@
 package tetzlaff.ibrelight.core;
 
 import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector2;
 
 /**
  * An interface for a definition of 3D to 2D projection that can be expressed as a projective transformation matrix.
@@ -30,6 +31,11 @@ public interface Projection
 
     float getVerticalFieldOfView();
     float getAspectRatio();
+
+    default Vector2 getCenter()
+    {
+        return Vector2.ZERO;
+    }
 
     /**
      * Convert to a string designed for use in a VSET file

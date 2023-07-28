@@ -12,14 +12,15 @@
 
 package tetzlaff.ibrelight.core;
 
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
+import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector3;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
-
-import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
-import tetzlaff.gl.vecmath.Matrix4;
-import tetzlaff.gl.vecmath.Vector3;
 
 public interface ReadonlyViewSet
 {
@@ -124,15 +125,6 @@ public interface ReadonlyViewSet
      */
     File getPreviewImageFile(int poseIndex);
 
-    /**
-     * Generates preview images at the requested resolution in the preview directory designated for this view set.
-     * If the preview directory is the same as the full-res directory, this will throw an IllegalStateException to prevent overwriting.
-     * @param width The width of each preview image.
-     * @param height The height of each preview image.
-     * @throws IOException If errors occur while saving the images.
-     */
-    void generatePreviewImages(int width, int height) throws IOException;
-
     int getPrimaryViewIndex();
 
     /**
@@ -235,6 +227,5 @@ public interface ReadonlyViewSet
      */
     File findFullResPrimaryImageFile() throws FileNotFoundException;
     File findPreviewImageFile(int index) throws FileNotFoundException;
-    File findOrGeneratePreviewImageFile(int index, int width, int height) throws IOException;
     File findPreviewPrimaryImageFile() throws FileNotFoundException;
 }
