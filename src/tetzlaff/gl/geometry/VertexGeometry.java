@@ -14,9 +14,15 @@ package tetzlaff.gl.geometry;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import org.jengineering.sjmply.PLY;
+import org.jengineering.sjmply.PLYElementList;
+import org.jengineering.sjmply.PLYType;
+import org.jengineering.sjmply.PLY_Plotly;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tetzlaff.gl.core.Context;
@@ -29,6 +35,8 @@ import tetzlaff.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
+
+import static org.jengineering.sjmply.PLYType.*;
 
 /**
  * A data structure for representing a geometry mesh consisting of vertex positions, surface normals, and texture coordinates.
@@ -391,6 +399,136 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
         log.info("Mesh loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
         return inst;
+    }
+
+    public static VertexGeometry createFromPLYFile(File file) throws IOException
+    {
+        PLY ply = PLY.load(file.toPath());
+
+        VertexGeometry geometry = new VertexGeometry(file);
+
+        PLYElementList vertex = ply.elements("vertex");
+        PLYElementList face = ply.elements("face");
+
+        vertex.convertProperty("x", FLOAT32);
+        vertex.convertProperty("y", FLOAT32);
+        vertex.convertProperty("z", FLOAT32);
+        float[] x = vertex.property(PLYType.FLOAT32, "x");
+        float[] y = vertex.property(PLYType.FLOAT32, "y");
+        float[] z = vertex.property(PLYType.FLOAT32, "z");
+
+        float[] nx = {};
+        float[] ny = {};
+        float[] nz = {};
+
+        float[] s = {};
+        float[] t = {};
+
+        int vertexCount = face.size * 3;
+        geometry.vertices = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount);
+        if (vertex.properties.keySet().containsAll(List.of(new String[]{"nx", "ny", "nz"})))
+        {
+            geometry.hasNormals = true;
+            geometry.normals = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount);
+
+            vertex.convertProperty("nx", FLOAT32);
+            vertex.convertProperty("ny", FLOAT32);
+            vertex.convertProperty("nz", FLOAT32);
+            nx = vertex.property(FLOAT32, "nx");
+            ny = vertex.property(FLOAT32, "ny");
+            nz = vertex.property(FLOAT32, "nz");
+        }
+
+        boolean vertexCoords = vertex.properties.keySet().containsAll(List.of(new String[]{"s", "t"}));
+
+        if (vertexCoords || face.properties.containsKey("texcoord"))
+        {
+            geometry.hasTexCoords = true;
+            geometry.texCoords = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 2, vertexCount);
+        }
+
+        if (vertexCoords)
+        {
+            vertex.convertProperty("s", FLOAT32);
+            vertex.convertProperty("t", FLOAT32);
+            s = vertex.property(FLOAT32, "s");
+            t = vertex.property(FLOAT32, "t");
+        }
+
+        List<Vector3> vertexList = new ArrayList<>(100000);
+        List<Vector3> normalList = new ArrayList<>(100000);
+        List<Vector2> texCoordList = new ArrayList<>(100000);
+
+        Vector3 sum = Vector3.ZERO;
+
+        face.convertProperty("vertex_indices", LIST(UINT32,INT32));
+        if (geometry.hasTexCoords && !vertexCoords)
+        {
+            face.convertProperty("texcoord", LIST(UINT8,FLOAT32));
+        }
+
+        int[][] vertex_indices = face.property(LIST(UINT32,INT32),"vertex_indices");
+        for (int i = 0; i < face.size; i++)
+        {
+            float[][] faceCoords = {};
+            if (geometry.hasTexCoords && !vertexCoords)
+            {
+                faceCoords = face.property(LIST(UINT32, FLOAT32), "texcoord");
+            }
+
+            for (int v = 0; v < 3; v++)
+            {
+                int vtidx = vertex_indices[i][v];
+                Vector3 vert = new Vector3(x[vtidx], y[vtidx], z[vtidx]);
+                vertexList.add(vert);
+                sum = sum.plus(vert);
+
+                if (geometry.hasNormals)
+                {
+                    normalList.add(new Vector3(nx[vtidx], ny[vtidx], nz[vtidx]));
+                }
+
+                if (geometry.hasTexCoords)
+                {
+                    if (vertexCoords)
+                    {
+                        texCoordList.add(new Vector2(s[vtidx], t[vtidx]));
+                    }
+                    else // Per-face texture coordinates
+                    {
+                        texCoordList.add(new Vector2(faceCoords[i][v*2], faceCoords[i][(v*2)+1]));
+                    }
+                }
+            }
+        }
+
+        geometry.centroid = sum.dividedBy(vertexCount);
+
+        float boundingBoxMinX = 0.0f;
+        float boundingBoxMinY = 0.0f;
+        float boundingBoxMinZ = 0.0f;
+        float boundingBoxMaxX = 0.0f;
+        float boundingBoxMaxY = 0.0f;
+        float boundingBoxMaxZ = 0.0f;
+        geometry.boundingRadius = 0.0f;
+
+        for (Vector3 vert : vertexList)
+        {
+            boundingBoxMinX = Math.min(boundingBoxMinX, vert.x);
+            boundingBoxMinY = Math.min(boundingBoxMinY, vert.y);
+            boundingBoxMinZ = Math.min(boundingBoxMinZ, vert.z);
+
+            boundingBoxMaxX = Math.max(boundingBoxMaxX, vert.x);
+            boundingBoxMaxY = Math.max(boundingBoxMaxY, vert.y);
+            boundingBoxMaxZ = Math.max(boundingBoxMaxZ, vert.z);
+
+            geometry.boundingRadius = Math.max(geometry.boundingRadius, vert.minus(geometry.centroid).length());
+        }
+
+        geometry.boundingBoxCenter = new Vector3((boundingBoxMinX + boundingBoxMaxX) / 2, (boundingBoxMinY + boundingBoxMaxY) / 2, (boundingBoxMinZ + boundingBoxMaxZ) / 2);
+        geometry.boundingBoxSize = new Vector3(boundingBoxMaxX - boundingBoxMinX, boundingBoxMaxY - boundingBoxMinY, boundingBoxMaxZ - boundingBoxMinZ);
+
+        return geometry;
     }
 
     private static Vector3[] computeTangents(
