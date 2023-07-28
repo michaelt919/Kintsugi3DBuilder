@@ -173,9 +173,12 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
             firstSmooth = false;
         }
 
-        // Copy smoothed result back into normal estimate
-        estimateNormals.getFrontFramebuffer().blitColorAttachmentFromFramebuffer(0,
-            smoothNormals.getFrontFramebuffer(), 0);
+        if (normalOptimizationSettings.getNormalSmoothingIterations() > 0)
+        {
+            // Copy smoothed result back into normal estimate
+            estimateNormals.getFrontFramebuffer().blitColorAttachmentFromFramebuffer(0,
+                smoothNormals.getFrontFramebuffer(), 0);
+        }
     }
 
     private FramebufferObject<ContextType> getNormalMapFBO()
