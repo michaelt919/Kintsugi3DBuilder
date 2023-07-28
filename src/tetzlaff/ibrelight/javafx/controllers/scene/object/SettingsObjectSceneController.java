@@ -23,6 +23,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
+import javafx.util.StringConverter;
+import tetzlaff.ibrelight.javafx.util.SafeLogScaleNumberStringConverter;
 import tetzlaff.ibrelight.javafx.util.SafeNumberStringConverter;
 import tetzlaff.ibrelight.javafx.util.StaticUtilities;
 
@@ -34,10 +36,13 @@ public class SettingsObjectSceneController implements Initializable
     @FXML private TextField xCenterTextField;
     @FXML private TextField yCenterTextField;
     @FXML private TextField zCenterTextField;
+    @FXML private TextField scaleTxtField;
+
 
     @FXML private Slider xCenterSlider;
     @FXML private Slider yCenterSlider;
     @FXML private Slider zCenterSlider;
+    @FXML private Slider scaleSlider;
 
     @FXML private TextField rotateYTextField;
     @FXML private Slider rotateYSlider;
@@ -46,6 +51,10 @@ public class SettingsObjectSceneController implements Initializable
     @FXML private TextField rotateZTextField;
     @FXML private Slider rotateZSlider;
     @FXML private Button selectPointButton;
+
+    private final SafeLogScaleNumberStringConverter converter = new SafeLogScaleNumberStringConverter(1);
+
+
 
     private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
 
@@ -56,9 +65,27 @@ public class SettingsObjectSceneController implements Initializable
         StaticUtilities.makeClampedNumeric(-90, 90, rotateXTextField);
         StaticUtilities.makeWrapAroundNumeric(-180, 180, rotateZTextField);
 
+        StaticUtilities.makeNumeric(scaleTxtField);
         StaticUtilities.makeNumeric(xCenterTextField);
         StaticUtilities.makeNumeric(yCenterTextField);
         StaticUtilities.makeNumeric(zCenterTextField);
+
+        scaleSlider.setLabelFormatter(new StringConverter<>() {
+            @Override
+            public String toString(Double object) {
+                String out = converter.toString(object);
+                if (out.length() >= 4) {
+                    return out.substring(0, 4);
+                } else {
+                    return out;
+                }
+            }
+
+            @Override
+            public Double fromString(String string) {
+                throw new UnsupportedOperationException();
+            }
+        });
     }
 
     public final ChangeListener<ObjectPoseSetting> changeListener =
@@ -95,6 +122,8 @@ public class SettingsObjectSceneController implements Initializable
         rotateXTextField.textProperty().bindBidirectional(objectPose.rotateXProperty(), n);
         rotateZTextField.textProperty().bindBidirectional(objectPose.rotateZProperty(), n);
 
+        //TODO: BIND SCALE SLIDER
+
         xCenterSlider.valueProperty().bindBidirectional(objectPose.centerXProperty());
         yCenterSlider.valueProperty().bindBidirectional(objectPose.centerYProperty());
         zCenterSlider.valueProperty().bindBidirectional(objectPose.centerZProperty());
@@ -112,6 +141,8 @@ public class SettingsObjectSceneController implements Initializable
         rotateYTextField.textProperty().unbindBidirectional(objectPose.rotateYProperty());
         rotateXTextField.textProperty().unbindBidirectional(objectPose.rotateXProperty());
         rotateZTextField.textProperty().unbindBidirectional(objectPose.rotateZProperty());
+
+        //TODO: UNBIND SCALE SLIDER
 
         xCenterSlider.valueProperty().unbindBidirectional(objectPose.centerXProperty());
         yCenterSlider.valueProperty().unbindBidirectional(objectPose.centerYProperty());
