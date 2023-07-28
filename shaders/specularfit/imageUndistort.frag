@@ -25,7 +25,8 @@ uniform vec2 coefficientsP;
 uniform float skew;
 
 void main() {
-    vec2 uv = (fTexCoord * viewportSize - opticalCenter) / focalLength;
+    // Flip y-component vertically before applying undistortion equations
+    vec2 uv = (vec2(fTexCoord.x, 1 - fTexCoord.y) * viewportSize - opticalCenter) / focalLength;
 
     float r2 = dot(uv, uv);
     float r4 = pow(r2, 2);
@@ -45,11 +46,11 @@ void main() {
     uvd.x = uvd.x + (2 * coefficientsP[0] * xy + coefficientsP[1] * uvd22pr2.x);
     uvd.y = uvd.y + (coefficientsP[0] * uvd22pr2.y + 2 * coefficientsP[1] * xy);
 
-
-    vec2 uvO = (uvd * focalLength + opticalCenter + vec2(uvd.y * skew, 0)) / viewportSize;
-    if (uvO.x > 1.0 || uvO.x < 0.0 || uvO.y > 1.0 || uvO.y < 0.0) {
+    vec2 uvOut = (uvd * focalLength + opticalCenter + vec2(uvd.y * skew, 0)) / viewportSize;
+    if (uvOut.x > 1.0 || uvOut.x < 0.0 || uvOut.y > 1.0 || uvOut.y < 0.0) {
         fragColor = vec4(0,0,0,1);
     } else {
-        fragColor = texture(inputImage, uvO);
+        // Flip y-component back before performing texture lookup
+        fragColor = texture(inputImage, vec2(uvOut.x, 1 - uvOut.y));
     }
 }

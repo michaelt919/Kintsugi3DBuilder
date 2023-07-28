@@ -180,7 +180,7 @@ public class DistortionProjection implements Projection
     @Override
     public Vector2 getCenter()
     {
-        return new Vector2(cx / width - 0.5f, 0.5f - cy / height); // Vertical axis is flipped in Metashape coordinates
+        return new Vector2(2.0f * cx / width - 1.0f, 1.0f - 2.0f * cy / height); // Vertical axis is flipped in Metashape coordinates
     }
     
     @Override
