@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<GridPane hgap="5.0" vgap="5.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.UnzipFileSelectionController">
+<GridPane hgap="5.0" vgap="5.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.UnzipFileSelectionController">
    <columnConstraints>
       <ColumnConstraints hgrow="SOMETIMES" maxWidth="202.66665903727215" minWidth="10.0" prefWidth="111.99999237060547" />
       <ColumnConstraints hgrow="SOMETIMES" maxWidth="360.00000762939453" minWidth="10.0" prefWidth="360.00000762939453" />

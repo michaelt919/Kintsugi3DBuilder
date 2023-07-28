@@ -24,7 +24,7 @@ InstallDirRegKey HKLM "Software\Kintsugi3DBuilder" "Install_Dir"
 
 ; Installer Pages
 !insertmacro MUI_PAGE_WELCOME
-!insertmacro MUI_PAGE_LICENSE "ibrelight-about.txt"
+!insertmacro MUI_PAGE_LICENSE "kintsugi3d-builder-about.txt"
 !insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
@@ -47,7 +47,7 @@ Section "Kintsugi 3D Builder (required)"
     SetOutPath $INSTDIR
     File "target\Kintsugi3DBuilder.exe"
     File "ibr.ico"
-    File "ibrelight-about.txt"
+    File "kintsugi3d-builder-about.txt"
 
     ; Include shaders
     SetOutPath "$INSTDIR\shaders"

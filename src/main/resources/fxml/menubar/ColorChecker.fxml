@@ -15,7 +15,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <GridPane prefHeight="225.0" prefWidth="165.0" xmlns="http://javafx.com/javafx/8.0.162" xmlns:fx="http://javafx.com/fxml/1"
-          fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.ColorCheckerController">
+          fx:controller="kintsugi3d.builder.javafx.controllers.menubar.ColorCheckerController">
    <children>
       <Label layoutX="183.0" layoutY="160.0" text="3.1 (Black)" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
       <Label layoutX="8.0" layoutY="6.0" text="CIE-Y" GridPane.halignment="RIGHT">
