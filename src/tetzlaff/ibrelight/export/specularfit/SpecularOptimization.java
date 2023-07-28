@@ -23,13 +23,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
+import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.Projection;
 import tetzlaff.ibrelight.core.ReadonlyViewSet;
 import tetzlaff.ibrelight.core.TextureFitSettings;
 import tetzlaff.ibrelight.export.specularfit.settings.SpecularFitRequestParams;
+import tetzlaff.ibrelight.export.specularfit.gltf.SpecularFitGltfExporter;
 import tetzlaff.ibrelight.rendering.resources.*;
 import tetzlaff.optimization.ShaderBasedErrorCalculator;
 import tetzlaff.util.ImageFinder;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.function.BiConsumer;
 
 /**
  * Implement specular fit using algorithm described by Nam et al., 2018
@@ -214,8 +225,14 @@ public class SpecularOptimization
             fullResolution.saveNormalMap(settings.getOutputDirectory());
 
             // Save the final weight maps
-            // TODO combined weight images when using block-based fitting
-            SpecularFitSerializer.saveWeightImages(fullResolution.getBasisWeightResources().weightMaps, settings.getOutputDirectory());
+            int weightsPerImage = settings.getExportSettings().isCombineWeights() ? 4 : 1;
+            try (WeightImageCreator<ContextType> weightImageCreator = new WeightImageCreator<>(cache.getContext(), settings.getTextureFitSettings(), weightsPerImage))
+            {
+                weightImageCreator.createImages(fullResolution, settings.getOutputDirectory());
+            } catch (Exception e)
+            {
+                throw new RuntimeException(e);
+            }
 
             // Save the final specular albedo and roughness maps
             fullResolution.getRoughnessOptimization().saveTextures(settings.getOutputDirectory());

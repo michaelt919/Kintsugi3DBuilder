@@ -12,8 +12,8 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>IBRelight</groupId>
-    <artifactId>IBRelight</artifactId>
+    <groupId>Kintsugi3D</groupId>
+    <artifactId>Kintsugi3DBuilder</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <build>
@@ -38,7 +38,7 @@
                         <goals><goal>launch4j</goal></goals>
                         <configuration>
                             <headerType>gui</headerType>
-                            <outfile>target/IBRelight.exe</outfile>
+                            <outfile>target/Kintsugi3DBuilder.exe</outfile>
                             <jar>target/${project.artifactId}-${project.version}-jar-with-dependencies.jar</jar>
                             <icon>ibr.ico</icon>
                             <downloadUrl>https://adoptium.net/temurin/releases/?version=11</downloadUrl>

@@ -1,19 +1,19 @@
-; IBRelight NSIS Installer script
+; Kintsugi3DBuilder NSIS Installer script
 
 ;Include Modern UI
 
 !include "MUI2.nsh"
 !include "LangFile.nsh"
 
-Name "IBRelight"
-OutFile "target\IBRelight-Installer.exe"
+Name "Kintsugi 3D Builder"
+OutFile "target\Kintsugi3DBuilder-Installer.exe"
 RequestExecutionLevel admin
 Unicode True
 ManifestDPIAware True
 
-InstallDir $PROGRAMFILES\IBRelight
+InstallDir $PROGRAMFILES\Kintsugi3DBuilder
 
-InstallDirRegKey HKLM "Software\IBRelight" "Install_Dir"
+InstallDirRegKey HKLM "Software\Kintsugi3DBuilder" "Install_Dir"
 
 ; MUI Settings
 !define MUI_ICON "ibr.ico"
@@ -40,12 +40,12 @@ InstallDirRegKey HKLM "Software\IBRelight" "Install_Dir"
 ; ---------------------------
 
 ; Main installation
-Section "IBRelight (required)"
+Section "Kintsugi 3D Builder (required)"
 
     SectionIn RO
 
     SetOutPath $INSTDIR
-    File "target\IBRelight.exe"
+    File "target\Kintsugi3DBuilder.exe"
     File "ibr.ico"
     File "ibrelight-about.txt"
 
@@ -54,13 +54,13 @@ Section "IBRelight (required)"
     File /r "shaders\*"
 
     ; Write install directory registry key
-    WriteRegStr HKLM SOFTWARE\IBRelight "Install_Dir" "$INSTDIR"
+    WriteRegStr HKLM "SOFTWARE\Kintsugi3DBuilder" "Install_Dir" "$INSTDIR"
 
     ; Write uninstall keys to registry
-    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\IBRelight" "DisplayName" "IBRelight"
-    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\IBRelight" "UninstallString" '"$INSTDIR\uninstall.exe"'
-    WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\IBRelight" "NoModify" 1
-    WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\IBRelight" "NoRepair" 1
+    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DBuilder" "DisplayName" "Kintsugi 3D Builder"
+    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DBuilder" "UninstallString" '"$INSTDIR\uninstall.exe"'
+    WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DBuilder" "NoModify" 1
+    WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DBuilder" "NoRepair" 1
     WriteUninstaller "$INSTDIR\uninstall.exe"
 
 SectionEnd
@@ -68,9 +68,9 @@ SectionEnd
 ; Optional start menu shortcuts
 Section "Start Menu Shortcuts"
 
-    CreateDirectory "$SMPROGRAMS\IBRelight"
-    CreateShortcut "$SMPROGRAMS\IBRelight\Uninstall.lnk" "$INSTDIR\uninstall.exe"
-    CreateShortcut "$SMPROGRAMS\IBRelight\IBRelight.lnk" "$INSTDIR\IBRelight.exe"
+    CreateDirectory "$SMPROGRAMS\Kintsugi3DBuilder"
+    CreateShortcut "$SMPROGRAMS\Kintsugi3DBuilder\Uninstall.lnk" "$INSTDIR\uninstall.exe"
+    CreateShortcut "$SMPROGRAMS\Kintsugi3DBuilder\Kintsugi 3D Builder.lnk" "$INSTDIR\Kintsugi3DBuilder.exe"
 
 SectionEnd
 
@@ -78,11 +78,11 @@ SectionEnd
 Section "Uninstall"
 
     ; Remove directories
-    RMDir /r "$SMPROGRAMS\IBRelight"
+    RMDir /r "$SMPROGRAMS\Kintsugi3DBuilder"
     RMDir /r "$INSTDIR"
 
     ; Remove registry keys
-    DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\IBRelight"
-    DeleteRegKey HKLM SOFTWARE\IBRelight
+    DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DBuilder"
+    DeleteRegKey HKLM "SOFTWARE\Kintsugi3DBuilder"
 
 SectionEnd

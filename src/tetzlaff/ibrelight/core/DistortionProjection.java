@@ -12,6 +12,7 @@
 package tetzlaff.ibrelight.core;
 
 import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector2;
 
 /**
  * Creates a perspective projection that also maintains camera distortion parameters (for Brown's distortion model).
@@ -172,13 +173,30 @@ public class DistortionProjection implements Projection
     @Override
     public Matrix4 getProjectionMatrix(float nearPlane, float farPlane)
     {
-        return Matrix4.perspective(this.getVerticalFieldOfView(), this.getAspectRatio(), nearPlane, farPlane);
+        return Matrix4.translate(getCenter().asVector3())
+            .times(Matrix4.perspective(this.getVerticalFieldOfView(), this.getAspectRatio(), nearPlane, farPlane));
+    }
+
+    @Override
+    public Vector2 getCenter()
+    {
+        return new Vector2(2.0f * cx / width - 1.0f, 1.0f - 2.0f * cy / height); // Vertical axis is flipped in Metashape coordinates
     }
     
     @Override
     public String toVSETString()
     {
-        return String.format("D\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
-                                cx, cy, width/height, fx, width, k1, k2, k3, p1, p2);
+        return String.format("s\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
+                                cx, cy, width/height, fy, width, k1, k2, k3, k4, p1, p2, fx - fy, skew);
+    }
+
+    public DistortionProjection scaledTo(int newWidth, int newHeight)
+    {
+        float ratioX = newWidth / width;
+        float ratioY = newHeight / height;
+
+        return new DistortionProjection(newWidth, newHeight,
+            fx * ratioX, fy * ratioY, cx * ratioX, cy * ratioY,
+            k1, k2, k3, k4, p1, p2, skew);
     }
 }

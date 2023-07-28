@@ -15,7 +15,7 @@
             <outputDirectory></outputDirectory>
         </file>
         <file>
-            <source>target/IBRelight.exe</source>
+            <source>target/Kintsugi3DBuilder.exe</source>
             <outputDirectory></outputDirectory>
         </file>
     </files>
