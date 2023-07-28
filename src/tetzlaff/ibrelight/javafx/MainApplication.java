@@ -38,12 +38,14 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tetzlaff.gl.vecmath.Vector2;
+import tetzlaff.ibrelight.app.Rendering;
 import tetzlaff.ibrelight.app.SynchronizedWindow;
 import tetzlaff.ibrelight.app.WindowSynchronization;
 import tetzlaff.ibrelight.core.IBRRequestManager;
 import tetzlaff.ibrelight.core.StandardRenderingMode;
 import tetzlaff.ibrelight.javafx.controllers.menubar.MenubarController;
 import tetzlaff.ibrelight.javafx.controllers.scene.RootSceneController;
+import tetzlaff.ibrelight.javafx.controllers.scene.WelcomeWindowController;
 import tetzlaff.ibrelight.javafx.internal.SettingsModelImpl;
 import tetzlaff.ibrelight.javafx.util.StaticUtilities;
 import tetzlaff.util.ShadingParameterMode;
@@ -140,22 +142,35 @@ public class MainApplication extends Application
         URL sceneURL = getClass().getClassLoader().getResource(sceneFXMLFileName);
         assert sceneURL != null : "cant find " + sceneFXMLFileName;
 
+        String welcomeWindowFXMLFileName = "fxml/scene/WelcomeWindow.fxml";
+        URL welcomeWindowURL = getClass().getClassLoader().getResource(welcomeWindowFXMLFileName);
+        assert welcomeWindowURL != null : "cant find " + welcomeWindowFXMLFileName;
+
         //init fxml loaders
         FXMLLoader sceneFXMLLoader = new FXMLLoader(sceneURL);
         FXMLLoader menuBarFXMLLoader = new FXMLLoader(menuBarURL);
+        FXMLLoader welcomeWindowFXMLLoader = new FXMLLoader(welcomeWindowURL);
 
         //load Parents
         Parent menuBarRoot = menuBarFXMLLoader.load();
         Parent sceneRoot = sceneFXMLLoader.load();
+        Parent welcomeRoot = welcomeWindowFXMLLoader.load();
 
         //load Controllers
         RootSceneController sceneController = sceneFXMLLoader.getController();
         MenubarController menuBarController = menuBarFXMLLoader.getController();
+        WelcomeWindowController welcomeWindowController = welcomeWindowFXMLLoader.getController();
 
         //load stages
         primaryStage.setTitle("Kintsugi Builder");
         primaryStage.setScene(new Scene(menuBarRoot));
         primaryStage.setMaximized(true);
+
+        Stage welcomeStage = new Stage();
+        welcomeStage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+        welcomeStage.setTitle("Welcome!");
+        welcomeStage.setScene(new Scene(welcomeRoot));
+        welcomeStage.initOwner(primaryStage.getScene().getWindow());
 
         Stage sceneStage = new Stage();
         sceneStage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
@@ -168,6 +183,9 @@ public class MainApplication extends Application
 
 //        primaryStage.setX(primaryScreenBounds.getMinX() + 10);
 //        primaryStage.setY(primaryScreenBounds.getMinY() + 10);
+
+        welcomeStage.setX(primaryScreenBounds.getMinX() + 10);
+        welcomeStage.setY(primaryScreenBounds.getMinY() + 120);
 
         primaryStage.show();
 
@@ -197,6 +215,8 @@ public class MainApplication extends Application
 //        libraryStage.show();
 
         primaryStage.requestFocus();
+        primaryStage.show();
+        welcomeStage.show();
 
         MultithreadModels.getInstance().getCanvasModel().addCanvasChangedListener(
             canvas -> menuBarController.getFramebufferView().setCanvas(canvas));
@@ -243,6 +263,9 @@ public class MainApplication extends Application
         menuBarController.init(primaryStage, InternalModels.getInstance(),
             () -> getHostServices().showDocument("https://docs.google.com/document/d/1jM4sr359-oacpom0TrGLYSqCUdHFEprnvsCn5oVwTEI/edit?usp=sharing"));
 
+        welcomeWindowController.init(primaryStage.getScene().getWindow(), Rendering.getRequestQueue(), InternalModels.getInstance(),
+                () -> getHostServices().showDocument("https://docs.google.com/document/d/1jM4sr359-oacpom0TrGLYSqCUdHFEprnvsCn5oVwTEI/edit?usp=sharing"));
+
         // Open scene window from the menu
         settingsModel.getBooleanProperty("sceneWindowOpen").addListener(sceneWindowOpen ->
         {
@@ -272,6 +295,13 @@ public class MainApplication extends Application
         WindowSynchronization.getInstance().addListener(menuBarWindow);
 
         primaryStage.setOnCloseRequest(event ->
+        {
+            // Consume the event and let the window synchronization system close the stage later if the user confirms that they want to exit.
+            event.consume();
+            WindowSynchronization.getInstance().quit();
+        });
+
+        welcomeStage.setOnCloseRequest(event ->
         {
             // Consume the event and let the window synchronization system close the stage later if the user confirms that they want to exit.
             event.consume();
