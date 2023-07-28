@@ -35,6 +35,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
 {
     private static final Logger log = LoggerFactory.getLogger(SpecularFitRequest.class);
     private final SpecularFitRequestParams settings;
+    private final IBRelightModels modelAccess;
 
     /**
      * Default constructor for CLI args requests
@@ -47,12 +48,13 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
     {
         return new SpecularFitRequest<>(new SpecularFitRequestParams(
             new TextureFitSettings(2048, 2048, modelAccess.getSettingsModel().getFloat("gamma")),
-            modelAccess.getSettingsModel(), new File(args[2])));
+            modelAccess.getSettingsModel(), new File(args[2])), modelAccess);
     }
 
-    public SpecularFitRequest(SpecularFitRequestParams settings)
+    public SpecularFitRequest(SpecularFitRequestParams settings, IBRelightModels modelAccess)
     {
         this.settings = settings;
+        this.modelAccess = modelAccess;
     }
 
     /**
@@ -205,6 +207,8 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
             Matrix4 rotation = viewSet == null ? Matrix4.IDENTITY : viewSet.getCameraPose(viewSet.getPrimaryViewIndex());
             Vector3 translation = rotation.getUpperLeft3x3().times(geometry.getCentroid().times(-1.0f));
             Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2), translation.asVector4(1.0f));
+
+            transform = objectModel.getTransformationMatrix().times(transform);
 
             SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(geometry, transform);
             exporter.setDefaultNames();
