@@ -226,7 +226,7 @@ public class MainApplication extends Application
         settingsModel.createBooleanSetting("occlusionEnabled", true);
         settingsModel.createBooleanSetting("fresnelEnabled", false);
         settingsModel.createBooleanSetting("pbrGeometricAttenuationEnabled", false);
-        settingsModel.createBooleanSetting("relightingEnabled", true);
+        settingsModel.createBooleanSetting("relightingEnabled", false);
         settingsModel.createBooleanSetting("shadowsEnabled", false);
         settingsModel.createBooleanSetting("visibleLightsEnabled", true);
         settingsModel.createBooleanSetting("lightWidgetsEnabled", false);
