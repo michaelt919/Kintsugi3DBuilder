@@ -27,7 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 import java.util.ResourceBundle;
 
 
@@ -42,12 +42,7 @@ public class ChunkViewerController implements Initializable {
     @FXML
     public ImageView chunkViewerImgView;
     public Text imgViewLabel;
-    private Document selectedChunkXML;
-
     static final String[] VALID_EXTENSIONS = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
-    private String psxFilePath;
-    private int chunkID;
-    private String chunkName;
 
     static final int THUMBNAIL_SIZE = 30;
     @FXML
@@ -58,14 +53,10 @@ public class ChunkViewerController implements Initializable {
 
     @FXML
     public TextFlow textFlow;
+    MetashapeObjectChunk metashapeObjectChunk;
 
-    private Scene scene;
-    private Parent root;
-    private Stage stage;
-    //key is chunk name, value is path to chunk's zip file
-    private HashMap<String, String> chunkZipPathPairs;
-    private MetashapeObjectChunk metashapeObjectChunk;
-    private MetashapeObject metashapeObject;
+    private ImgSelectionThread loadImgThread;
+
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -73,20 +64,10 @@ public class ChunkViewerController implements Initializable {
     }
 
     public void initializeChunkSelectionAndTreeView(MetashapeObjectChunk metashapeObjectChunk) {
-        
-        //TODO: REMOVE THESE ASSIGNMENTS BECAUSE THEY'RE STORED IN METASHAPE OBJECT CHUNK?
         this.metashapeObjectChunk = metashapeObjectChunk;
-        this.metashapeObject = metashapeObjectChunk.getMetashapeObject();
-
-        this.selectedChunkXML = metashapeObjectChunk.getChunkXML();
-        this.psxFilePath = metashapeObjectChunk.getPsxFilePath();
-        this.chunkID = metashapeObjectChunk.getChunkID();
-        this.chunkName = metashapeObjectChunk.getChunkName();
-        
-        //TODO: SHOULD DO CASTING?
-        this.chunkZipPathPairs = (HashMap<String, String>) metashapeObjectChunk.getChunkZipPathPairs();
 
         //add chunk name to tree
+        String chunkName = metashapeObjectChunk.getChunkName();
         TreeItem<String> rootItem = new TreeItem<>(chunkName);
         chunkTreeView.setRoot(rootItem);
 
@@ -98,15 +79,53 @@ public class ChunkViewerController implements Initializable {
         updateSelectChunkButton();
 
         //fill thumbnail list
-        ArrayList <Image> thumbnailImageList = metashapeObjectChunk.getThumbnailImageList();
+        ArrayList <Image> thumbnailImageList = (ArrayList<Image>) metashapeObjectChunk.loadThumbnailImageList();
 
         //add full-res images as children to the chunk name in treeview
-        ArrayList<Element> cameras = (ArrayList<Element>) metashapeObjectChunk.getThumbnailCameras();
+        ArrayList<Element> cameras = (ArrayList<Element>) metashapeObjectChunk.findThumbnailCameras();
 
         for (int i = 0; i < cameras.size(); ++i) {
             Element camera = cameras.get(i);
             String imageName = camera.getAttribute("label");
 
+            //get parent of camera
+            //if parent of camera is a group, create a group node and put it under the root, then add camera to it
+            //unless that group already exists, then add the camera to the already created group
+
+            Element parent = (Element) camera.getParentNode();
+            TreeItem<String> destinationItem; //stores the node which the image will be added to
+                                                // (either a group or the root node)
+            if(parent.getTagName().equals("group")){
+                String groupName = parent.getAttribute("label");//TODO: CURRENTLY ONLY CHECKS TO SEE IF NAMES MATCH
+
+                List<TreeItem<String>> rootChildren = rootItem.getChildren();
+                boolean groupAlreadyCreated = false;//boolean to track if group is already present in treeview
+                TreeItem<String> matchingItem = null;
+                for (TreeItem<String> item : rootChildren){
+                    if (item.getValue().equals(groupName)){
+                        groupAlreadyCreated = true;
+                        matchingItem = item;
+                        break;
+                    }
+                }
+
+                if (groupAlreadyCreated){
+                    //add camera to this group
+                    destinationItem = matchingItem;
+                }
+                else{//group has not been created yet
+                    TreeItem<String> newGroup = new TreeItem<>(groupName);
+                    rootItem.getChildren().add(newGroup);
+                    destinationItem = newGroup;
+                }
+            }
+            else{
+                //parent is camera, so add image to root node
+                //(camera is not part of a group)
+                destinationItem = rootItem;
+            }
+
+            //set image and thumbnail
             ImageView thumbnailImgView;
             try {
                 thumbnailImgView = new ImageView(thumbnailImageList.get(i));
@@ -118,8 +137,7 @@ public class ChunkViewerController implements Initializable {
             thumbnailImgView.setFitHeight(THUMBNAIL_SIZE);
 
             TreeItem<String> imageTreeItem = new TreeItem<>(imageName, thumbnailImgView);
-            rootItem.getChildren().add(imageTreeItem);
-
+            destinationItem.getChildren().add(imageTreeItem);
         }
 
         //unroll treeview
@@ -127,16 +145,21 @@ public class ChunkViewerController implements Initializable {
     }
 
     public void selectChunk(ActionEvent actionEvent) throws IOException {
-        String selectedChunk = this.newChunkSelectionChoiceBox.getValue();
+        Scene scene;
+        Parent root;
+        Stage stage;
 
-        if (!selectedChunk.equals(chunkName)) {//only change scene if switching to new chunk
-            String selectedChunkZip = chunkZipPathPairs.get(selectedChunk);
+        String currentChunkName = this.metashapeObjectChunk.getChunkName();
+        String selectedChunkName = this.newChunkSelectionChoiceBox.getValue();
 
+        MetashapeObject metashapeObject = this.metashapeObjectChunk.getMetashapeObject();
+
+        if (!selectedChunkName.equals(currentChunkName)) {//only change scene if switching to new chunk
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/menubar/ChunkViewer.fxml"));
             root = fxmlLoader.load();
             ChunkViewerController chunkViewerController = fxmlLoader.getController();
 
-            MetashapeObjectChunk newMetashapeObjectChunk = new MetashapeObjectChunk(this.metashapeObject, selectedChunkZip);
+            MetashapeObjectChunk newMetashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, selectedChunkName);
             chunkViewerController.initializeChunkSelectionAndTreeView(newMetashapeObjectChunk);
 
             stage = (Stage) ((javafx.scene.Node) actionEvent.getSource()).getScene().getWindow();
@@ -151,53 +174,54 @@ public class ChunkViewerController implements Initializable {
     public void selectImageInTreeView() {
         //selectedItem holds the cameraID associated with the image
         TreeItem<String> selectedItem = chunkTreeView.getSelectionModel().getSelectedItem();
-        if (selectedItem != null) {
+        if (selectedItem != null &&
+                selectedItem.getValue() != null &&
+                selectedItem.isLeaf()) {
+
             String imageName = selectedItem.getValue();
-            try {
-                //goal of this try block is to find the camera which is associated with the image name in selectedItem
-                //then take that camera's image and put it into the imageview to show to the user
-                Element selectedItemCam = metashapeObjectChunk.matchImageToCam(imageName);
+            updateImageText(imageName);
+            imgViewLabel.setText(imgViewLabel.getText() + " (preview)");
 
-                if (selectedItemCam != null) {
-                    File imgFile = metashapeObjectChunk.getImgFileFromCam(selectedItemCam);
 
-                    //set imageview to selected image
-                    if (imgFile.exists()) {
-                        chunkViewerImgView.setImage(new Image(imgFile.toURI().toString()));
+            //set thumbnail as main image, then update to full resolution later
+            setThumbnailAsFullImage(selectedItem);
 
-//                      set label to: psx name + chunk name + cameraID
-                        File psxFile = new File(this.psxFilePath);
-
-                        imgViewLabel.setText("File: " + psxFile.getName() +
-                                            "\nChunk: " + chunkName +
-                                            "\nImage: " + imageName);
-
-                        textFlow.setTextAlignment(TextAlignment.LEFT);
-                    } else {
-                        setThumbnailAsFullImage(selectedItem);
-                    }
-                }
-                else{
-                    //camera not found
-                    setThumbnailAsFullImage(selectedItem);
-                }
-                //TODO: .TIF (and maybe other image types) ARE NOT SUPPORTED. CONVERT THESE?
-                //TODO: AFTER SELECTION, PROGRAM WILL FREEZE TO DOWNLOAD IMAGES FROM ONEDRIVE
-            } catch (IllegalArgumentException e) {//could not find image
-                log.error("An error occurred: Could not find image:", e);
+            //if loadImgThread is running, kill it and start a new one
+            if(loadImgThread != null && loadImgThread.isActive()){
+                loadImgThread.stopThread();
             }
+
+            loadImgThread = new ImgSelectionThread(imageName,this);
+            Thread myThread = new Thread(loadImgThread);
+            myThread.start();
         }
     }
 
+    void updateImageText(String imageName) {
+        String psxFilePath = this.metashapeObjectChunk.getPsxFilePath();
+        String chunkName = this.metashapeObjectChunk.getChunkName();
+
+//                      set label to: psx name + chunk name + cameraID
+        File psxFile = new File(psxFilePath);
+
+        imgViewLabel.setText("File: " + psxFile.getName() +
+                            "\nChunk: " + chunkName +
+                            "\nImage: " + imageName);
+
+        textFlow.setTextAlignment(TextAlignment.LEFT);
+    }
+
     private void setThumbnailAsFullImage(TreeItem<String> selectedItem) {
-        //use thumbnail as main image if main image not found
+        //use thumbnail as main image
+        //used if image is not found, or if larger resolution image is being loaded
         chunkViewerImgView.setImage(selectedItem.getGraphic().
                 snapshot(new SnapshotParameters(), null));
-        imgViewLabel.setText("Image not found.");
-        textFlow.setTextAlignment(TextAlignment.CENTER);
     }
 
     private void initializeChoiceBox() {
+        MetashapeObject metashapeObject = this.metashapeObjectChunk.getMetashapeObject();
+        String chunkName = this.metashapeObjectChunk.getChunkName();
+
         //add all items from old checkbox to new checkbox
         this.newChunkSelectionChoiceBox.getItems().addAll(metashapeObject.getChunkNames());
 
@@ -228,12 +252,13 @@ public class ChunkViewerController implements Initializable {
     public void updateSelectChunkButton(ActionEvent actionEvent) {
         //need to keep the unused ActionEvent so we can link this method to the choice box
         String selectedChunk = this.newChunkSelectionChoiceBox.getValue();
+        String currentChunkName = this.metashapeObjectChunk.getChunkName();
 
         if (selectedChunk == null){
             return;
         }
 
-        if (selectedChunk.equals(chunkName)) {
+        if (selectedChunk.equals(currentChunkName)) {
             selectChunkButton.setDisable(true);
             selectChunkButton.setText("Chunk already selected");
         } else {

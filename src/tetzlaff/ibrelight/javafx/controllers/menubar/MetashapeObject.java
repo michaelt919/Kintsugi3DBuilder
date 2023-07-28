@@ -35,10 +35,10 @@ public class MetashapeObject {
     }
 
     public MetashapeObject(String path){
-        getChunkNamesFromPSX(path);
+        loadChunkNamesFromPSX(path);
     }
 
-    public List<String> getChunkNamesFromPSX(String psxFilePath) {
+    public List<String> loadChunkNamesFromPSX(String psxFilePath) {
         //return the chunk names stored in the .psx file (and assigns them to this.chunkNames)
         //also initializes this.psxFilePath to psxFilePath
         //also puts values into this.chunkZipPathPairs

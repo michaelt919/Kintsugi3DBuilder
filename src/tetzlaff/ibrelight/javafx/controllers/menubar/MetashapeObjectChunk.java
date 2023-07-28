@@ -13,7 +13,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class MetashapeObjectChunk {
     private static final Logger log = LoggerFactory.getLogger(MetashapeObjectChunk.class);
@@ -27,7 +26,7 @@ public class MetashapeObjectChunk {
     private Document chunkXML;
     private Document frameZip;
 
-    public MetashapeObjectChunk(){
+    private MetashapeObjectChunk(){
         metashapeObject = new MetashapeObject();
         chunkName = "";
         chunkID = -1;//TODO: GOOD NULL CHUNK ID?
@@ -35,9 +34,11 @@ public class MetashapeObjectChunk {
         frameZip = null;
     }
 
-    public MetashapeObjectChunk(MetashapeObject metashapeObject, String selectedChunkZip) {
+    public MetashapeObjectChunk(MetashapeObject metashapeObject, String chunkName) {
         this.metashapeObject = metashapeObject;
-        this.chunkZipPath = selectedChunkZip;
+        this.chunkName = chunkName;
+
+        this.chunkZipPath = metashapeObject.getChunkZipPathPairs().get(chunkName);
 
         //set chunk xml
         try {
@@ -47,11 +48,6 @@ public class MetashapeObjectChunk {
             throw new RuntimeException(e);
         }
 
-        //set chunk name
-        Node chunk = this.chunkXML.getElementsByTagName("chunk").item(0);
-        Element chunkElement = (Element) chunk;
-        this.chunkName = chunkElement.getAttribute("label");
-
         //set chunkID
         this.chunkID = getChunkIdFromZipPath();
 
@@ -59,7 +55,9 @@ public class MetashapeObjectChunk {
         String psxFilePath = metashapeObject.getPsxFilePath();
         String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4);//remove ".psx" from path
 
+        //the 0 means that the program searches for info regarding frame 0
         String frameZipPath = psxPathBase + ".files\\" + chunkID + "\\0\\frame.zip";
+
         try {
             this.frameZip = UnzipHelper.unzipToDocument(frameZipPath);
         } catch (IOException e) {
@@ -81,7 +79,8 @@ public class MetashapeObjectChunk {
         File parentFile = new File(file.getParent());
 
         try{
-            return Integer.parseInt(parentFile.getName());
+            this.chunkID = Integer.parseInt(parentFile.getName());
+            return this.chunkID;
         }
         catch (NumberFormatException nfe){
             log.error("An error occurred parsing chunk:", nfe);
@@ -89,36 +88,25 @@ public class MetashapeObjectChunk {
         }
     }
 
-    public Document getChunkXML() {
-        return this.chunkXML;
-    }
-
     public String getPsxFilePath() {
         return this.metashapeObject.getPsxFilePath();
-    }
-
-    public int getChunkID() {
-        return this.chunkID;
-    }
-
-    public Map<String, String> getChunkZipPathPairs() {
-        return metashapeObject.getChunkZipPathPairs();
     }
 
     public MetashapeObject getMetashapeObject() {
         return this.metashapeObject;
     }
 
-    public ArrayList<Image> getThumbnailImageList() {
+    public List<Image> loadThumbnailImageList() {
         //unzip thumbnail folder
         String psxFilePath = this.metashapeObject.getPsxFilePath();
         String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4);//remove ".psx" from path
 
+        //Note: the 0 denotes that these thumbnails are for frame 0
         String thumbnailPath = psxPathBase + ".files\\" + chunkID + "\\0\\thumbnails\\thumbnails.zip";
         return UnzipHelper.unzipImages(thumbnailPath);
     }
 
-    public List<Element> getThumbnailCameras() {
+    public List<Element> findThumbnailCameras() {
         NodeList cams = this.chunkXML.getElementsByTagName("camera");
         ArrayList<Element> cameras = new ArrayList<>();
         for (int i = 0; i < cams.getLength(); ++i) {
@@ -128,10 +116,6 @@ public class MetashapeObjectChunk {
             }
         }
         return cameras;
-    }
-
-    public Document getFrameZip() {
-        return this.frameZip;
     }
 
     public Element matchImageToCam(String imageName) {

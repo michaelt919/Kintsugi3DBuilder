@@ -82,7 +82,7 @@ public class UnzipFileSelectionController {
         }
 
         ArrayList<String> chunkNames = (ArrayList<String>)
-                metashapeObject.getChunkNamesFromPSX(psxPathTxtField.getText());
+                metashapeObject.loadChunkNamesFromPSX(psxPathTxtField.getText());
 
         chunkSelectionChoiceBox.getItems().clear();
         chunkSelectionChoiceBox.getItems().addAll(chunkNames);
@@ -121,7 +121,6 @@ public class UnzipFileSelectionController {
 
     public void selectChunk(ActionEvent actionEvent) {
         String selectedChunkName = chunkSelectionChoiceBox.getValue();
-        String selectedChunkZip = metashapeObject.getChunkZipPathPairs().get(selectedChunkName);
 
         try {
             //load chunk viewer window
@@ -129,9 +128,8 @@ public class UnzipFileSelectionController {
             root = fxmlLoader.load();
             ChunkViewerController chunkViewerController = fxmlLoader.getController();
 
-
             metashapeObject.setPsxFilePath(psxPathTxtField.getText());
-            MetashapeObjectChunk metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, selectedChunkZip);
+            MetashapeObjectChunk metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, selectedChunkName);
 
             chunkViewerController.initializeChunkSelectionAndTreeView(metashapeObjectChunk);
         }

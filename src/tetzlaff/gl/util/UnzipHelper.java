@@ -1,8 +1,12 @@
 package tetzlaff.gl.util;
 
+import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.commons.imaging.ImageReadException;
+import org.apache.commons.imaging.common.bytesource.ByteSourceInputStream;
+import org.apache.commons.imaging.formats.tiff.TiffImageParser;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
@@ -13,8 +17,10 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -81,7 +87,7 @@ public class UnzipHelper {
         return null;
     }
 
-    public static ArrayList<Image> unzipImages(String zipFilePath){
+    public static List<Image> unzipImages(String zipFilePath){
         ArrayList<Image> images = new ArrayList<>();
 
         try (ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFilePath))) {
@@ -89,13 +95,13 @@ public class UnzipHelper {
             while ((entry = zipInputStream.getNextEntry()) != null) {
                 String entryName = entry.getName();
                 if (isValidImageType(entryName)) {
-                    Image imageData = readImageData(zipInputStream);
+                    Image imageData = readImageData(zipInputStream, entryName);
                     images.add(imageData);
                 }
                 zipInputStream.closeEntry();
             }
 
-        } catch (IOException e) {
+        } catch (IOException | ImageReadException e) {
             log.error("Error unzipping images:", e);
         }
 
@@ -103,7 +109,15 @@ public class UnzipHelper {
         return images;
     }
 
-    public static Image readImageData(InputStream inputStream) throws IOException {
+    private static Image readImageData(InputStream inputStream, String fileName) throws IOException, ImageReadException {
+        //convert unzipped image if it is a .tif or .tiff file
+        if (fileName.toLowerCase().matches(".*\\.tiff?")) {//convert image if it is a .tif or .tiff
+            TiffImageParser tiffImageParser = new TiffImageParser();
+            ByteSourceInputStream byteSourceInputStream = new ByteSourceInputStream(inputStream, fileName);
+            BufferedImage bufferedImage = tiffImageParser.getBufferedImage(byteSourceInputStream, null);
+            return SwingFXUtils.toFXImage(bufferedImage, null);
+        }
+
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         byte[] buffer = new byte[4096];
         int bytesRead;
@@ -112,24 +126,6 @@ public class UnzipHelper {
         }
         ByteArrayInputStream imageInputStream = new ByteArrayInputStream(outputStream.toByteArray());
         return new Image(imageInputStream);
-    }
-
-    public static int getChunkIdFromZipPath(String chunkZipPath) {
-        //TODO: REMOVE CALLS TO THIS FUNCTION IN CHUNK VIEWER CONTROLLER AND UNZIP FILE SELECTION CONTROLLER
-        //example chunk zip path ----> ...GuanYu_with_ground_truth.files\0\chunk.zip
-        //want to extract the 0 in this example because that number denotes the chunkID
-        File file = new File(chunkZipPath);
-
-        //parent file would give "...GuanYu_with_ground_truth.files\0" in this case
-        File parentFile = new File(file.getParent());
-
-        try{
-            return Integer.parseInt(parentFile.getName());
-        }
-        catch (NumberFormatException nfe){
-            log.error("Invalid number format:", nfe);
-            return -1;
-        }
     }
 
     private static boolean isValidImageType(String path) {
