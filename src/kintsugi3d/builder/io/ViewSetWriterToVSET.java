@@ -36,7 +36,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
     {
 
         PrintStream out = new PrintStream(outputStream);
-        out.println("# Created by IBRelight");
+        out.println("# Created by Kintsugi 3D Builder");
 
         if (viewSet.getGeometryFileName() != null)
         {

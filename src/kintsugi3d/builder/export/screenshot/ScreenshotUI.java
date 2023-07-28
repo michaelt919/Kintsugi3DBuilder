@@ -30,7 +30,7 @@ import javafx.stage.Window;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.core.IBRRequestQueue;
 import kintsugi3d.builder.core.IBRRequestUI;
-import kintsugi3d.builder.core.IBRelightModels;
+import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.export.screenshot.ScreenshotRequest.Builder;
 
 public class ScreenshotUI implements IBRRequestUI
@@ -52,7 +52,7 @@ public class ScreenshotUI implements IBRRequestUI
 
     private Stage stage;
 
-    public static ScreenshotUI create(Window window, IBRelightModels modelAccess) throws IOException
+    public static ScreenshotUI create(Window window, Kintsugi3DBuilderState modelAccess) throws IOException
     {
         String fxmlFileName = "fxml/export/ScreenshotUI.fxml";
         URL url = ScreenshotUI.class.getClassLoader().getResource(fxmlFileName);

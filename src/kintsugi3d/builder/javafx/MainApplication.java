@@ -161,7 +161,7 @@ public class MainApplication extends Application
         WelcomeWindowController welcomeWindowController = welcomeWindowFXMLLoader.getController();
 
         //load stages
-        primaryStage.setTitle("Kintsugi Builder");
+        primaryStage.setTitle("Kintsugi 3D Builder");
         primaryStage.setScene(new Scene(menuBarRoot));
         primaryStage.setMaximized(true);
 

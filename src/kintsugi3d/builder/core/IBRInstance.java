@@ -27,20 +27,20 @@ import kintsugi3d.builder.state.*;
 public interface IBRInstance<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
 {
     /**
-     * Draw the object using the current settings and selections in IBRelight,
+     * Draw the object using the current settings and selections in the 3D viewport,
      * potentially in subdivisions to avoid graphics card timeouts.
      * @param framebuffer The framebuffer into which to draw the object.
      * @param viewOverride The view matrix.  If this is null, it will default to the current viewpoint in the app.
      * @param projectionOverride The projection matrix.  If this is null, it will default to the current camera in the app.
      * @param subdivWidth The width of the rectangle of pixels to draw at once.  This can be set to a fraction of the
-     *                    framebuffer width to reduce the likelihood of graphics card timeouts that would crash IBRelight.
+     *                    framebuffer width to reduce the likelihood of graphics card timeouts that would crash Kintsugi 3D Builder.
      * @param subdivHeight The height of the rectangle of pixels to draw at once.  This can be set to a fraction of the
-     *                     framebuffer height to reduce the likelihood of graphics card timeouts that would crash IBRelight.
+     *                     framebuffer height to reduce the likelihood of graphics card timeouts that would crash Kintsugi 3D Builder.
      */
     void draw(Framebuffer<ContextType> framebuffer, Matrix4 viewOverride, Matrix4 projectionOverride, int subdivWidth, int subdivHeight);
 
     /**
-     * Draw the object using the current settings and selections in IBRelight.
+     * Draw the object using the current settings and selections in the 3D viewport.
      * The whole frame will be drawn at once (no subdivisions).
      * @param framebuffer The framebuffer into which to draw the object.
      * @param viewOverride The view matrix.  If this is null, it will default to the current viewpoint in the app.
@@ -53,7 +53,7 @@ public interface IBRInstance<ContextType extends Context<ContextType>> extends I
     }
 
     /**
-     * Draw the object using the current settings and viewpoint in IBRelight.
+     * Draw the object using the current settings and viewpoint in the 3D viewport.
      * The whole frame will be drawn at once (no subdivisions).
      * @param framebuffer The framebuffer into which to draw the object.
      */

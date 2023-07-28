@@ -87,7 +87,7 @@ public final class Rendering
         {
             if (stage == null)
             {
-                CanvasWindow<OpenGLContext> window = OpenGLContextFactory.getInstance().buildWindow("IBRelight", 800, 800)
+                CanvasWindow<OpenGLContext> window = OpenGLContextFactory.getInstance().buildWindow("Kintsugi 3D Builder", 800, 800)
                     .setResizable(true)
                     .setMultisamples(4)
                     .create();
@@ -474,7 +474,7 @@ public final class Rendering
             try
             {
                 Class<?> requestClass = Class.forName(args[1]);
-                Method createMethod = requestClass.getDeclaredMethod("create", IBRelightModels.class, String[].class);
+                Method createMethod = requestClass.getDeclaredMethod("create", Kintsugi3DBuilderState.class, String[].class);
                 if (IBRRequest.class.isAssignableFrom(createMethod.getReturnType())
                     && ((createMethod.getModifiers() & (Modifier.PUBLIC | Modifier.STATIC)) == (Modifier.PUBLIC | Modifier.STATIC)))
                 {

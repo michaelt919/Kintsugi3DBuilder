@@ -181,7 +181,7 @@ public class SceneViewportModel<ContextType extends Context<ContextType>> implem
 
     /**
      * Scale is returned in terms of the local object space defined in the geometry file
-     * (not the scaled world space used by the user-facing IBRelight widgets).
+     * (not the scaled world space used by the user-facing widgets).
      * @param viewMatrix
      * @param size
      * @return

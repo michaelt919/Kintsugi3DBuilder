@@ -14,7 +14,7 @@ package kintsugi3d.builder.export.screenshot;
 import java.io.IOException;
 
 import javafx.stage.Window;
-import kintsugi3d.builder.core.IBRelightModels;
+import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.export.screenshot.ScreenshotRequest.BuilderImplementation;
 
 public final class ScreenshotUIFactory
@@ -23,7 +23,7 @@ public final class ScreenshotUIFactory
     {
     }
 
-    public static ScreenshotUI create(Window window, IBRelightModels modelAccess) throws IOException
+    public static ScreenshotUI create(Window window, Kintsugi3DBuilderState modelAccess) throws IOException
     {
         ScreenshotUI ui = ScreenshotUI.create(window, modelAccess);
         ui.setBuilderSupplier(BuilderImplementation::new);

@@ -26,7 +26,7 @@ public interface GraphicsRequest<ContextType extends Context<ContextType>>
      * @param context The graphics context to be used.
      * @param callback A callback that can be fired to update the loading bar.
      *                 If this is unused, an "infinite loading" indicator will be displayed instead.
-     * @throws Exception An exception may be thrown by the executable that will be caught and logged by IBRelight.
+     * @throws Exception An exception may be thrown by the executable that will be caught and logged by Kintsugi 3D Builder.
      */
     void executeRequest(ContextType context, LoadingMonitor callback) throws Exception;
 }

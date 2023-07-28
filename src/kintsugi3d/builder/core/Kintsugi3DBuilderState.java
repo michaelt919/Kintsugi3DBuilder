@@ -13,7 +13,7 @@ package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.state.*;
 
-public interface IBRelightModels
+public interface Kintsugi3DBuilderState
 {
     ReadonlyCameraModel getCameraModel();
     ReadonlyLightingModel getLightingModel();

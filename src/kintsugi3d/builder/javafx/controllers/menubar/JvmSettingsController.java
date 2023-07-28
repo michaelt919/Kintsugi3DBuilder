@@ -68,9 +68,9 @@ public class JvmSettingsController implements Initializable
         }
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("IBRelight");
+        alert.setTitle("Kintsugi 3D Builder");
         alert.setHeaderText("Restart Required");
-        alert.setContentText("A restart of IBRelight is needed for changes to take effect.");
+        alert.setContentText("A restart of Kintsugi 3D Builder is needed for changes to take effect.");
         alert.show();
     }
 

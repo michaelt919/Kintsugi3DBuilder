@@ -14,7 +14,7 @@ package kintsugi3d.builder.export.simpleanimation;
 import java.io.IOException;
 
 import javafx.stage.Window;
-import kintsugi3d.builder.core.IBRelightModels;
+import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.export.simpleanimation.OrbitAnimationRequest.BuilderImplementation;
 
 public final class OrbitAnimationUIFactory
@@ -23,7 +23,7 @@ public final class OrbitAnimationUIFactory
     {
     }
 
-    public static SimpleAnimationUI create(Window window, IBRelightModels modelAccess) throws IOException
+    public static SimpleAnimationUI create(Window window, Kintsugi3DBuilderState modelAccess) throws IOException
     {
         SimpleAnimationUI ui = SimpleAnimationUI.create(window, modelAccess);
         ui.setBuilderSupplier(BuilderImplementation::new);

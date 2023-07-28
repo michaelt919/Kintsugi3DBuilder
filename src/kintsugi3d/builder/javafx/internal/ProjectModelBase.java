@@ -38,7 +38,7 @@ public abstract class ProjectModelBase implements ProjectModel
     public abstract List<ObjectPoseSetting> getObjectPoseList();
 
     /**
-     * Opens an IBRelight project file (.ibr) and sets up the lights, camera, etc.
+     * Opens an Kintsugi 3D Builder project file (.ibr) and sets up the lights, camera, etc.
      * Returns the file containing the viewset with the actual image data.
      *
      * @param projectFile

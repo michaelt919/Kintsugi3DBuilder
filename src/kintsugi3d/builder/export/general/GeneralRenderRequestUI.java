@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.core.IBRRequestQueue;
 import kintsugi3d.builder.core.IBRRequestUI;
-import kintsugi3d.builder.core.IBRelightModels;
+import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 
 public class GeneralRenderRequestUI implements IBRRequestUI
 {
@@ -102,7 +102,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
     }
 
     // TODO rename this and other UI create() methods, also changing its usage in reflection code, to better reflect that UIs are basically singletons.
-    public static GeneralRenderRequestUI create(Window window, IBRelightModels modelAccess)
+    public static GeneralRenderRequestUI create(Window window, Kintsugi3DBuilderState modelAccess)
     {
         INSTANCE.stage = new Stage();
         INSTANCE.stage.setTitle("Generic export");

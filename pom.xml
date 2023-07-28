@@ -64,7 +64,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>kintsugi3d.builder.app.IBRelight</mainClass>
+                                    <mainClass>kintsugi3d.builder.app.Kintsugi3DBuilder</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>

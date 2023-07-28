@@ -586,7 +586,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
     /**
      * Gets the distance from the camera to the centroid in the primary view.
-     * This is frequently used to calibrate scale in IBRelight.
+     * This is frequently used to calibrate scale in Kintsugi 3D Builder.
      * @return The camera distance in the primary view.
      */
     public double getPrimaryViewDistance()

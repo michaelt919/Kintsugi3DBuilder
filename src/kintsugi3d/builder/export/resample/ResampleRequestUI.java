@@ -31,7 +31,7 @@ import javafx.stage.Window;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.core.IBRRequestQueue;
 import kintsugi3d.builder.core.IBRRequestUI;
-import kintsugi3d.builder.core.IBRelightModels;
+import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 
 public class ResampleRequestUI implements IBRRequestUI
 {
@@ -48,7 +48,7 @@ public class ResampleRequestUI implements IBRRequestUI
 
     private File lastDirectory;
 
-    public static ResampleRequestUI create(Window window, IBRelightModels modelAccess) throws IOException
+    public static ResampleRequestUI create(Window window, Kintsugi3DBuilderState modelAccess) throws IOException
     {
         String fxmlFileName = "fxml/export/ResampleRequestUI.fxml";
         URL url = ResampleRequestUI.class.getClassLoader().getResource(fxmlFileName);

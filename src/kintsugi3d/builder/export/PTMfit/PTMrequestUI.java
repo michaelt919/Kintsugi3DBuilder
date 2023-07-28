@@ -36,7 +36,7 @@ public class PTMrequestUI implements IBRRequestUI {
     @FXML private TextField exportDirectoryField;
     @FXML private Button runButton;
     private final DirectoryChooser directoryChooser = new DirectoryChooser();
-    private IBRelightModels modelAccess;
+    private Kintsugi3DBuilderState modelAccess;
     private Stage stage;
 
     private File lastDirectory;
@@ -44,7 +44,7 @@ public class PTMrequestUI implements IBRRequestUI {
 
 
 
-    public static PTMrequestUI create(Window window, IBRelightModels modelAccess) throws IOException
+    public static PTMrequestUI create(Window window, Kintsugi3DBuilderState modelAccess) throws IOException
     {
         String fxmlFileName = "fxml/export/PTMrequestUI.fxml";
         URL url = PTMrequestUI.class.getClassLoader().getResource(fxmlFileName);

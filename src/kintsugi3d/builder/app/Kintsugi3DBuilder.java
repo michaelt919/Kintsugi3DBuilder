@@ -19,12 +19,12 @@ import kintsugi3d.gl.interactive.InitializationException;
 import java.io.File;
 import java.io.IOException;
 
-public final class IBRelight
+public final class Kintsugi3DBuilder
 {
     private static final boolean GRAPHICS_WINDOW_ENABLED = false;
     public static final String APP_FOLDER_NAME = "Kintsugi3DBuilder";
 
-    private IBRelight()
+    private Kintsugi3DBuilder()
     {
     }
 
@@ -36,7 +36,7 @@ public final class IBRelight
             System.setProperty("Kintsugi3D.logDir", getUserAppDirectory() + "/logs");
         }
 
-        Logger log = LoggerFactory.getLogger(IBRelight.class);
+        Logger log = LoggerFactory.getLogger(Kintsugi3DBuilder.class);
 
         //allow render thread to modify user interface thread
         System.setProperty("glass.disableThreadChecks", "true");

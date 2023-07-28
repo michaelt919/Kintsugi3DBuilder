@@ -45,7 +45,7 @@ import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.IBRRequestUI;
-import kintsugi3d.builder.core.IBRelightModels;
+import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.core.StandardRenderingMode;
 import kintsugi3d.builder.export.specularfit.SpecularFitRequestUI;
@@ -183,7 +183,7 @@ public class MenubarController
                         try
                         {
                             Class<?> requestUIClass = Class.forName(className);
-                            Method createMethod = requestUIClass.getDeclaredMethod("create", Window.class, IBRelightModels.class);
+                            Method createMethod = requestUIClass.getDeclaredMethod("create", Window.class, Kintsugi3DBuilderState.class);
                             if (IBRRequestUI.class.isAssignableFrom(createMethod.getReturnType())
                                 && ((createMethod.getModifiers() & (Modifier.PUBLIC | Modifier.STATIC)) == (Modifier.PUBLIC | Modifier.STATIC)))
                             {
@@ -492,10 +492,10 @@ public class MenubarController
     {
         try
         {
-            List<String> lines = Files.readAllLines(new File("ibrelight-about.txt").toPath());
+            List<String> lines = Files.readAllLines(new File("kintsugi3d-builder-about.txt").toPath());
             Alert alert = new Alert(AlertType.INFORMATION, String.join(System.lineSeparator(), lines));
-            alert.setTitle("About IBRelight");
-            alert.setHeaderText("About IBRelight");
+            alert.setTitle("About Kintsugi 3D Builder");
+            alert.setHeaderText("About Kintsugi 3D Builder");
             alert.initOwner(this.stage);
             alert.initModality(Modality.NONE);
             alert.show();

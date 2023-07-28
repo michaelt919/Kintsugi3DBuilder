@@ -40,7 +40,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
 {
     private static final Logger log = LoggerFactory.getLogger(SpecularFitRequest.class);
     private final SpecularFitRequestParams settings;
-    private final IBRelightModels modelAccess;
+    private final Kintsugi3DBuilderState modelAccess;
 
     /**
      * Default constructor for CLI args requests
@@ -49,14 +49,14 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
      * @return the request object
      */
     public static <ContextType extends Context<ContextType>> SpecularFitRequest<ContextType> create(
-            IBRelightModels modelAccess, String... args)
+            Kintsugi3DBuilderState modelAccess, String... args)
     {
         return new SpecularFitRequest<>(new SpecularFitRequestParams(
             new TextureFitSettings(2048, 2048, modelAccess.getSettingsModel().getFloat("gamma")),
             modelAccess.getSettingsModel(), new File(args[2])), modelAccess);
     }
 
-    public SpecularFitRequest(SpecularFitRequestParams settings, IBRelightModels modelAccess)
+    public SpecularFitRequest(SpecularFitRequestParams settings, Kintsugi3DBuilderState modelAccess)
     {
         this.settings = settings;
         this.modelAccess = modelAccess;
@@ -77,7 +77,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
             SpecularResources<ContextType> specularFit;
 
             // Assume fitting from prior solution
-            log.info("No IBRelight project loaded; loading prior solution");
+            log.info("No Kintsugi 3D Builder project loaded; loading prior solution");
             specularFit = new SpecularOptimization(settings).loadPriorSolution(context, settings.getPriorSolutionDirectory());
 
             // Load just geometry, tonemapping, settings.
@@ -110,7 +110,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
 
     /**
      * This version optimizes from scratch and requires IBR resources.
-     * @param renderable The implementation of the IBRelight renderer.
+     * @param renderable The implementation of the Kintsugi 3D Builder renderer.
      *                   This can be used to dynamically generate renders of the current view,
      *                   or just to access the IBRResources and the graphics Context.
      * @param callback A callback that can be fired to update the loading bar.

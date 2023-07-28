@@ -71,13 +71,13 @@ public class SpecularFitRequestUI implements IBRRequestUI
     private final DirectoryChooser directoryChooser = new DirectoryChooser();
     private final FileChooser fileChooser = new FileChooser();
 
-    private IBRelightModels modelAccess;
+    private Kintsugi3DBuilderState modelAccess;
     private Stage stage;
 
     private File lastDirectory;
     private File lastViewSet;
 
-    public static SpecularFitRequestUI create(Window window, IBRelightModels modelAccess) throws IOException
+    public static SpecularFitRequestUI create(Window window, Kintsugi3DBuilderState modelAccess) throws IOException
     {
         String fxmlFileName = "fxml/export/SpecularFitRequestUI.fxml";
         URL url = SpecularFitRequestUI.class.getClassLoader().getResource(fxmlFileName);

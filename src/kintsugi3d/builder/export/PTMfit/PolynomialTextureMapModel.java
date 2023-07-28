@@ -12,7 +12,6 @@
 package kintsugi3d.builder.export.PTMfit;
 
 import kintsugi3d.optimization.LeastSquaresModel;
-//import tetzlaff.ibrelight.export.PTMfit.PTMData;
 
 import java.util.function.IntFunction;
 

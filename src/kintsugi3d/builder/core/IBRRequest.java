@@ -14,19 +14,19 @@ package kintsugi3d.builder.core;
 import kintsugi3d.gl.core.Context;
 
 /**
- * An interface for an executable that can be launched from the IBRelight "Export" menu.
+ * An interface for an executable that can be launched from the "Export" menu.
  * @param <ContextType> The type of the graphics context that the renderer implementation uses.
  */
 public interface IBRRequest<ContextType extends Context<ContextType>>
 {
     /**
      * The entry point for the executable.
-     * @param renderable The implementation of the IBRelight renderer.
+     * @param renderable The implementation of Kintsugi 3D Builder's renderer.
      *                   This can be used to dynamically generate renders of the current view,
      *                   or just to access the IBRResources and the graphics Context.
      * @param callback A callback that can be fired to update the loading bar.
      *                 If this is unused, an "infinite loading" indicator will be displayed instead.
-     * @throws Exception An exception may be thrown by the executable that will be caught and logged by IBRelight.
+     * @throws Exception An exception may be thrown by the executable that will be caught and logged by Kintsugi 3D Builder.
      */
      void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws Exception;
 }

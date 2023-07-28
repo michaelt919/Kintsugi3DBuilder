@@ -30,7 +30,7 @@ import javafx.stage.Window;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.core.IBRRequestQueue;
 import kintsugi3d.builder.core.IBRRequestUI;
-import kintsugi3d.builder.core.IBRelightModels;
+import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.export.simpleanimation.SimpleAnimationRequestBase.Builder;
 
 public class SimpleAnimationUI implements IBRRequestUI
@@ -48,7 +48,7 @@ public class SimpleAnimationUI implements IBRRequestUI
 
     private Stage stage;
 
-    public static SimpleAnimationUI create(Window window, IBRelightModels modelAccess) throws IOException
+    public static SimpleAnimationUI create(Window window, Kintsugi3DBuilderState modelAccess) throws IOException
     {
         String fxmlFileName = "fxml/export/SimpleAnimationUI.fxml";
         URL url = SimpleAnimationUI.class.getClassLoader().getResource(fxmlFileName);
