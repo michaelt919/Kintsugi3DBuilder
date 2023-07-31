@@ -99,19 +99,19 @@ public final class ViewSet implements ReadonlyViewSet
     private File rootDirectory;
 
     /**
-     * The relative file path to be used for loading images.
+     * The directory to be used for loading images.
      */
-    private String relativeFullResImagePathName;
+    private File fullResImageDirectory;
 
     /**
-     * The relative file path to be used for loading images.
+     * The directory to be used for saving preview images.
      */
-    private String relativePreviewImagePathName;
+    private File previewImageDirectory;
 
     /**
-     * The relative name of the mesh file.
+     * The mesh file.
      */
-    private String geometryFileName;
+    private File geometryFile;
 
     /**
      * Used to decode pixel colors according to a gamma curve if reference values are unavailable, otherwise, affects the absolute brightness of the decoded colors.
@@ -361,9 +361,9 @@ public final class ViewSet implements ReadonlyViewSet
         }
 
         result.rootDirectory = this.rootDirectory;
-        result.relativeFullResImagePathName = this.relativeFullResImagePathName;
-        result.relativePreviewImagePathName = this.relativePreviewImagePathName;
-        result.geometryFileName = this.geometryFileName;
+        result.fullResImageDirectory = this.fullResImageDirectory;
+        result.previewImageDirectory = this.previewImageDirectory;
+        result.geometryFile = this.geometryFile;
         result.infiniteLightSources = this.infiniteLightSources;
         result.recommendedNearPlane = this.recommendedNearPlane;
         result.recommendedFarPlane = this.recommendedFarPlane;
@@ -394,9 +394,9 @@ public final class ViewSet implements ReadonlyViewSet
         }
 
         result.rootDirectory = this.rootDirectory;
-        result.relativeFullResImagePathName = this.relativeFullResImagePathName;
-        result.relativePreviewImagePathName = this.relativePreviewImagePathName;
-        result.geometryFileName = this.geometryFileName;
+        result.fullResImageDirectory = this.fullResImageDirectory;
+        result.previewImageDirectory = this.previewImageDirectory;
+        result.geometryFile = this.geometryFile;
         result.infiniteLightSources = this.infiniteLightSources;
         result.recommendedNearPlane = this.recommendedNearPlane;
         result.recommendedFarPlane = this.recommendedFarPlane;
@@ -467,32 +467,13 @@ public final class ViewSet implements ReadonlyViewSet
      */
     public void moveRootDirectory(Path newRootDirectory)
     {
-        //noinspection VariableNotUsedInsideIf
-        if (this.rootDirectory != null)
-        {
-            if (this.getGeometryFile() != null)
-            {
-                this.geometryFileName = newRootDirectory.relativize(getGeometryFile().toPath()).toString();
-            }
-
-            if (this.getFullResImageFilePath() != null)
-            {
-                this.relativeFullResImagePathName = newRootDirectory.relativize(getFullResImageFilePath().toPath()).toString();
-            }
-
-            if (this.getPreviewImageFilePath() != null)
-            {
-                this.relativePreviewImagePathName = newRootDirectory.relativize(getPreviewImageFilePath().toPath()).toString();
-            }
-        }
-
         this.rootDirectory = newRootDirectory.toFile();
     }
 
     @Override
     public String getGeometryFileName()
     {
-        return geometryFileName;
+        return this.rootDirectory.toPath().relativize(this.geometryFile.toPath()).toString();
     }
 
     /**
@@ -501,25 +482,32 @@ public final class ViewSet implements ReadonlyViewSet
      */
     public void setGeometryFileName(String fileName)
     {
-        this.geometryFileName = fileName;
+        this.geometryFile = this.rootDirectory.toPath().resolve(fileName).toFile();
     }
 
     @Override
     public File getGeometryFile()
     {
-        return geometryFileName == null ? null : new File(this.rootDirectory, geometryFileName);
+        return geometryFile;
     }
 
     @Override
     public File getFullResImageFilePath()
     {
-        return this.relativeFullResImagePathName == null ? this.rootDirectory : new File(this.rootDirectory, relativeFullResImagePathName);
+        return this.fullResImageDirectory == null ? this.rootDirectory : this.fullResImageDirectory;
     }
 
     @Override
     public String getRelativeFullResImagePathName()
     {
-        return this.relativeFullResImagePathName;
+        try
+        {
+            return this.rootDirectory.toPath().relativize(this.fullResImageDirectory.toPath()).toString();
+        }
+        catch (IllegalArgumentException e) //If the root and other directories are located under different drive letters on windows
+        {
+            return this.fullResImageDirectory.toString();
+        }
     }
 
     /**
@@ -528,19 +516,26 @@ public final class ViewSet implements ReadonlyViewSet
      */
     public void setRelativeFullResImagePathName(String relativeImagePath)
     {
-        this.relativeFullResImagePathName = relativeImagePath;
+        this.fullResImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
     }
 
     @Override
     public File getPreviewImageFilePath()
     {
-        return this.relativePreviewImagePathName == null ? this.rootDirectory : new File(this.rootDirectory, relativePreviewImagePathName);
+        return this.previewImageDirectory == null ? this.rootDirectory : this.previewImageDirectory;
     }
 
     @Override
     public String getRelativePreviewImagePathName()
     {
-        return this.relativePreviewImagePathName;
+        try
+        {
+            return this.rootDirectory.toPath().relativize(this.previewImageDirectory.toPath()).toString();
+        }
+        catch (IllegalArgumentException e) //If the root and other directories are located under different drive letters on windows
+        {
+            return this.previewImageDirectory.toString();
+        }
     }
 
     /**
@@ -549,7 +544,7 @@ public final class ViewSet implements ReadonlyViewSet
      */
     public void setRelativePreviewImagePathName(String relativeImagePath)
     {
-        this.relativePreviewImagePathName = relativeImagePath;
+        this.previewImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
     }
 
     @Override
