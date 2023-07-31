@@ -412,9 +412,9 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
         vertex.convertProperty("x", FLOAT32);
         vertex.convertProperty("y", FLOAT32);
         vertex.convertProperty("z", FLOAT32);
-        float[] x = vertex.property(PLYType.FLOAT32, "x");
-        float[] y = vertex.property(PLYType.FLOAT32, "y");
-        float[] z = vertex.property(PLYType.FLOAT32, "z");
+        float[] x = vertex.property(FLOAT32, "x");
+        float[] y = vertex.property(FLOAT32, "y");
+        float[] z = vertex.property(FLOAT32, "z");
 
         float[] nx = {};
         float[] ny = {};
@@ -454,13 +454,15 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
         List<Vector3> vertexList = new ArrayList<>(100000);
         List<Vector3> normalList = new ArrayList<>(100000);
         List<Vector2> texCoordList = new ArrayList<>(100000);
+        Map<NormalTexCoordPair, Vector3> tangentMap = new HashMap<>(100000);
+        Map<NormalTexCoordPair, Vector3> bitangentMap = new HashMap<>(100000);
 
         Vector3 sum = Vector3.ZERO;
 
         face.convertProperty("vertex_indices", LIST(UINT32,INT32));
         if (geometry.hasTexCoords && !vertexCoords)
         {
-            face.convertProperty("texcoord", LIST(UINT8,FLOAT32));
+            face.convertProperty("texcoord", LIST(UINT32,FLOAT32));
         }
 
         int[][] vertex_indices = face.property(LIST(UINT32,INT32),"vertex_indices");
@@ -495,6 +497,41 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
                         texCoordList.add(new Vector2(faceCoords[i][v*2], faceCoords[i][(v*2)+1]));
                     }
                 }
+            }
+
+            if (geometry.hasNormals && geometry.hasTexCoords)
+            {
+                Vector3 position0 = vertexList.get(vertexList.size() - 3);
+                Vector3 position1 = vertexList.get(vertexList.size() - 2);
+                Vector3 position2 = vertexList.get(vertexList.size() - 1);
+
+                Vector2 texCoords0 = texCoordList.get(texCoordList.size() - 3);
+                Vector2 texCoords1 = texCoordList.get(texCoordList.size() - 2);
+                Vector2 texCoords2 = texCoordList.get(texCoordList.size() - 1);
+
+                Vector3[] tangents = computeTangents(position0, position1, position2, texCoords0, texCoords1, texCoords2);
+
+                // TODO broken code - make it so that two vertices share tangents if they share normals AND texture coordinates
+
+                NormalTexCoordPair pair0 = new NormalTexCoordPair(
+                        normalList.size() - 3,
+                        texCoordList.size() - 3);
+
+                NormalTexCoordPair pair1 = new NormalTexCoordPair(
+                        normalList.size() - 2,
+                        texCoordList.size() - 2);
+
+                NormalTexCoordPair pair2 = new NormalTexCoordPair(
+                        normalList.size() - 1,
+                        texCoordList.size() - 1);
+
+                tangentMap.put(pair0, tangentMap.getOrDefault(pair0, Vector3.ZERO).plus(tangents[0]));
+                tangentMap.put(pair1, tangentMap.getOrDefault(pair1, Vector3.ZERO).plus(tangents[0]));
+                tangentMap.put(pair2, tangentMap.getOrDefault(pair2, Vector3.ZERO).plus(tangents[0]));
+
+                bitangentMap.put(pair0, bitangentMap.getOrDefault(pair0, Vector3.ZERO).plus(tangents[1]));
+                bitangentMap.put(pair1, bitangentMap.getOrDefault(pair1, Vector3.ZERO).plus(tangents[1]));
+                bitangentMap.put(pair2, bitangentMap.getOrDefault(pair2, Vector3.ZERO).plus(tangents[1]));
             }
         }
 
@@ -553,6 +590,25 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
                 Vector2 texCoord = texCoordList.get(i);
                 geometry.texCoords.set(i, 0, texCoord.x);
                 geometry.texCoords.set(i, 1, texCoord.y);
+            }
+        }
+
+        Map<NormalTexCoordPair, Vector4> orthoTangentsMap = new HashMap<>(100000);
+        for (Entry<NormalTexCoordPair, Vector3> entry : tangentMap.entrySet())
+        {
+            orthoTangentsMap.put(entry.getKey(),
+                    orthogonalizeTangent(normalList.get(entry.getKey().normalIndex), entry.getValue(), bitangentMap.get(entry.getKey())));
+        }
+
+        if (geometry.hasTexCoords && geometry.hasNormals)
+        {
+            geometry.tangents = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, vertexCount);
+            for (int i = 0; i < normalList.size(); i++)
+            {
+                geometry.tangents.set(i, 0, orthoTangentsMap.get(new NormalTexCoordPair(i, i)).x);
+                geometry.tangents.set(i, 1, orthoTangentsMap.get(new NormalTexCoordPair(i, i)).y);
+                geometry.tangents.set(i, 2, orthoTangentsMap.get(new NormalTexCoordPair(i, i)).z);
+                geometry.tangents.set(i, 3, orthoTangentsMap.get(new NormalTexCoordPair(i, i)).w);
             }
         }
 
