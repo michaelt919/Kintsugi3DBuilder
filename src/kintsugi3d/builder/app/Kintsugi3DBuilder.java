@@ -22,7 +22,6 @@ import java.io.IOException;
 public final class Kintsugi3DBuilder
 {
     private static final boolean GRAPHICS_WINDOW_ENABLED = false;
-    public static final String APP_FOLDER_NAME = "Kintsugi3DBuilder";
 
     private Kintsugi3DBuilder()
     {
@@ -33,7 +32,7 @@ public final class Kintsugi3DBuilder
         // Dynamically set the log directory based on the OS before instantiating a logger
         if (System.getProperty("Kintsugi3D.logDir") == null)
         {
-            System.setProperty("Kintsugi3D.logDir", getUserAppDirectory() + "/logs");
+            System.setProperty("Kintsugi3D.logDir", ApplicationFolders.getUserAppDirectory() + "/logs");
         }
 
         Logger log = LoggerFactory.getLogger(Kintsugi3DBuilder.class);
@@ -71,30 +70,5 @@ public final class Kintsugi3DBuilder
             log.info("Starting JavaFX UI");
             MainApplication.launchWrapper("");
         }
-    }
-
-    public static File getUserAppDirectory()
-    {
-        String os = System.getProperty("os.name").toLowerCase();
-
-        // Windows
-        if (os.indexOf("win") >= 0)
-        {
-            return new File(new File(System.getenv("APPDATA")), APP_FOLDER_NAME);
-        }
-
-        // Mac OS
-        if (os.indexOf("mac") >= 0)
-        {
-            return new File(new File(System.getProperty("user.home")), "Library/Application Support/" + APP_FOLDER_NAME);
-        }
-
-        // Linux and Unix
-        if (os.indexOf("nix") >= 0 || os.indexOf("nux") >= 0 || os.indexOf("aix") >= 0)
-        {
-            return new File(new File(System.getProperty("user.home")), "." + APP_FOLDER_NAME);
-        }
-
-        return new File(".");
     }
 }
