@@ -40,6 +40,7 @@ public class ConsoleController implements Initializable
 
         messageListView.setCellFactory(new LogMessageCellFactory());
         messageListView.setItems(logMessages.getMessages().filtered(this::logMessagePassesFilter));
+        messageListView.scrollTo(messageListView.getItems().size() - 1);
 
         // If the logger cannot log a level, disable a filter button
         if (! logMessages.isLevelAvailable(Level.ERROR))
