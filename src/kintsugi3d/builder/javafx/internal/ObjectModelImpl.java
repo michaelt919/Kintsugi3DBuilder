@@ -28,6 +28,7 @@ public class ObjectModelImpl extends ExtendedObjectModelBase
         0.0,
         0.0,
         false,
+        1.0,
         "sentinel"
     );
 
@@ -50,8 +51,9 @@ public class ObjectModelImpl extends ExtendedObjectModelBase
 
     @Override
     public Matrix4 getTransformationMatrix()
-    {
-        return getOrbit().times(Matrix4.translate(getCenter().negated()));
+    {//TODO: REMOVE DUPLICATE METHOD? (also found in parent class ExtendedObjectModelBase.java)
+        return getOrbit().times(Matrix4.translate(getCenter().negated()))
+                .times(Matrix4.scale(getScale()));
     }
 
     @Override
@@ -115,6 +117,17 @@ public class ObjectModelImpl extends ExtendedObjectModelBase
         if (!getActiveObjectPose().isLocked())
         {
             getActiveObjectPose().setRotateX(rotationX);
+        }
+    }
+
+    @Override
+    public float getScale(){return (float) getActiveObjectPose().getScale();}
+
+    @Override
+    public void setScale(float scale){
+        if (!getActiveObjectPose().isLocked())
+        {
+            getActiveObjectPose().setScale(scale);
         }
     }
 

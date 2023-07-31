@@ -35,25 +35,19 @@ public class SettingsLightSceneController implements Initializable
     {
         setDisabled(true);
 
-        StringConverter<Double> pow10converter = new StringConverter<Double>()
-        {
+        StringConverter<Double> pow10converter = new StringConverter<>() {
             @Override
-            public String toString(Double object)
-            {
+            public String toString(Double object) {
                 String s = logScaleNumberStringConverter.toString(object);
-                if (s.length() > 4)
-                {
+                if (s.length() > 4) {
                     return s.substring(0, 4);
-                }
-                else
-                {
+                } else {
                     return s;
                 }
             }
 
             @Override
-            public Double fromString(String string)
-            {
+            public Double fromString(String string) {
                 return null;
             }
         };

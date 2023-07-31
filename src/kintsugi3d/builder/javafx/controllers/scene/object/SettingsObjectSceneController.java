@@ -52,11 +52,9 @@ public class SettingsObjectSceneController implements Initializable
     @FXML private Slider rotateZSlider;
     @FXML private Button selectPointButton;
 
-    private final SafeLogScaleNumberStringConverter converter = new SafeLogScaleNumberStringConverter(1);
+    private final SafeLogScaleNumberStringConverter log10converter = new SafeLogScaleNumberStringConverter(1);
 
-
-
-    private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
+    private final SafeNumberStringConverter converter = new SafeNumberStringConverter(0);
 
     @Override
     public void initialize(URL location, ResourceBundle resources)
@@ -73,7 +71,7 @@ public class SettingsObjectSceneController implements Initializable
         scaleSlider.setLabelFormatter(new StringConverter<>() {
             @Override
             public String toString(Double object) {
-                String out = converter.toString(object);
+                String out = log10converter.toString(object);
                 if (out.length() >= 4) {
                     return out.substring(0, 4);
                 } else {
@@ -115,14 +113,13 @@ public class SettingsObjectSceneController implements Initializable
     private void bind(ObjectPoseSetting objectPose)
     {
 
-        xCenterTextField.textProperty().bindBidirectional(objectPose.centerXProperty(), n);
-        yCenterTextField.textProperty().bindBidirectional(objectPose.centerYProperty(), n);
-        zCenterTextField.textProperty().bindBidirectional(objectPose.centerZProperty(), n);
-        rotateYTextField.textProperty().bindBidirectional(objectPose.rotateYProperty(), n);
-        rotateXTextField.textProperty().bindBidirectional(objectPose.rotateXProperty(), n);
-        rotateZTextField.textProperty().bindBidirectional(objectPose.rotateZProperty(), n);
-
-        //TODO: BIND SCALE SLIDER
+        xCenterTextField.textProperty().bindBidirectional(objectPose.centerXProperty(), converter);
+        yCenterTextField.textProperty().bindBidirectional(objectPose.centerYProperty(), converter);
+        zCenterTextField.textProperty().bindBidirectional(objectPose.centerZProperty(), converter);
+        rotateYTextField.textProperty().bindBidirectional(objectPose.rotateYProperty(), converter);
+        rotateXTextField.textProperty().bindBidirectional(objectPose.rotateXProperty(), converter);
+        rotateZTextField.textProperty().bindBidirectional(objectPose.rotateZProperty(), converter);
+        scaleTxtField.textProperty().bindBidirectional(objectPose.scaleProperty(), log10converter);
 
         xCenterSlider.valueProperty().bindBidirectional(objectPose.centerXProperty());
         yCenterSlider.valueProperty().bindBidirectional(objectPose.centerYProperty());
@@ -130,6 +127,7 @@ public class SettingsObjectSceneController implements Initializable
         rotateYSlider.valueProperty().bindBidirectional(objectPose.rotateYProperty());
         rotateXSlider.valueProperty().bindBidirectional(objectPose.rotateXProperty());
         rotateZSlider.valueProperty().bindBidirectional(objectPose.rotateZProperty());
+        scaleSlider.valueProperty().bindBidirectional(objectPose.scaleProperty());
     }
 
     private void unbind(ObjectPoseSetting objectPose)
@@ -141,8 +139,7 @@ public class SettingsObjectSceneController implements Initializable
         rotateYTextField.textProperty().unbindBidirectional(objectPose.rotateYProperty());
         rotateXTextField.textProperty().unbindBidirectional(objectPose.rotateXProperty());
         rotateZTextField.textProperty().unbindBidirectional(objectPose.rotateZProperty());
-
-        //TODO: UNBIND SCALE SLIDER
+        scaleTxtField.textProperty().unbindBidirectional(objectPose.scaleProperty());
 
         xCenterSlider.valueProperty().unbindBidirectional(objectPose.centerXProperty());
         yCenterSlider.valueProperty().unbindBidirectional(objectPose.centerYProperty());
@@ -150,6 +147,7 @@ public class SettingsObjectSceneController implements Initializable
         rotateYSlider.valueProperty().unbindBidirectional(objectPose.rotateYProperty());
         rotateXSlider.valueProperty().unbindBidirectional(objectPose.rotateXProperty());
         rotateZSlider.valueProperty().unbindBidirectional(objectPose.rotateZProperty());
+        scaleSlider.valueProperty().unbindBidirectional(objectPose.scaleProperty());
     }
 
     public void setOnActionSelectPoint(EventHandler<ActionEvent> actionEventEventHandler)

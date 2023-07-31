@@ -59,6 +59,7 @@ public class RootObjectSceneController
             0.0,
             0.0,
             false,
+            1.0,
             "Default Pose"
         );
 
