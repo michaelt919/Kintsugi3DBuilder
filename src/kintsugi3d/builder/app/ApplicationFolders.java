@@ -94,7 +94,7 @@ public class ApplicationFolders
             return new File(new File(System.getProperty("user.home")), "Library/Caches/" + APP_FOLDER_NAME);
         }
 
-        return getUserAppDirectory();
+        return new File(getUserAppDirectory(), "cache");
     }
 
     /**
@@ -103,18 +103,27 @@ public class ApplicationFolders
      */
     public static File getSystemAppDirectory()
     {
-        //TODO
-        return new File(".");
+        if (OS == OperatingSystem.WINDOWS)
+        {
+            return new File(new File(System.getenv("PROGRAMDATA")), APP_FOLDER_NAME);
+        }
+
+        if (OS == OperatingSystem.MACOS)
+        {
+            return new File("/Library/" + APP_FOLDER_NAME);
+        }
+
+        return getUserAppDirectory();
     }
 
     /**
-     * Get the folder that the application is currently installed to. Will return the working
-     * directory "." if the app is not installed as a system app.
+     * Get the folder that the application is currently installed to. Will return null
+     * if the app is not installed as a system app.
      * @return installation directory
      */
     public static File getInstallationDirectory()
     {
         //TODO
-        return new File(".");
+        return null;
     }
 }
