@@ -13,6 +13,7 @@
 package kintsugi3d.util;
 
 import javafx.scene.control.MenuItem;
+import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 
 import java.io.*;
@@ -23,6 +24,8 @@ import java.util.List;
 public class RecentProjects extends WelcomeWindowController {
 
     private static File recentProjectsFile = new File("src/main/resources/recentFiles.txt");//TODO: NEW LOCATION?
+    private static WelcomeWindowController welcomeWindowController;
+    private static MenubarController menubarController;
 
     public static List<String> getItemsFromRecentsFile() {
         List<String> projectItems = new ArrayList<>();
@@ -52,7 +55,7 @@ public class RecentProjects extends WelcomeWindowController {
         return menuItems;
     }
 
-    public static void updateRecentFiles(String fileName, WelcomeWindowController welcomeWindowController) {
+    public static void updateRecentFiles(String fileName) {
         // Read existing file content into a List
         List<String> existingFileNames = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(recentProjectsFile))) {
@@ -79,8 +82,16 @@ public class RecentProjects extends WelcomeWindowController {
             e.printStackTrace();
         }
 
-        //update list of recent projects
+        //update list of recent projects in program
         welcomeWindowController.updateRecentProjectsButton();
+        menubarController.updateRecentProjectsMenu();
     }
 
+    public static void initializeWelcomeWindowController(WelcomeWindowController welcomeWindowController) {
+        RecentProjects.welcomeWindowController = welcomeWindowController;
+    }
+
+    public static void initializeMenubarController(MenubarController menubarController) {
+        RecentProjects.menubarController = menubarController;
+    }
 }

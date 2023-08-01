@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.function.Predicate;
@@ -30,13 +31,16 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
+import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -92,9 +96,17 @@ public class MenubarController
     @FXML private CheckMenuItem phyMaskingCheckMenuItem;
     @FXML private CheckMenuItem fresnelEffectCheckMenuItem;
 
+    @FXML public CustomMenuItem autoCacheClearingMenuItem;
+    @FXML public CustomMenuItem autosaveMenuItem;
+
+    //need to manually set the color of nodes when they are inside a customMenuItem
+    private ArrayList<CustomMenuItem> customMenuItems;
+
     @FXML private FileChooser projectFileChooser;
 
     @FXML private Menu exportMenu;
+    @FXML private Menu recentProjectsMenu;
+
 
     @FXML private FramebufferView framebufferView;
 
@@ -239,6 +251,25 @@ public class MenubarController
                 MultithreadModels.getInstance().getSettingsModel().set("currentLightCalibration", Vector2.ZERO);
             }
         });
+
+        RecentProjects.initializeMenubarController(this);
+        updateRecentProjectsMenu();
+
+        customMenuItems = new ArrayList<>();
+        customMenuItems.add(autosaveMenuItem);
+        customMenuItems.add(autoCacheClearingMenuItem);
+
+        //TODO: DOESN'T QUITE FORMAT PROPERLY
+        //checkbox text should change color whenever the user hovers into the menu, but it only changes color
+        //when the user hovers into the checkbox itself
+        for (CustomMenuItem item : customMenuItems){
+            //turn menu item text black if it is not rolled over
+            //if rolled over, turn white
+            //(this behavior does not happen by default)
+            Labeled labeledNode = (Labeled) item.getContent();
+            labeledNode.setOnMouseEntered(event -> labeledNode.setTextFill(Color.WHITE));
+            labeledNode.setOnMouseExited(event -> labeledNode.setTextFill(Color.BLACK));
+        }
     }
 
     public FramebufferView getFramebufferView()
@@ -402,6 +433,13 @@ public class MenubarController
                     MultithreadModels.getInstance().getLoadingModel().saveToVSETFile(vsetFile);
                     internalModels.getProjectModel().saveProjectFile(projectFile, vsetFile);
                 }
+
+                //TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY
+                Dialog<ButtonType> saveInfo = new Alert(AlertType.INFORMATION,
+                        "Save Complete!");
+                saveInfo.setTitle("Save successful");
+                saveInfo.setHeaderText(projectFile.getName());
+                saveInfo.show();
             }
             catch(IOException | TransformerException | ParserConfigurationException e)
             {
@@ -649,7 +687,7 @@ public class MenubarController
         }
     }
 
-    public void shading_JVMSettings(ActionEvent actionEvent)
+    public void shading_JVMSettings()
     {
         if (jvmOptionsWindowOpen.get())
         {
@@ -666,7 +704,7 @@ public class MenubarController
         }
     }
 
-    public void help_console(ActionEvent actionEvent)
+    public void help_console()
     {
         if (consoleWindowOpen.get())
         {
@@ -685,4 +723,65 @@ public class MenubarController
             log.error("An error occurred opening console window:", e);
         }
     }
+
+    public void updateRecentProjectsMenu() {//TODO: FORMAT ----- PROJECT NAME --> PATH
+        //TODO: REMOVE REPETITION WITH WELCOME WINDOW CONTROLLER
+        recentProjectsMenu.getItems().clear();
+
+        ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
+
+        recentProjectsMenu.getItems().addAll(recentItems);
+
+        //disable button if there are no recent projects
+        if(recentProjectsMenu.getItems().isEmpty()){
+            recentProjectsMenu.setDisable(true);
+        }
+
+        //attach event handlers to all menu items
+        for (MenuItem item : recentItems){
+            item.setOnAction(event -> handleMenuItemSelection(item));
+        }
+    }
+
+    public void handleMenuItemSelection(MenuItem item) {
+        String projectName = item.getText();
+        openProjectFromFile(new File(projectName));
+    }
+
+    private void openProjectFromFile(File selectedFile) {
+        //open the project and update the recent files list
+        this.projectFile = selectedFile;
+        File newVsetFile = null;
+
+        if (projectFile.getName().endsWith(".vset"))
+        {
+            newVsetFile = projectFile;
+        }
+        else
+        {
+            try
+            {
+                newVsetFile = internalModels.getProjectModel().openProjectFile(projectFile);
+            }
+            catch (IOException | ParserConfigurationException | SAXException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        if (newVsetFile != null)
+        {
+            MultithreadModels.getInstance().getLoadingModel().unload();
+
+            this.vsetFile = newVsetFile;
+            File vsetFileRef = newVsetFile;
+
+            RecentProjects.updateRecentFiles(projectFile.getAbsolutePath());
+
+            projectLoaded = true;
+
+            new Thread(() -> MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFileRef.getPath(), vsetFileRef)).start();
+        }
+    }
+
 }

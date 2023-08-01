@@ -12,62 +12,124 @@
   ~
   -->
 
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
 <?import kintsugi3d.builder.core.*?>
+
 <AnchorPane prefHeight="720.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.MenubarController">
 <MenuBar AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
       <Menu mnemonicParsing="false" text="File">
-         <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="Create project">
+         <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="New Project">
             <accelerator>
                <KeyCodeCombination alt="UP" code="N" control="ANY" meta="UP" shift="UP" shortcut="UP" />
             </accelerator></MenuItem>
-         <MenuItem mnemonicParsing="false" onAction="#file_openProject" text="Open project">
-            <accelerator>
-               <KeyCodeCombination alt="UP" code="O" control="ANY" meta="UP" shift="UP" shortcut="UP" />
-            </accelerator></MenuItem>
-         <MenuItem mnemonicParsing="false" onAction="#file_saveProject" text="Save project">
+         <MenuItem mnemonicParsing="false" onAction="#file_saveProject" text="Save">
             <accelerator>
                <KeyCodeCombination alt="UP" code="S" control="ANY" meta="UP" shift="UP" shortcut="UP" />
             </accelerator></MenuItem>
-         <MenuItem mnemonicParsing="false" onAction="#file_saveProjectAs" text="Save project as...">
+         <MenuItem mnemonicParsing="false" onAction="#file_saveProjectAs" text="Save As">
             <accelerator>
                <KeyCodeCombination alt="UP" code="F12" control="ANY" meta="UP" shift="UP" shortcut="UP" />
             </accelerator></MenuItem>
-         <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Export Specular Fit">
-            <accelerator>
-               <KeyCodeCombination alt="UP" code="P" control="ANY" meta="UP" shift="UP" shortcut="UP" />
-            </accelerator></MenuItem>
-         <MenuItem mnemonicParsing="false" onAction="#file_closeProject" text="Close project">
-            <accelerator>
-               <KeyCodeCombination alt="UP" code="W" control="ANY" meta="UP" shift="UP" shortcut="UP" />
-            </accelerator></MenuItem>
-         <SeparatorMenuItem />
+         <SeparatorMenuItem mnemonicParsing="false" />
          <Menu fx:id="exportMenu" mnemonicParsing="false" text="Export" />
-          <CheckMenuItem fx:id="lightCalibrationCheckMenuItem" mnemonicParsing="false" text="Light Calibration Mode" />
-          <MenuItem mnemonicParsing="false" onAction="#file_colorChecker" text="Enter Color Checker Values... (DEPRECATED)" visible="false" />
-          <MenuItem mnemonicParsing="false" onAction="#unzip" text="Unzip Metashape File">
-          <accelerator>
-          <KeyCodeCombination alt="UP" code="M" control="ANY" meta="UP" shift="UP" shortcut="UP" />
-          </accelerator></MenuItem>
-          <MenuItem mnemonicParsing="false" onAction="#eyedropperColorChecker" text="Color Calibration">
-            <accelerator>
-               <KeyCodeCombination alt="UP" code="B" control="ANY" meta="UP" shift="UP" shortcut="UP" />
-            </accelerator></MenuItem>
-         <MenuItem mnemonicParsing="false" onAction="#file_loadOptions" text="Load Options..." />
-          <SeparatorMenuItem />
+         <MenuItem mnemonicParsing="false" text="RE-IMPORT DATA (UNFINISHED)" />
+         <SeparatorMenuItem />
+         <Menu fx:id="recentProjectsMenu" mnemonicParsing="false" text="Recent Projects">
+           <items>
+             <MenuItem mnemonicParsing="false" text="Action 1" />
+           </items>
+         </Menu>
+         <SeparatorMenuItem mnemonicParsing="false" />
          <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
+          <SeparatorMenuItem />
       </Menu>
-      <Menu mnemonicParsing="false" text="View">
+      <Menu mnemonicParsing="false" text="Workflow">
+        <items>
+          <MenuItem mnemonicParsing="false" text="Pre-process Calibration (UNFINISHED)" />
+            <MenuItem mnemonicParsing="false" text="Process (UNFINISHED)" />
+        </items>
+      </Menu>
+      <Menu mnemonicParsing="false" text="Environment">
+         <items>
+            <CheckMenuItem mnemonicParsing="false" text="Snap-based Object Rotation (UNFINISHED)" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <Menu mnemonicParsing="false" text="Per-light Intensity (UNFINISHED)">
+              <items>
+                  <MenuItem mnemonicParsing="false" onAction="#eyedropperColorChecker" text="Color Calibration" />
+                  <MenuItem mnemonicParsing="false" text="ADD INTENSITY SLIDERS" />
+              </items>
+            </Menu>
+            <Menu mnemonicParsing="false" text="Ambient light settings (UNFINISHED)">
+              <items>
+                  <MenuItem mnemonicParsing="false" onAction="#eyedropperColorChecker" text="Color Calibration" />
+                  <MenuItem mnemonicParsing="false" text="ADD INTENSITY SLIDERS" />
+              </items>
+            </Menu>
+         </items>
+      </Menu>
+      <Menu mnemonicParsing="false" text="System Settings">
+         <items>
+             <CustomMenuItem fx:id="autoCacheClearingMenuItem" hideOnClick="false" mnemonicParsing="false" text="Auto Cache Clearing (UNFINISHED)">
+                 <content>
+                     <CheckBox fx:id="autoCacheClearingCheckBox" text="Auto Cache Clearing (UNFINISHED)" />
+                 </content>
+             </CustomMenuItem>
+            <Menu mnemonicParsing="false" text="Cache Path">
+              <items>
+                  <SeparatorMenuItem mnemonicParsing="false">
+                     <content>
+                        <Label fx:id="cachePathLabel" text="Current Cache Path: ................................................">
+                           <padding>
+                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                           </padding>
+                        </Label>
+                     </content>
+                  </SeparatorMenuItem>
+                  <CustomMenuItem mnemonicParsing="false" text="Clear Cache">
+                     <content>
+                        <Button fx:id="clearCacheButton" mnemonicParsing="false" text="Clear Cache (UNFINISHED)" />
+                     </content>
+                  </CustomMenuItem>
+                  <CustomMenuItem mnemonicParsing="false" text="Set Cache Path">
+                      <content>
+                          <Button fx:id="setCachePathButton" mnemonicParsing="false" text="Set Cache Path (UNFINISHED)" />
+                      </content>
+                  </CustomMenuItem>
+              </items>
+            </Menu>
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <CustomMenuItem fx:id="autosaveMenuItem" hideOnClick="false" mnemonicParsing="false" text="Autosave">
+              <content>
+                <CheckBox fx:id="autosaveCheckBox" text="Autosave" />
+              </content>
+            </CustomMenuItem>
+         </items></Menu>
+      <Menu text="Help">
+          <MenuItem mnemonicParsing="false" onAction="#help_userManual" text="User Manual" />
+          <MenuItem mnemonicParsing="false" onAction="#help_console" text="View Log" />
+          <MenuItem mnemonicParsing="false" onAction="#help_about" text="About" />
+      </Menu>
+      <Menu mnemonicParsing="false" text="About">
+         <items>
+            <MenuItem mnemonicParsing="false" text="Action 1" />
+         </items>
+      </Menu>
+      <Menu mnemonicParsing="false" text="Hide UI?">
+         <items>
+            <CheckMenuItem mnemonicParsing="false" text="HIDE" />
+         </items>
+      </Menu>
+      <Menu mnemonicParsing="false" text="View" visible="false">
          <CheckMenuItem fx:id="is3DGridCheckMenuItem" mnemonicParsing="false" text="3D grid" />
          <CheckMenuItem fx:id="compassCheckMenuItem" mnemonicParsing="false" text="Compass" visible="false" />
          <CheckMenuItem fx:id="halfResolutionCheckMenuItem" mnemonicParsing="false" selected="true" text="Half resolution" />
          <CheckMenuItem fx:id="multiSamplingCheckMenuItem" mnemonicParsing="false" text="Multi-sampling" visible="false" />
          <CheckMenuItem fx:id="sceneWindowMenuItem" mnemonicParsing="false" selected="true" text="Scene window" />
       </Menu>
-      <Menu mnemonicParsing="false" text="Lighting">
+      <Menu mnemonicParsing="false" text="Lighting" visible="false">
          <CheckMenuItem fx:id="relightingCheckMenuItem" mnemonicParsing="false" selected="true" text="Relighting" />
          <CheckMenuItem fx:id="environmentMappingCheckMenuItem" mnemonicParsing="false" selected="true" text="Environment mapping" visible="false" />
          <CheckMenuItem fx:id="shadowsCheckMenuItem" mnemonicParsing="false" text="Shadows" />
@@ -76,7 +138,7 @@
          <CheckMenuItem fx:id="visibleCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show camera poses for photographs" visible="false" />
          <CheckMenuItem fx:id="visibleSavedCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show saved camera poses" visible="false" />
       </Menu>
-      <Menu mnemonicParsing="false" text="Shading">
+      <Menu mnemonicParsing="false" text="Shading" visible="false">
          <RadioMenuItem mnemonicParsing="false" text="None" userData="None" visible="false">
              <userData>
                  <StandardRenderingMode fx:value="NONE" />
@@ -142,11 +204,34 @@
          <CheckMenuItem mnemonicParsing="false" text="Full-screen render" />
          <CheckMenuItem mnemonicParsing="false" text="Separate render window" />
       </Menu>
-      <Menu text="Help">
-          <MenuItem mnemonicParsing="false" onAction="#help_userManual" text="User Manual" />
-          <MenuItem mnemonicParsing="false" onAction="#help_console" text="View Log" />
-          <MenuItem mnemonicParsing="false" onAction="#help_about" text="About" />
-      </Menu>
+    <Menu mnemonicParsing="false" text="DEPRECATED MENU ITEMS" visible="false">
+        <items>
+            <MenuItem mnemonicParsing="false" onAction="#file_openProject" text="Open project" visible="false">
+                <accelerator>
+                    <KeyCodeCombination alt="UP" code="O" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+                </accelerator>
+            </MenuItem>
+            <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Export Specular Fit" visible="false">
+                <accelerator>
+                    <KeyCodeCombination alt="UP" code="P" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+                </accelerator>
+            </MenuItem>
+            <MenuItem mnemonicParsing="false" onAction="#file_closeProject" text="Close project" visible="false">
+                <accelerator>
+                    <KeyCodeCombination alt="UP" code="W" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+                </accelerator>
+            </MenuItem>
+            <CheckMenuItem fx:id="lightCalibrationCheckMenuItem" mnemonicParsing="false" text="Light Calibration Mode" visible="false" />
+            <MenuItem mnemonicParsing="false" onAction="#file_colorChecker" text="Enter Color Checker Values... (DEPRECATED)" visible="false" />
+            <MenuItem mnemonicParsing="false" onAction="#unzip" text="Unzip Metashape File" visible="false">
+                <accelerator>
+                    <KeyCodeCombination alt="UP" code="M" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+                </accelerator>
+            </MenuItem>
+            <MenuItem mnemonicParsing="false" onAction="#file_loadOptions" text="Load Options..." visible="false" />
+            <MenuItem mnemonicParsing="false" text="Action 1" />
+        </items>
+    </Menu>
    </MenuBar>
    <ProgressBar fx:id="progressBar" layoutY="25.0" prefWidth="1280.0" progress="0.0" visible="false" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="25.0" VBox.vgrow="ALWAYS">
        <VBox.margin>
