@@ -67,6 +67,9 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                 String id = scanner.next();
                 switch(id)
                 {
+                    case "U":
+                        result.setUuid(UUID.fromString(scanner.nextLine().trim()));
+                        break;
                     case "c":
                     {
                         result.setRecommendedNearPlane(scanner.nextFloat());

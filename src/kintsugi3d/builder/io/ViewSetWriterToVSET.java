@@ -38,6 +38,10 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         PrintStream out = new PrintStream(outputStream);
         out.println("# Created by Kintsugi 3D Builder");
 
+        out.println();
+        out.println("# ViewSet UUID");
+        out.println("U " + viewSet.getUuid());
+
         if (viewSet.getGeometryFileName() != null)
         {
             out.println();

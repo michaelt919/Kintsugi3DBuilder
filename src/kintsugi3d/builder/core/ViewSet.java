@@ -38,6 +38,11 @@ public final class ViewSet implements ReadonlyViewSet
     private static final Logger log = LoggerFactory.getLogger(ViewSet.class);
 
     /**
+     * A unique id given to each view set that can be used to prevent cache collisions on disk.
+     */
+    private UUID viewSetUid = UUID.randomUUID();
+
+    /**
      * A list of camera poses defining the transformation from object space to camera space for each view.
      * These are necessary to perform projective texture mapping.
      */
@@ -775,5 +780,16 @@ public final class ViewSet implements ReadonlyViewSet
     public File findPreviewPrimaryImageFile() throws FileNotFoundException
     {
         return findPreviewImageFile(primaryViewIndex);
+    }
+
+    @Override
+    public UUID getUuid()
+    {
+        return viewSetUid;
+    }
+
+    public void setUuid(UUID viewSetUid)
+    {
+        this.viewSetUid = viewSetUid;
     }
 }
