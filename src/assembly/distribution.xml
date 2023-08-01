@@ -24,5 +24,9 @@
             <directory>${project.basedir}/shaders</directory>
             <outputDirectory>shaders</outputDirectory>
         </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/bundledjre</directory>
+            <outputDirectory>jre</outputDirectory>
+        </fileSet>
     </fileSets>
 </assembly>

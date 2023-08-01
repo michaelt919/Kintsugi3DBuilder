@@ -65,6 +65,15 @@ Section "Kintsugi 3D Builder (required)"
 
 SectionEnd
 
+; Bundled JRE
+Section "Bundled Java Runtime"
+
+    ; Include JRE
+    SetOutPath "$INSTDIR\jre"
+    File /r "bundledjre\*"
+
+SectionEnd
+
 ; Optional start menu shortcuts
 Section "Start Menu Shortcuts"
 
