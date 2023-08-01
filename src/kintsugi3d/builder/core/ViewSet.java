@@ -473,7 +473,14 @@ public final class ViewSet implements ReadonlyViewSet
     @Override
     public String getGeometryFileName()
     {
-        return this.rootDirectory.toPath().relativize(this.geometryFile.toPath()).toString();
+        try
+        {
+            return this.rootDirectory.toPath().relativize(this.geometryFile.toPath()).toString();
+        }
+        catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
+        {
+            return previewImageDirectory == null ? null : previewImageDirectory.toString();
+        }
     }
 
     /**
@@ -504,9 +511,9 @@ public final class ViewSet implements ReadonlyViewSet
         {
             return this.rootDirectory.toPath().relativize(this.fullResImageDirectory.toPath()).toString();
         }
-        catch (IllegalArgumentException e) //If the root and other directories are located under different drive letters on windows
+        catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
-            return this.fullResImageDirectory.toString();
+            return fullResImageDirectory == null ? null : fullResImageDirectory.toString();
         }
     }
 
@@ -532,9 +539,9 @@ public final class ViewSet implements ReadonlyViewSet
         {
             return this.rootDirectory.toPath().relativize(this.previewImageDirectory.toPath()).toString();
         }
-        catch (IllegalArgumentException e) //If the root and other directories are located under different drive letters on windows
+        catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
-            return this.previewImageDirectory.toString();
+            return previewImageDirectory == null ? null : previewImageDirectory.toString();
         }
     }
 

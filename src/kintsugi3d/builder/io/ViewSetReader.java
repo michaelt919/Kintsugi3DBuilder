@@ -28,7 +28,7 @@ public interface ViewSetReader
      * @param stream The input stream
      * @return The view set
      */
-    ViewSet readFromStream(InputStream stream) throws Exception;
+    ViewSet readFromStream(InputStream stream, File root) throws Exception;
 
     /**
      * Loads a view set from an input file.
@@ -41,8 +41,7 @@ public interface ViewSetReader
     {
         try (InputStream stream = new FileInputStream(file))
         {
-            ViewSet result = readFromStream(stream);
-            result.setRootDirectory(file.getParentFile());
+            ViewSet result = readFromStream(stream, file.getParentFile());
             return result;
         }
     }

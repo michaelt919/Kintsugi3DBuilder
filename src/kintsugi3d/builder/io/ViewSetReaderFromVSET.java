@@ -22,6 +22,7 @@ import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.*;
 
@@ -44,11 +45,12 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
     }
 
     @Override
-    public ViewSet readFromStream(InputStream stream)
+    public ViewSet readFromStream(InputStream stream, File root)
     {
         Date timestamp = new Date();
 
         ViewSet result = new ViewSet(128);
+        result.setRootDirectory(root);
 
         float gamma = 2.2f;
 

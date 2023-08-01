@@ -28,6 +28,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import kintsugi3d.builder.app.ApplicationFolders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.Context;
@@ -257,7 +258,8 @@ public class SpecularFitRequestUI implements IBRRequestUI
             }
 
             // Image cache settings
-            settings.getImageCacheSettings().setCacheParentDirectory(new File(settings.getOutputDirectory(), "cache"));
+            File cacheDir = new File(ApplicationFolders.getUserCacheDirectory(), "SpecularFitCache");
+            settings.getImageCacheSettings().setCacheParentDirectory(cacheDir);
             settings.getImageCacheSettings().setTextureWidth(settings.getTextureFitSettings().width);
             settings.getImageCacheSettings().setTextureHeight(settings.getTextureFitSettings().height);
             settings.getImageCacheSettings().setTextureSubdiv( // TODO expose this in the interface
