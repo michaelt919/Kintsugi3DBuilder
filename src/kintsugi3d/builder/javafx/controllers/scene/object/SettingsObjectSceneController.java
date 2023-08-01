@@ -121,6 +121,9 @@ public class SettingsObjectSceneController implements Initializable
         rotateZTextField.textProperty().bindBidirectional(objectPose.rotateZProperty(), converter);
         scaleTxtField.textProperty().bindBidirectional(objectPose.scaleProperty(), log10converter);
 
+        //default value must be set here because it is overwritten when the slider is converted to logarithmic format
+        scaleTxtField.textProperty().setValue("1.0");
+
         xCenterSlider.valueProperty().bindBidirectional(objectPose.centerXProperty());
         yCenterSlider.valueProperty().bindBidirectional(objectPose.centerYProperty());
         zCenterSlider.valueProperty().bindBidirectional(objectPose.centerZProperty());
