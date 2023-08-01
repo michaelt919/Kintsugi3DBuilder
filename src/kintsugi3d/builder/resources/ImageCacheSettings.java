@@ -12,6 +12,7 @@
 package kintsugi3d.builder.resources;
 
 import java.io.File;
+import java.util.UUID;
 
 public class ImageCacheSettings
 {
@@ -20,6 +21,7 @@ public class ImageCacheSettings
     private int textureHeight;
     private int textureSubdiv;
     private int sampledSize;
+    private UUID viewSetUid;
 
     public File getCacheDirectory()
     {
@@ -78,7 +80,14 @@ public class ImageCacheSettings
 
     public String getFolderNameFromSettings()
     {
-        return String.format("%d-%d-%d-%d", textureWidth, textureHeight, textureSubdiv, sampledSize);
+        if (viewSetUid != null)
+        {
+            return String.format("%s/%d-%d-%d-%d", viewSetUid, textureWidth, textureHeight, textureSubdiv, sampledSize);
+        }
+        else
+        {
+            return String.format("%d-%d-%d-%d", textureWidth, textureHeight, textureSubdiv, sampledSize);
+        }
     }
 
     public File getBlockDir(int i, int j)
@@ -94,5 +103,15 @@ public class ImageCacheSettings
     public int getBlockStartY(int j)
     {
         return (int) Math.round((double) j * (double) textureHeight / (double) textureSubdiv);
+    }
+
+    public UUID getViewSetUid()
+    {
+        return viewSetUid;
+    }
+
+    public void setViewSetUid(UUID viewSetUid)
+    {
+        this.viewSetUid = viewSetUid;
     }
 }
