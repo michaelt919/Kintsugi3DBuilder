@@ -1,6 +1,7 @@
 package kintsugi3d.util;
 
 import javafx.scene.control.MenuItem;
+import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 
 import java.io.*;
@@ -10,7 +11,7 @@ import java.util.List;
 
 public class RecentProjects extends WelcomeWindowController {
 
-    private static File recentProjectsFile = new File("src/main/resources/recentFiles.txt");//TODO: NEW LOCATION?
+    private static File recentProjectsFile = new File(ApplicationFolders.getUserAppDirectory(), "recentFiles.txt");
 
     public static List<String> getItemsFromRecentsFile() {
         List<String> projectItems = new ArrayList<>();
