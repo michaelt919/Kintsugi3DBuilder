@@ -61,20 +61,20 @@ public class CreateProjectController {
         //then add an item to the dropdown which contains the path they selected
 
         if (directoryChoices.getValue().equals(CHOOSE_LOCATION)){
-                this.directoryChooser.setTitle("Choose an output directory");
+            this.directoryChooser.setTitle("Choose an output directory");
 
-                File file = this.directoryChooser.showDialog(stage.getOwner());
+            File file = this.directoryChooser.showDialog(stage.getOwner());
 
-                if (file != null && file.exists()){
-                    directoryChooser.setInitialDirectory(file);
-                    directoryChoices.getItems().add(file.getAbsolutePath());
-                    directoryChoices.setValue(file.getAbsolutePath());
-                }
-                else{
-                    Toolkit.getDefaultToolkit().beep();
-                }
+            if (file != null && file.exists()){
+                directoryChooser.setInitialDirectory(file);
+                directoryChoices.getItems().add(file.getAbsolutePath());
+                directoryChoices.setValue(file.getAbsolutePath());
+            }
+            else{
+                Toolkit.getDefaultToolkit().beep();
             }
         }
+    }
 
     public void setCallback(Runnable callback)
     {

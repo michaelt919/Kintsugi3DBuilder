@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar;
 
+import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -31,15 +32,18 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.stage.Window;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +64,12 @@ import kintsugi3d.util.Flag;
 
 public class MenubarController
 {
+    String defaultAutosavePath = "C:\\";//TODO: WILL CHANGE WHEN FILE STRUCTURE IS CEMENTED
+
+    String defaultAutosaveSelection = "Default Path: --> " + defaultAutosavePath;
+    static final String CHOOSE_LOCATION = "Choose Location...";
+    private DirectoryChooser directoryChooser = new DirectoryChooser();
+
     private static final Logger log = LoggerFactory.getLogger(MenubarController.class);
 
     private InternalModels internalModels;
@@ -102,6 +112,10 @@ public class MenubarController
     //need to manually set the color of nodes when they are inside a customMenuItem
     private ArrayList<CustomMenuItem> customMenuItems;
 
+    @FXML public ChoiceBox<String> autosaveOptionsChoiceBox;
+
+    @FXML private CheckMenuItem imageCompressionCheckMenuItem;
+
     @FXML private FileChooser projectFileChooser;
 
     @FXML private Menu exportMenu;
@@ -110,7 +124,7 @@ public class MenubarController
 
     @FXML private FramebufferView framebufferView;
 
-    private Window stage;
+    private Window window;
 
     private File projectFile;
     private File vsetFile;
@@ -122,7 +136,7 @@ public class MenubarController
     public <ContextType extends Context<ContextType>> void init(
         Stage injectedStage, InternalModels injectedInternalModels, Runnable injectedUserDocumentationHandler)
     {
-        this.stage = injectedStage;
+        this.window = injectedStage;
         this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
 
         this.internalModels = injectedInternalModels;
@@ -270,6 +284,16 @@ public class MenubarController
             labeledNode.setOnMouseEntered(event -> labeledNode.setTextFill(Color.WHITE));
             labeledNode.setOnMouseExited(event -> labeledNode.setTextFill(Color.BLACK));
         }
+
+        //add "Default Path" and "Choose Location..." items to choiceBox
+        //initialize directory selection dropdown menu
+        autosaveOptionsChoiceBox.getItems().addAll(defaultAutosaveSelection, CHOOSE_LOCATION);
+
+        //initialize option to default path
+        autosaveOptionsChoiceBox.setValue(defaultAutosaveSelection);
+
+        //attach event handler (this cannot be done in scenebuilder)
+        autosaveOptionsChoiceBox.setOnAction(this::handleDirectoryDropdownSelection);
     }
 
     public FramebufferView getFramebufferView()
@@ -373,7 +397,7 @@ public class MenubarController
         if (confirmClose("Are you sure you want to open another project?"))
         {
             projectFileChooser.setTitle("Open project");
-            File selectedFile = projectFileChooser.showOpenDialog(stage);
+            File selectedFile = projectFileChooser.showOpenDialog(window);
             if (selectedFile != null)
             {
                 this.projectFile = selectedFile;
@@ -463,7 +487,7 @@ public class MenubarController
             projectFileChooser.setInitialFileName("");
             projectFileChooser.setInitialDirectory(vsetFile.getParentFile());
         }
-        File selectedFile = projectFileChooser.showSaveDialog(stage);
+        File selectedFile = projectFileChooser.showSaveDialog(window);
         if (selectedFile != null)
         {
             this.projectFile = selectedFile;
@@ -487,7 +511,7 @@ public class MenubarController
     @FXML
     private void exportSpecularFit(){
         try {
-            IBRRequestUI requestUI = SpecularFitRequestUI.create(this.stage, MultithreadModels.getInstance());
+            IBRRequestUI requestUI = SpecularFitRequestUI.create(this.window, MultithreadModels.getInstance());
             requestUI.bind(internalModels.getSettingsModel());
             requestUI.prompt(Rendering.getRequestQueue());
 
@@ -535,7 +559,7 @@ public class MenubarController
             Alert alert = new Alert(AlertType.INFORMATION, String.join(System.lineSeparator(), lines));
             alert.setTitle("About Kintsugi 3D Builder");
             alert.setHeaderText("About Kintsugi 3D Builder");
-            alert.initOwner(this.stage);
+            alert.initOwner(this.window);
             alert.initModality(Modality.NONE);
             alert.show();
             alert.setY(100.0);
@@ -579,7 +603,7 @@ public class MenubarController
         stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
         stage.setTitle(title);
         stage.setScene(new Scene(root));
-        stage.initOwner(this.stage);
+        stage.initOwner(this.window);
 
         stage.setResizable(false);
 
@@ -605,7 +629,7 @@ public class MenubarController
         stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
         stage.setTitle(title);
         stage.setScene(new Scene(root, width, height));
-        stage.initOwner(this.stage);
+        stage.initOwner(this.window);
         stage.setResizable(false);
         flag.set(true);
         stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
@@ -627,7 +651,7 @@ public class MenubarController
         stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
         stage.setTitle(title);
         stage.setScene(new Scene(root));
-        stage.initOwner(this.stage);
+        stage.initOwner(this.window);
 
         flag.set(true);
         stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
@@ -784,4 +808,24 @@ public class MenubarController
         }
     }
 
+    private void handleDirectoryDropdownSelection(ActionEvent actionEvent) {
+        //if user clicks "choose directory" option, open the directory chooser
+        //then add an item to the dropdown which contains the path they selected
+
+        if (autosaveOptionsChoiceBox.getValue().equals(CHOOSE_LOCATION)){
+            this.directoryChooser.setTitle("Choose an output directory");
+
+            Stage stage = (Stage) window;
+            File file = this.directoryChooser.showDialog(stage.getOwner());
+
+            if (file != null && file.exists()){
+                directoryChooser.setInitialDirectory(file);
+                autosaveOptionsChoiceBox.getItems().add(file.getAbsolutePath());
+                autosaveOptionsChoiceBox.setValue(file.getAbsolutePath());
+            }
+            else{
+                Toolkit.getDefaultToolkit().beep();
+            }
+        }
+    }
 }
