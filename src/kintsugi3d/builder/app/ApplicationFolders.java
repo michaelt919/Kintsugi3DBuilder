@@ -13,6 +13,7 @@
 package kintsugi3d.builder.app;
 
 import java.io.File;
+import java.util.Objects;
 
 public class ApplicationFolders
 {
@@ -53,7 +54,7 @@ public class ApplicationFolders
         if (System.getProperty("Kintsugi3D.dataDir") != null)
         {
             File dir = new File(System.getProperty("Kintsugi3D.dataDir"));
-            if (dir.canRead() && dir.canWrite())
+            if (dir.mkdirs() && dir.canRead() && dir.canWrite())
             {
                 return dir;
             }
@@ -84,6 +85,15 @@ public class ApplicationFolders
      */
     public static File getUserCacheDirectory()
     {
+        if (System.getProperty("Kintsugi3D.dataDir") != null)
+        {
+            File dir = new File(System.getProperty("Kintsugi3D.cacheDir"));
+            if (dir.mkdirs() && dir.canRead() && dir.canWrite())
+            {
+                return dir;
+            }
+        }
+
         if (OS == OperatingSystem.WINDOWS)
         {
             return new File(new File(System.getenv("LOCALAPPDATA")), APP_FOLDER_NAME);
