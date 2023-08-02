@@ -36,5 +36,9 @@
             <directory>${project.basedir}/shaders</directory>
             <outputDirectory>shaders</outputDirectory>
         </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/jre</directory>
+            <outputDirectory>jre</outputDirectory>
+        </fileSet>
     </fileSets>
 </assembly>

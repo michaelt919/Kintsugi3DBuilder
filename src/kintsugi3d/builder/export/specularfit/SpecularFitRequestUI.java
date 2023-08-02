@@ -15,6 +15,7 @@ package kintsugi3d.builder.export.specularfit;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.UUID;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -29,6 +30,8 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import kintsugi3d.builder.app.ApplicationFolders;
+import kintsugi3d.builder.javafx.internal.ProjectModelBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.Context;
@@ -258,7 +261,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
             }
 
             // Image cache settings
-            settings.getImageCacheSettings().setCacheParentDirectory(new File(settings.getOutputDirectory(), "cache"));
+            settings.getImageCacheSettings().setCacheParentDirectory(new File(ApplicationFolders.getUserCacheDirectory(), "fit")); //TODO: expose to UI
             settings.getImageCacheSettings().setTextureWidth(settings.getTextureFitSettings().width);
             settings.getImageCacheSettings().setTextureHeight(settings.getTextureFitSettings().height);
             settings.getImageCacheSettings().setTextureSubdiv( // TODO expose this in the interface

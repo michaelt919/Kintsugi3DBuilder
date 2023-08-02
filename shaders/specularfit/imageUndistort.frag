@@ -24,14 +24,15 @@ uniform vec4 coefficientsK;
 uniform vec2 coefficientsP;
 uniform float skew;
 
-void main() {
+void main()
+{
     // Flip y-component vertically before applying undistortion equations
     vec2 uv = (vec2(fTexCoord.x, 1 - fTexCoord.y) * viewportSize - opticalCenter) / focalLength;
 
     float r2 = dot(uv, uv);
-    float r4 = pow(r2, 2);
-    float r6 = pow(r4, 2);
-    float r8 = pow(r6, 2);
+    float r4 = r2 * r2;
+    float r6 = r4 * r2;
+    float r8 = r4 * r4;
 
     vec2 uvd = uv;
     // Radial distortion
@@ -41,15 +42,18 @@ void main() {
     uvd.y = uv.y * distort;
 
     // Tangential distortion
-    float xy = uvd.x * uvd.y;
-    vec2 uvd22pr2 = r2 + (uvd * uvd) * 2;
-    uvd.x = uvd.x + (2 * coefficientsP[0] * xy + coefficientsP[1] * uvd22pr2.x);
-    uvd.y = uvd.y + (coefficientsP[0] * uvd22pr2.y + 2 * coefficientsP[1] * xy);
+    float xy = uv.x * uv.y;
+    vec2 rSqPlus2uvSq = r2 + (uv * uv) * 2;
+    uvd.x = uvd.x + (coefficientsP[0] * rSqPlus2uvSq.x + 2 * coefficientsP[1] * xy);
+    uvd.y = uvd.y + (coefficientsP[1] * rSqPlus2uvSq.y + 2 * coefficientsP[0] * xy);
 
     vec2 uvOut = (uvd * focalLength + opticalCenter + vec2(uvd.y * skew, 0)) / viewportSize;
-    if (uvOut.x > 1.0 || uvOut.x < 0.0 || uvOut.y > 1.0 || uvOut.y < 0.0) {
+    if (uvOut.x > 1.0 || uvOut.x < 0.0 || uvOut.y > 1.0 || uvOut.y < 0.0)
+    {
         fragColor = vec4(0,0,0,1);
-    } else {
+    }
+    else
+    {
         // Flip y-component back before performing texture lookup
         fragColor = texture(inputImage, vec2(uvOut.x, 1 - uvOut.y));
     }
