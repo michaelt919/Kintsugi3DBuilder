@@ -5,4 +5,4 @@ ImageBasedColorAppearance.iml
 *.log
 /out/*
 src/main/resources/recentFiles.txt
-/bundledjre
+/jre

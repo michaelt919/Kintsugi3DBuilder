@@ -70,7 +70,7 @@ Section "Bundled Java Runtime"
 
     ; Include JRE
     SetOutPath "$INSTDIR\jre"
-    File /r "bundledjre\*"
+    File /r "jre\*"
 
 SectionEnd
 
