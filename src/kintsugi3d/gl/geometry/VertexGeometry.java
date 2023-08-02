@@ -104,13 +104,12 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
      */
     public static VertexGeometry createFromOBJFile(File file) throws FileNotFoundException
     {
-        VertexGeometry inst = new VertexGeometry(file);
-
         Date timestamp = new Date();
 
         // Assume initially that normals and texture coordinates are present
-        inst.hasNormals = true;
-        inst.hasTexCoords = true;
+        boolean hasNormals = true;
+        boolean hasTexCoords = true;
+        String materialFileName = null;
 
         // Initialize dynamic tables to store the data from the file
         List<Vector3> vertexList = new ArrayList<>(100000);
@@ -134,10 +133,10 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
                 switch (id)
                 {
                     case "mtllib":
-                        if (inst.materialFileName == null)
+                        if (materialFileName == null)
                         {
                             // Use first material filename found
-                            inst.materialFileName = scanner.next();
+                            materialFileName = scanner.next();
                         }
                         break;
                     case "usemtl":
@@ -159,13 +158,13 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
                         break;
                     case "vt":
                         // Texture coordinate
-                        if (inst.hasTexCoords)
+                        if (hasTexCoords)
                         {
                             texCoordList.add(new Vector2(scanner.nextFloat(), scanner.nextFloat()));
                         }
                         break;
                     case "vn":
-                        if (inst.hasNormals)
+                        if (hasNormals)
                         {
                             // Vertex normal
                             float nx = scanner.nextFloat();
@@ -198,9 +197,9 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
                             if (parts.length < 2 || parts[1].isEmpty())
                             {
                                 // No texture coordinate
-                                inst.hasTexCoords = false;
+                                hasTexCoords = false;
                             }
-                            else if (inst.hasTexCoords)
+                            else if (hasTexCoords)
                             {
                                 // Process texture coordinate
                                 int texCoordIndex = Integer.parseInt(parts[1]);
@@ -220,9 +219,9 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
                             if (parts.length < 3 || parts[2].isEmpty())
                             {
                                 // No vertex normal
-                                inst.hasNormals = false;
+                                hasNormals = false;
                             }
-                            else if (inst.hasNormals)
+                            else if (hasNormals)
                             {
                                 // Process vertex normal
                                 int normalIndex = Integer.parseInt(parts[2]);
@@ -239,48 +238,6 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
                                 }
                             }
                         }
-
-                        if (inst.hasTexCoords)
-                        {
-                            if (inst.hasNormals)
-                            {
-                                Vector3 position0 = vertexList.get(vertexIndexList.get(vertexIndexList.size() - 3));
-                                Vector3 position1 = vertexList.get(vertexIndexList.get(vertexIndexList.size() - 2));
-                                Vector3 position2 = vertexList.get(vertexIndexList.get(vertexIndexList.size() - 1));
-
-                                Vector2 texCoords0 = texCoordList.get(texCoordIndexList.get(texCoordIndexList.size() - 3));
-                                Vector2 texCoords1 = texCoordList.get(texCoordIndexList.get(texCoordIndexList.size() - 2));
-                                Vector2 texCoords2 = texCoordList.get(texCoordIndexList.get(texCoordIndexList.size() - 1));
-
-                                Vector3[] tangents = computeTangents(position0, position1, position2, texCoords0, texCoords1, texCoords2);
-
-                                // TODO broken code - make it so that two vertices share tangents if they share normals AND texture coordinates
-
-                                NormalTexCoordPair pair0 = new NormalTexCoordPair(
-                                    normalIndexList.get(normalIndexList.size() - 3),
-                                    texCoordIndexList.get(texCoordIndexList.size() - 3));
-
-                                NormalTexCoordPair pair1 = new NormalTexCoordPair(
-                                    normalIndexList.get(normalIndexList.size() - 2),
-                                    texCoordIndexList.get(texCoordIndexList.size() - 2));
-
-                                NormalTexCoordPair pair2 = new NormalTexCoordPair(
-                                    normalIndexList.get(normalIndexList.size() - 1),
-                                    texCoordIndexList.get(texCoordIndexList.size() - 1));
-
-                                tangentMap.put(pair0, tangentMap.getOrDefault(pair0, Vector3.ZERO).plus(tangents[0]));
-                                tangentMap.put(pair1, tangentMap.getOrDefault(pair1, Vector3.ZERO).plus(tangents[0]));
-                                tangentMap.put(pair2, tangentMap.getOrDefault(pair2, Vector3.ZERO).plus(tangents[0]));
-
-                                bitangentMap.put(pair0, bitangentMap.getOrDefault(pair0, Vector3.ZERO).plus(tangents[1]));
-                                bitangentMap.put(pair1, bitangentMap.getOrDefault(pair1, Vector3.ZERO).plus(tangents[1]));
-                                bitangentMap.put(pair2, bitangentMap.getOrDefault(pair2, Vector3.ZERO).plus(tangents[1]));
-                            }
-                            else
-                            {
-                                // TODO
-                            }
-                        }
                         break;
                     default:
                         break;
@@ -291,88 +248,11 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
             }
         }
 
-        inst.centroid = sum.dividedBy(vertexList.size());
+        VertexGeometry inst = createFromArrays(file, hasNormals, hasTexCoords, vertexList, vertexIndexList, normalList,
+                normalIndexList, texCoordList, texCoordIndexList);
 
-        Map<NormalTexCoordPair, Vector4> orthoTangentsMap = new HashMap<>(100000);
-        for (Entry<NormalTexCoordPair, Vector3> entry : tangentMap.entrySet())
-        {
-            orthoTangentsMap.put(entry.getKey(),
-                orthogonalizeTangent(normalList.get(entry.getKey().normalIndex), entry.getValue(), bitangentMap.get(entry.getKey())));
-        }
-
-        float boundingBoxMinX = 0.0f;
-        float boundingBoxMinY = 0.0f;
-        float boundingBoxMinZ = 0.0f;
-        float boundingBoxMaxX = 0.0f;
-        float boundingBoxMaxY = 0.0f;
-        float boundingBoxMaxZ = 0.0f;
-        inst.boundingRadius = 0.0f;
-
-        // Copy the data from the dynamic tables into a data structure that OpenGL can use.
-        int vertexCount = vertexIndexList.size();
-        inst.vertices = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount);
-        int index = 0;
-        for (int k : vertexIndexList)
-        {
-            Vector3 vertex = vertexList.get(k);
-
-            boundingBoxMinX = Math.min(boundingBoxMinX, vertex.x);
-            boundingBoxMinY = Math.min(boundingBoxMinY, vertex.y);
-            boundingBoxMinZ = Math.min(boundingBoxMinZ, vertex.z);
-
-            boundingBoxMaxX = Math.max(boundingBoxMaxX, vertex.x);
-            boundingBoxMaxY = Math.max(boundingBoxMaxY, vertex.y);
-            boundingBoxMaxZ = Math.max(boundingBoxMaxZ, vertex.z);
-
-            inst.boundingRadius = Math.max(inst.boundingRadius, vertex.minus(inst.centroid).length());
-
-            inst.vertices.set(index, 0, vertex.x);
-            inst.vertices.set(index, 1, vertex.y);
-            inst.vertices.set(index, 2, vertex.z);
-
-            index++;
-        }
-
-        inst.boundingBoxCenter = new Vector3((boundingBoxMinX + boundingBoxMaxX) / 2, (boundingBoxMinY + boundingBoxMaxY) / 2, (boundingBoxMinZ + boundingBoxMaxZ) / 2);
-        inst.boundingBoxSize = new Vector3(boundingBoxMaxX - boundingBoxMinX, boundingBoxMaxY - boundingBoxMinY, boundingBoxMaxZ - boundingBoxMinZ);
-
-        if (inst.hasNormals)
-        {
-            inst.normals = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount);
-            int i = 0;
-            for (int k : normalIndexList)
-            {
-                inst.normals.set(i, 0, normalList.get(k).x);
-                inst.normals.set(i, 1, normalList.get(k).y);
-                inst.normals.set(i, 2, normalList.get(k).z);
-                i++;
-            }
-        }
-
-        if (inst.hasTexCoords)
-        {
-            inst.texCoords = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 2, vertexCount);
-            int i = 0;
-            for (int k : texCoordIndexList)
-            {
-                inst.texCoords.set(i, 0, texCoordList.get(k).x);
-                inst.texCoords.set(i, 1, texCoordList.get(k).y);
-                i++;
-            }
-        }
-
-        if (inst.hasTexCoords && inst.hasNormals)
-        {
-            inst.tangents = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, vertexCount);
-            for (int i = 0; i < normalIndexList.size(); i++)
-            {
-                inst.tangents.set(i, 0, orthoTangentsMap.get(new NormalTexCoordPair(normalIndexList.get(i), texCoordIndexList.get(i))).x);
-                inst.tangents.set(i, 1, orthoTangentsMap.get(new NormalTexCoordPair(normalIndexList.get(i), texCoordIndexList.get(i))).y);
-                inst.tangents.set(i, 2, orthoTangentsMap.get(new NormalTexCoordPair(normalIndexList.get(i), texCoordIndexList.get(i))).z);
-                inst.tangents.set(i, 3, orthoTangentsMap.get(new NormalTexCoordPair(normalIndexList.get(i), texCoordIndexList.get(i))).w);
-            }
-        }
-
+        // Handle OBJ materials
+        inst.materialFileName = materialFileName;
         if (inst.materialFileName != null)
         {
             try
@@ -612,6 +492,139 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
         }
 
         return geometry;
+    }
+
+    private static VertexGeometry createFromArrays(
+        File file, boolean hasNormals, boolean hasTexCoords, List<Vector3> vertexList, List<Integer> vertexIndexList,
+        List<Vector3> normalList, List<Integer> normalIndexList, List<Vector2> texCoordList, List<Integer> texCoordIndexList)
+    {
+        VertexGeometry inst = new VertexGeometry(file);
+        inst.hasNormals = hasNormals;
+        inst.hasTexCoords = hasTexCoords;
+
+        //TODO: loop over and find sum, tangents and bitangents
+        Vector3 sum = Vector3.ZERO;
+        Map<NormalTexCoordPair, Vector3> tangentMap = new HashMap<>(vertexIndexList.size());
+        Map<NormalTexCoordPair, Vector3> bitangentMap = new HashMap<>(vertexIndexList.size());
+
+        for (int f = 0; f < vertexIndexList.size() - 2; f += 3)
+        {
+            if (inst.hasNormals && inst.hasTexCoords)
+            {
+                Vector3 position0 = vertexList.get(vertexIndexList.get(f));
+                Vector3 position1 = vertexList.get(vertexIndexList.get(f + 1));
+                Vector3 position2 = vertexList.get(vertexIndexList.get(f + 2));
+
+                // Add positions to sum to compute centroid
+                sum = sum.plus(position0);
+                sum = sum.plus(position1);
+                sum = sum.plus(position2);
+
+                Vector2 texCoords0 = texCoordList.get(texCoordIndexList.get(f));
+                Vector2 texCoords1 = texCoordList.get(texCoordIndexList.get(f + 1));
+                Vector2 texCoords2 = texCoordList.get(texCoordIndexList.get(f + 2));
+
+                Vector3[] tangents = computeTangents(position0, position1, position2, texCoords0, texCoords1, texCoords2);
+
+                // TODO broken code - make it so that two vertices share tangents if they share normals AND texture coordinates
+
+                NormalTexCoordPair pair0 = new NormalTexCoordPair(normalIndexList.get(f), texCoordIndexList.get(f));
+                NormalTexCoordPair pair1 = new NormalTexCoordPair(normalIndexList.get(f + 1), texCoordIndexList.get(f + 1));
+                NormalTexCoordPair pair2 = new NormalTexCoordPair(normalIndexList.get(f + 2), texCoordIndexList.get(f + 2));
+
+                tangentMap.put(pair0, tangentMap.getOrDefault(pair0, Vector3.ZERO).plus(tangents[0]));
+                tangentMap.put(pair1, tangentMap.getOrDefault(pair1, Vector3.ZERO).plus(tangents[0]));
+                tangentMap.put(pair2, tangentMap.getOrDefault(pair2, Vector3.ZERO).plus(tangents[0]));
+
+                bitangentMap.put(pair0, bitangentMap.getOrDefault(pair0, Vector3.ZERO).plus(tangents[1]));
+                bitangentMap.put(pair1, bitangentMap.getOrDefault(pair1, Vector3.ZERO).plus(tangents[1]));
+                bitangentMap.put(pair2, bitangentMap.getOrDefault(pair2, Vector3.ZERO).plus(tangents[1]));
+            }
+        }
+
+        inst.centroid = sum.dividedBy(vertexList.size());
+
+        Map<NormalTexCoordPair, Vector4> orthoTangentsMap = new HashMap<>(tangentMap.size());
+        for (Entry<NormalTexCoordPair, Vector3> entry : tangentMap.entrySet())
+        {
+            orthoTangentsMap.put(entry.getKey(),
+                    orthogonalizeTangent(normalList.get(entry.getKey().normalIndex), entry.getValue(), bitangentMap.get(entry.getKey())));
+        }
+
+        float boundingBoxMinX = 0.0f;
+        float boundingBoxMinY = 0.0f;
+        float boundingBoxMinZ = 0.0f;
+        float boundingBoxMaxX = 0.0f;
+        float boundingBoxMaxY = 0.0f;
+        float boundingBoxMaxZ = 0.0f;
+        inst.boundingRadius = 0.0f;
+
+        // Copy the data from the dynamic tables into a data structure that OpenGL can use.
+        int vertexCount = vertexIndexList.size();
+        inst.vertices = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount);
+        int index = 0;
+        for (int k : vertexIndexList)
+        {
+            Vector3 vertex = vertexList.get(k);
+
+            boundingBoxMinX = Math.min(boundingBoxMinX, vertex.x);
+            boundingBoxMinY = Math.min(boundingBoxMinY, vertex.y);
+            boundingBoxMinZ = Math.min(boundingBoxMinZ, vertex.z);
+
+            boundingBoxMaxX = Math.max(boundingBoxMaxX, vertex.x);
+            boundingBoxMaxY = Math.max(boundingBoxMaxY, vertex.y);
+            boundingBoxMaxZ = Math.max(boundingBoxMaxZ, vertex.z);
+
+            inst.boundingRadius = Math.max(inst.boundingRadius, vertex.minus(inst.centroid).length());
+
+            inst.vertices.set(index, 0, vertex.x);
+            inst.vertices.set(index, 1, vertex.y);
+            inst.vertices.set(index, 2, vertex.z);
+
+            index++;
+        }
+
+        inst.boundingBoxCenter = new Vector3((boundingBoxMinX + boundingBoxMaxX) / 2, (boundingBoxMinY + boundingBoxMaxY) / 2, (boundingBoxMinZ + boundingBoxMaxZ) / 2);
+        inst.boundingBoxSize = new Vector3(boundingBoxMaxX - boundingBoxMinX, boundingBoxMaxY - boundingBoxMinY, boundingBoxMaxZ - boundingBoxMinZ);
+
+        if (inst.hasNormals)
+        {
+            inst.normals = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount);
+            int i = 0;
+            for (int k : normalIndexList)
+            {
+                inst.normals.set(i, 0, normalList.get(k).x);
+                inst.normals.set(i, 1, normalList.get(k).y);
+                inst.normals.set(i, 2, normalList.get(k).z);
+                i++;
+            }
+        }
+
+        if (inst.hasTexCoords)
+        {
+            inst.texCoords = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 2, vertexCount);
+            int i = 0;
+            for (int k : texCoordIndexList)
+            {
+                inst.texCoords.set(i, 0, texCoordList.get(k).x);
+                inst.texCoords.set(i, 1, texCoordList.get(k).y);
+                i++;
+            }
+        }
+
+        if (inst.hasTexCoords && inst.hasNormals)
+        {
+            inst.tangents = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, vertexCount);
+            for (int i = 0; i < normalIndexList.size(); i++)
+            {
+                inst.tangents.set(i, 0, orthoTangentsMap.get(new NormalTexCoordPair(normalIndexList.get(i), texCoordIndexList.get(i))).x);
+                inst.tangents.set(i, 1, orthoTangentsMap.get(new NormalTexCoordPair(normalIndexList.get(i), texCoordIndexList.get(i))).y);
+                inst.tangents.set(i, 2, orthoTangentsMap.get(new NormalTexCoordPair(normalIndexList.get(i), texCoordIndexList.get(i))).z);
+                inst.tangents.set(i, 3, orthoTangentsMap.get(new NormalTexCoordPair(normalIndexList.get(i), texCoordIndexList.get(i))).w);
+            }
+        }
+
+        return inst;
     }
 
     private static List<Vector3> computeNormals(List<Vector3> vertexList)
