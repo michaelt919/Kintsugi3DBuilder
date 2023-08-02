@@ -34,7 +34,7 @@
                 <executions>
                     <execution>
                         <id>l4j-clui</id>
-                        <phase>install</phase>
+                        <phase>package</phase>
                         <goals><goal>launch4j</goal></goals>
                         <configuration>
                             <headerType>gui</headerType>
@@ -58,7 +58,7 @@
                 <executions>
                     <execution>
                         <id>build-exec-jar</id>
-                        <phase>package</phase>
+                        <phase>prepare-package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
@@ -75,7 +75,7 @@
                     </execution>
                     <execution>
                         <id>build-dist-zip</id>
-                        <phase>install</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
@@ -84,6 +84,28 @@
                                 <descriptor>src/assembly/distribution.xml</descriptor>
                             </descriptors>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.digitalmediaserver</groupId>
+                <artifactId>nsis-maven-plugin</artifactId>
+                <version>1.0.3</version>
+                <configuration>
+                    <injectHeaderFile>true</injectHeaderFile>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>build-windows-installer</id>
+                        <phase>install</phase>
+                        <configuration>
+                            <scriptFile>installer.nsi</scriptFile>
+                            <outputFile>${project.artifactId}-setup.exe</outputFile>
+                        </configuration>
+                        <goals>
+                            <goal>generate-headerfile</goal>
+                            <goal>make</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

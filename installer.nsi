@@ -6,7 +6,6 @@
 !include "LangFile.nsh"
 
 Name "Kintsugi 3D Builder"
-OutFile "target\Kintsugi3DBuilder-Installer.exe"
 RequestExecutionLevel admin
 Unicode True
 ManifestDPIAware True
