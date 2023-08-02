@@ -85,7 +85,9 @@
            </columnConstraints>
             <Label text="Scale:" GridPane.halignment="LEFT" GridPane.rowIndex="0" />
             <TextField fx:id="scaleTxtField" prefHeight="25.0" prefWidth="56.0" GridPane.columnIndex="1" />
-            <Slider fx:id="scaleSlider" majorTickUnit="0.5" max="2.0" maxWidth="-Infinity" min="-2.0" prefHeight="37.0" prefWidth="274.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.halignment="RIGHT" />
+            <Slider fx:id="scaleSlider" majorTickUnit="0.5" max="2.0" maxWidth="-Infinity" min="-2.0" prefHeight="37.0"
+                    prefWidth="274.0" showTickLabels="true" showTickMarks="true"
+                    GridPane.columnIndex="2" GridPane.halignment="RIGHT" value="1.0" />
 
             <rowConstraints>
              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />

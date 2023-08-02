@@ -25,6 +25,8 @@ public class ObjectModelWrapper extends ExtendedObjectModelBase
     private final MultithreadValue<Float> rotationY;
     private final MultithreadValue<Float> rotationZ;
 
+    private final MultithreadValue<Float> scale;
+
     public ObjectModelWrapper(ExtendedObjectModel baseModel)
     {
         this.baseModel = baseModel;
@@ -32,6 +34,7 @@ public class ObjectModelWrapper extends ExtendedObjectModelBase
         this.rotationX = MultithreadValue.createFromFunctions(baseModel::getRotationX, baseModel::setRotationX);
         this.rotationY = MultithreadValue.createFromFunctions(baseModel::getRotationY, baseModel::setRotationY);
         this.rotationZ = MultithreadValue.createFromFunctions(baseModel::getRotationZ, baseModel::setRotationZ);
+        this.scale = MultithreadValue.createFromFunctions(baseModel::getScale, baseModel::setScale);
     }
 
     @Override
@@ -65,6 +68,9 @@ public class ObjectModelWrapper extends ExtendedObjectModelBase
     }
 
     @Override
+    public float getScale(){return this.scale.getValue();}
+
+    @Override
     public void setCenter(Vector3 center)
     {
         this.center.setValue(center);
@@ -87,4 +93,7 @@ public class ObjectModelWrapper extends ExtendedObjectModelBase
     {
         this.rotationX.setValue(rotationX);
     }
+
+    @Override
+    public void setScale(float scale){this.scale.setValue(scale);}
 }

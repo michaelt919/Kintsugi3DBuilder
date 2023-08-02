@@ -22,4 +22,6 @@ public interface ExtendedObjectModel extends ObjectModel, ReadonlyExtendedObject
     void setRotationZ(float rotationZ);
     void setRotationY(float rotationY);
     void setRotationX(float rotationX);
+
+    void setScale(float scale);
 }

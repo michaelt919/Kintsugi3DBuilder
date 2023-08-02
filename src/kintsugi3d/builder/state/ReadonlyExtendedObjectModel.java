@@ -28,4 +28,5 @@ public interface ReadonlyExtendedObjectModel extends ReadonlyObjectModel
     float getRotationZ();
     float getRotationY();
     float getRotationX();
+    float getScale();
 }
