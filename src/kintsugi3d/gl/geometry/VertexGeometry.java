@@ -14,15 +14,11 @@ package kintsugi3d.gl.geometry;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.jengineering.sjmply.PLY;
 import org.jengineering.sjmply.PLYElementList;
-import org.jengineering.sjmply.PLYType;
-import org.jengineering.sjmply.PLY_Plotly;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.Context;
@@ -498,32 +494,35 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
                     }
                 }
             }
+        }
 
+        if (!geometry.hasNormals)
+        {
+            normalList = computeNormals(vertexList);
+            geometry.hasNormals = true;
+        }
+
+        for (int i = 0; i < vertexList.size() - 2; i+=3)
+        {
             if (geometry.hasNormals && geometry.hasTexCoords)
             {
-                Vector3 position0 = vertexList.get(vertexList.size() - 3);
-                Vector3 position1 = vertexList.get(vertexList.size() - 2);
-                Vector3 position2 = vertexList.get(vertexList.size() - 1);
+                Vector3 position0 = vertexList.get(i);
+                Vector3 position1 = vertexList.get(i + 1);
+                Vector3 position2 = vertexList.get(i + 2);
 
-                Vector2 texCoords0 = texCoordList.get(texCoordList.size() - 3);
-                Vector2 texCoords1 = texCoordList.get(texCoordList.size() - 2);
-                Vector2 texCoords2 = texCoordList.get(texCoordList.size() - 1);
+                Vector2 texCoords0 = texCoordList.get(i);
+                Vector2 texCoords1 = texCoordList.get(i + 1);
+                Vector2 texCoords2 = texCoordList.get(i + 2);
 
                 Vector3[] tangents = computeTangents(position0, position1, position2, texCoords0, texCoords1, texCoords2);
 
                 // TODO broken code - make it so that two vertices share tangents if they share normals AND texture coordinates
 
-                NormalTexCoordPair pair0 = new NormalTexCoordPair(
-                        normalList.size() - 3,
-                        texCoordList.size() - 3);
+                NormalTexCoordPair pair0 = new NormalTexCoordPair(i, i);
 
-                NormalTexCoordPair pair1 = new NormalTexCoordPair(
-                        normalList.size() - 2,
-                        texCoordList.size() - 2);
+                NormalTexCoordPair pair1 = new NormalTexCoordPair(i + 1, i + 1);
 
-                NormalTexCoordPair pair2 = new NormalTexCoordPair(
-                        normalList.size() - 1,
-                        texCoordList.size() - 1);
+                NormalTexCoordPair pair2 = new NormalTexCoordPair(i + 2, i + 2);
 
                 tangentMap.put(pair0, tangentMap.getOrDefault(pair0, Vector3.ZERO).plus(tangents[0]));
                 tangentMap.put(pair1, tangentMap.getOrDefault(pair1, Vector3.ZERO).plus(tangents[0]));
@@ -613,6 +612,34 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
         }
 
         return geometry;
+    }
+
+    private static List<Vector3> computeNormals(List<Vector3> vertexList)
+    {
+        List<Vector3> normals = new ArrayList<>(Collections.nCopies(vertexList.size(), Vector3.ZERO));
+
+        // Iterate over faces
+        for (int i = 0; i < vertexList.size() - 2; i+=3)
+        {
+            Vector3 p1 = vertexList.get(i);
+            Vector3 p2 = vertexList.get(i + 1);
+            Vector3 p3 = vertexList.get(i + 2);
+
+            Vector3 n = (p2.minus(p1)).cross(p3.minus(p1));
+            n=n.times(-1.f);
+
+            normals.set(i, normals.get(i).plus(n));
+            normals.set(i + 1, normals.get(i + 1).plus(n));
+            normals.set(i + 2, normals.get(i + 2).plus(n));
+        }
+
+        // Normalize summed face normals
+        for (int i = 0; i < normals.size(); i++)
+        {
+            normals.set(i, normals.get(i).normalized());
+        }
+
+        return normals;
     }
 
     private static Vector3[] computeTangents(
