@@ -624,7 +624,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
     public ImageCache<ContextType> cache(ImageCacheSettings settings) throws IOException
     {
-        settings.setViewSetUid(getViewSet().getUuid());
+        settings.setCacheFolderName(getViewSet().getUuid().toString());
 
         ImageCache<ContextType> cache = new ImageCache<>(this, settings);
 

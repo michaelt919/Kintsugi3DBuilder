@@ -21,7 +21,7 @@ public class ImageCacheSettings
     private int textureHeight;
     private int textureSubdiv;
     private int sampledSize;
-    private UUID viewSetUid;
+    private String cacheFolderName;
 
     public File getCacheDirectory()
     {
@@ -80,9 +80,9 @@ public class ImageCacheSettings
 
     public String getFolderNameFromSettings()
     {
-        if (viewSetUid != null)
+        if (cacheFolderName != null)
         {
-            return String.format("%s/%d-%d-%d-%d", viewSetUid, textureWidth, textureHeight, textureSubdiv, sampledSize);
+            return String.format("%s/%d-%d-%d-%d", cacheFolderName, textureWidth, textureHeight, textureSubdiv, sampledSize);
         }
         else
         {
@@ -105,13 +105,13 @@ public class ImageCacheSettings
         return (int) Math.round((double) j * (double) textureHeight / (double) textureSubdiv);
     }
 
-    public UUID getViewSetUid()
+    public String getCacheFolderName()
     {
-        return viewSetUid;
+        return cacheFolderName;
     }
 
-    public void setViewSetUid(UUID viewSetUid)
+    public void setCacheFolderName(String cacheFolderName)
     {
-        this.viewSetUid = viewSetUid;
+        this.cacheFolderName = cacheFolderName;
     }
 }
