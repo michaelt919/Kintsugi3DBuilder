@@ -37,10 +37,11 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
-import javafx.scene.paint.Color;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
@@ -106,15 +107,23 @@ public class MenubarController
     @FXML private CheckMenuItem phyMaskingCheckMenuItem;
     @FXML private CheckMenuItem fresnelEffectCheckMenuItem;
 
-    @FXML public CustomMenuItem autoCacheClearingMenuItem;
-    @FXML public CustomMenuItem autosaveMenuItem;
-
-    //need to manually set the color of nodes when they are inside a customMenuItem
-    private ArrayList<CustomMenuItem> customMenuItems;
-
+    @FXML private CheckMenuItem autoCacheClearingCheckMenuItem;
+    @FXML private CheckMenuItem autoSaveCheckMenuItem;
+    @FXML private CheckMenuItem preloadVisibilityEtcCheckMenuItem;
     @FXML public ChoiceBox<String> autosaveOptionsChoiceBox;
 
     @FXML private CheckMenuItem imageCompressionCheckMenuItem;
+
+    @FXML private Label widthLabel;
+    @FXML private TextField widthTxtField;
+    @FXML private Label heightLabel;
+    @FXML private TextField heightTxtField;
+
+    @FXML public Slider perLightIntensitySlider;
+    @FXML public Slider ambientLightIntensitySlider;
+
+    @FXML public TextField perLightIntensityTxtField;
+    @FXML public TextField ambientLightIntensityTxtField;
 
     @FXML private FileChooser projectFileChooser;
 
@@ -256,6 +265,7 @@ public class MenubarController
 
         initToggleGroups();
         bindCheckMenuItems();
+        bindSlidersToTxtFields();
 
         lightCalibrationCheckMenuItem.selectedProperty().addListener(observable ->
         {
@@ -269,22 +279,6 @@ public class MenubarController
         RecentProjects.initializeMenubarController(this);
         updateRecentProjectsMenu();
 
-        customMenuItems = new ArrayList<>();
-        customMenuItems.add(autosaveMenuItem);
-        customMenuItems.add(autoCacheClearingMenuItem);
-
-        //TODO: DOESN'T QUITE FORMAT PROPERLY
-        //checkbox text should change color whenever the user hovers into the menu, but it only changes color
-        //when the user hovers into the checkbox itself
-        for (CustomMenuItem item : customMenuItems){
-            //turn menu item text black if it is not rolled over
-            //if rolled over, turn white
-            //(this behavior does not happen by default)
-            Labeled labeledNode = (Labeled) item.getContent();
-            labeledNode.setOnMouseEntered(event -> labeledNode.setTextFill(Color.WHITE));
-            labeledNode.setOnMouseExited(event -> labeledNode.setTextFill(Color.BLACK));
-        }
-
         //add "Default Path" and "Choose Location..." items to choiceBox
         //initialize directory selection dropdown menu
         autosaveOptionsChoiceBox.getItems().addAll(defaultAutosaveSelection, CHOOSE_LOCATION);
@@ -295,6 +289,7 @@ public class MenubarController
         //attach event handler (this cannot be done in scenebuilder)
         autosaveOptionsChoiceBox.setOnAction(this::handleDirectoryDropdownSelection);
     }
+
 
     public FramebufferView getFramebufferView()
     {
@@ -343,6 +338,10 @@ public class MenubarController
             internalModels.getSettingsModel().getBooleanProperty("multisamplingEnabled"));
         sceneWindowMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("sceneWindowOpen"));
+    }
+
+    private void bindSlidersToTxtFields() {
+        //TODO: BIND INTENSITY SLIDERS TO TEXT FIELDS HERE
     }
 
     //Menubar->File
@@ -827,5 +826,16 @@ public class MenubarController
                 Toolkit.getDefaultToolkit().beep();
             }
         }
+    }
+
+    public void updatePreloadVisibilityEtc() {
+        //if checkbox is unchecked, disable "Preload Visibility & Shadow Testing" options
+        boolean isPreloadVisEnabled = preloadVisibilityEtcCheckMenuItem.isSelected();
+
+        heightLabel.setDisable(!isPreloadVisEnabled);
+        widthLabel.setDisable(!isPreloadVisEnabled);
+
+        heightTxtField.setDisable(!isPreloadVisEnabled);
+        widthTxtField.setDisable(!isPreloadVisEnabled);
     }
 }

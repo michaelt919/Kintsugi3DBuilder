@@ -49,51 +49,68 @@
       <Menu mnemonicParsing="false" text="Workflow">
         <items>
           <MenuItem mnemonicParsing="false" text="Pre-process Calibration (UNFINISHED)" />
+            <MenuItem mnemonicParsing="false" onAction="#eyedropperColorChecker" text="Color Calibration">
+               <accelerator>
+                  <KeyCodeCombination alt="UP" code="B" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+               </accelerator></MenuItem>
             <MenuItem mnemonicParsing="false" text="Process (UNFINISHED)" />
         </items>
       </Menu>
       <Menu mnemonicParsing="false" text="Environment">
          <items>
-            <CheckMenuItem mnemonicParsing="false" text="Snap-based Object Rotation (UNFINISHED)" />
+            <CheckMenuItem mnemonicParsing="false" selected="true" text="Snap-based Object Rotation (UNFINISHED)" />
             <SeparatorMenuItem mnemonicParsing="false" />
             <Menu mnemonicParsing="false" text="Per-light Intensity (UNFINISHED)">
               <items>
-                  <MenuItem mnemonicParsing="false" onAction="#eyedropperColorChecker" text="Color Calibration" />
+                  <MenuItem mnemonicParsing="false" text="Color Picker (UNFINISHED)" />
                   <CustomMenuItem mnemonicParsing="false" text="Intensity Slider Selection">
-                    <content>
-                        <HBox>
+                      <content>
+                        <VBox alignment="CENTER_LEFT" spacing="10.0">
                            <children>
-                              <Slider />
+                                  <Label text="Intensity Selection"> text="Intensity Selection"</Label>
+                                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                    <children>
+                                    <TextField fx:id="perLightIntensityTxtField" prefWidth="50.0" />
+                                        <Slider fx:id="perLightIntensitySlider" showTickLabels="true" showTickMarks="true">
+                                       <HBox.margin>
+                                          <Insets />
+                                       </HBox.margin></Slider>
+                                    </children>
+                                </HBox>
                            </children>
-                        </HBox>
-                    </content>
+                        </VBox>
+                      </content>
                   </CustomMenuItem>
               </items>
             </Menu>
             <Menu mnemonicParsing="false" text="Ambient light settings (UNFINISHED)">
-              <items>
-                  <MenuItem mnemonicParsing="false" onAction="#eyedropperColorChecker" text="Color Calibration" />
-                  <CustomMenuItem mnemonicParsing="false" text="Intensity Slider Selection">
-                      <content>
-                          <HBox>
-                              <Label> text="Intensity Selection"</Label>
-                              <children>
-                                  <Slider />
-                              </children>
-                          </HBox>
-                      </content>
-                  </CustomMenuItem>
-              </items>
+                <items>
+                    <MenuItem mnemonicParsing="false" text="Color Picker (UNFINISHED)" />
+                    <CustomMenuItem mnemonicParsing="false" text="Intensity Slider Selection">
+                        <content>
+                            <VBox alignment="CENTER_LEFT" spacing="10.0">
+                                <children>
+                                    <Label text="Intensity Selection"> text="Intensity Selection"</Label>
+                                    <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                        <children>
+                                            <TextField fx:id="ambientLightIntensityTxtField" prefWidth="50.0" />
+                                            <Slider fx:id="ambientLightIntensitySlider" showTickLabels="true" showTickMarks="true">
+                                                <HBox.margin>
+                                                    <Insets />
+                                                </HBox.margin></Slider>
+                                        </children>
+                                    </HBox>
+                                </children>
+                            </VBox>
+                        </content>
+                    </CustomMenuItem>
+                </items>
             </Menu>
          </items>
       </Menu>
       <Menu mnemonicParsing="false" text="System Settings">
          <items>
-             <CustomMenuItem fx:id="autoCacheClearingMenuItem" hideOnClick="false" mnemonicParsing="false" text="Auto Cache Clearing (UNFINISHED)">
-                 <content>
-                     <CheckBox fx:id="autoCacheClearingCheckBox" text="Auto Cache Clearing (UNFINISHED)" />
-                 </content>
-             </CustomMenuItem>
+            <CheckMenuItem fx:id="autoCacheClearingCheckMenuItem" mnemonicParsing="false" selected="true" text="Auto Cache Clearing" />
             <Menu mnemonicParsing="false" text="Cache Path">
               <items>
                   <SeparatorMenuItem mnemonicParsing="false">
@@ -118,11 +135,7 @@
               </items>
             </Menu>
             <SeparatorMenuItem mnemonicParsing="false" />
-            <CustomMenuItem fx:id="autosaveMenuItem" hideOnClick="false" mnemonicParsing="false" text="Autosave">
-              <content>
-                <CheckBox fx:id="autosaveCheckBox" text="Autosave" />
-              </content>
-            </CustomMenuItem>
+            <CheckMenuItem fx:id="autoSaveCheckMenuItem" mnemonicParsing="false" selected="true" text="Autosave" />
             <CustomMenuItem hideOnClick="false" mnemonicParsing="false" text="Options">
                <content>
                   <ChoiceBox fx:id="autosaveOptionsChoiceBox" prefWidth="200.0" />
@@ -135,18 +148,29 @@
                   <Label text="Preload Visibility and Shadow Testing" />
                </graphic>
             </CustomMenuItem>
-            <CheckMenuItem fx:id="preloadVisibilityEtcCheckMenuItem" mnemonicParsing="false" selected="true" text="Preload Visibility &amp; Shadow Testing" />
+            <CheckMenuItem fx:id="preloadVisibilityEtcCheckMenuItem" mnemonicParsing="false" onAction="#updatePreloadVisibilityEtc" selected="true" text="Preload Visibility &amp; Shadow Testing" />
             <CustomMenuItem mnemonicParsing="false" text="Resolution Input Fields">
               <content>
-                  <HBox alignment="CENTER_LEFT" spacing="5.0">
+                  <HBox alignment="CENTER_LEFT" spacing="10.0">
                      <children>
-                        <Label text="X: " textFill="black">
+                        <HBox alignment="CENTER_LEFT">
+                           <children>
+                              <Label fx:id = "widthLabel" text="Width: " textFill="black">
                         </Label>
-                         <TextField prefWidth="50.0" />
-                         <Label text="Y: " textFill="black">
+                               <TextField fx:id= "widthTxtField" prefWidth="50.0" />
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT">
+                           <children>
+                               <Label fx:id = "heightLabel" text="Height: " textFill="black">
                          </Label>
-                         <TextField prefWidth="50.0" />
+                               <TextField fx:id= "heightTxtField" prefWidth="50.0" />
+                           </children>
+                        </HBox>
                      </children>
+                     <padding>
+                        <Insets left="5.0" right="5.0" />
+                     </padding>
                   </HBox>
               </content>
             </CustomMenuItem>
