@@ -19,6 +19,7 @@ import java.util.Date;
 import java.util.Objects;
 import javax.imageio.ImageIO;
 
+import kintsugi3d.builder.app.ApplicationFolders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
@@ -101,8 +102,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         private void updateViewSetFromLoadOptions()
         {
             this.viewSet.setPreviewImageResolution(loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
-            this.viewSet.setRelativePreviewImagePathName(
-                String.format("_%dx%d", loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight()));
+            String directoryName = String.format("preview/%s/_%dx%d", viewSet.getUuid().toString(), loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
+            this.viewSet.setRelativePreviewImagePathName(new File(ApplicationFolders.getUserCacheDirectory(), directoryName).toString());
         }
 
         public Builder<ContextType> setPrimaryView(String primaryViewName)
@@ -624,6 +625,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
     public ImageCache<ContextType> cache(ImageCacheSettings settings) throws IOException
     {
+        settings.setCacheFolderName(getViewSet().getUuid().toString());
+
         ImageCache<ContextType> cache = new ImageCache<>(this, settings);
 
         if (!cache.isInitialized())
