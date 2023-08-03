@@ -348,9 +348,9 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
 
         int[][] vertex_indices = face.property(LIST(UINT32,INT32),"vertex_indices");
 
-        boolean faceTexCoords = !hasTexCoords && face.properties.containsKey("texcoord");
+        boolean facialTexCoords = !hasTexCoords && face.properties.containsKey("texcoord");
         float[][] faceCoords = {};
-        if (faceTexCoords)
+        if (facialTexCoords)
         {
             hasTexCoords = true;
             face.convertProperty("texcoord", LIST(UINT32,FLOAT32));
@@ -371,14 +371,12 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
 
                 if (hasTexCoords)
                 {
-                    if (faceTexCoords)
+                    if (facialTexCoords)
                     {
-                        //TODO: Parse face texture coordinates
+                        texCoordList.add(new Vector2(faceCoords[i][v*2], faceCoords[i][(v*2)+1]));
                     }
-                    else
-                    {
-                        texCoordIndexList.add(vertexIndex);
-                    }
+
+                    texCoordIndexList.add(vertexIndex);
                 }
             }
         }
