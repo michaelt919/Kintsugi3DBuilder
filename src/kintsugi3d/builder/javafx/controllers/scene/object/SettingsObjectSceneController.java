@@ -1,12 +1,13 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2022
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 The Regents of the University of Minnesota
  *
- *  Licensed under GPLv3
- *  ( http://www.gnu.org/licenses/gpl-3.0.html )
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
  *
- *  This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  *
- *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
 package kintsugi3d.builder.javafx.controllers.scene.object;
@@ -52,11 +53,9 @@ public class SettingsObjectSceneController implements Initializable
     @FXML private Slider rotateZSlider;
     @FXML private Button selectPointButton;
 
-    private final SafeLogScaleNumberStringConverter converter = new SafeLogScaleNumberStringConverter(1);
+    private final SafeLogScaleNumberStringConverter log10converter = new SafeLogScaleNumberStringConverter(1);
 
-
-
-    private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
+    private final SafeNumberStringConverter converter = new SafeNumberStringConverter(0);
 
     @Override
     public void initialize(URL location, ResourceBundle resources)
@@ -73,7 +72,7 @@ public class SettingsObjectSceneController implements Initializable
         scaleSlider.setLabelFormatter(new StringConverter<>() {
             @Override
             public String toString(Double object) {
-                String out = converter.toString(object);
+                String out = log10converter.toString(object);
                 if (out.length() >= 4) {
                     return out.substring(0, 4);
                 } else {
@@ -115,14 +114,16 @@ public class SettingsObjectSceneController implements Initializable
     private void bind(ObjectPoseSetting objectPose)
     {
 
-        xCenterTextField.textProperty().bindBidirectional(objectPose.centerXProperty(), n);
-        yCenterTextField.textProperty().bindBidirectional(objectPose.centerYProperty(), n);
-        zCenterTextField.textProperty().bindBidirectional(objectPose.centerZProperty(), n);
-        rotateYTextField.textProperty().bindBidirectional(objectPose.rotateYProperty(), n);
-        rotateXTextField.textProperty().bindBidirectional(objectPose.rotateXProperty(), n);
-        rotateZTextField.textProperty().bindBidirectional(objectPose.rotateZProperty(), n);
+        xCenterTextField.textProperty().bindBidirectional(objectPose.centerXProperty(), converter);
+        yCenterTextField.textProperty().bindBidirectional(objectPose.centerYProperty(), converter);
+        zCenterTextField.textProperty().bindBidirectional(objectPose.centerZProperty(), converter);
+        rotateYTextField.textProperty().bindBidirectional(objectPose.rotateYProperty(), converter);
+        rotateXTextField.textProperty().bindBidirectional(objectPose.rotateXProperty(), converter);
+        rotateZTextField.textProperty().bindBidirectional(objectPose.rotateZProperty(), converter);
+        scaleTxtField.textProperty().bindBidirectional(objectPose.scaleProperty(), log10converter);
 
-        //TODO: BIND SCALE SLIDER
+        //default value must be set here because it is overwritten when the slider is converted to logarithmic format
+        scaleTxtField.textProperty().setValue("1.0");
 
         xCenterSlider.valueProperty().bindBidirectional(objectPose.centerXProperty());
         yCenterSlider.valueProperty().bindBidirectional(objectPose.centerYProperty());
@@ -130,6 +131,7 @@ public class SettingsObjectSceneController implements Initializable
         rotateYSlider.valueProperty().bindBidirectional(objectPose.rotateYProperty());
         rotateXSlider.valueProperty().bindBidirectional(objectPose.rotateXProperty());
         rotateZSlider.valueProperty().bindBidirectional(objectPose.rotateZProperty());
+        scaleSlider.valueProperty().bindBidirectional(objectPose.scaleProperty());
     }
 
     private void unbind(ObjectPoseSetting objectPose)
@@ -141,8 +143,7 @@ public class SettingsObjectSceneController implements Initializable
         rotateYTextField.textProperty().unbindBidirectional(objectPose.rotateYProperty());
         rotateXTextField.textProperty().unbindBidirectional(objectPose.rotateXProperty());
         rotateZTextField.textProperty().unbindBidirectional(objectPose.rotateZProperty());
-
-        //TODO: UNBIND SCALE SLIDER
+        scaleTxtField.textProperty().unbindBidirectional(objectPose.scaleProperty());
 
         xCenterSlider.valueProperty().unbindBidirectional(objectPose.centerXProperty());
         yCenterSlider.valueProperty().unbindBidirectional(objectPose.centerYProperty());
@@ -150,6 +151,7 @@ public class SettingsObjectSceneController implements Initializable
         rotateYSlider.valueProperty().unbindBidirectional(objectPose.rotateYProperty());
         rotateXSlider.valueProperty().unbindBidirectional(objectPose.rotateXProperty());
         rotateZSlider.valueProperty().unbindBidirectional(objectPose.rotateZProperty());
+        scaleSlider.valueProperty().unbindBidirectional(objectPose.scaleProperty());
     }
 
     public void setOnActionSelectPoint(EventHandler<ActionEvent> actionEventEventHandler)
