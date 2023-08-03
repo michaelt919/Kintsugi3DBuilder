@@ -321,54 +321,59 @@ public final class FramebufferView extends Region
                             Thread.onSpinWait();
                         }
 
-                        if (!frontImagePending) // could still be pending if the wait loop timed out
+                        try
                         {
-                            // prevent swap in the middle of graphics thread writing to back copy buffer
-                            synchronized (backCopyBufferLock)
+                            if (!frontImagePending) // could still be pending if the wait loop timed out
                             {
-                                if (copyBufferSwapReady)
+                                // prevent swap in the middle of graphics thread writing to back copy buffer
+                                synchronized (backCopyBufferLock)
                                 {
-                                    copyBufferSwapReady = false;
+                                    if (copyBufferSwapReady)
+                                    {
+                                        copyBufferSwapReady = false;
 
-                                    // Swap copy buffers
-                                    // back is written to by graphics thread
-                                    // front is read from by copy thread
-                                    ByteBuffer tmp = frontCopyBuffer;
-                                    frontCopyBuffer = backCopyBuffer;
-                                    backCopyBuffer = tmp;
+                                        // Swap copy buffers
+                                        // back is written to by graphics thread
+                                        // front is read from by copy thread
+                                        ByteBuffer tmp = frontCopyBuffer;
+                                        frontCopyBuffer = backCopyBuffer;
+                                        backCopyBuffer = tmp;
+                                    }
                                 }
+
+                                //noinspection FloatingPointEquality
+                                if (fboCopyBufferDimensions.width != backImage.getWidth() || fboCopyBufferDimensions.height != backImage.getHeight())
+                                {
+                                    backImage = new WritableImage(fboCopyBufferDimensions.width, fboCopyBufferDimensions.height);
+                                }
+
+                                backImage.getPixelWriter().setPixels(0, 0, fboCopyBufferDimensions.width, fboCopyBufferDimensions.height,
+                                    PixelFormat.getByteBgraInstance(), frontCopyBuffer, fboCopyBufferDimensions.width * 4);
+
+                                // Swap images
+                                WritableImage tmp = frontImage;
+                                frontImage = backImage;
+                                backImage = tmp;
+
+                                frontImagePending = true;
                             }
-
-                            //noinspection FloatingPointEquality
-                            if (fboCopyBufferDimensions.width != backImage.getWidth() || fboCopyBufferDimensions.height != backImage.getHeight())
-                            {
-                                backImage = new WritableImage(fboCopyBufferDimensions.width, fboCopyBufferDimensions.height);
-                            }
-
-                            backImage.getPixelWriter().setPixels(0, 0, fboCopyBufferDimensions.width, fboCopyBufferDimensions.height,
-                                PixelFormat.getByteBgraInstance(), frontCopyBuffer, fboCopyBufferDimensions.width * 4);
-
-                            // Swap images
-                            WritableImage tmp = frontImage;
-                            frontImage = backImage;
-                            backImage = tmp;
-
-                            frontImagePending = true;
                         }
-
-                        // prevent race conditions related to starting the next thread
-                        synchronized (nextCopyThreadLock)
+                        finally // always need to indicate that the thread finished, even if an exception was thrown.
                         {
-                            if (nextCopyThread != null)
+                            // prevent race conditions related to starting the next thread
+                            synchronized (nextCopyThreadLock)
                             {
-                                // Kick off the next copy thread if another is ready to go.
-                                nextCopyThread.start();
-                                nextCopyThread = null;
-                            }
-                            else
-                            {
-                                // Otherwise, there's no longer a copy thread running
-                                copyThreadRunning = false;
+                                if (nextCopyThread != null)
+                                {
+                                    // Kick off the next copy thread if another is ready to go.
+                                    nextCopyThread.start();
+                                    nextCopyThread = null;
+                                }
+                                else
+                                {
+                                    // Otherwise, there's no longer a copy thread running
+                                    copyThreadRunning = false;
+                                }
                             }
                         }
                     });
