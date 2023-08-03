@@ -47,7 +47,8 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         throws FileNotFoundException
     {
         this.context = resources.getContext();
-        this.estimationProgram = createDiffuseEstimationProgram(resources, programFactory);
+        this.estimationProgram = includeConstant ? createDiffuseTranslucentEstimationProgram(resources, programFactory)
+            : createDiffuseEstimationProgram(resources, programFactory);
         this.textureFitSettings = settings;
         this.includeConstant = includeConstant;
 
@@ -65,6 +66,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         if (includeConstant)
         {
             builder.addColorAttachment(ColorFormat.RGBA8); // Add attachment for storing constant term texture
+            builder.addColorAttachment(ColorFormat.RGBA8); // Add attachment for storing quadratic term texture
         }
 
         return builder.createFramebufferObject();
@@ -90,6 +92,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         if (includeConstant)
         {
             framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+            framebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
         }
 
         // Perform diffuse fit
@@ -139,6 +142,11 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         return framebuffer.getColorAttachmentTexture(1);
     }
 
+    public Texture2D<ContextType> getQuadraticMap()
+    {
+        return framebuffer.getColorAttachmentTexture(2);
+    }
+
     public boolean includesConstantMap()
     {
         return includeConstant;
@@ -149,7 +157,13 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
             ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
     {
         return programFactory.createProgram(resources,
-            new File("shaders/common/texspace_dynamic.vert"),
-            new File("shaders/specularfit/estimateDiffuse.frag"));
+            new File("shaders/common/texspace_dynamic.vert"), new File("shaders/specularfit/estimateDiffuse.frag"));
+    }
+    private static <ContextType extends Context<ContextType>>
+    ProgramObject<ContextType> createDiffuseTranslucentEstimationProgram(
+        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
+    {
+        return programFactory.createProgram(resources,
+            new File("shaders/common/texspace_dynamic.vert"), new File("shaders/specularfit/estimateDiffuseTranslucent.frag"));
     }
 }

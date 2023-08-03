@@ -27,20 +27,11 @@ import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
  */
 public final class SpecularFitFinal<ContextType extends Context<ContextType>> extends SpecularFitBase<ContextType>
 {
-    /**
-     * Diffuse map from file
-     */
     private final Texture2D<ContextType> diffuseMap;
-
-    /**
-     * Normal map from file
-     */
     private final Texture2D<ContextType> normalMap;
-
-    /**
-     * Constant term map from file
-     */
     private final Texture2D<ContextType> constantMap;
+    private final Texture2D<ContextType> quadraticMap;
+
 
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> createEmpty(
         ContextType context, TextureFitSettings textureFitSettings,
@@ -79,6 +70,16 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
                 .setMipmapsEnabled(true)
                 .createTexture()
             : null;
+
+        // Allocate constant map
+        quadraticMap = includeConstant ?
+            context.getTextureFactory()
+                .build2DColorTexture(textureFitSettings.width, textureFitSettings.height)
+                .setInternalFormat(ColorFormat.RGB8)
+                .setLinearFilteringEnabled(true)
+                .setMipmapsEnabled(true)
+                .createTexture()
+            : null;
     }
 
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> loadFromPriorSolution(
@@ -109,7 +110,16 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
         File constantMapFile = new File(priorSolutionDirectory, "constant.png");
         constantMap = constantMapFile.exists() ?
             context.getTextureFactory()
-                .build2DColorTextureFromFile(new File(priorSolutionDirectory, "constant.png"), true)
+                .build2DColorTextureFromFile(constantMapFile, true)
+                .setLinearFilteringEnabled(true)
+                .createTexture()
+            : null;
+
+        // Load constant map
+        File quadraticMapFile = new File(priorSolutionDirectory, "quadratic.png");
+        quadraticMap = quadraticMapFile.exists() ?
+            context.getTextureFactory()
+                .build2DColorTextureFromFile(quadraticMapFile, true)
                 .setLinearFilteringEnabled(true)
                 .createTexture()
             : null;
@@ -121,9 +131,11 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
     @Override
     public void close()
     {
+        super.close();
         diffuseMap.close();
         normalMap.close();
         constantMap.close();
+        quadraticMap.close();
     }
 
     @Override
@@ -142,5 +154,11 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
     public Texture2D<ContextType> getConstantMap()
     {
         return constantMap;
+    }
+
+    @Override
+    public Texture2D<ContextType> getQuadraticMap()
+    {
+        return quadraticMap;
     }
 }

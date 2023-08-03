@@ -379,6 +379,11 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     {
         return diffuseOptimization.includesConstantMap() ? diffuseOptimization.getConstantMap() : null;
     }
+    @Override
+    public Texture2D<ContextType> getQuadraticMap()
+    {
+        return diffuseOptimization.includesConstantMap() ? diffuseOptimization.getQuadraticMap() : null;
+    }
 
     /**
      * Final diffuse estimate

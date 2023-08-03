@@ -13,10 +13,11 @@
  */
 
 #include "specularFit.glsl"
-#line 18 0
+#line 17 0
 
 layout(location = 0) out vec4 diffuseOut;
-layout(location = 0) out vec4 constantOut;
+layout(location = 1) out vec4 constantOut;
+layout(location = 2) out vec4 quadraticOut;
 
 void main()
 {
@@ -35,6 +36,9 @@ void main()
     float sumWeights = 0.0;
     vec4 weightedSums = vec4(0);
     vec4 cosineWeightedSums = vec4(0);
+
+//    mat3 mATA = mat3(0);
+//    mat3 vATb = mat3(0);
 
     for (int k = 0; k < CAMERA_POSE_COUNT; k++)
     {
@@ -68,22 +72,42 @@ void main()
                 vec3 diffuse = PI * (actualReflectanceTimesNDotL - specularEstimate); // could be negative
 
                 sumWeights += weight * triangleNDotV;
-                weightedSums += weight * triangleNDotV * vec4(diffuse, nDotL);
-                cosineWeightedSums += weight * triangleNDotV * vec4(diffuse * nDotL, nDotL * nDotL);
+                weightedSums +=  weight * triangleNDotV *  vec4(diffuse, nDotL);
+                cosineWeightedSums += weight *  triangleNDotV * vec4(diffuse * nDotL, nDotL * nDotL);
+
+//                vec3 w = vec3(1, nDotL, nDotL * nDotL);
+//                mATA += weight * triangleNDotV * outerProduct(w, w);
+//                vATb += weight * triangleNDotV * outerProduct(w, diffuse);
             }
         }
     }
 
-    vec3 diffuseColor = max(vec3(0), // just a simple linear regression
-        (sumWeights * cosineWeightedSums.rgb - weightedSums.a * weightedSums.rgb)
-            / (sumWeights * cosineWeightedSums.a - weightedSums.a * weightedSums.a));
+//    if (determinant(mATA) > 0)
+//    {
+//        // In linear system to solve, each row is a term of the model (constant, linear, quadratic),
+//        // while RGB is stored across each row of vATb and the corresponding solution
+//        // We want RGB to be stored across the columns and for each column to be a term, so we transpose the solution
+//        mat3 solution = transpose(inverse(mATA) * vATb);
+//        constantOut = vec4(pow(solution[0], vec3(1.0 / gamma)), 1.0);
+//        diffuseOut = vec4(pow(solution[1], vec3(1.0 / gamma)), 1.0);
+//        quadraticOut = vec4(pow(solution[2], vec3(1.0 / gamma)), 1.0);
+//    }
+//    else
+//    {
+//        discard;
+//    }
 
-    vec3 constantColor = (weightedSums.rgb - diffuseColor * weightedSums.a) / sumWeights;
+    // just a simple linear regression
+    vec4 diffuseColorSum = sumWeights * cosineWeightedSums - weightedSums.a * weightedSums;
+    vec4 diffuseColor = diffuseColorSum / max(1.0, diffuseColorSum.a);
 
-    vec3 diffuseFallback = cosineWeightedSums.rgb / cosineWeightedSums.a; // Constraining constant term to 0
+    vec4 constantColorSum = vec4(weightedSums.rgb - diffuseColor.rgb * weightedSums.a, sumWeights);
+    vec4 constantColor = constantColorSum / max(1.0, constantColorSum.a);
 
-    diffuseOut = vec4(pow(
-        max(vec3(0), mix(diffuseFallback, diffuseColor, step(0.0, constantColor))), // use fallback if constant color is < 0
-        vec3(1.0 / gamma)), 1.0);
-    constantOut = vec4(pow(constantColor, vec3(1.0 / gamma)), 1.0);
+    vec4 diffuseFallback = cosineWeightedSums / max(1.0, cosineWeightedSums.a); // Constraining constant term to 0
+
+    diffuseOut = pow(
+        max(vec4(0), mix(diffuseFallback, diffuseColor, step(0.0, vec4(constantColor.rgb, 1.0)))), // use fallback if constant color is < 0
+        vec4(vec3(1.0 / gamma), 1.0));
+    constantOut = pow(constantColor, vec4(vec3(1.0 / gamma), 1.0));
 }

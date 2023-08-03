@@ -20,6 +20,7 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
     private Texture2D<ContextType> diffuseMap;
     private Texture2D<ContextType> normalMap;
     private Texture2D<ContextType> constantMap;
+    private Texture2D<ContextType> quadraticMap;
     private Texture2D<ContextType> specularReflectivityMap;
     private Texture2D<ContextType> specularRoughnessMap;
     private BasisResources<ContextType> basisResources;
@@ -65,6 +66,12 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
     }
 
     @Override
+    public Texture2D<ContextType> getQuadraticMap()
+    {
+        return quadraticMap;
+    }
+
+    @Override
     public Texture2D<ContextType> getSpecularReflectivityMap()
     {
         return specularReflectivityMap;
@@ -107,9 +114,22 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
         this.normalMap = normalMap;
     }
 
+    /**
+     * Sets the constant texture.  This object will take ownership of the normal map.
+     * @param constantMap
+     */
     public void setConstantMap(Texture2D<ContextType> constantMap)
     {
         this.constantMap = constantMap;
+    }
+
+    /**
+     * Sets the quadratic texture.  This object will take ownership of the normal map.
+     * @param quadraticMap
+     */
+    public void setQuadraticMap(Texture2D<ContextType> quadraticMap)
+    {
+        this.quadraticMap = quadraticMap;
     }
 
     /**
@@ -151,6 +171,7 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
         diffuseMap.close();
         normalMap.close();
         constantMap.close();
+        quadraticMap.close();
         specularReflectivityMap.close();
         specularRoughnessMap.close();
         basisResources.close();
