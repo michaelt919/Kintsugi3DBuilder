@@ -46,6 +46,7 @@ Section "Kintsugi 3D Builder (required)"
     SetOutPath $INSTDIR
     File "target\Kintsugi3DBuilder.exe"
     File "ibr.ico"
+    File "ibr-icon.png"
     File "kintsugi3d-builder-about.txt"
 
     ; Include shaders
