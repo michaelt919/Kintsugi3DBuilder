@@ -20,11 +20,16 @@
 
 <AnchorPane prefHeight="720.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.MenubarController">
 <MenuBar AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-      <Menu mnemonicParsing="false" text="File">
+      <Menu fx:id="fileMenu" mnemonicParsing="false" text="File">
          <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="New Project">
             <accelerator>
                <KeyCodeCombination alt="UP" code="N" control="ANY" meta="UP" shift="UP" shortcut="UP" />
             </accelerator></MenuItem>
+         <MenuItem mnemonicParsing="false" onAction="#file_openProject" text="Open project">
+             <accelerator>
+                 <KeyCodeCombination alt="UP" code="O" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+             </accelerator>
+         </MenuItem>
          <MenuItem mnemonicParsing="false" onAction="#file_saveProject" text="Save">
             <accelerator>
                <KeyCodeCombination alt="UP" code="S" control="ANY" meta="UP" shift="UP" shortcut="UP" />
@@ -33,9 +38,14 @@
             <accelerator>
                <KeyCodeCombination alt="UP" code="F12" control="ANY" meta="UP" shift="UP" shortcut="UP" />
             </accelerator></MenuItem>
+         <MenuItem mnemonicParsing="false" onAction="#file_closeProject" text="Close project">
+             <accelerator>
+                 <KeyCodeCombination alt="UP" code="W" control="ANY" meta="UP" shift="UP" shortcut="UP" />
+             </accelerator>
+         </MenuItem>
          <SeparatorMenuItem mnemonicParsing="false" />
          <Menu fx:id="exportMenu" mnemonicParsing="false" text="Export" />
-         <MenuItem mnemonicParsing="false" text="RE-IMPORT DATA (UNFINISHED)" />
+         <MenuItem mnemonicParsing="false" text="Re-import Data (UNFINISHED)" />
          <SeparatorMenuItem />
          <Menu fx:id="recentProjectsMenu" mnemonicParsing="false" text="Recent Projects">
            <items>
@@ -46,9 +56,17 @@
          <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
           <SeparatorMenuItem />
       </Menu>
+    <Menu mnemonicParsing="false" text="View">
+        <CheckMenuItem fx:id="is3DGridCheckMenuItem" mnemonicParsing="false" text="3D grid" />
+        <CheckMenuItem fx:id="compassCheckMenuItem" mnemonicParsing="false" text="Compass" visible="false" />
+        <CheckMenuItem fx:id="halfResolutionCheckMenuItem" mnemonicParsing="false" selected="true" text="Half resolution" />
+        <CheckMenuItem fx:id="multiSamplingCheckMenuItem" mnemonicParsing="false" text="Multi-sampling" visible="false" />
+        <CheckMenuItem fx:id="sceneWindowMenuItem" mnemonicParsing="false" selected="true" text="Scene window" />
+    </Menu>
       <Menu mnemonicParsing="false" text="Workflow">
         <items>
-          <MenuItem mnemonicParsing="false" text="Pre-process Calibration (UNFINISHED)" />
+            <MenuItem mnemonicParsing="false" text="Pre-process Calibration (UNFINISHED)" />
+            <CheckMenuItem fx:id="lightCalibrationCheckMenuItem" mnemonicParsing="false" text="Light Calibration Mode" visible="false" />
             <MenuItem mnemonicParsing="false" onAction="#eyedropperColorChecker" text="Color Calibration">
                <accelerator>
                   <KeyCodeCombination alt="UP" code="B" control="ANY" meta="UP" shift="UP" shortcut="UP" />
@@ -56,22 +74,37 @@
             <MenuItem mnemonicParsing="false" text="Process (UNFINISHED)" />
         </items>
       </Menu>
-      <Menu mnemonicParsing="false" text="Environment">
+      <Menu fx:id="environmentMenu" mnemonicParsing="false" text="Environment">
          <items>
             <CheckMenuItem mnemonicParsing="false" selected="true" text="Snap-based Object Rotation (UNFINISHED)" />
-            <SeparatorMenuItem mnemonicParsing="false" />
-            <Menu mnemonicParsing="false" text="Per-light Intensity (UNFINISHED)">
+             <SeparatorMenuItem mnemonicParsing="false" />
+             <SeparatorMenuItem mnemonicParsing="false">
+                 <content>
+                     <Label fx:id="lightingSettingsLabel" text="Lighting Settings" textFill="black">
+                         <padding>
+                             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                         </padding>
+                     </Label>
+                 </content>
+             </SeparatorMenuItem>
+            <CheckMenuItem fx:id="relightingCheckMenuItem" mnemonicParsing="false" onAction="#updateRelightingVisibility" selected="true" text="Relighting (UNFINISHED)" />
+             <CheckMenuItem fx:id="visibleLightWidgetsCheckMenuItem" selected="true" mnemonicParsing="false" text="Show light widgets (UNFINISHED)" />
+             <Menu fx:id="perLightIntensityMenu" mnemonicParsing="false" text="Per-light Intensity (UNFINISHED)">
               <items>
-                  <MenuItem mnemonicParsing="false" text="Color Picker (UNFINISHED)" />
-                  <CustomMenuItem mnemonicParsing="false" text="Intensity Slider Selection">
+                  <CheckMenuItem fx:id="enableLight1CheckMenuItem" mnemonicParsing="false" selected="true" text="Enable Light 1" />
+ <CustomMenuItem hideOnClick="false">
+                     <content>
+                        <ColorPicker />
+                     </content>
+                 </CustomMenuItem>                  <CustomMenuItem hideOnClick="false" mnemonicParsing="false" text="Intensity Slider Selection">
                       <content>
                         <VBox alignment="CENTER_LEFT" spacing="10.0">
                            <children>
                                   <Label text="Intensity Selection"> text="Intensity Selection"</Label>
                                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                                     <children>
-                                    <TextField fx:id="perLightIntensityTxtField" prefWidth="50.0" />
-                                        <Slider fx:id="perLightIntensitySlider" showTickLabels="true" showTickMarks="true">
+                                    <TextField fx:id="perLight1IntensityTxtField" prefWidth="50.0" />
+                                        <Slider fx:id="perLight1IntensitySlider" showTickLabels="true" showTickMarks="true">
                                        <HBox.margin>
                                           <Insets />
                                        </HBox.margin></Slider>
@@ -81,12 +114,88 @@
                         </VBox>
                       </content>
                   </CustomMenuItem>
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <CheckMenuItem fx:id="enableLight2CheckMenuItem" mnemonicParsing="false" text="Enable Light 2" />
+ <CustomMenuItem hideOnClick="false">
+                     <content>
+                        <ColorPicker />
+                     </content>
+                 </CustomMenuItem>                  <CustomMenuItem hideOnClick="false" mnemonicParsing="false" text="Intensity Slider Selection">
+                      <content>
+                          <VBox alignment="CENTER_LEFT" spacing="10.0">
+                              <children>
+                                  <Label text="Intensity Selection"> text="Intensity Selection"</Label>
+                                  <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                      <children>
+                                          <TextField fx:id="perLight2IntensityTxtField" prefWidth="50.0" />
+                                          <Slider fx:id="perLight2IntensitySlider" showTickLabels="true" showTickMarks="true">
+                                              <HBox.margin>
+                                                  <Insets />
+                                              </HBox.margin></Slider>
+                                      </children>
+                                  </HBox>
+                              </children>
+                          </VBox>
+                      </content>
+                  </CustomMenuItem>
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <CheckMenuItem fx:id="enableLight3CheckMenuItem" mnemonicParsing="false" text="Enable Light 3" />
+<CustomMenuItem hideOnClick="false">
+                     <content>
+                        <ColorPicker />
+                     </content>
+                 </CustomMenuItem>                 <CustomMenuItem hideOnClick="false" mnemonicParsing="false" text="Intensity Slider Selection">
+                     <content>
+                         <VBox alignment="CENTER_LEFT" spacing="10.0">
+                             <children>
+                                 <Label text="Intensity Selection"> text="Intensity Selection"</Label>
+                                 <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                     <children>
+                                         <TextField fx:id="perLight3IntensityTxtField" prefWidth="50.0" />
+                                         <Slider fx:id="perLight3IntensitySlider" showTickLabels="true" showTickMarks="true">
+                                             <HBox.margin>
+                                                 <Insets />
+                                             </HBox.margin></Slider>
+                                     </children>
+                                 </HBox>
+                             </children>
+                         </VBox>
+                     </content>
+                 </CustomMenuItem>
+                 <CheckMenuItem fx:id="enableLight4CheckMenuItem" mnemonicParsing="false" text="Enable Light 4" />
+                 <CustomMenuItem hideOnClick="false">
+                     <content>
+                        <ColorPicker />
+                     </content>
+                 </CustomMenuItem>
+                 <CustomMenuItem hideOnClick="false" mnemonicParsing="false" text="Intensity Slider Selection">
+                     <content>
+                         <VBox alignment="CENTER_LEFT" spacing="10.0">
+                             <children>
+                                 <Label text="Intensity Selection"> text="Intensity Selection"</Label>
+                                 <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                     <children>
+                                         <TextField fx:id="perLight4IntensityTxtField" prefWidth="50.0" />
+                                         <Slider fx:id="perLight4IntensitySlider" showTickLabels="true" showTickMarks="true">
+                                             <HBox.margin>
+                                                 <Insets />
+                                             </HBox.margin></Slider>
+                                     </children>
+                                 </HBox>
+                             </children>
+                         </VBox>
+                     </content>
+                 </CustomMenuItem>
               </items>
             </Menu>
-            <Menu mnemonicParsing="false" text="Ambient light settings (UNFINISHED)">
+            <Menu fx:id="ambientLightSettingsMenu" mnemonicParsing="false" text="Ambient light settings (UNFINISHED)">
                 <items>
-                    <MenuItem mnemonicParsing="false" text="Color Picker (UNFINISHED)" />
-                    <CustomMenuItem mnemonicParsing="false" text="Intensity Slider Selection">
+                    <CustomMenuItem hideOnClick="false">
+                        <content>
+                            <ColorPicker />
+                        </content>
+                    </CustomMenuItem>
+                    <CustomMenuItem hideOnClick="false" mnemonicParsing="false" text="Intensity Slider Selection">
                         <content>
                             <VBox alignment="CENTER_LEFT" spacing="10.0">
                                 <children>
@@ -110,7 +219,7 @@
       </Menu>
       <Menu mnemonicParsing="false" text="System Settings">
          <items>
-            <CheckMenuItem fx:id="autoCacheClearingCheckMenuItem" mnemonicParsing="false" selected="true" text="Auto Cache Clearing" />
+            <CheckMenuItem fx:id="autoCacheClearingCheckMenuItem" mnemonicParsing="false" selected="true" text="Auto Cache Clearing (UNFINISHED)" />
             <Menu mnemonicParsing="false" text="Cache Path">
               <items>
                   <SeparatorMenuItem mnemonicParsing="false">
@@ -135,36 +244,32 @@
               </items>
             </Menu>
             <SeparatorMenuItem mnemonicParsing="false" />
-            <CheckMenuItem fx:id="autoSaveCheckMenuItem" mnemonicParsing="false" selected="true" text="Autosave" />
+            <CheckMenuItem fx:id="autoSaveCheckMenuItem" mnemonicParsing="false" selected="true" text="Autosave (UNFINISHED)" />
             <CustomMenuItem hideOnClick="false" mnemonicParsing="false" text="Options">
                <content>
                   <ChoiceBox fx:id="autosaveOptionsChoiceBox" prefWidth="200.0" />
                </content>
             </CustomMenuItem>
             <SeparatorMenuItem mnemonicParsing="false" />
-            <CheckMenuItem fx:id="imageCompressionCheckMenuItem" mnemonicParsing="false" text="Image Compression" />
-            <CustomMenuItem mnemonicParsing="false" text="Preload Visibility &amp; Shadow Testing">
-               <graphic>
-                  <Label text="Preload Visibility and Shadow Testing" />
-               </graphic>
-            </CustomMenuItem>
-            <CheckMenuItem fx:id="preloadVisibilityEtcCheckMenuItem" mnemonicParsing="false" onAction="#updatePreloadVisibilityEtc" selected="true" text="Preload Visibility &amp; Shadow Testing" />
+            <CheckMenuItem fx:id="imageCompressionCheckMenuItem" mnemonicParsing="false" selected="true" text="Image Compression (UNFINISHED)" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <CheckMenuItem fx:id="preloadVisibilityEtcCheckMenuItem" mnemonicParsing="false" onAction="#updatePreloadVisibilityEtc" selected="true" text="Preload Visibility &amp; Shadow Testing (UNFINISHED)" />
             <CustomMenuItem mnemonicParsing="false" text="Resolution Input Fields">
               <content>
                   <HBox alignment="CENTER_LEFT" spacing="10.0">
                      <children>
                         <HBox alignment="CENTER_LEFT">
                            <children>
-                              <Label fx:id = "widthLabel" text="Width: " textFill="black">
+                              <Label fx:id="widthLabel" text="Width: " textFill="black">
                         </Label>
-                               <TextField fx:id= "widthTxtField" prefWidth="50.0" />
+                               <TextField fx:id="widthTxtField" prefWidth="50.0" />
                            </children>
                         </HBox>
                         <HBox alignment="CENTER_LEFT">
                            <children>
-                               <Label fx:id = "heightLabel" text="Height: " textFill="black">
+                               <Label fx:id="heightLabel" text="Height: " textFill="black">
                          </Label>
-                               <TextField fx:id= "heightTxtField" prefWidth="50.0" />
+                               <TextField fx:id="heightTxtField" prefWidth="50.0" />
                            </children>
                         </HBox>
                      </children>
@@ -174,35 +279,43 @@
                   </HBox>
               </content>
             </CustomMenuItem>
-         </items></Menu>
+             <SeparatorMenuItem mnemonicParsing="false" />
+            <CheckMenuItem fx:id="mipmapCheckMenuItem" mnemonicParsing="false" selected="true" text="Mipmap (UNFINISHED)" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+             <MenuItem mnemonicParsing="false" onAction="#shading_JVMSettings" text="JVM Settings… (UNFINISHED)" />
+             <SeparatorMenuItem mnemonicParsing="false" />
+             <CheckMenuItem mnemonicParsing="false" text="Reduce Viewport Resultion (UNFINISHED)" />
+            <CheckMenuItem fx:id="darkModeCheckMenuItem" mnemonicParsing="false" selected="true" text="Dark Mode (UNFINISHED)" />
+            <CheckMenuItem mnemonicParsing="false" text="Stand-alone 3D Viewer (UNFINISHED)" />
+            <MenuItem mnemonicParsing="false" text="More 3D Viewer Settings (UNFINISHED)" />
+            <MenuItem mnemonicParsing="false" text="Photo View Settings (UNFINISHED)" />
+             <MenuItem mnemonicParsing="false" onAction="#shading_IBRSettings" text="IBR settings… (UNFINISHED)" />
+             <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Accessibility Settings (UNFINISHED)" />
+             <Menu text="Photo Lighting Settings">
+                 <CheckMenuItem fx:id="fresnelEffectCheckMenuItem" mnemonicParsing="false" text="Fresnel effect (UNFINISHED)" />
+                 <CheckMenuItem fx:id="shadowsCheckMenuItem" mnemonicParsing="false" text="Shadows (UNFINISHED)" />
+                 <CheckMenuItem fx:id="phyMaskingCheckMenuItem" mnemonicParsing="false" text="Physically based masking/shadowing (UNFINISHED)" />
+             </Menu>
+         </items>
+      </Menu>
       <Menu text="Help">
-          <MenuItem mnemonicParsing="false" onAction="#help_userManual" text="User Manual" />
-          <MenuItem mnemonicParsing="false" onAction="#help_console" text="View Log" />
-          <MenuItem mnemonicParsing="false" onAction="#help_about" text="About" />
+          <MenuItem mnemonicParsing="false" onAction="#help_userManual" text="Processing Tool Documentation" />
+          <MenuItem mnemonicParsing="false" text="Process Guides (UNFINISHED)" />
       </Menu>
       <Menu mnemonicParsing="false" text="About">
          <items>
-            <MenuItem mnemonicParsing="false" text="Action 1" />
+             <MenuItem mnemonicParsing="false" onAction="#help_about" text="About" />
          </items>
       </Menu>
       <Menu mnemonicParsing="false" text="Hide UI?">
          <items>
-            <CheckMenuItem mnemonicParsing="false" text="HIDE (UNFINISHED)" />
+            <CheckMenuItem mnemonicParsing="false" text="Hide (UNFINISHED)" />
          </items>
       </Menu>
-      <Menu mnemonicParsing="false" text="View" visible="false">
-         <CheckMenuItem fx:id="is3DGridCheckMenuItem" mnemonicParsing="false" text="3D grid" />
-         <CheckMenuItem fx:id="compassCheckMenuItem" mnemonicParsing="false" text="Compass" visible="false" />
-         <CheckMenuItem fx:id="halfResolutionCheckMenuItem" mnemonicParsing="false" selected="true" text="Half resolution" />
-         <CheckMenuItem fx:id="multiSamplingCheckMenuItem" mnemonicParsing="false" text="Multi-sampling" visible="false" />
-         <CheckMenuItem fx:id="sceneWindowMenuItem" mnemonicParsing="false" selected="true" text="Scene window" />
-      </Menu>
       <Menu mnemonicParsing="false" text="Lighting" visible="false">
-         <CheckMenuItem fx:id="relightingCheckMenuItem" mnemonicParsing="false" selected="true" text="Relighting" />
          <CheckMenuItem fx:id="environmentMappingCheckMenuItem" mnemonicParsing="false" selected="true" text="Environment mapping" visible="false" />
-         <CheckMenuItem fx:id="shadowsCheckMenuItem" mnemonicParsing="false" text="Shadows" />
          <CheckMenuItem fx:id="visibleLightsCheckMenuItem" mnemonicParsing="false" selected="true" text="Show light sources" />
-          <CheckMenuItem fx:id="visibleLightWidgetsCheckMenuItem" mnemonicParsing="false" text="Show light widgets" />
          <CheckMenuItem fx:id="visibleCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show camera poses for photographs" visible="false" />
          <CheckMenuItem fx:id="visibleSavedCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show saved camera poses" visible="false" />
       </Menu>
@@ -261,10 +374,6 @@
               </userData>
           </RadioMenuItem>
          <SeparatorMenuItem mnemonicParsing="false" />
-         <MenuItem mnemonicParsing="false" onAction="#shading_IBRSettings" text="IBR settings…" />
-         <MenuItem mnemonicParsing="false" onAction="#shading_JVMSettings" text="JVM Settings…" />
-         <CheckMenuItem fx:id="phyMaskingCheckMenuItem" mnemonicParsing="false" text="Physically based masking/shadowing" />
-         <CheckMenuItem fx:id="fresnelEffectCheckMenuItem" mnemonicParsing="false" text="Fresnel effect" />
       </Menu>
       <Menu mnemonicParsing="false" text="Windows" visible="false">
          <CheckMenuItem mnemonicParsing="false" selected="true" text="Scene" />
@@ -274,22 +383,11 @@
       </Menu>
     <Menu mnemonicParsing="false" text="DEPRECATED MENU ITEMS" visible="false">
         <items>
-            <MenuItem mnemonicParsing="false" onAction="#file_openProject" text="Open project" visible="false">
-                <accelerator>
-                    <KeyCodeCombination alt="UP" code="O" control="ANY" meta="UP" shift="UP" shortcut="UP" />
-                </accelerator>
-            </MenuItem>
             <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Export Specular Fit" visible="false">
                 <accelerator>
                     <KeyCodeCombination alt="UP" code="P" control="ANY" meta="UP" shift="UP" shortcut="UP" />
                 </accelerator>
             </MenuItem>
-            <MenuItem mnemonicParsing="false" onAction="#file_closeProject" text="Close project" visible="false">
-                <accelerator>
-                    <KeyCodeCombination alt="UP" code="W" control="ANY" meta="UP" shift="UP" shortcut="UP" />
-                </accelerator>
-            </MenuItem>
-            <CheckMenuItem fx:id="lightCalibrationCheckMenuItem" mnemonicParsing="false" text="Light Calibration Mode" visible="false" />
             <MenuItem mnemonicParsing="false" onAction="#file_colorChecker" text="Enter Color Checker Values... (DEPRECATED)" visible="false" />
             <MenuItem mnemonicParsing="false" onAction="#unzip" text="Unzip Metashape File" visible="false">
                 <accelerator>
@@ -297,6 +395,7 @@
                 </accelerator>
             </MenuItem>
             <MenuItem mnemonicParsing="false" onAction="#file_loadOptions" text="Load Options..." visible="false" />
+             <MenuItem mnemonicParsing="false" onAction="#help_console" text="View Log" visible="false" />
         </items>
     </Menu>
    </MenuBar>

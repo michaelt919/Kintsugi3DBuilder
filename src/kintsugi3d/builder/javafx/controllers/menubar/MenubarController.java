@@ -22,6 +22,7 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Scanner;
 import java.util.function.Predicate;
@@ -42,6 +43,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
+import javafx.scene.text.Text;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
@@ -84,12 +86,14 @@ public class MenubarController
     private final Flag unzipperOpen = new Flag(false);
     private final Flag consoleWindowOpen = new Flag(false);
 
+
     @FXML private ProgressBar progressBar;
 
     //toggle groups
     @FXML private ToggleGroup renderGroup;
 
     //menu items
+    //TODO: ORGANIZE CHECK MENU ITEMS
     @FXML private CheckMenuItem lightCalibrationCheckMenuItem;
     @FXML private CheckMenuItem is3DGridCheckMenuItem;
     @FXML private CheckMenuItem compassCheckMenuItem;
@@ -110,6 +114,10 @@ public class MenubarController
     @FXML private CheckMenuItem autoCacheClearingCheckMenuItem;
     @FXML private CheckMenuItem autoSaveCheckMenuItem;
     @FXML private CheckMenuItem preloadVisibilityEtcCheckMenuItem;
+    @FXML private CheckMenuItem mipmapCheckMenuItem;
+    @FXML private CheckMenuItem reduceViewportResolutionCheckMenuItem;
+    @FXML private CheckMenuItem darkModeCheckMenuItem;
+    @FXML private CheckMenuItem standAlone3dViewerCheckMenuItem;
     @FXML public ChoiceBox<String> autosaveOptionsChoiceBox;
 
     @FXML private CheckMenuItem imageCompressionCheckMenuItem;
@@ -119,10 +127,15 @@ public class MenubarController
     @FXML private Label heightLabel;
     @FXML private TextField heightTxtField;
 
-    @FXML public Slider perLightIntensitySlider;
+    @FXML private Menu perLightIntensityMenu;
+    @FXML private Menu ambientLightSettingsMenu;
+    @FXML public Slider perLight1IntensitySlider;
     @FXML public Slider ambientLightIntensitySlider;
 
-    @FXML public TextField perLightIntensityTxtField;
+    @FXML public TextField perLight1IntensityTxtField;
+    @FXML
+    private MenuItem perLightColorPickerMenuItem;
+
     @FXML public TextField ambientLightIntensityTxtField;
 
     @FXML private FileChooser projectFileChooser;
@@ -266,6 +279,8 @@ public class MenubarController
         initToggleGroups();
         bindCheckMenuItems();
         bindSlidersToTxtFields();
+        updateRelightingVisibility();
+        updatePreloadVisibilityEtc();
 
         lightCalibrationCheckMenuItem.selectedProperty().addListener(observable ->
         {
@@ -338,6 +353,10 @@ public class MenubarController
             internalModels.getSettingsModel().getBooleanProperty("multisamplingEnabled"));
         sceneWindowMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("sceneWindowOpen"));
+
+        //TODO: HOW TO BIND?
+        //mipmapCheckMenuItem.selectedProperty().bindBidirectional(loadSettings.mipmaps);
+
     }
 
     private void bindSlidersToTxtFields() {
@@ -555,13 +574,23 @@ public class MenubarController
         try
         {
             List<String> lines = Files.readAllLines(new File("kintsugi3d-builder-about.txt").toPath());
-            Alert alert = new Alert(AlertType.INFORMATION, String.join(System.lineSeparator(), lines));
+            String contentText = String.join(System.lineSeparator(), lines);
+
+            javafx.scene.control.ScrollPane scrollPane = new javafx.scene.control.ScrollPane();
+            Text contentTextElement = new Text(contentText);
+
+            //Set the desired width for the text (screen width / 3)
+            contentTextElement.setWrappingWidth(Screen.getPrimary().getVisualBounds().getWidth()/3);
+            scrollPane.setContent(contentTextElement);
+
+            Alert alert = new Alert(AlertType.INFORMATION);
             alert.setTitle("About Kintsugi 3D Builder");
             alert.setHeaderText("About Kintsugi 3D Builder");
             alert.initOwner(this.window);
             alert.initModality(Modality.NONE);
+            alert.getDialogPane().setContent(scrollPane);
             alert.show();
-            alert.setY(100.0);
+            alert.setY(70.0);
         }
         catch (IOException e)
         {
@@ -829,13 +858,38 @@ public class MenubarController
     }
 
     public void updatePreloadVisibilityEtc() {
-        //if checkbox is unchecked, disable "Preload Visibility & Shadow Testing" options
-        boolean isPreloadVisEnabled = preloadVisibilityEtcCheckMenuItem.isSelected();
+        //if check menu item is unchecked, disable "Preload Visibility & Shadow Testing" options
+        ArrayList<Object> controlItems = new ArrayList<>();
+        controlItems.add(heightLabel);
+        controlItems.add(widthLabel);
+        controlItems.add(heightTxtField);
+        controlItems.add(widthTxtField);
 
-        heightLabel.setDisable(!isPreloadVisEnabled);
-        widthLabel.setDisable(!isPreloadVisEnabled);
+        updateCheckMenuItemVisibilities(preloadVisibilityEtcCheckMenuItem, controlItems);
+    }
 
-        heightTxtField.setDisable(!isPreloadVisEnabled);
-        widthTxtField.setDisable(!isPreloadVisEnabled);
+    public void updateRelightingVisibility() {
+        ArrayList<Object> controlItems = new ArrayList<>();
+        controlItems.add(visibleLightWidgetsCheckMenuItem);
+        controlItems.add(perLightIntensityMenu);
+        controlItems.add(ambientLightSettingsMenu);
+        updateCheckMenuItemVisibilities(relightingCheckMenuItem, controlItems);
+    }
+
+    //if the check menu item is disabled, also disable the control items (labels, text fields, etc.)
+    // or Menu Items it is associated with
+    private void updateCheckMenuItemVisibilities(CheckMenuItem checkMenuItem, Collection<Object> items){
+        boolean isChecked = checkMenuItem.isSelected();
+
+        for(Object item : items){
+            if (item instanceof javafx.scene.control.Control){
+                Control convertedControlItem = (Control) item;
+                convertedControlItem.setDisable(!isChecked);
+            }
+            else if (item instanceof MenuItem){
+                MenuItem convertedMenuItem = (MenuItem) item;
+                convertedMenuItem.setDisable(!isChecked);
+            }
+        }
     }
 }
