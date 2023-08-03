@@ -130,7 +130,7 @@
                         <phase>install</phase>
                         <configuration>
                             <scriptFile>installer.nsi</scriptFile>
-                            <outputFile>${project.artifactId}-setup.exe</outputFile>
+                            <outputFile>${project.artifactId}-${project.version}-setup.exe</outputFile>
                         </configuration>
                         <goals>
                             <goal>generate-headerfile</goal>
