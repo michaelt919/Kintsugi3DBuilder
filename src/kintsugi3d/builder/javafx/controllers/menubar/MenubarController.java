@@ -588,6 +588,7 @@ public class MenubarController
             alert.setHeaderText("About Kintsugi 3D Builder");
             alert.initOwner(this.window);
             alert.initModality(Modality.NONE);
+            alert.setResizable(true);
             alert.getDialogPane().setContent(scrollPane);
             alert.show();
             alert.setY(70.0);
