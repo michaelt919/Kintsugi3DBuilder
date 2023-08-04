@@ -236,6 +236,12 @@ public class SpecularOptimization
 
             return fullResolution;
         }
+        catch (Exception e)
+        {
+            // Prevent memory leak when an exception occurs
+            fullResolution.close();
+            throw e;
+        }
     }
 
     private <ContextType extends Context<ContextType>> void optimizeBlocks(
