@@ -85,7 +85,7 @@ public class ApplicationFolders
      */
     public static File getUserCacheDirectory()
     {
-        if (System.getProperty("Kintsugi3D.dataDir") != null)
+        if (System.getProperty("Kintsugi3D.cacheDir") != null)
         {
             File dir = new File(System.getProperty("Kintsugi3D.cacheDir"));
             if (dir.mkdirs() && dir.canRead() && dir.canWrite())
