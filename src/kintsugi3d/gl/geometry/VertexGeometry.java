@@ -411,7 +411,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
 
         for (int f = 0; f < vertexIndexList.size() - 2; f += 3)
         {
-            if (inst.hasNormals && inst.hasTexCoords)
+            if (inst.hasTexCoords)
             {
                 Vector3 position0 = vertexList.get(vertexIndexList.get(f));
                 Vector3 position1 = vertexList.get(vertexIndexList.get(f + 1));
