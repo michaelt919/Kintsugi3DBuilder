@@ -13,6 +13,7 @@
 package kintsugi3d.builder.javafx.controllers.menubar;
 
 import javafx.application.Platform;
+import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -53,7 +54,10 @@ public class ConsoleController implements Initializable
 
         messageListView.setCellFactory(new LogMessageCellFactory());
         messageListView.setItems(logMessages.getMessages().filtered(this::logMessagePassesFilter));
+
         messageListView.scrollTo(messageListView.getItems().size() - 1);
+
+        messageListView.getItems().addListener(new ListChangeAutoscroll());
 
         // If the logger cannot log a level, disable a filter button
         if (! logMessages.isLevelAvailable(Level.ERROR))
@@ -193,6 +197,18 @@ public class ConsoleController implements Initializable
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyy hh:mm:ss").withZone(ZoneId.systemDefault());
             sb.append(formatter.format(message.getTimestamp()));
             return sb.toString();
+        }
+    }
+
+    private class ListChangeAutoscroll implements ListChangeListener<LogMessage>
+    {
+        @Override
+        public void onChanged(Change<? extends LogMessage> change)
+        {
+            Platform.runLater(() ->
+            {
+                messageListView.scrollTo(messageListView.getItems().size() - 1);
+            });
         }
     }
 }

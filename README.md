@@ -1,6 +1,6 @@
-Kintsugi 3D Builder
+# Kintsugi 3D Builder
 
-Contributors:
+## Contributors
 - Michael Tetzlaff (University of Minnesota / University of Wisconsin - Stout) - primary developer
 - Alex Kautz (University of Rochester) - contributor
 - Seth Berrier (University of Wisconsin - Stout) - contributor
@@ -23,3 +23,16 @@ Kintsugi 3D Builder is distributed in the hope that it will be useful, but WITHO
  
 Requests for source code, comments, or bug reports should be sent to
 Michael Tetzlaff ( tetzlaffm@uwstout.edu )
+
+## Build Requirements
+### Package
+Kintsugi 3D builder can be compiled using the maven build system with no external requirements,
+however in order to use the `package` maven lifecycle to build the app to a executable jar, exe and distributable zip folder,
+a redistributable Java runtime should be located in the `jre` folder at the repository root. The `package` lifecycle will not fail without this,
+but no JRE will be bundled in the distribution zip file.
+
+### Install
+There are additional requirements for building the installer executable using the `install` maven lifecycle:
+- NSIS must be installed on the system. [Download Nullsoft Scriptable Install System](https://nsis.sourceforge.io/Download)
+- The NSIS install folder must be added to your `PATH` environment variable.
+- A JRE must be located at `jre`. The `install` lifecycle *will fail* without the `jre` folder.

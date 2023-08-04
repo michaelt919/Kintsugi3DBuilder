@@ -6,3 +6,4 @@ ImageBasedColorAppearance.iml
 /out/*
 src/main/resources/recentFiles.txt
 /jre
+/dependency-reduced-pom.xml

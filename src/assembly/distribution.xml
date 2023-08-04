@@ -19,7 +19,7 @@
     </formats>
     <files>
         <file>
-            <source>README.md</source>
+            <source>ibr-icon.png</source>
             <outputDirectory></outputDirectory>
         </file>
         <file>
