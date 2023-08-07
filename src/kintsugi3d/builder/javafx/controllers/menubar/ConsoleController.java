@@ -151,7 +151,14 @@ public class ConsoleController implements Initializable
 
                             Label levelLabel = new Label(message.getLogLevel().toString());
                             levelLabel.setPrefWidth(40);
-                            Label messageLabel = new Label(message.getMessage() + strStackTrace(message.getThrown()));
+
+                            StringBuilder labelText = new StringBuilder(message.getMessage());
+                            if (this.isSelected())
+                            {
+                                labelText.append(strStackTrace(message.getThrown()));
+                            }
+
+                            Label messageLabel = new Label(labelText.toString());
 
                             HBox box = new HBox(levelLabel, messageLabel);
 
