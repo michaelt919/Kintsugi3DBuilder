@@ -17,6 +17,8 @@ import kintsugi3d.builder.app.logging.RecentLogMessageAppender;
 import kintsugi3d.builder.javafx.MainApplication;
 
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URL;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -149,7 +151,7 @@ public class ConsoleController implements Initializable
 
                             Label levelLabel = new Label(message.getLogLevel().toString());
                             levelLabel.setPrefWidth(40);
-                            Label messageLabel = new Label(message.getMessage());
+                            Label messageLabel = new Label(message.getMessage() + strStackTrace(message.getThrown()));
 
                             HBox box = new HBox(levelLabel, messageLabel);
 
@@ -175,6 +177,17 @@ public class ConsoleController implements Initializable
                     });
                 }
             };
+        }
+
+        private String strStackTrace(Throwable thrown)
+        {
+            if (thrown == null)
+                return "";
+
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            thrown.printStackTrace(pw);
+            return "\n" + sw.toString().trim();
         }
 
         private String formatTooltip(LogMessage message)

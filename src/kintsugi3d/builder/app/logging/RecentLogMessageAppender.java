@@ -16,6 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +64,8 @@ public class RecentLogMessageAppender extends AbstractAppender
                 Instant.ofEpochMilli(event.getTimeMillis()),
                 Level.valueOf(event.getLevel().name()),
                 event.getLoggerName(),
-                event.getMessage().getFormattedMessage()
+                event.getMessage().getFormattedMessage(),
+                event.getThrown()
         );
 
         messages.add(message);
