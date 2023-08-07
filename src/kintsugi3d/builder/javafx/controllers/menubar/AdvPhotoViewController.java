@@ -29,7 +29,7 @@ import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.util.ShadingParameterMode;
 
-public class IBROptionsController implements Initializable
+public class AdvPhotoViewController implements Initializable
 {
     @FXML private TextField buehlerTextField;
     @FXML private CheckBox buehlerCheckBox;
