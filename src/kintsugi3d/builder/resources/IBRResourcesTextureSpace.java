@@ -1,12 +1,13 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2023
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 The Regents of the University of Minnesota
  *
- *  Licensed under GPLv3
- *  ( http://www.gnu.org/licenses/gpl-3.0.html )
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
  *
- *  This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  *
- *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
 package kintsugi3d.builder.resources;
@@ -99,14 +100,14 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
         if (loadOptions.isCompressionRequested())
         {
             this.textureArray = builder
-                    .setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP)
-                    .createTexture();
+                .setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP)
+                .createTexture();
         }
         else
         {
             this.textureArray = builder
-                    .setInternalFormat(ColorFormat.RGBA8)
-                    .createTexture();
+                .setInternalFormat(ColorFormat.RGBA8)
+                .createTexture();
         }
 
         if(loadingMonitor != null)
@@ -120,8 +121,8 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
             log.info("Loading camera pose {}/{}", k, getViewSet().getCameraPoseCount());
 
             textureArray.loadLayer(k,
-                    ImageFinder.getInstance().findImageFile(new File(textureDirectory, getViewSet().getImageFileName(k))),
-                    true);
+                ImageFinder.getInstance().findImageFile(new File(textureDirectory, getViewSet().getImageFileName(k))),
+                true);
 
             if(loadingMonitor != null)
             {

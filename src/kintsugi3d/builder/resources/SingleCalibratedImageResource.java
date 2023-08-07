@@ -1,12 +1,13 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2023
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 The Regents of the University of Minnesota
  *
- *  Licensed under GPLv3
- *  ( http://www.gnu.org/licenses/gpl-3.0.html )
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
  *
- *  This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  *
- *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
 package kintsugi3d.builder.resources;
@@ -14,6 +15,7 @@ package kintsugi3d.builder.resources;
 import java.io.File;
 import java.io.IOException;
 
+import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryResources;
@@ -21,6 +23,7 @@ import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
 import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.util.ImageUndistorter;
 
 /**
  * For use i.e. with projtex_single.frag
@@ -87,7 +90,22 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
             var colorTextureBuilder =
                 context.getTextureFactory().build2DColorTextureFromFile(imageFile, true);
             loadOptions.configureColorTextureBuilder(colorTextureBuilder);
-            colorTexture = colorTextureBuilder.createTexture();
+
+            int projectionIndex = viewSet.getCameraProjectionIndex(viewIndex);
+            if (viewSet.getCameraProjection(projectionIndex) instanceof DistortionProjection)
+            {
+                DistortionProjection distortion = (DistortionProjection) viewSet.getCameraProjection(projectionIndex);
+
+                try (ImageUndistorter<ContextType> undistorter = new ImageUndistorter<>(context);
+                     Texture2D<ContextType> distortedTexture = colorTextureBuilder.createTexture())
+                {
+                    colorTexture = undistorter.undistort(distortedTexture, distortion);
+                }
+            }
+            else
+            {
+                colorTexture = colorTextureBuilder.createTexture();
+            }
         }
         else
         {
@@ -104,13 +122,13 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
             if (loadOptions.areDepthImagesRequested())
             {
                 try
-                    (
-                        // Don't automatically generate any texture attachments for this framebuffer object
-                        FramebufferObject<ContextType> depthRenderingFBO =
-                            context.buildFramebufferObject(colorTexture.getWidth(), colorTexture.getHeight())
-                                .createFramebufferObject();
-                        DepthMapGenerator<ContextType> depthMapGenerator = DepthMapGenerator.createFromGeometryResources(geometryResources)
-                    )
+                (
+                    // Don't automatically generate any texture attachments for this framebuffer object
+                    FramebufferObject<ContextType> depthRenderingFBO =
+                        context.buildFramebufferObject(colorTexture.getWidth(), colorTexture.getHeight())
+                            .createFramebufferObject();
+                    DepthMapGenerator<ContextType> depthMapGenerator = DepthMapGenerator.createFromGeometryResources(geometryResources)
+                )
                 {
 
                     // Build depth texture

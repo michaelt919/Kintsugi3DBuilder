@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Seth Berrier, Michael Tetzlaff, Josh Lyu, Luke Denney, Jacob Buelow
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -155,4 +155,29 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
             log.error("An error occurred saving normal map:", e);
         }
     }
+
+    public void saveConstantMap(File outputDirectory)
+    {
+        try
+        {
+            getConstantMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "constant.png"));
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred saving diffuse map:", e);
+        }
+    }
+
+    public void saveQuadraticMap(File outputDirectory)
+    {
+        try
+        {
+            getQuadraticMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "quadratic.png"));
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred saving diffuse map:", e);
+        }
+    }
+
 }

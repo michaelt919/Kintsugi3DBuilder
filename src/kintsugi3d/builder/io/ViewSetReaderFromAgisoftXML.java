@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Seth Berrier, Michael Tetzlaff, Josh Lyu, Luke Denney, Jacob Buelow
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -25,6 +25,7 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+import java.io.File;
 import java.io.InputStream;
 import java.util.*;
 
@@ -157,7 +158,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     }
 
     @Override
-    public ViewSet readFromStream(InputStream stream) throws XMLStreamException
+    public ViewSet readFromStream(InputStream stream, File root) throws XMLStreamException
     {
         Map<String, Sensor> sensorSet = new Hashtable<>();
         HashSet<Camera> cameraSet = new HashSet<>();
@@ -547,6 +548,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         }
 
         ViewSet result = new ViewSet(cameraSet.size());
+        result.setRootDirectory(root);
 
         Sensor[] sensors = sensorSet.values().toArray(new Sensor[0]);
 

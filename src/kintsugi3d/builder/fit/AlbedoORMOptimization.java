@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Seth Berrier, Michael Tetzlaff, Josh Lyu, Luke Denney, Jacob Buelow
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -75,6 +75,11 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         estimationProgram.setTexture("diffuseEstimate", specularFit.getDiffuseMap());
         estimationProgram.setTexture("specularEstimate", specularFit.getSpecularReflectivityMap());
         estimationProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
+
+        if (specularFit.getConstantMap() != null)
+        {
+            estimationProgram.setTexture("constantEstimate", specularFit.getConstantMap());
+        }
 
         if (occlusionMap != null)
         {

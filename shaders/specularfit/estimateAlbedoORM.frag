@@ -1,15 +1,15 @@
 #version 330
 
 /*
- *  Copyright (c) Michael Tetzlaff 2023
- *  Copyright (c) The Regents of the University of Minnesota 2019
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 The Regents of the University of Minnesota
  *
- *  Licensed under GPLv3
- *  ( http://www.gnu.org/licenses/gpl-3.0.html )
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
  *
- *  This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  *
- *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
 #include <shaders/colorappearance/linearize.glsl>
@@ -17,6 +17,10 @@
 
 #ifndef OCCLUSION_TEXTURE_ENABLED
 #define OCCLUSION_TEXTURE_ENABLED 0
+#endif
+
+#ifndef CONSTANT_TEXTURE_ENABLED
+#define CONSTANT_TEXTURE_ENABLED 0
 #endif
 
 in vec2 fTexCoord;
@@ -28,6 +32,10 @@ uniform sampler2D occlusionTexture; // pass-through occlusion
 uniform sampler2D diffuseEstimate;
 uniform sampler2D roughnessEstimate;
 uniform sampler2D specularEstimate;
+
+#if CONSTANT_TEXTURE_ENABLED
+uniform sampler2D constantTexture; // pass-through occlusion // TODO figure this out after implementing Godot shader
+#endif
 
 layout(location = 0) out vec4 totalAlbedoOut;
 layout(location = 1) out vec4 ormOut;

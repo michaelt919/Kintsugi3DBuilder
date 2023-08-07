@@ -1,12 +1,13 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2022
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 The Regents of the University of Minnesota
  *
- *  Licensed under GPLv3
- *  ( http://www.gnu.org/licenses/gpl-3.0.html )
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
  *
- *  This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  *
- *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
 package kintsugi3d.builder.javafx.multithread;
@@ -24,6 +25,8 @@ public class ObjectModelWrapper extends ExtendedObjectModelBase
     private final MultithreadValue<Float> rotationY;
     private final MultithreadValue<Float> rotationZ;
 
+    private final MultithreadValue<Float> scale;
+
     public ObjectModelWrapper(ExtendedObjectModel baseModel)
     {
         this.baseModel = baseModel;
@@ -31,6 +34,7 @@ public class ObjectModelWrapper extends ExtendedObjectModelBase
         this.rotationX = MultithreadValue.createFromFunctions(baseModel::getRotationX, baseModel::setRotationX);
         this.rotationY = MultithreadValue.createFromFunctions(baseModel::getRotationY, baseModel::setRotationY);
         this.rotationZ = MultithreadValue.createFromFunctions(baseModel::getRotationZ, baseModel::setRotationZ);
+        this.scale = MultithreadValue.createFromFunctions(baseModel::getScale, baseModel::setScale);
     }
 
     @Override
@@ -64,6 +68,9 @@ public class ObjectModelWrapper extends ExtendedObjectModelBase
     }
 
     @Override
+    public float getScale(){return this.scale.getValue();}
+
+    @Override
     public void setCenter(Vector3 center)
     {
         this.center.setValue(center);
@@ -86,4 +93,7 @@ public class ObjectModelWrapper extends ExtendedObjectModelBase
     {
         this.rotationX.setValue(rotationX);
     }
+
+    @Override
+    public void setScale(float scale){this.scale.setValue(scale);}
 }

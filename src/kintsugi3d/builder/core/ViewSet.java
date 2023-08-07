@@ -1,12 +1,13 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2022
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 The Regents of the University of Minnesota
  *
- *  Licensed under GPLv3
- *  ( http://www.gnu.org/licenses/gpl-3.0.html )
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
  *
- *  This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  *
- *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
 package kintsugi3d.builder.core;
@@ -36,6 +37,11 @@ import kintsugi3d.util.ImageFinder;
 public final class ViewSet implements ReadonlyViewSet
 {
     private static final Logger log = LoggerFactory.getLogger(ViewSet.class);
+
+    /**
+     * A unique id given to each view set that can be used to prevent cache collisions on disk.
+     */
+    private UUID viewSetUid = UUID.randomUUID();
 
     /**
      * A list of camera poses defining the transformation from object space to camera space for each view.
@@ -99,19 +105,19 @@ public final class ViewSet implements ReadonlyViewSet
     private File rootDirectory;
 
     /**
-     * The relative file path to be used for loading images.
+     * The directory to be used for loading images.
      */
-    private String relativeFullResImagePathName;
+    private File fullResImageDirectory;
 
     /**
-     * The relative file path to be used for loading images.
+     * The directory to be used for saving preview images.
      */
-    private String relativePreviewImagePathName;
+    private File previewImageDirectory;
 
     /**
-     * The relative name of the mesh file.
+     * The mesh file.
      */
-    private String geometryFileName;
+    private File geometryFile;
 
     /**
      * Used to decode pixel colors according to a gamma curve if reference values are unavailable, otherwise, affects the absolute brightness of the decoded colors.
@@ -361,9 +367,9 @@ public final class ViewSet implements ReadonlyViewSet
         }
 
         result.rootDirectory = this.rootDirectory;
-        result.relativeFullResImagePathName = this.relativeFullResImagePathName;
-        result.relativePreviewImagePathName = this.relativePreviewImagePathName;
-        result.geometryFileName = this.geometryFileName;
+        result.fullResImageDirectory = this.fullResImageDirectory;
+        result.previewImageDirectory = this.previewImageDirectory;
+        result.geometryFile = this.geometryFile;
         result.infiniteLightSources = this.infiniteLightSources;
         result.recommendedNearPlane = this.recommendedNearPlane;
         result.recommendedFarPlane = this.recommendedFarPlane;
@@ -394,9 +400,9 @@ public final class ViewSet implements ReadonlyViewSet
         }
 
         result.rootDirectory = this.rootDirectory;
-        result.relativeFullResImagePathName = this.relativeFullResImagePathName;
-        result.relativePreviewImagePathName = this.relativePreviewImagePathName;
-        result.geometryFileName = this.geometryFileName;
+        result.fullResImageDirectory = this.fullResImageDirectory;
+        result.previewImageDirectory = this.previewImageDirectory;
+        result.geometryFile = this.geometryFile;
         result.infiniteLightSources = this.infiniteLightSources;
         result.recommendedNearPlane = this.recommendedNearPlane;
         result.recommendedFarPlane = this.recommendedFarPlane;
@@ -467,32 +473,20 @@ public final class ViewSet implements ReadonlyViewSet
      */
     public void moveRootDirectory(Path newRootDirectory)
     {
-        //noinspection VariableNotUsedInsideIf
-        if (this.rootDirectory != null)
-        {
-            if (this.getGeometryFile() != null)
-            {
-                this.geometryFileName = newRootDirectory.relativize(getGeometryFile().toPath()).toString();
-            }
-
-            if (this.getFullResImageFilePath() != null)
-            {
-                this.relativeFullResImagePathName = newRootDirectory.relativize(getFullResImageFilePath().toPath()).toString();
-            }
-
-            if (this.getPreviewImageFilePath() != null)
-            {
-                this.relativePreviewImagePathName = newRootDirectory.relativize(getPreviewImageFilePath().toPath()).toString();
-            }
-        }
-
         this.rootDirectory = newRootDirectory.toFile();
     }
 
     @Override
     public String getGeometryFileName()
     {
-        return geometryFileName;
+        try
+        {
+            return this.rootDirectory.toPath().relativize(this.geometryFile.toPath()).toString();
+        }
+        catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
+        {
+            return previewImageDirectory == null ? null : previewImageDirectory.toString();
+        }
     }
 
     /**
@@ -501,25 +495,32 @@ public final class ViewSet implements ReadonlyViewSet
      */
     public void setGeometryFileName(String fileName)
     {
-        this.geometryFileName = fileName;
+        this.geometryFile = this.rootDirectory.toPath().resolve(fileName).toFile();
     }
 
     @Override
     public File getGeometryFile()
     {
-        return geometryFileName == null ? null : new File(this.rootDirectory, geometryFileName);
+        return geometryFile;
     }
 
     @Override
     public File getFullResImageFilePath()
     {
-        return this.relativeFullResImagePathName == null ? this.rootDirectory : new File(this.rootDirectory, relativeFullResImagePathName);
+        return this.fullResImageDirectory == null ? this.rootDirectory : this.fullResImageDirectory;
     }
 
     @Override
     public String getRelativeFullResImagePathName()
     {
-        return this.relativeFullResImagePathName;
+        try
+        {
+            return this.rootDirectory.toPath().relativize(this.fullResImageDirectory.toPath()).toString();
+        }
+        catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
+        {
+            return fullResImageDirectory == null ? null : fullResImageDirectory.toString();
+        }
     }
 
     /**
@@ -528,19 +529,26 @@ public final class ViewSet implements ReadonlyViewSet
      */
     public void setRelativeFullResImagePathName(String relativeImagePath)
     {
-        this.relativeFullResImagePathName = relativeImagePath;
+        this.fullResImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
     }
 
     @Override
     public File getPreviewImageFilePath()
     {
-        return this.relativePreviewImagePathName == null ? this.rootDirectory : new File(this.rootDirectory, relativePreviewImagePathName);
+        return this.previewImageDirectory == null ? this.rootDirectory : this.previewImageDirectory;
     }
 
     @Override
     public String getRelativePreviewImagePathName()
     {
-        return this.relativePreviewImagePathName;
+        try
+        {
+            return this.rootDirectory.toPath().relativize(this.previewImageDirectory.toPath()).toString();
+        }
+        catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
+        {
+            return previewImageDirectory == null ? null : previewImageDirectory.toString();
+        }
     }
 
     /**
@@ -549,7 +557,7 @@ public final class ViewSet implements ReadonlyViewSet
      */
     public void setRelativePreviewImagePathName(String relativeImagePath)
     {
-        this.relativePreviewImagePathName = relativeImagePath;
+        this.previewImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
     }
 
     @Override
@@ -773,5 +781,16 @@ public final class ViewSet implements ReadonlyViewSet
     public File findPreviewPrimaryImageFile() throws FileNotFoundException
     {
         return findPreviewImageFile(primaryViewIndex);
+    }
+
+    @Override
+    public UUID getUuid()
+    {
+        return viewSetUid;
+    }
+
+    public void setUuid(UUID viewSetUid)
+    {
+        this.viewSetUid = viewSetUid;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Seth Berrier, Michael Tetzlaff, Josh Lyu, Luke Denney, Jacob Buelow
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,8 +13,10 @@
 package kintsugi3d.gl.javafx;
 
 import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.util.OptionalInt;
 
+import com.sun.glass.ui.Application;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -309,56 +311,69 @@ public final class FramebufferView extends Region
                 Thread copyThread = // Copy into WritableImage on another thread:
                     new Thread(() ->
                     {
-                        while (frontImagePending)
+                        Instant threadStart = Instant.now();
+                        while (frontImagePending
+                            && java.time.Duration.between(threadStart, Instant.now())
+                                .compareTo(java.time.Duration.ofSeconds(3) /* 3 sec. timeout for failsafe */) < 0.0)
+                                // We need to be careful that this thread doesn't prevent the application from terminating
+                                // in the event that JavaFX quit since the previous frame became available (i.e. the image became pending).
                         {
                             Thread.onSpinWait();
                         }
 
-                        // prevent swap in the middle of graphics thread writing to back copy buffer
-                        synchronized (backCopyBufferLock)
+                        try
                         {
-                            if (copyBufferSwapReady)
+                            if (!frontImagePending) // could still be pending if the wait loop timed out
                             {
-                                copyBufferSwapReady = false;
+                                // prevent swap in the middle of graphics thread writing to back copy buffer
+                                synchronized (backCopyBufferLock)
+                                {
+                                    if (copyBufferSwapReady)
+                                    {
+                                        copyBufferSwapReady = false;
 
-                                // Swap copy buffers
-                                // back is written to by graphics thread
-                                // front is read from by copy thread
-                                ByteBuffer tmp = frontCopyBuffer;
-                                frontCopyBuffer = backCopyBuffer;
-                                backCopyBuffer = tmp;
+                                        // Swap copy buffers
+                                        // back is written to by graphics thread
+                                        // front is read from by copy thread
+                                        ByteBuffer tmp = frontCopyBuffer;
+                                        frontCopyBuffer = backCopyBuffer;
+                                        backCopyBuffer = tmp;
+                                    }
+                                }
+
+                                //noinspection FloatingPointEquality
+                                if (fboCopyBufferDimensions.width != backImage.getWidth() || fboCopyBufferDimensions.height != backImage.getHeight())
+                                {
+                                    backImage = new WritableImage(fboCopyBufferDimensions.width, fboCopyBufferDimensions.height);
+                                }
+
+                                backImage.getPixelWriter().setPixels(0, 0, fboCopyBufferDimensions.width, fboCopyBufferDimensions.height,
+                                    PixelFormat.getByteBgraInstance(), frontCopyBuffer, fboCopyBufferDimensions.width * 4);
+
+                                // Swap images
+                                WritableImage tmp = frontImage;
+                                frontImage = backImage;
+                                backImage = tmp;
+
+                                frontImagePending = true;
                             }
                         }
-
-                        //noinspection FloatingPointEquality
-                        if (fboCopyBufferDimensions.width != backImage.getWidth() || fboCopyBufferDimensions.height != backImage.getHeight())
+                        finally // always need to indicate that the thread finished, even if an exception was thrown.
                         {
-                            backImage = new WritableImage(fboCopyBufferDimensions.width, fboCopyBufferDimensions.height);
-                        }
-
-                        backImage.getPixelWriter().setPixels(0, 0, fboCopyBufferDimensions.width, fboCopyBufferDimensions.height,
-                            PixelFormat.getByteBgraInstance(), frontCopyBuffer, fboCopyBufferDimensions.width * 4);
-
-                        // Swap images
-                        WritableImage tmp = frontImage;
-                        frontImage = backImage;
-                        backImage = tmp;
-
-                        frontImagePending = true;
-
-                        // prevent race conditions related to starting the next thread
-                        synchronized (nextCopyThreadLock)
-                        {
-                            if (nextCopyThread != null)
+                            // prevent race conditions related to starting the next thread
+                            synchronized (nextCopyThreadLock)
                             {
-                                // Kick off the next copy thread if another is ready to go.
-                                nextCopyThread.start();
-                                nextCopyThread = null;
-                            }
-                            else
-                            {
-                                // Otherwise, there's no longer a copy thread running
-                                copyThreadRunning = false;
+                                if (nextCopyThread != null)
+                                {
+                                    // Kick off the next copy thread if another is ready to go.
+                                    nextCopyThread.start();
+                                    nextCopyThread = null;
+                                }
+                                else
+                                {
+                                    // Otherwise, there's no longer a copy thread running
+                                    copyThreadRunning = false;
+                                }
                             }
                         }
                     });

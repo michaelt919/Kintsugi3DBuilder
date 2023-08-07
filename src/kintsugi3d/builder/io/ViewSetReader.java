@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Seth Berrier, Michael Tetzlaff, Josh Lyu, Luke Denney, Jacob Buelow
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -28,7 +28,7 @@ public interface ViewSetReader
      * @param stream The input stream
      * @return The view set
      */
-    ViewSet readFromStream(InputStream stream) throws Exception;
+    ViewSet readFromStream(InputStream stream, File root) throws Exception;
 
     /**
      * Loads a view set from an input file.
@@ -41,8 +41,7 @@ public interface ViewSetReader
     {
         try (InputStream stream = new FileInputStream(file))
         {
-            ViewSet result = readFromStream(stream);
-            result.setRootDirectory(file.getParentFile());
+            ViewSet result = readFromStream(stream, file.getParentFile());
             return result;
         }
     }

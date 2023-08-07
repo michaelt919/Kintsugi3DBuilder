@@ -1,5 +1,19 @@
+/*
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ *
+ */
+
 package kintsugi3d.builder.javafx.controllers.menubar;
 
+import javafx.application.Platform;
+import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -40,6 +54,10 @@ public class ConsoleController implements Initializable
 
         messageListView.setCellFactory(new LogMessageCellFactory());
         messageListView.setItems(logMessages.getMessages().filtered(this::logMessagePassesFilter));
+
+        messageListView.scrollTo(messageListView.getItems().size() - 1);
+
+        messageListView.getItems().addListener(new ListChangeAutoscroll());
 
         // If the logger cannot log a level, disable a filter button
         if (! logMessages.isLevelAvailable(Level.ERROR))
@@ -129,41 +147,44 @@ public class ConsoleController implements Initializable
                 @Override
                 public void updateItem(LogMessage message, boolean empty)
                 {
-                    super.updateItem(message, empty);
-                    if (empty || message == null)
+                    Platform.runLater(() ->
                     {
-                        setText(null);
-                        setGraphic(null);
-                        setStyle(null);
-                    } else
-                    {
-                        setText(null);
-
-                        Label levelLabel = new Label(message.getLogLevel().toString());
-                        levelLabel.setPrefWidth(40);
-                        Label messageLabel = new Label(message.getMessage());
-
-                        HBox box = new HBox(levelLabel, messageLabel);
-
-                        box.setSpacing(10);
-
-                        Tooltip.install(box, new Tooltip(formatTooltip(message)));
-
-                        if (message.getLogLevel() == Level.ERROR)
+                        super.updateItem(message, empty);
+                        if (empty || message == null)
                         {
-                            setStyle("-fx-background-color: #fa6d6d");
-                        }
-                        else if (message.getLogLevel() == Level.WARN)
-                        {
-                            setStyle("-fx-background-color: #fab66d");
-                        }
-                        else
-                        {
+                            setText(null);
+                            setGraphic(null);
                             setStyle(null);
-                        }
+                        } else
+                        {
+                            setText(null);
 
-                        setGraphic(box);
-                    }
+                            Label levelLabel = new Label(message.getLogLevel().toString());
+                            levelLabel.setPrefWidth(40);
+                            Label messageLabel = new Label(message.getMessage());
+
+                            HBox box = new HBox(levelLabel, messageLabel);
+
+                            box.setSpacing(10);
+
+                            Tooltip.install(box, new Tooltip(formatTooltip(message)));
+
+                            if (message.getLogLevel() == Level.ERROR)
+                            {
+                                setStyle("-fx-background-color: #fa6d6d");
+                            }
+                            else if (message.getLogLevel() == Level.WARN)
+                            {
+                                setStyle("-fx-background-color: #fab66d");
+                            }
+                            else
+                            {
+                                setStyle(null);
+                            }
+
+                            setGraphic(box);
+                        }
+                    });
                 }
             };
         }
@@ -176,6 +197,18 @@ public class ConsoleController implements Initializable
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyy hh:mm:ss").withZone(ZoneId.systemDefault());
             sb.append(formatter.format(message.getTimestamp()));
             return sb.toString();
+        }
+    }
+
+    private class ListChangeAutoscroll implements ListChangeListener<LogMessage>
+    {
+        @Override
+        public void onChanged(Change<? extends LogMessage> change)
+        {
+            Platform.runLater(() ->
+            {
+                messageListView.scrollTo(messageListView.getItems().size() - 1);
+            });
         }
     }
 }
