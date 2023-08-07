@@ -24,9 +24,9 @@ import java.util.List;
 
 public class RecentProjects extends WelcomeWindowController {
 
-    private static File recentProjectsFile = new File(ApplicationFolders.getUserAppDirectory(), "recentFiles.txt");
     private static WelcomeWindowController welcomeWindowController;
     private static MenubarController menubarController;
+    private static File recentProjectsFile = new File(ApplicationFolders.getUserAppDirectory(), "recentFiles.txt");
 
     public static List<String> getItemsFromRecentsFile() {
         List<String> projectItems = new ArrayList<>();

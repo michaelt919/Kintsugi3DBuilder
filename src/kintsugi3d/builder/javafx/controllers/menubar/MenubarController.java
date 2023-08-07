@@ -78,7 +78,7 @@ public class MenubarController
     private InternalModels internalModels;
 
     //Window open flags
-    private final Flag ibrOptionsWindowOpen = new Flag(false);
+    private final Flag advPhotoViewWindowOpen = new Flag(false);
     private final Flag jvmOptionsWindowOpen = new Flag(false);
     private final Flag loadOptionsWindowOpen = new Flag(false);
     private final Flag loaderWindowOpen = new Flag(false);
@@ -91,6 +91,8 @@ public class MenubarController
 
     //toggle groups
     @FXML private ToggleGroup renderGroup;
+
+    public Menu aboutMenu;
 
     //menu items
     //TODO: ORGANIZE CHECK MENU ITEMS
@@ -602,15 +604,15 @@ public class MenubarController
     @FXML
     private void shading_IBRSettings()
     {
-        if (ibrOptionsWindowOpen.get())
+        if (advPhotoViewWindowOpen.get())
         {
             return;
         }
 
         try
         {
-            IBROptionsController ibrOptionsController = makeWindow("IBR Settings", ibrOptionsWindowOpen, "fxml/menubar/IBROptions.fxml");
-            ibrOptionsController.bind(internalModels.getSettingsModel());
+            AdvPhotoViewController advPhotoViewController = makeWindow("Advanced Photo View", advPhotoViewWindowOpen, "fxml/menubar/AdvPhotoViewSettings.fxml");
+            advPhotoViewController.bind(internalModels.getSettingsModel());
         }
         catch(IOException e)
         {
@@ -892,5 +894,12 @@ public class MenubarController
                 convertedMenuItem.setDisable(!isChecked);
             }
         }
+    }
+
+    //used so the user can click on the About menu and immediately see the about modal
+    //instead of clicking on a single menu item
+    public void hideAndShowAboutModal() {
+        aboutMenu.hide();
+        help_about();
     }
 }
