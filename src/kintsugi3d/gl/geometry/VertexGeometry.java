@@ -444,7 +444,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
             }
         }
 
-        inst.centroid = sum.dividedBy(vertexList.size());
+        inst.centroid = sum.dividedBy(vertexIndexList.size());
 
         Map<NormalTexCoordPair, Vector4> orthoTangentsMap = new HashMap<>(tangentMap.size());
         for (Entry<NormalTexCoordPair, Vector3> entry : tangentMap.entrySet())
