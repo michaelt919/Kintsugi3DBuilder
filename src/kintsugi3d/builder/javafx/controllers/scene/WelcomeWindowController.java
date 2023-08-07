@@ -20,6 +20,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -88,6 +89,7 @@ public class WelcomeWindowController {
         projectFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Full projects", "*.ibr"));
         projectFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Standalone view sets", "*.vset"));
 
+        RecentProjects.initializeWelcomeWindowController(this);
         updateRecentProjectsButton();
 
         MultithreadModels.getInstance().getLoadingModel().setLoadingMonitor(new LoadingMonitor() {
@@ -132,6 +134,7 @@ public class WelcomeWindowController {
     }
 
     public void updateRecentProjectsButton() {//TODO: FORMAT ----- PROJECT NAME --> PATH
+        //TODO: REMOVE REPETITION WITH MENUBARCONTROLLER
         recentProjectsSplitMenuButton.getItems().clear();
 
         ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
@@ -263,7 +266,7 @@ public class WelcomeWindowController {
             this.vsetFile = newVsetFile;
             File vsetFileRef = newVsetFile;
 
-            RecentProjects.updateRecentFiles(projectFile.getAbsolutePath(), this);
+            RecentProjects.updateRecentFiles(projectFile.getAbsolutePath());
 
             projectLoaded = true;
 
@@ -360,6 +363,11 @@ public class WelcomeWindowController {
 
     public void unrollMenu() {
         recentProjectsSplitMenuButton.show();
+    }
+
+    public void hideMenu(MouseEvent mouseEvent){
+        //recentProjectsSplitMenuButton.hide();
+        //TODO: ONLY HIDE THE MENU WHEN THE USER'S MOUSE LEAVES THE CONTEXT MENU
     }
 
 }
