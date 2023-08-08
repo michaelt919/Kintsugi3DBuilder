@@ -155,4 +155,29 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
             log.error("An error occurred saving normal map:", e);
         }
     }
+
+    public void saveConstantMap(File outputDirectory)
+    {
+        try
+        {
+            getConstantMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "constant.png"));
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred saving diffuse map:", e);
+        }
+    }
+
+    public void saveQuadraticMap(File outputDirectory)
+    {
+        try
+        {
+            getQuadraticMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "quadratic.png"));
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred saving diffuse map:", e);
+        }
+    }
+
 }

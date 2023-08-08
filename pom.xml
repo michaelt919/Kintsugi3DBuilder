@@ -14,18 +14,64 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>Kintsugi3D</groupId>
     <artifactId>Kintsugi3DBuilder</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
     <packaging>jar</packaging>
     <build>
         <sourceDirectory>src</sourceDirectory>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.1</version>
                 <configuration>
                     <source>11</source>
                     <target>11</target>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>log4j-plugin-processor</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <phase>process-classes</phase>
+                        <configuration>
+                            <proc>only</proc>
+                            <annotationProcessors>
+                                <annotationProcessor>org.apache.logging.log4j.core.config.plugins.processor.PluginProcessor</annotationProcessor>
+                            </annotationProcessors>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <transformers>
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                            <mainClass>kintsugi3d.builder.app.Kintsugi3DBuilder</mainClass>
+                        </transformer>
+                        <transformer implementation="com.github.edwgiz.mavenShadePlugin.log4j2CacheTransformer.PluginsCacheFileTransformer" />
+                    </transformers>
+                    <shadedArtifactAttached>true</shadedArtifactAttached>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.github.edwgiz</groupId>
+                        <artifactId>maven-shade-plugin.log4j2-cachefile-transformer</artifactId>
+                        <version>2.6.1</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>com.akathist.maven.plugins.launch4j</groupId>
@@ -34,14 +80,15 @@
                 <executions>
                     <execution>
                         <id>l4j-clui</id>
-                        <phase>install</phase>
+                        <phase>package</phase>
                         <goals><goal>launch4j</goal></goals>
                         <configuration>
                             <headerType>gui</headerType>
                             <outfile>target/Kintsugi3DBuilder.exe</outfile>
-                            <jar>target/${project.artifactId}-${project.version}-jar-with-dependencies.jar</jar>
+                            <jar>target/${project.artifactId}-${project.version}-shaded.jar</jar>
                             <icon>ibr.ico</icon>
                             <downloadUrl>https://adoptium.net/temurin/releases/?version=11</downloadUrl>
+                            <chdir>.</chdir>
                             <jre>
                                 <path>jre;%JAVA_HOME%;%PATH%</path>
                                 <minVersion>11.0.0</minVersion>
@@ -57,25 +104,8 @@
                 <version>3.3.0</version>
                 <executions>
                     <execution>
-                        <id>build-exec-jar</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <archive>
-                                <manifest>
-                                    <mainClass>kintsugi3d.builder.app.Kintsugi3DBuilder</mainClass>
-                                </manifest>
-                            </archive>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                        </configuration>
-                    </execution>
-                    <execution>
                         <id>build-dist-zip</id>
-                        <phase>install</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
@@ -84,6 +114,28 @@
                                 <descriptor>src/assembly/distribution.xml</descriptor>
                             </descriptors>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.digitalmediaserver</groupId>
+                <artifactId>nsis-maven-plugin</artifactId>
+                <version>1.0.3</version>
+                <configuration>
+                    <injectHeaderFile>true</injectHeaderFile>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>build-windows-installer</id>
+                        <phase>install</phase>
+                        <configuration>
+                            <scriptFile>installer.nsi</scriptFile>
+                            <outputFile>${project.artifactId}-${project.version}-setup.exe</outputFile>
+                        </configuration>
+                        <goals>
+                            <goal>generate-headerfile</goal>
+                            <goal>make</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
@@ -157,11 +209,6 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-imaging</artifactId>
             <version>1.0-alpha1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-swing</artifactId>
-            <version>11-ea+24</version>
         </dependency>
     </dependencies>
 </project>

@@ -100,14 +100,14 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
         if (loadOptions.isCompressionRequested())
         {
             this.textureArray = builder
-                    .setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP)
-                    .createTexture();
+                .setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP)
+                .createTexture();
         }
         else
         {
             this.textureArray = builder
-                    .setInternalFormat(ColorFormat.RGBA8)
-                    .createTexture();
+                .setInternalFormat(ColorFormat.RGBA8)
+                .createTexture();
         }
 
         if(loadingMonitor != null)
@@ -121,8 +121,8 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
             log.info("Loading camera pose {}/{}", k, getViewSet().getCameraPoseCount());
 
             textureArray.loadLayer(k,
-                    ImageFinder.getInstance().findImageFile(new File(textureDirectory, getViewSet().getImageFileName(k))),
-                    true);
+                ImageFinder.getInstance().findImageFile(new File(textureDirectory, getViewSet().getImageFileName(k))),
+                true);
 
             if(loadingMonitor != null)
             {

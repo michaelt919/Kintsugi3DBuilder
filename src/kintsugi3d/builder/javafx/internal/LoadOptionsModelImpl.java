@@ -25,8 +25,8 @@ public class LoadOptionsModelImpl implements ReadonlyLoadOptionsModel
     public final BooleanProperty compression = new SimpleBooleanProperty(true);
     public final BooleanProperty alpha = new SimpleBooleanProperty(true);
     public final BooleanProperty depthImages = new SimpleBooleanProperty(true);
-    public final IntegerProperty depthWidth = new SimpleIntegerProperty(1024);
-    public final IntegerProperty depthHeight = new SimpleIntegerProperty(1024);
+    public final IntegerProperty depthWidth = new SimpleIntegerProperty(512);
+    public final IntegerProperty depthHeight = new SimpleIntegerProperty(512);
     public final IntegerProperty previewWidth = new SimpleIntegerProperty(1024);
     public final IntegerProperty previewHeight = new SimpleIntegerProperty(1024);
 
