@@ -402,7 +402,8 @@ public class SpecularFitGltfExporter
             {
                 Vector3 normal = new Vector3(normInBuffer.get(i), normInBuffer.get(i+1), normInBuffer.get(i+2));
 
-                // Ignore translation, only rotation and scale, but normalized so only non-uniform scale
+                // Ignore translation, only rotation and scale, but normalized to cancel uniform scale
+                // Non-uniform scale is unsupported
                 normal = transformation.getUpperLeft3x3().times(normal).normalized();
 
                 normOutBuffer.put(i, normal.x);
