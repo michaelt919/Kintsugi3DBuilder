@@ -48,9 +48,9 @@ public class LoadOptionsController implements Initializable
         depthHeight.disableProperty().bind(depthImages.selectedProperty().not());
     }
 
-    private void setupTextAndProp(IntegerProperty prop, TextField tex)
+    private void setupTextAndProp(IntegerProperty integerProperty, TextField txtField)
     {
-        StringConverter<Number> ISC = new StringConverter<Number>()
+        StringConverter<Number> numberStringConverter = new StringConverter<Number>()
         {
             @Override
             public String toString(Number object)
@@ -78,19 +78,19 @@ public class LoadOptionsController implements Initializable
                 }
             }
         };
-        tex.textProperty().bindBidirectional(prop, ISC);
-        tex.focusedProperty().addListener((ob, o, n) ->
+        txtField.textProperty().bindBidirectional(integerProperty, numberStringConverter);
+        txtField.focusedProperty().addListener((ob, o, n) ->
         {
             if (o && !n)
             {
-                tex.setText(prop.getValue().toString());
+                txtField.setText(integerProperty.getValue().toString());
             }
         });
-        prop.addListener((ob, o, n) ->
+        integerProperty.addListener((ob, o, n) ->
         {
             if (n.intValue() < 1)
             {
-                prop.setValue(1);
+                integerProperty.setValue(1);
             }
         });
     }

@@ -25,7 +25,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
-import main.resources.fxml.menubar.CreateProjectController;
 import org.xml.sax.SAXException;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.core.IBRRequestManager;

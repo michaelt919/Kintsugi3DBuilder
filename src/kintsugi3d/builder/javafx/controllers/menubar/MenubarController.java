@@ -30,8 +30,9 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
 import javafx.application.Platform;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -48,6 +49,7 @@ import javafx.scene.text.Text;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
+import javafx.util.StringConverter;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,6 +158,10 @@ public class MenubarController
     private boolean projectLoaded;
 
     private Runnable userDocumentationHandler;
+
+    final Number DEFAULT_VALUE = 1024;
+    private IntegerProperty widthIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
+    private IntegerProperty heightIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
 
 
     public <ContextType extends Context<ContextType>> void init(
@@ -285,6 +291,13 @@ public class MenubarController
         updateRelightingVisibility();
         updatePreloadVisibilityEtc();
 
+        setupTxtFieldProperties(widthIntProperty, widthTxtField);
+        setupTxtFieldProperties(heightIntProperty, heightTxtField);
+
+        widthTxtField.disableProperty().bind(preloadVisibilityEtcCheckMenuItem.selectedProperty().not());
+        heightTxtField.disableProperty().bind(preloadVisibilityEtcCheckMenuItem.selectedProperty().not());
+
+
         lightCalibrationCheckMenuItem.selectedProperty().addListener(observable ->
         {
             if (!lightCalibrationCheckMenuItem.isSelected())
@@ -357,8 +370,20 @@ public class MenubarController
         sceneWindowMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("sceneWindowOpen"));
 
-        //TODO: HOW TO BIND?
-        //mipmapCheckMenuItem.selectedProperty().bindBidirectional(loadSettings.mipmaps);
+        mipmapCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getLoadOptionsModel().mipmaps);
+        preloadVisibilityEtcCheckMenuItem.selectedProperty().bindBidirectional(
+                internalModels.getLoadOptionsModel().depthImages);
+
+        widthIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthWidth);
+        heightIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthHeight);
+
+        imageCompressionCheckMenuItem.selectedProperty().bindBidirectional(
+                internalModels.getLoadOptionsModel().compression);
+
+        //also:
+        //preload vis and shadow testing / generate depth images
+        //compressed images
+        //full alpha channel?
 
     }
 
@@ -612,7 +637,7 @@ public class MenubarController
 
         try
         {
-            AdvPhotoViewController advPhotoViewController = makeWindow("Advanced Photo View", advPhotoViewWindowOpen, "fxml/menubar/AdvPhotoViewSettings.fxml");
+            AdvPhotoViewController advPhotoViewController = makeWindow("Advanced Photo View", advPhotoViewWindowOpen, "fxml/menubar/AdvPhotoView.fxml");
             advPhotoViewController.bind(internalModels.getSettingsModel());
         }
         catch(IOException e)
@@ -895,6 +920,53 @@ public class MenubarController
                 convertedMenuItem.setDisable(!isChecked);
             }
         }
+    }
+
+    //this function is used to hook up the text field's string property to the backend
+    //StringProperty --> IntegerProperty
+    private void setupTxtFieldProperties(IntegerProperty integerProperty, TextField txtField) {StringConverter<Number> numberStringConverter = new StringConverter<Number>()
+        {
+            @Override
+            public String toString(Number object)
+            {
+                if (object != null)
+                {
+                    return Integer.toString(object.intValue());
+                }
+                else
+                {
+                    return String.valueOf(DEFAULT_VALUE);
+                }
+            }
+
+            @Override
+            public Number fromString(String string)
+            {
+                try
+                {
+                    return Integer.valueOf(string);
+                }
+                catch (NumberFormatException nfe)
+                {
+                    return DEFAULT_VALUE;
+                }
+            }
+        };
+        txtField.textProperty().bindBidirectional(integerProperty, numberStringConverter);
+        txtField.focusedProperty().addListener((ob, o, n) ->
+        {
+            if (o && !n)
+            {
+                txtField.setText(integerProperty.getValue().toString());
+            }
+        });
+        integerProperty.addListener((ob, o, n) ->
+        {
+            if (n.intValue() < 1)
+            {
+                integerProperty.setValue(1);
+            }
+        });
     }
 
     public void hideAndShowAboutModal() {

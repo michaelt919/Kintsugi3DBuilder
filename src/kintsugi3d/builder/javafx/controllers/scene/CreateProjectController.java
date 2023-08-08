@@ -10,7 +10,7 @@
  *
  */
 
-package main.resources.fxml.menubar;
+package kintsugi3d.builder.javafx.controllers.scene;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
