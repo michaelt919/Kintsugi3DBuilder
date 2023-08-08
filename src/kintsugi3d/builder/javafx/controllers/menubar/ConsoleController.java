@@ -153,9 +153,18 @@ public class ConsoleController implements Initializable
                             levelLabel.setPrefWidth(40);
 
                             StringBuilder labelText = new StringBuilder(message.getMessage());
-                            if (this.isSelected())
+
+                            if (message.getThrown() != null)
                             {
-                                labelText.append(strStackTrace(message.getThrown()));
+                                if (this.isSelected())
+                                {
+                                    labelText.append("\n");
+                                    labelText.append(strStackTrace(message.getThrown()));
+                                }
+                                else
+                                {
+                                    labelText.append("... (Click for more)");
+                                }
                             }
 
                             Label messageLabel = new Label(labelText.toString());
@@ -194,7 +203,7 @@ public class ConsoleController implements Initializable
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             thrown.printStackTrace(pw);
-            return "\n" + sw.toString().trim();
+            return sw.toString().trim();
         }
 
         private String formatTooltip(LogMessage message)
