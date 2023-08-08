@@ -89,8 +89,8 @@
                      </Label>
                  </content>
              </SeparatorMenuItem>
-            <CheckMenuItem fx:id="relightingCheckMenuItem" mnemonicParsing="false" onAction="#updateRelightingVisibility" selected="true" text="Relighting (UNFINISHED)" />
-             <CheckMenuItem fx:id="visibleLightWidgetsCheckMenuItem" mnemonicParsing="false" selected="true" text="Show light widgets (UNFINISHED)" />
+            <CheckMenuItem fx:id="relightingCheckMenuItem" mnemonicParsing="false" onAction="#updateRelightingVisibility" selected="true" text="Relighting" />
+             <CheckMenuItem fx:id="visibleLightWidgetsCheckMenuItem" mnemonicParsing="false" selected="true" text="Show light widgets" />
              <Menu fx:id="perLightIntensityMenu" mnemonicParsing="false" text="Per-light Intensity (UNFINISHED)">
               <items>
                   <CheckMenuItem fx:id="enableLight1CheckMenuItem" mnemonicParsing="false" selected="true" text="Enable Light 1" />
@@ -294,9 +294,9 @@
              <SeparatorMenuItem mnemonicParsing="false" />
             <MenuItem mnemonicParsing="false" text="Accessibility Settings (UNFINISHED)" />
              <Menu text="Photo Lighting Settings">
-                 <CheckMenuItem fx:id="fresnelEffectCheckMenuItem" mnemonicParsing="false" text="Fresnel effect (UNFINISHED)" />
-                 <CheckMenuItem fx:id="shadowsCheckMenuItem" mnemonicParsing="false" selected="true" text="Shadows (UNFINISHED)" />
-                 <CheckMenuItem fx:id="phyMaskingCheckMenuItem" mnemonicParsing="false" text="Physically based masking/shadowing (UNFINISHED)" />
+                 <CheckMenuItem fx:id="fresnelEffectCheckMenuItem" mnemonicParsing="false" text="Fresnel effect" />
+                 <CheckMenuItem fx:id="shadowsCheckMenuItem" mnemonicParsing="false" selected="true" text="Shadows" />
+                 <CheckMenuItem fx:id="phyMaskingCheckMenuItem" mnemonicParsing="false" text="Physically based masking/shadowing" />
              </Menu>
          </items>
       </Menu>

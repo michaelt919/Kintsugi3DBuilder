@@ -379,12 +379,6 @@ public class MenubarController
 
         imageCompressionCheckMenuItem.selectedProperty().bindBidirectional(
                 internalModels.getLoadOptionsModel().compression);
-
-        //also:
-        //preload vis and shadow testing / generate depth images
-        //compressed images
-        //full alpha channel?
-
     }
 
     private void bindSlidersToTxtFields() {
@@ -777,7 +771,7 @@ public class MenubarController
 
         try
         {
-            JvmSettingsController jvmSettingsController = makeWindow("JVM Settings", jvmOptionsWindowOpen, "fxml/menubar/JvmSettings.fxml");
+            makeWindow("JVM Settings", jvmOptionsWindowOpen, "fxml/menubar/JvmSettings.fxml");
         }
         catch(IOException e)
         {
