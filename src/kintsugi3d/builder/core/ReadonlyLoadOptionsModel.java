@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.core;//Created by alexk on 7/31/2017.
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.core.ColorFormat;
 import kintsugi3d.gl.core.CompressionFormat;
@@ -29,6 +30,7 @@ public interface ReadonlyLoadOptionsModel
     int getPreviewImageWidth();
     int getPreviewImageHeight();
 
+    @JsonIgnore
     default TextureLoadOptions getTextureLoadOptions()
     {
         TextureLoadOptions options = new TextureLoadOptions();
