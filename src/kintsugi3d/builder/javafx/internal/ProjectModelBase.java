@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.javafx.internal;
 
+import kintsugi3d.gl.util.UnzipHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;

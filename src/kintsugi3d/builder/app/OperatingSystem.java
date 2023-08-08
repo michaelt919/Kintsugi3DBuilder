@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -10,18 +10,12 @@
  *
  */
 
-package kintsugi3d.builder.state;//Created by alexk on 7/21/2017.
+package kintsugi3d.builder.app;
 
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
-
-public interface ExtendedObjectModel extends ObjectModel, ReadonlyExtendedObjectModel
+public enum OperatingSystem
 {
-    void setOrbit(Matrix4 orbit);
-    void setCenter(Vector3 center);
-    void setRotationZ(float rotationZ);
-    void setRotationY(float rotationY);
-    void setRotationX(float rotationX);
-
-    void setScale(float scale);
+    UNKNOWN,
+    WINDOWS,
+    MACOS,
+    UNIX,
 }

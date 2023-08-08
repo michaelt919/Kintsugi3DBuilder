@@ -32,7 +32,7 @@ public class ObjectPoseSetting implements DOMConvertable
     private final DoubleProperty scale = new SimpleDoubleProperty();
 
     public ObjectPoseSetting(Double centerX, Double centerY, Double centerZ,
-                             Double rotateY, Double rotateX, Double rotateZ, Boolean locked, String name)
+                             Double rotateY, Double rotateX, Double rotateZ, Boolean locked, Double scale, String name)
     {
         this.centerX.setValue(centerX);
         this.centerY.setValue(centerY);
@@ -41,6 +41,7 @@ public class ObjectPoseSetting implements DOMConvertable
         this.rotateX.setValue(rotateX);
         this.rotateZ.setValue(rotateZ);
         this.locked.setValue(locked);
+        this.scale.setValue(scale);
         this.name.setValue(name);
     }
 
@@ -55,6 +56,7 @@ public class ObjectPoseSetting implements DOMConvertable
         element.setAttribute("rotateX", rotateX.getValue().toString());
         element.setAttribute("rotateZ", rotateZ.getValue().toString());
         element.setAttribute("locked", locked.getValue().toString());
+        element.setAttribute("scale", scale.getValue().toString());
         element.setAttribute("name", name.getValue());
         return element;
     }
@@ -69,6 +71,7 @@ public class ObjectPoseSetting implements DOMConvertable
             Double.valueOf(element.getAttribute("rotateX")),
             Double.valueOf(element.getAttribute("rotateZ")),
             Boolean.valueOf(element.getAttribute("locked")),
+            element.hasAttribute("scale") ? Double.parseDouble(element.getAttribute("scale")) : 1.0,
             element.getAttribute("name")
         );
     }
@@ -96,7 +99,9 @@ public class ObjectPoseSetting implements DOMConvertable
             this.rotateX.getValue(),
             this.rotateZ.getValue(),
             this.locked.getValue(),
-            this.name.getValue() + " copy"
+            this.scale.getValue(),
+            this.name.getValue()
+                    + " copy"
         );
     }
 
@@ -204,6 +209,13 @@ public class ObjectPoseSetting implements DOMConvertable
     {
         this.locked.set(locked);
     }
+
+    public DoubleProperty scaleProperty(){return scale;}
+
+    public double getScale(){return Math.pow(10, scale.get());}
+        //scale.get() returns the slider value before it has been adjusted to a logarithmic scale
+
+    public void setScale(double scale){this.scale.set(scale);}
 
     public String getName()
     {

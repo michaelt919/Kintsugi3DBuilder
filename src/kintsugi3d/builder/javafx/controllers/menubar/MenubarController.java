@@ -969,6 +969,8 @@ public class MenubarController
         });
     }
 
+    //used so the user can click on the About menu and immediately see the about modal
+    //instead of clicking on a single menu item
     public void hideAndShowAboutModal() {
         aboutMenu.hide();
         help_about();

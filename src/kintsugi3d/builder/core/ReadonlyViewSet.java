@@ -19,6 +19,7 @@ import kintsugi3d.gl.vecmath.Vector3;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Collection;
+import java.util.UUID;
 
 public interface ReadonlyViewSet
 {
@@ -226,4 +227,6 @@ public interface ReadonlyViewSet
     File findFullResPrimaryImageFile() throws FileNotFoundException;
     File findPreviewImageFile(int index) throws FileNotFoundException;
     File findPreviewPrimaryImageFile() throws FileNotFoundException;
+
+    UUID getUuid();
 }

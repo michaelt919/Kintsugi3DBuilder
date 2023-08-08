@@ -22,7 +22,8 @@ public abstract class ExtendedObjectModelBase implements ExtendedObjectModel
     @Override
     public Matrix4 getTransformationMatrix()
     {
-        return getOrbit().times(Matrix4.translate(getCenter().negated()));
+        return getOrbit().times(Matrix4.translate(getCenter()))
+                .times(Matrix4.scale(getScale()));
     }
 
     @Override
