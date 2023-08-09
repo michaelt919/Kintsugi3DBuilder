@@ -10,17 +10,15 @@
  *
  */
 
-package kintsugi3d.builder;
+package kintsugi3d.builder.preferences;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
+import java.io.IOException;
 
-public interface ReadOnlyUserPreferencesModel
+public interface UserPreferencesSerializer
 {
-    @JsonProperty("loadOptions")
-    ReadonlyLoadOptionsModel getReadOnlyLoadOptions();
+    void writeUserPreferences(UserPreferencesModel preferencesModel) throws IOException;
 
-    @JsonProperty("directoryPreferences")
-    ReadOnlyDirectoryPreferencesModel getReadOnlyDirectoryPreferences();
+    UserPreferencesModel readUserPreferences() throws IOException;
 
+    UserPreferencesModel readOrDefault();
 }

@@ -10,7 +10,7 @@
  *
  */
 
-package kintsugi3d.builder;
+package kintsugi3d.builder.preferences;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -19,6 +19,7 @@ import kintsugi3d.builder.core.SimpleLoadOptionsModel;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 public class JacksonUserPreferencesSerializer implements UserPreferencesSerializer
 {
@@ -54,17 +55,5 @@ public class JacksonUserPreferencesSerializer implements UserPreferencesSerializ
     public static File getPreferencesFile()
     {
         return new File(DIRECTORY, FILE_NAME);
-    }
-
-    public static void main(String[] args) throws Exception
-    {
-        UserPreferencesModel model = UserPreferencesModel.createDefault();
-        model.setLoadOptions(new SimpleLoadOptionsModel());
-
-        new JacksonUserPreferencesSerializer().writeUserPreferences(model);
-
-        UserPreferencesModel readModel = new JacksonUserPreferencesSerializer().readOrDefault();
-
-        ReadOnlyUserPreferencesModel overridden = new ReadOnlyMergedUserPreferencesModel(model, readModel);
     }
 }

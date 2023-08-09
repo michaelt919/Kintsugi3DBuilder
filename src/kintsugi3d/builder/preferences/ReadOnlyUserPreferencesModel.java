@@ -10,20 +10,17 @@
  *
  */
 
-package kintsugi3d.builder;
+package kintsugi3d.builder.preferences;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
 
-import java.nio.file.Path;
-
-public interface ReadOnlyDirectoryPreferencesModel
+public interface ReadOnlyUserPreferencesModel
 {
-    Path getPreviewImagesDirectory();
+    @JsonProperty("loadOptions")
+    ReadonlyLoadOptionsModel getReadOnlyLoadOptions();
 
-    Path getLogFileDirectory();
+    @JsonProperty("directoryPreferences")
+    ReadOnlyDirectoryPreferencesModel getReadOnlyDirectoryPreferences();
 
-    Path getCacheDirectory();
-
-    @JsonIgnore
-    Path getPreferencesFileLocation();
 }

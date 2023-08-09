@@ -10,15 +10,20 @@
  *
  */
 
-package kintsugi3d.builder;
+package kintsugi3d.builder.preferences;
 
-import java.io.IOException;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-public interface UserPreferencesSerializer
+import java.nio.file.Path;
+
+public interface ReadOnlyDirectoryPreferencesModel
 {
-    void writeUserPreferences(UserPreferencesModel preferencesModel) throws IOException;
+    Path getPreviewImagesDirectory();
 
-    UserPreferencesModel readUserPreferences() throws IOException;
+    Path getLogFileDirectory();
 
-    UserPreferencesModel readOrDefault();
+    Path getCacheDirectory();
+
+    @JsonIgnore
+    Path getPreferencesFileLocation();
 }

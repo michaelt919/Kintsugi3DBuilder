@@ -27,6 +27,7 @@ public class SpecularFitRequestParams
     private final ReconstructionSettings reconstructionSettings = new ReconstructionSettings();
     private final ImageCacheSettings imageCacheSettings = new ImageCacheSettings();
     private final ExportSettings exportSettings = new ExportSettings();
+    //TODO Merge project and global preferences and attach to request
 
     private double convergenceTolerance = 0.00001;
     private double preliminaryConvergenceTolerance = 0.01;

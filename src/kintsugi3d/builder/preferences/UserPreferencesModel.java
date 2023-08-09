@@ -10,7 +10,7 @@
  *
  */
 
-package kintsugi3d.builder;
+package kintsugi3d.builder.preferences;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
