@@ -69,7 +69,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
     private void handleMissingFiles(Exception e)
     {
-        log.error("An error occurred:", e);
+        log.error("An error occurred loading project:", e);
         if (loadingMonitor != null)
         {
             loadingMonitor.loadingFailed(e);

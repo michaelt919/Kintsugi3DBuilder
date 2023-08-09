@@ -13,6 +13,8 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import main.resources.fxml.menubar.CreateProjectController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.core.IBRRequestManager;
@@ -31,6 +33,7 @@ import java.util.*;
 import java.util.function.Predicate;
 
 public class WelcomeWindowController {
+    private static final Logger log = LoggerFactory.getLogger(WelcomeWindowController.class);
     private InternalModels internalModels;
 
     //Window open flags
@@ -114,7 +117,7 @@ public class WelcomeWindowController {
             public void loadingFailed(Exception e) {
                 loadingComplete();
                 projectLoaded = false;
-                Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, e.toString()).show());
+                handleException("An error occurred while loading project", e);
             }
         });
     }
@@ -175,9 +178,9 @@ public class WelcomeWindowController {
                     projectLoaded = true;
                 });
             }
-            catch (IOException e)
+            catch (Exception e)
             {
-                e.printStackTrace();
+                handleException("An error occurred creating a new project", e);
             }
         }
         updateRecentProjectsButton();
@@ -201,9 +204,9 @@ public class WelcomeWindowController {
                 });
                 createProjectController.init();
             }
-            catch (IOException e)
+            catch (Exception e)
             {
-                e.printStackTrace();
+                handleException("An error occurred creating a new project", e);
             }
         }
     }
@@ -238,9 +241,9 @@ public class WelcomeWindowController {
             {
                 newVsetFile = internalModels.getProjectModel().openProjectFile(projectFile);
             }
-            catch (IOException | ParserConfigurationException | SAXException e)
+            catch (Exception e)
             {
-                e.printStackTrace();
+                handleException("An error occurred opening project", e);
             }
         }
 
@@ -348,6 +351,15 @@ public class WelcomeWindowController {
 
     public void unrollMenu() {
         recentProjectsSplitMenuButton.show();
+    }
+
+    private void handleException(String message, Exception e)
+    {
+        log.error("{}:", message, e);
+        Platform.runLater(() ->
+        {
+            new Alert(Alert.AlertType.ERROR, message + "\nSee the log for more info.").show();
+        });
     }
 
 }
