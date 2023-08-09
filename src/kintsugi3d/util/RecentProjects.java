@@ -22,12 +22,13 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 
-public class RecentProjects extends WelcomeWindowController {
+public class RecentProjects {
 
     private static WelcomeWindowController welcomeWindowController;
     private static MenubarController menubarController;
     private static File recentProjectsFile = new File(ApplicationFolders.getUserAppDirectory(), "recentFiles.txt");
 
+    private RecentProjects(){throw new IllegalStateException("Utility class");};
     public static List<String> getItemsFromRecentsFile() {
         List<String> projectItems = new ArrayList<>();
 

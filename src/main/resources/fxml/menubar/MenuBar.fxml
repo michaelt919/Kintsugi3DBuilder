@@ -296,6 +296,8 @@
              <Menu text="Photo Lighting Settings">
                  <CheckMenuItem fx:id="fresnelEffectCheckMenuItem" mnemonicParsing="false" text="Fresnel effect" />
                  <CheckMenuItem fx:id="shadowsCheckMenuItem" mnemonicParsing="false" selected="true" text="Shadows" />
+                 <!--shadows check menu item is set as selected in the menubar controller
+                    "selected" state is overwritten to "false" during binding-->
                  <CheckMenuItem fx:id="phyMaskingCheckMenuItem" mnemonicParsing="false" text="Physically based masking/shadowing" />
              </Menu>
          </items>
@@ -378,7 +380,7 @@
          <CheckMenuItem mnemonicParsing="false" text="Full-screen render" />
          <CheckMenuItem mnemonicParsing="false" text="Separate render window" />
       </Menu>
-    <Menu mnemonicParsing="false" text="DEPRECATED MENU ITEMS" visible="false">
+    <Menu mnemonicParsing="false" text="DEPRECATED MENU ITEMS" visible ="false">
         <items>
             <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Export Specular Fit" visible="false">
                 <accelerator>
@@ -386,7 +388,7 @@
                 </accelerator>
             </MenuItem>
             <MenuItem mnemonicParsing="false" onAction="#file_colorChecker" text="Enter Color Checker Values... (DEPRECATED)" visible="false" />
-            <MenuItem mnemonicParsing="false" onAction="#unzip" text="Unzip Metashape File" visible="false">
+            <MenuItem mnemonicParsing="false" onAction="#unzip" text="Unzip Metashape File">
                 <accelerator>
                     <KeyCodeCombination alt="UP" code="M" control="ANY" meta="UP" shift="UP" shortcut="UP" />
                 </accelerator>
@@ -400,6 +402,7 @@
    </MenuBar>
    <HBox alignment="CENTER_LEFT" spacing="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
       <children>
+         <Button fx:id="settingsButton" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" onAction="#openSystemSettingsModal" prefWidth="52.0" text="Button" />
          <Button mnemonicParsing="false" onAction="#help_about" text="About" />
          <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" />
       </children>

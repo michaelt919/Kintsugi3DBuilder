@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -39,12 +40,15 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -88,6 +92,8 @@ public class MenubarController
     private final Flag colorCheckerWindowOpen = new Flag(false);
     private final Flag unzipperOpen = new Flag(false);
     private final Flag consoleWindowOpen = new Flag(false);
+    private Flag systemSettingsModalOpen = new Flag(false);
+
 
 
     @FXML private ProgressBar progressBar;
@@ -96,6 +102,7 @@ public class MenubarController
     @FXML private ToggleGroup renderGroup;
 
     public Menu aboutMenu;
+    public Button settingsButton;
 
     //menu items
     //TODO: ORGANIZE CHECK MENU ITEMS
@@ -307,6 +314,21 @@ public class MenubarController
             }
         });
 
+        //add graphic to settings button
+        try {
+            settingsButton.setGraphic(new ImageView(new Image(new File("ibr-icon.png").toURI().toURL().toString())));
+            double scale = 0.5;
+            settingsButton.setScaleX(scale);
+            settingsButton.setScaleY(scale);
+            settingsButton.setScaleZ(scale);
+            settingsButton.setTranslateX(10);
+            HBox parent = (HBox) settingsButton.getParent();
+            parent.setTranslateY(-15);
+        } catch (MalformedURLException e) {
+            settingsButton.setText("System Settings");
+            throw new RuntimeException(e);
+        }
+
         RecentProjects.initializeMenubarController(this);
         updateRecentProjectsMenu();
 
@@ -351,6 +373,7 @@ public class MenubarController
             internalModels.getSettingsModel().getBooleanProperty("relightingEnabled"));
         shadowsCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("shadowsEnabled"));
+        shadowsCheckMenuItem.setSelected(true);//need to do this here because it doesn't work in the fxml after binding
         visibleLightsCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("visibleLightsEnabled"));
         visibleLightWidgetsCheckMenuItem.selectedProperty().bindBidirectional(
@@ -560,6 +583,7 @@ public class MenubarController
         }
     }
 
+    //TODO: REMOVE?
     @FXML
     private void file_loadOptions()
     {
@@ -968,5 +992,21 @@ public class MenubarController
     public void hideAndShowAboutModal() {
         aboutMenu.hide();
         help_about();
+    }
+
+    public void openSystemSettingsModal() {
+        if (systemSettingsModalOpen.get())
+        {
+            return;
+        }
+
+        try
+        {
+            makeWindow("System Settings", systemSettingsModalOpen, "fxml/menubar/SystemSettings.fxml");
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred opening the settings modal:", e);
+        }
     }
 }

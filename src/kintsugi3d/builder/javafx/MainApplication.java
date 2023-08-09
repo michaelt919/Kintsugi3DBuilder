@@ -263,7 +263,7 @@ public class MainApplication extends Application
         menuBarController.init(primaryStage, InternalModels.getInstance(),
             () -> getHostServices().showDocument("https://docs.google.com/document/d/1jM4sr359-oacpom0TrGLYSqCUdHFEprnvsCn5oVwTEI/edit?usp=sharing"));
 
-        welcomeWindowController.init(primaryStage.getScene().getWindow(), Rendering.getRequestQueue(), InternalModels.getInstance(),
+        welcomeWindowController.init(primaryStage, Rendering.getRequestQueue(), InternalModels.getInstance(),
                 () -> getHostServices().showDocument("https://docs.google.com/document/d/1jM4sr359-oacpom0TrGLYSqCUdHFEprnvsCn5oVwTEI/edit?usp=sharing"));
 
         // Open scene window from the menu

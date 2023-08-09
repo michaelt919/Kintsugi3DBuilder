@@ -72,11 +72,13 @@ public class WelcomeWindowController {
     private Runnable userDocumentationHandler;
 
     private IBRRequestManager<?> requestQueue;
+    private Stage stage;
 
     public <ContextType extends Context<ContextType>> void init(
-            Window injectedParentWindow, IBRRequestManager<ContextType> requestQueue, InternalModels injectedInternalModels,
+            Stage injectedStage, IBRRequestManager<ContextType> requestQueue, InternalModels injectedInternalModels,
             Runnable injectedUserDocumentationHandler) {
-        this.parentWindow = injectedParentWindow;
+        this.parentWindow = injectedStage.getOwner();
+        this.stage = injectedStage;
         this.internalModels = injectedInternalModels;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
 
@@ -352,7 +354,14 @@ public class WelcomeWindowController {
         }
     }
 
-
+    //TODO: HIDE WELCOME WINDOW WHEN A PROJECT IS MADE/OPENED
+//    public void hideWelcomeWindow(){
+//        stage.hide();
+//    }
+//    public void showWelcomeWindow(){
+//        stage.show();
+//    }
+//
 
     @FXML
     private void help_userManual()
