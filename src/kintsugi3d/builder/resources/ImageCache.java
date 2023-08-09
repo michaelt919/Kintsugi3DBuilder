@@ -283,7 +283,6 @@ public class ImageCache<ContextType extends Context<ContextType>>
             {
                 try (SingleCalibratedImageResource<ContextType> image =
                     resources.createSingleImageResource(k,
-                        // TODO: use specified originalImageDirectory; need to handle search for different file extensions; jpg/png/tiff/etc.
                         resources.getViewSet().findFullResImageFile(k), // new File(originalImageDirectory, resources.viewSet.getImageFileName(k)),
                         loadOptions))
                 {

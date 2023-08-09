@@ -34,6 +34,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
     private OpenGLFramebufferAttachment depthAttachment;
     private OpenGLFramebufferAttachment stencilAttachment;
     private OpenGLFramebufferAttachment depthStencilAttachment;
+    private boolean closed = false;
 
     public static class OpenGLFramebufferObjectBuilder extends FramebufferObjectBuilderBase<OpenGLContext>
     {
@@ -383,11 +384,15 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
     @Override
     public void close()
     {
-        glDeleteFramebuffers(contents.fboId);
-        OpenGLContext.errorCheck();
-        for (Resource attachment : ownedAttachments)
+        if (!closed)
         {
-            attachment.close();
+            glDeleteFramebuffers(contents.fboId);
+            OpenGLContext.errorCheck();
+            for (Resource attachment : ownedAttachments)
+            {
+                attachment.close();
+            }
+            closed = true;
         }
     }
 }

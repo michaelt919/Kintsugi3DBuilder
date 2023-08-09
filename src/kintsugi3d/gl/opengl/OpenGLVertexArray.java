@@ -27,6 +27,7 @@ class OpenGLVertexArray implements Resource
     private final boolean usesIndexing = false;
     private final int vaoId;
     private int count = Integer.MAX_VALUE;
+    private boolean closed = false;
 
     OpenGLVertexArray(OpenGLContext context)
     {
@@ -91,7 +92,11 @@ class OpenGLVertexArray implements Resource
     @Override
     public void close()
     {
-        glDeleteVertexArrays(this.vaoId);
-        OpenGLContext.errorCheck();
+        if (!closed)
+        {
+            glDeleteVertexArrays(this.vaoId);
+            OpenGLContext.errorCheck();
+            closed = true;
+        }
     }
 }

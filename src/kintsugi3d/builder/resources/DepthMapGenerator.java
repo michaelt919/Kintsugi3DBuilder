@@ -99,5 +99,6 @@ public class DepthMapGenerator<ContextType extends Context<ContextType>> impleme
     public void close()
     {
         depthRenderingProgram.close();
+        depthDrawable.close();
     }
 }

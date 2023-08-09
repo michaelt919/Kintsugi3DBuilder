@@ -54,6 +54,12 @@ class OpenGLDrawable extends DrawableBase<OpenGLContext> implements Drawable<Ope
     @Override
     protected void finalize()
     {
+        this.close();
+    }
+
+    @Override
+    public void close()
+    {
         vao.close();
     }
 
