@@ -23,13 +23,13 @@ import de.javagl.jgltf.model.io.v2.GltfAssetV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetWriterV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetsV2;
 import de.javagl.jgltf.model.v2.MaterialModelV2;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import kintsugi3d.builder.fit.SpecularFitSerializer;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
-import kintsugi3d.builder.fit.SpecularFitSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -392,10 +392,25 @@ public class SpecularFitGltfExporter
         }
         primitiveBuilder.addPositions3D(posOutBuffer);
 
-
         if (geometry.hasNormals())
         {
-            primitiveBuilder.addNormals3D(geometry.getNormals().getBuffer().asFloatBuffer());
+            // Copy to a new buffer while applying transformation
+            FloatBuffer normInBuffer = geometry.getNormals().getBuffer().asFloatBuffer();
+            FloatBuffer normOutBuffer = FloatBuffer.allocate(normInBuffer.capacity());
+
+            for (int i = 0; i < normInBuffer.capacity(); i += 3)
+            {
+                Vector3 normal = new Vector3(normInBuffer.get(i), normInBuffer.get(i+1), normInBuffer.get(i+2));
+
+                // Ignore translation, only rotation and scale, but normalized so only non-uniform scale
+                normal = transformation.getUpperLeft3x3().times(normal).normalized();
+
+                normOutBuffer.put(i, normal.x);
+                normOutBuffer.put(i+1, normal.y);
+                normOutBuffer.put(i+2, normal.z);
+            }
+
+            primitiveBuilder.addNormals3D(normOutBuffer);
         }
 
         if (geometry.hasTexCoords())
