@@ -61,9 +61,10 @@ public class JacksonUserPreferencesSerializer implements UserPreferencesSerializ
         UserPreferencesModel model = UserPreferencesModel.createDefault();
         model.setLoadOptions(new SimpleLoadOptionsModel());
 
+        new JacksonUserPreferencesSerializer().writeUserPreferences(model);
+
         UserPreferencesModel readModel = new JacksonUserPreferencesSerializer().readOrDefault();
 
         ReadOnlyUserPreferencesModel overridden = new ReadOnlyMergedUserPreferencesModel(model, readModel);
-        System.out.println(overridden.getSampleValue());
     }
 }

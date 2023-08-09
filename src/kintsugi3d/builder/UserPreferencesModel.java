@@ -20,7 +20,7 @@ public class UserPreferencesModel implements ReadOnlyUserPreferencesModel
 {
     private SimpleLoadOptionsModel loadOptionsModel = new SimpleLoadOptionsModel();
 
-    private Integer sampleValue = 5;
+    private DirectoryPreferencesModel directoryPreferencesModel = DirectoryPreferencesModel.createDefault();
 
     private UserPreferencesModel() {}
 
@@ -33,7 +33,7 @@ public class UserPreferencesModel implements ReadOnlyUserPreferencesModel
     {
         UserPreferencesModel model = new UserPreferencesModel();
         model.loadOptionsModel = null;
-        model.sampleValue = null;
+        model.directoryPreferencesModel = null;
 
         return model;
     }
@@ -45,6 +45,23 @@ public class UserPreferencesModel implements ReadOnlyUserPreferencesModel
         return loadOptionsModel;
     }
 
+    @Override
+    @JsonIgnore
+    public ReadOnlyDirectoryPreferencesModel getReadOnlyDirectoryPreferences()
+    {
+        return directoryPreferencesModel;
+    }
+
+    public DirectoryPreferencesModel getDirectoryPreferences()
+    {
+        return directoryPreferencesModel;
+    }
+
+    public void setDirectoryPreferencesModel(DirectoryPreferencesModel directoryPreferencesModel)
+    {
+        this.directoryPreferencesModel = directoryPreferencesModel;
+    }
+
     public SimpleLoadOptionsModel getLoadOptions()
     {
         return loadOptionsModel;
@@ -53,16 +70,5 @@ public class UserPreferencesModel implements ReadOnlyUserPreferencesModel
     public void setLoadOptions(SimpleLoadOptionsModel loadOptionsModel)
     {
         this.loadOptionsModel = loadOptionsModel;
-    }
-
-    @Override
-    public Integer getSampleValue()
-    {
-        return sampleValue;
-    }
-
-    public void setSampleValue(Integer sampleValue)
-    {
-        this.sampleValue = sampleValue;
     }
 }

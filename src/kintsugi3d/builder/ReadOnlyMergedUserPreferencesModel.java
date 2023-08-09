@@ -14,6 +14,8 @@ package kintsugi3d.builder;
 
 import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
 
+import java.nio.file.Path;
+
 public class ReadOnlyMergedUserPreferencesModel implements ReadOnlyUserPreferencesModel
 {
     ReadOnlyUserPreferencesModel base;
@@ -42,8 +44,36 @@ public class ReadOnlyMergedUserPreferencesModel implements ReadOnlyUserPreferenc
     }
 
     @Override
-    public Integer getSampleValue()
+    public ReadOnlyDirectoryPreferencesModel getReadOnlyDirectoryPreferences()
     {
-        return nullableOverride(base.getSampleValue(), override.getSampleValue());
+        return new ReadOnlyDirectoryPreferencesModel()
+        {
+            final ReadOnlyDirectoryPreferencesModel baseDirs = base.getReadOnlyDirectoryPreferences();
+            final ReadOnlyDirectoryPreferencesModel overrideDirs = override.getReadOnlyDirectoryPreferences();
+
+            @Override
+            public Path getPreviewImagesDirectory()
+            {
+                return nullableOverride(baseDirs.getPreviewImagesDirectory(), overrideDirs.getPreviewImagesDirectory());
+            }
+
+            @Override
+            public Path getLogFileDirectory()
+            {
+                return nullableOverride(baseDirs.getLogFileDirectory(), overrideDirs.getLogFileDirectory());
+            }
+
+            @Override
+            public Path getCacheDirectory()
+            {
+                return nullableOverride(baseDirs.getCacheDirectory(), overrideDirs.getCacheDirectory());
+            }
+
+            @Override
+            public Path getPreferencesFileLocation()
+            {
+                return nullableOverride(baseDirs.getPreferencesFileLocation(), overrideDirs.getPreferencesFileLocation());
+            }
+        };
     }
 }
