@@ -85,7 +85,7 @@
                   <Insets />
                </GridPane.margin>
                 </Text>
-                <Text layoutX="272.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Undistorted Images&#10;(Directory containing images (.png, .jpg))" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+                <Text layoutX="272.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Images&#10;(Directory containing images (.png, .jpg))" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
                     <font>
                         <Font name="Monospaced Regular" size="14.0" />
                     </font>

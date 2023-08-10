@@ -151,7 +151,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
-        // undistorted images are defined in the load options
+        // images are defined in the load options
         public Builder<ContextType> loadAgisoftFiles(File cameraFile, File geometryFile, File undistortedImageDirectory) throws Exception
         {
             this.viewSet = ViewSetReaderFromAgisoftXML.getInstance().readFromFile(cameraFile);

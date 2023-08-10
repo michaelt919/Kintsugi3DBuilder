@@ -20,6 +20,8 @@ public interface SpecularResources<ContextType extends Context<ContextType>> ext
 {
     Texture2D<ContextType> getDiffuseMap();
     Texture2D<ContextType> getNormalMap();
+    Texture2D<ContextType> getConstantMap();
+    Texture2D<ContextType> getQuadraticMap();
     Texture2D<ContextType> getSpecularReflectivityMap();
     Texture2D<ContextType> getSpecularRoughnessMap();
     BasisResources<ContextType> getBasisResources();
@@ -46,17 +48,48 @@ public interface SpecularResources<ContextType extends Context<ContextType>> ext
         SpecularResources<ContextType> readSource, int srcX, int srcY, int srcWidth, int srcHeight, boolean linearFiltering)
     {
         // Blit each individual texture -- diffuse, normal, specular reflectivity, specular roughness, weight maps, weight mask
-        this.getDiffuseMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,
-            readSource.getDiffuseMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
-        this.getNormalMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,
-            readSource.getNormalMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
-        this.getSpecularReflectivityMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,
-            readSource.getSpecularReflectivityMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
-        this.getSpecularRoughnessMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,
-            readSource.getSpecularRoughnessMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
-        this.getBasisWeightResources().weightMaps.blitCroppedAndScaled(destX, destY, destWidth, destHeight,
-            readSource.getBasisWeightResources().weightMaps, srcX, srcY, srcWidth, srcHeight, linearFiltering);
-        this.getBasisWeightResources().weightMask.blitCroppedAndScaled(destX, destY, destWidth, destHeight,
-            readSource.getBasisWeightResources().weightMask, srcX, srcY, srcWidth, srcHeight, linearFiltering);
+        if (this.getDiffuseMap() != null && readSource.getDiffuseMap() != null)
+        {
+            this.getDiffuseMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,
+                readSource.getDiffuseMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+        }
+
+        if (this.getNormalMap() != null && readSource.getNormalMap() != null)
+        {
+            this.getNormalMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,
+                readSource.getNormalMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+        }
+
+        if (this.getConstantMap() != null && readSource.getConstantMap() != null)
+        {
+            this.getConstantMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,
+                readSource.getConstantMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+        }
+
+        if (this.getQuadraticMap() != null && readSource.getQuadraticMap() != null)
+        {
+            this.getQuadraticMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,
+                readSource.getQuadraticMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+        }
+
+        if (this.getSpecularReflectivityMap() != null && readSource.getSpecularReflectivityMap() != null)
+        {
+            this.getSpecularReflectivityMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,
+                readSource.getSpecularReflectivityMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+        }
+
+        if (this.getSpecularRoughnessMap() != null && readSource.getSpecularRoughnessMap() != null)
+        {
+            this.getSpecularRoughnessMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,
+                readSource.getSpecularRoughnessMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+        }
+
+        if (this.getBasisWeightResources() != null && readSource.getBasisWeightResources() != null)
+        {
+            this.getBasisWeightResources().weightMaps.blitCroppedAndScaled(destX, destY, destWidth, destHeight,
+                readSource.getBasisWeightResources().weightMaps, srcX, srcY, srcWidth, srcHeight, linearFiltering);
+            this.getBasisWeightResources().weightMask.blitCroppedAndScaled(destX, destY, destWidth, destHeight,
+                readSource.getBasisWeightResources().weightMask, srcX, srcY, srcWidth, srcHeight, linearFiltering);
+        }
     }
 }

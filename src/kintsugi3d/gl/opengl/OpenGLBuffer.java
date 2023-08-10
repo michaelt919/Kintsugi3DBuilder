@@ -26,6 +26,7 @@ abstract class OpenGLBuffer implements ContextBound<OpenGLContext>, Resource
 
     private final int bufferId;
     private final int usage;
+    private boolean closed = false;
 
     OpenGLBuffer(OpenGLContext context, int usage)
     {
@@ -72,7 +73,11 @@ abstract class OpenGLBuffer implements ContextBound<OpenGLContext>, Resource
     @Override
     public void close()
     {
-        glDeleteBuffers(this.bufferId);
-        OpenGLContext.errorCheck();
+        if (!closed)
+        {
+            glDeleteBuffers(this.bufferId);
+            OpenGLContext.errorCheck();
+            closed = true;
+        }
     }
 }

@@ -129,6 +129,13 @@ public final class FinalErrorCalculaton
             finalErrorCalcProgram.setTexture("normalEstimate", specularFit.getNormalMap());
             finalErrorCalcProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
             finalErrorCalcProgram.setTexture("diffuseEstimate", specularFit.getDiffuseMap());
+
+            if (specularFit.getConstantMap() != null)
+            {
+                // TODO add support for constant maps in error estimation
+                finalErrorCalcProgram.setTexture("constantEstimate", specularFit.getConstantMap());
+            }
+
             finalErrorCalcProgram.setUniform("errorGamma", 1.0f);
 
             // Reuse errorCalculator's framebuffer as a scratch framebuffer (for efficiency)
@@ -172,6 +179,13 @@ public final class FinalErrorCalculaton
             ggxErrorCalcProgram.setTexture("specularEstimate", specularFit.getSpecularReflectivityMap());
             ggxErrorCalcProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
             ggxErrorCalcProgram.setTexture("diffuseEstimate", specularFit.getDiffuseMap());
+
+            if (specularFit.getConstantMap() != null)
+            {
+                // TODO add support for constant maps in error estimation
+                ggxErrorCalcProgram.setTexture("constantEstimate", specularFit.getConstantMap());
+            }
+
             ggxErrorCalcProgram.setUniform("errorGamma", 1.0f);
 
             rmseOut.println("RMSE for GGX fit: " +

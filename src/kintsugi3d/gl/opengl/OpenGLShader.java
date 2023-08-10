@@ -35,6 +35,7 @@ class OpenGLShader implements Shader<OpenGLContext>
     protected final OpenGLContext context;
 
     private int shaderId;
+    private boolean closed = false;
 
     OpenGLShader(OpenGLContext context, int shaderType, File file, Map<String, Object> defines) throws FileNotFoundException
     {
@@ -232,7 +233,11 @@ class OpenGLShader implements Shader<OpenGLContext>
     @Override
     public void close()
     {
-        glDeleteShader(shaderId);
-        OpenGLContext.errorCheck();
+        if (!closed)
+        {
+            glDeleteShader(shaderId);
+            OpenGLContext.errorCheck();
+            closed = true;
+        }
     }
 }

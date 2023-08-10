@@ -65,12 +65,12 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         if (reconstructAll)
         {
             // Create directory for reconstructions from basis functions
-            new File(outputDirectory, reconstructName).mkdir();
+            new File(outputDirectory, reconstructName).mkdirs();
 
             if (groundTruthName != null)
             {
                 // Create directory for ground truth images with consistent tonemapping
-                new File(outputDirectory, groundTruthName).mkdir();
+                new File(outputDirectory, groundTruthName).mkdirs();
             }
         }
 
@@ -89,6 +89,12 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
                 program.setTexture("specularEstimate", specularFit.getSpecularReflectivityMap());
                 program.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
                 program.setTexture("diffuseEstimate", specularFit.getDiffuseMap());
+
+                if (specularFit.getConstantMap() != null)
+                {
+                    // TODO add support for constant maps in reconstruction shaders (if reconstruction isn't scrapped altogether)
+                    program.setTexture("constantEstimate", specularFit.getConstantMap());
+                }
             }))
         {
             // Use the same view set as for fitting if another wasn't specified for reconstruction.

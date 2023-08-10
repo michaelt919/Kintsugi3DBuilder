@@ -19,13 +19,13 @@ import kintsugi3d.gl.vecmath.*;
  * A "drawable" is essentially a tuple consisting of a program (the instructions) and a set of vertex buffers (the data).
  * It is in some ways analogous to an OpenGL vertex array object (VAO), but it is tied to a specific program 
  * since there is no guarantee that different programs will expect the same set of vertex attributes.
- * Unlike many other GL entities, a Drawable is not a proper "resource;" 
- * any graphics resources that a Drawable does allocate will be automatically deleted when the entity is garbage collected by the JRE.
+ * Unlike many other GL entities, a Drawable will be automatically deleted when the entity is garbage collected by the JRE,
+ * but can be closed manually or using try-with-resources to be deleted sooner to free up VRAM
  * @author Michael Tetzlaff
  *
  * @param <ContextType> The type of the GL context that the Drawable is associated with.
  */
-public interface Drawable<ContextType extends Context<ContextType>> extends ContextBound<ContextType>
+public interface Drawable<ContextType extends Context<ContextType>> extends ContextBound<ContextType>, Resource
 {
     /**
      * Gets the shader program that will be used by this drawable object.
@@ -459,4 +459,7 @@ public interface Drawable<ContextType extends Context<ContextType>> extends Cont
      * false if the vertex attribute was not set because no vertex attribute exists at the specified location in this shader program.
      */
     boolean addVertexBuffer(String name, VertexBuffer<ContextType> buffer);
+
+    @Override
+    void close();
 }

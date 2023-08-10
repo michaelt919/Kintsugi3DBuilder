@@ -115,6 +115,7 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
         if (geometryResources.isNull())
         {
             this.depthTexture = null;
+            this.shadowTexture = null;
             this.shadowMatrix = null;
         }
         else
@@ -151,6 +152,7 @@ public class SingleCalibratedImageResource<ContextType extends Context<ContextTy
             else
             {
                 this.depthTexture = null;
+                this.shadowTexture = null;
                 this.shadowMatrix = null;
             }
         }

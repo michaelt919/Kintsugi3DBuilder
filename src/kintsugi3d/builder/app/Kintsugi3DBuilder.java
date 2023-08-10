@@ -65,7 +65,7 @@ public final class Kintsugi3DBuilder
                     {
                         log.error("Error initializing render window:", e);
                     }
-                }).start();
+                }, "OpenGL Rendering Thread").start();
             });
 
             log.info("Starting JavaFX UI");

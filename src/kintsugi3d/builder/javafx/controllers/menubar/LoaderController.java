@@ -65,7 +65,7 @@ public class LoaderController implements Initializable
 
         camFileChooser.setTitle("Select camera positions file");
         objFileChooser.setTitle("Select object file");
-        photoDirectoryChooser.setTitle("Select undistorted photo directory");
+        photoDirectoryChooser.setTitle("Select photo directory");
     }
 
     public void setCallback(Runnable callback)

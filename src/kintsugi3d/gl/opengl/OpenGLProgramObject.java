@@ -39,6 +39,7 @@ final class OpenGLProgramObject implements ProgramObject<OpenGLContext>
     private AbstractCollection<OpenGLShader> ownedShaders;
     private ResourceManager<OpenGLTexture> textureManager;
     private ResourceManager<OpenGLUniformBuffer> uniformBufferManager;
+    private boolean closed = false;
 
     static class OpenGLProgramBuilder extends ProgramBuilderBase<OpenGLContext>
     {
@@ -258,11 +259,15 @@ final class OpenGLProgramObject implements ProgramObject<OpenGLContext>
     @Override
     public void close()
     {
-        glDeleteProgram(programId);
-        OpenGLContext.errorCheck();
-        for (OpenGLShader shader : ownedShaders)
+        if (!closed)
         {
-            shader.close();
+            glDeleteProgram(programId);
+            OpenGLContext.errorCheck();
+            for (OpenGLShader shader : ownedShaders)
+            {
+                shader.close();
+            }
+            closed = true;
         }
     }
 
