@@ -1,17 +1,19 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2023
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 The Regents of the University of Minnesota
  *
- *  Licensed under GPLv3
- *  ( http://www.gnu.org/licenses/gpl-3.0.html )
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
  *
- *  This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  *
- *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
 package kintsugi3d.builder.resources;
 
 import java.io.File;
+import java.util.UUID;
 
 public class ImageCacheSettings
 {
@@ -20,6 +22,7 @@ public class ImageCacheSettings
     private int textureHeight;
     private int textureSubdiv;
     private int sampledSize;
+    private String cacheFolderName;
 
     public File getCacheDirectory()
     {
@@ -78,7 +81,14 @@ public class ImageCacheSettings
 
     public String getFolderNameFromSettings()
     {
-        return String.format("%d-%d-%d-%d", textureWidth, textureHeight, textureSubdiv, sampledSize);
+        if (cacheFolderName != null)
+        {
+            return String.format("%s/%d-%d-%d-%d", cacheFolderName, textureWidth, textureHeight, textureSubdiv, sampledSize);
+        }
+        else
+        {
+            return String.format("%d-%d-%d-%d", textureWidth, textureHeight, textureSubdiv, sampledSize);
+        }
     }
 
     public File getBlockDir(int i, int j)
@@ -94,5 +104,15 @@ public class ImageCacheSettings
     public int getBlockStartY(int j)
     {
         return (int) Math.round((double) j * (double) textureHeight / (double) textureSubdiv);
+    }
+
+    public String getCacheFolderName()
+    {
+        return cacheFolderName;
+    }
+
+    public void setCacheFolderName(String cacheFolderName)
+    {
+        this.cacheFolderName = cacheFolderName;
     }
 }

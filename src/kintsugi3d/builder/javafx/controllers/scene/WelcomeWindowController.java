@@ -1,3 +1,15 @@
+/*
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ *
+ */
+
 package kintsugi3d.builder.javafx.controllers.scene;
 
 import javafx.application.Platform;
@@ -8,28 +20,28 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
-import main.resources.fxml.menubar.CreateProjectController;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
-import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.core.IBRRequestManager;
 import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.LoaderController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.gl.core.Context;
 import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.function.Predicate;
 
 public class WelcomeWindowController {
@@ -79,6 +91,7 @@ public class WelcomeWindowController {
         projectFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Full projects", "*.ibr"));
         projectFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Standalone view sets", "*.vset"));
 
+        RecentProjects.initializeWelcomeWindowController(this);
         updateRecentProjectsButton();
 
         MultithreadModels.getInstance().getLoadingModel().setLoadingMonitor(new LoadingMonitor() {
@@ -123,6 +136,7 @@ public class WelcomeWindowController {
     }
 
     public void updateRecentProjectsButton() {//TODO: FORMAT ----- PROJECT NAME --> PATH
+        //TODO: REMOVE REPETITION WITH MENUBARCONTROLLER
         recentProjectsSplitMenuButton.getItems().clear();
 
         ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
@@ -254,7 +268,7 @@ public class WelcomeWindowController {
             this.vsetFile = newVsetFile;
             File vsetFileRef = newVsetFile;
 
-            RecentProjects.updateRecentFiles(projectFile.getAbsolutePath(), this);
+            RecentProjects.updateRecentFiles(projectFile.getAbsolutePath());
 
             projectLoaded = true;
 
@@ -351,6 +365,11 @@ public class WelcomeWindowController {
 
     public void unrollMenu() {
         recentProjectsSplitMenuButton.show();
+    }
+
+    public void hideMenu(MouseEvent mouseEvent){
+        //recentProjectsSplitMenuButton.hide();
+        //TODO: ONLY HIDE THE MENU WHEN THE USER'S MOUSE LEAVES THE CONTEXT MENU
     }
 
     private void handleException(String message, Exception e)

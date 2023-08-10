@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Seth Berrier, Michael Tetzlaff, Josh Lyu, Luke Denney, Jacob Buelow
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -19,6 +19,7 @@ import kintsugi3d.gl.vecmath.Vector3;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Collection;
+import java.util.UUID;
 
 public interface ReadonlyViewSet
 {
@@ -226,4 +227,6 @@ public interface ReadonlyViewSet
     File findFullResPrimaryImageFile() throws FileNotFoundException;
     File findPreviewImageFile(int index) throws FileNotFoundException;
     File findPreviewPrimaryImageFile() throws FileNotFoundException;
+
+    UUID getUuid();
 }

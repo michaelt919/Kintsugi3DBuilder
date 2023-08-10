@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Seth Berrier, Michael Tetzlaff, Josh Lyu, Luke Denney, Jacob Buelow
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -55,7 +55,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     private SpecularFitOptimizable(
         ReadonlyIBRResources<ContextType> resources, BasisResources<ContextType> basisResources, boolean basisResourcesOwned,
         SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings textureFitSettings,
-        NormalOptimizationSettings normalOptimizationSettings)
+        NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
         throws FileNotFoundException
     {
         super(basisResources, basisResourcesOwned, textureFitSettings);
@@ -66,7 +66,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         this.setupShaderProgram = program -> programFactory.setupShaderProgram(resources, program);
 
         // Final diffuse estimation
-        diffuseOptimization = new FinalDiffuseOptimization<>(resources, programFactory, textureFitSettings);
+        diffuseOptimization = new FinalDiffuseOptimization<>(resources, programFactory, textureFitSettings, includeConstantTerm);
 
         // Normal optimization module that manages its own resources
         normalOptimization = new NormalOptimization<>(
@@ -85,12 +85,12 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
     public static <ContextType extends Context<ContextType>> SpecularFitOptimizable<ContextType> create(
         ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings textureFitSettings,
-        SpecularBasisSettings specularBasisSettings, NormalOptimizationSettings normalOptimizationSettings)
+        SpecularBasisSettings specularBasisSettings, NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
         throws FileNotFoundException
     {
         return new SpecularFitOptimizable<>(resources,
             new BasisResources<>(resources.getContext(), specularBasisSettings), true,
-            programFactory, textureFitSettings, normalOptimizationSettings);
+            programFactory, textureFitSettings, normalOptimizationSettings, includeConstantTerm);
     }
 
     public ReadonlyIBRResources<ContextType> getResources()
@@ -372,6 +372,17 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     public Texture2D<ContextType> getNormalMap()
     {
         return normalOptimization.getNormalMap();
+    }
+
+    @Override
+    public Texture2D<ContextType> getConstantMap()
+    {
+        return diffuseOptimization.includesConstantMap() ? diffuseOptimization.getConstantMap() : null;
+    }
+    @Override
+    public Texture2D<ContextType> getQuadraticMap()
+    {
+        return diffuseOptimization.includesConstantMap() ? diffuseOptimization.getQuadraticMap() : null;
     }
 
     /**

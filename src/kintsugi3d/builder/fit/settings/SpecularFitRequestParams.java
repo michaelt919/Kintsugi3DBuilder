@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Seth Berrier, Michael Tetzlaff, Josh Lyu, Luke Denney, Jacob Buelow
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -30,6 +30,8 @@ public class SpecularFitRequestParams
 
     private double convergenceTolerance = 0.00001;
     private double preliminaryConvergenceTolerance = 0.01;
+
+    private boolean shouldIncludeConstantTerm;
 
     private File priorSolutionDirectory = null;
     private File outputDirectory;
@@ -156,6 +158,16 @@ public class SpecularFitRequestParams
         }
 
         this.preliminaryConvergenceTolerance = preliminaryConvergenceTolerance;
+    }
+
+    public boolean shouldIncludeConstantTerm()
+    {
+        return shouldIncludeConstantTerm;
+    }
+
+    public void setShouldIncludeConstantTerm(boolean shouldIncludeConstantTerm)
+    {
+        this.shouldIncludeConstantTerm = shouldIncludeConstantTerm;
     }
 
     /**

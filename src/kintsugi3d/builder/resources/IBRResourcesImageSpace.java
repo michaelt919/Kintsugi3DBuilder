@@ -1,12 +1,13 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2022
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 The Regents of the University of Minnesota
  *
- *  Licensed under GPLv3
- *  ( http://www.gnu.org/licenses/gpl-3.0.html )
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
  *
- *  This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  *
- *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
 package kintsugi3d.builder.resources;
@@ -18,6 +19,7 @@ import java.util.Date;
 import java.util.Objects;
 import javax.imageio.ImageIO;
 
+import kintsugi3d.builder.app.ApplicationFolders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
@@ -100,8 +102,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         private void updateViewSetFromLoadOptions()
         {
             this.viewSet.setPreviewImageResolution(loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
-            this.viewSet.setRelativePreviewImagePathName(
-                String.format("_%dx%d", loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight()));
+            String directoryName = String.format("preview/%s/_%dx%d", viewSet.getUuid().toString(), loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
+            this.viewSet.setRelativePreviewImagePathName(new File(ApplicationFolders.getUserCacheDirectory(), directoryName).toString());
         }
 
         public Builder<ContextType> setPrimaryView(String primaryViewName)
@@ -623,6 +625,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
     public ImageCache<ContextType> cache(ImageCacheSettings settings) throws IOException
     {
+        settings.setCacheFolderName(getViewSet().getUuid().toString());
+
         ImageCache<ContextType> cache = new ImageCache<>(this, settings);
 
         if (!cache.isInitialized())

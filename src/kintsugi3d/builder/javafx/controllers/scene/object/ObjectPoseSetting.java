@@ -1,12 +1,13 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2022
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 The Regents of the University of Minnesota
  *
- *  Licensed under GPLv3
- *  ( http://www.gnu.org/licenses/gpl-3.0.html )
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
  *
- *  This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  *
- *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
 package kintsugi3d.builder.javafx.controllers.scene.object;
@@ -31,7 +32,7 @@ public class ObjectPoseSetting implements DOMConvertable
     private final DoubleProperty scale = new SimpleDoubleProperty();
 
     public ObjectPoseSetting(Double centerX, Double centerY, Double centerZ,
-                             Double rotateY, Double rotateX, Double rotateZ, Boolean locked, String name)
+                             Double rotateY, Double rotateX, Double rotateZ, Boolean locked, Double scale, String name)
     {
         this.centerX.setValue(centerX);
         this.centerY.setValue(centerY);
@@ -40,6 +41,7 @@ public class ObjectPoseSetting implements DOMConvertable
         this.rotateX.setValue(rotateX);
         this.rotateZ.setValue(rotateZ);
         this.locked.setValue(locked);
+        this.scale.setValue(scale);
         this.name.setValue(name);
     }
 
@@ -54,6 +56,7 @@ public class ObjectPoseSetting implements DOMConvertable
         element.setAttribute("rotateX", rotateX.getValue().toString());
         element.setAttribute("rotateZ", rotateZ.getValue().toString());
         element.setAttribute("locked", locked.getValue().toString());
+        element.setAttribute("scale", scale.getValue().toString());
         element.setAttribute("name", name.getValue());
         return element;
     }
@@ -68,6 +71,7 @@ public class ObjectPoseSetting implements DOMConvertable
             Double.valueOf(element.getAttribute("rotateX")),
             Double.valueOf(element.getAttribute("rotateZ")),
             Boolean.valueOf(element.getAttribute("locked")),
+            element.hasAttribute("scale") ? Double.parseDouble(element.getAttribute("scale")) : 1.0,
             element.getAttribute("name")
         );
     }
@@ -95,7 +99,9 @@ public class ObjectPoseSetting implements DOMConvertable
             this.rotateX.getValue(),
             this.rotateZ.getValue(),
             this.locked.getValue(),
-            this.name.getValue() + " copy"
+            this.scale.getValue(),
+            this.name.getValue()
+                    + " copy"
         );
     }
 
@@ -203,6 +209,13 @@ public class ObjectPoseSetting implements DOMConvertable
     {
         this.locked.set(locked);
     }
+
+    public DoubleProperty scaleProperty(){return scale;}
+
+    public double getScale(){return Math.pow(10, scale.get());}
+        //scale.get() returns the slider value before it has been adjusted to a logarithmic scale
+
+    public void setScale(double scale){this.scale.set(scale);}
 
     public String getName()
     {

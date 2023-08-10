@@ -1,16 +1,18 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2022
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 The Regents of the University of Minnesota
  *
- *  Licensed under GPLv3
- *  ( http://www.gnu.org/licenses/gpl-3.0.html )
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
  *
- *  This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  *
- *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
 package kintsugi3d.builder.javafx.controllers.menubar;
 
+import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -19,6 +21,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Scanner;
 import java.util.function.Predicate;
@@ -26,6 +30,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
 import javafx.application.Platform;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -33,9 +39,18 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
+import javafx.scene.text.Text;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.stage.Window;
+import javafx.util.StringConverter;
+import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -55,12 +70,18 @@ import kintsugi3d.util.Flag;
 
 public class MenubarController
 {
+    String defaultAutosavePath = "C:\\";//TODO: WILL CHANGE WHEN FILE STRUCTURE IS CEMENTED
+
+    String defaultAutosaveSelection = "Default Path: --> " + defaultAutosavePath;
+    static final String CHOOSE_LOCATION = "Choose Location...";
+    private DirectoryChooser directoryChooser = new DirectoryChooser();
+
     private static final Logger log = LoggerFactory.getLogger(MenubarController.class);
 
     private InternalModels internalModels;
 
     //Window open flags
-    private final Flag ibrOptionsWindowOpen = new Flag(false);
+    private final Flag advPhotoViewWindowOpen = new Flag(false);
     private final Flag jvmOptionsWindowOpen = new Flag(false);
     private final Flag loadOptionsWindowOpen = new Flag(false);
     private final Flag loaderWindowOpen = new Flag(false);
@@ -68,12 +89,16 @@ public class MenubarController
     private final Flag unzipperOpen = new Flag(false);
     private final Flag consoleWindowOpen = new Flag(false);
 
+
     @FXML private ProgressBar progressBar;
 
     //toggle groups
     @FXML private ToggleGroup renderGroup;
 
+    public Menu aboutMenu;
+
     //menu items
+    //TODO: ORGANIZE CHECK MENU ITEMS
     @FXML private CheckMenuItem lightCalibrationCheckMenuItem;
     @FXML private CheckMenuItem is3DGridCheckMenuItem;
     @FXML private CheckMenuItem compassCheckMenuItem;
@@ -91,13 +116,42 @@ public class MenubarController
     @FXML private CheckMenuItem phyMaskingCheckMenuItem;
     @FXML private CheckMenuItem fresnelEffectCheckMenuItem;
 
+    @FXML private CheckMenuItem autoCacheClearingCheckMenuItem;
+    @FXML private CheckMenuItem autoSaveCheckMenuItem;
+    @FXML private CheckMenuItem preloadVisibilityEtcCheckMenuItem;
+    @FXML private CheckMenuItem mipmapCheckMenuItem;
+    @FXML private CheckMenuItem reduceViewportResolutionCheckMenuItem;
+    @FXML private CheckMenuItem darkModeCheckMenuItem;
+    @FXML private CheckMenuItem standAlone3dViewerCheckMenuItem;
+    @FXML public ChoiceBox<String> autosaveOptionsChoiceBox;
+
+    @FXML private CheckMenuItem imageCompressionCheckMenuItem;
+
+    @FXML private Label widthLabel;
+    @FXML private TextField widthTxtField;
+    @FXML private Label heightLabel;
+    @FXML private TextField heightTxtField;
+
+    @FXML private Menu perLightIntensityMenu;
+    @FXML private Menu ambientLightSettingsMenu;
+    @FXML public Slider perLight1IntensitySlider;
+    @FXML public Slider ambientLightIntensitySlider;
+
+    @FXML public TextField perLight1IntensityTxtField;
+    @FXML
+    private MenuItem perLightColorPickerMenuItem;
+
+    @FXML public TextField ambientLightIntensityTxtField;
+
     @FXML private FileChooser projectFileChooser;
 
     @FXML private Menu exportMenu;
+    @FXML private Menu recentProjectsMenu;
+
 
     @FXML private FramebufferView framebufferView;
 
-    private Window stage;
+    private Window window;
 
     private File projectFile;
     private File vsetFile;
@@ -105,11 +159,15 @@ public class MenubarController
 
     private Runnable userDocumentationHandler;
 
+    final Number DEFAULT_VALUE = 1024;
+    private IntegerProperty widthIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
+    private IntegerProperty heightIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
+
 
     public <ContextType extends Context<ContextType>> void init(
         Stage injectedStage, InternalModels injectedInternalModels, Runnable injectedUserDocumentationHandler)
     {
-        this.stage = injectedStage;
+        this.window = injectedStage;
         this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
 
         this.internalModels = injectedInternalModels;
@@ -229,6 +287,16 @@ public class MenubarController
 
         initToggleGroups();
         bindCheckMenuItems();
+        bindSlidersToTxtFields();
+        updateRelightingVisibility();
+        updatePreloadVisibilityEtc();
+
+        setupTxtFieldProperties(widthIntProperty, widthTxtField);
+        setupTxtFieldProperties(heightIntProperty, heightTxtField);
+
+        widthTxtField.disableProperty().bind(preloadVisibilityEtcCheckMenuItem.selectedProperty().not());
+        heightTxtField.disableProperty().bind(preloadVisibilityEtcCheckMenuItem.selectedProperty().not());
+
 
         lightCalibrationCheckMenuItem.selectedProperty().addListener(observable ->
         {
@@ -238,7 +306,21 @@ public class MenubarController
                 MultithreadModels.getInstance().getSettingsModel().set("currentLightCalibration", Vector2.ZERO);
             }
         });
+
+        RecentProjects.initializeMenubarController(this);
+        updateRecentProjectsMenu();
+
+        //add "Default Path" and "Choose Location..." items to choiceBox
+        //initialize directory selection dropdown menu
+        autosaveOptionsChoiceBox.getItems().addAll(defaultAutosaveSelection, CHOOSE_LOCATION);
+
+        //initialize option to default path
+        autosaveOptionsChoiceBox.setValue(defaultAutosaveSelection);
+
+        //attach event handler (this cannot be done in scenebuilder)
+        autosaveOptionsChoiceBox.setOnAction(this::handleDirectoryDropdownSelection);
     }
+
 
     public FramebufferView getFramebufferView()
     {
@@ -287,6 +369,20 @@ public class MenubarController
             internalModels.getSettingsModel().getBooleanProperty("multisamplingEnabled"));
         sceneWindowMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("sceneWindowOpen"));
+
+        mipmapCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getLoadOptionsModel().mipmaps);
+        preloadVisibilityEtcCheckMenuItem.selectedProperty().bindBidirectional(
+                internalModels.getLoadOptionsModel().depthImages);
+
+        widthIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthWidth);
+        heightIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthHeight);
+
+        imageCompressionCheckMenuItem.selectedProperty().bindBidirectional(
+                internalModels.getLoadOptionsModel().compression);
+    }
+
+    private void bindSlidersToTxtFields() {
+        //TODO: BIND INTENSITY SLIDERS TO TEXT FIELDS HERE
     }
 
     //Menubar->File
@@ -341,7 +437,7 @@ public class MenubarController
         if (confirmClose("Are you sure you want to open another project?"))
         {
             projectFileChooser.setTitle("Open project");
-            File selectedFile = projectFileChooser.showOpenDialog(stage);
+            File selectedFile = projectFileChooser.showOpenDialog(window);
             if (selectedFile != null)
             {
                 this.projectFile = selectedFile;
@@ -401,6 +497,13 @@ public class MenubarController
                     MultithreadModels.getInstance().getLoadingModel().saveToVSETFile(vsetFile);
                     internalModels.getProjectModel().saveProjectFile(projectFile, vsetFile);
                 }
+
+                //TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY
+                Dialog<ButtonType> saveInfo = new Alert(AlertType.INFORMATION,
+                        "Save Complete!");
+                saveInfo.setTitle("Save successful");
+                saveInfo.setHeaderText(projectFile.getName());
+                saveInfo.show();
             }
             catch(Exception e)
             {
@@ -424,7 +527,7 @@ public class MenubarController
             projectFileChooser.setInitialFileName("");
             projectFileChooser.setInitialDirectory(vsetFile.getParentFile());
         }
-        File selectedFile = projectFileChooser.showSaveDialog(stage);
+        File selectedFile = projectFileChooser.showSaveDialog(window);
         if (selectedFile != null)
         {
             this.projectFile = selectedFile;
@@ -448,7 +551,7 @@ public class MenubarController
     @FXML
     private void exportSpecularFit(){
         try {
-            IBRRequestUI requestUI = SpecularFitRequestUI.create(this.stage, MultithreadModels.getInstance());
+            IBRRequestUI requestUI = SpecularFitRequestUI.create(this.window, MultithreadModels.getInstance());
             requestUI.bind(internalModels.getSettingsModel());
             requestUI.prompt(Rendering.getRequestQueue());
 
@@ -493,13 +596,24 @@ public class MenubarController
         try
         {
             List<String> lines = Files.readAllLines(new File("kintsugi3d-builder-about.txt").toPath());
-            Alert alert = new Alert(AlertType.INFORMATION, String.join(System.lineSeparator(), lines));
+            String contentText = String.join(System.lineSeparator(), lines);
+
+            javafx.scene.control.ScrollPane scrollPane = new javafx.scene.control.ScrollPane();
+            Text contentTextElement = new Text(contentText);
+
+            //Set the desired width for the text (screen width / 3)
+            contentTextElement.setWrappingWidth(Screen.getPrimary().getVisualBounds().getWidth()/3);
+            scrollPane.setContent(contentTextElement);
+
+            Alert alert = new Alert(AlertType.INFORMATION);
             alert.setTitle("About Kintsugi 3D Builder");
             alert.setHeaderText("About Kintsugi 3D Builder");
-            alert.initOwner(this.stage);
+            alert.initOwner(this.window);
             alert.initModality(Modality.NONE);
+            alert.setResizable(true);
+            alert.getDialogPane().setContent(scrollPane);
             alert.show();
-            alert.setY(100.0);
+            alert.setY(70.0);
         }
         catch (Exception e)
         {
@@ -510,15 +624,15 @@ public class MenubarController
     @FXML
     private void shading_IBRSettings()
     {
-        if (ibrOptionsWindowOpen.get())
+        if (advPhotoViewWindowOpen.get())
         {
             return;
         }
 
         try
         {
-            IBROptionsController ibrOptionsController = makeWindow("IBR Settings", ibrOptionsWindowOpen, "fxml/menubar/IBROptions.fxml");
-            ibrOptionsController.bind(internalModels.getSettingsModel());
+            AdvPhotoViewController advPhotoViewController = makeWindow("Advanced Photo View", advPhotoViewWindowOpen, "fxml/menubar/AdvPhotoView.fxml");
+            advPhotoViewController.bind(internalModels.getSettingsModel());
         }
         catch(Exception e)
         {
@@ -540,7 +654,7 @@ public class MenubarController
         stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
         stage.setTitle(title);
         stage.setScene(new Scene(root));
-        stage.initOwner(this.stage);
+        stage.initOwner(this.window);
 
         stage.setResizable(false);
 
@@ -566,7 +680,7 @@ public class MenubarController
         stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
         stage.setTitle(title);
         stage.setScene(new Scene(root, width, height));
-        stage.initOwner(this.stage);
+        stage.initOwner(this.window);
         stage.setResizable(false);
         flag.set(true);
         stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
@@ -588,7 +702,7 @@ public class MenubarController
         stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
         stage.setTitle(title);
         stage.setScene(new Scene(root));
-        stage.initOwner(this.stage);
+        stage.initOwner(this.window);
 
         flag.set(true);
         stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
@@ -648,7 +762,7 @@ public class MenubarController
         }
     }
 
-    public void shading_JVMSettings(ActionEvent actionEvent)
+    public void shading_JVMSettings()
     {
         if (jvmOptionsWindowOpen.get())
         {
@@ -657,7 +771,7 @@ public class MenubarController
 
         try
         {
-            JvmSettingsController jvmSettingsController = makeWindow("JVM Settings", jvmOptionsWindowOpen, "fxml/menubar/JvmSettings.fxml");
+            makeWindow("JVM Settings", jvmOptionsWindowOpen, "fxml/menubar/JvmSettings.fxml");
         }
         catch(Exception e)
         {
@@ -665,7 +779,7 @@ public class MenubarController
         }
     }
 
-    public void help_console(ActionEvent actionEvent)
+    public void help_console()
     {
         if (consoleWindowOpen.get())
         {
@@ -683,6 +797,177 @@ public class MenubarController
         {
             handleException("An error occurred opening console window", e);
         }
+    }
+
+    public void updateRecentProjectsMenu() {//TODO: FORMAT ----- PROJECT NAME --> PATH
+        //TODO: REMOVE REPETITION WITH WELCOME WINDOW CONTROLLER
+        recentProjectsMenu.getItems().clear();
+
+        ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
+
+        recentProjectsMenu.getItems().addAll(recentItems);
+
+        //disable button if there are no recent projects
+        if(recentProjectsMenu.getItems().isEmpty()){
+            recentProjectsMenu.setDisable(true);
+        }
+
+        //attach event handlers to all menu items
+        for (MenuItem item : recentItems){
+            item.setOnAction(event -> handleMenuItemSelection(item));
+        }
+    }
+
+    public void handleMenuItemSelection(MenuItem item) {
+        String projectName = item.getText();
+        openProjectFromFile(new File(projectName));
+    }
+
+    private void openProjectFromFile(File selectedFile) {
+        //open the project and update the recent files list
+        this.projectFile = selectedFile;
+        File newVsetFile = null;
+
+        if (projectFile.getName().endsWith(".vset"))
+        {
+            newVsetFile = projectFile;
+        }
+        else
+        {
+            try
+            {
+                newVsetFile = internalModels.getProjectModel().openProjectFile(projectFile);
+            }
+            catch (Exception e)
+            {
+                handleException("An error occurred while opening project", e);
+            }
+        }
+
+        if (newVsetFile != null)
+        {
+            MultithreadModels.getInstance().getLoadingModel().unload();
+
+            this.vsetFile = newVsetFile;
+            File vsetFileRef = newVsetFile;
+
+            RecentProjects.updateRecentFiles(projectFile.getAbsolutePath());
+
+            projectLoaded = true;
+
+            new Thread(() -> MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFileRef.getPath(), vsetFileRef)).start();
+        }
+    }
+
+    private void handleDirectoryDropdownSelection(ActionEvent actionEvent) {
+        //if user clicks "choose directory" option, open the directory chooser
+        //then add an item to the dropdown which contains the path they selected
+
+        if (autosaveOptionsChoiceBox.getValue().equals(CHOOSE_LOCATION)){
+            this.directoryChooser.setTitle("Choose an output directory");
+
+            Stage stage = (Stage) window;
+            File file = this.directoryChooser.showDialog(stage.getOwner());
+
+            if (file != null && file.exists()){
+                directoryChooser.setInitialDirectory(file);
+                autosaveOptionsChoiceBox.getItems().add(file.getAbsolutePath());
+                autosaveOptionsChoiceBox.setValue(file.getAbsolutePath());
+            }
+            else{
+                Toolkit.getDefaultToolkit().beep();
+            }
+        }
+    }
+
+    public void updatePreloadVisibilityEtc() {
+        //if check menu item is unchecked, disable "Preload Visibility & Shadow Testing" options
+        ArrayList<Object> controlItems = new ArrayList<>();
+        controlItems.add(heightLabel);
+        controlItems.add(widthLabel);
+        controlItems.add(heightTxtField);
+        controlItems.add(widthTxtField);
+
+        updateCheckMenuItemVisibilities(preloadVisibilityEtcCheckMenuItem, controlItems);
+    }
+
+    public void updateRelightingVisibility() {
+        ArrayList<Object> controlItems = new ArrayList<>();
+        controlItems.add(visibleLightWidgetsCheckMenuItem);
+        controlItems.add(perLightIntensityMenu);
+        controlItems.add(ambientLightSettingsMenu);
+        updateCheckMenuItemVisibilities(relightingCheckMenuItem, controlItems);
+    }
+
+    //if the check menu item is disabled, also disable the control items (labels, text fields, etc.)
+    // or Menu Items it is associated with
+    private void updateCheckMenuItemVisibilities(CheckMenuItem checkMenuItem, Collection<Object> items){
+        boolean isChecked = checkMenuItem.isSelected();
+
+        for(Object item : items){
+            if (item instanceof javafx.scene.control.Control){
+                Control convertedControlItem = (Control) item;
+                convertedControlItem.setDisable(!isChecked);
+            }
+            else if (item instanceof MenuItem){
+                MenuItem convertedMenuItem = (MenuItem) item;
+                convertedMenuItem.setDisable(!isChecked);
+            }
+        }
+    }
+
+    //this function is used to hook up the text field's string property to the backend
+    //StringProperty --> IntegerProperty
+    private void setupTxtFieldProperties(IntegerProperty integerProperty, TextField txtField) {StringConverter<Number> numberStringConverter = new StringConverter<Number>()
+        {
+            @Override
+            public String toString(Number object)
+            {
+                if (object != null)
+                {
+                    return Integer.toString(object.intValue());
+                }
+                else
+                {
+                    return String.valueOf(DEFAULT_VALUE);
+                }
+            }
+
+            @Override
+            public Number fromString(String string)
+            {
+                try
+                {
+                    return Integer.valueOf(string);
+                }
+                catch (NumberFormatException nfe)
+                {
+                    return DEFAULT_VALUE;
+                }
+            }
+        };
+        txtField.textProperty().bindBidirectional(integerProperty, numberStringConverter);
+        txtField.focusedProperty().addListener((ob, o, n) ->
+        {
+            if (o && !n)
+            {
+                txtField.setText(integerProperty.getValue().toString());
+            }
+        });
+        integerProperty.addListener((ob, o, n) ->
+        {
+            if (n.intValue() < 1)
+            {
+                integerProperty.setValue(1);
+            }
+        });
+    }
+
+    //used so the user can click on the About menu and immediately see the about modal
+    //instead of clicking on a single menu item
+    public void hideAndShowAboutModal() {
+        aboutMenu.hide();
+        help_about();
     }
 
     private void handleException(String message, Exception e)

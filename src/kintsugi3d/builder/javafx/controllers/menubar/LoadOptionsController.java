@@ -1,12 +1,13 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2022
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 The Regents of the University of Minnesota
  *
- *  Licensed under GPLv3
- *  ( http://www.gnu.org/licenses/gpl-3.0.html )
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
  *
- *  This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  *
- *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
 package kintsugi3d.builder.javafx.controllers.menubar;//Created by alexk on 7/31/2017.
@@ -47,9 +48,9 @@ public class LoadOptionsController implements Initializable
         depthHeight.disableProperty().bind(depthImages.selectedProperty().not());
     }
 
-    private void setupTextAndProp(IntegerProperty prop, TextField tex)
+    private void setupTextAndProp(IntegerProperty integerProperty, TextField txtField)
     {
-        StringConverter<Number> ISC = new StringConverter<Number>()
+        StringConverter<Number> numberStringConverter = new StringConverter<Number>()
         {
             @Override
             public String toString(Number object)
@@ -77,19 +78,19 @@ public class LoadOptionsController implements Initializable
                 }
             }
         };
-        tex.textProperty().bindBidirectional(prop, ISC);
-        tex.focusedProperty().addListener((ob, o, n) ->
+        txtField.textProperty().bindBidirectional(integerProperty, numberStringConverter);
+        txtField.focusedProperty().addListener((ob, o, n) ->
         {
             if (o && !n)
             {
-                tex.setText(prop.getValue().toString());
+                txtField.setText(integerProperty.getValue().toString());
             }
         });
-        prop.addListener((ob, o, n) ->
+        integerProperty.addListener((ob, o, n) ->
         {
             if (n.intValue() < 1)
             {
-                prop.setValue(1);
+                integerProperty.setValue(1);
             }
         });
     }

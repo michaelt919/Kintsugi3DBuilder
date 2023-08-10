@@ -6,7 +6,6 @@
 !include "LangFile.nsh"
 
 Name "Kintsugi 3D Builder"
-OutFile "target\Kintsugi3DBuilder-Installer.exe"
 RequestExecutionLevel admin
 Unicode True
 ManifestDPIAware True
@@ -40,13 +39,14 @@ InstallDirRegKey HKLM "Software\Kintsugi3DBuilder" "Install_Dir"
 ; ---------------------------
 
 ; Main installation
-Section "Kintsugi 3D Builder (required)"
+Section "Kintsugi 3D Builder (required)" SectionApp
 
     SectionIn RO
 
     SetOutPath $INSTDIR
     File "target\Kintsugi3DBuilder.exe"
     File "ibr.ico"
+    File "ibr-icon.png"
     File "kintsugi3d-builder-about.txt"
 
     ; Include shaders
@@ -65,8 +65,17 @@ Section "Kintsugi 3D Builder (required)"
 
 SectionEnd
 
+; Bundled JRE
+Section "Bundled Java Runtime" SectionJava
+
+    ; Include JRE
+    SetOutPath "$INSTDIR\jre"
+    File /r "jre\*"
+
+SectionEnd
+
 ; Optional start menu shortcuts
-Section "Start Menu Shortcuts"
+Section "Start Menu Shortcuts" SectionShortcut
 
     CreateDirectory "$SMPROGRAMS\Kintsugi3DBuilder"
     CreateShortcut "$SMPROGRAMS\Kintsugi3DBuilder\Uninstall.lnk" "$INSTDIR\uninstall.exe"
@@ -86,3 +95,13 @@ Section "Uninstall"
     DeleteRegKey HKLM "SOFTWARE\Kintsugi3DBuilder"
 
 SectionEnd
+
+LangString DESC_SectionApp ${LANG_ENGLISH} "The main Kintsugi 3D Builder Application"
+LangString DESC_SectionJava ${LANG_ENGLISH} "Install a bundled Java 11 Runtime Environment (JRE). Leaving this option unchecked will require installing Java 11 manually for Kintsugi 3D Builder to function."
+LangString DESC_SectionShortcut ${LANG_ENGLISH} "Install shortcuts so the application can be launched from the start menu"
+
+!insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
+!insertmacro MUI_DESCRIPTION_TEXT ${SectionApp} $(DESC_SectionApp)
+!insertmacro MUI_DESCRIPTION_TEXT ${SectionJava} $(DESC_SectionJava)
+!insertmacro MUI_DESCRIPTION_TEXT ${SectionShortcut} $(DESC_SectionShortcut)
+!insertmacro MUI_FUNCTION_DESCRIPTION_END

@@ -1,37 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.Scene?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Spinner?>
-<?import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.FlowPane?>
-<?import javafx.scene.layout.HBox?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<?import java.lang.Integer?>
-<AnchorPane fx:id="root" prefHeight="0.0" prefWidth="0.0"
-            fx:controller="kintsugi3d.builder.javafx.controllers.menubar.JvmSettingsController" xmlns:fx="http://javafx.com/fxml/1">
+<!--
+  ~ Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  ~
+  -->
+
+<AnchorPane fx:id="root" prefHeight="151.0" prefWidth="200.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.JvmSettingsController">
    <children>
-      <FlowPane hgap="10.0" prefHeight="200.0" prefWidth="200.0" vgap="10.0">
+      <FlowPane hgap="10.0" prefWidth="200.0" vgap="10.0">
          <children>
-            <HBox maxWidth="1.7976931348623157E308" prefHeight="25.0" prefWidth="274.0" spacing="10.0">
+            <VBox spacing="10.0">
                <children>
                   <CheckBox fx:id="maxMemCheckbox" maxWidth="-Infinity" mnemonicParsing="false" prefHeight="25.0" prefWidth="142.0" text="Limit Memory Usage" />
-                  <Spinner fx:id="maxMemSpinner" editable="true" maxWidth="1.7976931348623157E308" prefHeight="25.0" prefWidth="97.0">
-                     <valueFactory>
-                        <SpinnerValueFactory.IntegerSpinnerValueFactory min="0" max="10"/>
-                     </valueFactory>
-                  </Spinner>
-                  <Label prefHeight="25.0" prefWidth="47.0" text="MB" HBox.hgrow="ALWAYS">
-                     <padding>
-                        <Insets left="10.0" />
-                     </padding>
-                  </Label>
+                  <HBox>
+                     <children>
+                        <Spinner fx:id="maxMemSpinner" editable="true" maxWidth="1.7976931348623157E308" prefHeight="25.0" prefWidth="97.0">
+                           <valueFactory>
+                              <SpinnerValueFactory.IntegerSpinnerValueFactory max="10" min="0" />
+                           </valueFactory>
+                        </Spinner>
+                        <Label prefHeight="25.0" prefWidth="47.0" text="MB">
+                           <padding>
+                              <Insets left="10.0" />
+                           </padding>
+                        </Label>
+                     </children>
+                  </HBox>
                </children>
-            </HBox>
+            </VBox>
          </children>
          <padding>
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
@@ -39,9 +46,9 @@
       </FlowPane>
       <HBox alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" prefHeight="0.0" prefWidth="200.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
          <children>
-            <Button fx:id="okButton" mnemonicParsing="false" text="OK" onAction="#button_OK" />
-            <Button fx:id="applyButton" mnemonicParsing="false" text="Apply" onAction="#button_Apply" />
-            <Button fx:id="closeButton" mnemonicParsing="false" text="Close" onAction="#button_Close" />
+            <Button fx:id="okButton" mnemonicParsing="false" onAction="#button_OK" text="OK" />
+            <Button fx:id="applyButton" mnemonicParsing="false" onAction="#button_Apply" text="Apply" />
+            <Button fx:id="closeButton" mnemonicParsing="false" onAction="#button_Close" text="Close" />
          </children>
          <padding>
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
