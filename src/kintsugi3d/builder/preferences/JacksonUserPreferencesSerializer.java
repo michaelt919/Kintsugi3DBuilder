@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.preferences;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import kintsugi3d.builder.app.ApplicationFolders;
@@ -35,7 +36,9 @@ public class JacksonUserPreferencesSerializer implements UserPreferencesSerializ
     @Override
     public UserPreferencesModel readUserPreferences() throws IOException
     {
-        ObjectReader reader = new ObjectMapper().readerFor(UserPreferencesModel.class);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        ObjectReader reader = mapper.readerFor(UserPreferencesModel.class);
         return reader.readValue(getPreferencesFile());
     }
 
@@ -54,5 +57,12 @@ public class JacksonUserPreferencesSerializer implements UserPreferencesSerializ
     public static File getPreferencesFile()
     {
         return new File(DIRECTORY, FILE_NAME);
+    }
+
+    public static void main(String[] args) throws Exception
+    {
+        GlobalUserPreferencesManager manager = GlobalUserPreferencesManager.getInstance();
+        manager.getPreferences();
+        manager.commit();
     }
 }
