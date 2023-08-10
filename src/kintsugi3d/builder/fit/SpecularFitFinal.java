@@ -132,10 +132,17 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
     public void close()
     {
         super.close();
-        diffuseMap.close();
-        normalMap.close();
-        constantMap.close();
-        quadraticMap.close();
+        if (diffuseMap !=  null)
+            diffuseMap.close();
+
+        if (normalMap != null)
+            normalMap.close();
+
+        if (constantMap != null)
+            constantMap.close();
+
+        if (quadraticMap != null)
+            quadraticMap.close();
     }
 
     @Override
