@@ -54,6 +54,7 @@ import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
+import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,7 +87,7 @@ public class MenubarController
 
     //Window open flags
     private final Flag advPhotoViewWindowOpen = new Flag(false);
-    private final Flag jvmOptionsWindowOpen = new Flag(false);
+    private final Flag systemMemoryWindowOpen = new Flag(false);
     private final Flag loadOptionsWindowOpen = new Flag(false);
     private final Flag loaderWindowOpen = new Flag(false);
     private final Flag colorCheckerWindowOpen = new Flag(false);
@@ -655,7 +656,7 @@ public class MenubarController
 
         try
         {
-            AdvPhotoViewController advPhotoViewController = makeWindow("Advanced Photo View", advPhotoViewWindowOpen, "fxml/menubar/AdvPhotoView.fxml");
+            AdvPhotoViewController advPhotoViewController = makeWindow("Advanced Photo View", advPhotoViewWindowOpen, "fxml/menubar/systemsettings/AdvancedPhotoView.fxml");
             advPhotoViewController.bind(internalModels.getSettingsModel());
         }
         catch(IOException e)
@@ -786,16 +787,16 @@ public class MenubarController
         }
     }
 
-    public void shading_JVMSettings()
+    public void shading_SystemMemory()
     {
-        if (jvmOptionsWindowOpen.get())
+        if (systemMemoryWindowOpen.get())
         {
             return;
         }
 
         try
         {
-            makeWindow("JVM Settings", jvmOptionsWindowOpen, "fxml/menubar/JvmSettings.fxml");
+            makeWindow("System Memory", systemMemoryWindowOpen, "fxml/menubar/systemsettings/SystemMemory.fxml");
         }
         catch(IOException e)
         {
@@ -1002,7 +1003,8 @@ public class MenubarController
 
         try
         {
-            makeWindow("System Settings", systemSettingsModalOpen, "fxml/menubar/SystemSettings.fxml");
+            SystemSettingsController systemSettingsController = makeWindow("System Settings", systemSettingsModalOpen, "fxml/menubar/systemsettings/SystemSettings.fxml");
+            systemSettingsController.init();
         }
         catch (IOException e)
         {

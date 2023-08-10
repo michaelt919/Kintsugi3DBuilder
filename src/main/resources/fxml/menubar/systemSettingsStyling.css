@@ -1,6 +1,6 @@
 .button {
     -fx-background-color: #222222;
-    -fx-text-fill: #ffffff;
+    -fx-text-fill: #FFFFFF;
     -fx-background-radius: 30 30 30 30;
 }
 
@@ -13,19 +13,19 @@
 }
 
 .checkbox{
-    -fx-text-fill: #ffffff;
+    -fx-text-fill: #FFFFFF;
 }
 
 .label{
-    -fx-text-fill: #ffffff;
+    -fx-text-fill: #FFFFFF;
 }
 
 .titled-pane > .title{ /*only applies to the dropdown bar, not the content within*/
-    -fx-background-color: #441166;
+    -fx-background-color:#D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
 }
 
 .titled-pane > .title > *.text{
-    -fx-fill:#ffffff
+    -fx-fill:#000000;
 }
 
 .grid-pane{
@@ -42,4 +42,37 @@
 
 .accordion{
     -fx-background-color: #000000;
+}
+
+.text{
+    -fx-fill:#FFFFFF;
+}
+
+.slider .thumb .thumb-label .label{
+    -fx-text-fill:#FF0000;
+}
+
+.list-view{
+    -fx-background-color: #000000;
+    -fx-text-fill: #FFFFFF;
+}
+
+/* Apply to even cells */
+.list-cell:even {
+    -fx-background-color: #333333; /* Even cell background color */
+}
+
+/* Apply to odd cells */
+.list-cell:odd {
+    -fx-background-color: #222222; /* Odd cell background color */
+}
+
+/* Apply to all cells */
+.list-cell {
+    -fx-text-fill: #FFFFFF; /* Text color for all cells */
+}
+
+.list-cell:selected{
+    -fx-background-color:#D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
+    -fx-text-fill: #000000
 }

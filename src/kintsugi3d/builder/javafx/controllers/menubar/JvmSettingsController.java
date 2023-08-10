@@ -12,7 +12,6 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -59,13 +58,13 @@ public class JvmSettingsController implements Initializable
         maxMemSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(MIN_VALUE, MAX_VALUE, configuration.getMaxMemoryMb(), 1));
     }
 
-    public void button_OK(ActionEvent actionEvent)
+    public void button_OK()
     {
-        button_Apply(actionEvent);
-        button_Close(actionEvent);
+        button_Apply();
+        button_Close();
     }
 
-    public void button_Apply(ActionEvent actionEvent)
+    public void button_Apply()
     {
         configuration.setEnableMaxMemory(maxMemCheckbox.isSelected());
         configuration.setMaxMemoryMb((Integer)maxMemSpinner.getValue());
@@ -86,8 +85,9 @@ public class JvmSettingsController implements Initializable
         alert.show();
     }
 
-    public void button_Close(ActionEvent actionEvent)
+    public void button_Close()
     {
+        //TODO: NEEDS TO HAVE DIFFERENT BEHAVIOR WHEN INSIDE SYSTEM SETTINGS
         root.getScene().getWindow().hide();
     }
 }

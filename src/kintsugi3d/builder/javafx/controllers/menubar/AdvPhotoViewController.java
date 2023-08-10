@@ -31,6 +31,7 @@ import kintsugi3d.util.ShadingParameterMode;
 
 public class AdvPhotoViewController implements Initializable
 {//used to be called IBR Options
+    //TODO: LOOK AT FORMATTING OF SLIDERS (text is hard to read)
     @FXML private TextField buehlerTextField;
     @FXML private CheckBox buehlerCheckBox;
     @FXML private CheckBox occlusionCheckBox;

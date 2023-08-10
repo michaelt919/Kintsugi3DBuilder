@@ -9,23 +9,23 @@
   ~
   ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-  ~
   -->
 
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-<GridPane fx:id="root" hgap="15.0" vgap="15.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.AdvPhotoViewController">
-    <CheckBox fx:id="occlusionCheckBox" mnemonicParsing="false" prefHeight="27.0" prefWidth="260.0" text="Visibility/shadow testing" GridPane.columnSpan="2" GridPane.rowIndex="4">
+
+<GridPane fx:id="root" hgap="15.0" styleClass="grid-pane" stylesheets="@../systemSettingsStyling.css" vgap="15.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.AdvPhotoViewController">
+    <CheckBox fx:id="occlusionCheckBox" mnemonicParsing="false" styleClass="checkbox" prefHeight="27.0" prefWidth="260.0" text="Visibility/shadow testing" GridPane.columnSpan="2" GridPane.rowIndex="4">
       <font>
          <Font size="18.0" />
       </font></CheckBox>
-    <Text text="Gamma: " GridPane.halignment="RIGHT">
+    <Text text="Gamma: " styleClass="text" GridPane.halignment="RIGHT">
       <font>
          <Font size="18.0" />
       </font></Text>
-    <CheckBox fx:id="buehlerCheckBox" mnemonicParsing="false" text="Limit blended views per pixel:" GridPane.columnSpan="3" GridPane.rowIndex="1">
+    <CheckBox fx:id="buehlerCheckBox" mnemonicParsing="false" styleClass="checkbox" text="Limit blended views per pixel:" GridPane.columnSpan="3" GridPane.rowIndex="1">
         <font>
             <Font size="18.0" />
         </font>
@@ -35,15 +35,15 @@
             <Font size="18.0" />
         </font>
     </TextField>
-    <Text text="Weight exponent: " GridPane.halignment="RIGHT" GridPane.rowIndex="2">
+    <Text text="Weight exponent: " styleClass="text" GridPane.halignment="RIGHT" GridPane.rowIndex="2">
       <font>
          <Font size="18.0" />
       </font></Text>
-    <Text text="Isotropy factor: " GridPane.halignment="RIGHT" GridPane.rowIndex="3">
+    <Text text="Isotropy factor: " styleClass="text" GridPane.halignment="RIGHT" GridPane.rowIndex="3">
       <font>
          <Font size="18.0" />
       </font></Text>
-    <Text text="Visibility bias: " GridPane.halignment="RIGHT" GridPane.rowIndex="5">
+    <Text text="Visibility bias: " styleClass="text" GridPane.halignment="RIGHT" GridPane.rowIndex="5">
       <font>
          <Font size="18.0" />
       </font></Text>
@@ -63,12 +63,12 @@
       <font>
          <Font size="18.0" />
       </font></TextField>
-    <Slider fx:id="gammaSlider" blockIncrement="1.0" majorTickUnit="1.0" max="5.0" min="1.0" minorTickCount="4" showTickLabels="true" showTickMarks="true" value="2.2" GridPane.columnIndex="2" />
-    <Slider fx:id="weightExponentSlider" majorTickUnit="49.0" min="1.0" minorTickCount="8" showTickLabels="true" showTickMarks="true" value="16.0" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-    <Slider fx:id="isotropyFactorSlider" blockIncrement="0.2" majorTickUnit="0.25" max="1.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-    <Slider fx:id="occlusionBiasSlider" majorTickUnit="0.001" max="0.004" showTickLabels="true" showTickMarks="true" value="0.0025" GridPane.columnIndex="2" GridPane.rowIndex="5" />
-   <ChoiceBox fx:id="weightModeChoiceBox" managed="false" prefHeight="25.0" prefWidth="254.0" visible="false" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="5" />
-   <Text managed="false" strokeType="OUTSIDE" strokeWidth="0.0" text="Weight mode: " visible="false" GridPane.halignment="RIGHT" GridPane.rowIndex="5">
+    <Slider fx:id="gammaSlider" styleClass="slider" blockIncrement="1.0" majorTickUnit="1.0" max="5.0" min="1.0" minorTickCount="4" showTickLabels="true" showTickMarks="true" value="2.2" GridPane.columnIndex="2" />
+    <Slider fx:id="weightExponentSlider" styleClass="slider" majorTickUnit="49.0" min="1.0" minorTickCount="8" showTickLabels="true" showTickMarks="true" value="16.0" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+    <Slider fx:id="isotropyFactorSlider" styleClass="slider" blockIncrement="0.2" majorTickUnit="0.25" max="1.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+    <Slider fx:id="occlusionBiasSlider" styleClass="slider" majorTickUnit="0.001" max="0.004" showTickLabels="true" showTickMarks="true" value="0.0025" GridPane.columnIndex="2" GridPane.rowIndex="5" />
+   <ChoiceBox fx:id="weightModeChoiceBox" styleClass="choicebox" managed="false" prefHeight="25.0" prefWidth="254.0" visible="false" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="5" />
+   <Text managed="false" styleClass="text" strokeType="OUTSIDE" strokeWidth="0.0" text="Weight mode: " visible="false" GridPane.halignment="RIGHT" GridPane.rowIndex="5">
       <font>
          <Font size="18.0" />
       </font></Text>

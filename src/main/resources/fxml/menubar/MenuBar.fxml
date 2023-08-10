@@ -103,7 +103,7 @@
                       <content>
                         <VBox alignment="CENTER_LEFT" spacing="10.0">
                            <children>
-                                  <Label text="Intensity Selection"> text="Intensity Selection"</Label>
+                               <Label text="Intensity Selection"> text="Intensity Selection"</Label>
                                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                                     <children>
                                     <TextField fx:id="perLight1IntensityTxtField" prefWidth="50.0" />
@@ -285,7 +285,7 @@
              <SeparatorMenuItem mnemonicParsing="false" />
             <CheckMenuItem fx:id="mipmapCheckMenuItem" mnemonicParsing="false" selected="true" text="Mipmap" />
             <SeparatorMenuItem mnemonicParsing="false" />
-             <MenuItem mnemonicParsing="false" onAction="#shading_JVMSettings" text="System Memory… " />
+             <MenuItem mnemonicParsing="false" onAction="#shading_SystemMemory" text="System Memory… " />
              <SeparatorMenuItem mnemonicParsing="false" />
              <CheckMenuItem fx:id="halfResolutionCheckMenuItem" mnemonicParsing="false" text="Reduce Viewport Resolution" />
             <CheckMenuItem mnemonicParsing="false" text="Stand-alone 3D Viewer (UNFINISHED)" />
