@@ -57,7 +57,7 @@ public class UserPreferencesModel implements ReadOnlyUserPreferencesModel
         return directoryPreferencesModel;
     }
 
-    public void setDirectoryPreferencesModel(DirectoryPreferencesModel directoryPreferencesModel)
+    public void setDirectoryPreferences(DirectoryPreferencesModel directoryPreferencesModel)
     {
         this.directoryPreferencesModel = directoryPreferencesModel;
     }

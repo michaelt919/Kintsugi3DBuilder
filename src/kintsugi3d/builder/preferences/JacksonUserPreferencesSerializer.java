@@ -18,6 +18,7 @@ import kintsugi3d.builder.app.ApplicationFolders;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 public class JacksonUserPreferencesSerializer implements UserPreferencesSerializer
 {
