@@ -20,7 +20,7 @@
       <ToolBar orientation="VERTICAL" prefHeight="447.0" prefWidth="200.0">
         <items>
           <Button mnemonicParsing="false" onAction="#file_createProject" prefHeight="57.0" prefWidth="140.0" text="Create Project" />
-            <SplitMenuButton fx:id="recentProjectsSplitMenuButton" alignment="CENTER_RIGHT" mnemonicParsing="false" onAction="#splitMenuButtonActions" onMouseEntered="#unrollMenu" popupSide="RIGHT" prefHeight="57.0" prefWidth="140.0" text="Recent Projects" textAlignment="CENTER">
+            <SplitMenuButton fx:id="recentProjectsSplitMenuButton" alignment="CENTER_RIGHT" mnemonicParsing="false" onAction="#splitMenuButtonActions" onMouseEntered="#unrollMenu" onMouseExited="#hideMenu" popupSide="RIGHT" prefHeight="57.0" prefWidth="140.0" text="Recent Projects" textAlignment="CENTER">
             </SplitMenuButton>
             <Button layoutX="10.0" layoutY="71.0" mnemonicParsing="false" onAction="#file_openProject" prefHeight="57.0" prefWidth="140.0" text="Open Project" />
             <Button layoutX="10.0" layoutY="194.0" mnemonicParsing="false" onAction="#file_closeProject" prefHeight="57.0" prefWidth="140.0" text="Close Project" />

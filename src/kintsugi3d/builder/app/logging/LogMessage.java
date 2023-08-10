@@ -23,12 +23,24 @@ public class LogMessage
     private final String sourceClassName;
     private final String message;
 
+    private final Throwable thrown;
+
     public LogMessage(Instant timestamp, Level logLevel, String sourceClassName, String message)
     {
         this.timestamp = timestamp;
         this.logLevel = logLevel;
         this.sourceClassName = sourceClassName;
         this.message = message;
+        this.thrown = null;
+    }
+
+    public LogMessage(Instant timestamp, Level logLevel, String sourceClassName, String message, Throwable thrown)
+    {
+        this.timestamp = timestamp;
+        this.logLevel = logLevel;
+        this.sourceClassName = sourceClassName;
+        this.message = message;
+        this.thrown = thrown;
     }
 
     public Instant getTimestamp()
@@ -49,5 +61,10 @@ public class LogMessage
     public String getMessage()
     {
         return message;
+    }
+
+    public Throwable getThrown()
+    {
+        return thrown;
     }
 }

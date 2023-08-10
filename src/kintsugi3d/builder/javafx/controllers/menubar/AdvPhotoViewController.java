@@ -29,8 +29,8 @@ import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.util.ShadingParameterMode;
 
-public class IBROptionsController implements Initializable
-{
+public class AdvPhotoViewController implements Initializable
+{//used to be called IBR Options
     @FXML private TextField buehlerTextField;
     @FXML private CheckBox buehlerCheckBox;
     @FXML private CheckBox occlusionCheckBox;
