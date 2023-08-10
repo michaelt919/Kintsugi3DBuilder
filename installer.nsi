@@ -69,6 +69,25 @@ Section "Kintsugi 3D Builder (required)" SectionApp
 
 SectionEnd
 
+; Optional File Type associations
+Section "File Type Associations" SectionAssociation
+
+    ; Associate .ibr files as Kintsugi 3D Builder Projects
+    WriteRegStr HKCR ".ibr" "" "Kintsugi3DBuilder.Project"
+
+    WriteRegStr HKCR "Kintsugi3DBuilder.Project" "" "Kintsugi 3D Builder Project"
+    WriteRegStr HKCR "Kintsugi3DBuilder.Project\DefaultIcon" "" "$INSTDIR\Kintsugi3DBuilder.exe,0"
+    WriteRegStr HKCR "Kintsugi3DBuilder.Project\Shell\Open\Command" "" '"$INSTDIR\Kintsugi3DBuilder.exe" "%1"'
+
+    ; Associate .vset files as Kintsugi 3D Builder Viewsets
+    WriteRegStr HKCR ".vset" "" "Kintsugi3DBuilder.Viewset"
+
+    WriteRegStr HKCR "Kintsugi3DBuilder.Viewset" "" "Kintsugi 3D Builder Viewset"
+    WriteRegStr HKCR "Kintsugi3DBuilder.Viewset\DefaultIcon" "" "$INSTDIR\Kintsugi3DBuilder.exe,0"
+    WriteRegStr HKCR "Kintsugi3DBuilder.Viewset\Shell\Open\Command" "" '"$INSTDIR\Kintsugi3DBuilder.exe" "%1"'
+
+SectionEnd
+
 ; Optional start menu shortcuts
 Section "Start Menu Shortcuts" SectionShortcut
 
