@@ -19,7 +19,6 @@ import java.io.IOException;
 
 public class GlobalUserPreferencesManager
 {
-    private static final Logger log = LoggerFactory.getLogger(GlobalUserPreferencesManager.class);
     private static final GlobalUserPreferencesManager INSTANCE = new GlobalUserPreferencesManager();
     private final UserPreferencesSerializer serializer = new JacksonUserPreferencesSerializer();
 
@@ -48,15 +47,9 @@ public class GlobalUserPreferencesManager
         this.preferencesModel = model;
     }
 
-    public void commit()
+    public void commit() throws IOException
     {
-        try
-        {
-            serializer.writeUserPreferences(preferencesModel);
-        } catch (IOException e)
-        {
-            log.error("Failed to write user preferences file", e);
-        }
+        serializer.writeUserPreferences(preferencesModel);
     }
 
     public void rollback()

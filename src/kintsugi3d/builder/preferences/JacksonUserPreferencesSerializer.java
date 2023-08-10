@@ -15,11 +15,9 @@ package kintsugi3d.builder.preferences;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.core.SimpleLoadOptionsModel;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 
 public class JacksonUserPreferencesSerializer implements UserPreferencesSerializer
 {
@@ -27,7 +25,7 @@ public class JacksonUserPreferencesSerializer implements UserPreferencesSerializ
     private static final String FILE_NAME = "preferences.json";
 
     @Override
-    public void writeUserPreferences(UserPreferencesModel preferencesModel) throws IOException
+    public void writeUserPreferences(ReadOnlyUserPreferencesModel preferencesModel) throws IOException
     {
         ObjectMapper mapper = new ObjectMapper();
         mapper.writeValue(getPreferencesFile(), preferencesModel);

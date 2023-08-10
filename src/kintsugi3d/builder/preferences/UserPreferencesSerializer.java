@@ -16,7 +16,7 @@ import java.io.IOException;
 
 public interface UserPreferencesSerializer
 {
-    void writeUserPreferences(UserPreferencesModel preferencesModel) throws IOException;
+    void writeUserPreferences(ReadOnlyUserPreferencesModel preferencesModel) throws IOException;
 
     UserPreferencesModel readUserPreferences() throws IOException;
 
