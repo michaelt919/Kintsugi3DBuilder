@@ -46,7 +46,7 @@ public class SpecularFitGltfExporter
 
     private TextureInfo baseColorTexture, normalTexture, roughnessMetallicTexture;
 
-    private TextureInfo diffuseTexture, specularTexture;
+    private TextureInfo diffuseTexture, diffuseConstantTexture, specularTexture;
 
     GltfMaterialExtras extraData = new GltfMaterialExtras();
 
@@ -127,6 +127,27 @@ public class SpecularFitGltfExporter
             return;
 
         addLodsToTexture(diffuseTexture, baseUri, baseRes, minRes);
+    }
+
+    public void setDiffuseConstantUri(String uri)
+    {
+        if (diffuseConstantTexture == null)
+        {
+            diffuseConstantTexture = createRelativeTexture(uri, "diffuseConstant");
+            extraData.setDiffuseConstantTexture(diffuseConstantTexture);
+        }
+        else
+        {
+            setTextureUri(diffuseConstantTexture, uri);
+        }
+    }
+
+    public void addDiffuseConstantLods(String baseUri, int baseRes, int minRes)
+    {
+        if (diffuseConstantTexture == null)
+            return;
+
+        addLodsToTexture(diffuseConstantTexture, baseUri, baseRes, minRes);
     }
 
     public void setNormalUri(String uri)
