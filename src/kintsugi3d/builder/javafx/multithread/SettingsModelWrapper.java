@@ -77,6 +77,17 @@ public class SettingsModelWrapper extends SettingsModelBase
         return baseModel.exists(name);
     }
 
+    @Override
+    public boolean shouldSerialize(String name)
+    {
+        if (exists(name))
+        {
+            return getSetting(name).shouldSerialize();
+        }
+
+        return false;
+    }
+
     protected Setting getSetting(String settingName)
     {
         return new Setting()
@@ -97,6 +108,12 @@ public class SettingsModelWrapper extends SettingsModelBase
             public Object getValue()
             {
                 return getObject(settingName);
+            }
+
+            @Override
+            public boolean shouldSerialize()
+            {
+                return SettingsModelWrapper.this.shouldSerialize(settingName);
             }
         };
     }

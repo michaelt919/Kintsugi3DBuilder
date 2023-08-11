@@ -13,8 +13,8 @@
 package kintsugi3d.builder.preferences;
 
 import kintsugi3d.builder.javafx.MultithreadModels;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerializer;
+import kintsugi3d.builder.preferences.serialization.UserPreferencesSerializer;
 
 import java.io.IOException;
 

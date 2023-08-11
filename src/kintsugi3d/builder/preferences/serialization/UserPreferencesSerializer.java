@@ -10,7 +10,10 @@
  *
  */
 
-package kintsugi3d.builder.preferences;
+package kintsugi3d.builder.preferences.serialization;
+
+import kintsugi3d.builder.preferences.ReadOnlyUserPreferencesModel;
+import kintsugi3d.builder.preferences.UserPreferencesModel;
 
 import java.io.IOException;
 

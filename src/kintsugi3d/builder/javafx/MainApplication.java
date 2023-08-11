@@ -37,7 +37,7 @@ import javafx.scene.image.Image;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
-import kintsugi3d.builder.preferences.JacksonUserPreferencesSerializer;
+import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.vecmath.Vector2;

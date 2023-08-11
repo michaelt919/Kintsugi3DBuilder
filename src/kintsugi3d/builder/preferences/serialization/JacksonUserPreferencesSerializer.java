@@ -10,17 +10,19 @@
  *
  */
 
-package kintsugi3d.builder.preferences;
+package kintsugi3d.builder.preferences.serialization;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
+import kintsugi3d.builder.preferences.ReadOnlyUserPreferencesModel;
+import kintsugi3d.builder.preferences.UserPreferencesModel;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 
 public class JacksonUserPreferencesSerializer implements UserPreferencesSerializer
 {
