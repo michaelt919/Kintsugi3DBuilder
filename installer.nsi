@@ -108,12 +108,20 @@ Section "Uninstall"
     DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DBuilder"
     DeleteRegKey HKLM "SOFTWARE\Kintsugi3DBuilder"
 
+    ; Remove file type associations
+    DeleteRegKey HKCR ".ibr"
+    DeleteRegKey HKCR ".vset"
+    DeleteRegKey HKCR "Kintsugi3DBuilder.Project"
+    DeleteRegKey HKCR "Kintsugi3DBuilder.Viewset"
+
 SectionEnd
 
 LangString DESC_SectionApp ${LANG_ENGLISH} "The main Kintsugi 3D Builder Application. This will also install the Java 11 Runtime that is necessary to run the application."
+LangString DESC_SectionAssociation ${LANG_ENGLISH} "Set up Kintsugi 3D Builder Project file associations (.ibr and .vset)"
 LangString DESC_SectionShortcut ${LANG_ENGLISH} "Install shortcuts so the application can be launched from the start menu"
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionApp} $(DESC_SectionApp)
+!insertmacro MUI_DESCRIPTION_TEXT ${SectionAssociation} $(DESC_SectionAssociation)
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionShortcut} $(DESC_SectionShortcut)
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
