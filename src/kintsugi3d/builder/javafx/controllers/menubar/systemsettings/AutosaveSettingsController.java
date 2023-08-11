@@ -11,5 +11,67 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.systemsettings;
 
-public class AutosaveSettingsController {
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.Stage;
+import javafx.stage.Window;
+import kintsugi3d.builder.javafx.InternalModels;
+
+import java.awt.*;
+import java.io.File;
+
+public class AutosaveSettingsController implements SystemSettingsControllerBase{
+    @FXML public javafx.scene.control.ChoiceBox<String> autosaveOptionsChoiceBox;
+    String defaultAutosavePath = "C:\\";//TODO: WILL CHANGE WHEN FILE STRUCTURE IS CEMENTED
+
+    String defaultAutosaveSelection = "Default Path: --> " + defaultAutosavePath;
+    static final String CHOOSE_LOCATION = "Choose Location...";
+    private DirectoryChooser directoryChooser = new DirectoryChooser();
+
+    private Window window;
+
+    @Override
+    public void init() {
+        //add "Default Path" and "Choose Location..." items to choiceBox
+        //initialize directory selection dropdown menu
+        autosaveOptionsChoiceBox.getItems().addAll(defaultAutosaveSelection, CHOOSE_LOCATION);
+
+        //initialize option to default path
+        autosaveOptionsChoiceBox.setValue(defaultAutosaveSelection);
+
+        //attach event handler (this cannot be done in scenebuilder)
+        autosaveOptionsChoiceBox.setOnAction(this::handleDirectoryDropdownSelection);
+    }
+
+    private void handleDirectoryDropdownSelection(ActionEvent event) {
+        //if user clicks "choose directory" option, open the directory chooser
+        //then add an item to the dropdown which contains the path they selected
+
+        if (autosaveOptionsChoiceBox.getValue().equals(CHOOSE_LOCATION)){
+            this.directoryChooser.setTitle("Choose an output directory");
+
+            Stage stage = (Stage) window;
+            File file = this.directoryChooser.showDialog(stage.getOwner());
+
+            if (file != null && file.exists()){
+                directoryChooser.setInitialDirectory(file);
+                autosaveOptionsChoiceBox.getItems().add(file.getAbsolutePath());
+                autosaveOptionsChoiceBox.setValue(file.getAbsolutePath());
+            }
+            else{
+                Toolkit.getDefaultToolkit().beep();
+            }
+        }
+    }
+
+    public void injectWindow(Window window){
+        this.window = window;
+    }
+
+    @Override
+    public void bindInfo(InternalModels internalModels) {
+        //TODO: imp.
+    }
+
 }

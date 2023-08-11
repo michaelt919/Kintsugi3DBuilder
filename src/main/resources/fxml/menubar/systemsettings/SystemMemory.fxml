@@ -16,7 +16,7 @@
   ~
   -->
 
-<AnchorPane fx:id="root" prefHeight="151.0" prefWidth="200.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.JvmSettingsController">
+<AnchorPane fx:id="root" prefHeight="151.0" prefWidth="200.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.systemsettings.JvmSettingsController">
    <children>
       <FlowPane hgap="10.0" prefWidth="200.0" vgap="10.0">
          <children>

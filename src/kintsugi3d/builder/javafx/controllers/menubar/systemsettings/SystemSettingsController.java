@@ -16,21 +16,36 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
+import javafx.stage.Window;
+import kintsugi3d.builder.javafx.InternalModels;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class SystemSettingsController {
 
     public AnchorPane settingsFxmlHost;//holds the fxml which contains whatever settings the user is modifying
+    //TODO: NEED TO REAPPLY ALL DEFAULT CHECKBOX SETTINGS
     @FXML
     private ListView<String> settingsListView;
 
-    static final String FOLDER_PATH = "src/main/resources/fxml/menubar/systemsettings";
+    //Note: settings string MUST MATCH their .fxml counterparts
+    //ex. Autosave Settings --> AutosaveSettings.fxml
+    //    System Memory --> SysMem.fxml will not work
+    static final String[] settingsNames = {"Accessibility",
+                                            "Advanced Photo View",
+                                            "Autosave Settings",
+                                            "Cache Settings",
+                                            "Object Visuals",
+                                            "Photo Lighting Settings",
+                                            "System Memory",
+                                            "Miscellaneous"
+                                            };
+    private InternalModels internalModels;
+    private Window window;
 
-    public void init() {
+    public void init(InternalModels internalModels, Window window) {
+        this.internalModels = internalModels;
+        this.window = window;
         populateFileList();
         //initialize listeners for cell items
         settingsListView.getSelectionModel().selectedItemProperty().addListener((observableValue, s, t1) -> {
@@ -44,6 +59,17 @@ public class SystemSettingsController {
                 //TODO: VERIFY THAT THE USER HAS SAVED ALL NECESSARY SETTINGS BEFORE SWITCHING?
                 FXMLLoader loader = new FXMLLoader(getClass().getResource(fileName));
                 newContent = loader.load();
+
+                //initialize controller
+                SystemSettingsControllerBase controller = loader.getController();
+                controller.init();
+
+                //attach controller info
+                controller.bindInfo(internalModels);
+                if (controller instanceof AutosaveSettingsController){
+                    ((AutosaveSettingsController) controller).injectWindow(window);
+                }
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -52,51 +78,13 @@ public class SystemSettingsController {
                 settingsFxmlHost.getChildren().setAll(newContent);
             }
         });
+        settingsListView.setFixedCellSize(40);
     }
 
     //fill the listView with the fxml files in String folderPath
     private void populateFileList() {
-        File folder = new File(FOLDER_PATH);
-
-        if (folder.exists() && folder.isDirectory()) {
-            File[] files = folder.listFiles();
-            if (files != null) {
-                List<String> fileNames = Arrays.stream(files)
-                        .filter(File::isFile)
-                        .map(File::getName)
-                        .collect(Collectors.toList());
-
-                settingsListView.getItems().addAll(parseFileNames(fileNames));
-            }
-        }
-    }
-
-    private Collection<String> parseFileNames(List<String> fileNames) {
-        Collection<String> newFileNames = new ArrayList<>();
-        for(String fileName : fileNames){
-            String parsedFileName = parseString(fileName);
-
-            if(!parsedFileName.equals("System Settings")) {
-                newFileNames.add(parsedFileName);
-            }
-        }
-
-        return newFileNames;
-    }
-
-    private static String parseString(String input) {
-        //ex. turn "AutosaveSettings.fmxl" into "Autosave Settings"
-        StringBuilder parsedString = new StringBuilder();
-
-        for (int i = 0; i < input.length(); i++) {
-            char c = input.charAt(i);
-            if (Character.isUpperCase(c)) {
-                parsedString.append(" ");
-            }
-            parsedString.append(c);
-        }
-
-        return parsedString.toString().trim().substring(0, parsedString.length() - 6); //remove ".fxml";
+        settingsListView.getItems().clear();
+        settingsListView.getItems().addAll(settingsNames);
     }
 }
 

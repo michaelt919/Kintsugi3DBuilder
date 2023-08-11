@@ -7,15 +7,15 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
-package kintsugi3d.builder.javafx.controllers.menubar;
+package kintsugi3d.builder.javafx.controllers.menubar.systemsettings;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
+import kintsugi3d.builder.javafx.InternalModels;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.builder.util.Launch4jConfiguration;
@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class JvmSettingsController implements Initializable
+public class JvmSettingsController implements Initializable, SystemSettingsControllerBase
 {
     private static final Logger log = LoggerFactory.getLogger(JvmSettingsController.class);
 
@@ -43,19 +43,7 @@ public class JvmSettingsController implements Initializable
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle)
     {
-        try
-        {
-            configuration = Launch4jConfiguration.read();
-        }
-        catch (IOException e)
-        {
-            log.error("Failed to read jvm configuration:", e);
-            log.error("Using default configuration");
-            configuration = Launch4jConfiguration.empty();
-        }
-
-        maxMemCheckbox.setSelected(configuration.isEnableMaxMemory());
-        maxMemSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(MIN_VALUE, MAX_VALUE, configuration.getMaxMemoryMb(), 1));
+        init();
     }
 
     public void button_OK()
@@ -89,5 +77,29 @@ public class JvmSettingsController implements Initializable
     {
         //TODO: NEEDS TO HAVE DIFFERENT BEHAVIOR WHEN INSIDE SYSTEM SETTINGS
         root.getScene().getWindow().hide();
+    }
+
+    @Override
+    public void init() {
+        try
+        {
+            configuration = Launch4jConfiguration.read();
+        }
+        catch (IOException e)
+        {
+            log.error("Failed to read jvm configuration:", e);
+            log.error("Using default configuration");
+            configuration = Launch4jConfiguration.empty();
+        }
+
+        maxMemCheckbox.setSelected(configuration.isEnableMaxMemory());
+        maxMemSpinner.setValueFactory(
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(
+                        MIN_VALUE, MAX_VALUE, configuration.getMaxMemoryMb(), 1));
+    }
+
+    @Override
+    public void bindInfo(InternalModels internalModels) {
+        //TODO: imp.
     }
 }

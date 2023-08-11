@@ -11,5 +11,24 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.systemsettings;
 
-public class MiscellaneousSettingsController {
+import javafx.fxml.FXML;
+import javafx.scene.control.CheckBox;
+import kintsugi3d.builder.javafx.InternalModels;
+
+public class MiscellaneousSettingsController implements SystemSettingsControllerBase{
+    @FXML public CheckBox sceneWindowCheckBox;
+    private InternalModels internalModels;
+
+    @Override
+    public void init() {
+        //nothing here yet
+    }
+
+    @Override
+    public void bindInfo(InternalModels internalModels) {
+        this.internalModels = internalModels;
+
+        sceneWindowCheckBox.selectedProperty().bindBidirectional(
+                internalModels.getSettingsModel().getBooleanProperty("sceneWindowOpen"));
+    }
 }

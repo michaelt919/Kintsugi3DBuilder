@@ -26,6 +26,6 @@
   </rowConstraints>
    <children>
        <ListView fx:id="settingsListView" styleClass="list-view" GridPane.rowSpan="3" />
-       <fx:include fx:id="settingsFxmlHost" styleClass="anchor-pane" source="AutosaveSettings.fxml" GridPane.rowSpan="2" GridPane.columnIndex="1"/>
+       <fx:include fx:id="settingsFxmlHost" styleClass="anchor-pane" source="Dummy.fxml" GridPane.rowSpan="2" GridPane.columnIndex="1"/>
    </children>
 </GridPane>

@@ -11,5 +11,102 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.systemsettings;
 
-public class ObjectVisualsController {
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.fxml.FXML;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.util.StringConverter;
+import kintsugi3d.builder.javafx.InternalModels;
+
+public class ObjectVisualsController implements SystemSettingsControllerBase{
+
+    final Number DEFAULT_VALUE = 1024;//default value for Preload vis and shadow testing txt fields
+    private IntegerProperty widthIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
+    private IntegerProperty heightIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
+
+    @FXML public CheckBox imageCompressionCheckBox;
+    @FXML public CheckBox preloadVisibilityEtcCheckBox;
+    @FXML public Label widthLabel;
+    @FXML public TextField widthTxtField;
+    @FXML public Label heightLabel;
+    @FXML public TextField heightTxtField;
+    @FXML public CheckBox mipmapCheckBox;
+    @FXML public CheckBox reduceViewportResCheckBox;
+
+    @Override
+    public void init() {
+        //nothing here yet
+    }
+
+    @Override
+    public void bindInfo(InternalModels internalModels) {
+        imageCompressionCheckBox.selectedProperty().bindBidirectional(
+                internalModels.getLoadOptionsModel().compression);
+
+        setupTxtFieldProperties(widthIntProperty, widthTxtField);
+        setupTxtFieldProperties(heightIntProperty, heightTxtField);
+
+        widthTxtField.disableProperty().bind(preloadVisibilityEtcCheckBox.selectedProperty().not());
+        heightTxtField.disableProperty().bind(preloadVisibilityEtcCheckBox.selectedProperty().not());
+
+        preloadVisibilityEtcCheckBox.selectedProperty().bindBidirectional(
+                internalModels.getLoadOptionsModel().depthImages);
+
+        widthIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthWidth);
+        heightIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthHeight);
+
+        mipmapCheckBox.selectedProperty().bindBidirectional(internalModels.getLoadOptionsModel().mipmaps);
+        reduceViewportResCheckBox.selectedProperty().bindBidirectional(
+                internalModels.getSettingsModel().getBooleanProperty("halfResolutionEnabled"));
+    }
+
+    //this function is used to hook up the text field's string property to the backend
+    //StringProperty --> IntegerProperty
+    private void setupTxtFieldProperties(IntegerProperty integerProperty, TextField txtField) {
+        StringConverter<Number> numberStringConverter = new StringConverter<Number>()
+        {
+            @Override
+            public String toString(Number object)
+            {
+                if (object != null)
+                {
+                    return Integer.toString(object.intValue());
+                }
+                else
+                {
+                    return String.valueOf(DEFAULT_VALUE);
+                }
+            }
+
+            @Override
+            public Number fromString(String string)
+            {
+                try
+                {
+                    return Integer.valueOf(string);
+                }
+                catch (NumberFormatException nfe)
+                {
+                    return DEFAULT_VALUE;
+                }
+            }
+        };
+        txtField.textProperty().bindBidirectional(integerProperty, numberStringConverter);
+        txtField.focusedProperty().addListener((ob, o, n) ->
+        {
+            if (o && !n)
+            {
+                txtField.setText(integerProperty.getValue().toString());
+            }
+        });
+        integerProperty.addListener((ob, o, n) ->
+        {
+            if (n.intValue() < 1)
+            {
+                integerProperty.setValue(1);
+            }
+        });
+    }
 }

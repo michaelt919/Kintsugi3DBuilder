@@ -54,6 +54,7 @@ import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
+import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
@@ -1004,7 +1005,7 @@ public class MenubarController
         try
         {
             SystemSettingsController systemSettingsController = makeWindow("System Settings", systemSettingsModalOpen, "fxml/menubar/systemsettings/SystemSettings.fxml");
-            systemSettingsController.init();
+            systemSettingsController.init(internalModels, window);
         }
         catch (IOException e)
         {

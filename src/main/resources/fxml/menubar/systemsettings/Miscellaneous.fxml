@@ -19,7 +19,7 @@
    <children>
       <VBox prefHeight="200.0" prefWidth="317.0" spacing="10.0">
           <children>
-              <CheckBox mnemonicParsing="false" text="Show Scene Window..." />
+              <CheckBox fx:id="sceneWindowCheckBox" mnemonicParsing="false" text="Show Scene Window..." />
               <CheckBox mnemonicParsing="false" text="Stand-alone 3D Viewer (UNFINISHED)" />
           </children>
          <padding>

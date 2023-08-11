@@ -12,7 +12,34 @@
     -fx-background-color: #222222;
 }
 
+.context-menu {
+    -fx-background-color: #000000;
+}
+
 .checkbox{
+    -fx-text-fill: #FFFFFF;
+}
+
+.color-picker{
+    -fx-background-color: #000000;
+    -fx-border-color: #D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
+    -fx-text-fill:#000000;
+}
+
+.combo-box-base .text{ /*text for the color picker label within the dropdown*/
+    -fx-fill: #000000;
+}
+
+.choicebox{
+    -fx-background-color:#D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
+}
+
+.menu{
+    -fx-background-color:#000000;
+}
+
+.menu-item{
+    -fx-background-color:#000000;
     -fx-text-fill: #FFFFFF;
 }
 
