@@ -15,7 +15,7 @@ package kintsugi3d.builder.fit.settings;
 import java.io.File;
 
 import kintsugi3d.builder.core.TextureFitSettings;
-import kintsugi3d.builder.resources.ImageCacheSettings;
+import kintsugi3d.builder.resources.ibr.ImageCacheSettings;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 
 public class SpecularFitRequestParams

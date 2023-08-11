@@ -23,7 +23,7 @@ import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.core.StandardRenderingMode;
-import kintsugi3d.builder.resources.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.StandardShader;

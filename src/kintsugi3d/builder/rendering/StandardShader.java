@@ -19,7 +19,7 @@ import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.core.StandardRenderingMode;
-import kintsugi3d.builder.resources.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.util.ShadingParameterMode;
 

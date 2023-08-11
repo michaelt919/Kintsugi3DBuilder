@@ -20,7 +20,7 @@ import java.util.stream.IntStream;
 
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
-import kintsugi3d.builder.resources.GraphicsStream;
+import kintsugi3d.builder.resources.ibr.stream.GraphicsStream;
 import kintsugi3d.util.Counter;
 
 /**

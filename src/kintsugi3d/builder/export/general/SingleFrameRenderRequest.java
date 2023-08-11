@@ -20,7 +20,7 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.builder.core.IBRInstance;
 import kintsugi3d.builder.core.IBRRequest;
 import kintsugi3d.builder.core.LoadingMonitor;
-import kintsugi3d.builder.resources.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 
 class SingleFrameRenderRequest<ContextType extends Context<ContextType>> extends RenderRequestBase<ContextType>

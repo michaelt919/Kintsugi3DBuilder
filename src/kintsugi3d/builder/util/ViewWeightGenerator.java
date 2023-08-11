@@ -13,7 +13,7 @@
 package kintsugi3d.builder.util;
 
 import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.builder.resources.ReadonlyIBRResources;
+import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 
 @FunctionalInterface
 public interface ViewWeightGenerator

@@ -24,7 +24,7 @@ import kintsugi3d.gl.core.Program;
 import kintsugi3d.gl.core.ProgramObject;
 import kintsugi3d.gl.core.ShaderType;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-import kintsugi3d.builder.resources.ReadonlyIBRResources;
+import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 
 public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>

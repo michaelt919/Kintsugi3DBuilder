@@ -19,7 +19,7 @@ import java.util.Queue;
 
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.resources.ReadonlyIBRResources;
+import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 
 public class KNNViewWeightGenerator implements ViewWeightGenerator
 {

@@ -26,7 +26,7 @@ import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
-import kintsugi3d.builder.resources.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.builder.state.ReadonlyCameraModel;
 import kintsugi3d.builder.state.ReadonlyLightingModel;

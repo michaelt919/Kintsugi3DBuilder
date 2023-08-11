@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
-import kintsugi3d.builder.resources.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 
 class MultiviewRetargetRenderRequest<ContextType extends Context<ContextType>> extends RenderRequestBase<ContextType>

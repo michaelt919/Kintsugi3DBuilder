@@ -63,7 +63,7 @@ import kintsugi3d.builder.core.IBRRequestUI;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.core.StandardRenderingMode;
-import kintsugi3d.builder.export.specularfit.SpecularFitRequestUI;
+import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.util.Flag;

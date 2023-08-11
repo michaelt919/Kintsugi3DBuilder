@@ -20,7 +20,7 @@ import java.util.function.Consumer;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.builder.core.IBRRequest;
 import kintsugi3d.builder.core.StandardRenderingMode;
-import kintsugi3d.builder.resources.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 
 abstract class RenderRequestBase<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>
