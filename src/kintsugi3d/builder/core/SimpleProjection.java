@@ -63,6 +63,6 @@ public class SimpleProjection implements Projection
     @Override
     public String toVSETString()
     {
-        return String.format("f\t0\t0\t%.8f\t%.8f", aspectRatio, verticalFieldOfView);
+        return String.format("f\t0\t0\t%.8f\t%.8f", aspectRatio, verticalFieldOfView * 180.0 / Math.PI);
     }
 }
