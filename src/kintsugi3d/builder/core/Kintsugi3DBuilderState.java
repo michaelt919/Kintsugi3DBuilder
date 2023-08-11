@@ -34,7 +34,7 @@ public interface Kintsugi3DBuilderState
     CanvasModel getCanvasModel();
 
     SceneViewportModel getSceneViewportModel();
-    ReadonlyLoadOptionsModel getLoadOptionsModel();
+    LoadOptionsModel getLoadOptionsModel();
     LoadingModel getLoadingModel();
 
     ProjectModel getProjectModel();

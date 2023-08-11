@@ -13,11 +13,13 @@
 package kintsugi3d.builder.core;//Created by alexk on 7/31/2017.
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.core.ColorFormat;
 import kintsugi3d.gl.core.CompressionFormat;
 import kintsugi3d.gl.material.TextureLoadOptions;
 
+@JsonSerialize(as = LoadOptionsModel.class)
 public interface ReadonlyLoadOptionsModel
 {
     boolean areColorImagesRequested();

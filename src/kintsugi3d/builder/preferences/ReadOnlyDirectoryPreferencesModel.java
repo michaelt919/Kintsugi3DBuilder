@@ -13,9 +13,11 @@
 package kintsugi3d.builder.preferences;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.nio.file.Path;
 
+@JsonSerialize(as = DirectoryPreferencesModel.class)
 public interface ReadOnlyDirectoryPreferencesModel
 {
     Path getPreviewImagesDirectory();

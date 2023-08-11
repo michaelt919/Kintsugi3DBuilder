@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.javafx;//Created by alexk on 7/19/2017.
 
+import kintsugi3d.builder.core.LoadOptionsModel;
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 import kintsugi3d.builder.preferences.ReadOnlyUserPreferencesModel;
 import kintsugi3d.builder.preferences.UserPreferencesModel;
@@ -33,7 +34,7 @@ public final class MultithreadModels implements Kintsugi3DBuilderState
 
     private final SettingsModel settingsModel;
     private final UserPreferencesModel userPreferencesModel;
-    private final ReadonlyLoadOptionsModel loadOptionsModel;
+    private final LoadOptionsModel loadOptionsModel;
     private final SceneViewportModel sceneViewportModel;
     private final CanvasModel canvasModel;
     private final LoadingModel loadingModel;
@@ -80,7 +81,7 @@ public final class MultithreadModels implements Kintsugi3DBuilderState
     }
 
     @Override
-    public ReadonlyLoadOptionsModel getLoadOptionsModel()
+    public LoadOptionsModel getLoadOptionsModel()
     {
         return loadOptionsModel;
     }

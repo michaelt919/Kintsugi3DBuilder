@@ -28,23 +28,37 @@ public class SettingsModelImpl extends SettingsModelBase
     private interface TypedProperty<T> extends Property<T>
     {
         Class<? extends T> getType();
+        boolean shouldSerialize();
     }
 
     private static class TypedPropertyGenericImpl<T> implements TypedProperty<T>
     {
         private final Property<T> base;
         private final Class<T> type;
+        private final boolean serialize;
 
-        TypedPropertyGenericImpl(Class<T> type, Property<T> base)
+        TypedPropertyGenericImpl(Class<T> type, Property<T> base, boolean serialize)
         {
             this.base = base;
             this.type = type;
+            this.serialize = serialize;
+        }
+
+        TypedPropertyGenericImpl(Class<T> type, Property<T> base)
+        {
+            this(type, base, false);
         }
 
         @Override
         public Class<T> getType()
         {
             return this.type;
+        }
+
+        @Override
+        public boolean shouldSerialize()
+        {
+            return serialize;
         }
 
         @Override
@@ -130,17 +144,30 @@ public class SettingsModelImpl extends SettingsModelBase
     {
         private final ObjectProperty<Object> base;
         private final Class<?> type;
+        private final boolean serialize;
 
-        TypedPropertyNonGenericImpl(Class<?> type, Object initialValue)
+        TypedPropertyNonGenericImpl(Class<?> type, Object initialValue, boolean serialize)
         {
             this.base = new SimpleObjectProperty<>(initialValue);
             this.type = type;
+            this.serialize = serialize;
+        }
+
+        TypedPropertyNonGenericImpl(Class<?> type, Object initialValue)
+        {
+            this(type, initialValue, false);
         }
 
         @Override
         public Class<?> getType()
         {
             return this.type;
+        }
+
+        @Override
+        public boolean shouldSerialize()
+        {
+            return serialize;
         }
 
         @Override

@@ -265,11 +265,11 @@ public class ImageCache<ContextType extends Context<ContextType>>
         throws IOException
     {
         SimpleLoadOptionsModel loadOptions = new SimpleLoadOptionsModel();
-        loadOptions.setColorImagesRequested(true);
-        loadOptions.setAlphaRequested(true);
-        loadOptions.setCompressionRequested(false);
-        loadOptions.setMipmapsRequested(false);
-        loadOptions.setDepthImagesRequested(true);
+        loadOptions.requestColorImages(true);
+        loadOptions.requestAlpha(true);
+        loadOptions.requestCompression(false);
+        loadOptions.requstMipmaps(false);
+        loadOptions.requestDepthImages(true);
 
         try(ProgramObject<ContextType> texSpaceProgram = SingleCalibratedImageResource.getShaderProgramBuilder(context, resources.getViewSet(), loadOptions)
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_dynamic.vert"))

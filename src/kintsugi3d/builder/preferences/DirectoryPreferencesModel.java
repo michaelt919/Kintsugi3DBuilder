@@ -12,60 +12,14 @@
 
 package kintsugi3d.builder.preferences;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.nio.file.Path;
 
-public class DirectoryPreferencesModel implements ReadOnlyDirectoryPreferencesModel
+@JsonSerialize(as = DirectoryPreferencesModel.class)
+public interface DirectoryPreferencesModel extends ReadOnlyDirectoryPreferencesModel
 {
-    private Path previewImagesDirectory = null;
-    private Path logFileDirectory = null;
-    private Path cacheDirectory = null;
-
-    private DirectoryPreferencesModel() {}
-
-    public static DirectoryPreferencesModel createDefault()
-    {
-        return new DirectoryPreferencesModel();
-    }
-
-    @Override
-    public Path getPreviewImagesDirectory()
-    {
-        return previewImagesDirectory;
-    }
-
-    public void setCacheDirectory(Path cacheDirectory)
-    {
-        this.cacheDirectory = cacheDirectory;
-    }
-
-    @Override
-    public Path getLogFileDirectory()
-    {
-        return logFileDirectory;
-    }
-
-    public void setLogFileDirectory(Path logFileDirectory)
-    {
-        this.logFileDirectory = logFileDirectory;
-    }
-
-    @Override
-    public Path getCacheDirectory()
-    {
-        return cacheDirectory;
-    }
-
-    public void setPreviewImagesDirectory(Path previewImagesDirectory)
-    {
-        this.previewImagesDirectory = previewImagesDirectory;
-    }
-
-    @Override
-    @JsonIgnore
-    public Path getPreferencesFileLocation()
-    {
-        return JacksonUserPreferencesSerializer.getPreferencesFile().toPath();
-    }
+    void setCacheDirectory(Path cacheDirectory);
+    void setLogFileDirectory(Path logFileDirectory);
+    void setPreviewImagesDirectory(Path previewImagesDirectory);
 }

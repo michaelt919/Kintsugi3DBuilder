@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import kintsugi3d.builder.app.ApplicationFolders;
+import kintsugi3d.builder.javafx.MultithreadModels;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,6 +64,13 @@ public class JacksonUserPreferencesSerializer implements UserPreferencesSerializ
     {
         GlobalUserPreferencesManager manager = GlobalUserPreferencesManager.getInstance();
         manager.getPreferences();
+        manager.inject();
+
+        MultithreadModels.getInstance().getLoadOptionsModel().setCompressionRequested(true);
+        MultithreadModels.getInstance().getLoadOptionsModel().setDepthImageWidth(69);
+        MultithreadModels.getInstance().getLoadOptionsModel().setDepthImageHeight(420);
+
+        manager.collect();
         manager.commit();
     }
 }

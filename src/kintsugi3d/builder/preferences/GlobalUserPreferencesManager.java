@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.preferences;
 
+import kintsugi3d.builder.javafx.MultithreadModels;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,9 +36,7 @@ public class GlobalUserPreferencesManager
     public UserPreferencesModel getPreferences()
     {
         if (!modelLoaded)
-        {
             rollback();
-        }
 
         return preferencesModel;
     }
@@ -45,6 +44,22 @@ public class GlobalUserPreferencesManager
     public void setPreferences(UserPreferencesModel model)
     {
         this.preferencesModel = model;
+    }
+
+    public void inject()
+    {
+        if (!modelLoaded)
+            rollback();
+
+        MultithreadModels.getInstance().getLoadOptionsModel().copyFrom(preferencesModel.getLoadOptions());
+    }
+
+    public void collect()
+    {
+        if (!modelLoaded)
+            rollback();
+
+        preferencesModel.setLoadOptions(MultithreadModels.getInstance().getLoadOptionsModel());
     }
 
     public void commit() throws IOException
