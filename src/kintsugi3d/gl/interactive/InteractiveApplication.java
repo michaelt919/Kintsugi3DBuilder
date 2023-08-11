@@ -143,8 +143,6 @@ public class InteractiveApplication
                 log.error("Error terminating refreshable:", e);
             }
         }
-
-        System.exit(0);
     }
 
     public static void runSimultaneous(Iterable<InteractiveApplication> apps) throws InitializationException

@@ -46,19 +46,25 @@ public class GlobalUserPreferencesManager
         this.preferencesModel = model;
     }
 
-    public void inject()
+    public void load()
     {
-        if (!modelLoaded)
-            rollback();
+        rollback();
+        inject();
+    }
 
+    public void save() throws IOException
+    {
+        collect();
+        commit();
+    }
+
+    private void inject()
+    {
         MultithreadModels.getInstance().getLoadOptionsModel().copyFrom(preferencesModel.getLoadOptions());
     }
 
-    public void collect()
+    private void collect()
     {
-        if (!modelLoaded)
-            rollback();
-
         preferencesModel.setLoadOptions(MultithreadModels.getInstance().getLoadOptionsModel());
     }
 

@@ -63,14 +63,12 @@ public class JacksonUserPreferencesSerializer implements UserPreferencesSerializ
     public static void main(String[] args) throws Exception
     {
         GlobalUserPreferencesManager manager = GlobalUserPreferencesManager.getInstance();
-        manager.getPreferences();
-        manager.inject();
+        manager.load();
 
-        MultithreadModels.getInstance().getLoadOptionsModel().setCompressionRequested(true);
+        MultithreadModels.getInstance().getLoadOptionsModel().setCompressionRequested(false);
         MultithreadModels.getInstance().getLoadOptionsModel().setDepthImageWidth(69);
         MultithreadModels.getInstance().getLoadOptionsModel().setDepthImageHeight(420);
 
-        manager.collect();
-        manager.commit();
+        manager.save();
     }
 }
