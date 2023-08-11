@@ -12,9 +12,11 @@
 
 package kintsugi3d.builder.core;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize(as = LoadOptionsModel.class)
+@JsonDeserialize(as = SimpleLoadOptionsModel.class)
 public interface LoadOptionsModel extends ReadonlyLoadOptionsModel
 {
     void setColorImagesRequested(boolean colorImagesRequested);

@@ -12,11 +12,13 @@
 
 package kintsugi3d.builder.preferences;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.nio.file.Path;
 
 @JsonSerialize(as = DirectoryPreferencesModel.class)
+@JsonDeserialize(as = SimpleDirectoryPreferencesModel.class)
 public interface DirectoryPreferencesModel extends ReadOnlyDirectoryPreferencesModel
 {
     void setCacheDirectory(Path cacheDirectory);
