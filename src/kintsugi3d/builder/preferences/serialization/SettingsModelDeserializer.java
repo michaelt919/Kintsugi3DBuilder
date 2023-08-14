@@ -81,11 +81,7 @@ public class SettingsModelDeserializer extends StdDeserializer<SettingsModel>
                     if (node.has("$TYPE"))
                     {
                         Class<?> objType = mapper.readValue(node.get("$TYPE").toString(), Class.class);
-
-                        if (objType.isEnum())
-                        {
-                            outputModel.createObjectSetting(entry.getKey(), mapper.readValue(node.get("value").toString(), objType), true);
-                        }
+                        outputModel.createObjectSetting(entry.getKey(), mapper.readValue(node.get("$VALUE").toString(), objType), true);
                     }
 
                     // Explicitly deserialize Vector2, Vector3 and Vector4

@@ -64,14 +64,7 @@ public class SettingsModelSerializer extends StdSerializer<SettingsModel>
                 jGen.writeObjectFieldStart(setting.getName());
 
                 jGen.writeObjectField("$TYPE", setting.getType());
-                if (setting.getType().isEnum())
-                {
-                    jGen.writeStringField("value", setting.getValue().toString());
-                }
-                else
-                {
-                    jGen.writeObject(setting.getValue());
-                }
+                jGen.writeObjectField("$VALUE", setting.getValue());
 
                 jGen.writeEndObject();
             }
@@ -100,6 +93,7 @@ public class SettingsModelSerializer extends StdSerializer<SettingsModel>
         model.createBooleanSetting("fresnelEnabled", false);
         model.createNumericSetting("serializedNumericSettingA", 123, true);
         model.createObjectSetting("weightMode", ShadingParameterMode.PER_PIXEL, true);
+        model.createObjectSetting("testObject", new TestObjectClass(), true);
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.writeValue(new File("X:\\CHViewer\\test.json"), (ReadonlySettingsModel) model);
@@ -107,5 +101,15 @@ public class SettingsModelSerializer extends StdSerializer<SettingsModel>
         ObjectReader reader = mapper.readerFor(SettingsModel.class);
         SettingsModel readModel = reader.readValue(new File("X:\\CHViewer\\test.json"));
         System.out.println("Complete");
+    }
+
+    public static class TestObjectClass
+    {
+        public TestObjectClass()
+        {
+
+        }
+        public int valueA = 5;
+        public float valueB = 6.9f;
     }
 }
