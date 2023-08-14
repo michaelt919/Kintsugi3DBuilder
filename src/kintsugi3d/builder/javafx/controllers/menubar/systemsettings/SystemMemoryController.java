@@ -24,9 +24,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class JvmSettingsController implements Initializable, SystemSettingsControllerBase
+public class SystemMemoryController implements Initializable, SystemSettingsControllerBase
 {
-    private static final Logger log = LoggerFactory.getLogger(JvmSettingsController.class);
+    private static final Logger log = LoggerFactory.getLogger(SystemMemoryController.class);
 
     private static final int MIN_VALUE = 1;
     private static final int MAX_VALUE = 1048576;
