@@ -24,7 +24,7 @@
             </SplitMenuButton>
             <Button layoutX="10.0" layoutY="71.0" mnemonicParsing="false" onAction="#file_openProject" prefHeight="57.0" prefWidth="140.0" text="Open Project" />
             <Button layoutX="10.0" layoutY="194.0" mnemonicParsing="false" onAction="#file_closeProject" prefHeight="57.0" prefWidth="140.0" text="Close Project" />
-            <Button layoutX="10.0" layoutY="133.0" mnemonicParsing="false" onAction="#help_userManual" prefHeight="57.0" prefWidth="140.0" text="Need Help?" />
+            <Button layoutX="10.0" layoutY="133.0" mnemonicParsing="false" onAction="#help_userManual" prefHeight="57.0" prefWidth="140.0" text="Guides" />
             <Button layoutX="10.0" layoutY="255.0" mnemonicParsing="false" onAction="#createProject" prefHeight="57.0" prefWidth="140.0" text="Create Project (NEW)" />
         </items>
       </ToolBar>

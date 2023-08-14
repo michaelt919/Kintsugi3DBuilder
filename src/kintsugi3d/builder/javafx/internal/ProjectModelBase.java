@@ -12,7 +12,6 @@
 
 package kintsugi3d.builder.javafx.internal;
 
-import kintsugi3d.gl.util.UnzipHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -51,7 +50,7 @@ public abstract class ProjectModelBase implements ProjectModel
     public abstract List<ObjectPoseSetting> getObjectPoseList();
 
     /**
-     * Opens an Kintsugi 3D Builder project file (.ibr) and sets up the lights, camera, etc.
+     * Opens a Kintsugi 3D Builder project file (.ibr) and sets up the lights, camera, etc.
      * Returns the file containing the viewset with the actual image data.
      *
      * @param projectFile
