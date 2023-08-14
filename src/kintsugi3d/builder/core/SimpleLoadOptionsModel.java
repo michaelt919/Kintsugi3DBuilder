@@ -18,6 +18,7 @@ public class SimpleLoadOptionsModel implements ReadonlyLoadOptionsModel
     private boolean mipmapsRequested;
     private boolean compressionRequested;
     private boolean alphaRequested;
+    private boolean iccTransformationRequested;
     private boolean depthImagesRequested;
     private int depthImageWidth;
     private int depthImageHeight;
@@ -80,6 +81,12 @@ public class SimpleLoadOptionsModel implements ReadonlyLoadOptionsModel
     public boolean isAlphaRequested()
     {
         return this.alphaRequested;
+    }
+
+    @Override
+    public boolean isICCTransformationRequested()
+    {
+        return iccTransformationRequested;
     }
 
     public SimpleLoadOptionsModel setAlphaRequested(boolean alphaRequested)

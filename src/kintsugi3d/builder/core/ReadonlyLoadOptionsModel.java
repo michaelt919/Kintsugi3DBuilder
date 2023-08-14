@@ -23,6 +23,7 @@ public interface ReadonlyLoadOptionsModel
     boolean areMipmapsRequested();
     boolean isCompressionRequested();
     boolean isAlphaRequested();
+    boolean isICCTransformationRequested();
     boolean areDepthImagesRequested();
     int getDepthImageWidth();
     int getDepthImageHeight();
@@ -55,8 +56,10 @@ public interface ReadonlyLoadOptionsModel
             colorTextureBuilder.setInternalFormat(ColorFormat.RGBA8);
         }
 
-        colorTextureBuilder.setMipmapsEnabled(this.areMipmapsRequested());
-        colorTextureBuilder.setLinearFilteringEnabled(true);
-        colorTextureBuilder.setMaxAnisotropy(16.0f);
+        colorTextureBuilder
+            .setMipmapsEnabled(this.areMipmapsRequested())
+            .setLinearFilteringEnabled(true)
+            .setMaxAnisotropy(16.0f)
+            .setICCTransformationRequested(this.isICCTransformationRequested());
     }
 }

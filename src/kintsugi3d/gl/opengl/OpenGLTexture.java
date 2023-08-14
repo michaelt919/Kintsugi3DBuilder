@@ -13,17 +13,31 @@
 package kintsugi3d.gl.opengl;
 
 import java.awt.*;
+import java.awt.color.ColorSpace;
+import java.awt.color.ICC_ColorSpace;
 import java.awt.image.BufferedImage;
+import java.awt.image.ComponentColorModel;
+import java.awt.image.Raster;
+import java.awt.image.WritableRaster;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.AbstractMap;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.function.*;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.lwjgl.*;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.core.ColorFormat.DataType;
 import kintsugi3d.util.RadianceImageLoader.Image;
+import sun.java2d.cmm.CMSManager;
+import sun.java2d.cmm.ColorTransform;
+import sun.java2d.cmm.PCMM;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
@@ -339,117 +353,162 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
         }
     }
 
+    private static int[] getRGBAScanline(BufferedImage colorImg, BufferedImage maskImg, int y)
+    {
+        int[] scanline = colorImg.getRGB(0, y, colorImg.getWidth(), 1, null, 0, colorImg.getWidth());
+        int[] mask = maskImg.getRGB(0, y, maskImg.getWidth(), 1, null, 0, maskImg.getWidth());
+
+        for (int x = 0; x < scanline.length; x++)
+        {
+            scanline[x] = (scanline[x] & 0x00ffffff) | ((mask[x] & 0x0000ff00) << 16);
+        }
+
+        return scanline;
+    }
+
+    static BufferedImage forceSRGB (BufferedImage original)
+    {
+        return original == null || !(original.getColorModel() instanceof ComponentColorModel) ? original
+            : new BufferedImage(
+                new ComponentColorModel(
+                    ColorSpace.getInstance(ColorSpace.CS_sRGB),
+                    original.getColorModel().hasAlpha(),
+                    original.isAlphaPremultiplied(),
+                    original.getTransparency(),
+                    original.getColorModel().getTransferType()),
+                original.getRaster(),
+                original.isAlphaPremultiplied(),
+                null);
+    }
+
+    static BufferedImage convertICCToSRGB(BufferedImage original)
+    {
+        if (original == null || !(original.getColorModel().getColorSpace() instanceof ICC_ColorSpace))
+        {
+            return original;
+        }
+        else
+        {
+            // Copied from ICC_ColorSpace::toRGB
+            ColorTransform[] transformList = new ColorTransform[2];
+            ICC_ColorSpace srgbCS =
+                (ICC_ColorSpace) ColorSpace.getInstance(ColorSpace.CS_sRGB);
+            PCMM mdl = CMSManager.getModule();
+            ICC_ColorSpace colorSpace = (ICC_ColorSpace) original.getColorModel().getColorSpace();
+            transformList[0] = mdl.createTransform(
+                colorSpace.getProfile(), ColorTransform.Any, ColorTransform.In);
+            transformList[1] = mdl.createTransform(
+                srgbCS.getProfile(), ColorTransform.Any, ColorTransform.Out);
+            ColorTransform this2srgb = mdl.createTransform(transformList);
+
+            // Set component scaling
+            int nc = colorSpace.getNumComponents();
+            float[] minVal = new float[nc];
+            float[] maxVal = new float[nc];
+
+            for (int i = 0; i < nc; i++)
+            {
+                minVal[i] = colorSpace.getMinValue(i); // in case getMinVal is overridden
+                maxVal[i] = colorSpace.getMaxValue(i); // in case getMaxVal is overridden
+            }
+
+            float[] destMinVal = new float[nc];
+            Arrays.fill(destMinVal, 0.0f);
+
+            float[] destMaxVal = new float[nc];
+            Arrays.fill(destMaxVal, 1.0f);
+
+            BufferedImage result = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_RGB);
+            this2srgb.colorConvert(original.getRaster(), result.getRaster(), minVal, maxVal, destMinVal, destMaxVal);
+            return result;
+        }
+    }
+
+    private static Stream<Map.Entry<Integer, int[]>> getScanlineStream(BufferedImage colorImg, BufferedImage maskImg, boolean flipVertical)
+    {
+//        BufferedImage colorSRGB = convertICCToSRGB(colorImg);
+
+        // Could use parallel stream to accelerate image decoding / copy,
+        // but does not seem to make a difference in practice as the bottleneck is color space conversion (if necessary)
+        // which should happen prior to this
+        IntStream scanlineRange = IntStream.range(0, colorImg.getHeight());
+
+        Stream<Map.Entry<Integer, int[]>> scanlineStream;
+
+        if (maskImg == null)
+        {
+            if (flipVertical)
+            {
+                scanlineStream = scanlineRange.mapToObj(y -> new AbstractMap.SimpleEntry<>(
+                    colorImg.getHeight() - 1 - y,
+                    colorImg.getRGB(0, y, colorImg.getWidth(), 1, null, 0, colorImg.getWidth())));
+            }
+            else
+            {
+                scanlineStream = scanlineRange.mapToObj(y -> new AbstractMap.SimpleEntry<>(
+                    y,
+                    colorImg.getRGB(0, y, colorImg.getWidth(), 1, null, 0, colorImg.getWidth())));
+            }
+        }
+        else
+        {
+//            // ICC for mask image is probably overkill, but just for consistency
+//            // -- should return the original mask image immediately assuming mask image doesn't actually have ICC
+//            BufferedImage maskSRGB = convertICCToSRGB(maskImg);
+
+            if (flipVertical)
+            {
+                scanlineStream = scanlineRange.mapToObj(y -> new AbstractMap.SimpleEntry<>(
+                    colorImg.getHeight() - 1 - y,
+                    getRGBAScanline(colorImg, maskImg, y)));
+            }
+            else
+            {
+                scanlineStream = scanlineRange.mapToObj(y -> new AbstractMap.SimpleEntry<>(
+                    y,
+                    getRGBAScanline(colorImg, maskImg, y)));
+            }
+        }
+
+        return scanlineStream;
+    }
+
     static ByteBuffer bufferedImageToNativeBuffer(BufferedImage colorImg, BufferedImage maskImg, boolean flipVertical)
     {
         ByteBuffer buffer = BufferUtils.createByteBuffer(colorImg.getWidth() * colorImg.getHeight() * 4);
         IntBuffer intBuffer = buffer.asIntBuffer();
 
-        if (maskImg == null)
+        getScanlineStream(colorImg, maskImg, flipVertical).forEach(scanline ->
         {
-            if (flipVertical)
+            int y = scanline.getKey();
+            int[] scanlineData = scanline.getValue();
+
+            for (int x = 0; x < colorImg.getWidth(); x++)
             {
-                for (int y = colorImg.getHeight() - 1; y >= 0; y--)
-                {
-                    for (int x = 0; x < colorImg.getWidth(); x++)
-                    {
-                        intBuffer.put(colorImg.getRGB(x, y));
-                    }
-                }
+                intBuffer.put(y * colorImg.getWidth() + x, scanlineData[x]);
             }
-            else
-            {
-                for (int y = 0; y < colorImg.getHeight(); y++)
-                {
-                    for (int x = 0; x < colorImg.getWidth(); x++)
-                    {
-                        intBuffer.put(colorImg.getRGB(x, y));
-                    }
-                }
-            }
-        }
-        else
-        {
-            if (flipVertical)
-            {
-                for (int y = colorImg.getHeight() - 1; y >= 0; y--)
-                {
-                    for (int x = 0; x < colorImg.getWidth(); x++)
-                    {
-                        // Use green channel of the mask image for alpha
-                        intBuffer.put((colorImg.getRGB(x, y) & 0x00ffffff) | ((maskImg.getRGB(x, y) & 0x0000ff00) << 16));
-                    }
-                }
-            }
-            else
-            {
-                for (int y = 0; y < colorImg.getHeight(); y++)
-                {
-                    for (int x = 0; x < colorImg.getWidth(); x++)
-                    {
-                        // Use green channel of the mask image for alpha
-                        intBuffer.put((colorImg.getRGB(x, y) & 0x00ffffff) | ((maskImg.getRGB(x, y) & 0x0000ff00) << 16));
-                    }
-                }
-            }
-        }
+        });
 
         return buffer;
     }
 
     static ByteBuffer bufferedImageToNativeBuffer(BufferedImage colorImg, BufferedImage maskImg, boolean flipVertical,
-        Function<ByteBuffer, Consumer<Color>> bufferWrapperFunction, int mappedColorLength)
+        Function<ByteBuffer, BiConsumer<Integer, Color>> bufferWrapperFunction, int mappedColorLength)
     {
         ByteBuffer buffer = BufferUtils.createByteBuffer(colorImg.getWidth() * colorImg.getHeight() * mappedColorLength);
-        Consumer<Color> wrappedBuffer = bufferWrapperFunction.apply(buffer);
+        BiConsumer<Integer, Color> wrappedBuffer = bufferWrapperFunction.apply(buffer);
 
-        if (maskImg == null)
+        getScanlineStream(colorImg, maskImg, flipVertical).forEach(scanline ->
         {
-            if (flipVertical)
+            int y = scanline.getKey();
+            int[] scanlineData = scanline.getValue();
+
+            for (int x = 0; x < colorImg.getWidth(); x++)
             {
-                for (int y = colorImg.getHeight() - 1; y >= 0; y--)
-                {
-                    for (int x = 0; x < colorImg.getWidth(); x++)
-                    {
-                        wrappedBuffer.accept(new Color(colorImg.getRGB(x, y), true));
-                    }
-                }
+                wrappedBuffer.accept(
+                    y * colorImg.getWidth() + x, new Color(scanlineData[x], true));
             }
-            else
-            {
-                for (int y = 0; y < colorImg.getHeight(); y++)
-                {
-                    for (int x = 0; x < colorImg.getWidth(); x++)
-                    {
-                        wrappedBuffer.accept(new Color(colorImg.getRGB(x, y), true));
-                    }
-                }
-            }
-        }
-        else
-        {
-            if (flipVertical)
-            {
-                for (int y = colorImg.getHeight() - 1; y >= 0; y--)
-                {
-                    for (int x = 0; x < colorImg.getWidth(); x++)
-                    {
-                        // Use green channel of the mask image for alpha
-                        wrappedBuffer.accept(new Color((colorImg.getRGB(x, y) & 0x00ffffff) | ((maskImg.getRGB(x, y) & 0x0000ff00) << 16), true));
-                    }
-                }
-            }
-            else
-            {
-                for (int y = 0; y < colorImg.getHeight(); y++)
-                {
-                    for (int x = 0; x < colorImg.getWidth(); x++)
-                    {
-                        // Use green channel of the mask image for alpha
-                        wrappedBuffer.accept(new Color((colorImg.getRGB(x, y) & 0x00ffffff) | ((maskImg.getRGB(x, y) & 0x0000ff00) << 16), true));
-                    }
-                }
-            }
-        }
+        });
 
         return buffer;
     }
@@ -459,11 +518,14 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
         ByteBuffer buffer = BufferUtils.createByteBuffer(colorImg.width * colorImg.height * (maskImg == null ? 12 : 16));
         FloatBuffer floatBuffer = buffer.asFloatBuffer();
 
-        int k = 0;
+        // Use parallel stream to accelerate image copy
+        IntStream scanlineRange = IntStream.range(0, colorImg.height);
+
         if (maskImg == null)
         {
-            for (int y = 0; y < colorImg.height; y++)
+            scanlineRange.forEach(y ->
             {
+                int k = y * colorImg.width * 3;
                 for (int x = 0; x < colorImg.width; x++)
                 {
                     floatBuffer.put(colorImg.data[k]);
@@ -473,12 +535,13 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
                     floatBuffer.put(colorImg.data[k]);
                     k++;
                 }
-            }
+            });
         }
         else
         {
-            for (int y = 0; y < colorImg.height; y++)
+            scanlineRange.forEach(y ->
             {
+                int k = y * colorImg.width * 4;
                 for (int x = 0; x < colorImg.width; x++)
                 {
                     floatBuffer.put(colorImg.data[k]);
@@ -491,7 +554,7 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
                     // Use green channel of the mask image for alpha
                     floatBuffer.put((float)((maskImg.getRGB(x, y) & 0x0000ff00) >>> 8) / 255.0f);
                 }
-            }
+            });
         }
 
         return buffer;

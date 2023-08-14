@@ -13,6 +13,7 @@
 package kintsugi3d.gl.types;
 
 import java.nio.ByteBuffer;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import kintsugi3d.gl.nativebuffer.NativeDataType;
@@ -50,4 +51,12 @@ public interface AbstractDataType<HighLevelType>
      *         or an Iterable of Numbers for multi-component) will format and store the element in the previously specified buffer.
      */
     Consumer<HighLevelType> wrapByteBuffer(ByteBuffer baseBuffer);
+
+    /**
+     * Creates a consumer function that will store a data element of this type at a particular index in the specified buffer.
+     * @param baseBuffer The buffer in which to store data.
+     * @return A function which, when invoked on the high-level type associated with this data type  (typically Number single-component
+     *         or an Iterable of Numbers for multi-component) will format and store the element in the previously specified buffer.
+     */
+    BiConsumer<Integer, HighLevelType> wrapIndexedByteBuffer(ByteBuffer baseBuffer);
 }

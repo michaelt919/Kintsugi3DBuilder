@@ -14,6 +14,7 @@ package kintsugi3d.gl.types;
 
 import java.nio.*;
 import java.util.Iterator;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import kintsugi3d.gl.nativebuffer.NativeDataType;
@@ -63,6 +64,36 @@ public final class AbstractDataTypeFactory
             case DOUBLE:
                 DoubleBuffer doubleBuffer = baseBuffer.asDoubleBuffer();
                 return component -> doubleBuffer.put(component.doubleValue());
+            default:
+                throw new UnsupportedOperationException("Unrecognized component data type.");
+        }
+    }
+
+    static BiConsumer<Integer, Number> wrapIndexedByteBuffer(ByteBuffer baseBuffer, NativeDataType nativeDataType)
+    {
+        switch(nativeDataType)
+        {
+            case UNSIGNED_BYTE:
+            case BYTE:
+            case PACKED_BYTE:
+                ByteBuffer byteBuffer = baseBuffer.slice();
+                return (index, component) -> byteBuffer.put(index, component.byteValue());
+            case UNSIGNED_SHORT:
+            case SHORT:
+            case PACKED_SHORT:
+                ShortBuffer shortBuffer = baseBuffer.asShortBuffer();
+                return (index, component) -> shortBuffer.put(index, component.shortValue());
+            case UNSIGNED_INT:
+            case INT:
+            case PACKED_INT:
+                IntBuffer intBuffer = baseBuffer.asIntBuffer();
+                return (index, component) -> intBuffer.put(index, component.intValue());
+            case FLOAT:
+                FloatBuffer floatBuffer = baseBuffer.asFloatBuffer();
+                return (index, component) -> floatBuffer.put(index, component.floatValue());
+            case DOUBLE:
+                DoubleBuffer doubleBuffer = baseBuffer.asDoubleBuffer();
+                return (index, component) -> doubleBuffer.put(index, component.doubleValue());
             default:
                 throw new UnsupportedOperationException("Unrecognized component data type.");
         }
@@ -119,6 +150,29 @@ public final class AbstractDataTypeFactory
                 }
             };
         }
+
+        @Override
+        public BiConsumer<Integer, Iterable<? extends Number>> wrapIndexedByteBuffer(ByteBuffer baseBuffer)
+        {
+            BiConsumer<Integer, Number> componentConsumer = AbstractDataTypeFactory.wrapIndexedByteBuffer(baseBuffer, nativeDataType);
+
+            return (index, highLevelValue) ->
+            {
+                int componentIndex = 0;
+                Iterator<? extends Number> iterator = highLevelValue.iterator();
+                while (iterator.hasNext() && componentIndex < this.componentCount)
+                {
+                    componentConsumer.accept(index, iterator.next());
+                    componentIndex++;
+                }
+
+                while(componentIndex < this.componentCount)
+                {
+                    componentConsumer.accept(index, 0);
+                    componentIndex++;
+                }
+            };
+        }
     }
 
     private static final class SingleComponentDataType implements AbstractDataType<Number>
@@ -152,6 +206,12 @@ public final class AbstractDataTypeFactory
         public Consumer<Number> wrapByteBuffer(ByteBuffer baseBuffer)
         {
             return AbstractDataTypeFactory.wrapByteBuffer(baseBuffer, nativeDataType);
+        }
+
+        @Override
+        public BiConsumer<Integer, Number> wrapIndexedByteBuffer(ByteBuffer baseBuffer)
+        {
+            return AbstractDataTypeFactory.wrapIndexedByteBuffer(baseBuffer, nativeDataType);
         }
     }
 

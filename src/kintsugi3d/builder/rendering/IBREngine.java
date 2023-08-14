@@ -101,7 +101,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             this.rectangleVertices = context.createRectangle();
 
             this.resources = resourceBuilder
-                .generateUndistortedPreviewImages()
+//                .generateUndistortedPreviewImages()
                 .create();
 
             context.flush();
