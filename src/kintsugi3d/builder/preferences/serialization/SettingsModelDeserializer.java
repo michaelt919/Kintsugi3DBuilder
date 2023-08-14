@@ -16,10 +16,15 @@ import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.builder.state.impl.SimpleSettingsModel;
+import kintsugi3d.gl.vecmath.Vector2;
+import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.gl.vecmath.Vector4;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -41,6 +46,14 @@ public class SettingsModelDeserializer extends StdDeserializer<SettingsModel>
     public SettingsModel deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JacksonException
     {
         SimpleSettingsModel outputModel = new SimpleSettingsModel();
+        ObjectMapper mapper = new ObjectMapper();
+
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(Vector2.class, new VectorDeserializer.Vector2Deserializer());
+        module.addDeserializer(Vector3.class, new VectorDeserializer.Vector3Deserializer());
+        module.addDeserializer(Vector4.class, new VectorDeserializer.Vector4Deserializer());
+        mapper.registerModule(module);
+
 
         JsonNode rootNode = jsonParser.getCodec().readTree(jsonParser);
         for (Iterator<Map.Entry<String, JsonNode>> it = rootNode.fields(); it.hasNext(); )
@@ -48,18 +61,49 @@ public class SettingsModelDeserializer extends StdDeserializer<SettingsModel>
             Map.Entry<String, JsonNode> entry = it.next();
             JsonNode node = entry.getValue();
 
-            JsonNodeType type = node.getNodeType();
-            if (type == JsonNodeType.BOOLEAN)
+            switch (node.getNodeType())
             {
-                outputModel.createBooleanSetting(entry.getKey(), entry.getValue().asBoolean(), true);
-            }
-            else if (type == JsonNodeType.NUMBER)
-            {
-                outputModel.createNumericSetting(entry.getKey(), entry.getValue().numberValue(), true);
-            }
-            else
-            {
-                //TODO: Deserialize objects... need to know the type to deserialize to. maybe serialize the class that created the data?
+                case BOOLEAN:
+                    outputModel.createBooleanSetting(entry.getKey(), node.asBoolean(), true);
+                    break;
+                case NUMBER:
+                    outputModel.createNumericSetting(entry.getKey(), node.numberValue(), true);
+                    break;
+                case STRING:
+                    outputModel.createObjectSetting(entry.getKey(), node.asText(), true);
+                    break;
+                case NULL:
+                    outputModel.createObjectSetting(entry.getKey(), null, true);
+                    break;
+                case OBJECT:
+                    //TODO: Deserialize objects... need to know the type to deserialize to. maybe serialize the class that created the data?
+
+                    if (node.has("$TYPE"))
+                    {
+                        Class<?> objType = mapper.readValue(node.get("$TYPE").toString(), Class.class);
+
+                        if (objType.isEnum())
+                        {
+                            outputModel.createObjectSetting(entry.getKey(), mapper.readValue(node.get("value").toString(), objType), true);
+                        }
+                    }
+
+                    // Explicitly deserialize Vector2, Vector3 and Vector4
+                    if (node.has("x") && node.has("y") && node.has("z") && node.has("w"))
+                    {
+                        outputModel.createObjectSetting(entry.getKey(), mapper.readValue(node.toString(), Vector4.class), true);
+                    }
+                    else if (node.has("x") && node.has("y") && node.has("z"))
+                    {
+                        outputModel.createObjectSetting(entry.getKey(), mapper.readValue(node.toString(), Vector3.class), true);
+                    }
+                    else if (node.has("x") && node.has("y"))
+                    {
+                        outputModel.createObjectSetting(entry.getKey(), mapper.readValue(node.toString(), Vector2.class), true);
+                    }
+                    break;
+                default:
+                    break;
             }
         }
 
