@@ -317,19 +317,19 @@ public class MenubarController
         });
 
         //add graphic to settings button
-        try {
-            settingsButton.setGraphic(new ImageView(new Image(new File("ibr-icon.png").toURI().toURL().toString())));
-            double scale = 0.5;
-            settingsButton.setScaleX(scale);
-            settingsButton.setScaleY(scale);
-            settingsButton.setScaleZ(scale);
-            settingsButton.setTranslateX(10);
-            HBox parent = (HBox) settingsButton.getParent();
-            parent.setTranslateY(-15);
-        } catch (MalformedURLException e) {
-            settingsButton.setText("System Settings");
-            throw new RuntimeException(e);
-        }
+//        try {
+//            settingsButton.setGraphic(new ImageView(new Image(new File("ibr-icon.png").toURI().toURL().toString())));
+//            double scale = 0.5;
+//            settingsButton.setScaleX(scale);
+//            settingsButton.setScaleY(scale);
+//            settingsButton.setScaleZ(scale);
+//            settingsButton.setTranslateX(10);
+//            HBox parent = (HBox) settingsButton.getParent();
+//            parent.setTranslateY(-15);
+//        } catch (MalformedURLException e) {
+//            settingsButton.setText("System Settings");
+//            throw new RuntimeException(e);
+//        }
 
         RecentProjects.initializeMenubarController(this);
         updateRecentProjectsMenu();

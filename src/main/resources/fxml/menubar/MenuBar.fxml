@@ -18,8 +18,8 @@
 <?import javafx.scene.layout.*?>
 <?import kintsugi3d.builder.core.*?>
 
-<AnchorPane prefHeight="720.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.MenubarController">
-<MenuBar AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+<AnchorPane prefHeight="720.0" styleClass="anchor-pane" stylesheets="@systemSettingsStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.MenubarController">
+<MenuBar styleClass="menu-bar" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
       <Menu mnemonicParsing="false" text="File">
          <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="New Project">
             <accelerator>
@@ -380,7 +380,7 @@
          <CheckMenuItem mnemonicParsing="false" text="Full-screen render" />
          <CheckMenuItem mnemonicParsing="false" text="Separate render window" />
       </Menu>
-    <Menu mnemonicParsing="false" text="DEPRECATED MENU ITEMS" visible ="false">
+    <Menu mnemonicParsing="false" text="DEPRECATED MENU ITEMS" visible="false">
         <items>
             <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Export Specular Fit" visible="false">
                 <accelerator>
@@ -397,16 +397,17 @@
         </items>
     </Menu>
       <padding>
-         <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+         <Insets bottom="2.0" left="2.0" right="2.0" top="4.0" />
       </padding>
+      <opaqueInsets>
+         <Insets />
+      </opaqueInsets>
    </MenuBar>
-   <HBox alignment="CENTER_LEFT" spacing="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
-      <children>
-         <Button fx:id="settingsButton" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" onAction="#openSystemSettingsModal" prefWidth="52.0" text="Button" />
-         <Button mnemonicParsing="false" onAction="#help_about" text="About" />
-         <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" />
-      </children>
-   </HBox>
+    <HBox alignment="CENTER_LEFT" spacing="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
+        <Button fx:id="settingsButton" contentDisplay="CENTER" mnemonicParsing="false" onAction="#openSystemSettingsModal" prefHeight="25.0" prefWidth="80.0" text="Settings" />
+        <Button mnemonicParsing="false" onAction="#help_about" text="About" />
+        <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" />
+    </HBox>
    <ProgressBar fx:id="progressBar" layoutY="25.0" prefWidth="1280.0" progress="0.0" visible="false" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="25.0" VBox.vgrow="ALWAYS">
        <VBox.margin>
            <Insets />

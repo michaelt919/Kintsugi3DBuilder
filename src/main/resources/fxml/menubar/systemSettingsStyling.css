@@ -1,5 +1,9 @@
+.anchor-pane{
+    -fx-background-color: #000000;
+}
+
 .button {
-    -fx-background-color: #222222;
+    -fx-background-color: #272727;
     -fx-text-fill: #FFFFFF;
     -fx-background-radius: 30 30 30 30;
 }
@@ -8,9 +12,16 @@
     -fx-background-color: #222255;
 }
 
-.button:pressed{
-    -fx-background-color: #222222;
+.button:pressed {
+    -fx-background-color: #272727;
 }
+
+.split-menu-button {
+    -fx-base: #272727;
+    -fx-text-fill: #FFFFFF;
+    -fx-background-radius: 30 30 30 30;
+}
+
 
 .context-menu {
     -fx-background-color: #000000;
@@ -30,12 +41,17 @@
     -fx-fill: #000000;
 }
 
-.choicebox{
+.choice-box{
     -fx-background-color:#D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
 }
 
 .menu{
-    -fx-background-color:#000000;
+    -fx-background-color: #272727;
+    -fx-background-radius: 30 30 30 30;
+}
+
+.menu-bar{
+    -fx-background-color: 000000
 }
 
 .menu-item{
@@ -91,7 +107,7 @@
 
 /* Apply to odd cells */
 .list-cell:odd {
-    -fx-background-color: #222222; /* Odd cell background color */
+    -fx-background-color: #272727; /* Odd cell background color */
 }
 
 /* Apply to all cells */
