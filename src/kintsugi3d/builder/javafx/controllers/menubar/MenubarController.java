@@ -1012,4 +1012,11 @@ public class MenubarController
             log.error("An error occurred opening the settings modal:", e);
         }
     }
+
+    public void simulateNewWorkflow() throws IOException {
+        Flag flag = new Flag(false);//TODO: this flag is not really used for anything
+
+        makeWindow("New Workflow", flag, "fxml/scene/SettingsReview.fxml");
+
+    }
 }

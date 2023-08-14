@@ -20,128 +20,140 @@
 <BorderPane fx:id="root" prefHeight="330.0" prefWidth="750.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.LoaderController">
     <bottom>
         <HBox alignment="CENTER" BorderPane.alignment="CENTER">
-            <children>
-            <HBox alignment="CENTER_LEFT" visible="true" HBox.hgrow="ALWAYS">
-                <children>
-                    <Label text="Primary view:  " />
-                    <ChoiceBox fx:id="primaryViewChoiceBox" prefWidth="400.0" />
-                </children>
+            <BorderPane.margin>
+                <Insets/>
+            </BorderPane.margin>
+            <padding>
+                <Insets bottom="6.0" left="6.0" right="6.0" top="6.0"/>
+            </padding>
+            <HBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                <Label text="Primary view:  "/>
+                <ChoiceBox fx:id="primaryViewChoiceBox" prefWidth="400.0"/>
             </HBox>
             <HBox alignment="CENTER_RIGHT" spacing="30.0" HBox.hgrow="ALWAYS">
-               <children>
-                      <Button mnemonicParsing="false" onAction="#cancelButtonPress" text="Cancel">
-                          <font>
-                              <Font name="System Bold" size="18.0" />
-                          </font>
-                          <HBox.margin>
-                              <Insets />
-                          </HBox.margin>
-                      </Button>
-                      <Button mnemonicParsing="false" onAction="#okButtonPress" text="OK" textFill="#8291f3">
-                          <font>
-                              <Font name="System Bold" size="18.0" />
-                          </font>
-                          <HBox.margin>
-                              <Insets />
-                          </HBox.margin>
-                      </Button>
-               </children>
+                <Button mnemonicParsing="false" onAction="#cancelButtonPress" text="Cancel">
+                    <font>
+                        <Font name="System Bold" size="18.0"/>
+                    </font>
+                    <HBox.margin>
+                        <Insets/>
+                    </HBox.margin>
+                </Button>
+                <Button mnemonicParsing="false" onAction="#okButtonPress" text="OK" textFill="#8291f3">
+                    <font>
+                        <Font name="System Bold" size="18.0"/>
+                    </font>
+                    <HBox.margin>
+                        <Insets/>
+                    </HBox.margin>
+                </Button>
             </HBox>
-            </children>
-         <BorderPane.margin>
-            <Insets />
-         </BorderPane.margin>
-         <padding>
-            <Insets bottom="6.0" left="6.0" right="6.0" top="6.0" />
-         </padding>
         </HBox>
     </bottom>
     <center>
         <GridPane alignment="CENTER" hgap="10.0" vgap="10.0" BorderPane.alignment="CENTER">
             <columnConstraints>
-                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
             </columnConstraints>
             <rowConstraints>
-                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
             </rowConstraints>
-            <children>
-                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Camera Positions&#10;(Agisoft Metashape XML file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
-                    <font>
-                        <Font name="Monospaced Regular" size="14.0" />
-                    </font>
-               <GridPane.margin>
-                  <Insets />
-               </GridPane.margin>
-                </Text>
-                <Text layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Mesh&#10;(Wavefront OBJ file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
-                    <font>
-                        <Font name="Monospaced Regular" size="14.0" />
-                    </font>
-               <GridPane.margin>
-                  <Insets />
-               </GridPane.margin>
-                </Text>
-                <Text layoutX="272.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Images&#10;(Directory containing images (.png, .jpg))" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
-                    <font>
-                        <Font name="Monospaced Regular" size="14.0" />
-                    </font>
-               <GridPane.margin>
-                  <Insets />
-               </GridPane.margin>
-                </Text>
-                <Button mnemonicParsing="false" onAction="#camFileSelect" text="Load" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
-               <GridPane.margin>
-                  <Insets />
-               </GridPane.margin>
-               <font>
-                  <Font size="18.0" />
-               </font></Button>
-                <Button mnemonicParsing="false" onAction="#objFileSelect" text="Load" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
-               <GridPane.margin>
-                  <Insets />
-               </GridPane.margin>
-               <font>
-                  <Font size="18.0" />
-               </font></Button>
-                <Button mnemonicParsing="false" onAction="#photoDirectorySelect" text="Load" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
-               <font>
-                  <Font size="18.0" />
-               </font></Button>
-                <Text fx:id="loadCheckCameras" fill="RED" layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Unloaded" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
-                    <font>
-                        <Font name="Monospaced Bold" size="28.0" />
-                    </font>
-               <GridPane.margin>
-                  <Insets />
-               </GridPane.margin>
-                </Text>
-                <Text fx:id="loadCheckObj" fill="RED" layoutX="10.0" layoutY="64.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Unloaded" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
-                    <font>
-                        <Font name="Monospaced Bold" size="28.0" />
-                    </font>
-               <GridPane.margin>
-                  <Insets />
-               </GridPane.margin>
-                </Text>
-                <Text fx:id="loadCheckImages" fill="RED" layoutX="10.0" layoutY="64.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Unloaded" textAlignment="CENTER" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
-                    <font>
-                        <Font name="Monospaced Bold" size="28.0" />
-                    </font>
-               <GridPane.margin>
-                  <Insets />
-               </GridPane.margin>
-                </Text>
-            </children>
-         <BorderPane.margin>
-            <Insets />
-         </BorderPane.margin>
-         <padding>
-            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-         </padding>
+            <BorderPane.margin>
+                <Insets/>
+            </BorderPane.margin>
+            <padding>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+            </padding>
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Camera Positions&#10;(Agisoft Metashape XML file)"
+                  textAlignment="CENTER" wrappingWidth="236.0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS"
+                  GridPane.rowIndex="2" GridPane.valignment="CENTER">
+                <font>
+                    <Font name="Monospaced Regular" size="14.0"/>
+                </font>
+                <GridPane.margin>
+                    <Insets/>
+                </GridPane.margin>
+            </Text>
+            <Text layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0"
+                  text="Mesh&#10;(Wavefront OBJ file)" textAlignment="CENTER" wrappingWidth="236.0"
+                  GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2"
+                  GridPane.valignment="CENTER">
+                <font>
+                    <Font name="Monospaced Regular" size="14.0"/>
+                </font>
+                <GridPane.margin>
+                    <Insets/>
+                </GridPane.margin>
+            </Text>
+            <Text layoutX="272.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0"
+                  text="Images&#10;(Directory containing images (.png, .jpg))" textAlignment="CENTER"
+                  wrappingWidth="236.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS"
+                  GridPane.rowIndex="2" GridPane.valignment="CENTER">
+                <font>
+                    <Font name="Monospaced Regular" size="14.0"/>
+                </font>
+                <GridPane.margin>
+                    <Insets/>
+                </GridPane.margin>
+            </Text>
+            <Button mnemonicParsing="false" onAction="#camFileSelect" text="Load" GridPane.halignment="CENTER"
+                    GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                <GridPane.margin>
+                    <Insets/>
+                </GridPane.margin>
+                <font>
+                    <Font size="18.0"/>
+                </font>
+            </Button>
+            <Button mnemonicParsing="false" onAction="#objFileSelect" text="Load" GridPane.columnIndex="1"
+                    GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                <GridPane.margin>
+                    <Insets/>
+                </GridPane.margin>
+                <font>
+                    <Font size="18.0"/>
+                </font>
+            </Button>
+            <Button mnemonicParsing="false" onAction="#photoDirectorySelect" text="Load" GridPane.columnIndex="2"
+                    GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                <font>
+                    <Font size="18.0"/>
+                </font>
+            </Button>
+            <Text fx:id="loadCheckCameras" fill="RED" layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE"
+                  strokeWidth="0.0" text="Unloaded" textAlignment="CENTER" GridPane.halignment="CENTER"
+                  GridPane.valignment="CENTER">
+                <font>
+                    <Font name="Monospaced Bold" size="28.0"/>
+                </font>
+                <GridPane.margin>
+                    <Insets/>
+                </GridPane.margin>
+            </Text>
+            <Text fx:id="loadCheckObj" fill="RED" layoutX="10.0" layoutY="64.0" strokeType="OUTSIDE" strokeWidth="0.0"
+                  text="Unloaded" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER"
+                  GridPane.valignment="CENTER">
+                <font>
+                    <Font name="Monospaced Bold" size="28.0"/>
+                </font>
+                <GridPane.margin>
+                    <Insets/>
+                </GridPane.margin>
+            </Text>
+            <Text fx:id="loadCheckImages" fill="RED" layoutX="10.0" layoutY="64.0" strokeType="OUTSIDE"
+                  strokeWidth="0.0" text="Unloaded" textAlignment="CENTER" GridPane.columnIndex="2"
+                  GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                <font>
+                    <Font name="Monospaced Bold" size="28.0"/>
+                </font>
+                <GridPane.margin>
+                    <Insets/>
+                </GridPane.margin>
+            </Text>
         </GridPane>
     </center>
    <padding>

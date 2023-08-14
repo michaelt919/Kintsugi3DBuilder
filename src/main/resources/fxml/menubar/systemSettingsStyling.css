@@ -1,3 +1,7 @@
+.anchor-pane{
+    -fx-background-color: #000000;
+}
+
 .button {
     -fx-background-color: #222222;
     -fx-text-fill: #FFFFFF;
@@ -8,9 +12,16 @@
     -fx-background-color: #222255;
 }
 
-.button:pressed{
+.button:pressed {
     -fx-background-color: #222222;
 }
+
+.split-menu-button {
+    -fx-base: #222222;
+    -fx-text-fill: #FFFFFF;
+    -fx-background-radius: 30 30 30 30;
+}
+
 
 .context-menu {
     -fx-background-color: #000000;
@@ -34,6 +45,14 @@
     -fx-background-color:#D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
 }
 
+.grid-pane{
+    -fx-background-color: #000000;
+}
+
+.label{
+    -fx-text-fill: #FFFFFF;
+}
+
 .menu{
     -fx-background-color:#000000;
 }
@@ -43,9 +62,6 @@
     -fx-text-fill: #FFFFFF;
 }
 
-.label{
-    -fx-text-fill: #FFFFFF;
-}
 
 .titled-pane > .title{ /*only applies to the dropdown bar, not the content within*/
     -fx-background-color:#D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
@@ -55,11 +71,7 @@
     -fx-fill:#000000;
 }
 
-.grid-pane{
-    -fx-background-color: #000000;
-}
-
-.anchor-pane{
+.tool-bar{
     -fx-background-color: #000000;
 }
 

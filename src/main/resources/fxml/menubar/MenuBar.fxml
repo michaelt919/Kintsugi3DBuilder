@@ -73,6 +73,8 @@
                     <KeyCodeCombination alt="UP" code="P" control="ANY" meta="UP" shift="UP" shortcut="UP" />
                 </accelerator>
             </MenuItem>
+            <MenuItem mnemonicParsing="false" onAction="#simulateNewWorkflow" text="Simulate New Workflow (UNFINISHED)">
+            </MenuItem>
         </items>
       </Menu>
       <Menu mnemonicParsing="false" text="Environment">
@@ -380,7 +382,7 @@
          <CheckMenuItem mnemonicParsing="false" text="Full-screen render" />
          <CheckMenuItem mnemonicParsing="false" text="Separate render window" />
       </Menu>
-    <Menu mnemonicParsing="false" text="DEPRECATED MENU ITEMS" visible ="false">
+    <Menu mnemonicParsing="false" text="DEPRECATED MENU ITEMS" visible="false">
         <items>
             <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Export Specular Fit" visible="false">
                 <accelerator>
