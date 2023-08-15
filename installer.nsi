@@ -18,6 +18,11 @@ InstallDirRegKey HKLM "Software\Kintsugi3DBuilder" "Install_Dir"
 !define MUI_ICON "ibr.ico"
 !define MUI_UNICON "ibr.ico"
 !define MUI_ABORTWARNING
+!define MUI_FINISHPAGE_RUN
+!define MUI_FINISHPAGE_RUN_TEXT "Start Kintsugi 3D Builder"
+!define MUI_FINISHPAGE_RUN_FUNCTION "LaunchLink"
+!define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
+!define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\kintsugi3d-builder-about.txt"
 
 ; ---------------------------
 
@@ -97,12 +102,22 @@ Section "Start Menu Shortcuts" SectionShortcut
 
 SectionEnd
 
+; Optional and default disabled Desktop shortcut
+Section /o "Desktop Shortcut" SectionDesktop
+
+    CreateShortcut "$DESKTOP\Kintsugi 3D Builder.lnk" "$INSTDIR\Kintsugi3DBuilder.exe"
+
+SectionEnd
+
 ; Uninstaller
 Section "Uninstall"
 
     ; Remove directories
     RMDir /r "$SMPROGRAMS\Kintsugi3DBuilder"
     RMDir /r "$INSTDIR"
+
+    ; Remove Desktop Shortcut
+    Delete "$DESKTOP\Kintsugi 3D Builder.lnk"
 
     ; Remove registry keys
     DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DBuilder"
@@ -116,12 +131,21 @@ Section "Uninstall"
 
 SectionEnd
 
+; Run the application if requested after installation
+Function LaunchLink
+
+  ExecShell "" "$INSTDIR\Kintsugi3DBuilder.exe"
+
+FunctionEnd
+
 LangString DESC_SectionApp ${LANG_ENGLISH} "The main Kintsugi 3D Builder Application. This will also install the Java 11 Runtime that is necessary to run the application."
 LangString DESC_SectionAssociation ${LANG_ENGLISH} "Set up Kintsugi 3D Builder Project file associations (.ibr and .vset)"
 LangString DESC_SectionShortcut ${LANG_ENGLISH} "Install shortcuts so the application can be launched from the start menu"
+LangString DESC_SectionDesktop ${LANG_ENGLISH} "Add a shortcut to Kintsugi 3D Builder to the desktop"
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionApp} $(DESC_SectionApp)
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionAssociation} $(DESC_SectionAssociation)
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionShortcut} $(DESC_SectionShortcut)
+!insertmacro MUI_DESCRIPTION_TEXT ${SectionDesktop} $(DESC_SectionDesktop)
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
