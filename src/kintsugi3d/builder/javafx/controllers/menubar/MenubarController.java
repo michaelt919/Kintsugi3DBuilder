@@ -637,6 +637,7 @@ public class MenubarController
             alert.getDialogPane().setContent(scrollPane);
             alert.show();
             alert.setY(70.0);
+
         }
         catch (IOException e)
         {

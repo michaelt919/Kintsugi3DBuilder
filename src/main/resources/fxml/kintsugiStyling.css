@@ -1,5 +1,5 @@
 .accordion{
-    -fx-background-color: #000000;
+    -fx-background-color: #222230;
 }
 
 .anchor-pane{
@@ -30,7 +30,7 @@
 
 .color-picker{
     -fx-background-color: #000000;
-    -fx-border-color: #D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
+    -fx-border-color: #222230;
     -fx-text-fill:#000000;
 }
 
@@ -42,13 +42,15 @@
     -fx-fill:#ffffff;
 }
 
-.combo-box .value-label{
-    -fx-text-fill: #0000ff; /*TODO: trying to change the color of the item
+/*TODO: change the color of combo box dropdown arrow*/
+
+.combo-box .text{
+    -fx-fill: #0000ff; /*TODO: trying to change the color of the item
                             which is presented in the dropdown before it is unrolled*/
 }
 
 .choice-box{
-    -fx-background-color:#D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
+    -fx-background-color:#222230;
 }
 
 dialog-pane{
@@ -84,7 +86,11 @@ dialog-pane{
 
 .list-cell:selected{
     -fx-background-color:#D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
-    -fx-text-fill: #00ff00; /*TODO: this does not change text color for some reason*/
+}
+
+.list-cell:selected .text{
+    -fx-fill: #000001; /*doesn't change the color of the view log/console.fxml cell text if it's #000000*/
+                       /*yes it's strange but it works*/
 }
 
 .menu{
@@ -93,7 +99,7 @@ dialog-pane{
 }
 
 .menu-bar{
-    -fx-background-color: 000000
+    -fx-background-color: #000000
 }
 
 .menu-item{
@@ -133,50 +139,66 @@ dialog-pane{
 }
 
 .table-view .column-header{
-    -fx-background-color:#D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
+    -fx-background-color:#222230;
 }
 
 .table-view .column-header-background .filler { /*top right corner of table view*/
-    -fx-background-color:#D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
+    -fx-background-color:#222230;
 }
 
 .table-view{
-    -fx-background-color: #000000; /*just the outline of the table view*/
+    -fx-background-color: #222230;
 }
 
 .text{
     -fx-fill: #FFFFFF;
 }
 
+.text-field{
+    -fx-background-color: #222222;
+    -fx-text-fill: #ffffff;
+}
+
 .titled-pane{
     -fx-background-color: #000000;
 }
 
-.titled-pane > .title{ /*only applies to the dropdown bar, not the content within*/
-    -fx-background-color:#D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
+.titled-pane > .title{ /*only applies to the dropdown bar, not the text or content within*/
+    -fx-background-color:#222230;
 }
 
 .titled-pane > .title > *.text{
-    -fx-fill:#000000;
+    -fx-fill:#ffffff;
+}
+
+.toggle-button:selected .text{
+    -fx-fill: #000000;
 }
 
 .toggle-button{
     -fx-background-color: #272727;
-    -fx-text-fill: #FFFFFF;
     -fx-background-radius: 30 30 30 30;
+}
+
+.toggle-button:selected{
+    -fx-background-color: #D4AA00;
+    -fx-font-weight:bold;
 }
 
 .toggle-button:hover{
     -fx-background-color: #222255;
 }
 
+.toggle-button:hover .text{
+    -fx-fill: #ffffff;
+}
+
 .toggle-button:pressed {
     -fx-background-color: #272727;
 }
 
-.toggle-button:selected{
-    -fx-font-weight:bold;
-}
+
+
 
 .tool-bar{
     -fx-background-color: #000000;
