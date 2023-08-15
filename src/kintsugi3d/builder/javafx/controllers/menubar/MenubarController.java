@@ -39,6 +39,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
@@ -77,6 +78,8 @@ public class MenubarController
     private DirectoryChooser directoryChooser = new DirectoryChooser();
 
     private static final Logger log = LoggerFactory.getLogger(MenubarController.class);
+
+    private static MenubarController instance;
 
     private InternalModels internalModels;
 
@@ -163,6 +166,15 @@ public class MenubarController
     private IntegerProperty widthIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
     private IntegerProperty heightIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
 
+    public MenubarController()
+    {
+        instance = this;
+    }
+
+    public static MenubarController getInstance()
+    {
+        return instance;
+    }
 
     public <ContextType extends Context<ContextType>> void init(
         Stage injectedStage, InternalModels injectedInternalModels, Runnable injectedUserDocumentationHandler)
@@ -319,6 +331,8 @@ public class MenubarController
 
         //attach event handler (this cannot be done in scenebuilder)
         autosaveOptionsChoiceBox.setOnAction(this::handleDirectoryDropdownSelection);
+
+        handleException("This is a test error alert!", new RuntimeException("Test exception"));
     }
 
 
@@ -975,7 +989,13 @@ public class MenubarController
         log.error("{}:", message, e);
         Platform.runLater(() ->
         {
-            new Alert(AlertType.ERROR, message + "\nSee the log for more info.").show();
+            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+            ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
+            Alert alert = new Alert(AlertType.ERROR, message + "\nSee the log for more info.", ok, showLog);
+            ((Button) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
+                help_console();
+            });
+            alert.show();
         });
     }
 }
