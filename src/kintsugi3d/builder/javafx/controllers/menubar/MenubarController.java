@@ -229,7 +229,7 @@ public class MenubarController
             {
                 loadingComplete();
                 projectLoaded = false;
-                Platform.runLater(() -> new Alert(AlertType.ERROR, e.toString()).show());
+                handleException("An error occurred while loading project", e);
             }
         });
 
@@ -431,9 +431,9 @@ public class MenubarController
                     projectLoaded = true;
                 });
             }
-            catch (IOException e)
+            catch (Exception e)
             {
-                log.error("An error occurred creating project:", e);
+                handleException("An error occurred creating project", e);
             }
         }
     }
@@ -478,9 +478,9 @@ public class MenubarController
                     {
                         newVsetFile = internalModels.getProjectModel().openProjectFile(projectFile);
                     }
-                    catch (IOException | ParserConfigurationException | SAXException e)
+                    catch (Exception e)
                     {
-                        log.error("An error occurred opening project:", e);
+                        handleException("An error occurred opening project", e);
                     }
                 }
 
@@ -530,9 +530,9 @@ public class MenubarController
                 saveInfo.setHeaderText(projectFile.getName());
                 saveInfo.show();
             }
-            catch(IOException | TransformerException | ParserConfigurationException e)
+            catch(Exception e)
             {
-                log.error("An error occurred saving project:", e);
+                handleException("An error occurred saving project", e);
             }
         }
     }
@@ -580,8 +580,8 @@ public class MenubarController
             requestUI.bind(internalModels.getSettingsModel());
             requestUI.prompt(Rendering.getRequestQueue());
 
-        } catch (IOException e) {
-            log.error("An error occurred handling request:", e);
+        } catch (Exception e) {
+            handleException("An error occurred handling request", e);
         }
     }
 
@@ -599,9 +599,9 @@ public class MenubarController
             LoadOptionsController loadOptionsController = makeWindow("Load Options", loadOptionsWindowOpen, "fxml/menubar/LoadOptions.fxml");
             loadOptionsController.bind(internalModels.getLoadOptionsModel());
         }
-        catch(IOException e)
+        catch(Exception e)
         {
-            log.error("An error occurred opening load options:", e);
+            handleException("An error occurred opening load options", e);
         }
     }
 
@@ -641,9 +641,9 @@ public class MenubarController
             alert.show();
             alert.setY(70.0);
         }
-        catch (IOException e)
+        catch (Exception e)
         {
-            log.error("An error occurred showing help and about:", e);
+            handleException("An error occurred showing help and about", e);
         }
     }
 
@@ -660,9 +660,9 @@ public class MenubarController
             AdvPhotoViewController advPhotoViewController = makeWindow("Advanced Photo View", advPhotoViewWindowOpen, "fxml/menubar/systemsettings/AdvancedPhotoView.fxml");
             advPhotoViewController.bind(internalModels.getSettingsModel());
         }
-        catch(IOException e)
+        catch(Exception e)
         {
-            log.error("An error occurred opening IBR settings:", e);
+            handleException("An error occurred opening IBR settings", e);
         }
     }
 
@@ -750,9 +750,9 @@ public class MenubarController
             colorCheckerController.init(MultithreadModels.getInstance().getLoadingModel());
 
         }
-        catch(IOException e)
+        catch(Exception e)
         {
-            log.error("An error occurred opening color checker:", e);
+            handleException("An error occurred opening color checker", e);
         }
     }
 
@@ -762,9 +762,9 @@ public class MenubarController
                 makeWindow(".psx Unzipper", unzipperOpen, "fxml/menubar/UnzipFileSelection.fxml");
             unzipFileSelectionController.init();
         }
-        catch(IOException e)
+        catch(Exception e)
         {
-            log.error("An error occurred opening file unzipper:", e);
+            handleException("An error occurred opening file unzipper", e);
         }
     }
           
@@ -782,9 +782,9 @@ public class MenubarController
             colorCheckerController.init(MultithreadModels.getInstance().getLoadingModel());
 
         }
-        catch(IOException e)
+        catch(Exception e)
         {
-            log.error("An error occurred opening color checker window:", e);
+            handleException("An error occurred opening color checker window", e);
         }
     }
 
@@ -799,9 +799,9 @@ public class MenubarController
         {
             makeWindow("System Memory", systemMemoryWindowOpen, "fxml/menubar/systemsettings/SystemMemory.fxml");
         }
-        catch(IOException e)
+        catch(Exception e)
         {
-            log.error("An error occurred opening jvm settings window:", e);
+            handleException("An error occurred opening jvm settings window", e);
         }
     }
 
@@ -819,9 +819,9 @@ public class MenubarController
             stage.initStyle(StageStyle.DECORATED);
             stage.show();
         }
-        catch (IOException e)
+        catch (Exception e)
         {
-            log.error("An error occurred opening console window:", e);
+            handleException("An error occurred opening console window", e);
         }
     }
 
@@ -864,9 +864,9 @@ public class MenubarController
             {
                 newVsetFile = internalModels.getProjectModel().openProjectFile(projectFile);
             }
-            catch (IOException | ParserConfigurationException | SAXException e)
+            catch (Exception e)
             {
-                e.printStackTrace();
+                handleException("An error occurred while opening project", e);
             }
         }
 
@@ -1011,5 +1011,14 @@ public class MenubarController
         {
             log.error("An error occurred opening the settings modal:", e);
         }
+    }
+
+    private void handleException(String message, Exception e)
+    {
+        log.error("{}:", message, e);
+        Platform.runLater(() ->
+        {
+            new Alert(AlertType.ERROR, message + "\nSee the log for more info.").show();
+        });
     }
 }
