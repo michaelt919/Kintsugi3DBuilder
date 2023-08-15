@@ -119,3 +119,11 @@
     -fx-background-color:#D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
     -fx-text-fill: #000000
 }
+
+.tool-bar{
+    -fx-background-color: #000000;
+}
+
+.tool-bar .button{
+    -fx-background-radius: 0;
+}

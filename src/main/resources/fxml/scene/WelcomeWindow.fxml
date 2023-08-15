@@ -15,19 +15,26 @@
   ~
   -->
 
-<AnchorPane prefHeight="447.0" prefWidth="410.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController">
-   <children>
-      <ToolBar orientation="VERTICAL" prefHeight="447.0" prefWidth="200.0">
-        <items>
-          <Button mnemonicParsing="false" onAction="#file_createProject" prefHeight="57.0" prefWidth="140.0" text="Create Project" />
-            <SplitMenuButton fx:id="recentProjectsSplitMenuButton" alignment="CENTER_RIGHT" mnemonicParsing="false" onAction="#splitMenuButtonActions" onMouseEntered="#unrollMenu" onMouseExited="#hideMenu" popupSide="RIGHT" prefHeight="57.0" prefWidth="140.0" text="Recent Projects" textAlignment="CENTER">
-            </SplitMenuButton>
-            <Button layoutX="10.0" layoutY="71.0" mnemonicParsing="false" onAction="#file_openProject" prefHeight="57.0" prefWidth="140.0" text="Open Project" />
-            <Button layoutX="10.0" layoutY="194.0" mnemonicParsing="false" onAction="#file_closeProject" prefHeight="57.0" prefWidth="140.0" text="Close Project" />
-            <Button layoutX="10.0" layoutY="133.0" mnemonicParsing="false" onAction="#help_userManual" prefHeight="57.0" prefWidth="140.0" text="Guides" />
-            <Button layoutX="10.0" layoutY="255.0" mnemonicParsing="false" onAction="#createProject" prefHeight="57.0" prefWidth="140.0" text="Create Project (NEW)" />
-        </items>
-      </ToolBar>
-       <ProgressBar fx:id="progressBar" prefWidth="410.0" progress="0.0" visible="false" VBox.vgrow="ALWAYS" />
-   </children>
+<AnchorPane prefHeight="447.0" prefWidth="410.0" styleClass="anchor-pane"
+            stylesheets="@../menubar/systemSettingsStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController">
+    <ToolBar orientation="VERTICAL" prefHeight="447.0" prefWidth="200.0">
+        <Button mnemonicParsing="false" onAction="#file_createProject" prefHeight="57.0" prefWidth="140.0"
+                text="Create Project"/>
+        <SplitMenuButton fx:id="recentProjectsSplitMenuButton" alignment="CENTER_RIGHT" mnemonicParsing="false"
+                         onAction="#splitMenuButtonActions" onMouseEntered="#unrollMenu" onMouseExited="#hideMenu"
+                         popupSide="RIGHT" prefHeight="57.0" prefWidth="140.0" text="Recent Projects"
+                         textAlignment="CENTER">
+        </SplitMenuButton>
+        <Button layoutX="10.0" layoutY="71.0" mnemonicParsing="false" onAction="#file_openProject" prefHeight="57.0"
+                prefWidth="140.0" text="Open Project"/>
+        <Button layoutX="10.0" layoutY="194.0" mnemonicParsing="false" onAction="#file_closeProject"
+                prefHeight="57.0" prefWidth="140.0" text="Close Project"/>
+        <Button layoutX="10.0" layoutY="133.0" mnemonicParsing="false" onAction="#help_userManual" prefHeight="57.0"
+                prefWidth="140.0" text="Guides"/>
+        <Button layoutX="10.0" layoutY="255.0" mnemonicParsing="false" onAction="#createProject" prefHeight="57.0"
+                prefWidth="140.0" text="Create Project (NEW)"/>
+    </ToolBar>
+    <ProgressBar fx:id="progressBar" prefWidth="410.0" progress="0.0" visible="false" VBox.vgrow="ALWAYS"/>
 </AnchorPane>
