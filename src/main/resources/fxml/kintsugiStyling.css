@@ -1,0 +1,191 @@
+.accordion{
+    -fx-background-color: #000000;
+}
+
+.anchor-pane{
+    -fx-background-color: #000000;
+}
+
+.button {
+    -fx-background-color: #272727;
+    -fx-text-fill: #FFFFFF;
+    -fx-background-radius: 30 30 30 30;
+}
+
+.button:hover{
+    -fx-background-color: #222255;
+}
+
+.button:pressed {
+    -fx-background-color: #272727;
+}
+
+.context-menu {
+    -fx-background-color: #000000;
+}
+
+.check-box{
+    -fx-text-fill: #FFFFFF;
+}
+
+.color-picker{
+    -fx-background-color: #000000;
+    -fx-border-color: #D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
+    -fx-text-fill:#000000;
+}
+
+.accordion .combo-box-base .text{ /*text within the dropdown for the color picker label in lighting settings*/
+    -fx-fill: #000000;
+}
+
+.combo-box .menu-item .text{
+    -fx-fill:#ffffff;
+}
+
+.combo-box .value-label{
+    -fx-text-fill: #0000ff; /*TODO: trying to change the color of the item
+                            which is presented in the dropdown before it is unrolled*/
+}
+
+.choice-box{
+    -fx-background-color:#D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
+}
+
+dialog-pane{
+    -fx-background-color:#000000;
+}
+
+.grid-pane{
+    -fx-background-color: #000000;
+}
+
+.hbox{
+    -fx-background-color: #000000;
+}
+
+.label{
+    -fx-text-fill: #FFFFFF;
+}
+
+.list-view{
+    -fx-background-color: #000000;
+    -fx-text-fill: #FFFFFF;
+}
+
+/* Apply to even cells */
+.list-cell:even {
+    -fx-background-color: #333333; /* Even cell background color */
+}
+
+/* Apply to odd cells */
+.list-cell:odd {
+    -fx-background-color: #272727; /* Odd cell background color */
+}
+
+.list-cell:selected{
+    -fx-background-color:#D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
+    -fx-text-fill: #00ff00; /*TODO: this does not change text color for some reason*/
+}
+
+.menu{
+    -fx-background-color: #272727;
+    -fx-background-radius: 30 30 30 30;
+}
+
+.menu-bar{
+    -fx-background-color: 000000
+}
+
+.menu-item{
+    -fx-background-color:#000000;
+    -fx-text-fill: #FFFFFF;
+}
+
+
+.split-menu-button {
+    -fx-base: #272727;
+    -fx-text-fill: #FFFFFF;
+    -fx-background-radius: 30 30 30 30;
+}
+
+.scroll-pane{
+    -fx-background-color: #000000;
+}
+
+.slider .thumb .thumb-label .label{
+    -fx-text-fill:#FF0000;
+}
+
+.tab{
+    -fx-background-color: #000000;
+}
+
+.tab-pane{
+    -fx-background-color: #ff0000; /* TODO: not changing the background color for some reason*/
+}
+
+.table-row-cell: even{
+    -fx-background-color: #333333; /* Even cell background color */
+}
+
+.table-row-cell: odd{
+    -fx-background-color: #272727; /* Odd cell background color */
+}
+
+.table-view .column-header{
+    -fx-background-color:#D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
+}
+
+.table-view .column-header-background .filler { /*top right corner of table view*/
+    -fx-background-color:#D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
+}
+
+.table-view{
+    -fx-background-color: #000000; /*just the outline of the table view*/
+}
+
+.text{
+    -fx-fill: #FFFFFF;
+}
+
+.titled-pane{
+    -fx-background-color: #000000;
+}
+
+.titled-pane > .title{ /*only applies to the dropdown bar, not the content within*/
+    -fx-background-color:#D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
+}
+
+.titled-pane > .title > *.text{
+    -fx-fill:#000000;
+}
+
+.toggle-button{
+    -fx-background-color: #272727;
+    -fx-text-fill: #FFFFFF;
+    -fx-background-radius: 30 30 30 30;
+}
+
+.toggle-button:hover{
+    -fx-background-color: #222255;
+}
+
+.toggle-button:pressed {
+    -fx-background-color: #272727;
+}
+
+.toggle-button:selected{
+    -fx-font-weight:bold;
+}
+
+.tool-bar{
+    -fx-background-color: #000000;
+}
+
+.tool-bar .button{
+    -fx-background-radius: 0;
+}
+
+.vbox{
+    -fx-background-color: #444444;
+}

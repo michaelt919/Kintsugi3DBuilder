@@ -12,12 +12,13 @@
   ~
   -->
 
-<?import javafx.collections.FXCollections?>
-<?import javafx.geometry.Insets?>
+<?import javafx.collections.*?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import kintsugi3d.builder.export.general.*?>
-<GridPane alignment="CENTER_LEFT" hgap="5.0" prefHeight="155.0" prefWidth="555.0" vgap="10.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.export.general.GeneralRenderRequestUI">
+
+<GridPane styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" prefHeight="155.0" prefWidth="555.0" stylesheets="@../kintsugiStyling.css" vgap="10.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.export.general.GeneralRenderRequestUI">
     <padding>
         <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
     </padding>
@@ -37,13 +38,13 @@
         </value>
     </ComboBox>
 
-    <Label fx:id="outputImageLabel" text="Output image name:" labelFor="$outputImageName" visible="false" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+    <Label fx:id="outputImageLabel" text="Output image name:" visible="false" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
     <TextField fx:id="outputImageName" prefHeight="25.0" prefWidth="300.0" visible="false" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.rowIndex="1" />
 
-    <Label fx:id="frameCountLabel" text="Number of frames:" labelFor="$frameCount" visible="false" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+    <Label fx:id="frameCountLabel" text="Number of frames:" visible="false" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
     <TextField fx:id="frameCount" prefHeight="25.0" prefWidth="300.0" visible="false" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.rowIndex="1" />
 
-    <Label fx:id="targetVSetFileLabel" text="Target view set file:" labelFor="$targetVSetFileField" visible="false" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+    <Label fx:id="targetVSetFileLabel" text="Target view set file:" visible="false" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
     <TextField fx:id="targetVSetFileField" prefHeight="25.0" prefWidth="300.0" visible="false" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.rowIndex="1" />
     <Button fx:id="targetVsetFileButton" mnemonicParsing="false" onAction="#targetVSetFileButtonAction" text="Choose file..." visible="false" GridPane.columnIndex="5" GridPane.rowIndex="1" />
 
@@ -62,8 +63,8 @@
     </ComboBox>
 
     <Label fx:id="customVertexShaderLabel" text="Custom Vertex Shader:" visible="false" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
-    <TextField visible="false" fx:id="customVertexShaderField" prefHeight="25.0" prefWidth="300.0" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.rowIndex="3" />
-    <Button fx:id="vertexShaderButton" visible="false" mnemonicParsing="false" onAction="#vertexShaderButtonAction" text="Choose file..." GridPane.columnIndex="5" GridPane.rowIndex="3" />
+    <TextField fx:id="customVertexShaderField" prefHeight="25.0" prefWidth="300.0" visible="false" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.rowIndex="3" />
+    <Button fx:id="vertexShaderButton" mnemonicParsing="false" onAction="#vertexShaderButtonAction" text="Choose file..." visible="false" GridPane.columnIndex="5" GridPane.rowIndex="3" />
 
     <Label text="Fragment Shader:" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="4" />
     <TextField fx:id="fragmentShaderField" prefHeight="25.0" prefWidth="300.0" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.rowIndex="4" />

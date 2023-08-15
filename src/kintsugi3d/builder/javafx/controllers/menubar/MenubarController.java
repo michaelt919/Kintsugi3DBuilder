@@ -19,13 +19,10 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.*;
 import java.util.List;
-import java.util.Scanner;
 import java.util.function.Predicate;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -47,8 +44,6 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -626,6 +621,8 @@ public class MenubarController
 
             javafx.scene.control.ScrollPane scrollPane = new javafx.scene.control.ScrollPane();
             Text contentTextElement = new Text(contentText);
+
+            //TODO: APPLY DARK MODE TO ABOUT SECTION
 
             //Set the desired width for the text (screen width / 3)
             contentTextElement.setWrappingWidth(Screen.getPrimary().getVisualBounds().getWidth()/3);
