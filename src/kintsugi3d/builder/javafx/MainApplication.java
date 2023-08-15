@@ -32,10 +32,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
+import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
 import javafx.scene.image.Image;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -279,7 +277,13 @@ public class MainApplication extends Application
         List<Exception> filtered = GlobalUserPreferencesManager.getInstance().getSerializerStartupExceptions().stream().filter(e -> !(e instanceof FileNotFoundException)).collect(Collectors.toList());
         if (!filtered.isEmpty())
         {
-            new Alert(AlertType.WARNING, "An error occurred loading your user preferences, and they may have been reverted to their defaults. No action is needed.\nCheck the log for more info.").show();
+            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+            ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
+            Alert alert = new Alert(AlertType.WARNING, "An error occurred loading your user preferences, and they may have been reverted to their defaults. No action is needed.\nCheck the log for more info.", ok, showLog);
+            ((Button) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
+                menuBarController.help_console(null);
+            });
+            alert.show();
         }
 
         //distribute to controllers
