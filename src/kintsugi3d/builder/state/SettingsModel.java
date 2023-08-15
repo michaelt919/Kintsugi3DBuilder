@@ -22,4 +22,6 @@ import kintsugi3d.builder.preferences.serialization.SettingsModelSerializer;
 public interface SettingsModel extends ReadonlySettingsModel
 {
     <T> void set(String name, T value);
+    void copyFrom(SettingsModel other);
+    void createSetting(String name, Class<?> type, Object initialValue, boolean serialize);
 }

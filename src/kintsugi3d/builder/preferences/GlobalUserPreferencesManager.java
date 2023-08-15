@@ -61,11 +61,13 @@ public class GlobalUserPreferencesManager
     private void inject()
     {
         MultithreadModels.getInstance().getLoadOptionsModel().copyFrom(preferencesModel.getLoadOptions());
+        MultithreadModels.getInstance().getSettingsModel().copyFrom(preferencesModel.getSettings());
     }
 
     private void collect()
     {
         preferencesModel.setLoadOptions(MultithreadModels.getInstance().getLoadOptionsModel());
+        preferencesModel.setSettings(MultithreadModels.getInstance().getSettingsModel());
     }
 
     public void commit() throws IOException

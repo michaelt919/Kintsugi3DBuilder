@@ -94,6 +94,8 @@ public class SettingsModelSerializer extends StdSerializer<SettingsModel>
         model.createNumericSetting("serializedNumericSettingA", 123, true);
         model.createObjectSetting("weightMode", ShadingParameterMode.PER_PIXEL, true);
         model.createObjectSetting("testObject", new TestObjectClass(), true);
+        model.createObjectSetting("exampleVector3", new Vector3(1.f,2.f,3.f), true);
+        model.createObjectSetting("exampleVector4", new Vector4(1.f,2.f,3.f,4.f), true);
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.writeValue(new File("X:\\CHViewer\\test.json"), (ReadonlySettingsModel) model);
