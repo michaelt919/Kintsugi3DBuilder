@@ -35,15 +35,7 @@ public final class Kintsugi3DBuilder
         // Dynamically set the log directory based on the OS before instantiating a logger
         if (System.getProperty("Kintsugi3D.logDir") == null)
         {
-            ReadOnlyDirectoryPreferencesModel directoryPreferences = GlobalUserPreferencesManager.getInstance().getPreferences().getDirectoryPreferences();
-            if (directoryPreferences.getLogFileDirectory() != null)
-            {
-                System.setProperty("Kintsugi3D.logDir", directoryPreferences.getLogFileDirectory().toString());
-            }
-            else
-            {
-                System.setProperty("Kintsugi3D.logDir", ApplicationFolders.getUserAppDirectory() + "/logs");
-            }
+            System.setProperty("Kintsugi3D.logDir", ApplicationFolders.getLogFileDirectory().toAbsolutePath().toString());
         }
 
         Logger log = LoggerFactory.getLogger(Kintsugi3DBuilder.class);

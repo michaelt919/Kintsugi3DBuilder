@@ -12,7 +12,12 @@
 
 package kintsugi3d.builder.app;
 
+import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
+
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 
 public class ApplicationFolders
@@ -49,33 +54,33 @@ public class ApplicationFolders
      * Get the long-term application data folder for the current os and user.
      * @return application folder
      */
-    public static File getUserAppDirectory()
+    public static Path getUserAppDirectory()
     {
         if (System.getProperty("Kintsugi3D.dataDir") != null)
         {
             File dir = new File(System.getProperty("Kintsugi3D.dataDir"));
             if (dir.mkdirs() && dir.canRead() && dir.canWrite())
             {
-                return dir;
+                return dir.toPath();
             }
         }
 
         if (OS == OperatingSystem.WINDOWS)
         {
-            return new File(new File(System.getenv("APPDATA")), APP_FOLDER_NAME);
+            return Paths.get(System.getenv("APPDATA"), APP_FOLDER_NAME);
         }
 
         if (OS == OperatingSystem.MACOS)
         {
-            return new File(new File(System.getProperty("user.home")), "Library/Application Support/" + APP_FOLDER_NAME);
+            return Paths.get(System.getProperty("user.home"), "Library/Application Support/", APP_FOLDER_NAME);
         }
 
         if (OS == OperatingSystem.UNIX)
         {
-            return new File(new File(System.getProperty("user.home")), "." + APP_FOLDER_NAME);
+            return Paths.get(System.getProperty("user.home"), "." + APP_FOLDER_NAME);
         }
 
-        return new File(".");
+        return Paths.get(".");
     }
 
     /**
@@ -83,44 +88,44 @@ public class ApplicationFolders
      * application data folder, and could be overwritten between sessions.
      * @return cache application folder
      */
-    public static File getUserCacheDirectory()
+    public static Path getUserCacheDirectory()
     {
         if (System.getProperty("Kintsugi3D.cacheDir") != null)
         {
             File dir = new File(System.getProperty("Kintsugi3D.cacheDir"));
             if (dir.mkdirs() && dir.canRead() && dir.canWrite())
             {
-                return dir;
+                return dir.toPath();
             }
         }
 
         if (OS == OperatingSystem.WINDOWS)
         {
-            return new File(new File(System.getenv("LOCALAPPDATA")), APP_FOLDER_NAME);
+            return Paths.get(System.getenv("LOCALAPPDATA"), APP_FOLDER_NAME);
         }
 
         if (OS == OperatingSystem.MACOS)
         {
-            return new File(new File(System.getProperty("user.home")), "Library/Caches/" + APP_FOLDER_NAME);
+            return Paths.get(System.getProperty("user.home"), "Library/Caches", APP_FOLDER_NAME);
         }
 
-        return new File(getUserAppDirectory(), "cache");
+        return getUserAppDirectory().resolve("cache");
     }
 
     /**
      * Get an application folder based on the current os that is not user dependent.
      * @return system app folder
      */
-    public static File getSystemAppDirectory()
+    public static Path getSystemAppDirectory()
     {
         if (OS == OperatingSystem.WINDOWS)
         {
-            return new File(new File(System.getenv("PROGRAMDATA")), APP_FOLDER_NAME);
+            return Paths.get(System.getenv("PROGRAMDATA"), APP_FOLDER_NAME);
         }
 
         if (OS == OperatingSystem.MACOS)
         {
-            return new File("/Library/" + APP_FOLDER_NAME);
+            return Paths.get("/Library" + APP_FOLDER_NAME);
         }
 
         return getUserAppDirectory();
@@ -131,9 +136,36 @@ public class ApplicationFolders
      * if the app is not installed as a system app.
      * @return installation directory
      */
-    public static File getInstallationDirectory()
+    public static Path getInstallationDirectory()
     {
         //TODO
         return null;
+    }
+
+    public static Path getPreviewImagesRootDirectory()
+    {
+        Path preferred = GlobalUserPreferencesManager.getInstance().getPreferences().getDirectoryPreferences().getPreviewImagesDirectory();
+        if (preferred != null)
+            return preferred;
+
+        return getUserCacheDirectory().resolve("preview");
+    }
+
+    public static Path getFitCacheRootDirectory()
+    {
+        Path preferred = GlobalUserPreferencesManager.getInstance().getPreferences().getDirectoryPreferences().getCacheDirectory();
+        if (preferred != null)
+            return preferred;
+
+        return getUserCacheDirectory().resolve("fit");
+    }
+
+    public static Path getLogFileDirectory()
+    {
+        Path preferred = GlobalUserPreferencesManager.getInstance().getPreferences().getDirectoryPreferences().getLogFileDirectory();
+        if (preferred != null)
+            return preferred;
+
+        return getUserAppDirectory().resolve("logs");
     }
 }

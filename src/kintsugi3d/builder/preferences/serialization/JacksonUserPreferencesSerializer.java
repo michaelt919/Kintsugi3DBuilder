@@ -26,7 +26,7 @@ import java.io.IOException;
 
 public class JacksonUserPreferencesSerializer implements UserPreferencesSerializer
 {
-    private static final File DIRECTORY = ApplicationFolders.getUserAppDirectory();
+    private static final File DIRECTORY = ApplicationFolders.getUserAppDirectory().toFile();
     private static final String FILE_NAME = "preferences.json";
 
     @Override
