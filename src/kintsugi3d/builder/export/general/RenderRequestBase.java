@@ -18,12 +18,12 @@ import java.nio.file.Paths;
 import java.util.function.Consumer;
 
 import kintsugi3d.gl.core.*;
-import kintsugi3d.builder.core.IBRRequest;
+import kintsugi3d.builder.core.ObservableIBRRequest;
 import kintsugi3d.builder.core.StandardRenderingMode;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 
-abstract class RenderRequestBase<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>
+abstract class RenderRequestBase implements ObservableIBRRequest
 {
     private static final File TEX_SPACE_VERTEX_SHADER = Paths.get("shaders", "common", "texspace.vert").toFile();
     private static final File IMG_SPACE_VERTEX_SHADER = Paths.get("shaders", "common", "imgspace.vert").toFile();
@@ -33,10 +33,10 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
     private final File vertexShader;
     private final File fragmentShader;
     private final ReadonlySettingsModel settingsModel;
-    private final Consumer<Program<ContextType>> shaderSetupCallback;
+    private final Consumer<Program<? extends Context<?>>> shaderSetupCallback;
     private final File outputDirectory;
 
-    RenderRequestBase(int width, int height, ReadonlySettingsModel settingsModel, Consumer<Program<ContextType>> shaderSetupCallback,
+    RenderRequestBase(int width, int height, ReadonlySettingsModel settingsModel, Consumer<Program<? extends Context<?>>> shaderSetupCallback,
                       File vertexShader, File fragmentShader, File outputDirectory)
     {
         this.width = width;
@@ -48,7 +48,7 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
         this.outputDirectory = outputDirectory;
     }
 
-    abstract static class BuilderBase<ContextType extends Context<ContextType>> implements RenderRequestBuilder<ContextType>
+    abstract static class BuilderBase implements RenderRequestBuilder
     {
         private final ReadonlySettingsModel settingsModel;
         private final File fragmentShader;
@@ -57,7 +57,7 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
         private int width = 1024;
         private int height = 1024;
         private File vertexShader = TEX_SPACE_VERTEX_SHADER;
-        private Consumer<Program<ContextType>> shaderSetupCallback = null;
+        private Consumer<Program<? extends Context<?>>> shaderSetupCallback = null;
 
         BuilderBase(ReadonlySettingsModel settingsModel, File fragmentShader, File outputDirectory)
         {
@@ -81,7 +81,7 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
             return settingsModel;
         }
 
-        protected Consumer<Program<ContextType>> getShaderSetupCallback()
+        protected Consumer<Program<? extends Context<?>>> getShaderSetupCallback()
         {
             return shaderSetupCallback;
         }
@@ -102,49 +102,50 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
         }
 
         @Override
-        public RenderRequestBuilder<ContextType> useTextureSpaceVertexShader()
+        public RenderRequestBuilder useTextureSpaceVertexShader()
         {
             this.vertexShader = TEX_SPACE_VERTEX_SHADER;
             return this;
         }
 
         @Override
-        public RenderRequestBuilder<ContextType> useCameraSpaceVertexShader()
+        public RenderRequestBuilder useCameraSpaceVertexShader()
         {
             this.vertexShader = IMG_SPACE_VERTEX_SHADER;
             return this;
         }
 
         @Override
-        public RenderRequestBuilder<ContextType> useCustomVertexShader(File vertexShader)
+        public RenderRequestBuilder useCustomVertexShader(File vertexShader)
         {
             this.vertexShader = vertexShader;
             return this;
         }
 
         @Override
-        public RenderRequestBuilder<ContextType> setShaderSetupCallback(Consumer<Program<ContextType>> shaderSetupCallback)
+        public RenderRequestBuilder setShaderSetupCallback(Consumer<Program<? extends Context<?>>> shaderSetupCallback)
         {
             this.shaderSetupCallback = shaderSetupCallback;
             return this;
         }
 
         @Override
-        public RenderRequestBuilder<ContextType> setWidth(int width)
+        public RenderRequestBuilder setWidth(int width)
         {
             this.width = width;
             return this;
         }
 
         @Override
-        public RenderRequestBuilder<ContextType> setHeight(int height)
+        public RenderRequestBuilder setHeight(int height)
         {
             this.height = height;
             return this;
         }
     }
 
-    protected ProgramObject<ContextType> createProgram(IBRResourcesImageSpace<ContextType> resources) throws FileNotFoundException
+    protected <ContextType extends Context<ContextType>> ProgramObject<ContextType> createProgram(
+        IBRResourcesImageSpace<ContextType> resources) throws FileNotFoundException
     {
         ProgramObject<ContextType> program =
             resources.getShaderProgramBuilder(this.settingsModel.get("renderingMode", StandardRenderingMode.class))
@@ -166,7 +167,7 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
         return program;
     }
 
-    protected FramebufferObject<ContextType> createFramebuffer(ContextType context)
+    protected <ContextType extends Context<ContextType>> FramebufferObject<ContextType> createFramebuffer(ContextType context)
     {
         return context.buildFramebufferObject(width, height)
             .addColorAttachment()
@@ -180,7 +181,7 @@ abstract class RenderRequestBase<ContextType extends Context<ContextType>> imple
         return resources.createDrawable(program);
     }
 
-    protected void render(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
+    protected <ContextType extends Context<ContextType>> void render(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
     {
         drawable.getContext().getState().disableBackFaceCulling();
         framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);

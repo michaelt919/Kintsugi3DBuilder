@@ -17,14 +17,14 @@ import java.io.File;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.vecmath.Matrix4;
 
-public final class OrbitAnimationRequest<ContextType extends Context<ContextType>> extends SimpleAnimationRequestBase<ContextType>
+public final class OrbitAnimationRequest extends SimpleAnimationRequestBase
 {
     protected static class BuilderImplementation extends BuilderBase
     {
         @Override
-        public <ContextType extends Context<ContextType>> OrbitAnimationRequest<ContextType> create()
+        public OrbitAnimationRequest create()
         {
-            return new OrbitAnimationRequest<>(getWidth(), getHeight(), getFrameCount(), getExportPath());
+            return new OrbitAnimationRequest(getWidth(), getHeight(), getFrameCount(), getExportPath());
         }
     }
 

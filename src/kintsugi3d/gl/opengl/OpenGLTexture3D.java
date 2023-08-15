@@ -32,6 +32,7 @@ import kintsugi3d.gl.core.ColorFormat.DataType;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.types.AbstractDataType;
 import kintsugi3d.gl.types.AbstractDataTypeFactory;
+import kintsugi3d.util.ImageHelper;
 
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -361,8 +362,8 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
         this.bind();
 
         BufferedImage colorImg = validateAndScaleImage(layerIndex, ImageIO.read(fileStream));
-        ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(
-            iccTransformationRequested ? convertICCToSRGB(colorImg) : forceSRGB(colorImg),
+        ByteBuffer buffer = bufferedImageToNativeBuffer(
+            iccTransformationRequested ? new ImageHelper(colorImg).convertICCToSRGB() : new ImageHelper(colorImg).forceSRGB(),
             null, flipVertical);
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
@@ -391,8 +392,8 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
 
         BufferedImage colorImg = validateAndScaleImage(layerIndex, ImageIO.read(imageStream));
         ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(
-            iccTransformationRequested ? convertICCToSRGB(colorImg) : forceSRGB(colorImg),
-            /* masks shouldn't be using ICC */ forceSRGB(validateAndScaleImage(layerIndex, ImageIO.read(maskStream))),
+            iccTransformationRequested ? new ImageHelper(colorImg).convertICCToSRGB() : new ImageHelper(colorImg).forceSRGB(),
+            /* masks shouldn't be using ICC */ new ImageHelper(validateAndScaleImage(layerIndex, ImageIO.read(maskStream))).forceSRGB(),
             flipVertical);
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);

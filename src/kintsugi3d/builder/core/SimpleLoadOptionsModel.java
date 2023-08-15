@@ -24,6 +24,7 @@ public class SimpleLoadOptionsModel implements ReadonlyLoadOptionsModel
     private int depthImageHeight;
     private int previewImageWidth;
     private int previewImageHeight;
+    private int maxLoadingThreads;
 
     @Override
     public boolean areColorImagesRequested()
@@ -83,12 +84,6 @@ public class SimpleLoadOptionsModel implements ReadonlyLoadOptionsModel
         return this.alphaRequested;
     }
 
-    @Override
-    public boolean isICCTransformationRequested()
-    {
-        return iccTransformationRequested;
-    }
-
     public SimpleLoadOptionsModel setAlphaRequested(boolean alphaRequested)
     {
         this.alphaRequested = alphaRequested;
@@ -99,6 +94,17 @@ public class SimpleLoadOptionsModel implements ReadonlyLoadOptionsModel
     {
         this.compressionRequested = compressionRequested;
         return this;
+    }
+
+    @Override
+    public boolean isICCTransformationRequested()
+    {
+        return iccTransformationRequested;
+    }
+
+    public void setIccTransformationRequested(boolean iccTransformationRequested)
+    {
+        this.iccTransformationRequested = iccTransformationRequested;
     }
 
     @Override
@@ -135,5 +141,16 @@ public class SimpleLoadOptionsModel implements ReadonlyLoadOptionsModel
     {
         this.depthImageHeight = depthImageHeight;
         return this;
+    }
+
+    @Override
+    public int getMaxLoadingThreads()
+    {
+        return maxLoadingThreads;
+    }
+
+    public void setMaxLoadingThreads(int maxLoadingThreads)
+    {
+        this.maxLoadingThreads = maxLoadingThreads;
     }
 }

@@ -27,6 +27,7 @@ import java.time.Instant;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.*;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -366,72 +367,10 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
         return scanline;
     }
 
-    static BufferedImage forceSRGB (BufferedImage original)
-    {
-        return original == null || !(original.getColorModel() instanceof ComponentColorModel) ? original
-            : new BufferedImage(
-                new ComponentColorModel(
-                    ColorSpace.getInstance(ColorSpace.CS_sRGB),
-                    original.getColorModel().hasAlpha(),
-                    original.isAlphaPremultiplied(),
-                    original.getTransparency(),
-                    original.getColorModel().getTransferType()),
-                original.getRaster(),
-                original.isAlphaPremultiplied(),
-                null);
-    }
-
-    static BufferedImage convertICCToSRGB(BufferedImage original)
-    {
-        if (original == null || !(original.getColorModel().getColorSpace() instanceof ICC_ColorSpace))
-        {
-            return original;
-        }
-        else
-        {
-            // Copied from ICC_ColorSpace::toRGB
-            ColorTransform[] transformList = new ColorTransform[2];
-            ICC_ColorSpace srgbCS =
-                (ICC_ColorSpace) ColorSpace.getInstance(ColorSpace.CS_sRGB);
-            PCMM mdl = CMSManager.getModule();
-            ICC_ColorSpace colorSpace = (ICC_ColorSpace) original.getColorModel().getColorSpace();
-            transformList[0] = mdl.createTransform(
-                colorSpace.getProfile(), ColorTransform.Any, ColorTransform.In);
-            transformList[1] = mdl.createTransform(
-                srgbCS.getProfile(), ColorTransform.Any, ColorTransform.Out);
-            ColorTransform this2srgb = mdl.createTransform(transformList);
-
-            // Set component scaling
-            int nc = colorSpace.getNumComponents();
-            float[] minVal = new float[nc];
-            float[] maxVal = new float[nc];
-
-            for (int i = 0; i < nc; i++)
-            {
-                minVal[i] = colorSpace.getMinValue(i); // in case getMinVal is overridden
-                maxVal[i] = colorSpace.getMaxValue(i); // in case getMaxVal is overridden
-            }
-
-            float[] destMinVal = new float[nc];
-            Arrays.fill(destMinVal, 0.0f);
-
-            float[] destMaxVal = new float[nc];
-            Arrays.fill(destMaxVal, 1.0f);
-
-            BufferedImage result = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_RGB);
-            this2srgb.colorConvert(original.getRaster(), result.getRaster(), minVal, maxVal, destMinVal, destMaxVal);
-            return result;
-        }
-    }
-
     private static Stream<Map.Entry<Integer, int[]>> getScanlineStream(BufferedImage colorImg, BufferedImage maskImg, boolean flipVertical)
     {
-//        BufferedImage colorSRGB = convertICCToSRGB(colorImg);
-
-        // Could use parallel stream to accelerate image decoding / copy,
-        // but does not seem to make a difference in practice as the bottleneck is color space conversion (if necessary)
-        // which should happen prior to this
-        IntStream scanlineRange = IntStream.range(0, colorImg.getHeight());
+        // Use parallel stream to accelerate image decoding / copy,
+        IntStream scanlineRange = IntStream.range(0, colorImg.getHeight()).parallel();
 
         Stream<Map.Entry<Integer, int[]>> scanlineStream;
 
@@ -452,10 +391,6 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
         }
         else
         {
-//            // ICC for mask image is probably overkill, but just for consistency
-//            // -- should return the original mask image immediately assuming mask image doesn't actually have ICC
-//            BufferedImage maskSRGB = convertICCToSRGB(maskImg);
-
             if (flipVertical)
             {
                 scanlineStream = scanlineRange.mapToObj(y -> new AbstractMap.SimpleEntry<>(

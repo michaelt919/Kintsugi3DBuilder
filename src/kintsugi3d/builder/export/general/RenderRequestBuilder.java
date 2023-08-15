@@ -17,22 +17,22 @@ import java.util.function.Consumer;
 
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
-import kintsugi3d.builder.core.IBRRequest;
+import kintsugi3d.builder.core.ObservableIBRRequest;
 
-public interface RenderRequestBuilder<ContextType extends Context<ContextType>>
+public interface RenderRequestBuilder
 {
-    RenderRequestBuilder<ContextType> useTextureSpaceVertexShader();
-    RenderRequestBuilder<ContextType> useCameraSpaceVertexShader();
-    RenderRequestBuilder<ContextType> useCustomVertexShader(File vertexShader);
+    RenderRequestBuilder useTextureSpaceVertexShader();
+    RenderRequestBuilder useCameraSpaceVertexShader();
+    RenderRequestBuilder useCustomVertexShader(File vertexShader);
 
     /**
      * Define a callback function that will be called to set up the shaders immediately before rendering.
      * @param shaderSetupCallback A function to be called to set up a shader program immediately before rendering.
      * @return Reference to the same builder.
      */
-    RenderRequestBuilder<ContextType> setShaderSetupCallback(Consumer<Program<ContextType>> shaderSetupCallback);
+    RenderRequestBuilder setShaderSetupCallback(Consumer<Program<? extends Context<?>>> shaderSetupCallback);
 
-    IBRRequest<ContextType> create();
-    RenderRequestBuilder<ContextType> setWidth(int width);
-    RenderRequestBuilder<ContextType> setHeight(int height);
+    ObservableIBRRequest create();
+    RenderRequestBuilder setWidth(int width);
+    RenderRequestBuilder setHeight(int height);
 }

@@ -46,7 +46,7 @@ public class ScreenshotUI implements IBRRequestUI
 
     public interface BuilderSupplier
     {
-        <ContextType extends Context<ContextType>> Builder<ContextType, ScreenshotRequest<ContextType>> get();
+        Builder<ScreenshotRequest> get();
     }
 
     private BuilderSupplier builderSupplier;
@@ -121,7 +121,7 @@ public class ScreenshotUI implements IBRRequestUI
             if (builderSupplier != null)
             {
                 requestQueue.addIBRRequest(
-                    builderSupplier.<ContextType>get()
+                    builderSupplier.get()
                         .setWidth(Integer.parseInt(widthTextField.getText()))
                         .setHeight(Integer.parseInt(heightTextField.getText()))
                         .setExportFile(new File(exportFileField.getText()))

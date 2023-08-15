@@ -15,7 +15,7 @@ package kintsugi3d.builder.export.specular;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.util.ImageLodResizer;
+import kintsugi3d.util.ImageHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,7 +66,7 @@ public class SpecularFitTextureRescaler
 
     public void generateLodsFor(File file) throws IOException
     {
-        ImageLodResizer.generateLods(file, settings.getMinimumTextureResolution());
+        ImageHelper.generateLods(file, settings.getMinimumTextureResolution());
     }
 
 }

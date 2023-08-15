@@ -30,6 +30,7 @@ public class LoadOptionsModelImpl implements ReadonlyLoadOptionsModel
     public final IntegerProperty depthHeight = new SimpleIntegerProperty(512);
     public final IntegerProperty previewWidth = new SimpleIntegerProperty(1024);
     public final IntegerProperty previewHeight = new SimpleIntegerProperty(1024);
+    public final IntegerProperty maxLoadingThreads = new SimpleIntegerProperty(12);
 
     @Override
     public boolean areColorImagesRequested()
@@ -59,6 +60,12 @@ public class LoadOptionsModelImpl implements ReadonlyLoadOptionsModel
     public boolean isICCTransformationRequested()
     {
         return icc.get();
+    }
+
+    @Override
+    public int getMaxLoadingThreads()
+    {
+        return maxLoadingThreads.get();
     }
 
     @Override

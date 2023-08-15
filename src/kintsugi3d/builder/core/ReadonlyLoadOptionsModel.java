@@ -24,6 +24,7 @@ public interface ReadonlyLoadOptionsModel
     boolean isCompressionRequested();
     boolean isAlphaRequested();
     boolean isICCTransformationRequested();
+    int getMaxLoadingThreads();
     boolean areDepthImagesRequested();
     int getDepthImageWidth();
     int getDepthImageHeight();

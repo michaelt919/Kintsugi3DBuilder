@@ -31,6 +31,7 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.core.ColorFormat.DataType;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.types.AbstractDataType;
+import kintsugi3d.util.ImageHelper;
 import kintsugi3d.util.RadianceImageLoader;
 import kintsugi3d.util.RadianceImageLoader.Image;
 
@@ -92,9 +93,9 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         {
             int width = colorImg.getWidth();
             int height = colorImg.getHeight();
-            ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(
-                isICCTransformationRequested() ? convertICCToSRGB(colorImg) : forceSRGB(colorImg),
-                /* masks shouldn't be using ICC */ forceSRGB(maskImg), flipVertical);
+            ByteBuffer buffer = bufferedImageToNativeBuffer(
+                isICCTransformationRequested() ? new ImageHelper(colorImg).convertICCToSRGB() : new ImageHelper(colorImg).forceSRGB(),
+                /* masks shouldn't be using ICC */ new ImageHelper(maskImg).forceSRGB(), flipVertical);
 
             if (this.isInternalFormatCompressed())
             {
