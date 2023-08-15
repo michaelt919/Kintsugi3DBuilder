@@ -17,6 +17,7 @@ import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerial
 import kintsugi3d.builder.preferences.serialization.UserPreferencesSerializer;
 
 import java.io.IOException;
+import java.util.List;
 
 public class GlobalUserPreferencesManager
 {
@@ -44,6 +45,11 @@ public class GlobalUserPreferencesManager
     public void setPreferences(UserPreferencesModel model)
     {
         this.preferencesModel = model;
+    }
+
+    public List<Exception> getSerializerStartupExceptions()
+    {
+        return serializer.getStartupExceptions();
     }
 
     public void load()

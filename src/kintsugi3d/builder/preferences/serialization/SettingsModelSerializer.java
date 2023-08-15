@@ -83,35 +83,4 @@ public class SettingsModelSerializer extends StdSerializer<SettingsModel>
 
         return false;
     }
-
-    public static void main(String[] args) throws Exception
-    {
-        SettingsModelImpl model = new SettingsModelImpl();
-        model.createBooleanSetting("lightCalibrationMode", false, true);
-        model.createObjectSetting("currentLightCalibration", Vector2.ZERO, true);
-        model.createBooleanSetting("occlusionEnabled", true);
-        model.createBooleanSetting("fresnelEnabled", false);
-        model.createNumericSetting("serializedNumericSettingA", 123, true);
-        model.createObjectSetting("weightMode", ShadingParameterMode.PER_PIXEL, true);
-        model.createObjectSetting("testObject", new TestObjectClass(), true);
-        model.createObjectSetting("exampleVector3", new Vector3(1.f,2.f,3.f), true);
-        model.createObjectSetting("exampleVector4", new Vector4(1.f,2.f,3.f,4.f), true);
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(new File("X:\\CHViewer\\test.json"), (ReadonlySettingsModel) model);
-
-        ObjectReader reader = mapper.readerFor(SettingsModel.class);
-        SettingsModel readModel = reader.readValue(new File("X:\\CHViewer\\test.json"));
-        System.out.println("Complete");
-    }
-
-    public static class TestObjectClass
-    {
-        public TestObjectClass()
-        {
-
-        }
-        public int valueA = 5;
-        public float valueB = 6.9f;
-    }
 }
