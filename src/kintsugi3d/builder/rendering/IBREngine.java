@@ -202,9 +202,9 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         float maxLuminance = (float) resources.getViewSet().getLuminanceEncoding().decodeFunction.applyAsDouble(255.0);
         float gamma = this.sceneModel.getSettingsModel().getFloat("gamma");
         return new Vector3(
-                (float) Math.pow(sceneModel.getLightingModel().getBackgroundColor().x / maxLuminance, 1.0 / gamma),
-                (float) Math.pow(sceneModel.getLightingModel().getBackgroundColor().y / maxLuminance, 1.0 / gamma),
-                (float) Math.pow(sceneModel.getLightingModel().getBackgroundColor().z / maxLuminance, 1.0 / gamma));
+                sceneModel.getLightingModel().getBackgroundColor().x / (float) Math.pow(maxLuminance, 1.0 / gamma),
+                sceneModel.getLightingModel().getBackgroundColor().y / (float) Math.pow(maxLuminance, 1.0 / gamma),
+                sceneModel.getLightingModel().getBackgroundColor().z / (float) Math.pow(maxLuminance, 1.0 / gamma));
     }
 
     @Override

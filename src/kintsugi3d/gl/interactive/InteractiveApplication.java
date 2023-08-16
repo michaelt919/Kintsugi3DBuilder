@@ -122,7 +122,7 @@ public class InteractiveApplication
                 }
                 catch (InterruptedException e)
                 {
-                    log.error("Interrupted while waiting for min frame delta", e);
+                    log.warn("Interrupted while waiting for min frame delta", e);
                 }
             }
         }

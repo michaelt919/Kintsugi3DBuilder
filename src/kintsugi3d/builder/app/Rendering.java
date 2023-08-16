@@ -482,13 +482,13 @@ public final class Rendering
                     // Use IBRRequest (rather than GraphicsRequest) so that it gets queued up after the actual request,
                     // once the project has finished loading
                     requestQueue.addBackgroundIBRRequest(new IBRRequest()
-                                {
-                                    @Override
-                                    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable)
-                                    {
-                                        WindowSynchronization.getInstance().quitWithoutConfirmation();
-                                    }
-                                });
+                    {
+                        @Override
+                        public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable)
+                        {
+                            WindowSynchronization.getInstance().quitWithoutConfirmation();
+                        }
+                    });
                 }
             }
             catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e)
