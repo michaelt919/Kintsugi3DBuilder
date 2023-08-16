@@ -88,7 +88,7 @@ public class MetashapeObject {
 
                 String chunkZipPath;
                 chunkNames = new ArrayList<>();
-                chunkZipPathPairs.clear();
+                chunkZipPathPairs = new HashMap<>();
                 for (int i = 0; i < chunkList.getLength(); ++i) {//add all chunks to chunkNames list
                     Node chunk = chunkList.item(i);
 

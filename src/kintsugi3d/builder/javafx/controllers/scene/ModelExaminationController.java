@@ -10,53 +10,37 @@
  *
  */
 
-package kintsugi3d.builder.javafx.controllers.menubar;
+package kintsugi3d.builder.javafx.controllers.scene;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
-import javafx.scene.text.TextFlow;
-import javafx.stage.Stage;
-import kintsugi3d.builder.javafx.controllers.scene.ImgThreadCompatibleController;
+import kintsugi3d.builder.javafx.controllers.menubar.ImgSelectionThread;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import javafx.scene.image.ImageView;
 
-import java.awt.*;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class ChunkViewerController extends ImgThreadCompatibleController {
-    //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"
-    //suppress warning?
+public class ModelExaminationController extends ImgThreadCompatibleController{
+    //TODO: NEED TO FIX VIEWER NOT DISPLAYING THE CORRECT IMAGE
 
-    private static final Logger log = LoggerFactory.getLogger(ChunkViewerController.class);
-    @FXML
-    public TreeView<String> chunkTreeView;
+    private static final Logger log = LoggerFactory.getLogger(ModelExaminationController.class);
+    @FXML private TreeView<String> chunkTreeView;
 
-    @FXML public Text imgViewText;
+    @FXML private Text imgViewText;
     static final String[] VALID_EXTENSIONS = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
 
     static final int THUMBNAIL_SIZE = 30;
-    @FXML
-    public ChoiceBox<String> newChunkSelectionChoiceBox;//allows the user to select a new chunk to view
-
-    @FXML public Button selectChunkButton;
-
     private ImgSelectionThread loadImgThread;
 
     public void initializeChunkSelectionAndTreeView(MetashapeObjectChunk metashapeObjectChunk) {
@@ -66,13 +50,6 @@ public class ChunkViewerController extends ImgThreadCompatibleController {
         String chunkName = metashapeObjectChunk.getChunkName();
         TreeItem<String> rootItem = new TreeItem<>(chunkName);
         chunkTreeView.setRoot(rootItem);
-
-        //initialize options in new chunk selection choice box (cannot be done before chunkName is set)
-        initializeChoiceBox();
-        this.newChunkSelectionChoiceBox.setOnAction(this::updateSelectChunkButton);
-
-        //disable select chunk button if selected chunk (in choice box) matches the current chunk
-        updateSelectChunkButton();
 
         //fill thumbnail list
         ArrayList <Image> thumbnailImageList = (ArrayList<Image>) metashapeObjectChunk.loadThumbnailImageList();
@@ -90,7 +67,7 @@ public class ChunkViewerController extends ImgThreadCompatibleController {
 
             Element parent = (Element) camera.getParentNode();
             TreeItem<String> destinationItem; //stores the node which the image will be added to
-                                                // (either a group or the root node)
+            // (either a group or the root node)
             if(parent.getTagName().equals("group")){
                 String groupName = parent.getAttribute("label");//TODO: CURRENTLY ONLY CHECKS TO SEE IF NAMES MATCH
 
@@ -140,33 +117,6 @@ public class ChunkViewerController extends ImgThreadCompatibleController {
         chunkTreeView.getRoot().setExpanded(true);
     }
 
-    public void selectChunk(ActionEvent actionEvent) throws IOException {
-        Scene scene;
-        Parent root;
-        Stage stage;
-
-        String currentChunkName = this.metashapeObjectChunk.getChunkName();
-        String selectedChunkName = this.newChunkSelectionChoiceBox.getValue();
-
-        MetashapeObject metashapeObject = this.metashapeObjectChunk.getMetashapeObject();
-
-        if (!selectedChunkName.equals(currentChunkName)) {//only change scene if switching to new chunk
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/menubar/ChunkViewer.fxml"));
-            root = fxmlLoader.load();
-            ChunkViewerController chunkViewerController = fxmlLoader.getController();
-
-            MetashapeObjectChunk newMetashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, selectedChunkName);
-            chunkViewerController.initializeChunkSelectionAndTreeView(newMetashapeObjectChunk);
-
-            stage = (Stage) ((javafx.scene.Node) actionEvent.getSource()).getScene().getWindow();
-            scene = new Scene(root);
-            stage.setScene(scene);
-            stage.show();
-        } else {
-            Toolkit.getDefaultToolkit().beep();
-        }
-    }
-
     public void selectImageInTreeView() {
         //selectedItem holds the cameraID associated with the image
         TreeItem<String> selectedItem = chunkTreeView.getSelectionModel().getSelectedItem();
@@ -201,8 +151,8 @@ public class ChunkViewerController extends ImgThreadCompatibleController {
         File psxFile = new File(psxFilePath);
 
         imgViewText.setText("File: " + psxFile.getName() +
-                            "\nChunk: " + chunkName +
-                            "\nImage: " + imageName);
+                "\nChunk: " + chunkName +
+                "\nImage: " + imageName);
 
         textFlow.setTextAlignment(TextAlignment.LEFT);
     }
@@ -214,28 +164,6 @@ public class ChunkViewerController extends ImgThreadCompatibleController {
                 snapshot(new SnapshotParameters(), null));
     }
 
-    private void initializeChoiceBox() {
-        MetashapeObject metashapeObject = this.metashapeObjectChunk.getMetashapeObject();
-        String chunkName = this.metashapeObjectChunk.getChunkName();
-
-        //add all items from old checkbox to new checkbox
-        this.newChunkSelectionChoiceBox.getItems().addAll(metashapeObject.getChunkNames());
-
-        //initialize checkbox to selected chunk (instead of blank) if possible
-        //otherwise, set to first item in list
-        try {
-            this.newChunkSelectionChoiceBox.setValue(chunkName);
-        } catch (Exception e) {
-            if (this.newChunkSelectionChoiceBox.getItems() != null) {
-                this.newChunkSelectionChoiceBox.setValue(this.newChunkSelectionChoiceBox.getItems().get(0));
-            }
-        }
-
-        if (this.newChunkSelectionChoiceBox.getItems().size() <= 1) {
-            selectChunkButton.setDisable(true);
-        }
-    }
-
     private boolean isValidImageType(String path) {
         for (String extension : VALID_EXTENSIONS) {
             if (path.matches("." + extension)) {
@@ -243,26 +171,5 @@ public class ChunkViewerController extends ImgThreadCompatibleController {
             }
         }
         return false;
-    }
-
-    public void updateSelectChunkButton(ActionEvent actionEvent) {
-        //need to keep the unused ActionEvent so we can link this method to the choice box
-        String selectedChunk = this.newChunkSelectionChoiceBox.getValue();
-        String currentChunkName = this.metashapeObjectChunk.getChunkName();
-
-        if (selectedChunk == null){
-            return;
-        }
-
-        if (selectedChunk.equals(currentChunkName)) {
-            selectChunkButton.setDisable(true);
-            selectChunkButton.setText("Chunk already selected");
-        } else {
-            selectChunkButton.setDisable(false);
-            selectChunkButton.setText("Select Chunk");
-        }
-    }
-    public void updateSelectChunkButton() {
-        updateSelectChunkButton(new ActionEvent());
     }
 }

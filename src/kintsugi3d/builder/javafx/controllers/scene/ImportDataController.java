@@ -13,8 +13,11 @@ package kintsugi3d.builder.javafx.controllers.scene;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
@@ -25,12 +28,13 @@ import javafx.scene.text.Text;
 import javafx.stage.*;
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
-import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObject;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -188,19 +192,33 @@ public class ImportDataController implements Initializable {
     }
 
     @FXML
-    private void okButtonPress()
-    {
+    private void okButtonPress(ActionEvent actionEvent) throws IOException {
         if (areComponentsLoaded())
         {
-            callback.run();
+//            callback.run();
+//
+//            new Thread(() ->
+//                    MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(
+//                            cameraFile.getPath(), cameraFile, objFile, photoDir,
+//                            primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
+//                    .start();
 
-            new Thread(() ->
-                    MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(
-                            cameraFile.getPath(), cameraFile, objFile, photoDir,
-                            primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
-                    .start();
+            //open 3d viewport/model examination window
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/scene/ModelExamination.fxml"));
+            Parent newRoot = fxmlLoader.load();
 
-            close();
+            ModelExaminationController controller = fxmlLoader.getController();
+
+            //TODO: what conditionals to put here?
+            MetashapeObject metashapeObject = new MetashapeObject(metashapePsxFile.getAbsolutePath());
+            MetashapeObjectChunk metashapeObjectChunk = new MetashapeObjectChunk(
+                    metashapeObject,chunkSelectionChoiceBox.getValue());
+            controller.initializeChunkSelectionAndTreeView(metashapeObjectChunk);
+
+            Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
+            Scene scene = new Scene(newRoot);
+            stage.setScene(scene);
+            stage.show();
         }
     }
 

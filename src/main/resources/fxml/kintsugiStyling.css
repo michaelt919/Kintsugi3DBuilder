@@ -172,6 +172,31 @@ dialog-pane{
     -fx-fill:#ffffff;
 }
 
+.tree-cell .arrow {
+    -fx-background-color: #ffffff;
+}
+
+
+.tree-cell:even{
+    -fx-background-color: #333333; /* Even cell background color */
+}
+
+.tree-cell:odd{
+    -fx-background-color: #272727; /* Odd cell background color */
+}
+
+.tree-cell:selected{
+    -fx-background-color:#D4AA00; /*Kintsugi yellow (as of August 10, 2023)*/
+}
+
+.tree-cell:selected .text{
+    -fx-fill: #000000;
+}
+
+.tree-cell: selected .arrow{
+    -fx-background-color: #000000;
+}
+
 .toggle-button:selected .text{
     -fx-fill: #000000;
 }

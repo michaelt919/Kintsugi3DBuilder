@@ -15,6 +15,7 @@ package kintsugi3d.builder.javafx.controllers.menubar;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
+import kintsugi3d.builder.javafx.controllers.scene.ImgThreadCompatibleController;
 import org.w3c.dom.Element;
 
 import javax.imageio.ImageIO;
@@ -30,13 +31,13 @@ public class ImgSelectionThread extends ChunkViewerController implements Runnabl
     private volatile boolean stopRequested = false;
     private volatile boolean isRunning = false;
 
-    public ImgSelectionThread(String imageName, ChunkViewerController chunkViewerController) {
+    public ImgSelectionThread(String imageName, ImgThreadCompatibleController controller) {
         this.imageName = imageName;
 
-        this.chunkViewerImgView = chunkViewerController.chunkViewerImgView;
-        this.imgViewLabel = chunkViewerController.imgViewLabel;
-        this.metashapeObjectChunk = chunkViewerController.metashapeObjectChunk;
-        this.textFlow = chunkViewerController.textFlow;
+        this.chunkViewerImgView = controller.chunkViewerImgView;
+        this.imgViewText = controller.imgViewLabel;
+        this.metashapeObjectChunk = controller.metashapeObjectChunk;
+        this.textFlow = controller.textFlow;
     }
 
     @Override
@@ -75,12 +76,12 @@ public class ImgSelectionThread extends ChunkViewerController implements Runnabl
                     }
                 }
                 else{//camera not found in xml document
-                    imgViewLabel.setText(imgViewLabel.getText() +
+                    imgViewText.setText(imgViewText.getText() +
                             " (full res image not found)");
                 }
             }
         } catch (IllegalArgumentException e) {//could not find image
-            imgViewLabel.setText(imgViewLabel.getText() + " (full res image not found)");
+            imgViewText.setText(imgViewText.getText() + " (full res image not found)");
             e.printStackTrace();
         } catch (IOException e) {
             throw new RuntimeException(e);
