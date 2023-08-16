@@ -54,7 +54,7 @@
 }
 
 dialog-pane{
-    -fx-background-color:#000000;
+    -fx-background-color:#ff0000;
 }
 
 .grid-pane{
@@ -151,7 +151,8 @@ dialog-pane{
 }
 
 .text{
-    -fx-fill: #FFFFFF;
+    -fx-fill: #ffFFFF;
+    -fx-base: #000000;
 }
 
 .text-field{

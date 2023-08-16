@@ -91,6 +91,7 @@ public class MenubarController
     private final Flag consoleWindowOpen = new Flag(false);
     private Flag systemSettingsModalOpen = new Flag(false);
 
+    private Flag aboutWindowOpen = new Flag(false);
 
 
     @FXML private ProgressBar progressBar;
@@ -616,27 +617,10 @@ public class MenubarController
     {
         try
         {
-            List<String> lines = Files.readAllLines(new File("kintsugi3d-builder-about.txt").toPath());
-            String contentText = String.join(System.lineSeparator(), lines);
 
-            javafx.scene.control.ScrollPane scrollPane = new javafx.scene.control.ScrollPane();
-            Text contentTextElement = new Text(contentText);
-
-            //TODO: APPLY DARK MODE TO ABOUT SECTION
-
-            //Set the desired width for the text (screen width / 3)
-            contentTextElement.setWrappingWidth(Screen.getPrimary().getVisualBounds().getWidth()/3);
-            scrollPane.setContent(contentTextElement);
-
-            Alert alert = new Alert(AlertType.INFORMATION);
-            alert.setTitle("About Kintsugi 3D Builder");
-            alert.setHeaderText("About Kintsugi 3D Builder");
-            alert.initOwner(this.window);
-            alert.initModality(Modality.NONE);
-            alert.setResizable(true);
-            alert.getDialogPane().setContent(scrollPane);
-            alert.show();
-            alert.setY(70.0);
+            AboutController aboutController = makeWindow(
+                    "About Kintsugi 3D Builder", aboutWindowOpen, "fxml/menubar/About.fxml");
+            aboutController.init();
 
         }
         catch (IOException e)
