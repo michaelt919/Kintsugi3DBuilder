@@ -74,6 +74,7 @@ public final class Kintsugi3DBuilder
 
             log.info("Starting Render Window");
             Rendering.runProgram(args);
+            // TODO System.exit() call for standalone graphics window?
         }
         else
         {
@@ -95,6 +96,7 @@ public final class Kintsugi3DBuilder
 
             log.info("Starting JavaFX UI");
             MainApplication.launchWrapper("");
+            System.exit(0);
         }
     }
 }
