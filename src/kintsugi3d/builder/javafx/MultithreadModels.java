@@ -33,7 +33,6 @@ public final class MultithreadModels implements Kintsugi3DBuilderState
     private final ProjectModel projectModel;
 
     private final SettingsModel settingsModel;
-    private final UserPreferencesModel userPreferencesModel;
     private final LoadOptionsModel loadOptionsModel;
     private final SceneViewportModel sceneViewportModel;
     private final CanvasModel canvasModel;
@@ -59,7 +58,6 @@ public final class MultithreadModels implements Kintsugi3DBuilderState
         canvasModel = new CanvasModelImpl();
         loadingModel = new LoadingModel();
         loadingModel.setLoadOptionsModel(loadOptionsModel);
-        userPreferencesModel = GlobalUserPreferencesManager.getInstance().getPreferences();
     }
 
     @Override
@@ -90,12 +88,6 @@ public final class MultithreadModels implements Kintsugi3DBuilderState
     public SettingsModel getSettingsModel()
     {
         return settingsModel;
-    }
-
-    @Override
-    public UserPreferencesModel getUserPreferencesModel()
-    {
-        return userPreferencesModel;
     }
 
     @Override

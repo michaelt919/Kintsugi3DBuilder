@@ -274,8 +274,7 @@ public class MainApplication extends Application
         log.info("Loading user preferences from file {}", JacksonUserPreferencesSerializer.getPreferencesFile());
         GlobalUserPreferencesManager.getInstance().load();
 
-        List<Exception> filtered = GlobalUserPreferencesManager.getInstance().getSerializerStartupExceptions().stream().filter(e -> !(e instanceof FileNotFoundException)).collect(Collectors.toList());
-        if (!filtered.isEmpty())
+        if (GlobalUserPreferencesManager.getInstance().hasStartupFailures())
         {
             ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
             ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);

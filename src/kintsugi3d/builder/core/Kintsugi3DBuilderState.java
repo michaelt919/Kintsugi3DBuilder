@@ -29,8 +29,6 @@ public interface Kintsugi3DBuilderState
      */
     SettingsModel getSettingsModel();
 
-    UserPreferencesModel getUserPreferencesModel();
-
     CanvasModel getCanvasModel();
 
     SceneViewportModel getSceneViewportModel();

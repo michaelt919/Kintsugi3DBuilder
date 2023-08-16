@@ -16,6 +16,7 @@ import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerializer;
 import kintsugi3d.builder.preferences.serialization.UserPreferencesSerializer;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -85,5 +86,11 @@ public class GlobalUserPreferencesManager
     {
         preferencesModel = serializer.readOrDefault();
         modelLoaded = true;
+    }
+
+    public boolean hasStartupFailures()
+    {
+        return this.getSerializerStartupExceptions().stream()
+                .anyMatch(e -> !(e instanceof FileNotFoundException));
     }
 }
