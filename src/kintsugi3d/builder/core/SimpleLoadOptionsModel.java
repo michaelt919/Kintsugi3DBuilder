@@ -140,7 +140,8 @@ public class SimpleLoadOptionsModel implements LoadOptionsModel
         return iccTransformationRequested;
     }
 
-    public void setIccTransformationRequested(boolean iccTransformationRequested)
+    @Override
+    public void setICCTransformationRequested(boolean iccTransformationRequested)
     {
         this.iccTransformationRequested = iccTransformationRequested;
     }
@@ -187,6 +188,7 @@ public class SimpleLoadOptionsModel implements LoadOptionsModel
         return maxLoadingThreads;
     }
 
+    @Override
     public void setMaxLoadingThreads(int maxLoadingThreads)
     {
         this.maxLoadingThreads = maxLoadingThreads;

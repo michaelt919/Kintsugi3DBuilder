@@ -22,6 +22,8 @@ public interface LoadOptionsModel extends ReadonlyLoadOptionsModel
     void setColorImagesRequested(boolean colorImagesRequested);
     void setMipmapsRequested(boolean mipmapsRequested);
     void setCompressionRequested(boolean compressionRequested);
+    void setICCTransformationRequested(boolean iccTransformationRequested);
+    void setMaxLoadingThreads(int maxLoadingThreads);
     void setDepthImagesRequested(boolean depthImagesRequested);
     void setDepthImageWidth(int depthImageWidth);
     void setDepthImageHeight(int depthImageHeight);

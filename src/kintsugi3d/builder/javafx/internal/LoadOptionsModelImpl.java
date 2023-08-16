@@ -117,6 +117,18 @@ public class LoadOptionsModelImpl implements LoadOptionsModel
     }
 
     @Override
+    public void setICCTransformationRequested(boolean iccTransformationRequested)
+    {
+        icc.setValue(iccTransformationRequested);
+    }
+
+    @Override
+    public void setMaxLoadingThreads(int maxLoadingThreads)
+    {
+        this.maxLoadingThreads.setValue(maxLoadingThreads);
+    }
+
+    @Override
     public void setDepthImagesRequested(boolean depthImagesRequested)
     {
         depthImages.setValue(depthImagesRequested);
