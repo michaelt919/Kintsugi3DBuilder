@@ -19,6 +19,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -186,10 +188,12 @@ public class ConsoleController implements Initializable
                             if (message.getLogLevel() == Level.ERROR)
                             {
                                 setStyle("-fx-background-color: #fa6d6d");
+                                //TODO: MAKE TEXT BLACK
                             }
                             else if (message.getLogLevel() == Level.WARN)
                             {
                                 setStyle("-fx-background-color: #fab66d");
+                                //TODO: MAKE TEXT BLACK
                             }
                             else
                             {

@@ -16,7 +16,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<GridPane fx:id="root" hgap="15.0" styleClass="grid-pane" stylesheets="@../systemSettingsStyling.css" vgap="15.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController">
+<GridPane fx:id="root" hgap="15.0" styleClass="grid-pane" stylesheets="@../../kintsugiStyling.css" vgap="15.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController">
     <CheckBox fx:id="occlusionCheckBox" mnemonicParsing="false" styleClass="checkbox" prefHeight="27.0" prefWidth="260.0" text="Visibility/shadow testing" GridPane.columnSpan="2" GridPane.rowIndex="4">
       <font>
          <Font size="18.0" />
