@@ -386,7 +386,14 @@ public class WelcomeWindowController {
         log.error("{}:", message, e);
         Platform.runLater(() ->
         {
-            new Alert(Alert.AlertType.ERROR, message + "\nSee the log for more info.").show();
+            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+            ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
+            Alert alert = new Alert(Alert.AlertType.ERROR, message + "\nSee the log for more info.", ok, showLog);
+            ((Button) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
+                // Use the menubar's console open function to prevent 2 console windows from appearing
+                MenubarController.getInstance().help_console();
+            });
+            alert.show();
         });
     }
 
