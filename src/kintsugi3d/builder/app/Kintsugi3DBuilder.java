@@ -21,6 +21,7 @@ import kintsugi3d.gl.interactive.InitializationException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 public final class Kintsugi3DBuilder
 {
@@ -35,18 +36,32 @@ public final class Kintsugi3DBuilder
         // Dynamically set the log directory based on the OS before instantiating a logger
         if (System.getProperty("Kintsugi3D.logDir") == null)
         {
-            ReadOnlyDirectoryPreferencesModel directoryPreferences = GlobalUserPreferencesManager.getInstance().getPreferences().getDirectoryPreferences();
-            if (directoryPreferences.getLogFileDirectory() != null)
-            {
-                System.setProperty("Kintsugi3D.logDir", directoryPreferences.getLogFileDirectory().toString());
-            }
-            else
-            {
-                System.setProperty("Kintsugi3D.logDir", ApplicationFolders.getUserAppDirectory() + "/logs");
-            }
+            System.setProperty("Kintsugi3D.logDir", ApplicationFolders.getLogFileDirectory().toAbsolutePath().toString());
         }
 
         Logger log = LoggerFactory.getLogger(Kintsugi3DBuilder.class);
+        log.debug("Logger initialized");
+
+        // Log any exceptions that may have occurred while loading the log file directory from preferences
+        List<Exception> startupExceptions = GlobalUserPreferencesManager.getInstance().getSerializerStartupExceptions();
+        for (Exception e : startupExceptions)
+        {
+            log.error("A user preferences exception occurred during pre-logger application startup", e);
+        }
+
+        if (!startupExceptions.isEmpty())
+        {
+            log.warn("Exceptions occurred while attempting to read the user preferences file, and the default preferences were likely restored.");
+        }
+
+        // Log all directories that will be used for session
+        log.info("Application log file directory: {}", ApplicationFolders.getLogFileDirectory());
+        log.info("Application data directory: {}", ApplicationFolders.getUserAppDirectory());
+        log.info("Application cache directory: {}", ApplicationFolders.getUserCacheDirectory());
+        log.info("Application system data directory: {}", ApplicationFolders.getSystemAppDirectory());
+        log.info("Application installation directory: {}", ApplicationFolders.getInstallationDirectory());
+        log.info("Preview images root directory: {}", ApplicationFolders.getPreviewImagesRootDirectory());
+        log.info("Fit cache root directory: {}", ApplicationFolders.getFitCacheRootDirectory());
 
         //allow render thread to modify user interface thread
         System.setProperty("glass.disableThreadChecks", "true");

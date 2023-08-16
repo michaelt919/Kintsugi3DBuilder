@@ -93,23 +93,8 @@ public class SimpleSettingsModel extends SettingsModelBase
         });
     }
 
-    //TODO: Maybe extract these create*Setting functions to SettingsModel? Or should components NOT have the ability to make new keys?
-    public void createBooleanSetting(String name, boolean initialValue, boolean serialize)
-    {
-        createSetting(name, Boolean.class, initialValue, serialize);
-    }
-
-    public void createNumericSetting(String name, Number initialValue, boolean serialize)
-    {
-        createSetting(name, Number.class, initialValue, serialize);
-    }
-
-    public void createObjectSetting(String name, Object initialValue, boolean serialize)
-    {
-        createSetting(name, initialValue.getClass(), initialValue, serialize);
-    }
-
-    private void createSetting(String name, Class<?> type, Object initialValue, boolean serialize)
+    @Override
+    public void createSetting(String name, Class<?> type, Object initialValue, boolean serialize)
     {
         settingMap.put(name, new Setting()
         {

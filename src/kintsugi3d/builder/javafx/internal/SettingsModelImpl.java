@@ -374,7 +374,8 @@ public class SettingsModelImpl extends SettingsModelBase
         throw new NoSuchElementException("No setting called \"" + name + " exists of type " + settingType);
     }
 
-    private void createObjectSettingInternal(String name, Class<?> settingType, Object initialValue, boolean serialize)
+    @Override
+    public void createSetting(String name, Class<?> settingType, Object initialValue, boolean serialize)
     {
         if(settingsMap.containsKey(name))
         {
@@ -384,41 +385,6 @@ public class SettingsModelImpl extends SettingsModelBase
         {
             settingsMap.put(name, new TypedPropertyNonGenericImpl(settingType, initialValue, serialize));
         }
-    }
-
-    public void createBooleanSetting(String name, boolean initialValue)
-    {
-        createBooleanSetting(name, initialValue, false);
-    }
-
-    public void createBooleanSetting(String name, boolean initialValue, boolean serialize)
-    {
-        createObjectSettingInternal(name, Boolean.class, initialValue, serialize);
-    }
-
-    public void createNumericSetting(String name, Number initialValue)
-    {
-        createNumericSetting(name, initialValue, false);
-    }
-
-    public void createNumericSetting(String name, Number initialValue, boolean serialize)
-    {
-        createObjectSettingInternal(name, Number.class, initialValue, serialize);
-    }
-
-    public void createObjectSetting(String name, Object initialValue)
-    {
-        createObjectSetting(name, initialValue, false);
-    }
-
-    public void createObjectSetting(String name, Object initialValue, boolean serialize)
-    {
-        createObjectSettingInternal(name, initialValue.getClass(), initialValue, serialize);
-    }
-
-    public <T> void createObjectSetting(String name, Class<T> settingType, T initialValue, boolean serialize)
-    {
-        createObjectSettingInternal(name, settingType, initialValue, serialize);
     }
 
     public <T> void createSettingFromProperty(String name, Class<T> settingType, Property<T> property)

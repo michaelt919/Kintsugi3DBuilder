@@ -16,18 +16,19 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
 import kintsugi3d.builder.preferences.ReadOnlyUserPreferencesModel;
 import kintsugi3d.builder.preferences.UserPreferencesModel;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class JacksonUserPreferencesSerializer implements UserPreferencesSerializer
 {
-    private static final File DIRECTORY = ApplicationFolders.getUserAppDirectory();
+    private static final File DIRECTORY = ApplicationFolders.getUserAppDirectory().toFile();
     private static final String FILE_NAME = "preferences.json";
+    private final List<Exception> startupExceptions = new ArrayList<>();
 
     @Override
     public void writeUserPreferences(ReadOnlyUserPreferencesModel preferencesModel) throws IOException
@@ -53,24 +54,19 @@ public class JacksonUserPreferencesSerializer implements UserPreferencesSerializ
             return readUserPreferences();
         } catch (IOException e)
         {
+            startupExceptions.add(e);
             return UserPreferencesModel.createDefault();
         }
+    }
+
+    @Override
+    public List<Exception> getStartupExceptions()
+    {
+        return startupExceptions;
     }
 
     public static File getPreferencesFile()
     {
         return new File(DIRECTORY, FILE_NAME);
-    }
-
-    public static void main(String[] args) throws Exception
-    {
-        GlobalUserPreferencesManager manager = GlobalUserPreferencesManager.getInstance();
-        manager.load();
-
-        MultithreadModels.getInstance().getLoadOptionsModel().setCompressionRequested(false);
-        MultithreadModels.getInstance().getLoadOptionsModel().setDepthImageWidth(69);
-        MultithreadModels.getInstance().getLoadOptionsModel().setDepthImageHeight(420);
-
-        manager.save();
     }
 }

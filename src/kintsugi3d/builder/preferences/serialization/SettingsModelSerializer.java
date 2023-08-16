@@ -21,6 +21,9 @@ import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.gl.vecmath.Vector2;
+import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.gl.vecmath.Vector4;
+import kintsugi3d.util.ShadingParameterMode;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,26 +55,32 @@ public class SettingsModelSerializer extends StdSerializer<SettingsModel>
                 continue;
             }
 
-            jGen.writeObjectField(setting.getName(), setting.getValue());
+            if (shouldStandardSerialize(setting.getType()))
+            {
+                jGen.writeObjectField(setting.getName(), setting.getValue());
+            }
+            else
+            {
+                jGen.writeObjectFieldStart(setting.getName());
+
+                jGen.writeObjectField("$TYPE", setting.getType());
+                jGen.writeObjectField("$VALUE", setting.getValue());
+
+                jGen.writeEndObject();
+            }
         }
 
         jGen.writeEndObject();
     }
 
-    public static void main(String[] args) throws Exception
+    private boolean shouldStandardSerialize(Class<?> type)
     {
-        SettingsModelImpl model = new SettingsModelImpl();
-        model.createBooleanSetting("lightCalibrationMode", false, true);
-        model.createObjectSetting("currentLightCalibration", Vector2.ZERO, true);
-        model.createBooleanSetting("occlusionEnabled", true);
-        model.createBooleanSetting("fresnelEnabled", false);
-        model.createNumericSetting("serializedNumericSettingA", 123, true);
+        if (type.isAssignableFrom(Boolean.class) || type.isAssignableFrom(Number.class) || type.isAssignableFrom(String.class))
+            return true;
 
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(new File("X:\\CHViewer\\test.json"), (ReadonlySettingsModel) model);
+        if (type.isAssignableFrom(Vector2.class) || type.isAssignableFrom(Vector3.class) || type.isAssignableFrom(Vector4.class))
+            return true;
 
-        ObjectReader reader = mapper.readerFor(SettingsModel.class);
-        SettingsModel readModel = reader.readValue(new File("X:\\CHViewer\\test.json"));
-        System.out.println("Complete");
+        return false;
     }
 }

@@ -13,14 +13,17 @@
 package kintsugi3d.builder.javafx;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -29,10 +32,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
+import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
 import javafx.scene.image.Image;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -272,6 +273,18 @@ public class MainApplication extends Application
         // Load user preferences, injecting where needed
         log.info("Loading user preferences from file {}", JacksonUserPreferencesSerializer.getPreferencesFile());
         GlobalUserPreferencesManager.getInstance().load();
+
+        List<Exception> filtered = GlobalUserPreferencesManager.getInstance().getSerializerStartupExceptions().stream().filter(e -> !(e instanceof FileNotFoundException)).collect(Collectors.toList());
+        if (!filtered.isEmpty())
+        {
+            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+            ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
+            Alert alert = new Alert(AlertType.WARNING, "An error occurred loading your user preferences, and they may have been reverted to their defaults. No action is needed.\nCheck the log for more info.", ok, showLog);
+            ((Button) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
+                menuBarController.help_console(null);
+            });
+            alert.show();
+        }
 
         //distribute to controllers
         sceneController.init(

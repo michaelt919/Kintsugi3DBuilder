@@ -16,6 +16,7 @@ import kintsugi3d.builder.preferences.ReadOnlyUserPreferencesModel;
 import kintsugi3d.builder.preferences.UserPreferencesModel;
 
 import java.io.IOException;
+import java.util.List;
 
 public interface UserPreferencesSerializer
 {
@@ -24,4 +25,6 @@ public interface UserPreferencesSerializer
     UserPreferencesModel readUserPreferences() throws IOException;
 
     UserPreferencesModel readOrDefault();
+
+    List<Exception> getStartupExceptions();
 }

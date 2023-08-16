@@ -16,12 +16,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import kintsugi3d.builder.core.LoadOptionsModel;
 import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
 import kintsugi3d.builder.core.SimpleLoadOptionsModel;
+import kintsugi3d.builder.state.ReadonlySettingsModel;
+import kintsugi3d.builder.state.SettingsModel;
+import kintsugi3d.builder.state.impl.SimpleSettingsModel;
 
 public class UserPreferencesModel implements ReadOnlyUserPreferencesModel
 {
     private LoadOptionsModel loadOptionsModel = new SimpleLoadOptionsModel();
 
     private DirectoryPreferencesModel directoryPreferencesModel = SimpleDirectoryPreferencesModel.createDefault();
+
+    private SettingsModel settingsModel = new SimpleSettingsModel();
 
     private UserPreferencesModel() {}
 
@@ -53,6 +58,13 @@ public class UserPreferencesModel implements ReadOnlyUserPreferencesModel
         return directoryPreferencesModel;
     }
 
+    @Override
+    @JsonIgnore
+    public ReadonlySettingsModel getReadOnlySettings()
+    {
+        return settingsModel;
+    }
+
     public DirectoryPreferencesModel getDirectoryPreferences()
     {
         return directoryPreferencesModel;
@@ -71,5 +83,15 @@ public class UserPreferencesModel implements ReadOnlyUserPreferencesModel
     public void setLoadOptions(LoadOptionsModel loadOptionsModel)
     {
         this.loadOptionsModel = loadOptionsModel;
+    }
+
+    public SettingsModel getSettings()
+    {
+        return settingsModel;
+    }
+
+    public void setSettings(SettingsModel settingsModel)
+    {
+        this.settingsModel = settingsModel;
     }
 }

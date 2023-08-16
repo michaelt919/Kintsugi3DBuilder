@@ -13,8 +13,10 @@
 package kintsugi3d.builder.preferences;
 
 import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
+import kintsugi3d.builder.state.ReadonlySettingsModel;
 
 import java.nio.file.Path;
+import java.util.Iterator;
 
 public class ReadOnlyMergedUserPreferencesModel implements ReadOnlyUserPreferencesModel
 {
@@ -73,6 +75,49 @@ public class ReadOnlyMergedUserPreferencesModel implements ReadOnlyUserPreferenc
             public Path getPreferencesFileLocation()
             {
                 return nullableOverride(baseDirs.getPreferencesFileLocation(), overrideDirs.getPreferencesFileLocation());
+            }
+        };
+    }
+
+    @Override
+    public ReadonlySettingsModel getReadOnlySettings()
+    {
+        return new ReadonlySettingsModel() //TODO
+        {
+            @Override
+            public Object getObject(String name)
+            {
+                return null;
+            }
+
+            @Override
+            public <T> T get(String name, Class<T> settingType)
+            {
+                return null;
+            }
+
+            @Override
+            public Class<?> getType(String name)
+            {
+                return null;
+            }
+
+            @Override
+            public boolean exists(String name)
+            {
+                return false;
+            }
+
+            @Override
+            public boolean shouldSerialize(String name)
+            {
+                return false;
+            }
+
+            @Override
+            public Iterator<Setting> iterator()
+            {
+                return null;
             }
         };
     }

@@ -261,7 +261,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
             }
 
             // Image cache settings
-            settings.getImageCacheSettings().setCacheParentDirectory(new File(ApplicationFolders.getUserCacheDirectory(), "fit")); //TODO: expose to UI
+            settings.getImageCacheSettings().setCacheParentDirectory(ApplicationFolders.getFitCacheRootDirectory().toFile());
             settings.getImageCacheSettings().setTextureWidth(settings.getTextureFitSettings().width);
             settings.getImageCacheSettings().setTextureHeight(settings.getTextureFitSettings().height);
             settings.getImageCacheSettings().setTextureSubdiv( // TODO expose this in the interface
