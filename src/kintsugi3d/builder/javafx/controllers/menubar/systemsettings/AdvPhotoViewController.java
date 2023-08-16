@@ -7,10 +7,9 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
-package kintsugi3d.builder.javafx.controllers.menubar;//Created by alexk on 7/31/2017.
+package kintsugi3d.builder.javafx.controllers.menubar.systemsettings;//Created by alexk on 7/31/2017.
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -23,14 +22,16 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
+import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
 import kintsugi3d.builder.javafx.util.SafeDecimalNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.util.ShadingParameterMode;
 
-public class AdvPhotoViewController implements Initializable
+public class AdvPhotoViewController implements Initializable, SystemSettingsControllerBase
 {//used to be called IBR Options
+    //TODO: LOOK AT FORMATTING OF SLIDERS (text is hard to read)
     @FXML private TextField buehlerTextField;
     @FXML private CheckBox buehlerCheckBox;
     @FXML private CheckBox occlusionCheckBox;
@@ -50,26 +51,7 @@ public class AdvPhotoViewController implements Initializable
     @Override
     public void initialize(URL location, ResourceBundle resources)
     {
-        weightModeChoiceBox.setConverter(new StringConverter<ShadingParameterMode>()
-        {
-            @Override
-            public String toString(ShadingParameterMode object)
-            {
-                return object.name();
-            }
-
-            @Override
-            public ShadingParameterMode fromString(String string)
-            {
-                return ShadingParameterMode.valueOf(string);
-            }
-        });
-        weightModeChoiceBox.getItems().addAll(ShadingParameterMode.values());
-
-        StaticUtilities.makeClampedNumeric(1, 5, gammaTextField);
-        StaticUtilities.makeClampedNumeric(1, 1000000, weightExponentTextField);
-        StaticUtilities.makeClampedNumeric(0, 1, isotropyFactorTextField);
-        StaticUtilities.makeClampedNumeric(0, 0.1, occlusionBiasTextField);
+        init();
     }
 
     public void bind(SettingsModelImpl injectedSettingsModel)
@@ -99,7 +81,10 @@ public class AdvPhotoViewController implements Initializable
             new SafeDecimalNumberStringConverter(0.0025f));
 
         this.settingsModel = injectedSettingsModel;
-        root.getScene().getWindow().setOnCloseRequest(param -> unbind());
+
+        //TODO: NEED TO UNBIND PARAMETERS UPON CLOSING
+        //uncommenting this will lead to exceptions when opening the new settings modal
+//        root.getScene().getWindow().setOnCloseRequest(param -> unbind());
     }
 
     private void unbind()
@@ -122,5 +107,34 @@ public class AdvPhotoViewController implements Initializable
 
         occlusionBiasSlider.valueProperty().unbindBidirectional(settingsModel.getNumericProperty("occlusionBias"));
         occlusionBiasTextField.textProperty().unbindBidirectional(settingsModel.getNumericProperty("occlusionBias"));
+    }
+
+    @Override
+    public void init() {
+        weightModeChoiceBox.setConverter(new StringConverter<ShadingParameterMode>()
+        {
+            @Override
+            public String toString(ShadingParameterMode object)
+            {
+                return object.name();
+            }
+
+            @Override
+            public ShadingParameterMode fromString(String string)
+            {
+                return ShadingParameterMode.valueOf(string);
+            }
+        });
+        weightModeChoiceBox.getItems().addAll(ShadingParameterMode.values());
+
+        StaticUtilities.makeClampedNumeric(1, 5, gammaTextField);
+        StaticUtilities.makeClampedNumeric(1, 1000000, weightExponentTextField);
+        StaticUtilities.makeClampedNumeric(0, 1, isotropyFactorTextField);
+        StaticUtilities.makeClampedNumeric(0, 0.1, occlusionBiasTextField);
+    }
+
+    @Override
+    public void bindInfo(InternalModels internalModels) {
+        bind(internalModels.getSettingsModel());
     }
 }

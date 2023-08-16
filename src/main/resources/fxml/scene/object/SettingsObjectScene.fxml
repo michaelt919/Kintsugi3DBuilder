@@ -16,9 +16,9 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox fx:id="root" prefWidth="400.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.object.SettingsObjectSceneController">
-   <TitledPane animated="false" text="Center">
-      <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+<VBox styleClass="vbox" fx:id="root" prefWidth="400.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.object.SettingsObjectSceneController">
+   <TitledPane styleClass="titled-pane" animated="false" text="Center">
+      <GridPane styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
          <padding>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
          </padding>
@@ -49,8 +49,8 @@
          </rowConstraints>
       </GridPane>
    </TitledPane>
-   <TitledPane animated="false" text="Rotation">
-      <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+   <TitledPane styleClass="titled-pane" animated="false" text="Rotation">
+      <GridPane styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
          <padding>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
          </padding>
@@ -75,27 +75,26 @@
          </rowConstraints>
       </GridPane>
    </TitledPane>
-   <TitledPane animated="false" text="Scale">
-      <content>
-         <GridPane prefHeight="77.0" prefWidth="398.0" vgap="10.0">
-           <columnConstraints>
-             <ColumnConstraints hgrow="SOMETIMES" maxWidth="83.0" minWidth="10.0" prefWidth="41.66667048136393" />
-             <ColumnConstraints hgrow="SOMETIMES" maxWidth="106.99999618530273" minWidth="10.0" prefWidth="47.999992370605476" />
-               <ColumnConstraints maxWidth="289.66667429606116" minWidth="230.0" prefWidth="289.66667429606116" />
-           </columnConstraints>
-            <Label text="Scale:" GridPane.halignment="LEFT" GridPane.rowIndex="0" />
-            <TextField fx:id="scaleTxtField" prefHeight="25.0" prefWidth="56.0" GridPane.columnIndex="1" />
-            <Slider fx:id="scaleSlider" majorTickUnit="0.5" max="2.0" maxWidth="-Infinity" min="-2.0" prefHeight="37.0"
-                    prefWidth="274.0" showTickLabels="true" showTickMarks="true"
-                    GridPane.columnIndex="2" GridPane.halignment="RIGHT" value="1.0" />
+   <TitledPane styleClass="titled-pane" animated="false" text="Scale">
+      <GridPane styleClass="grid-pane" prefHeight="77.0" prefWidth="398.0" vgap="10.0">
+         <columnConstraints>
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="83.0" minWidth="10.0" prefWidth="41.66667048136393"/>
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="106.99999618530273" minWidth="10.0"
+                               prefWidth="47.999992370605476"/>
+            <ColumnConstraints maxWidth="289.66667429606116" minWidth="230.0" prefWidth="289.66667429606116"/>
+         </columnConstraints>
+         <Label text="Scale:" GridPane.halignment="LEFT" GridPane.rowIndex="0"/>
+         <TextField fx:id="scaleTxtField" prefHeight="25.0" prefWidth="56.0" GridPane.columnIndex="1"/>
+         <Slider fx:id="scaleSlider" majorTickUnit="0.5" max="2.0" maxWidth="-Infinity" min="-2.0" prefHeight="37.0"
+                 prefWidth="274.0" showTickLabels="true" showTickMarks="true"
+                 GridPane.columnIndex="2" GridPane.halignment="RIGHT" value="1.0"/>
 
-            <rowConstraints>
-             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-           </rowConstraints>
-            <padding>
-               <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-            </padding>
-         </GridPane>
-      </content>
+         <rowConstraints>
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+         </rowConstraints>
+         <padding>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+         </padding>
+      </GridPane>
    </TitledPane>
 </VBox>

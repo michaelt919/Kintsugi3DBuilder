@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar;
 
+import java.awt.*;
 import java.io.File;
 import java.net.URL;
 import java.util.Comparator;
@@ -25,11 +26,12 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ChoiceBox;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.stage.Window;
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.javafx.MultithreadModels;
@@ -44,7 +46,7 @@ public class LoaderController implements Initializable
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
     @FXML private Text loadCheckImages;
-    @FXML private BorderPane root;
+    @FXML private GridPane root;
 
     private Stage thisStage;
 
@@ -183,6 +185,9 @@ public class LoaderController implements Initializable
                 .start();
 
             close();
+        }
+        else{
+            Toolkit.getDefaultToolkit().beep();
         }
     }
 

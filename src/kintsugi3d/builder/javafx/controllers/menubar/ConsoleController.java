@@ -13,13 +13,14 @@
 package kintsugi3d.builder.javafx.controllers.menubar;
 
 import javafx.application.Platform;
-import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,10 +57,7 @@ public class ConsoleController implements Initializable
 
         messageListView.setCellFactory(new LogMessageCellFactory());
         messageListView.setItems(logMessages.getMessages().filtered(this::logMessagePassesFilter));
-
         messageListView.scrollTo(messageListView.getItems().size() - 1);
-
-        messageListView.getItems().addListener(new ListChangeAutoscroll());
 
         // If the logger cannot log a level, disable a filter button
         if (! logMessages.isLevelAvailable(Level.ERROR))
@@ -190,10 +188,12 @@ public class ConsoleController implements Initializable
                             if (message.getLogLevel() == Level.ERROR)
                             {
                                 setStyle("-fx-background-color: #fa6d6d");
+                                //TODO: MAKE TEXT BLACK
                             }
                             else if (message.getLogLevel() == Level.WARN)
                             {
                                 setStyle("-fx-background-color: #fab66d");
+                                //TODO: MAKE TEXT BLACK
                             }
                             else
                             {
@@ -226,18 +226,6 @@ public class ConsoleController implements Initializable
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyy hh:mm:ss").withZone(ZoneId.systemDefault());
             sb.append(formatter.format(message.getTimestamp()));
             return sb.toString();
-        }
-    }
-
-    private class ListChangeAutoscroll implements ListChangeListener<LogMessage>
-    {
-        @Override
-        public void onChanged(Change<? extends LogMessage> change)
-        {
-            Platform.runLater(() ->
-            {
-                messageListView.scrollTo(messageListView.getItems().size() - 1);
-            });
         }
     }
 }

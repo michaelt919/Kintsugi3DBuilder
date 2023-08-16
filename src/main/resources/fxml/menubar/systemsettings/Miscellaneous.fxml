@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
@@ -12,12 +13,18 @@
   ~
   ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-  ~
   -->
 
-<AnchorPane prefHeight="100.0" prefWidth="600.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.ColorCheckerImgSelectionController">
-    <Label layoutX="14.0" layoutY="14.0" text="Color Checker Image: " />
-    <TextField fx:id="imgPathTxtField" layoutX="130.0" layoutY="10.0" onKeyPressed="#enterToRun" prefHeight="25.0" prefWidth="310.0" />
-    <Button layoutX="450.0" layoutY="10.0" mnemonicParsing="false" onAction="#selectImage" text="Choose image..." />
-    <Button fx:id="runButton" layoutX="11.0" layoutY="70.0" mnemonicParsing="false" onAction="#openEyedropper" text="Run" />
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.systemsettings.MiscellaneousSettingsController">
+   <children>
+      <VBox prefHeight="200.0" prefWidth="317.0" spacing="10.0">
+          <children>
+              <CheckBox fx:id="sceneWindowCheckBox" mnemonicParsing="false" text="Show Scene Window..." />
+              <CheckBox mnemonicParsing="false" text="Stand-alone 3D Viewer (UNFINISHED)" />
+          </children>
+         <padding>
+            <Insets bottom="7.0" left="7.0" right="7.0" top="7.0" />
+         </padding>
+      </VBox>
+   </children>
 </AnchorPane>

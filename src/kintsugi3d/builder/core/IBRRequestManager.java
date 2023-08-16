@@ -16,6 +16,8 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import kintsugi3d.gl.interactive.GraphicsRequest;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.Context;
@@ -122,6 +124,10 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
                     catch (Exception | AssertionError e)
                     {
                         log.error("Error occurred while executing request:", e);
+                        Platform.runLater(() ->
+                        {
+                            new Alert(Alert.AlertType.ERROR, "An error occurred processing request. Processing has stopped.\nCheck the log for more info.").show();
+                        });
                     }
                 }
 
