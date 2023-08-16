@@ -242,32 +242,32 @@ public class MainApplication extends Application
         SettingsModelImpl settingsModel = InternalModels.getInstance().getSettingsModel();
         settingsModel.createBooleanSetting("lightCalibrationMode", false);
         settingsModel.createObjectSetting("currentLightCalibration", Vector2.ZERO);
-        settingsModel.createBooleanSetting("occlusionEnabled", true);
-        settingsModel.createBooleanSetting("fresnelEnabled", false);
-        settingsModel.createBooleanSetting("pbrGeometricAttenuationEnabled", false);
+        settingsModel.createBooleanSetting("occlusionEnabled", true, true);
+        settingsModel.createBooleanSetting("fresnelEnabled", false, true);
+        settingsModel.createBooleanSetting("pbrGeometricAttenuationEnabled", false, true);
         settingsModel.createBooleanSetting("relightingEnabled", false);
-        settingsModel.createBooleanSetting("shadowsEnabled", false);
+        settingsModel.createBooleanSetting("shadowsEnabled", false, true);
         settingsModel.createBooleanSetting("visibleLightsEnabled", true);
         settingsModel.createBooleanSetting("lightWidgetsEnabled", false);
         settingsModel.createBooleanSetting("visibleCameraPosesEnabled", false);
         settingsModel.createBooleanSetting("visibleSavedCameraPosesEnabled", false);
         settingsModel.createSettingFromProperty("gamma", Number.class,
-            StaticUtilities.clamp(1, 5, new SimpleFloatProperty(2.2f)));
+            StaticUtilities.clamp(1, 5, new SimpleFloatProperty(2.2f)), true);
         settingsModel.createSettingFromProperty("weightExponent", Number.class,
-            StaticUtilities.clamp(1, 100, new SimpleFloatProperty(16.0f)));
+            StaticUtilities.clamp(1, 100, new SimpleFloatProperty(16.0f)), true);
         settingsModel.createSettingFromProperty("isotropyFactor", Number.class,
-            StaticUtilities.clamp(0, 1, new SimpleFloatProperty(0.0f)));
+            StaticUtilities.clamp(0, 1, new SimpleFloatProperty(0.0f)), true);
         settingsModel.createSettingFromProperty("occlusionBias", Number.class,
-            StaticUtilities.clamp(0, 0.1, new SimpleFloatProperty(0.0025f)));
-        settingsModel.createObjectSetting("weightMode", ShadingParameterMode.PER_PIXEL);
+            StaticUtilities.clamp(0, 0.1, new SimpleFloatProperty(0.0025f)), true);
+        settingsModel.createObjectSetting("weightMode", ShadingParameterMode.PER_PIXEL, true);
         settingsModel.createObjectSetting("renderingMode", StandardRenderingMode.IMAGE_BASED);
-        settingsModel.createBooleanSetting("is3DGridEnabled", false);
-        settingsModel.createBooleanSetting("compassEnabled", false);
-        settingsModel.createBooleanSetting("multisamplingEnabled", false);
-        settingsModel.createBooleanSetting("halfResolutionEnabled", false);
+        settingsModel.createBooleanSetting("is3DGridEnabled", false, true);
+        settingsModel.createBooleanSetting("compassEnabled", false, true);
+        settingsModel.createBooleanSetting("multisamplingEnabled", false, true);
+        settingsModel.createBooleanSetting("halfResolutionEnabled", false, true);
         settingsModel.createBooleanSetting("sceneWindowOpen", false);
-        settingsModel.createBooleanSetting("buehlerAlgorithm", true);
-        settingsModel.createNumericSetting("buehlerViewCount", 5);
+        settingsModel.createBooleanSetting("buehlerAlgorithm", true, true);
+        settingsModel.createNumericSetting("buehlerViewCount", 5, true);
 
         // Load user preferences, injecting where needed
         log.info("Loading user preferences from file {}", JacksonUserPreferencesSerializer.getPreferencesFile());
