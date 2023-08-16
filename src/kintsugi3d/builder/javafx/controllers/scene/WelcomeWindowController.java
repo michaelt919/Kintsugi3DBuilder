@@ -25,24 +25,27 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
-import org.xml.sax.SAXException;
-import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.core.IBRRequestManager;
 import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.LoaderController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.gl.core.Context;
 import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.function.Predicate;
 
 public class WelcomeWindowController {
+    private static final Logger log = LoggerFactory.getLogger(WelcomeWindowController.class);
     private InternalModels internalModels;
 
     //Window open flags
@@ -129,7 +132,7 @@ public class WelcomeWindowController {
             public void loadingFailed(Exception e) {
                 loadingComplete();
                 projectLoaded = false;
-                Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, e.toString()).show());
+                handleException("An error occurred while loading project", e);
             }
         });
     }
@@ -191,9 +194,9 @@ public class WelcomeWindowController {
                     projectLoaded = true;
                 });
             }
-            catch (IOException e)
+            catch (Exception e)
             {
-                e.printStackTrace();
+                handleException("An error occurred creating a new project", e);
             }
         }
         updateRecentProjectsButton();
@@ -217,9 +220,9 @@ public class WelcomeWindowController {
                 });
                 createProjectController.init();
             }
-            catch (IOException e)
+            catch (Exception e)
             {
-                e.printStackTrace();
+                handleException("An error occurred creating a new project", e);
             }
         }
     }
@@ -254,9 +257,9 @@ public class WelcomeWindowController {
             {
                 newVsetFile = internalModels.getProjectModel().openProjectFile(projectFile);
             }
-            catch (IOException | ParserConfigurationException | SAXException e)
+            catch (Exception e)
             {
-                e.printStackTrace();
+                handleException("An error occurred opening project", e);
             }
         }
 
@@ -376,6 +379,15 @@ public class WelcomeWindowController {
     public void hideMenu(MouseEvent mouseEvent){
         //recentProjectsSplitMenuButton.hide();
         //TODO: ONLY HIDE THE MENU WHEN THE USER'S MOUSE LEAVES THE CONTEXT MENU
+    }
+
+    private void handleException(String message, Exception e)
+    {
+        log.error("{}:", message, e);
+        Platform.runLater(() ->
+        {
+            new Alert(Alert.AlertType.ERROR, message + "\nSee the log for more info.").show();
+        });
     }
 
 }

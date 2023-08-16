@@ -383,6 +383,7 @@ public final class ViewSet implements ReadonlyViewSet
     {
         ViewSet result = new ViewSet(this.getCameraPoseCount());
 
+        result.viewSetUid = this.viewSetUid;
         result.cameraPoseList.addAll(this.cameraPoseList);
         result.cameraPoseInvList.addAll(this.cameraPoseInvList);
         result.cameraProjectionList.addAll(this.cameraProjectionList);

@@ -15,8 +15,7 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<AnchorPane prefHeight="178.0" prefWidth="331.0" stylesheets="@../systemSettingsStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.systemsettings.PhotoLightingSettingsController">
-
+<AnchorPane styleClass="anchor-pane" prefHeight="178.0" prefWidth="331.0" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.systemsettings.PhotoLightingSettingsController">
     <VBox spacing="10.0">
         <padding>
             <Insets bottom="7.0" left="7.0" right="7.0" top="7.0" />

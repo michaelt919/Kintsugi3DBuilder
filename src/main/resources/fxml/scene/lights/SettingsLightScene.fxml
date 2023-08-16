@@ -16,9 +16,9 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox fx:id="root" prefWidth="400.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.lights.SettingsLightSceneController">
-    <TitledPane animated="false" text="Target point">
-        <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+<VBox styleClass="vbox" fx:id="root" prefWidth="400.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.lights.SettingsLightSceneController">
+    <TitledPane styleClass="titled-pane" animated="false" text="Target point">
+        <GridPane styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
             <padding>
                 <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
             </padding>
@@ -44,8 +44,8 @@
          </rowConstraints>
         </GridPane>
     </TitledPane>
-    <TitledPane animated="false" text="Position">
-        <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+    <TitledPane styleClass="titled-pane" animated="false" text="Position">
+        <GridPane styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
             <padding>
                 <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
             </padding>
@@ -70,8 +70,8 @@
          </rowConstraints>
         </GridPane>
     </TitledPane>
-    <TitledPane animated="false" text="Light properties">
-        <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+    <TitledPane styleClass="titled-pane" animated="false" text="Light properties">
+        <GridPane styleClass="grid-pane" alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
             <padding>
                 <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
             </padding>
