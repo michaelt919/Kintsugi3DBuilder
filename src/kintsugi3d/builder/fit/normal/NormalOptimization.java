@@ -17,6 +17,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.function.Function;
 
+import kintsugi3d.builder.fit.FilenameConstants;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -186,7 +187,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         try
         {
             Framebuffer<ContextType> contextTypeFramebuffer = estimateNormals.getFrontFramebuffer();
-            contextTypeFramebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(outputDirectory, "normal.png"));
+            contextTypeFramebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(outputDirectory, FilenameConstants.getNormalFilename("PNG")));
         }
         catch (IOException e)
         {

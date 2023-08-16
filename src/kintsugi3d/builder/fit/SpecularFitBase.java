@@ -141,7 +141,7 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
     {
         try
         {
-            getDiffuseMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "diffuse.png"));
+            getDiffuseMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, FilenameConstants.getDiffuseFilename("PNG")));
         }
         catch (IOException e)
         {
@@ -153,7 +153,7 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
     {
         try
         {
-            getNormalMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "normal.png"));
+            getNormalMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, FilenameConstants.getNormalFilename("PNG")));
         }
         catch (IOException e)
         {
@@ -165,7 +165,7 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
     {
         try
         {
-            getConstantMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "constant.png"));
+            getConstantMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, FilenameConstants.getConstantFilename("PNG")));
         }
         catch (IOException e)
         {
@@ -177,7 +177,7 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
     {
         try
         {
-            getQuadraticMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "quadratic.png"));
+            getQuadraticMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, FilenameConstants.getQuadraticFilename("PNG")));
         }
         catch (IOException e)
         {

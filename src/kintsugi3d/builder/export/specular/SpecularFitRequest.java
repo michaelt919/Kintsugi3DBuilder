@@ -215,14 +215,14 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
             transform = objectModel == null ? Matrix4.IDENTITY : objectModel.getTransformationMatrix().times(transform);
 
             SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(geometry, transform);
-            exporter.setDefaultNames();
+            exporter.setDefaultNames("PNG");
             exporter.addWeightImages(settings.getSpecularBasisSettings().getBasisCount(), settings.getExportSettings().isCombineWeights());
 
             // Deal with LODs if enabled
             if (settings.getExportSettings().isGenerateLowResTextures())
             {
                 exporter.addAllDefaultLods(settings.getTextureFitSettings().height,
-                    settings.getExportSettings().getMinimumTextureResolution());
+                    settings.getExportSettings().getMinimumTextureResolution(), "PNG");
                 exporter.addWeightImageLods(settings.getSpecularBasisSettings().getBasisCount(),
                     settings.getTextureFitSettings().height, settings.getExportSettings().getMinimumTextureResolution());
             }

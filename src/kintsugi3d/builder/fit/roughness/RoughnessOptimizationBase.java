@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.fit.roughness;
 
+import kintsugi3d.builder.fit.FilenameConstants;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import org.slf4j.Logger;
@@ -93,9 +94,9 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
         try
         {
             Framebuffer<ContextType> contextTypeFramebuffer1 = getFramebuffer();
-            contextTypeFramebuffer1.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(outputDirectory, "specular.png"));
+            contextTypeFramebuffer1.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(outputDirectory, FilenameConstants.getSpecularFilename("PNG")));
             Framebuffer<ContextType> contextTypeFramebuffer = getFramebuffer();
-            contextTypeFramebuffer.getTextureReaderForColorAttachment(1).saveToFile("PNG", new File(outputDirectory, "roughness.png"));
+            contextTypeFramebuffer.getTextureReaderForColorAttachment(1).saveToFile("PNG", new File(outputDirectory, FilenameConstants.getRoughnessFilename("PNG")));
         }
         catch (IOException e)
         {

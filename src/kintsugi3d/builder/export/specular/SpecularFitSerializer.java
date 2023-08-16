@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.export.specular;
 
+import kintsugi3d.builder.fit.FilenameConstants;
 import kintsugi3d.builder.fit.decomposition.SimpleSpecularBasis;
 import kintsugi3d.builder.fit.decomposition.SpecularBasis;
 import kintsugi3d.builder.fit.decomposition.SpecularBasisWeights;
@@ -89,21 +90,13 @@ public class SpecularFitSerializer
 
     public static String getWeightFileName(int weightMapIndex, int weightsPerChannel)
     {
-        if (weightsPerChannel <= 1)
-        {
-            return String.format("weights%02d.png", weightMapIndex);
-        }
-        else
-        {
-            weightMapIndex *= weightsPerChannel;
-            return String.format("weights%02d%02d.png", weightMapIndex, weightMapIndex + (weightsPerChannel - 1));
-        }
+        return FilenameConstants.getWeightsFilename("PNG", weightMapIndex, weightsPerChannel);
     }
 
     public static void serializeBasisFunctions(int basisCount, int microfacetDistributionResolution, SpecularBasis basis, File outputDirectory)
     {
         // Text file format
-        try (PrintStream out = new PrintStream(new File(outputDirectory, getBasisFunctionsFilename())))
+        try (PrintStream out = new PrintStream(new File(outputDirectory, FilenameConstants.BASIS_FUNC_CSV_NAME)))
         {
             for (int b = 0; b < basisCount; b++)
             {
@@ -140,11 +133,6 @@ public class SpecularFitSerializer
         }
     }
 
-    public static String getBasisFunctionsFilename()
-    {
-        return "basisFunctions.csv";
-    }
-
     /**
      * Deserializes basis functions only.
      * Does not deserialize weights (which can be loaded as images) or diffuse basis colors (which should be re-fit, or a diffuse texture can be used instead).
@@ -154,7 +142,7 @@ public class SpecularFitSerializer
     public static SpecularBasis deserializeBasisFunctions(File priorSolutionDirectory)
         throws FileNotFoundException
     {
-        File basisFile = new File(priorSolutionDirectory, getBasisFunctionsFilename());
+        File basisFile = new File(priorSolutionDirectory, FilenameConstants.BASIS_FUNC_CSV_NAME);
 
         // Test to figure out the resolution
         int numElements; // Technically this is "microfacetDistributionResolution + 1" the way it's defined elsewhere

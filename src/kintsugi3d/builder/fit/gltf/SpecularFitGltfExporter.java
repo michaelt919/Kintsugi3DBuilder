@@ -24,6 +24,7 @@ import de.javagl.jgltf.model.io.v2.GltfAssetWriterV2;
 import de.javagl.jgltf.model.io.v2.GltfAssetsV2;
 import de.javagl.jgltf.model.v2.MaterialModelV2;
 import kintsugi3d.builder.export.specular.SpecularFitSerializer;
+import kintsugi3d.builder.fit.FilenameConstants;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -276,23 +277,23 @@ public class SpecularFitGltfExporter
         }
     }
 
-    public void setDefaultNames()
+    public void setDefaultNames(String fileType)
     {
-        setBaseColorUri("albedo.png");
-        setDiffuseUri("diffuse.png");
-        setNormalUri("normal.png");
-        setRoughnessMetallicUri("orm.png");
-        setSpecularUri("specular.png");
-        setBasisFunctionsUri("basisFunctions.csv");
+        setBaseColorUri(FilenameConstants.getAlbedoFilename(fileType));
+        setDiffuseUri(FilenameConstants.getDiffuseFilename(fileType));
+        setNormalUri(FilenameConstants.getNormalFilename(fileType));
+        setRoughnessMetallicUri(FilenameConstants.getOrmFilename(fileType));
+        setSpecularUri(FilenameConstants.getSpecularFilename(fileType));
+        setBasisFunctionsUri(FilenameConstants.BASIS_FUNC_CSV_NAME);
     }
 
-    public void addAllDefaultLods(int baseRes, int minRes)
+    public void addAllDefaultLods(int baseRes, int minRes, String fileType)
     {
-        addBaseColorLods("albedo.png", baseRes, minRes);
-        addDiffuseLods("diffuse.png", baseRes, minRes);
-        addNormalLods("normal.png", baseRes, minRes);
-        addRoughnessMetallicLods("orm.png", baseRes, minRes);
-        addSpecularLods("specular.png", baseRes, minRes);
+        addBaseColorLods(FilenameConstants.getAlbedoFilename(fileType), baseRes, minRes);
+        addDiffuseLods(FilenameConstants.getDiffuseFilename(fileType), baseRes, minRes);
+        addNormalLods(FilenameConstants.getNormalFilename(fileType), baseRes, minRes);
+        addRoughnessMetallicLods(FilenameConstants.getOrmFilename(fileType), baseRes, minRes);
+        addSpecularLods(FilenameConstants.getSpecularFilename(fileType), baseRes, minRes);
     }
 
     private static MaterialNormalTextureInfo convertTexInfoToNormal(TextureInfo normalTextureInfo, float scale)

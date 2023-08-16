@@ -15,6 +15,7 @@ package kintsugi3d.builder.fit.finalize;
 import java.io.File;
 import java.io.IOException;
 
+import kintsugi3d.builder.fit.FilenameConstants;
 import kintsugi3d.builder.fit.SpecularFitBase;
 import kintsugi3d.gl.core.ColorFormat;
 import kintsugi3d.gl.core.Context;
@@ -97,18 +98,18 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
 
         // Load diffuse map
         diffuseMap = context.getTextureFactory()
-            .build2DColorTextureFromFile(new File(priorSolutionDirectory, "diffuse.png"), true)
+            .build2DColorTextureFromFile(new File(priorSolutionDirectory, FilenameConstants.getDiffuseFilename("PNG")), true)
             .setLinearFilteringEnabled(true)
             .createTexture();
 
         // Load normal map
         normalMap = context.getTextureFactory()
-            .build2DColorTextureFromFile(new File(priorSolutionDirectory, "normal.png"), true)
+            .build2DColorTextureFromFile(new File(priorSolutionDirectory, FilenameConstants.getNormalFilename("PNG")), true)
             .setLinearFilteringEnabled(true)
             .createTexture();
 
         // Load constant map
-        File constantMapFile = new File(priorSolutionDirectory, "constant.png");
+        File constantMapFile = new File(priorSolutionDirectory, FilenameConstants.getConstantFilename("PNG"));
         constantMap = constantMapFile.exists() ?
             context.getTextureFactory()
                 .build2DColorTextureFromFile(constantMapFile, true)
@@ -117,7 +118,7 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
             : null;
 
         // Load constant map
-        File quadraticMapFile = new File(priorSolutionDirectory, "quadratic.png");
+        File quadraticMapFile = new File(priorSolutionDirectory, FilenameConstants.getQuadraticFilename("PNG"));
         quadraticMap = quadraticMapFile.exists() ?
             context.getTextureFactory()
                 .build2DColorTextureFromFile(quadraticMapFile, true)

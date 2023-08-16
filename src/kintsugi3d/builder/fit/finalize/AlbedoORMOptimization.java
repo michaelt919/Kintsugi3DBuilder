@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import kintsugi3d.builder.fit.FilenameConstants;
 import kintsugi3d.builder.resources.specular.SpecularResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -130,8 +131,8 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
     {
         try
         {
-            framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(outputDirectory, "albedo.png"));
-            framebuffer.getTextureReaderForColorAttachment(1).saveToFile("PNG", new File(outputDirectory, "orm.png"));
+            framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(outputDirectory, FilenameConstants.getAlbedoFilename("PNG")));
+            framebuffer.getTextureReaderForColorAttachment(1).saveToFile("PNG", new File(outputDirectory, FilenameConstants.getOrmFilename("PNG")));
         }
         catch (IOException e)
         {

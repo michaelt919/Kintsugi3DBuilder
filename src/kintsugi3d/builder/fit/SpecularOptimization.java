@@ -430,7 +430,7 @@ public class SpecularOptimization
         if (settings.getExportSettings().isGenerateLowResTextures())
         {
             SpecularFitTextureRescaler rescaler = new SpecularFitTextureRescaler(settings.getExportSettings());
-            rescaler.rescaleAll(settings.getOutputDirectory(), settings.getSpecularBasisSettings().getBasisCount());
+            rescaler.rescaleAll(settings.getOutputDirectory(), "PNG", settings.getSpecularBasisSettings().getBasisCount());
         }
     }
 }

@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.export.specular;
 
+import kintsugi3d.builder.fit.FilenameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.builder.fit.settings.ExportSettings;
@@ -32,9 +33,13 @@ public class SpecularFitTextureRescaler
         this.settings = settings;
     }
 
-    public void rescaleAll(File outputDirectory, int basisCount)
+    public void rescaleAll(File outputDirectory, String fileType, int basisCount)
     {
-        List<String> files = new ArrayList<>(List.of(new String[]{"albedo.png", "diffuse.png", "specular.png", "orm.png", "normal.png"}));
+        List<String> files = new ArrayList<>(List.of(new String[]{
+                FilenameConstants.getAlbedoFilename(fileType), FilenameConstants.getDiffuseFilename(fileType),
+                FilenameConstants.getSpecularFilename(fileType), FilenameConstants.getOrmFilename(fileType),
+                FilenameConstants.getNormalFilename(fileType)
+        }));
 
         if (settings.isCombineWeights())
         {
