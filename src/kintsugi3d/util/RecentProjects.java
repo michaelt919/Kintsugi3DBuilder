@@ -26,7 +26,7 @@ public class RecentProjects {
 
     private static WelcomeWindowController welcomeWindowController;
     private static MenubarController menubarController;
-    private static File recentProjectsFile = new File(ApplicationFolders.getUserAppDirectory(), "recentFiles.txt");
+    private static File recentProjectsFile = new File(ApplicationFolders.getUserAppDirectory().toFile(), "recentFiles.txt");
 
     private RecentProjects(){throw new IllegalStateException("Utility class");};
     public static List<String> getItemsFromRecentsFile() {

@@ -12,8 +12,13 @@
 
 package kintsugi3d.builder.state;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import kintsugi3d.builder.preferences.serialization.SettingsModelSerializer;
+
 import java.util.Iterator;
 
+@JsonSerialize(as = SettingsModel.class, using = SettingsModelSerializer.class)
 public interface ReadonlySettingsModel
 {
     interface Setting
@@ -21,12 +26,14 @@ public interface ReadonlySettingsModel
         String getName();
         Class<?> getType();
         Object getValue();
+        boolean shouldSerialize();
     }
 
     Object getObject(String name);
     <T> T get(String name, Class<T> settingType);
     Class<?> getType(String name);
     boolean exists(String name);
+    boolean shouldSerialize(String name);
     Iterator<Setting> iterator();
 
     default boolean existsForGet(String name, Class<?> settingType)
