@@ -81,8 +81,8 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
 
             // Load just geometry, tonemapping, settings.
             SimpleLoadOptionsModel loadOptions = new SimpleLoadOptionsModel();
-            loadOptions.setColorImagesRequested(false);
-            loadOptions.setDepthImagesRequested(false);
+            loadOptions.requestColorImages(false);
+            loadOptions.requestDepthImages(false);
 
             try(IBRResources<ContextType> resources = IBRResourcesImageSpace.getBuilderForContext(context)
                 .setLoadOptions(loadOptions)

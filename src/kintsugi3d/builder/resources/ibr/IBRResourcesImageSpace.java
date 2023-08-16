@@ -102,8 +102,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         private void updateViewSetFromLoadOptions()
         {
             this.viewSet.setPreviewImageResolution(loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
-            String directoryName = String.format("preview/%s/_%dx%d", viewSet.getUuid().toString(), loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
-            this.viewSet.setRelativePreviewImagePathName(new File(ApplicationFolders.getUserCacheDirectory(), directoryName).toString());
+            String directoryName = String.format("%s/_%dx%d", viewSet.getUuid().toString(), loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
+            this.viewSet.setRelativePreviewImagePathName(new File(ApplicationFolders.getPreviewImagesRootDirectory().toFile(), directoryName).toString());
         }
 
         public Builder<ContextType> setPrimaryView(String primaryViewName)

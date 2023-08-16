@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -10,18 +10,18 @@
  *
  */
 
-package kintsugi3d.builder.state;//Created by alexk on 7/31/2017.
+package kintsugi3d.builder.preferences;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import kintsugi3d.builder.preferences.serialization.SettingsModelDeserializer;
-import kintsugi3d.builder.preferences.serialization.SettingsModelSerializer;
 
-@JsonSerialize(as = SettingsModel.class, using = SettingsModelSerializer.class)
-@JsonDeserialize(as = SettingsModel.class, using = SettingsModelDeserializer.class)
-public interface SettingsModel extends ReadonlySettingsModel
+import java.nio.file.Path;
+
+@JsonSerialize(as = DirectoryPreferencesModel.class)
+@JsonDeserialize(as = SimpleDirectoryPreferencesModel.class)
+public interface DirectoryPreferencesModel extends ReadOnlyDirectoryPreferencesModel
 {
-    <T> void set(String name, T value);
-    void copyFrom(SettingsModel other);
-    void createSetting(String name, Class<?> type, Object initialValue, boolean serialize);
+    void setCacheDirectory(Path cacheDirectory);
+    void setLogFileDirectory(Path logFileDirectory);
+    void setPreviewImagesDirectory(Path previewImagesDirectory);
 }

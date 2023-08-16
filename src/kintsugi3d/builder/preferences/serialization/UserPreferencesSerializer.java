@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -10,30 +10,21 @@
  *
  */
 
-package kintsugi3d.builder.core;
+package kintsugi3d.builder.preferences.serialization;
 
 import kintsugi3d.builder.preferences.ReadOnlyUserPreferencesModel;
 import kintsugi3d.builder.preferences.UserPreferencesModel;
-import kintsugi3d.builder.state.*;
 
-public interface Kintsugi3DBuilderState
+import java.io.IOException;
+import java.util.List;
+
+public interface UserPreferencesSerializer
 {
-    ReadonlyCameraModel getCameraModel();
-    ReadonlyLightingModel getLightingModel();
-    ReadonlyObjectModel getObjectModel();
-    ReadonlyEnvironmentModel getEnvironmentModel();
+    void writeUserPreferences(ReadOnlyUserPreferencesModel preferencesModel) throws IOException;
 
-    /**
-     * Not read-only to allow export functions to change rendering mode (i.e. focus calibration)
-     * @return
-     */
-    SettingsModel getSettingsModel();
+    UserPreferencesModel readUserPreferences() throws IOException;
 
-    CanvasModel getCanvasModel();
+    UserPreferencesModel readOrDefault();
 
-    SceneViewportModel getSceneViewportModel();
-    LoadOptionsModel getLoadOptionsModel();
-    LoadingModel getLoadingModel();
-
-    ProjectModel getProjectModel();
+    List<Exception> getStartupExceptions();
 }
