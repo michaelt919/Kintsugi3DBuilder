@@ -331,8 +331,6 @@ public class MenubarController
 
         //attach event handler (this cannot be done in scenebuilder)
         autosaveOptionsChoiceBox.setOnAction(this::handleDirectoryDropdownSelection);
-
-        handleException("This is a test error alert!", new RuntimeException("Test exception"));
     }
 
 
