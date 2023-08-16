@@ -20,9 +20,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
-import java.nio.file.Files;
 import java.util.*;
-import java.util.List;
 import java.util.function.Predicate;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -44,7 +42,6 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
-import javafx.scene.text.Text;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
@@ -442,6 +439,8 @@ public class MenubarController
                     "If you click OK, any unsaved changes to the current project will be lost.");
             confirmation.setTitle("Close Project Confirmation");
             confirmation.setHeaderText(text);
+
+            //TODO: apply dark mode to popups
             return confirmation.showAndWait()
                 .filter(Predicate.isEqual(ButtonType.OK))
                 .isPresent();
@@ -605,7 +604,7 @@ public class MenubarController
     private void file_exit()
     {
         WindowSynchronization.getInstance().quit();
-    }
+    }//TODO: how to apply dark mode here?
 
     @FXML
     private void help_userManual()
