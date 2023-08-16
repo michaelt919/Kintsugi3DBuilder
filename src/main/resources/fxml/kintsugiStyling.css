@@ -111,7 +111,10 @@ dialog-pane{
 .split-menu-button {
     -fx-base: #272727;
     -fx-text-fill: #FFFFFF;
-    -fx-background-radius: 30 30 30 30;
+}
+
+.split-button:hover{
+    -fx-background-color: #222255;
 }
 
 .scroll-pane{
