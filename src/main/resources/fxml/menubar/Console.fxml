@@ -24,6 +24,7 @@
       <ListView fx:id="messageListView" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="50.0" />
       <HBox spacing="15.0">
          <children>
+            <ToggleButton fx:id="toggleButtonPause" mnemonicParsing="false" onAction="#buttonUpdatePaused" text="Pause" />
             <ToggleButton fx:id="toggleButtonError" mnemonicParsing="false" onAction="#buttonChangeLogLevel" selected="true" text="Show Errors" />
             <ToggleButton fx:id="toggleButtonWarn" mnemonicParsing="false" onAction="#buttonChangeLogLevel" selected="true" text="Show Warnings" />
             <ToggleButton fx:id="toggleButtonInfo" mnemonicParsing="false" onAction="#buttonChangeLogLevel" selected="true" text="Show Info" />

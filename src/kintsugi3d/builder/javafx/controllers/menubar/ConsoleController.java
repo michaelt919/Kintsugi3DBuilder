@@ -13,6 +13,8 @@
 package kintsugi3d.builder.javafx.controllers.menubar;
 
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -39,6 +41,7 @@ public class ConsoleController implements Initializable
 {
     private static final Logger log = LoggerFactory.getLogger(ConsoleController.class);
 
+    @FXML private ToggleButton toggleButtonPause;
     @FXML private ToggleButton toggleButtonError;
     @FXML private ToggleButton toggleButtonInfo;
     @FXML private ToggleButton toggleButtonDebug;
@@ -104,6 +107,22 @@ public class ConsoleController implements Initializable
         if (filteredList == null)
             return;
         filteredList.setPredicate(this::logMessagePassesFilter);
+    }
+
+    public void buttonUpdatePaused(ActionEvent event)
+    {
+        ObservableList<LogMessage> items;
+
+        if (toggleButtonPause.isSelected())
+        {
+            items = FXCollections.observableArrayList(logMessages.getMessages());
+        }
+        else
+        {
+            items = logMessages.getMessages();
+        }
+
+        messageListView.setItems(items.filtered(this::logMessagePassesFilter));
     }
 
     private boolean logMessagePassesFilter(LogMessage message)
