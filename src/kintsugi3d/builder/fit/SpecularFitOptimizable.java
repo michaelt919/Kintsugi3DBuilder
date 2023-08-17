@@ -76,18 +76,21 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         normalOptimization = new NormalOptimization<>(
             resources,
             programFactory,
-            estimationProgram ->
-            {
-                Drawable<ContextType> drawable = resources.createDrawable(estimationProgram);
-                programFactory.setupShaderProgram(resources, estimationProgram);
-                getBasisResources().useWithShaderProgram(estimationProgram);
-                getBasisWeightResources().useWithShaderProgram(estimationProgram);
-                return drawable;
-            },
+            estimationProgram -> getNormalDrawable(estimationProgram, programFactory),
             textureFitSettings, normalOptimizationSettings);
     }
 
-    public static <ContextType extends Context<ContextType>> SpecularFitOptimizable<ContextType> create(
+    private Drawable<ContextType> getNormalDrawable(Program<ContextType> estimationProgram,
+        SpecularFitProgramFactory<ContextType> programFactory)
+    {
+        Drawable<ContextType> drawable = resources.createDrawable(estimationProgram);
+        programFactory.setupShaderProgram(resources, estimationProgram);
+        getBasisResources().useWithShaderProgram(estimationProgram);
+        getBasisWeightResources().useWithShaderProgram(estimationProgram);
+        return drawable;
+    }
+
+    public static <ContextType extends Context<ContextType>> SpecularFitOptimizable<ContextType> createNew(
         ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings textureFitSettings,
         SpecularBasisSettings specularBasisSettings, NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
         throws FileNotFoundException
@@ -376,6 +379,16 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     public Texture2D<ContextType> getQuadraticMap()
     {
         return diffuseOptimization.includesConstantMap() ? diffuseOptimization.getQuadraticMap() : null;
+    }
+
+    /**
+     * Always returns null; ORM map should not be needed while optimizing; only afterwards
+     * @return null
+     */
+    @Override
+    public Texture2D<ContextType> getORMMap()
+    {
+        return null;
     }
 
     /**

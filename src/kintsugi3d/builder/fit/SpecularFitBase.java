@@ -76,6 +76,12 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
     }
 
     @Override
+    public ContextType getContext()
+    {
+        return basisResources.getContext();
+    }
+
+    @Override
     public int getWidth()
     {
         return basisWeightResources.weightMaps.getWidth();
@@ -184,5 +190,4 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
             log.error("An error occurred saving diffuse map:", e);
         }
     }
-
 }

@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 
 import kintsugi3d.builder.fit.SpecularFitBase;
+import kintsugi3d.builder.resources.specular.SpecularResources;
 import kintsugi3d.gl.core.ColorFormat;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Texture2D;
@@ -32,19 +33,21 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
     private final Texture2D<ContextType> normalMap;
     private final Texture2D<ContextType> constantMap;
     private final Texture2D<ContextType> quadraticMap;
-
+    private final AlbedoORMOptimization<ContextType> albedoORMOptimization;
 
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> createEmpty(
-        ContextType context, TextureFitSettings textureFitSettings,
+        SpecularResources<ContextType> original, TextureFitSettings textureFitSettings,
         SpecularBasisSettings specularBasisSettings, boolean includeConstant) throws IOException
     {
-        return new SpecularFitFinal<>(context, textureFitSettings, specularBasisSettings, includeConstant);
+        return new SpecularFitFinal<>(original, textureFitSettings, specularBasisSettings, includeConstant);
     }
 
-    private SpecularFitFinal(ContextType context, TextureFitSettings textureFitSettings,
+    private SpecularFitFinal(SpecularResources<ContextType> original, TextureFitSettings textureFitSettings,
         SpecularBasisSettings specularBasisSettings, boolean includeConstant) throws IOException
     {
-        super(context, textureFitSettings, specularBasisSettings);
+        super(original.getContext(), textureFitSettings, specularBasisSettings);
+
+        ContextType context = original.getContext();
 
         // Allocate diffuse map
         diffuseMap = context.getTextureFactory()
@@ -81,6 +84,10 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
                 .setMipmapsEnabled(true)
                 .createTexture()
             : null;
+
+        albedoORMOptimization = original.getOcclusionMap() == null ?
+            AlbedoORMOptimization.createWithoutOcclusion(context, textureFitSettings) :
+            AlbedoORMOptimization.createWithOcclusion(original.getOcclusionMap(), textureFitSettings);
     }
 
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> loadFromPriorSolution(
@@ -125,6 +132,8 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
                 .createTexture()
             : null;
 
+        albedoORMOptimization = AlbedoORMOptimization.loadFromPriorSolution(context, textureFitSettings, priorSolutionDirectory);
+
         getBasisResources().loadFromPriorSolution(priorSolutionDirectory);
         getBasisWeightResources().loadFromPriorSolution(priorSolutionDirectory);
     }
@@ -153,6 +162,11 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
         {
             quadraticMap.close();
         }
+
+        if (albedoORMOptimization != null)
+        {
+            albedoORMOptimization.close();
+        }
     }
 
     @Override
@@ -177,5 +191,21 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
     public Texture2D<ContextType> getQuadraticMap()
     {
         return quadraticMap;
+    }
+
+    @Override
+    public Texture2D<ContextType> getAlbedoMap()
+    {
+        return albedoORMOptimization.getAlbedoMap();
+    }
+    @Override
+    public Texture2D<ContextType> getORMMap()
+    {
+        return albedoORMOptimization.getORMMap();
+    }
+
+    public AlbedoORMOptimization<ContextType> getAlbedoORMOptimization()
+    {
+        return albedoORMOptimization;
     }
 }

@@ -43,15 +43,15 @@ import kintsugi3d.util.ImageFinder;
 /**
  * Implement specular fit using algorithm described by Nam et al., 2018
  */
-public class SpecularOptimization
+public class SpecularFitProcess
 {
-    private static final Logger log = LoggerFactory.getLogger(SpecularOptimization.class);
+    private static final Logger log = LoggerFactory.getLogger(SpecularFitProcess.class);
     private static final boolean DEBUG_IMAGES = false;
     private static final boolean TRACE_IMAGES = false;
 
     private final SpecularFitRequestParams settings;
 
-    public SpecularOptimization(SpecularFitRequestParams settings)
+    public SpecularFitProcess(SpecularFitRequestParams settings)
     {
         this.settings = settings;
     }
@@ -73,7 +73,7 @@ public class SpecularOptimization
         Duration duration = Duration.between(start, Instant.now());
         log.info("Cache found / generated in: " + duration);
 
-        SpecularResources<ContextType> specularFit = optimizeFit(cache);
+        SpecularResources<ContextType> specularFit = optimizeFit(cache, resources.getMaterialResources());
 
 //        // Save basis image visualization for reference and debugging
 //        try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(cache.getContext(), settings.getSpecularBasisSettings()))
@@ -107,21 +107,14 @@ public class SpecularOptimization
 //            finalErrorCalculaton.calculateFinalErrorMetrics(resources, programFactory, specularFit, errorCalculator, rmseOut);
 //        }
 
-        // Generate albedo / ORM maps at full resolution (does not require loaded source images)
-        try (AlbedoORMOptimization<ContextType> albedoORM = resources.getMaterialResources().getOcclusionTexture() == null ?
-                AlbedoORMOptimization.createWithoutOcclusion(resources.getContext(), settings.getTextureFitSettings()) :
-                AlbedoORMOptimization.createWithOcclusion(resources.getMaterialResources().getOcclusionTexture(), settings.getTextureFitSettings()))
-        {
-            albedoORM.execute(specularFit);
-            albedoORM.saveTextures(settings.getOutputDirectory());
-        }
 
         rescaleTextures();
 
         return specularFit;
     }
 
-    public <ContextType extends Context<ContextType>> SpecularResources<ContextType> optimizeFit(ImageCache<ContextType> cache)
+    public <ContextType extends Context<ContextType>> SpecularResources<ContextType> optimizeFit(
+        ImageCache<ContextType> cache, SpecularResources<ContextType> original)
         throws IOException
     {
         Instant start = Instant.now();
@@ -130,7 +123,7 @@ public class SpecularOptimization
 
         // Create space for the solution.
         // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.
-        SpecularFitFinal<ContextType> fullResolution = SpecularFitFinal.createEmpty(cache.getContext(),
+        SpecularFitFinal<ContextType> fullResolution = SpecularFitFinal.createEmpty(original,
             settings.getTextureFitSettings(), settings.getSpecularBasisSettings(), settings.shouldIncludeConstantTerm());
 
         try (IBRResourcesTextureSpace<ContextType> sampled = cache.createSampledResources())
@@ -154,7 +147,7 @@ public class SpecularOptimization
 
             try
             (
-                SpecularFitOptimizable<ContextType> sampledFit = SpecularFitOptimizable.create(
+                SpecularFitOptimizable<ContextType> sampledFit = SpecularFitOptimizable.createNew(
                     sampled, programFactory, sampledSettings, settings.getSpecularBasisSettings(),
                     settings.getNormalOptimizationSettings(), false)
             )
@@ -228,6 +221,10 @@ public class SpecularOptimization
             // Save the final specular albedo and roughness maps
             fullResolution.getRoughnessOptimization().saveTextures(settings.getOutputDirectory());
 
+            // Generate albedo / ORM maps at full resolution (does not require loaded source images)
+            fullResolution.getAlbedoORMOptimization().execute(fullResolution);
+            fullResolution.getAlbedoORMOptimization().saveTextures(settings.getOutputDirectory());
+
             return fullResolution;
         }
         catch (Exception e)
@@ -280,7 +277,7 @@ public class SpecularOptimization
                     try (IBRResourcesTextureSpace<ContextType> blockResources = blockResourceFactory.createBlockResources(i, j))
                     {
                         TextureFitSettings blockSettings = blockResources.getTextureFitSettings(settings.getTextureFitSettings().gamma);
-                        try (SpecularFitOptimizable<ContextType> blockOptimization = SpecularFitOptimizable.create(
+                        try (SpecularFitOptimizable<ContextType> blockOptimization = SpecularFitOptimizable.createNew(
                             blockResources, programFactory, blockSettings, settings.getSpecularBasisSettings(),
                             settings.getNormalOptimizationSettings(), settings.shouldIncludeConstantTerm()))
                         {

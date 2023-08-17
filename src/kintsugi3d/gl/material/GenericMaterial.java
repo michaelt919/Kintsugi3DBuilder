@@ -21,9 +21,9 @@ import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.vecmath.Vector3;
 
-public class Material implements ReadonlyMaterial
+public class GenericMaterial implements ReadonlyGenericMaterial
 {
-    private static final Logger log = LoggerFactory.getLogger(Material.class);
+    private static final Logger log = LoggerFactory.getLogger(GenericMaterial.class);
     private String name;
 
     private Vector3 ambient;
@@ -57,7 +57,7 @@ public class Material implements ReadonlyMaterial
     private ReadonlyMaterialScalarMap displacementMap;
     private ReadonlyMaterialScalarMap ambientOcclusionMap;
 
-    public Material(String name)
+    public GenericMaterial(String name)
     {
         this.name = name;
 
@@ -74,10 +74,10 @@ public class Material implements ReadonlyMaterial
         this.clearcoatRoughness = 0.0f;
     }
 
-    public static Dictionary<String, Material> loadFromMTLFile(File mtlFile) throws IOException
+    public static Dictionary<String, GenericMaterial> loadFromMTLFile(File mtlFile) throws IOException
     {
-        Dictionary<String, Material> materials = new Hashtable<>();
-        Material currentMaterial = null;
+        Dictionary<String, GenericMaterial> materials = new Hashtable<>();
+        GenericMaterial currentMaterial = null;
         boolean ambientSet = false;
 
         if (mtlFile.exists())
@@ -90,7 +90,7 @@ public class Material implements ReadonlyMaterial
 
                     if ("newmtl".equals(id) && scanner.hasNext())
                     {
-                        currentMaterial = new Material(scanner.next());
+                        currentMaterial = new GenericMaterial(scanner.next());
                         materials.put(currentMaterial.getName(), currentMaterial);
                     }
                     else if (currentMaterial != null)
@@ -904,9 +904,9 @@ public class Material implements ReadonlyMaterial
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> MaterialResources<ContextType> createResources(
+    public <ContextType extends Context<ContextType>> GenericMaterialResources<ContextType> createResources(
         ContextType context, File textureDirectory, TextureLoadOptions loadOptions) throws IOException
     {
-        return new MaterialResources<>(context, this, textureDirectory, loadOptions);
+        return new GenericMaterialResources<>(context, this, textureDirectory, loadOptions);
     }
 }

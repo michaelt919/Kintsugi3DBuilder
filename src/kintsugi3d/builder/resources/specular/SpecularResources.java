@@ -14,23 +14,96 @@ package kintsugi3d.builder.resources.specular;
 
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
-import kintsugi3d.gl.core.Blittable;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.Texture2D;
+import kintsugi3d.gl.core.*;
 
-public interface SpecularResources<ContextType extends Context<ContextType>> extends AutoCloseable, Blittable<SpecularResources<ContextType>>
+public interface SpecularResources<ContextType extends Context<ContextType>>
+    extends AutoCloseable, ContextBound<ContextType>, Blittable<SpecularResources<ContextType>>
 {
-    Texture2D<ContextType> getDiffuseMap();
+    default Texture2D<ContextType> getDiffuseMap()
+    {
+        return null;
+    }
+
     Texture2D<ContextType> getNormalMap();
-    Texture2D<ContextType> getConstantMap();
-    Texture2D<ContextType> getQuadraticMap();
+
+    default Texture2D<ContextType> getConstantMap()
+    {
+        return null;
+    }
+
+    default Texture2D<ContextType> getQuadraticMap()
+    {
+        return null;
+    }
+
     Texture2D<ContextType> getSpecularReflectivityMap();
     Texture2D<ContextType> getSpecularRoughnessMap();
-    BasisResources<ContextType> getBasisResources();
-    BasisWeightResources<ContextType> getBasisWeightResources();
+
+    /**
+     * Width and height are based on albedo map so this should never return null, unless getWidth() and getHeight() are overridden.
+     * @return
+     */
+    default Texture2D<ContextType> getAlbedoMap()
+    {
+        // Diffuse map can substitute for albedo map if there's no albedo map
+        return getDiffuseMap();
+    }
+
+    default Texture2D<ContextType> getORMMap()
+    {
+        return null;
+    }
+
+    default Texture2D<ContextType> getOcclusionMap()
+    {
+        // Occlusion would be in red channel so ORM can be used in place of occlusion if no explicit occlusion map
+        return getORMMap();
+    }
+
+    default BasisResources<ContextType> getBasisResources()
+    {
+        return null;
+    }
+
+    default BasisWeightResources<ContextType> getBasisWeightResources()
+    {
+        return null;
+    }
 
     @Override
     void close(); // no exception
+
+    private <SourceType extends Blittable<?>> void blitCroppedAndScaledSingle(
+        Blittable<SourceType> destTex, int destX, int destY, int destWidth, int destHeight,
+        SpecularResources<ContextType> readSource, SourceType srcTex, int srcX, int srcY, int srcWidth, int srcHeight,
+        boolean linearFiltering)
+    {
+        if (destTex != null && srcTex != null)
+        {
+            if (destTex.getWidth() == this.getWidth() && destTex.getHeight() == this.getHeight()
+                && srcTex.getWidth() == readSource.getWidth() && srcTex.getHeight() == readSource.getHeight())
+            {
+                // dimensions match, so just do a normal blit
+                destTex.blitCroppedAndScaled(destX, destY, destWidth, destHeight,
+                    srcTex, srcX, srcY, srcWidth, srcHeight, linearFiltering);
+            }
+            else
+            {
+                // dimensions do not match; try to remap rectangles to grab the same relative area in each
+                destTex.blitCroppedAndScaled(
+                    (int) Math.round((double) destX * destTex.getWidth() / this.getWidth()),
+                    (int) Math.round((double) destY * destTex.getHeight() / this.getHeight()),
+                    (int) Math.round((double) destWidth * destTex.getWidth() / this.getWidth()),
+                    (int) Math.round((double) destHeight * destTex.getHeight() / this.getHeight()),
+                    srcTex,
+                    (int) Math.round((double) srcX * srcTex.getWidth() / readSource.getWidth()),
+                    (int) Math.round((double) srcY * srcTex.getHeight() / readSource.getHeight()),
+                    (int) Math.round((double) srcWidth * srcTex.getWidth() / readSource.getWidth()),
+                    (int) Math.round((double) srcHeight * srcTex.getHeight() / readSource.getHeight()),
+                    linearFiltering);
+            }
+        }
+    }
 
     /**
      * Copies pixels from part of a blittable to another.  The copying operation will be start at (x, y) within
@@ -50,48 +123,47 @@ public interface SpecularResources<ContextType extends Context<ContextType>> ext
         SpecularResources<ContextType> readSource, int srcX, int srcY, int srcWidth, int srcHeight, boolean linearFiltering)
     {
         // Blit each individual texture -- diffuse, normal, specular reflectivity, specular roughness, weight maps, weight mask
-        if (this.getDiffuseMap() != null && readSource.getDiffuseMap() != null)
-        {
-            this.getDiffuseMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,
-                readSource.getDiffuseMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
-        }
+        blitCroppedAndScaledSingle(this.getDiffuseMap(), destX, destY, destWidth, destHeight,
+            readSource, readSource.getDiffuseMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+        blitCroppedAndScaledSingle(this.getNormalMap(), destX, destY, destWidth, destHeight,
+            readSource, readSource.getNormalMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+        blitCroppedAndScaledSingle(this.getConstantMap(), destX, destY, destWidth, destHeight,
+            readSource, readSource.getConstantMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+        blitCroppedAndScaledSingle(this.getQuadraticMap(), destX, destY, destWidth, destHeight,
+            readSource, readSource.getQuadraticMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+        blitCroppedAndScaledSingle(this.getSpecularReflectivityMap(), destX, destY, destWidth, destHeight,
+            readSource, readSource.getSpecularReflectivityMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+        blitCroppedAndScaledSingle(this.getSpecularRoughnessMap(), destX, destY, destWidth, destHeight,
+            readSource, readSource.getSpecularRoughnessMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+        blitCroppedAndScaledSingle(this.getAlbedoMap(), destX, destY, destWidth, destHeight,
+            readSource, readSource.getAlbedoMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+        blitCroppedAndScaledSingle(this.getORMMap(), destX, destY, destWidth, destHeight,
+            readSource, readSource.getORMMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
 
-        if (this.getNormalMap() != null && readSource.getNormalMap() != null)
+        if (this.getOcclusionMap() != this.getORMMap() && readSource.getOcclusionMap() != this.getOcclusionMap())
         {
-            this.getNormalMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,
-                readSource.getNormalMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
-        }
-
-        if (this.getConstantMap() != null && readSource.getConstantMap() != null)
-        {
-            this.getConstantMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,
-                readSource.getConstantMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
-        }
-
-        if (this.getQuadraticMap() != null && readSource.getQuadraticMap() != null)
-        {
-            this.getQuadraticMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,
-                readSource.getQuadraticMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
-        }
-
-        if (this.getSpecularReflectivityMap() != null && readSource.getSpecularReflectivityMap() != null)
-        {
-            this.getSpecularReflectivityMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,
-                readSource.getSpecularReflectivityMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
-        }
-
-        if (this.getSpecularRoughnessMap() != null && readSource.getSpecularRoughnessMap() != null)
-        {
-            this.getSpecularRoughnessMap().blitCroppedAndScaled(destX, destY, destWidth, destHeight,
-                readSource.getSpecularRoughnessMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+            blitCroppedAndScaledSingle(this.getOcclusionMap(), destX, destY, destWidth, destHeight,
+                readSource, readSource.getOcclusionMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
         }
 
         if (this.getBasisWeightResources() != null && readSource.getBasisWeightResources() != null)
         {
-            this.getBasisWeightResources().weightMaps.blitCroppedAndScaled(destX, destY, destWidth, destHeight,
-                readSource.getBasisWeightResources().weightMaps, srcX, srcY, srcWidth, srcHeight, linearFiltering);
-            this.getBasisWeightResources().weightMask.blitCroppedAndScaled(destX, destY, destWidth, destHeight,
-                readSource.getBasisWeightResources().weightMask, srcX, srcY, srcWidth, srcHeight, linearFiltering);
+            blitCroppedAndScaledSingle(this.getBasisWeightResources().weightMaps, destX, destY, destWidth, destHeight,
+                readSource, readSource.getBasisWeightResources().weightMaps, srcX, srcY, srcWidth, srcHeight, linearFiltering);
+            blitCroppedAndScaledSingle(this.getBasisWeightResources().weightMask, destX, destY, destWidth, destHeight,
+                readSource, readSource.getBasisWeightResources().weightMask, srcX, srcY, srcWidth, srcHeight, linearFiltering);
         }
+    }
+
+    @Override
+    default int getWidth()
+    {
+        return getAlbedoMap() == null ? 0 : getAlbedoMap().getWidth();
+    }
+
+    @Override
+    default int getHeight()
+    {
+        return getAlbedoMap() == null ? 0 : getAlbedoMap().getHeight();
     }
 }

@@ -24,7 +24,7 @@ import org.jengineering.sjmply.PLYElementList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.material.Material;
+import kintsugi3d.gl.material.GenericMaterial;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
@@ -58,7 +58,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
     private float boundingRadius;
 
     private String materialFileName;
-    private Material material; // TODO support multiple materials
+    private GenericMaterial material; // TODO support multiple materials
 
     private VertexGeometry(File filename)
     {
@@ -257,7 +257,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
         {
             try
             {
-                Dictionary<String, Material> materialLibrary = Material.loadFromMTLFile(new File(file.getParentFile(), inst.materialFileName));
+                Dictionary<String, GenericMaterial> materialLibrary = GenericMaterial.loadFromMTLFile(new File(file.getParentFile(), inst.materialFileName));
                 inst.material = materialLibrary.get(materialName);
             }
             catch(IOException e)
@@ -678,7 +678,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
     }
 
     @Override
-    public Material getMaterial()
+    public GenericMaterial getMaterial()
     {
         return this.material;
     }

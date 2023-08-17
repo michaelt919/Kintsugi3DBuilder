@@ -14,7 +14,7 @@ package kintsugi3d.builder.resources.ibr;
 
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.geometry.GeometryResources;
-import kintsugi3d.gl.material.MaterialResources;
+import kintsugi3d.gl.material.GenericMaterialResources;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.builder.core.ViewSet;
 
@@ -73,7 +73,7 @@ public abstract class IBRResourcesBase<ContextType extends Context<ContextType>>
 
 
     @Override
-    public final MaterialResources<ContextType> getMaterialResources()
+    public final GenericMaterialResources<ContextType> getMaterialResources()
     {
         return sharedResources.getMaterialResources();
     }

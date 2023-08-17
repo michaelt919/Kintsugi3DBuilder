@@ -19,7 +19,7 @@ import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryResources;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
-import kintsugi3d.gl.material.MaterialResources;
+import kintsugi3d.gl.material.GenericMaterialResources;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.builder.core.StandardRenderingMode;
 import kintsugi3d.builder.core.ViewSet;
@@ -50,7 +50,7 @@ public interface IBRResources<ContextType extends Context<ContextType>> extends 
      * Diffuse, normal, specular, roughness maps
      * @return
      */
-    MaterialResources<ContextType> getMaterialResources();
+    GenericMaterialResources<ContextType> getMaterialResources();
 
     /**
      * 1D textures for encoding and decoding
