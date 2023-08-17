@@ -68,7 +68,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         if (includeConstant)
         {
             builder.addColorAttachment(ColorFormat.RGBA8); // Add attachment for storing constant term texture
-            builder.addColorAttachment(ColorFormat.RGBA8); // Add attachment for storing quadratic term texture
+//            builder.addColorAttachment(ColorFormat.RGBA8); // Add attachment for storing quadratic term texture
         }
 
         return builder.createFramebufferObject();
@@ -144,10 +144,10 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         return framebuffer.getColorAttachmentTexture(1);
     }
 
-    public Texture2D<ContextType> getQuadraticMap()
-    {
-        return framebuffer.getColorAttachmentTexture(2);
-    }
+//    public Texture2D<ContextType> getQuadraticMap()
+//    {
+//        return framebuffer.getColorAttachmentTexture(2);
+//    }
 
     public boolean includesConstantMap()
     {

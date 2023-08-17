@@ -31,10 +31,7 @@ public interface SpecularResources<ContextType extends Context<ContextType>>
         return null;
     }
 
-    default Texture2D<ContextType> getQuadraticMap()
-    {
-        return null;
-    }
+//    Texture2D<ContextType> getQuadraticMap();
 
     Texture2D<ContextType> getSpecularReflectivityMap();
     Texture2D<ContextType> getSpecularRoughnessMap();
@@ -129,8 +126,8 @@ public interface SpecularResources<ContextType extends Context<ContextType>>
             readSource, readSource.getNormalMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
         blitCroppedAndScaledSingle(this.getConstantMap(), destX, destY, destWidth, destHeight,
             readSource, readSource.getConstantMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
-        blitCroppedAndScaledSingle(this.getQuadraticMap(), destX, destY, destWidth, destHeight,
-            readSource, readSource.getQuadraticMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+//        blitCroppedAndScaledSingle(this.getQuadraticMap(), destX, destY, destWidth, destHeight,
+//            readSource, readSource.getQuadraticMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
         blitCroppedAndScaledSingle(this.getSpecularReflectivityMap(), destX, destY, destWidth, destHeight,
             readSource, readSource.getSpecularReflectivityMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
         blitCroppedAndScaledSingle(this.getSpecularRoughnessMap(), destX, destY, destWidth, destHeight,

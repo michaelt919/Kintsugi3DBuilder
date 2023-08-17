@@ -22,7 +22,7 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
     private Texture2D<ContextType> diffuseMap;
     private Texture2D<ContextType> normalMap;
     private Texture2D<ContextType> constantMap;
-    private Texture2D<ContextType> quadraticMap;
+//    private Texture2D<ContextType> quadraticMap;
     private Texture2D<ContextType> specularReflectivityMap;
     private Texture2D<ContextType> specularRoughnessMap;
     private Texture2D<ContextType> albedoMap;
@@ -78,11 +78,11 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
         return constantMap;
     }
 
-    @Override
-    public Texture2D<ContextType> getQuadraticMap()
-    {
-        return quadraticMap;
-    }
+//    @Override
+//    public Texture2D<ContextType> getQuadraticMap()
+//    {
+//        return quadraticMap;
+//    }
 
     @Override
     public Texture2D<ContextType> getSpecularReflectivityMap()
@@ -147,14 +147,14 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
         this.constantMap = constantMap;
     }
 
-    /**
-     * Sets the quadratic texture.  This object will take ownership of the normal map.
-     * @param quadraticMap
-     */
-    public void setQuadraticMap(Texture2D<ContextType> quadraticMap)
-    {
-        this.quadraticMap = quadraticMap;
-    }
+//    /**
+//     * Sets the quadratic texture.  This object will take ownership of the normal map.
+//     * @param quadraticMap
+//     */
+//    public void setQuadraticMap(Texture2D<ContextType> quadraticMap)
+//    {
+//        this.quadraticMap = quadraticMap;
+//    }
 
     /**
      * Sets the specular reflectivity texture.  This object will take ownership of the specular map.
@@ -217,10 +217,10 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
             constantMap.close();
         }
 
-        if (quadraticMap != null)
-        {
-            quadraticMap.close();
-        }
+//        if (quadraticMap != null)
+//        {
+//            quadraticMap.close();
+//        }
 
         if (specularReflectivityMap != null)
         {

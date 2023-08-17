@@ -17,7 +17,7 @@
 
 layout(location = 0) out vec4 diffuseOut;
 layout(location = 1) out vec4 constantOut;
-layout(location = 2) out vec4 quadraticOut;
+//layout(location = 2) out vec4 quadraticOut;
 
 void main()
 {

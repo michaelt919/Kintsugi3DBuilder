@@ -32,7 +32,7 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
     private final Texture2D<ContextType> diffuseMap;
     private final Texture2D<ContextType> normalMap;
     private final Texture2D<ContextType> constantMap;
-    private final Texture2D<ContextType> quadraticMap;
+//    private final Texture2D<ContextType> quadraticMap;
     private final AlbedoORMOptimization<ContextType> albedoORMOptimization;
 
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> createEmpty(
@@ -75,15 +75,15 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
                 .createTexture()
             : null;
 
-        // Allocate constant map
-        quadraticMap = includeConstant ?
-            context.getTextureFactory()
-                .build2DColorTexture(textureFitSettings.width, textureFitSettings.height)
-                .setInternalFormat(ColorFormat.RGB8)
-                .setLinearFilteringEnabled(true)
-                .setMipmapsEnabled(true)
-                .createTexture()
-            : null;
+//        // Allocate quadratic map
+//        quadraticMap = includeConstant ?
+//            context.getTextureFactory()
+//                .build2DColorTexture(textureFitSettings.width, textureFitSettings.height)
+//                .setInternalFormat(ColorFormat.RGB8)
+//                .setLinearFilteringEnabled(true)
+//                .setMipmapsEnabled(true)
+//                .createTexture()
+//            : null;
 
         albedoORMOptimization = original.getOcclusionMap() == null ?
             AlbedoORMOptimization.createWithoutOcclusion(context, textureFitSettings) :
@@ -123,14 +123,14 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
                 .createTexture()
             : null;
 
-        // Load constant map
-        File quadraticMapFile = new File(priorSolutionDirectory, "quadratic.png");
-        quadraticMap = quadraticMapFile.exists() ?
-            context.getTextureFactory()
-                .build2DColorTextureFromFile(quadraticMapFile, true)
-                .setLinearFilteringEnabled(true)
-                .createTexture()
-            : null;
+//        // Load quadratic map
+//        File quadraticMapFile = new File(priorSolutionDirectory, "quadratic.png");
+//        quadraticMap = quadraticMapFile.exists() ?
+//            context.getTextureFactory()
+//                .build2DColorTextureFromFile(quadraticMapFile, true)
+//                .setLinearFilteringEnabled(true)
+//                .createTexture()
+//            : null;
 
         albedoORMOptimization = AlbedoORMOptimization.loadFromPriorSolution(context, textureFitSettings, priorSolutionDirectory);
 
@@ -158,10 +158,10 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
             constantMap.close();
         }
 
-        if (quadraticMap != null)
-        {
-            quadraticMap.close();
-        }
+//        if (quadraticMap != null)
+//        {
+//            quadraticMap.close();
+//        }
 
         if (albedoORMOptimization != null)
         {
@@ -187,11 +187,11 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
         return constantMap;
     }
 
-    @Override
-    public Texture2D<ContextType> getQuadraticMap()
-    {
-        return quadraticMap;
-    }
+//    @Override
+//    public Texture2D<ContextType> getQuadraticMap()
+//    {
+//        return quadraticMap;
+//    }
 
     @Override
     public Texture2D<ContextType> getAlbedoMap()

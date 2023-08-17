@@ -205,7 +205,7 @@ public class SpecularFitProcess
             if (settings.shouldIncludeConstantTerm())
             {
                 fullResolution.saveConstantMap(settings.getOutputDirectory());
-                fullResolution.saveQuadraticMap(settings.getOutputDirectory());
+//                fullResolution.saveQuadraticMap(settings.getOutputDirectory());
             }
 
             // Save the final weight maps
