@@ -32,7 +32,7 @@ public class SpecularFitRequestParams
     private double convergenceTolerance = 0.00001;
     private double preliminaryConvergenceTolerance = 0.01;
 
-    private boolean shouldIncludeConstantTerm = true;
+    private boolean shouldIncludeConstantTerm;
 
     private File priorSolutionDirectory = null;
     private File outputDirectory;
