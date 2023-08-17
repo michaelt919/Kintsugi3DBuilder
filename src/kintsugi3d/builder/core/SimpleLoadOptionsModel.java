@@ -14,17 +14,17 @@ package kintsugi3d.builder.core;
 
 public class SimpleLoadOptionsModel implements LoadOptionsModel
 {
-    private boolean colorImagesRequested;
-    private boolean mipmapsRequested;
-    private boolean compressionRequested;
-    private boolean alphaRequested;
-    private boolean iccTransformationRequested;
-    private boolean depthImagesRequested;
-    private int depthImageWidth;
-    private int depthImageHeight;
-    private int previewImageWidth;
-    private int previewImageHeight;
-    private int maxLoadingThreads;
+    private boolean colorImagesRequested = true;
+    private boolean mipmapsRequested = true;
+    private boolean compressionRequested = true;
+    private boolean alphaRequested = true;
+    private boolean iccTransformationRequested = true;
+    private boolean depthImagesRequested = true;
+    private int depthImageWidth = 512;
+    private int depthImageHeight = 512;
+    private int previewImageWidth = 1024;
+    private int previewImageHeight = 1024;
+    private int maxLoadingThreads = 12;
 
     @Override
     public boolean areColorImagesRequested()
