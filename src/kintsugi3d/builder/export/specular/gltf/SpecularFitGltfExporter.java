@@ -10,7 +10,7 @@
  *
  */
 
-package kintsugi3d.builder.fit.gltf;
+package kintsugi3d.builder.export.specular.gltf;
 
 import de.javagl.jgltf.impl.v2.*;
 import de.javagl.jgltf.model.creation.GltfModelBuilder;
