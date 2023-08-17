@@ -14,7 +14,7 @@
 #define COLOR_APPEARANCE_ANALYTIC_GLSL
 
 #include "colorappearance.glsl"
-#include "../relight/reflectanceequations.glsl"
+#include "reflectanceequations.glsl"
 
 #line 20 1109
 
@@ -66,7 +66,8 @@
 #define ANALYTIC_UV_SCALE 1.0
 #endif
 
-vec3 getNormal(vec2 texCoord);
+
+vec3 getTangentSpaceNormal(vec2 texCoord);
 
 vec4 getColor(int index)
 {

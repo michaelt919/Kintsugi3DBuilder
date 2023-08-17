@@ -212,7 +212,8 @@ public class SpecularFitProcess
             try (WeightImageCreator<ContextType> weightImageCreator = new WeightImageCreator<>(cache.getContext(), settings.getTextureFitSettings(), weightsPerImage))
             {
                 weightImageCreator.createImages(fullResolution, settings.getOutputDirectory());
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 throw new RuntimeException(e);
             }

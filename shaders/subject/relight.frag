@@ -1,29 +1,7 @@
 #version 330
 #extension GL_ARB_texture_query_lod : enable
 
-/*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
- * Copyright (c) 2019 The Regents of the University of Minnesota
- *
- * Licensed under GPLv3
- * ( http://www.gnu.org/licenses/gpl-3.0.html )
- *
- * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
- */
-
-in vec3 fPosition;
-in vec2 fTexCoord;
-in vec3 fNormal;
-in vec3 fTangent;
-in vec3 fBitangent;
-
-layout(location = 0) out vec4 fragColor;
-layout(location = 1) out int fragObjectID;
-
-uniform mat4 model_view;
-uniform mat4 fullProjection;
+#include "subject.glsl"
 
 #ifndef MATERIAL_EXPLORATION_MODE
 #define MATERIAL_EXPLORATION_MODE 0
@@ -41,44 +19,12 @@ uniform mat4 fullProjection;
 #define SORTING_SAMPLE_COUNT 5
 #endif
 
-#ifndef RELIGHTING_ENABLED
-#define RELIGHTING_ENABLED 1
-#endif
-
-#ifndef SPOTLIGHTS_ENABLED
-#define SPOTLIGHTS_ENABLED 0
-#endif
-
-#ifndef SHADOWS_ENABLED
-#define SHADOWS_ENABLED 0
-#endif
-
 #ifndef IMAGE_BASED_RENDERING_ENABLED
 #define IMAGE_BASED_RENDERING_ENABLED 0
 #endif
 
-#ifndef FRESNEL_EFFECT_ENABLED
-#define FRESNEL_EFFECT_ENABLED 0
-#endif
-
-#ifndef PHYSICALLY_BASED_MASKING_SHADOWING
-#define PHYSICALLY_BASED_MASKING_SHADOWING 0
-#endif
-
-#ifndef ENVIRONMENT_ILLUMINATION_ENABLED
-#define ENVIRONMENT_ILLUMINATION_ENABLED 1
-#endif
-
 #ifndef PRECOMPUTED_VIEW_WEIGHTS_ENABLED
 #define PRECOMPUTED_VIEW_WEIGHTS_ENABLED 0
-#endif
-
-#ifndef VIRTUAL_LIGHT_COUNT
-#if RELIGHTING_ENABLED
-#define VIRTUAL_LIGHT_COUNT 4
-#else
-#define VIRTUAL_LIGHT_COUNT 1
-#endif
 #endif
 
 #ifndef ARCHIVING_2017_ENVIRONMENT_NORMALIZATION
@@ -88,7 +34,7 @@ uniform mat4 fullProjection;
 #if MATERIAL_EXPLORATION_MODE
 
 #include "../colorappearance/analytic.glsl"
-
+#line 38 0
 #undef SMITH_MASKING_SHADOWING
 #define SMITH_MASKING_SHADOWING 1
 
@@ -99,6 +45,10 @@ uniform mat4 fullProjection;
 #undef SPECULAR_TEXTURE_ENABLED
 #undef ROUGHNESS_TEXTURE_ENABLED
 #undef NORMAL_TEXTURE_ENABLED
+#undef UV_SCALE_ENABLED
+#undef UV_SCALE
+#undef NORMAL_MAP_SCALE_ENABLED
+#undef NORMAL_MAP_SCALE
 
 #define DEFAULT_DIFFUSE_COLOR ANALYTIC_DIFFUSE_COLOR
 #define DEFAULT_SPECULAR_COLOR ANALYTIC_SPECULAR_COLOR
@@ -107,10 +57,12 @@ uniform mat4 fullProjection;
 #define SPECULAR_TEXTURE_ENABLED 0
 #define ROUGHNESS_TEXTURE_ENABLED 0
 #define NORMAL_TEXTURE_ENABLED 1
+#define UV_SCALE_ENABLED 1
+#define UV_SCALE ANALYTIC_UV_SCALE
+#define NORMAL_MAP_SCALE_ENABLED 1
+#define NORMAL_MAP_SCALE ANALYTIC_BUMP_HEIGHT
 
 #endif
-
-#include "../colorappearance/textures.glsl"
 
 #if !MATERIAL_EXPLORATION_MODE
 
@@ -135,10 +87,13 @@ uniform vec3 defaultDiffuseColor;
 #endif // DEFAULT_SPECULAR_COLOR
 
 #ifndef DEFAULT_SPECULAR_ROUGHNESS
-#define DEFAULT_SPECULAR_ROUGHNESS (vec3(0.1)); // TODO pass in a default?
+#define DEFAULT_SPECULAR_ROUGHNESS (0.1); // TODO pass in a default?
 #endif
 
 #endif // !MATERIAL_EXPLORATION_MODE
+
+#include "../colorappearance/material.glsl"
+#line 98 0
 
 #ifndef MIPMAPS_ENABLED
 #define MIPMAPS_ENABLED !BUEHLER_ALGORITHM
@@ -148,20 +103,10 @@ uniform vec3 defaultDiffuseColor;
 #define DISCRETE_DIFFUSE_ENVIRONMENT 1
 #endif
 
-#ifndef SMITH_MASKING_SHADOWING
-#if ROUGHNESS_TEXTURE_ENABLED
-#define SMITH_MASKING_SHADOWING 1
-#endif
-#endif
-
-#include "reflectanceequations.glsl"
-#include "tonemap.glsl"
 
 #if RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
 #include "environment.glsl"
 #endif
-
-uniform vec3 viewPos;
 
 #include "../colorappearance/colorappearance.glsl"
 
@@ -178,32 +123,9 @@ uniform vec3 viewPos;
 
 #endif
 
-#line 182 0
+#line 128 0
 
-uniform int objectID;
 uniform vec3 holeFillColor;
-
-#if VIRTUAL_LIGHT_COUNT > 0
-
-uniform vec3 lightIntensityVirtual[VIRTUAL_LIGHT_COUNT];
-
-#if RELIGHTING_ENABLED
-uniform vec3 lightPosVirtual[VIRTUAL_LIGHT_COUNT];
-uniform vec3 lightOrientationVirtual[VIRTUAL_LIGHT_COUNT];
-
-#if SPOTLIGHTS_ENABLED
-uniform float lightSpotSizeVirtual[VIRTUAL_LIGHT_COUNT];
-uniform float lightSpotTaperVirtual[VIRTUAL_LIGHT_COUNT];
-#endif // SPOTLIGHTS_ENABLED
-
-#if SHADOWS_ENABLED
-uniform sampler2DArray shadowMaps;
-uniform mat4 lightMatrixVirtual[VIRTUAL_LIGHT_COUNT];
-#endif // SHADOWS_ENABLED
-
-#endif // RELIGHTING_ENABLED
-
-#endif // VIRTUAL_LIGHT_COUNT > 0
 
 #if !BUEHLER_ALGORITHM
 uniform float weightExponent;
@@ -221,16 +143,6 @@ float getViewWeight(int viewIndex)
     return extractComponentByIndex(viewWeights[viewIndex/4], viewIndex%4);
 }
 #endif
-
-struct Material
-{
-    vec3 diffuseColor;
-    vec3 specularColor;
-    vec3 roughnessRGB;
-    vec3 roughnessRGBSq;
-    float roughness;
-    float roughnessSq;
-};
 
 #if IMAGE_BASED_RENDERING_ENABLED
 
@@ -310,7 +222,7 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 normalDir, Mat
 
         if (sampleColor.a == 0.0)
         {
-            //mfdFresnel = distTimesPi(nDotH, m.roughnessRGB) * m.specularColor / PI;
+            //mfdFresnel = distTimesPi(nDotH, vec3(m.roughness)) * m.specularColor / PI;
             mfdFresnel = vec3(0);
         }
         else
@@ -643,70 +555,6 @@ vec4[VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 normalDir, Material m)
 
 #endif // IMAGE_BASED_RENDERING_ENABLED
 
-Material getMaterial()
-{
-    Material m;
-
-#if DIFFUSE_TEXTURE_ENABLED
-    m.diffuseColor = pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma));
-#else
-    m.diffuseColor = DEFAULT_DIFFUSE_COLOR;
-#endif
-
-#if SPECULAR_TEXTURE_ENABLED
-    m.specularColor = max(vec3(0.04), pow(texture(specularMap, fTexCoord).rgb, vec3(gamma)));
-#else
-    m.specularColor = DEFAULT_SPECULAR_COLOR;
-#endif
-
-#if ROUGHNESS_TEXTURE_ENABLED
-    vec3 roughnessLookup = texture(roughnessMap, fTexCoord).rgb;
-    vec3 sqrtRoughness = vec3(
-        roughnessLookup.g + roughnessLookup.r - 16.0 / 31.0,
-        roughnessLookup.g,
-        roughnessLookup.g + roughnessLookup.b - 16.0 / 31.0);
-    m.roughnessRGB = sqrtRoughness * sqrtRoughness;
-#else
-    m.roughnessRGB = DEFAULT_SPECULAR_ROUGHNESS;
-#endif
-
-    m.roughnessRGBSq = m.roughnessRGB * m.roughnessRGB;
-    m.roughnessSq = getLuminance(m.specularColor) / (getLuminance(m.specularColor / m.roughnessRGBSq));
-    m.roughness = sqrt(m.roughnessSq);
-
-    return m;
-}
-
-vec3 getRefinedNormalDir(vec3 triangleNormal)
-{
-#if TANGENT_SPACE_NORMAL_MAP && NORMAL_TEXTURE_ENABLED
-    vec3 tangent = normalize(fTangent - dot(triangleNormal, fTangent) * triangleNormal);
-    vec3 bitangent = normalize(fBitangent
-        - dot(triangleNormal, fBitangent) * triangleNormal
-        - dot(tangent, fBitangent) * tangent);
-    mat3 tangentToObject = mat3(tangent, bitangent, triangleNormal);
-#endif
-
-    vec3 normalDir;
-#if NORMAL_TEXTURE_ENABLED
-#if MATERIAL_EXPLORATION_MODE
-    vec2 scaledTexCoord = ANALYTIC_UV_SCALE * fTexCoord;
-    vec3 normalDirTS = normalize(getNormal(scaledTexCoord - floor(scaledTexCoord)) * vec3(ANALYTIC_BUMP_HEIGHT, ANALYTIC_BUMP_HEIGHT, 1.0));
-    normalDir = tangentToObject * normalDirTS;
-#elif TANGENT_SPACE_NORMAL_MAP
-    vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
-    vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
-    normalDir = tangentToObject * normalDirTS;
-#else
-    normalDir = texture(normalMap, fTexCoord).xyz * 2 - vec3(1.0);
-#endif // TANGENT_SPACE_NORMAL_MAP
-#else
-    normalDir = triangleNormal;
-#endif // NORMAL_TEXTURE_ENABLED
-
-    return normalDir;
-}
-
 #if SHADOW_MAPS
 bool shadowTest(int lightIndex)
 {
@@ -724,7 +572,7 @@ bool shadowTest(int lightIndex)
 void main()
 {
     vec3 triangleNormal = normalize(fNormal);
-    vec3 normalDir = getRefinedNormalDir(triangleNormal);
+    vec3 normalDir = getRefinedWorldSpaceNormal(triangleNormal);
 
     vec3 viewDir = normalize(viewPos - fPosition);
     float nDotV_triangle = dot(triangleNormal, viewDir);
@@ -822,7 +670,7 @@ void main()
                 vec3 mfdFresnel;
 
 #if RELIGHTING_ENABLED && FRESNEL_EFFECT_ENABLED
-                vec3 mfdFresnelBase = m.specularColor * distTimesPi(nDotH, m.roughnessRGB);
+                vec3 mfdFresnelBase = m.specularColor * distTimesPi(nDotH, vec3(m.roughness));
                 vec3 mfdFresnelAnalytic = fresnel(mfdFresnelBase, vec3(getLuminance(mfdFresnelBase) / getLuminance(m.specularColor)), hDotV);
 
 #if IMAGE_BASED_RENDERING_ENABLED
@@ -836,7 +684,7 @@ void main()
 #endif // IMAGE_BASED_RENDERING_ENABLED
 
 #else
-                vec3 mfdFresnelAnalytic = m.specularColor * distTimesPi(nDotH, m.roughnessRGB);
+                vec3 mfdFresnelAnalytic = m.specularColor * distTimesPi(nDotH, vec3(m.roughness));
 
 #if IMAGE_BASED_RENDERING_ENABLED
                 mfdFresnel = max(vec3(0.0), predictedMFD.rgb);

@@ -47,7 +47,7 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
     }
 
     @Override
-    public void initialize() throws FileNotFoundException
+    public void initialize()
     {
         // the actual subject for image-based rendering
         // No lighting resources since light calibration is effectively unlit shading
@@ -56,13 +56,13 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
     }
 
     @Override
-    public void reloadShaders() throws FileNotFoundException
+    public void reloadShaders()
     {
         ibrSubject.reloadShaders();
     }
 
     @Override
-    public void update() throws FileNotFoundException
+    public void update()
     {
         ibrSubject.update();
     }

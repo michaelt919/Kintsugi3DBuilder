@@ -27,6 +27,8 @@ public interface LoadingHandler
     void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory,
         String primaryViewName, ReadonlyLoadOptionsModel loadOptions);
 
+    void requestFragmentShader(File shaderFile);
+
     Optional<AbstractImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException;
     void loadBackplate(File backplateFile) throws FileNotFoundException;
 

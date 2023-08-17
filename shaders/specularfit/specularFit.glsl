@@ -28,7 +28,7 @@ uniform sampler2D roughnessEstimate;
 #define NORMAL_TEXTURE_ENABLED 1
 #endif
 
-#include <shaders/relight/reflectanceequations.glsl>
+#include <shaders/colorappearance/reflectanceequations.glsl>
 
 #define COSINE_CUTOFF 0.0
 

@@ -220,6 +220,61 @@
             </Menu>
          </items>
       </Menu>
+      <Menu mnemonicParsing="false" text="Shading">
+         <RadioMenuItem mnemonicParsing="false" text="None" userData="None" visible="false">
+             <userData>
+                 <StandardRenderingMode fx:value="NONE" />
+             </userData>
+         </RadioMenuItem>
+         <RadioMenuItem mnemonicParsing="false" text="Wireframe" visible="false">
+             <userData>
+                 <StandardRenderingMode fx:value="WIREFRAME" />
+             </userData>
+            <toggleGroup>
+               <ToggleGroup fx:id="renderGroup" />
+            </toggleGroup>
+         </RadioMenuItem>
+         <RadioMenuItem mnemonicParsing="false" text="Simple Lambertian" toggleGroup="$renderGroup" visible="false">
+             <userData>
+                 <StandardRenderingMode fx:value="LAMBERTIAN_SHADED" />
+             </userData>
+         </RadioMenuItem>
+         <RadioMenuItem mnemonicParsing="false" text="Simple specular" toggleGroup="$renderGroup">
+             <userData>
+                 <StandardRenderingMode fx:value="SPECULAR_SHADED" />
+             </userData>
+         </RadioMenuItem>
+         <RadioMenuItem mnemonicParsing="false" text="Solid textured" toggleGroup="$renderGroup" visible="false">
+             <userData>
+                 <StandardRenderingMode fx:value="SOLID_TEXTURED" />
+             </userData>
+         </RadioMenuItem>
+          <RadioMenuItem mnemonicParsing="false" text="Normal mapped" toggleGroup="$renderGroup">
+              <userData>
+                  <StandardRenderingMode fx:value="SPECULAR_NORMAL_TEXTURED" />
+              </userData>
+          </RadioMenuItem>
+         <RadioMenuItem mnemonicParsing="false" text="Textured Lambertian" toggleGroup="$renderGroup">
+             <userData>
+                 <StandardRenderingMode fx:value="LAMBERTIAN_DIFFUSE_TEXTURED" />
+             </userData>
+         </RadioMenuItem>
+         <RadioMenuItem mnemonicParsing="false" text="Textured material" toggleGroup="$renderGroup">
+             <userData>
+                 <StandardRenderingMode fx:value="MATERIAL_SHADED" />
+             </userData>
+         </RadioMenuItem>
+         <RadioMenuItem mnemonicParsing="false" selected="true" text="Image-based rendering (IBR)" toggleGroup="$renderGroup">
+             <userData>
+                 <StandardRenderingMode fx:value="IMAGE_BASED" />
+             </userData>
+         </RadioMenuItem>
+          <RadioMenuItem mnemonicParsing="false" text="IBR with textures" toggleGroup="$renderGroup">
+              <userData>
+                  <StandardRenderingMode fx:value="IMAGE_BASED_WITH_MATERIALS" />
+              </userData>
+          </RadioMenuItem>
+      </Menu>
       <Menu mnemonicParsing="false" text="System Settings">
          <items>
             <CheckMenuItem fx:id="autoCacheClearingCheckMenuItem" mnemonicParsing="false" selected="true" text="Auto Cache Clearing (UNFINISHED)" />
@@ -317,62 +372,6 @@
          <CheckMenuItem fx:id="visibleLightsCheckMenuItem" mnemonicParsing="false" selected="true" text="Show light sources" />
          <CheckMenuItem fx:id="visibleCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show camera poses for photographs" visible="false" />
          <CheckMenuItem fx:id="visibleSavedCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show saved camera poses" visible="false" />
-      </Menu>
-      <Menu mnemonicParsing="false" text="Shading" visible="false">
-         <RadioMenuItem mnemonicParsing="false" text="None" userData="None" visible="false">
-             <userData>
-                 <StandardRenderingMode fx:value="NONE" />
-             </userData>
-         </RadioMenuItem>
-         <RadioMenuItem mnemonicParsing="false" text="Wireframe" visible="false">
-             <userData>
-                 <StandardRenderingMode fx:value="WIREFRAME" />
-             </userData>
-            <toggleGroup>
-               <ToggleGroup fx:id="renderGroup" />
-            </toggleGroup>
-         </RadioMenuItem>
-         <RadioMenuItem mnemonicParsing="false" text="Simple Lambertian" toggleGroup="$renderGroup" visible="false">
-             <userData>
-                 <StandardRenderingMode fx:value="LAMBERTIAN_SHADED" />
-             </userData>
-         </RadioMenuItem>
-         <RadioMenuItem mnemonicParsing="false" text="Simple specular" toggleGroup="$renderGroup">
-             <userData>
-                 <StandardRenderingMode fx:value="SPECULAR_SHADED" />
-             </userData>
-         </RadioMenuItem>
-         <RadioMenuItem mnemonicParsing="false" text="Solid textured" toggleGroup="$renderGroup" visible="false">
-             <userData>
-                 <StandardRenderingMode fx:value="SOLID_TEXTURED" />
-             </userData>
-         </RadioMenuItem>
-          <RadioMenuItem mnemonicParsing="false" text="Normal mapped" toggleGroup="$renderGroup">
-              <userData>
-                  <StandardRenderingMode fx:value="SPECULAR_NORMAL_TEXTURED" />
-              </userData>
-          </RadioMenuItem>
-         <RadioMenuItem mnemonicParsing="false" text="Textured Lambertian" toggleGroup="$renderGroup">
-             <userData>
-                 <StandardRenderingMode fx:value="LAMBERTIAN_DIFFUSE_TEXTURED" />
-             </userData>
-         </RadioMenuItem>
-         <RadioMenuItem mnemonicParsing="false" text="Textured material" toggleGroup="$renderGroup">
-             <userData>
-                 <StandardRenderingMode fx:value="MATERIAL_SHADED" />
-             </userData>
-         </RadioMenuItem>
-         <RadioMenuItem mnemonicParsing="false" selected="true" text="Image-based rendering (IBR)" toggleGroup="$renderGroup">
-             <userData>
-                 <StandardRenderingMode fx:value="IMAGE_BASED" />
-             </userData>
-         </RadioMenuItem>
-          <RadioMenuItem mnemonicParsing="false" text="IBR with textures" toggleGroup="$renderGroup">
-              <userData>
-                  <StandardRenderingMode fx:value="IMAGE_BASED_WITH_MATERIALS" />
-              </userData>
-          </RadioMenuItem>
-         <SeparatorMenuItem mnemonicParsing="false" />
       </Menu>
       <Menu mnemonicParsing="false" text="Windows" visible="false">
          <CheckMenuItem mnemonicParsing="false" selected="true" text="Scene" />
