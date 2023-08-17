@@ -60,7 +60,7 @@ public final class FinalErrorCalculaton
     public <ContextType extends Context<ContextType>> void validateNormalMap(
         IBRResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit, PrintStream rmseOut)
     {
-        if (CALCULATE_NORMAL_RMSE && resources.getMaterialResources().getNormalMap() != null)
+        if (CALCULATE_NORMAL_RMSE && resources.getSpecularMaterialResources().getNormalMap() != null)
         {
             try (ProgramObject<ContextType> textureRectProgram = resources.getContext().getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_dynamic.vert"))
@@ -71,7 +71,7 @@ public final class FinalErrorCalculaton
             {
                 // Use the real geometry rather than a rectangle so that the normal map is masked properly for the part of the normal map used.
                 Drawable<ContextType> textureRect = resources.createDrawable(textureRectProgram);
-                textureRectProgram.setTexture("tex", resources.getMaterialResources().getNormalMap());
+                textureRectProgram.setTexture("tex", resources.getSpecularMaterialResources().getNormalMap());
                 textureRectFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
                 textureRect.draw(PrimitiveMode.TRIANGLE_FAN, textureRectFBO);
 //                    textureRectFBO.saveColorBufferToFile(0, "PNG", new File(textureFitSettings.outputDirectory, "test_normalGT.png"));

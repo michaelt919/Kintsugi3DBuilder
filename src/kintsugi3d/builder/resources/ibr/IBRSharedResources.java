@@ -406,6 +406,16 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
         }
     }
 
+    public void replaceSpecularMaterialResources(SpecularMaterialResources<ContextType> specularMaterialResources)
+    {
+        if (this.specularMaterialResources != null)
+        {
+            this.specularMaterialResources.close();
+        }
+
+        this.specularMaterialResources = specularMaterialResources;
+    }
+
     /**
      * Gets a shader program builder with the following preprocessor defines automatically injected based on the
      * characteristics of this instance:

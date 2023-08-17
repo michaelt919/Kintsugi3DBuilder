@@ -44,6 +44,10 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         useTextureSafe(program, "occlusionMap", this.getOcclusionMap());
         useTextureSafe(program, "albedoMap", this.getAlbedoMap());
         useTextureSafe(program, "ormMap", this.getORMMap());
-        useTextureSafe(program, "weightMaps", this.getBasisWeightResources().weightMaps);
+
+        if (this.getBasisWeightResources() != null)
+        {
+            useTextureSafe(program, "weightMaps", this.getBasisWeightResources().weightMaps);
+        }
     }
 }

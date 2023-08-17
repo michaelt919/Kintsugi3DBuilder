@@ -62,7 +62,7 @@ public class SpecularFitProcess
             settings.getIbrSettings(), settings.getSpecularBasisSettings());
     }
 
-    public <ContextType extends Context<ContextType>> SpecularMaterialResources<ContextType> optimizeFit(IBRResourcesImageSpace<ContextType> resources)
+    public <ContextType extends Context<ContextType>> void optimizeFit(IBRResourcesImageSpace<ContextType> resources)
         throws IOException
     {
         Instant start = Instant.now();
@@ -73,7 +73,8 @@ public class SpecularFitProcess
         Duration duration = Duration.between(start, Instant.now());
         log.info("Cache found / generated in: " + duration);
 
-        SpecularMaterialResources<ContextType> specularFit = optimizeFit(cache, resources.getMaterialResources());
+        // Runs the fit (long process) and then replaces the old material resources / textures
+        resources.replaceSpecularMaterialResources(optimizeFit(cache, resources.getSpecularMaterialResources()));
 
 //        // Save basis image visualization for reference and debugging
 //        try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(cache.getContext(), settings.getSpecularBasisSettings()))
@@ -109,11 +110,9 @@ public class SpecularFitProcess
 
 
         rescaleTextures();
-
-        return specularFit;
     }
 
-    public <ContextType extends Context<ContextType>> SpecularMaterialResources<ContextType> optimizeFit(
+    private <ContextType extends Context<ContextType>> SpecularMaterialResources<ContextType> optimizeFit(
         ImageCache<ContextType> cache, SpecularMaterialResources<ContextType> original)
         throws IOException
     {
@@ -381,7 +380,6 @@ public class SpecularFitProcess
             albedoORM.saveTextures(settings.getOutputDirectory());
             return solution;
         }
-
     }
 
     private static <ContextType extends Context<ContextType>>
