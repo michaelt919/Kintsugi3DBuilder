@@ -16,40 +16,23 @@ import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.gl.core.*;
 
-public interface SpecularResources<ContextType extends Context<ContextType>>
-    extends AutoCloseable, ContextBound<ContextType>, Blittable<SpecularResources<ContextType>>
+public interface SpecularMaterialResources<ContextType extends Context<ContextType>>
+    extends AutoCloseable, ContextBound<ContextType>, Blittable<SpecularMaterialResources<ContextType>>
 {
-    default Texture2D<ContextType> getDiffuseMap()
-    {
-        return null;
-    }
+    Texture2D<ContextType> getDiffuseMap();
 
     Texture2D<ContextType> getNormalMap();
 
-    default Texture2D<ContextType> getConstantMap()
-    {
-        return null;
-    }
+    Texture2D<ContextType> getConstantMap();
 
 //    Texture2D<ContextType> getQuadraticMap();
 
     Texture2D<ContextType> getSpecularReflectivityMap();
     Texture2D<ContextType> getSpecularRoughnessMap();
 
-    /**
-     * Width and height are based on albedo map so this should never return null, unless getWidth() and getHeight() are overridden.
-     * @return
-     */
-    default Texture2D<ContextType> getAlbedoMap()
-    {
-        // Diffuse map can substitute for albedo map if there's no albedo map
-        return getDiffuseMap();
-    }
+    Texture2D<ContextType> getAlbedoMap();
 
-    default Texture2D<ContextType> getORMMap()
-    {
-        return null;
-    }
+    Texture2D<ContextType> getORMMap();
 
     default Texture2D<ContextType> getOcclusionMap()
     {
@@ -57,22 +40,16 @@ public interface SpecularResources<ContextType extends Context<ContextType>>
         return getORMMap();
     }
 
-    default BasisResources<ContextType> getBasisResources()
-    {
-        return null;
-    }
+    BasisResources<ContextType> getBasisResources();
 
-    default BasisWeightResources<ContextType> getBasisWeightResources()
-    {
-        return null;
-    }
+    BasisWeightResources<ContextType> getBasisWeightResources();
 
     @Override
     void close(); // no exception
 
     private <SourceType extends Blittable<?>> void blitCroppedAndScaledSingle(
         Blittable<SourceType> destTex, int destX, int destY, int destWidth, int destHeight,
-        SpecularResources<ContextType> readSource, SourceType srcTex, int srcX, int srcY, int srcWidth, int srcHeight,
+        SpecularMaterialResources<ContextType> readSource, SourceType srcTex, int srcX, int srcY, int srcWidth, int srcHeight,
         boolean linearFiltering)
     {
         if (destTex != null && srcTex != null)
@@ -117,7 +94,7 @@ public interface SpecularResources<ContextType extends Context<ContextType>>
      * @param linearFiltering Whether or not to use linear filtering if the dimensions of the source and destination are not the same.
      */
     default void blitCroppedAndScaled(int destX, int destY, int destWidth, int destHeight,
-        SpecularResources<ContextType> readSource, int srcX, int srcY, int srcWidth, int srcHeight, boolean linearFiltering)
+        SpecularMaterialResources<ContextType> readSource, int srcX, int srcY, int srcWidth, int srcHeight, boolean linearFiltering)
     {
         // Blit each individual texture -- diffuse, normal, specular reflectivity, specular roughness, weight maps, weight mask
         blitCroppedAndScaledSingle(this.getDiffuseMap(), destX, destY, destWidth, destHeight,
@@ -137,8 +114,10 @@ public interface SpecularResources<ContextType extends Context<ContextType>>
         blitCroppedAndScaledSingle(this.getORMMap(), destX, destY, destWidth, destHeight,
             readSource, readSource.getORMMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
 
-        if (this.getOcclusionMap() != this.getORMMap() && readSource.getOcclusionMap() != this.getOcclusionMap())
+        if (this.getOcclusionMap() != this.getORMMap())
         {
+            // Occlusion map and ORM map may be the same; so only blit if they are distinct in the destination
+            // to prevent overwriting ORM with occlusion
             blitCroppedAndScaledSingle(this.getOcclusionMap(), destX, destY, destWidth, destHeight,
                 readSource, readSource.getOcclusionMap(), srcX, srcY, srcWidth, srcHeight, linearFiltering);
         }
@@ -152,15 +131,5 @@ public interface SpecularResources<ContextType extends Context<ContextType>>
         }
     }
 
-    @Override
-    default int getWidth()
-    {
-        return getAlbedoMap() == null ? 0 : getAlbedoMap().getWidth();
-    }
-
-    @Override
-    default int getHeight()
-    {
-        return getAlbedoMap() == null ? 0 : getAlbedoMap().getHeight();
-    }
+    void setupShaderProgram(Program<ContextType> program);
 }

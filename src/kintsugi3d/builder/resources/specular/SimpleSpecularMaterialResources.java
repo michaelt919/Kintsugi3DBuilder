@@ -17,7 +17,8 @@ import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Texture2D;
 
-public class SimpleSpecularResources<ContextType extends Context<ContextType>> implements SpecularResources<ContextType>
+public class SimpleSpecularMaterialResources<ContextType extends Context<ContextType>>
+    extends SpecularMaterialResourcesBase<ContextType>
 {
     private Texture2D<ContextType> diffuseMap;
     private Texture2D<ContextType> normalMap;
@@ -35,7 +36,7 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
     /**
      * Package-visible default constructor
      */
-    SimpleSpecularResources(ContextType context)
+    SimpleSpecularMaterialResources(ContextType context)
     {
         this.context = context;
     }

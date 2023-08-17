@@ -17,7 +17,7 @@ import java.io.FileNotFoundException;
 import java.util.Objects;
 
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
-import kintsugi3d.builder.resources.specular.SpecularResources;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
@@ -74,7 +74,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         return builder.createFramebufferObject();
     }
 
-    public void execute(SpecularResources<ContextType> specularFit)
+    public void execute(SpecularMaterialResources<ContextType> specularFit)
     {
         // Set up diffuse estimation shader program
         specularFit.getBasisResources().useWithShaderProgram(estimationProgram);

@@ -18,7 +18,7 @@ import kintsugi3d.gl.vecmath.Vector3;
 import java.io.File;
 import java.io.IOException;
 
-public interface ReadonlyGenericMaterial
+public interface ReadonlyMaterial
 {
     String getName();
 
@@ -82,6 +82,6 @@ public interface ReadonlyGenericMaterial
 
     ReadonlyMaterialScalarMap getAmbientOcclusionMap();
 
-    <ContextType extends Context<ContextType>> GenericMaterialResources<ContextType> createResources(
+    <ContextType extends Context<ContextType>> MaterialResources<ContextType> createResources(
         ContextType context, File textureDirectory, TextureLoadOptions loadOptions) throws IOException;
 }

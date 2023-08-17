@@ -12,7 +12,6 @@
 
 package kintsugi3d.gl.material;
 
-import kintsugi3d.builder.resources.specular.SpecularResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.*;
@@ -24,13 +23,13 @@ import java.io.IOException;
 
 // TODO Use more information from the material.  Currently just pulling texture names.
 // TODO use glTF instead of / in addition to OBJ material?
-public class GenericMaterialResources<ContextType extends Context<ContextType>> implements SpecularResources<ContextType>
+public class MaterialResources<ContextType extends Context<ContextType>> implements ContextBound<ContextType>, Resource
 {
-    private static final Logger log = LoggerFactory.getLogger(GenericMaterialResources.class);
+    private static final Logger log = LoggerFactory.getLogger(MaterialResources.class);
 
     private final ContextType context;
 
-    private Texture2D<ContextType> albedoTexture;
+    private Texture2D<ContextType> diffuseTexture;
 
     private Texture2D<ContextType> normalTexture;
 
@@ -49,17 +48,15 @@ public class GenericMaterialResources<ContextType extends Context<ContextType>> 
     /**
      * A albedo texture map, if one exists.
      */
-    @Override
-    public Texture2D<ContextType> getAlbedoMap()
+    public Texture2D<ContextType> getDiffuseTexture()
     {
-        return albedoTexture;
+        return diffuseTexture;
     }
 
     /**
      * A normal map, if one exists.
      */
-    @Override
-    public Texture2D<ContextType> getNormalMap()
+    public Texture2D<ContextType> getNormalTexture()
     {
         return normalTexture;
     }
@@ -67,8 +64,7 @@ public class GenericMaterialResources<ContextType extends Context<ContextType>> 
     /**
      * A specular reflectivity map, if one exists.
      */
-    @Override
-    public Texture2D<ContextType> getSpecularReflectivityMap()
+    public Texture2D<ContextType> getSpecularReflectivityTexture()
     {
         return specularTexture;
     }
@@ -76,8 +72,7 @@ public class GenericMaterialResources<ContextType extends Context<ContextType>> 
     /**
      * A specular roughness map, if one exists.
      */
-    @Override
-    public Texture2D<ContextType> getSpecularRoughnessMap()
+    public Texture2D<ContextType> getSpecularRoughnessTexture()
     {
         return roughnessTexture;
     }
@@ -85,20 +80,19 @@ public class GenericMaterialResources<ContextType extends Context<ContextType>> 
     /**
      * An ambient occlusion map, if one exists.
      */
-    @Override
-    public Texture2D<ContextType> getOcclusionMap()
+    public Texture2D<ContextType> getOcclusionTexture()
     {
         return occlusionTexture;
     }
 
-    public static <ContextType extends Context<ContextType>> GenericMaterialResources<ContextType> createNull()
+    public static <ContextType extends Context<ContextType>> MaterialResources<ContextType> createNull()
     {
-        return new GenericMaterialResources<>();
+        return new MaterialResources<>();
     }
 
-    GenericMaterialResources()
+    MaterialResources()
     {
-        albedoTexture = null;
+        diffuseTexture = null;
         normalTexture = null;
         specularTexture = null;
         roughnessTexture = null;
@@ -106,7 +100,7 @@ public class GenericMaterialResources<ContextType extends Context<ContextType>> 
         context = null;
     }
 
-    GenericMaterialResources(ContextType context, ReadonlyGenericMaterial material, File textureDirectory, TextureLoadOptions loadOptions) throws IOException
+    MaterialResources(ContextType context, ReadonlyMaterial material, File textureDirectory, TextureLoadOptions loadOptions) throws IOException
     {
         this.context = context;
 
@@ -116,7 +110,7 @@ public class GenericMaterialResources<ContextType extends Context<ContextType>> 
         {
             File diffuseFile = finder.findImageFile(new File(textureDirectory, material.getDiffuseMap().getMapName()));
             log.info("Diffuse texture found.");
-            albedoTexture = context.getTextureFactory().build2DColorTextureFromFile(diffuseFile, true)
+            diffuseTexture = context.getTextureFactory().build2DColorTextureFromFile(diffuseFile, true)
                 .setInternalFormat(ColorFormat.RGB8)
                 .setMipmapsEnabled(loadOptions.areMipmapsRequested())
                 .setLinearFilteringEnabled(loadOptions.isLinearFilteringRequested())
@@ -124,7 +118,7 @@ public class GenericMaterialResources<ContextType extends Context<ContextType>> 
         }
         catch (FileNotFoundException e)
         {
-            albedoTexture = null;
+            diffuseTexture = null;
         }
 
         try
@@ -188,61 +182,13 @@ public class GenericMaterialResources<ContextType extends Context<ContextType>> 
         }
     }
 
-    public void setupShaderProgram(Program<ContextType> program)
-    {
-        if (this.normalTexture == null)
-        {
-            program.setTexture("normalMap", program.getContext().getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
-        }
-        else
-        {
-            program.setTexture("normalMap", this.normalTexture);
-        }
-
-        if (this.albedoTexture == null)
-        {
-            program.setTexture("diffuseMap", program.getContext().getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
-        }
-        else
-        {
-            program.setTexture("diffuseMap", this.albedoTexture);
-        }
-
-        if (this.specularTexture == null)
-        {
-            program.setTexture("specularMap", program.getContext().getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
-        }
-        else
-        {
-            program.setTexture("specularMap", this.specularTexture);
-        }
-
-        if (this.roughnessTexture == null)
-        {
-            program.setTexture("roughnessMap", program.getContext().getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
-        }
-        else
-        {
-            program.setTexture("roughnessMap", this.roughnessTexture);
-        }
-
-        if (this.occlusionTexture == null)
-        {
-            program.setTexture("occlusionMap", program.getContext().getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
-        }
-        else
-        {
-            program.setTexture("occlusionMap", this.occlusionTexture);
-        }
-    }
-
     @Override
     public void close()
     {
-        if (this.albedoTexture != null)
+        if (this.diffuseTexture != null)
         {
-            this.albedoTexture.close();
-            this.albedoTexture = null;
+            this.diffuseTexture.close();
+            this.diffuseTexture = null;
         }
 
         if (this.normalTexture != null)

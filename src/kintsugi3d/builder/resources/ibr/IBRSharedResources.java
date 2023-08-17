@@ -18,6 +18,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import kintsugi3d.builder.resources.specular.GenericMaterialResources;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -70,7 +72,7 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
      */
     private final GeometryResources<ContextType> geometryResources;
 
-    private final GenericMaterialResources<ContextType> materialResources;
+    private SpecularMaterialResources<ContextType> specularMaterialResources;
 
     private final LuminanceMapResources<ContextType> luminanceMapResources;
 
@@ -151,7 +153,7 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
                         .setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(
                                 1, viewSet.getCameraPoseCount(), this.cameraWeights));
 
-                GenericMaterial material = geometry.getMaterial();
+                Material material = geometry.getMaterial();
 
                 if (material != null && viewSet.getGeometryFile() != null /* need an actual file path to load the textures */)
                 {
@@ -196,18 +198,30 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
                     TextureLoadOptions mtlLoadOptions = new TextureLoadOptions();
                     mtlLoadOptions.setCompressionRequested(loadOptions.isCompressionRequested());
                     mtlLoadOptions.setMipmapsRequested(loadOptions.areMipmapsRequested());
-                    this.materialResources = material.createResources(context, viewSet.getGeometryFile().getParentFile(), mtlLoadOptions);
+                    this.specularMaterialResources = GenericMaterialResources.wrap(
+                        () ->
+                        {
+                            try
+                            {
+                                return material.createResources(context, viewSet.getGeometryFile().getParentFile(), mtlLoadOptions);
+                            }
+                            catch (IOException e)
+                            {
+                                log.error("An error occured while loading material resources (textures)", e);
+                                return MaterialResources.createNull();
+                            }
+                        });
                 }
                 else
                 {
-                    this.materialResources = GenericMaterialResources.createNull();
+                    this.specularMaterialResources = GenericMaterialResources.createNull();
                 }
             }
             else
             {
                 this.cameraWeights = null;
                 this.cameraWeightBuffer = null;
-                this.materialResources = GenericMaterialResources.createNull();
+                this.specularMaterialResources = GenericMaterialResources.createNull();
             }
         }
         else
@@ -215,7 +229,7 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
             this.geometryResources = GeometryResources.createNullResources();
             this.cameraWeights = null;
             this.cameraWeightBuffer = null;
-            this.materialResources = GenericMaterialResources.createNull();
+            this.specularMaterialResources = GenericMaterialResources.createNull();
         }
     }
 
@@ -354,9 +368,9 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
     /**
      * Diffuse, normal, specular, roughness maps
      */
-    public GenericMaterialResources<ContextType> getMaterialResources()
+    public SpecularMaterialResources<ContextType> getSpecularMaterialResources()
     {
-        return materialResources;
+        return specularMaterialResources;
     }
 
     public LuminanceMapResources<ContextType> getLuminanceMapResources()
@@ -421,10 +435,10 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
             .define("LUMINANCE_MAP_ENABLED", luminanceMapResources != null && luminanceMapResources.getLuminanceMap() != null)
             .define("INVERSE_LUMINANCE_MAP_ENABLED", luminanceMapResources != null && luminanceMapResources.getInverseLuminanceMap() != null)
             .define("IMAGE_BASED_RENDERING_ENABLED", renderingMode.isImageBased())
-            .define("DIFFUSE_TEXTURE_ENABLED", materialResources.getDiffuseMap() != null && renderingMode.useDiffuseTexture())
-            .define("SPECULAR_TEXTURE_ENABLED", materialResources.getSpecularReflectivityMap() != null && renderingMode.useSpecularTextures())
-            .define("ROUGHNESS_TEXTURE_ENABLED", materialResources.getSpecularRoughnessMap() != null && renderingMode.useSpecularTextures())
-            .define("NORMAL_TEXTURE_ENABLED", materialResources.getNormalMap() != null && renderingMode.useNormalTexture());
+            .define("DIFFUSE_TEXTURE_ENABLED", specularMaterialResources.getDiffuseMap() != null && renderingMode.useDiffuseTexture())
+            .define("SPECULAR_TEXTURE_ENABLED", specularMaterialResources.getSpecularReflectivityMap() != null && renderingMode.useSpecularTextures())
+            .define("ROUGHNESS_TEXTURE_ENABLED", specularMaterialResources.getSpecularRoughnessMap() != null && renderingMode.useSpecularTextures())
+            .define("NORMAL_TEXTURE_ENABLED", specularMaterialResources.getNormalMap() != null && renderingMode.useNormalTexture());
     }
 
     public void setupShaderProgram(Program<ContextType> program)
@@ -449,7 +463,7 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
         program.setUniform("gamma", this.getViewSet().getGamma());
 
         getLuminanceMapResources().setupShaderProgram(program);
-        getMaterialResources().setupShaderProgram(program);
+        getSpecularMaterialResources().setupShaderProgram(program);
     }
 
     public void close()
@@ -460,7 +474,7 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
         this.lightIntensityBuffer.close();
         this.lightIndexBuffer.close();
         this.geometryResources.close();
-        this.materialResources.close();
+        this.specularMaterialResources.close();
         this.luminanceMapResources.close();
     }
 }

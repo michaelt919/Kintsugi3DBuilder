@@ -12,7 +12,7 @@
 
 package kintsugi3d.builder.export.specular;
 
-import kintsugi3d.builder.resources.specular.SpecularResources;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.builder.core.TextureFitSettings;
 
@@ -50,7 +50,7 @@ public class WeightImageCreator<ContextType extends Context<ContextType>> implem
             .createFramebufferObject();
     }
 
-    public void createImages(SpecularResources<ContextType> specularFit, File outputDirectory) throws IOException
+    public void createImages(SpecularMaterialResources<ContextType> specularFit, File outputDirectory) throws IOException
     {
         specularFit.getBasisWeightResources().useWithShaderProgram(program);
         drawable.program().setUniform("weightStride", weightsPerImage);

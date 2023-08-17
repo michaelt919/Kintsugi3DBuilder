@@ -16,7 +16,7 @@ import java.io.File;
 import java.io.IOException;
 
 import kintsugi3d.builder.fit.SpecularFitBase;
-import kintsugi3d.builder.resources.specular.SpecularResources;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.core.ColorFormat;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Texture2D;
@@ -36,13 +36,13 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
     private final AlbedoORMOptimization<ContextType> albedoORMOptimization;
 
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> createEmpty(
-        SpecularResources<ContextType> original, TextureFitSettings textureFitSettings,
+        SpecularMaterialResources<ContextType> original, TextureFitSettings textureFitSettings,
         SpecularBasisSettings specularBasisSettings, boolean includeConstant) throws IOException
     {
         return new SpecularFitFinal<>(original, textureFitSettings, specularBasisSettings, includeConstant);
     }
 
-    private SpecularFitFinal(SpecularResources<ContextType> original, TextureFitSettings textureFitSettings,
+    private SpecularFitFinal(SpecularMaterialResources<ContextType> original, TextureFitSettings textureFitSettings,
         SpecularBasisSettings specularBasisSettings, boolean includeConstant) throws IOException
     {
         super(original.getContext(), textureFitSettings, specularBasisSettings);

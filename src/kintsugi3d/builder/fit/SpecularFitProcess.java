@@ -29,7 +29,7 @@ import kintsugi3d.builder.export.specular.WeightImageCreator;
 import kintsugi3d.builder.fit.finalize.AlbedoORMOptimization;
 import kintsugi3d.builder.fit.finalize.SpecularFitFinal;
 import kintsugi3d.builder.resources.ibr.*;
-import kintsugi3d.builder.resources.specular.SpecularResources;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.builder.resources.ibr.stream.GraphicsStreamResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +62,7 @@ public class SpecularFitProcess
             settings.getIbrSettings(), settings.getSpecularBasisSettings());
     }
 
-    public <ContextType extends Context<ContextType>> SpecularResources<ContextType> optimizeFit(IBRResourcesImageSpace<ContextType> resources)
+    public <ContextType extends Context<ContextType>> SpecularMaterialResources<ContextType> optimizeFit(IBRResourcesImageSpace<ContextType> resources)
         throws IOException
     {
         Instant start = Instant.now();
@@ -73,7 +73,7 @@ public class SpecularFitProcess
         Duration duration = Duration.between(start, Instant.now());
         log.info("Cache found / generated in: " + duration);
 
-        SpecularResources<ContextType> specularFit = optimizeFit(cache, resources.getMaterialResources());
+        SpecularMaterialResources<ContextType> specularFit = optimizeFit(cache, resources.getMaterialResources());
 
 //        // Save basis image visualization for reference and debugging
 //        try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(cache.getContext(), settings.getSpecularBasisSettings()))
@@ -113,8 +113,8 @@ public class SpecularFitProcess
         return specularFit;
     }
 
-    public <ContextType extends Context<ContextType>> SpecularResources<ContextType> optimizeFit(
-        ImageCache<ContextType> cache, SpecularResources<ContextType> original)
+    public <ContextType extends Context<ContextType>> SpecularMaterialResources<ContextType> optimizeFit(
+        ImageCache<ContextType> cache, SpecularMaterialResources<ContextType> original)
         throws IOException
     {
         Instant start = Instant.now();
@@ -236,7 +236,7 @@ public class SpecularFitProcess
     }
 
     private <ContextType extends Context<ContextType>> void optimizeBlocks(
-        Blittable<SpecularResources<ContextType>> fullResolutionDestination,
+        Blittable<SpecularMaterialResources<ContextType>> fullResolutionDestination,
         ImageCache<ContextType> cache,
         SpecularDecompositionFromScratch sampledDecomposition,
         File inputNormalMapFile)
@@ -326,7 +326,7 @@ public class SpecularFitProcess
     private <ContextType extends Context<ContextType>> void optimizeTexSpaceFit(
         IBRResourcesTextureSpace<ContextType> resources,
         BiConsumer<GraphicsStreamResource<ContextType>, ShaderBasedErrorCalculator<ContextType>> optimizeFunc,
-        SpecularResources<ContextType> resultsForErrorCalc) throws IOException
+        SpecularMaterialResources<ContextType> resultsForErrorCalc) throws IOException
     {
         SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
 
@@ -360,7 +360,7 @@ public class SpecularFitProcess
      * @return A fit based on the solution loaded from file.
      * @throws IOException
      */
-    public <ContextType extends Context<ContextType>> SpecularResources<ContextType> loadPriorSolution(
+    public <ContextType extends Context<ContextType>> SpecularMaterialResources<ContextType> loadPriorSolution(
         ContextType context, File priorSolutionDirectory)
         throws IOException
     {
@@ -411,7 +411,7 @@ public class SpecularFitProcess
     }
 
     private static <ContextType extends Context<ContextType>> Drawable<ContextType> createErrorCalcDrawable(
-            SpecularResources<ContextType> specularFit, ReadonlyIBRResources<ContextType> resources, Program<ContextType> errorCalcProgram)
+            SpecularMaterialResources<ContextType> specularFit, ReadonlyIBRResources<ContextType> resources, Program<ContextType> errorCalcProgram)
     {
         Drawable<ContextType> errorCalcDrawable = resources.createDrawable(errorCalcProgram);
         specularFit.getBasisResources().useWithShaderProgram(errorCalcProgram);

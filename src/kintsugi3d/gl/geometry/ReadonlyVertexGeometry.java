@@ -13,7 +13,7 @@
 package kintsugi3d.gl.geometry;
 
 import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.material.ReadonlyGenericMaterial;
+import kintsugi3d.gl.material.ReadonlyMaterial;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.vecmath.Vector3;
 
@@ -97,7 +97,7 @@ public interface ReadonlyVertexGeometry
      * Gets the associated material for this mesh.
      * @return The material for this mesh.
      */
-    ReadonlyGenericMaterial getMaterial();
+    ReadonlyMaterial getMaterial();
 
     /**
      * Gets the mesh filename.

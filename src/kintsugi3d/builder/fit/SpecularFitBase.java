@@ -20,7 +20,8 @@ import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimization;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimizationSimple;
-import kintsugi3d.builder.resources.specular.SpecularResources;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResourcesBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.Context;
@@ -28,7 +29,8 @@ import kintsugi3d.gl.core.Texture2D;
 import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 
-public abstract class SpecularFitBase<ContextType extends Context<ContextType>> implements SpecularResources<ContextType>
+public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
+    extends SpecularMaterialResourcesBase<ContextType>
 {
     private static final Logger log = LoggerFactory.getLogger(SpecularFitBase.class);
 

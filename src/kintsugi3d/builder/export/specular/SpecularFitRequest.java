@@ -20,7 +20,7 @@ import java.io.PrintStream;
 import kintsugi3d.builder.fit.debug.FinalReconstruction;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.fit.SpecularFitProcess;
-import kintsugi3d.builder.resources.specular.SpecularResources;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -73,7 +73,7 @@ public class SpecularFitRequest implements ObservableIBRRequest, ObservableGraph
         try
         {
             // Perform the specular fit using prior basis solution.
-            SpecularResources<ContextType> specularFit;
+            SpecularMaterialResources<ContextType> specularFit;
 
             // Assume fitting from prior solution
             log.info("No Kintsugi 3D Builder project loaded; loading prior solution");
@@ -122,7 +122,7 @@ public class SpecularFitRequest implements ObservableIBRRequest, ObservableGraph
         {
             // Perform the specular fit
             // Close immediately after saving when this is just an export operation.
-            try(SpecularResources<ContextType> specularFit = new SpecularFitProcess(settings)
+            try(SpecularMaterialResources<ContextType> specularFit = new SpecularFitProcess(settings)
                 .optimizeFit(renderable.getIBRResources()))
             {
                 if (settings.getExportSettings().isGlTFEnabled())
@@ -142,7 +142,7 @@ public class SpecularFitRequest implements ObservableIBRRequest, ObservableGraph
     }
 
     private <ContextType extends Context<ContextType>> void performReconstruction(
-        ReadonlyIBRResources<ContextType> resources, SpecularResources<ContextType> specularFit)
+        ReadonlyIBRResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit)
         throws FileNotFoundException
     {
         // Create output directory

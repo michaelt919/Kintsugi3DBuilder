@@ -16,7 +16,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import kintsugi3d.builder.resources.specular.SpecularResources;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,7 +137,7 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         estimationProgram.setUniform("gamma", settings.gamma);
     }
 
-    public void execute(SpecularResources<ContextType> specularFit)
+    public void execute(SpecularMaterialResources<ContextType> specularFit)
     {
         // Set up shader program
         estimationProgram.setTexture("diffuseEstimate", specularFit.getDiffuseMap());
