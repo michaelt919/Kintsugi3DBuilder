@@ -383,20 +383,19 @@
          <CheckMenuItem mnemonicParsing="false" text="Separate render window" />
       </Menu>
     <Menu mnemonicParsing="false" text="DEPRECATED MENU ITEMS" visible="false">
-        <items>
-            <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Export Specular Fit" visible="false">
-                <accelerator>
-                    <KeyCodeCombination alt="UP" code="P" control="ANY" meta="UP" shift="UP" shortcut="UP" />
-                </accelerator>
-            </MenuItem>
-            <MenuItem mnemonicParsing="false" onAction="#file_colorChecker" text="Enter Color Checker Values... (DEPRECATED)" visible="false" />
-            <MenuItem mnemonicParsing="false" onAction="#unzip" text="Unzip Metashape File">
-                <accelerator>
-                    <KeyCodeCombination alt="UP" code="M" control="ANY" meta="UP" shift="UP" shortcut="UP" />
-                </accelerator>
-            </MenuItem>
-            <MenuItem mnemonicParsing="false" onAction="#file_loadOptions" text="Load Options..." visible="false" />
-        </items>
+        <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Export Specular Fit" visible="false">
+            <accelerator>
+                <KeyCodeCombination alt="UP" code="P" control="ANY" meta="UP" shift="UP" shortcut="UP"/>
+            </accelerator>
+        </MenuItem>
+        <MenuItem mnemonicParsing="false" onAction="#file_colorChecker"
+                  text="Enter Color Checker Values... (DEPRECATED)" visible="false"/>
+        <MenuItem mnemonicParsing="false" onAction="#unzip" text="Unzip Metashape File">
+            <accelerator>
+                <KeyCodeCombination alt="UP" code="M" control="ANY" meta="UP" shift="UP" shortcut="UP"/>
+            </accelerator>
+        </MenuItem>
+        <MenuItem mnemonicParsing="false" onAction="#file_loadOptions" text="Load Options..." visible="false"/>
     </Menu>
       <padding>
          <Insets bottom="2.0" left="2.0" right="2.0" top="4.0" />

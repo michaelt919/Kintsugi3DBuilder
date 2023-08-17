@@ -32,20 +32,23 @@ import javax.xml.transform.stream.StreamResult;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class UnzipHelper {
     private static final Logger log = LoggerFactory.getLogger(UnzipHelper.class);
-    static final String[] validExtensions = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
+    static final String[] VALID_IMAGE_EXTENSIONS = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
+    static final String[] VALID_TEXT_EXTENSIONS = {"*.txt", "*.psx", "*.xml"}; //TODO: ADD MORE EXTENSIONS?
 
     private UnzipHelper() {
     }
 
     public static String unzipToString(String zipFileName) throws IOException {
         //unzip the zip file (which should be a .psx) and return the contents as a string
-        //intended to only unzip one file
+        //intended to only extract one file from the zip folder
         //Note: if this function unzips a file with multiple text files, it will simply concatenate them
 
         ZipInputStream zis= new ZipInputStream(new FileInputStream(zipFileName));
@@ -53,10 +56,16 @@ public class UnzipHelper {
             byte[] buffer = new byte[1024];
             StringBuilder s = new StringBuilder();
             int read = 0;
-            while ((zis.getNextEntry())!= null) {
-                while ((read = zis.read(buffer, 0, 1024)) >= 0) {
-                    s.append(new String(buffer, 0, read));
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry())!= null) {
+                //only read the file if it is a text file
+                String entryName = entry.getName();
+                if (isValidTextType(entryName)) {
+                    while ((read = zis.read(buffer, 0, 1024)) >= 0) {
+                        s.append(new String(buffer, 0, read));
+                    }
                 }
+
             }
             return s.toString();
         }
@@ -121,6 +130,29 @@ public class UnzipHelper {
         return images;
     }
 
+    public static Map<String, Image> unzipImagesWithFileNames(String zipFilePath){
+        Map<String, Image> images = new HashMap<>();
+        //Map<fileName, image>
+
+        try (ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFilePath))) {
+            ZipEntry entry;
+            while ((entry = zipInputStream.getNextEntry()) != null) {
+                String entryName = entry.getName();
+                if (isValidImageType(entryName)) {
+                    Image imageData = readImageData(zipInputStream, entryName);
+                    images.put(entryName, imageData);
+                }
+                zipInputStream.closeEntry();
+            }
+
+        } catch (IOException | ImageReadException e) {
+            log.error("Error unzipping images:", e);
+        }
+
+        log.info("Total images extracted: " + images.size());
+        return images;
+    }
+
     private static Image readImageData(InputStream inputStream, String fileName) throws IOException, ImageReadException {
         //convert unzipped image if it is a .tif or .tiff file
         if (fileName.toLowerCase().matches(".*\\.tiff?")) {//convert image if it is a .tif or .tiff
@@ -141,7 +173,16 @@ public class UnzipHelper {
     }
 
     private static boolean isValidImageType(String path) {
-        for (String extension : validExtensions) {
+        for (String extension : VALID_IMAGE_EXTENSIONS) {
+            if (path.matches("." + extension)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isValidTextType(String path) {
+        for (String extension : VALID_TEXT_EXTENSIONS) {
             if (path.matches("." + extension)) {
                 return true;
             }

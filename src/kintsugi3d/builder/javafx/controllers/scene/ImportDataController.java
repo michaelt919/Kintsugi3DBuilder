@@ -213,9 +213,10 @@ public class ImportDataController implements Initializable {
             MetashapeObject metashapeObject = new MetashapeObject(metashapePsxFile.getAbsolutePath());
             MetashapeObjectChunk metashapeObjectChunk = new MetashapeObjectChunk(
                     metashapeObject,chunkSelectionChoiceBox.getValue());
-            controller.initializeChunkSelectionAndTreeView(metashapeObjectChunk);
 
             Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
+            controller.init(metashapeObjectChunk, stage);
+
             Scene scene = new Scene(newRoot);
             stage.setScene(scene);
             stage.show();

@@ -37,5 +37,6 @@
          </children>
       </VBox>
           <ImageView fx:id="chunkViewerImgView" fitHeight="309.0" fitWidth="299.0" pickOnBounds="true" preserveRatio="true" />
+        <fx:include fx:id="framebufferView" source="../menubar/FramebufferView.fxml"/>
     </HBox>
 </AnchorPane>

@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class MetashapeObjectChunk {
     private static final Logger log = LoggerFactory.getLogger(MetashapeObjectChunk.class);
@@ -37,6 +38,9 @@ public class MetashapeObjectChunk {
 
     private Document chunkXML;
     private Document frameZip;
+    private Document thumbnailsZipDocXML;
+    private File thumbnailsZipFolder;
+    private String psxPathBase;
 
     private MetashapeObjectChunk(){
         metashapeObject = new MetashapeObject();
@@ -44,6 +48,8 @@ public class MetashapeObjectChunk {
         chunkID = -1;//TODO: GOOD NULL CHUNK ID?
         chunkXML = null;
         frameZip = null;
+        thumbnailsZipFolder = null;
+        psxPathBase = null;
     }
 
     public MetashapeObjectChunk(MetashapeObject metashapeObject, String chunkName) {
@@ -65,7 +71,18 @@ public class MetashapeObjectChunk {
 
         //unzip frame.zip
         String psxFilePath = metashapeObject.getPsxFilePath();
-        String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4);//remove ".psx" from path
+        psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4);//remove ".psx" from path
+
+        //set thumbnails zip folder
+        //note: CANNOT be set before psxPathBase is set
+        this.thumbnailsZipFolder = new File(getThumbnailZipFolderPath());
+
+        try {
+            this.thumbnailsZipDocXML = UnzipHelper.unzipToDocument(thumbnailsZipFolder.getAbsolutePath());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
 
         //the 0 means that the program searches for info regarding frame 0
         String frameZipPath = psxPathBase + ".files\\" + chunkID + "\\0\\frame.zip";
@@ -73,8 +90,9 @@ public class MetashapeObjectChunk {
         try {
             this.frameZip = UnzipHelper.unzipToDocument(frameZipPath);
         } catch (IOException e) {
-            log.error("An error occurred loading Metashape chunk:", e);
+            log.error("An error occurred unzipping frame.zip while creating a MetashapeObjectChunk object:", e);
         }
+
     }
 
 
@@ -109,13 +127,16 @@ public class MetashapeObjectChunk {
     }
 
     public List<Image> loadThumbnailImageList() {
-        //unzip thumbnail folder
-        String psxFilePath = this.metashapeObject.getPsxFilePath();
-        String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4);//remove ".psx" from path
+        return UnzipHelper.unzipImages(getThumbnailZipFolderPath());
+    }
 
+    public Map<String, Image> loadThumbnailImageWithFileNamesList(){
+        return UnzipHelper.unzipImagesWithFileNames(getThumbnailZipFolderPath());
+    }
+
+    private String getThumbnailZipFolderPath(){
         //Note: the 0 denotes that these thumbnails are for frame 0
-        String thumbnailPath = psxPathBase + ".files\\" + chunkID + "\\0\\thumbnails\\thumbnails.zip";
-        return UnzipHelper.unzipImages(thumbnailPath);
+        return psxPathBase + ".files\\" + chunkID + "\\0\\thumbnails\\thumbnails.zip";
     }
 
     public List<Element> findThumbnailCameras() {
@@ -170,5 +191,31 @@ public class MetashapeObjectChunk {
 
         //String path now holds the full path to the selected thumbnail's full-res image
         return new File(path);
+    }
+
+    public String getThumbnailImgPathFromCamId(int cameraID) {
+        //open thumbnails.zip
+        //open doc.xml within that folder
+        //doc.xml holds cam_id/thumbnail path pairs
+
+//        <?xml version="1.0" encoding="UTF-8"?>
+//          <thumbnails version="1.2.0">
+//              <thumbnail camera_id="0" path="c0.png"/>
+//              <thumbnail camera_id="1" path="c1.png"/>
+        //...
+
+        NodeList thumbnails = thumbnailsZipDocXML.getElementsByTagName("thumbnail");
+        for(int i = 0; i < thumbnails.getLength(); ++i) {
+            if (thumbnails.item(i).getNodeName().equals("thumbnail")) {
+                Element thumbnail = (Element) thumbnails.item(i);
+                //find the thumbnail with matching camera id
+
+                if (Integer.parseInt( thumbnail.getAttribute("camera_id")) == cameraID){
+                    return thumbnail.getAttribute("path");
+                }
+            }
+        }
+
+        return "";//no thumbnail img path found
     }
 }

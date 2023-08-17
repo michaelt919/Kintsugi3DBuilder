@@ -30,12 +30,14 @@ public class ImgSelectionThread extends ChunkViewerController implements Runnabl
     private final String imageName;
     private volatile boolean stopRequested = false;
     private volatile boolean isRunning = false;
+    private final ImgThreadCompatibleController imgThreadCompatibleController;
 
     public ImgSelectionThread(String imageName, ImgThreadCompatibleController controller) {
         this.imageName = imageName;
 
+        this.imgThreadCompatibleController = controller;
         this.chunkViewerImgView = controller.chunkViewerImgView;
-        this.imgViewText = controller.imgViewLabel;
+        this.imgViewText = controller.imgViewText;
         this.metashapeObjectChunk = controller.metashapeObjectChunk;
         this.textFlow = controller.textFlow;
     }
@@ -90,9 +92,8 @@ public class ImgSelectionThread extends ChunkViewerController implements Runnabl
         Image finalImage = image;//copy here so a final version of image can be passed to lambda expression
         if (finalImage != null) {
             Platform.runLater(() -> {
-                //TODO: WITH LARGER IMAGES, FORMATTING IS BROKEN
                 chunkViewerImgView.setImage(finalImage);
-                updateImageText(imageName);
+                imgThreadCompatibleController.updateImageText(imageName);
             });
         }
     }

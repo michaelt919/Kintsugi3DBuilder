@@ -21,17 +21,10 @@ import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
-import javafx.scene.image.Image;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
-import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.scene.ImgThreadCompatibleController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Element;
-import javafx.scene.image.ImageView;
 
 import java.awt.*;
 import java.io.File;
@@ -45,13 +38,8 @@ public class ChunkViewerController extends ImgThreadCompatibleController {
     //suppress warning?
 
     private static final Logger log = LoggerFactory.getLogger(ChunkViewerController.class);
-    @FXML
-    public TreeView<String> chunkTreeView;
-
-    @FXML public Text imgViewText;
     static final String[] VALID_EXTENSIONS = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
 
-    static final int THUMBNAIL_SIZE = 30;
     @FXML
     public ChoiceBox<String> newChunkSelectionChoiceBox;//allows the user to select a new chunk to view
 
@@ -62,10 +50,7 @@ public class ChunkViewerController extends ImgThreadCompatibleController {
     public void initializeChunkSelectionAndTreeView(MetashapeObjectChunk metashapeObjectChunk) {
         this.metashapeObjectChunk = metashapeObjectChunk;
 
-        //add chunk name to tree
-        String chunkName = metashapeObjectChunk.getChunkName();
-        TreeItem<String> rootItem = new TreeItem<>(chunkName);
-        chunkTreeView.setRoot(rootItem);
+        initTreeView();
 
         //initialize options in new chunk selection choice box (cannot be done before chunkName is set)
         initializeChoiceBox();
@@ -73,71 +58,6 @@ public class ChunkViewerController extends ImgThreadCompatibleController {
 
         //disable select chunk button if selected chunk (in choice box) matches the current chunk
         updateSelectChunkButton();
-
-        //fill thumbnail list
-        ArrayList <Image> thumbnailImageList = (ArrayList<Image>) metashapeObjectChunk.loadThumbnailImageList();
-
-        //add full-res images as children to the chunk name in treeview
-        ArrayList<Element> cameras = (ArrayList<Element>) metashapeObjectChunk.findThumbnailCameras();
-
-        for (int i = 0; i < cameras.size(); ++i) {
-            Element camera = cameras.get(i);
-            String imageName = camera.getAttribute("label");
-
-            //get parent of camera
-            //if parent of camera is a group, create a group node and put it under the root, then add camera to it
-            //unless that group already exists, then add the camera to the already created group
-
-            Element parent = (Element) camera.getParentNode();
-            TreeItem<String> destinationItem; //stores the node which the image will be added to
-                                                // (either a group or the root node)
-            if(parent.getTagName().equals("group")){
-                String groupName = parent.getAttribute("label");//TODO: CURRENTLY ONLY CHECKS TO SEE IF NAMES MATCH
-
-                List<TreeItem<String>> rootChildren = rootItem.getChildren();
-                boolean groupAlreadyCreated = false;//boolean to track if group is already present in treeview
-                TreeItem<String> matchingItem = null;
-                for (TreeItem<String> item : rootChildren){
-                    if (item.getValue().equals(groupName)){
-                        groupAlreadyCreated = true;
-                        matchingItem = item;
-                        break;
-                    }
-                }
-
-                if (groupAlreadyCreated){
-                    //add camera to this group
-                    destinationItem = matchingItem;
-                }
-                else{//group has not been created yet
-                    TreeItem<String> newGroup = new TreeItem<>(groupName);
-                    rootItem.getChildren().add(newGroup);
-                    destinationItem = newGroup;
-                }
-            }
-            else{
-                //parent is camera, so add image to root node
-                //(camera is not part of a group)
-                destinationItem = rootItem;
-            }
-
-            //set image and thumbnail
-            ImageView thumbnailImgView;
-            try {
-                thumbnailImgView = new ImageView(thumbnailImageList.get(i));
-            } catch (IndexOutOfBoundsException e) {
-                //thumbnail not found in thumbnailImageList
-                thumbnailImgView = new ImageView(new Image(new File("question-mark.png").toURI().toString()));
-            }
-            thumbnailImgView.setFitWidth(THUMBNAIL_SIZE);
-            thumbnailImgView.setFitHeight(THUMBNAIL_SIZE);
-
-            TreeItem<String> imageTreeItem = new TreeItem<>(imageName, thumbnailImgView);
-            destinationItem.getChildren().add(imageTreeItem);
-        }
-
-        //unroll treeview
-        chunkTreeView.getRoot().setExpanded(true);
     }
 
     public void selectChunk(ActionEvent actionEvent) throws IOException {
@@ -191,20 +111,6 @@ public class ChunkViewerController extends ImgThreadCompatibleController {
             Thread myThread = new Thread(loadImgThread);
             myThread.start();
         }
-    }
-
-    void updateImageText(String imageName) {
-        String psxFilePath = this.metashapeObjectChunk.getPsxFilePath();
-        String chunkName = this.metashapeObjectChunk.getChunkName();
-
-//                      set label to: psx name + chunk name + cameraID
-        File psxFile = new File(psxFilePath);
-
-        imgViewText.setText("File: " + psxFile.getName() +
-                            "\nChunk: " + chunkName +
-                            "\nImage: " + imageName);
-
-        textFlow.setTextAlignment(TextAlignment.LEFT);
     }
 
     private void setThumbnailAsFullImage(TreeItem<String> selectedItem) {

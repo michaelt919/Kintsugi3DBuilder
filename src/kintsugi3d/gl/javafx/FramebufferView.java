@@ -290,7 +290,7 @@ public final class FramebufferView extends Region
                 // Three threads need to be coordinated:
                 // 1) the graphics thread (copying data off the framebuffer)
                 // 2) the JavaFX thread (setting which Image is the current image for the ImageView)
-                // 3) an standalone copy thread for copying into the JavaFX image that doesn't block either graphics or JavaFX
+                // 3) a standalone copy thread for copying into the JavaFX image that doesn't block either graphics or JavaFX
                 // 3) must coordinate with both 1) and 2) to prevent race conditions
                 synchronized (backCopyBufferLock)
                 {
