@@ -10,7 +10,7 @@ RequestExecutionLevel admin
 Unicode True
 ManifestDPIAware True
 
-InstallDir $PROGRAMFILES\Kintsugi3DBuilder
+InstallDir $PROGRAMFILES64\Kintsugi3DBuilder
 
 InstallDirRegKey HKLM "Software\Kintsugi3DBuilder" "Install_Dir"
 
@@ -47,6 +47,7 @@ InstallDirRegKey HKLM "Software\Kintsugi3DBuilder" "Install_Dir"
 Section "Kintsugi 3D Builder (required)" SectionApp
 
     SectionIn RO
+    SetRegView 64
 
     SetOutPath $INSTDIR
     File "target\Kintsugi3DBuilder.exe"
@@ -76,6 +77,8 @@ SectionEnd
 
 ; Optional File Type associations
 Section "File Type Associations" SectionAssociation
+
+    SetRegView 64
 
     ; Associate .ibr files as Kintsugi 3D Builder Projects
     WriteRegStr HKCR ".ibr" "" "Kintsugi3DBuilder.Project"
@@ -112,6 +115,8 @@ SectionEnd
 ; Uninstaller
 Section "Uninstall"
 
+    SetRegView 64
+
     ; Remove directories
     RMDir /r "$SMPROGRAMS\Kintsugi3DBuilder"
     RMDir /r "$INSTDIR"
@@ -135,6 +140,20 @@ SectionEnd
 Function LaunchLink
 
   ExecShell "" "$INSTDIR\Kintsugi3DBuilder.exe"
+
+FunctionEnd
+
+; Init function, read previous installation directory
+Function .onInit
+
+	SetRegView 64
+	ClearErrors
+	ReadRegStr $0 HKLM "Software\Kintsugi3DBuilder" "Install_Dir"
+
+	${If} ${Errors}
+    ${Else}
+         StrCpy $INSTDIR $0
+    ${EndIf}
 
 FunctionEnd
 
