@@ -12,8 +12,6 @@ ManifestDPIAware True
 
 InstallDir $PROGRAMFILES64\Kintsugi3DBuilder
 
-InstallDirRegKey HKLM "Software\Kintsugi3DBuilder" "Install_Dir"
-
 ; MUI Settings
 !define MUI_ICON "ibr.ico"
 !define MUI_UNICON "ibr.ico"
@@ -68,6 +66,7 @@ Section "Kintsugi 3D Builder (required)" SectionApp
 
     ; Write uninstall keys to registry
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DBuilder" "DisplayName" "Kintsugi 3D Builder"
+    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DBuilder" "DefaultIcon" "$INSTDIR\Kintsugi3DBuilder.exe,0"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DBuilder" "UninstallString" '"$INSTDIR\uninstall.exe"'
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DBuilder" "NoModify" 1
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DBuilder" "NoRepair" 1
