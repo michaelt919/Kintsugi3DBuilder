@@ -48,6 +48,7 @@ import javafx.stage.Window;
 import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
+import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1018,5 +1019,21 @@ public class MenubarController
             });
             alert.show();
         });
+    }
+
+    public void launchViewerApp()
+    {
+        try
+        {
+            Kintsugi3DViewerLauncher.launchViewer();
+        }
+        catch (IllegalStateException e)
+        {
+            handleException("Kintsugi 3D Viewer was not found on this computer. Check that it is installed.", e);
+        }
+        catch (Exception e)
+        {
+            handleException("Failed to launch Kintsugi 3D Viewer", e);
+        }
     }
 }
