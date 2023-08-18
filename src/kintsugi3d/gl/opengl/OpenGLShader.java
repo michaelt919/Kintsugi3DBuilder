@@ -170,7 +170,8 @@ class OpenGLShader implements Shader<OpenGLContext>
                     }
                     else if (parts[1].charAt(0) == '<' && parts[1].charAt(parts[1].length() - 1) == '>')
                     {
-                        includeFile = new File(parts[1].substring(1, parts[1].length() - 1));
+                        // Find the include file in the "shaders" directory.
+                        includeFile = new File("shaders", parts[1].substring(1, parts[1].length() - 1));
                     }
                     else
                     {
