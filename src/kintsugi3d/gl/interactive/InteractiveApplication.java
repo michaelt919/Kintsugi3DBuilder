@@ -76,7 +76,7 @@ public class InteractiveApplication
                 }
                 catch(RuntimeException e)
                 {
-                    log.error("Runtime error occurred:", e);
+                    log.error("Runtime error occurred", e);
                 }
             }
             Date timestampB = new Date();
@@ -91,7 +91,7 @@ public class InteractiveApplication
                 }
                 catch(RuntimeException e)
                 {
-                    log.error("An error occurred while polling events:", e);
+                    log.error("An error occurred while polling events", e);
                 }
             }
             timestampA = new Date();
@@ -122,7 +122,7 @@ public class InteractiveApplication
                 }
                 catch (InterruptedException e)
                 {
-                    log.error("Interrupted while waiting for min frame delta:", e);
+                    log.warn("Interrupted while waiting for min frame delta", e);
                 }
             }
         }
@@ -143,8 +143,6 @@ public class InteractiveApplication
                 log.error("Error terminating refreshable:", e);
             }
         }
-
-        System.exit(0);
     }
 
     public static void runSimultaneous(Iterable<InteractiveApplication> apps) throws InitializationException

@@ -135,7 +135,7 @@ public class ResampleRequestUI implements IBRRequestUI
             //stage.close();
 
             requestQueue.addIBRRequest(
-                new ResampleRequest<>(
+                new ResampleRequest(
                     Integer.parseInt(widthTextField.getText()),
                     Integer.parseInt(heightTextField.getText()),
                     new File(targetVSetFileField.getText()),

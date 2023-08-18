@@ -16,19 +16,21 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
+import kintsugi3d.builder.core.LoadOptionsModel;
 
-public class LoadOptionsModelImpl implements ReadonlyLoadOptionsModel
+public class LoadOptionsModelImpl implements LoadOptionsModel
 {
     public final BooleanProperty colorImages = new SimpleBooleanProperty(true);
     public final BooleanProperty mipmaps = new SimpleBooleanProperty(true);
     public final BooleanProperty compression = new SimpleBooleanProperty(true);
     public final BooleanProperty alpha = new SimpleBooleanProperty(true);
+    public final BooleanProperty icc = new SimpleBooleanProperty(true);
     public final BooleanProperty depthImages = new SimpleBooleanProperty(true);
     public final IntegerProperty depthWidth = new SimpleIntegerProperty(512);
     public final IntegerProperty depthHeight = new SimpleIntegerProperty(512);
     public final IntegerProperty previewWidth = new SimpleIntegerProperty(1024);
     public final IntegerProperty previewHeight = new SimpleIntegerProperty(1024);
+    public final IntegerProperty maxLoadingThreads = new SimpleIntegerProperty(12);
 
     @Override
     public boolean areColorImagesRequested()
@@ -52,6 +54,18 @@ public class LoadOptionsModelImpl implements ReadonlyLoadOptionsModel
     public boolean isAlphaRequested()
     {
         return alpha.get();
+    }
+
+    @Override
+    public boolean isICCTransformationRequested()
+    {
+        return icc.get();
+    }
+
+    @Override
+    public int getMaxLoadingThreads()
+    {
+        return maxLoadingThreads.get();
     }
 
     @Override
@@ -82,5 +96,65 @@ public class LoadOptionsModelImpl implements ReadonlyLoadOptionsModel
     public int getPreviewImageHeight()
     {
         return previewHeight.get();
+    }
+
+    @Override
+    public void setColorImagesRequested(boolean colorImagesRequested)
+    {
+        colorImages.setValue(colorImagesRequested);
+    }
+
+    @Override
+    public void setMipmapsRequested(boolean mipmapsRequested)
+    {
+        mipmaps.setValue(mipmapsRequested);
+    }
+
+    @Override
+    public void setCompressionRequested(boolean compressionRequested)
+    {
+        compression.setValue(compressionRequested);
+    }
+
+    @Override
+    public void setICCTransformationRequested(boolean iccTransformationRequested)
+    {
+        icc.setValue(iccTransformationRequested);
+    }
+
+    @Override
+    public void setMaxLoadingThreads(int maxLoadingThreads)
+    {
+        this.maxLoadingThreads.setValue(maxLoadingThreads);
+    }
+
+    @Override
+    public void setDepthImagesRequested(boolean depthImagesRequested)
+    {
+        depthImages.setValue(depthImagesRequested);
+    }
+
+    @Override
+    public void setDepthImageWidth(int depthImageWidth)
+    {
+        depthWidth.setValue(depthImageWidth);
+    }
+
+    @Override
+    public void setDepthImageHeight(int depthImageHeight)
+    {
+        depthHeight.setValue(depthImageHeight);
+    }
+
+    @Override
+    public void setPreviewImageHeight(int previewImageHeight)
+    {
+        previewHeight.setValue(previewImageHeight);
+    }
+
+    @Override
+    public void setPreviewImageWidth(int previewImageWidth)
+    {
+        previewWidth.setValue(previewImageWidth);
     }
 }

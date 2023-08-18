@@ -77,6 +77,17 @@ public class SettingsModelWrapper extends SettingsModelBase
         return baseModel.exists(name);
     }
 
+    @Override
+    public boolean shouldSerialize(String name)
+    {
+        if (exists(name))
+        {
+            return baseModel.shouldSerialize(name);
+        }
+
+        return false;
+    }
+
     protected Setting getSetting(String settingName)
     {
         return new Setting()
@@ -98,12 +109,24 @@ public class SettingsModelWrapper extends SettingsModelBase
             {
                 return getObject(settingName);
             }
+
+            @Override
+            public boolean shouldSerialize()
+            {
+                return SettingsModelWrapper.this.shouldSerialize(settingName);
+            }
         };
     }
 
     @Override
     public Iterator<Setting> iterator()
     {
+        // Before creating iterator, init all settings in the base model
+        for (Iterator<Setting> it = baseModel.iterator(); it.hasNext();)
+        {
+            initSetting(it.next().getName());
+        }
+
         return new Iterator<Setting>()
         {
             private final Iterator<String> base = settings.keySet().iterator();
@@ -120,5 +143,12 @@ public class SettingsModelWrapper extends SettingsModelBase
                 return getSetting(base.next());
             }
         };
+    }
+
+    @Override
+    public void createSetting(String name, Class<?> type, Object initialValue, boolean serialize)
+    {
+        baseModel.createSetting(name, type, initialValue, serialize);
+        initSetting(name);
     }
 }

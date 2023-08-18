@@ -12,26 +12,31 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar;
 
+import java.awt.*;
 import java.io.File;
 import java.net.URL;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.ResourceBundle;
+import java.util.stream.IntStream;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ChoiceBox;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.stage.Window;
+import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
+import kintsugi3d.builder.javafx.MultithreadModels;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 
 public class LoaderController implements Initializable
 {
@@ -41,7 +46,7 @@ public class LoaderController implements Initializable
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
     @FXML private Text loadCheckImages;
-    @FXML private BorderPane root;
+    @FXML private GridPane root;
 
     private Stage thisStage;
 
@@ -73,6 +78,27 @@ public class LoaderController implements Initializable
         this.callback = callback;
     }
 
+    /**
+     * Recursively chains together add calls to the dropdown, using Platform.runLater between each one
+     * to avoid locking up the JavaFX Application thread
+     * @param iterator
+     */
+    private void addToViewListRecursive(Iterator<String> iterator)
+    {
+        primaryViewChoiceBox.getItems().add(iterator.next());
+
+        if (iterator.hasNext())
+        {
+            Platform.runLater(() -> addToViewListRecursive(iterator));
+        }
+        else
+        {
+            // Finished adding all the choices; select the first one by default and re-enable
+            primaryViewChoiceBox.getSelectionModel().select(0);
+            primaryViewChoiceBox.setDisable(false);
+        }
+    }
+
     @FXML
     private void camFileSelect()
     {
@@ -92,12 +118,20 @@ public class LoaderController implements Initializable
                 loadCheckCameras.setFill(Paint.valueOf("Green"));
 
                 primaryViewChoiceBox.getItems().clear();
-                for (int i = 0; i < newViewSet.getCameraPoseCount(); i++)
+
+                if (newViewSet.getCameraPoseCount() > 0)
                 {
-                    primaryViewChoiceBox.getItems().add(newViewSet.getImageFileName(i));
+                    // Disable while updating the choices as it won't be responsive until it's done adding all the options
+                    primaryViewChoiceBox.setDisable(true);
+                    Iterator<String> imageIterator = IntStream.range(0, newViewSet.getCameraPoseCount())
+                        .mapToObj(newViewSet::getImageFileName)
+                        .sorted(Comparator.naturalOrder())
+                        .iterator();
+
+                    // Use individual Platform.runLater calls, chained together recursively
+                    // to prevent locking up the JavaFX Application thread
+                    Platform.runLater(() -> addToViewListRecursive(imageIterator));
                 }
-                primaryViewChoiceBox.getItems().sort(Comparator.naturalOrder());
-                primaryViewChoiceBox.getSelectionModel().select(0);
             }
             catch (Exception e)
             {
@@ -151,6 +185,9 @@ public class LoaderController implements Initializable
                 .start();
 
             close();
+        }
+        else{
+            Toolkit.getDefaultToolkit().beep();
         }
     }
 

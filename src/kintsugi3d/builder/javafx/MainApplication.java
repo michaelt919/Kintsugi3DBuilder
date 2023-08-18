@@ -13,14 +13,17 @@
 package kintsugi3d.builder.javafx;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -29,13 +32,13 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
+import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
 import javafx.scene.image.Image;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
+import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.vecmath.Vector2;
@@ -90,6 +93,22 @@ public class MainApplication extends Application
         @Override
         public void quit()
         {
+            // Commit the current user preferences to disk
+            try
+            {
+                log.info("Saving user preferences file to {}", JacksonUserPreferencesSerializer.getPreferencesFile());
+                GlobalUserPreferencesManager.getInstance().save();
+                log.debug("User preferences file saved successfully!");
+            }
+            catch (Exception e)
+            {
+                log.error("An error occurred saving user preferences", e);
+                Platform.runLater(() ->
+                {
+                    new Alert(AlertType.ERROR, "An error occurred while saving user preferences. Your preferences may have been lost.\nCheck the log for more info.").showAndWait();
+                });
+            }
+
             Platform.runLater(stage::close);
         }
 
@@ -224,32 +243,47 @@ public class MainApplication extends Application
         SettingsModelImpl settingsModel = InternalModels.getInstance().getSettingsModel();
         settingsModel.createBooleanSetting("lightCalibrationMode", false);
         settingsModel.createObjectSetting("currentLightCalibration", Vector2.ZERO);
-        settingsModel.createBooleanSetting("occlusionEnabled", true);
-        settingsModel.createBooleanSetting("fresnelEnabled", false);
-        settingsModel.createBooleanSetting("pbrGeometricAttenuationEnabled", false);
+        settingsModel.createBooleanSetting("occlusionEnabled", true, true);
+        settingsModel.createBooleanSetting("fresnelEnabled", false, true);
+        settingsModel.createBooleanSetting("pbrGeometricAttenuationEnabled", false, true);
         settingsModel.createBooleanSetting("relightingEnabled", false);
-        settingsModel.createBooleanSetting("shadowsEnabled", false);
+        settingsModel.createBooleanSetting("shadowsEnabled", false, true);
         settingsModel.createBooleanSetting("visibleLightsEnabled", true);
         settingsModel.createBooleanSetting("lightWidgetsEnabled", false);
         settingsModel.createBooleanSetting("visibleCameraPosesEnabled", false);
         settingsModel.createBooleanSetting("visibleSavedCameraPosesEnabled", false);
         settingsModel.createSettingFromProperty("gamma", Number.class,
-            StaticUtilities.clamp(1, 5, new SimpleFloatProperty(2.2f)));
+            StaticUtilities.clamp(1, 5, new SimpleFloatProperty(2.2f)), true);
         settingsModel.createSettingFromProperty("weightExponent", Number.class,
-            StaticUtilities.clamp(1, 100, new SimpleFloatProperty(16.0f)));
+            StaticUtilities.clamp(1, 100, new SimpleFloatProperty(16.0f)), true);
         settingsModel.createSettingFromProperty("isotropyFactor", Number.class,
-            StaticUtilities.clamp(0, 1, new SimpleFloatProperty(0.0f)));
+            StaticUtilities.clamp(0, 1, new SimpleFloatProperty(0.0f)), true);
         settingsModel.createSettingFromProperty("occlusionBias", Number.class,
-            StaticUtilities.clamp(0, 0.1, new SimpleFloatProperty(0.0025f)));
-        settingsModel.createObjectSetting("weightMode", ShadingParameterMode.PER_PIXEL);
+            StaticUtilities.clamp(0, 0.1, new SimpleFloatProperty(0.0025f)), true);
+        settingsModel.createObjectSetting("weightMode", ShadingParameterMode.PER_PIXEL, true);
         settingsModel.createObjectSetting("renderingMode", StandardRenderingMode.IMAGE_BASED);
-        settingsModel.createBooleanSetting("is3DGridEnabled", false);
-        settingsModel.createBooleanSetting("compassEnabled", false);
-        settingsModel.createBooleanSetting("multisamplingEnabled", false);
-        settingsModel.createBooleanSetting("halfResolutionEnabled", false);
+        settingsModel.createBooleanSetting("is3DGridEnabled", false, true);
+        settingsModel.createBooleanSetting("compassEnabled", false, true);
+        settingsModel.createBooleanSetting("multisamplingEnabled", false, true);
+        settingsModel.createBooleanSetting("halfResolutionEnabled", false, true);
         settingsModel.createBooleanSetting("sceneWindowOpen", false);
-        settingsModel.createBooleanSetting("buehlerAlgorithm", true);
-        settingsModel.createNumericSetting("buehlerViewCount", 5);
+        settingsModel.createBooleanSetting("buehlerAlgorithm", true, true);
+        settingsModel.createNumericSetting("buehlerViewCount", 5, true);
+
+        // Load user preferences, injecting where needed
+        log.info("Loading user preferences from file {}", JacksonUserPreferencesSerializer.getPreferencesFile());
+        GlobalUserPreferencesManager.getInstance().load();
+
+        if (GlobalUserPreferencesManager.getInstance().hasStartupFailures())
+        {
+            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+            ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
+            Alert alert = new Alert(AlertType.WARNING, "An error occurred loading your user preferences, and they may have been reverted to their defaults. No action is needed.\nCheck the log for more info.", ok, showLog);
+            ((Button) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
+                menuBarController.help_console();
+            });
+            alert.show();
+        }
 
         //distribute to controllers
         sceneController.init(
@@ -263,7 +297,7 @@ public class MainApplication extends Application
         menuBarController.init(primaryStage, InternalModels.getInstance(),
             () -> getHostServices().showDocument("https://docs.google.com/document/d/1jM4sr359-oacpom0TrGLYSqCUdHFEprnvsCn5oVwTEI/edit?usp=sharing"));
 
-        welcomeWindowController.init(primaryStage.getScene().getWindow(), Rendering.getRequestQueue(), InternalModels.getInstance(),
+        welcomeWindowController.init(primaryStage, Rendering.getRequestQueue(), InternalModels.getInstance(),
                 () -> getHostServices().showDocument("https://docs.google.com/document/d/1jM4sr359-oacpom0TrGLYSqCUdHFEprnvsCn5oVwTEI/edit?usp=sharing"));
 
         // Open scene window from the menu

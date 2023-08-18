@@ -20,15 +20,23 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.function.BiConsumer;
 
+import kintsugi3d.builder.export.specular.SpecularFitTextureRescaler;
+import kintsugi3d.builder.fit.debug.BasisImageCreator;
+import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
+import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromExistingBasis;
+import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromScratch;
+import kintsugi3d.builder.export.specular.WeightImageCreator;
+import kintsugi3d.builder.fit.finalize.AlbedoORMOptimization;
+import kintsugi3d.builder.fit.finalize.SpecularFitFinal;
+import kintsugi3d.builder.resources.ibr.*;
+import kintsugi3d.builder.resources.specular.SpecularResources;
+import kintsugi3d.builder.resources.ibr.stream.GraphicsStreamResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
-import kintsugi3d.builder.core.Projection;
-import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
-import kintsugi3d.builder.resources.*;
 import kintsugi3d.optimization.ShaderBasedErrorCalculator;
 import kintsugi3d.util.ImageFinder;
 
@@ -38,43 +46,14 @@ import kintsugi3d.util.ImageFinder;
 public class SpecularOptimization
 {
     private static final Logger log = LoggerFactory.getLogger(SpecularOptimization.class);
-    static final boolean DEBUG = true;
+    private static final boolean DEBUG_IMAGES = false;
+    private static final boolean TRACE_IMAGES = false;
 
     private final SpecularFitRequestParams settings;
 
     public SpecularOptimization(SpecularFitRequestParams settings)
     {
         this.settings = settings;
-    }
-
-    private int determineImageWidth(ReadonlyViewSet viewSet)
-    {
-        Projection defaultProj = viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(
-            viewSet.getPrimaryViewIndex()));
-
-        if (defaultProj.getAspectRatio() < 1.0)
-        {
-            return settings.getTextureFitSettings().width;
-        }
-        else
-        {
-            return Math.round(settings.getTextureFitSettings().height * defaultProj.getAspectRatio());
-        }
-    }
-
-    private int determineImageHeight(ReadonlyViewSet viewSet)
-    {
-        Projection defaultProj = viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(
-            viewSet.getPrimaryViewIndex()));
-
-        if (defaultProj.getAspectRatio() < 1.0)
-        {
-            return Math.round(settings.getTextureFitSettings().width / defaultProj.getAspectRatio());
-        }
-        else
-        {
-            return settings.getTextureFitSettings().height;
-        }
     }
 
     private <ContextType extends Context<ContextType>> SpecularFitProgramFactory<ContextType> getProgramFactory()
@@ -92,15 +71,15 @@ public class SpecularOptimization
         ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings());
 
         Duration duration = Duration.between(start, Instant.now());
-        log.info("Cache generated / loaded in: " + duration);
+        log.info("Cache found / generated in: " + duration);
 
         SpecularResources<ContextType> specularFit = optimizeFit(cache);
 
-        // Save basis image visualization for reference and debugging
-        try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(cache.getContext(), settings.getSpecularBasisSettings()))
-        {
-            basisImageCreator.createImages(specularFit, settings.getOutputDirectory());
-        }
+//        // Save basis image visualization for reference and debugging
+//        try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(cache.getContext(), settings.getSpecularBasisSettings()))
+//        {
+//            basisImageCreator.createImages(specularFit, settings.getOutputDirectory());
+//        }
 
         // TODO: Final error calculation causes TDR for high-res textures
         // and is also not accurate as it doesn't load the full resolution images
@@ -168,7 +147,7 @@ public class SpecularOptimization
             SpecularFitInitializer<ContextType> initializer = new SpecularFitInitializer<>(sampled, settings.getSpecularBasisSettings());
             initializer.initialize(programFactory, sampledDecomposition);
 
-            if (DEBUG)
+            if (DEBUG_IMAGES)
             {
                 initializer.saveDebugImage(sampledDecomposition, settings.getOutputDirectory());
             }
@@ -183,11 +162,23 @@ public class SpecularOptimization
                 // Preliminary optimization at low resolution to determine basis functions
                 optimizeTexSpaceFit(sampled, (stream, errorCalculator) -> sampledFit.optimizeFromScratch(
                     sampledDecomposition, stream, settings.getPreliminaryConvergenceTolerance(),
-                    errorCalculator, DEBUG ? settings.getOutputDirectory() : null), sampledFit
+                    errorCalculator, TRACE_IMAGES ? settings.getOutputDirectory() : null), sampledFit
                 );
 
                 // Save the final basis functions
                 sampledDecomposition.saveBasisFunctions(settings.getOutputDirectory());
+
+                if (DEBUG_IMAGES)
+                {
+                    // write out diffuse texture for debugging
+                    sampledDecomposition.saveDiffuseMap(settings.getTextureFitSettings().gamma, settings.getOutputDirectory());
+
+                    // Save basis image visualization for reference and debugging
+                    try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(cache.getContext(), settings.getSpecularBasisSettings()))
+                    {
+                        basisImageCreator.createImages(sampledFit, settings.getOutputDirectory());
+                    }
+                }
 
                 File geometryFile = sampled.getViewSet().getGeometryFile();
                 File inputNormalMap = geometryFile == null ? null :
@@ -202,13 +193,16 @@ public class SpecularOptimization
             Duration duration = Duration.between(start, Instant.now());
             log.info("Total processing time: " + duration);
 
-            try (PrintStream time = new PrintStream(new File(settings.getOutputDirectory(), "time.txt")))
+            if (DEBUG_IMAGES)
             {
-                time.println(duration);
-            }
-            catch (FileNotFoundException e)
-            {
-                log.error("An error occurred writing time file:", e);
+                try (PrintStream time = new PrintStream(new File(settings.getOutputDirectory(), "time.txt")))
+                {
+                    time.println(duration);
+                }
+                catch (FileNotFoundException e)
+                {
+                    log.error("An error occurred writing time file:", e);
+                }
             }
 
             // Save the final diffuse and normal maps
@@ -281,7 +275,6 @@ public class SpecularOptimization
             {
                 for (int j = 0; j < cache.getSettings().getTextureSubdiv(); j++)
                 {
-                    log.info("");
                     log.info("Starting block (" + i + ", " + j + ")...");
 
                     try (IBRResourcesTextureSpace<ContextType> blockResources = blockResourceFactory.createBlockResources(i, j))
@@ -309,7 +302,7 @@ public class SpecularOptimization
                             // Optimize weights and normals
                             optimizeTexSpaceFit(blockResources, (stream, errorCalculator) -> blockOptimization.optimizeFromExistingBasis(
                                 blockDecomposition, stream, settings.getConvergenceTolerance(),
-                                errorCalculator, DEBUG ? settings.getOutputDirectory() : null), blockOptimization
+                                errorCalculator, TRACE_IMAGES ? settings.getOutputDirectory() : null), blockOptimization
                             );
 
                             // Fill holes in the weight map
@@ -438,6 +431,19 @@ public class SpecularOptimization
         {
             SpecularFitTextureRescaler rescaler = new SpecularFitTextureRescaler(settings.getExportSettings());
             rescaler.rescaleAll(settings.getOutputDirectory(), settings.getSpecularBasisSettings().getBasisCount());
+
+            if (settings.shouldIncludeConstantTerm())
+            {
+                try
+                {
+                    rescaler.generateLodsFor(new File(settings.getOutputDirectory(), "constant.png"));
+                }
+                catch (IOException e)
+                {
+                    log.error("Failed to resize diffuse constant texture", e);
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 }

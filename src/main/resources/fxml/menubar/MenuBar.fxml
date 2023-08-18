@@ -18,8 +18,8 @@
 <?import javafx.scene.layout.*?>
 <?import kintsugi3d.builder.core.*?>
 
-<AnchorPane prefHeight="720.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.MenubarController">
-<MenuBar AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+<AnchorPane prefHeight="720.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.MenubarController">
+<MenuBar styleClass="menu-bar" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
       <Menu mnemonicParsing="false" text="File">
          <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="New Project">
             <accelerator>
@@ -103,7 +103,7 @@
                       <content>
                         <VBox alignment="CENTER_LEFT" spacing="10.0">
                            <children>
-                                  <Label text="Intensity Selection"> text="Intensity Selection"</Label>
+                               <Label text="Intensity Selection"> text="Intensity Selection"</Label>
                                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                                     <children>
                                     <TextField fx:id="perLight1IntensityTxtField" prefWidth="50.0" />
@@ -285,7 +285,7 @@
              <SeparatorMenuItem mnemonicParsing="false" />
             <CheckMenuItem fx:id="mipmapCheckMenuItem" mnemonicParsing="false" selected="true" text="Mipmap" />
             <SeparatorMenuItem mnemonicParsing="false" />
-             <MenuItem mnemonicParsing="false" onAction="#shading_JVMSettings" text="System Memory… " />
+             <MenuItem mnemonicParsing="false" onAction="#shading_SystemMemory" text="System Memory… " />
              <SeparatorMenuItem mnemonicParsing="false" />
              <CheckMenuItem fx:id="halfResolutionCheckMenuItem" mnemonicParsing="false" text="Reduce Viewport Resolution" />
             <CheckMenuItem mnemonicParsing="false" text="Stand-alone 3D Viewer (UNFINISHED)" />
@@ -296,6 +296,8 @@
              <Menu text="Photo Lighting Settings">
                  <CheckMenuItem fx:id="fresnelEffectCheckMenuItem" mnemonicParsing="false" text="Fresnel effect" />
                  <CheckMenuItem fx:id="shadowsCheckMenuItem" mnemonicParsing="false" selected="true" text="Shadows" />
+                 <!--shadows check menu item is set as selected in the menubar controller
+                    "selected" state is overwritten to "false" during binding-->
                  <CheckMenuItem fx:id="phyMaskingCheckMenuItem" mnemonicParsing="false" text="Physically based masking/shadowing" />
              </Menu>
          </items>
@@ -386,7 +388,7 @@
                 </accelerator>
             </MenuItem>
             <MenuItem mnemonicParsing="false" onAction="#file_colorChecker" text="Enter Color Checker Values... (DEPRECATED)" visible="false" />
-            <MenuItem mnemonicParsing="false" onAction="#unzip" text="Unzip Metashape File" visible="false">
+            <MenuItem mnemonicParsing="false" onAction="#unzip" text="Unzip Metashape File">
                 <accelerator>
                     <KeyCodeCombination alt="UP" code="M" control="ANY" meta="UP" shift="UP" shortcut="UP" />
                 </accelerator>
@@ -395,19 +397,21 @@
         </items>
     </Menu>
       <padding>
-         <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+         <Insets bottom="2.0" left="2.0" right="2.0" top="4.0" />
       </padding>
+      <opaqueInsets>
+         <Insets />
+      </opaqueInsets>
    </MenuBar>
-   <HBox alignment="CENTER_LEFT" spacing="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
-      <children>
-         <Button mnemonicParsing="false" onAction="#help_about" text="About" />
-         <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" />
-      </children>
-   </HBox>
+    <HBox alignment="CENTER_LEFT" spacing="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
+        <Button fx:id="settingsButton" contentDisplay="CENTER" mnemonicParsing="false" onAction="#openSystemSettingsModal" prefHeight="25.0" prefWidth="80.0" text="Settings" />
+        <Button mnemonicParsing="false" onAction="#help_about" text="About" />
+        <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" />
+    </HBox>
    <ProgressBar fx:id="progressBar" layoutY="25.0" prefWidth="1280.0" progress="0.0" visible="false" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="25.0" VBox.vgrow="ALWAYS">
        <VBox.margin>
            <Insets />
        </VBox.margin>
    </ProgressBar>
-    <fx:include fx:id="framebufferView" source="FramebufferView.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="27.0" VBox.vgrow="ALWAYS" />
+    <fx:include fx:id="framebufferView" source="FramebufferView.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="33.0" VBox.vgrow="ALWAYS" />
 </AnchorPane>

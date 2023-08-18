@@ -12,21 +12,19 @@
 
 package kintsugi3d.gl.interactive;
 
-import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.core.LoadingMonitor;
+import kintsugi3d.gl.core.Context;
 
 /**
  * An interface for an executable that only requires a graphics context (no pre-loaded data)
- * @param <ContextType> The type of the graphics context that the renderer implementation uses.
  */
-public interface GraphicsRequest<ContextType extends Context<ContextType>>
+public interface GraphicsRequest
 {
     /**
      * The entry point for the executable.
      * @param context The graphics context to be used.
-     * @param callback A callback that can be fired to update the loading bar.
-     *                 If this is unused, an "infinite loading" indicator will be displayed instead.
+     * @param <ContextType> The type of the graphics context that the renderer implementation uses.
      * @throws Exception An exception may be thrown by the executable that will be caught and logged by Kintsugi 3D Builder.
      */
-    void executeRequest(ContextType context, LoadingMonitor callback) throws Exception;
+    <ContextType extends Context<ContextType>> void executeRequest(ContextType context) throws Exception;
 }

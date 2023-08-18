@@ -21,7 +21,7 @@ import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
-import kintsugi3d.builder.resources.LuminanceMapResources;
+import kintsugi3d.builder.resources.ibr.LuminanceMapResources;
 import kintsugi3d.util.CubicHermiteSpline;
 
 public class SampledLuminanceEncoding 

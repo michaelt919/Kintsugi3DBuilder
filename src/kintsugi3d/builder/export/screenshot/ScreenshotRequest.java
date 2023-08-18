@@ -18,25 +18,25 @@ import java.io.IOException;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.builder.core.IBRInstance;
-import kintsugi3d.builder.core.IBRRequest;
+import kintsugi3d.builder.core.ObservableIBRRequest;
 import kintsugi3d.builder.core.LoadingMonitor;
 
-public class ScreenshotRequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>
+public class ScreenshotRequest implements ObservableIBRRequest
 {
     private final int width;
     private final int height;
     private final File exportFile;
 
-    public interface Builder<ContextType extends Context<ContextType>, RequestType extends ScreenshotRequest<ContextType>>
+    public interface Builder<RequestType extends ScreenshotRequest>
     {
-        Builder<ContextType, RequestType> setWidth(int width);
-        Builder<ContextType, RequestType> setHeight(int height);
-        Builder<ContextType, RequestType> setExportFile(File exportFile);
+        Builder<RequestType> setWidth(int width);
+        Builder<RequestType> setHeight(int height);
+        Builder<RequestType> setExportFile(File exportFile);
         RequestType create();
     }
 
-    protected static class BuilderImplementation<ContextType extends Context<ContextType>>
-            implements Builder<ContextType, ScreenshotRequest<ContextType>>
+    protected static class BuilderImplementation
+            implements Builder<ScreenshotRequest>
     {
         private int width;
         private int height;
@@ -58,21 +58,21 @@ public class ScreenshotRequest<ContextType extends Context<ContextType>> impleme
         }
 
         @Override
-        public Builder<ContextType, ScreenshotRequest<ContextType>> setWidth(int width)
+        public Builder<ScreenshotRequest> setWidth(int width)
         {
             this.width = width;
             return this;
         }
 
         @Override
-        public Builder<ContextType, ScreenshotRequest<ContextType>> setHeight(int height)
+        public Builder<ScreenshotRequest> setHeight(int height)
         {
             this.height = height;
             return this;
         }
 
         @Override
-        public Builder<ContextType, ScreenshotRequest<ContextType>> setExportFile(File exportFile)
+        public Builder<ScreenshotRequest> setExportFile(File exportFile)
         {
             this.exportFile = exportFile;
             return this;
@@ -80,9 +80,9 @@ public class ScreenshotRequest<ContextType extends Context<ContextType>> impleme
 
 
         @Override
-        public ScreenshotRequest<ContextType> create()
+        public ScreenshotRequest create()
         {
-            return new ScreenshotRequest<>(getWidth(), getHeight(), getExportFile());
+            return new ScreenshotRequest(getWidth(), getHeight(), getExportFile());
         }
     }
 
@@ -94,7 +94,8 @@ public class ScreenshotRequest<ContextType extends Context<ContextType>> impleme
     }
 
     @Override
-    public void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
+    public <ContextType extends Context<ContextType>> void executeRequest(
+        IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
     {
         try
         (

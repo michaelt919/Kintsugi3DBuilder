@@ -27,7 +27,7 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.DoubleVector2;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.resources.ReadonlyIBRResources;
+import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 
 public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -177,7 +177,6 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
             log.info("Decoded white point (as reflectance * pi): " + decodedWhitePoint);
             double normalizedRMSE = rmse * Math.pow(decodedWhitePoint / Math.PI, 1.0 / viewSet.getGamma());
             log.info("Normalized RMSE (* white point / pi): " + normalizedRMSE);
-            log.info("");
 
             return new DoubleVector2(normalizedRMSE, sampleCount);
         }
@@ -195,8 +194,6 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         BiConsumer<Integer, Framebuffer<ContextType>> groundTruthAction,
         BiConsumer<Integer, DoubleVector2> rmseAction)
     {
-        log.info("");
-
         for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
         {
             int viewIndex = k; // effectively final variable

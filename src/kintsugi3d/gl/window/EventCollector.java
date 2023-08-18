@@ -17,9 +17,13 @@ import java.util.Queue;
 import java.util.function.Consumer;
 
 import kintsugi3d.gl.window.listeners.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class EventCollector
 {
+    private static final Logger log = LoggerFactory.getLogger(EventCollector.class);
+
     private final Queue<Consumer<CanvasPositionListener>> canvasPos = new LinkedList<>();
     private final Queue<Consumer<CanvasSizeListener>> canvasSize = new LinkedList<>();
     private final Queue<Consumer<WindowCloseListener>> windowClose = new LinkedList<>();
@@ -155,7 +159,21 @@ class EventCollector
             Consumer<L> event = eventQueue.poll();
             for (L l : listeners)
             {
-                event.accept(l);
+                if (event == null)
+                {
+                    log.warn("Event was null", new Throwable());
+                }
+                else
+                {
+                    try
+                    {
+                        event.accept(l);
+                    }
+                    catch(Exception e)
+                    {
+                        log.error("An error occurred while polling events", e);
+                    }
+                }
             }
         }
     }

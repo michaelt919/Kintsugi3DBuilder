@@ -26,7 +26,7 @@ import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
-import kintsugi3d.builder.resources.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.builder.state.ReadonlyCameraModel;
 import kintsugi3d.builder.state.ReadonlyLightingModel;
@@ -70,7 +70,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
     private void handleMissingFiles(Exception e)
     {
-        log.error("An error occurred:", e);
+        log.error("An error occurred loading project:", e);
         if (loadingMonitor != null)
         {
             loadingMonitor.loadingFailed(e);
@@ -95,7 +95,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                     IBRResourcesImageSpace.getBuilderForContext(this.context)
                         .setLoadingMonitor(this.loadingMonitor)
                         .setLoadOptions(loadOptions)
-                        .loadVSETFile(vsetFile));
+                        .loadVSETFile(vsetFile)
+                        .generateUndistortedPreviewImages());
 
             newItem.getSceneModel().setObjectModel(this.objectModel);
             newItem.getSceneModel().setCameraModel(this.cameraModel);
@@ -177,7 +178,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                         .setLoadingMonitor(this.loadingMonitor)
                         .setLoadOptions(loadOptions)
                         .loadAgisoftFiles(xmlFile, meshFile, imageDirectory)
-                        .setPrimaryView(primaryViewName));
+                        .setPrimaryView(primaryViewName)
+                        .generateUndistortedPreviewImages());
 
             newItem.getSceneModel().setObjectModel(this.objectModel);
             newItem.getSceneModel().setCameraModel(this.cameraModel);

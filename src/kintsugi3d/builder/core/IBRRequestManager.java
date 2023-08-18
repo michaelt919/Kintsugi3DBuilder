@@ -15,11 +15,14 @@ package kintsugi3d.builder.core;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import kintsugi3d.gl.interactive.GraphicsRequest;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.rendering.IBRInstanceManager;
-import kintsugi3d.gl.interactive.GraphicsRequest;
+import kintsugi3d.gl.interactive.ObservableGraphicsRequest;
 
 public class IBRRequestManager<ContextType extends Context<ContextType>> implements IBRRequestQueue<ContextType>
 {
@@ -51,7 +54,43 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
     }
 
     @Override
-    public void addIBRRequest(IBRRequest<ContextType> request)
+    public synchronized void addBackgroundIBRRequest(IBRRequest request)
+    {
+        if (instanceManager.getLoadedInstance() == null)
+        {
+            // Instance is currently null, wait for a load and then call this function again (recursive-ish)
+            instanceManager.addInstanceLoadCallback(instance -> addBackgroundIBRRequest(request));
+        }
+        else
+        {
+            this.requestList.add(() ->
+            {
+                // Check again for null, just in case
+                if (instanceManager.getLoadedInstance() == null)
+                {
+                    // Instance is currently null, wait for a load and then call this function again (recursive-ish)
+                    instanceManager.addInstanceLoadCallback(instance -> addBackgroundIBRRequest(request));
+                }
+                else
+                {
+                    // Suppress warning about catching and not rethrowing AssertionError.
+                    // The request should effectively be regarded a "sandbox" where a critical logic error should not result in the application terminating.
+                    //noinspection ErrorNotRethrown
+                    try
+                    {
+                        request.executeRequest(instanceManager.getLoadedInstance());
+                    }
+                    catch (Exception | AssertionError e)
+                    {
+                        log.error("Error occurred while executing request:", e);
+                    }
+                }
+            });
+        }
+    }
+
+    @Override
+    public synchronized void addIBRRequest(ObservableIBRRequest request)
     {
         if (instanceManager.getLoadedInstance() == null)
         {
@@ -62,6 +101,11 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
         {
             this.requestList.add(() ->
             {
+                if (loadingMonitor != null)
+                {
+                    loadingMonitor.startLoading();
+                }
+
                 // Check again for null, just in case
                 if (instanceManager.getLoadedInstance() == null)
                 {
@@ -80,23 +124,37 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
                     catch (Exception | AssertionError e)
                     {
                         log.error("Error occurred while executing request:", e);
+                        Platform.runLater(() ->
+                        {
+                            new Alert(Alert.AlertType.ERROR, "An error occurred processing request. Processing has stopped.\nCheck the log for more info.").show();
+                        });
                     }
+                }
+
+                if (loadingMonitor != null)
+                {
+                    loadingMonitor.loadingComplete();
                 }
             });
         }
     }
 
+    /**
+     * Add a graphics request without a loading monitor
+     * @param request
+     */
     @Override
-    public void addGraphicsRequest(GraphicsRequest<ContextType> request)
+    public synchronized void addBackgroundGraphicsRequest(GraphicsRequest request)
     {
         this.requestList.add(() ->
         {
+
             // Suppress warning about catching and not rethrowing AssertionError.
             // The request should effectively be regarded a "sandbox" where a critical logic error should not result in the application terminating.
-            //noinspection ErrorNotRethrown
+            // noinspection ErrorNotRethrown
             try
             {
-                request.executeRequest(context, loadingMonitor);
+                request.executeRequest(context);
             }
             catch(Exception | AssertionError e)
             {
@@ -105,7 +163,36 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
         });
     }
 
-    public void executeQueue()
+    @Override
+    public synchronized void addGraphicsRequest(ObservableGraphicsRequest request)
+    {
+        this.requestList.add(() ->
+        {
+            if (loadingMonitor != null)
+            {
+                loadingMonitor.startLoading();
+            }
+
+            // Suppress warning about catching and not rethrowing AssertionError.
+            // The request should effectively be regarded a "sandbox" where a critical logic error should not result in the application terminating.
+            // noinspection ErrorNotRethrown
+            try
+            {
+                request.executeRequest(context, loadingMonitor);
+            }
+            catch(Exception | AssertionError e)
+            {
+                log.error("Error occurred while executing request:", e);
+            }
+
+            if (loadingMonitor != null)
+            {
+                loadingMonitor.loadingComplete();
+            }
+        });
+    }
+
+    public synchronized void executeQueue()
     {
         //if (model != null && model.getLoadedInstance() != null)
         {
@@ -113,18 +200,12 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
 
             while (!requestList.isEmpty())
             {
-                if (loadingMonitor != null)
+                if (requestList.peek() != null)
                 {
-                    loadingMonitor.startLoading();
+                    requestList.peek().run(); // Peek first to ensure that isEmpty() returns false when called from other threads.
                 }
 
-                requestList.peek().run(); // Peek first to ensure that isEmpty() returns false when called from other threads.
                 requestList.poll();       // Once the task is done, remove the request from the queue.
-
-                if (loadingMonitor != null)
-                {
-                    loadingMonitor.loadingComplete();
-                }
             }
         }
     }

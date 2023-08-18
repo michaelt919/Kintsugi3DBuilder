@@ -14,9 +14,15 @@ package kintsugi3d.builder.core;
 
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.interactive.GraphicsRequest;
+import kintsugi3d.gl.interactive.ObservableGraphicsRequest;
 
 public interface IBRRequestQueue<ContextType extends Context<ContextType>>
 {
-    void addIBRRequest(IBRRequest<ContextType> request);
-    void addGraphicsRequest(GraphicsRequest<ContextType> request);
+    void addBackgroundIBRRequest(IBRRequest request);
+
+    void addIBRRequest(ObservableIBRRequest request);
+
+    void addBackgroundGraphicsRequest(GraphicsRequest request);
+
+    void addGraphicsRequest(ObservableGraphicsRequest request);
 }

@@ -14,6 +14,7 @@ package kintsugi3d.gl.types;
 
 import java.nio.ByteBuffer;
 import java.util.Iterator;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import kintsugi3d.gl.nativebuffer.NativeDataType;
@@ -88,32 +89,41 @@ public enum PackedDataType implements AbstractDataType<Iterable<? extends Number
         return nativeDataType.getSizeInBytes();
     }
 
+    private int getPackedValue(Iterable<? extends Number> components)
+    {
+        Iterator<? extends Number> componentIterator = components.iterator();
+        int packedValue = ((1 << redBits) - 1) & componentIterator.next().intValue();
+        if (componentCount >= 2)
+        {
+            packedValue = (packedValue << greenBits) | (((1 << greenBits) - 1) & componentIterator.next().intValue());
+
+            if (componentCount >= 3)
+            {
+                packedValue = (packedValue << blueBits) | (((1 << blueBits) - 1) & componentIterator.next().intValue());
+
+                if (componentCount >= 4)
+                {
+                    packedValue = (packedValue << alphaBits) | ((1 << alphaBits) - 1) & componentIterator.next().intValue();
+                }
+            }
+        }
+        return packedValue;
+    }
+
     @Override
     public Consumer<Iterable<? extends Number>> wrapByteBuffer(ByteBuffer baseBuffer)
     {
         Consumer<Number> packedConsumer = AbstractDataTypeFactory.wrapByteBuffer(baseBuffer, nativeDataType);
+        return components -> packedConsumer.accept(getPackedValue(components));
+    }
 
-        return components ->
-        {
-            Iterator<? extends Number> componentIterator = components.iterator();
-            int packedValue = ((1 << redBits) - 1) & componentIterator.next().intValue();
-            if (componentCount >= 2)
-            {
-                packedValue = (packedValue << greenBits) | (((1 << greenBits) - 1) & componentIterator.next().intValue());
 
-                if (componentCount >= 3)
-                {
-                    packedValue = (packedValue << blueBits) | (((1 << blueBits) - 1) & componentIterator.next().intValue());
 
-                    if (componentCount >= 4)
-                    {
-                        packedValue = (packedValue << alphaBits) | ((1 << alphaBits) - 1) & componentIterator.next().intValue();
-                    }
-                }
-            }
-
-            packedConsumer.accept(packedValue);
-        };
+    @Override
+    public BiConsumer<Integer, Iterable<? extends Number>> wrapIndexedByteBuffer(ByteBuffer baseBuffer)
+    {
+        BiConsumer<Integer, Number> packedConsumer = AbstractDataTypeFactory.wrapIndexedByteBuffer(baseBuffer, nativeDataType);
+        return (index, components) -> packedConsumer.accept(index, getPackedValue(components));
     }
 
     /**

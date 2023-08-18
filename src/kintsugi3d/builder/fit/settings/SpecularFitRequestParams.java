@@ -15,7 +15,7 @@ package kintsugi3d.builder.fit.settings;
 import java.io.File;
 
 import kintsugi3d.builder.core.TextureFitSettings;
-import kintsugi3d.builder.resources.ImageCacheSettings;
+import kintsugi3d.builder.resources.ibr.ImageCacheSettings;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 
 public class SpecularFitRequestParams
@@ -27,6 +27,7 @@ public class SpecularFitRequestParams
     private final ReconstructionSettings reconstructionSettings = new ReconstructionSettings();
     private final ImageCacheSettings imageCacheSettings = new ImageCacheSettings();
     private final ExportSettings exportSettings = new ExportSettings();
+    //TODO Merge project and global preferences and attach to request
 
     private double convergenceTolerance = 0.00001;
     private double preliminaryConvergenceTolerance = 0.01;

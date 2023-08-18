@@ -25,24 +25,27 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
-import org.xml.sax.SAXException;
-import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.core.IBRRequestManager;
 import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.LoaderController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.gl.core.Context;
 import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.function.Predicate;
 
 public class WelcomeWindowController {
+    private static final Logger log = LoggerFactory.getLogger(WelcomeWindowController.class);
     private InternalModels internalModels;
 
     //Window open flags
@@ -72,11 +75,13 @@ public class WelcomeWindowController {
     private Runnable userDocumentationHandler;
 
     private IBRRequestManager<?> requestQueue;
+    private Stage stage;
 
     public <ContextType extends Context<ContextType>> void init(
-            Window injectedParentWindow, IBRRequestManager<ContextType> requestQueue, InternalModels injectedInternalModels,
+            Stage injectedStage, IBRRequestManager<ContextType> requestQueue, InternalModels injectedInternalModels,
             Runnable injectedUserDocumentationHandler) {
-        this.parentWindow = injectedParentWindow;
+        this.parentWindow = injectedStage.getOwner();
+        this.stage = injectedStage;
         this.internalModels = injectedInternalModels;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
 
@@ -127,7 +132,7 @@ public class WelcomeWindowController {
             public void loadingFailed(Exception e) {
                 loadingComplete();
                 projectLoaded = false;
-                Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, e.toString()).show());
+                handleException("An error occurred while loading project", e);
             }
         });
     }
@@ -189,9 +194,9 @@ public class WelcomeWindowController {
                     projectLoaded = true;
                 });
             }
-            catch (IOException e)
+            catch (Exception e)
             {
-                e.printStackTrace();
+                handleException("An error occurred creating a new project", e);
             }
         }
         updateRecentProjectsButton();
@@ -215,9 +220,9 @@ public class WelcomeWindowController {
                 });
                 createProjectController.init();
             }
-            catch (IOException e)
+            catch (Exception e)
             {
-                e.printStackTrace();
+                handleException("An error occurred creating a new project", e);
             }
         }
     }
@@ -252,9 +257,9 @@ public class WelcomeWindowController {
             {
                 newVsetFile = internalModels.getProjectModel().openProjectFile(projectFile);
             }
-            catch (IOException | ParserConfigurationException | SAXException e)
+            catch (Exception e)
             {
-                e.printStackTrace();
+                handleException("An error occurred opening project", e);
             }
         }
 
@@ -352,7 +357,14 @@ public class WelcomeWindowController {
         }
     }
 
-
+    //TODO: HIDE WELCOME WINDOW WHEN A PROJECT IS MADE/OPENED
+//    public void hideWelcomeWindow(){
+//        stage.hide();
+//    }
+//    public void showWelcomeWindow(){
+//        stage.show();
+//    }
+//
 
     @FXML
     private void help_userManual()
@@ -367,6 +379,22 @@ public class WelcomeWindowController {
     public void hideMenu(MouseEvent mouseEvent){
         //recentProjectsSplitMenuButton.hide();
         //TODO: ONLY HIDE THE MENU WHEN THE USER'S MOUSE LEAVES THE CONTEXT MENU
+    }
+
+    private void handleException(String message, Exception e)
+    {
+        log.error("{}:", message, e);
+        Platform.runLater(() ->
+        {
+            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+            ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
+            Alert alert = new Alert(Alert.AlertType.ERROR, message + "\nSee the log for more info.", ok, showLog);
+            ((Button) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
+                // Use the menubar's console open function to prevent 2 console windows from appearing
+                MenubarController.getInstance().help_console();
+            });
+            alert.show();
+        });
     }
 
 }

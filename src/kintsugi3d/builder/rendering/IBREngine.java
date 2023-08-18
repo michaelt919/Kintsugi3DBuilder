@@ -23,10 +23,10 @@ import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.rendering.components.StandardScene;
 import kintsugi3d.builder.resources.DynamicResourceLoader;
-import kintsugi3d.builder.resources.IBRResourcesImageSpace.Builder;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
 import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibrationRoot;
 import kintsugi3d.builder.rendering.components.lit.LitRoot;
-import kintsugi3d.builder.resources.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.builder.state.SceneViewport;
 
@@ -101,7 +101,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             this.rectangleVertices = context.createRectangle();
 
             this.resources = resourceBuilder
-                .generateUndistortedPreviewImages()
+//                .generateUndistortedPreviewImages()
                 .create();
 
             context.flush();
@@ -202,9 +202,9 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         float maxLuminance = (float) resources.getViewSet().getLuminanceEncoding().decodeFunction.applyAsDouble(255.0);
         float gamma = this.sceneModel.getSettingsModel().getFloat("gamma");
         return new Vector3(
-                (float) Math.pow(sceneModel.getLightingModel().getBackgroundColor().x / maxLuminance, 1.0 / gamma),
-                (float) Math.pow(sceneModel.getLightingModel().getBackgroundColor().y / maxLuminance, 1.0 / gamma),
-                (float) Math.pow(sceneModel.getLightingModel().getBackgroundColor().z / maxLuminance, 1.0 / gamma));
+                sceneModel.getLightingModel().getBackgroundColor().x / (float) Math.pow(maxLuminance, 1.0 / gamma),
+                sceneModel.getLightingModel().getBackgroundColor().y / (float) Math.pow(maxLuminance, 1.0 / gamma),
+                sceneModel.getLightingModel().getBackgroundColor().z / (float) Math.pow(maxLuminance, 1.0 / gamma));
     }
 
     @Override

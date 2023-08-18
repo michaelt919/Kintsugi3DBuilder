@@ -19,10 +19,10 @@ import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.builder.core.IBRInstance;
-import kintsugi3d.builder.core.IBRRequest;
+import kintsugi3d.builder.core.ObservableIBRRequest;
 import kintsugi3d.builder.core.LoadingMonitor;
 
-public abstract class SimpleAnimationRequestBase<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>
+public abstract class SimpleAnimationRequestBase implements ObservableIBRRequest
 {
     private final int width;
     private final int height;
@@ -35,7 +35,7 @@ public abstract class SimpleAnimationRequestBase<ContextType extends Context<Con
         Builder setHeight(int height);
         Builder setFrameCount(int frameCount);
         Builder setExportPath(File exportPath);
-        <ContextType extends Context<ContextType>> IBRRequest<ContextType> create();
+        <ContextType extends Context<ContextType>> ObservableIBRRequest create();
     }
 
     protected abstract static class BuilderBase implements Builder
@@ -110,7 +110,7 @@ public abstract class SimpleAnimationRequestBase<ContextType extends Context<Con
     }
 
     @Override
-    public void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
+    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
     {
         try
         (

@@ -18,7 +18,7 @@ import java.util.function.*;
 import java.util.stream.IntStream;
 
 import org.ejml.simple.SimpleMatrix;
-import kintsugi3d.builder.resources.GraphicsStream;
+import kintsugi3d.builder.resources.ibr.stream.GraphicsStream;
 
 public class NonNegativeWeightOptimization
 {

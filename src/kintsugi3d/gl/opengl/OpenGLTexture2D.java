@@ -18,6 +18,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.imageio.ImageIO;
@@ -30,6 +31,7 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.core.ColorFormat.DataType;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.types.AbstractDataType;
+import kintsugi3d.util.ImageHelper;
 import kintsugi3d.util.RadianceImageLoader;
 import kintsugi3d.util.RadianceImageLoader.Image;
 
@@ -91,7 +93,9 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         {
             int width = colorImg.getWidth();
             int height = colorImg.getHeight();
-            ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(colorImg, maskImg, flipVertical);
+            ByteBuffer buffer = bufferedImageToNativeBuffer(
+                isICCTransformationRequested() ? new ImageHelper(colorImg).convertICCToSRGB() : new ImageHelper(colorImg).forceSRGB(),
+                /* masks shouldn't be using ICC */ new ImageHelper(maskImg).forceSRGB(), flipVertical);
 
             if (this.isInternalFormatCompressed())
             {
@@ -187,13 +191,13 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                     (this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER
                         || this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER));
             int type = OpenGLContext.getDataTypeConstant(mappedType);
-            Function<ByteBuffer, Consumer<? super MappedType>> bufferWrapperFunctionPartial = mappedType::wrapByteBuffer;
+            Function<ByteBuffer, BiConsumer<Integer, ? super MappedType>> bufferWrapperFunctionPartial = mappedType::wrapIndexedByteBuffer;
             int mappedColorLength = mappedType.getSizeInBytes();
 
-            Function<ByteBuffer, Consumer<Color>> bufferWrapperFunctionFull = byteBuffer ->
+            Function<ByteBuffer, BiConsumer<Integer, Color>> bufferWrapperFunctionFull = byteBuffer ->
             {
-                Consumer<? super MappedType> partiallyWrappedBuffer = bufferWrapperFunctionPartial.apply(byteBuffer);
-                return color -> partiallyWrappedBuffer.accept(mappingFunction.apply(color));
+                BiConsumer<Integer, ? super MappedType> partiallyWrappedBuffer = bufferWrapperFunctionPartial.apply(byteBuffer);
+                return (index, color) -> partiallyWrappedBuffer.accept(index, mappingFunction.apply(color));
             };
 
             ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(colorImg, maskImg, flipVertical, bufferWrapperFunctionFull, mappedColorLength);

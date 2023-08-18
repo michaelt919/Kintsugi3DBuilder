@@ -21,12 +21,13 @@ import java.util.List;
 import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
 
+import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-import kintsugi3d.builder.resources.ReadonlyIBRResources;
+import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.util.ColorArrayList;
 import kintsugi3d.optimization.KMeansClustering;
 

@@ -17,15 +17,19 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+import kintsugi3d.builder.fit.debug.BasisImageCreator;
+import kintsugi3d.builder.fit.decomposition.*;
+import kintsugi3d.builder.fit.finalize.FinalDiffuseOptimization;
+import kintsugi3d.builder.fit.normal.NormalOptimization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.builder.fit.settings.NormalOptimizationSettings;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-import kintsugi3d.builder.resources.GraphicsStream;
-import kintsugi3d.builder.resources.GraphicsStreamResource;
-import kintsugi3d.builder.resources.ReadonlyIBRResources;
+import kintsugi3d.builder.resources.ibr.stream.GraphicsStream;
+import kintsugi3d.builder.resources.ibr.stream.GraphicsStreamResource;
+import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.optimization.ReadonlyErrorReport;
 import kintsugi3d.optimization.ShaderBasedErrorCalculator;
 import kintsugi3d.optimization.function.GeneralizedSmoothStepBasis;
@@ -165,7 +169,24 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
                 // Use the current front normal buffer for extracting reflectance information.
                 reflectanceStream.getProgram().setTexture("normalEstimate", getNormalMap());
 
-                basisOptimizationIteration(specularDecomposition, reflectanceStreamParallel, errorCalculator, debugDirectory);
+                basisOptimizationIteration(specularDecomposition, reflectanceStreamParallel, errorCalculator);
+
+                if (debugDirectory != null)
+                {
+                    // Save basis image visualization for reference and debugging
+                    try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(context, specularBasisSettings))
+                    {
+                        basisImageCreator.createImages(this, debugDirectory);
+                    }
+                    catch (IOException e)
+                    {
+                        log.error("Error occurred while creating basis images:", e);
+                    }
+
+                    // write out diffuse texture for debugging
+                    specularDecomposition.saveDiffuseMap(textureFitSettings.gamma, debugDirectory);
+                }
+
                 getBasisResources().updateFromSolution(specularDecomposition);
 
                 weightAndNormalIteration(specularDecomposition, reflectanceStream, weightOptimization,
@@ -202,7 +223,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         // This can cause error to increase but it's unclear if that poses a problem for convergence.
         getRoughnessOptimization().execute();
 
-        if (SpecularOptimization.DEBUG)
+        if (debugDirectory != null)
         {
             getRoughnessOptimization().saveTextures(debugDirectory);
 
@@ -221,24 +242,17 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
     private void calculateError(ShaderBasedErrorCalculator<ContextType> errorCalculator)
     {
-        if (SpecularOptimization.DEBUG)
-        {
-            log.info("Calculating error...");
-        }
+        log.debug("Calculating error...");
 
         // Calculate the error in preparation for normal estimation.
         errorCalculator.update();
 
-        if (SpecularOptimization.DEBUG)
-        {
-            // Log error in debug mode.
-            logError(errorCalculator.getReport());
-        }
+        // Log error in debug mode.
+        logError(errorCalculator.getReport());
     }
 
     private void basisOptimizationIteration(SpecularDecompositionFromScratch specularDecomposition,
-        GraphicsStream<ColorList[]> reflectanceStreamParallel, ShaderBasedErrorCalculator<ContextType> errorCalculator,
-        File debugDirectory)
+        GraphicsStream<ColorList[]> reflectanceStreamParallel, ShaderBasedErrorCalculator<ContextType> errorCalculator)
     {
         BRDFReconstruction brdfReconstruction = new BRDFReconstruction(
             specularBasisSettings,
@@ -257,9 +271,6 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
             reflectanceStreamParallel.map(framebufferData -> new ReflectanceData(framebufferData[0], framebufferData[1])),
             specularDecomposition);
 
-        // Log error in debug mode.
-        if (debugDirectory != null)
-        {
             // Use the current front normal buffer for calculating error.
             errorCalculator.getProgram().setTexture("normalEstimate", getNormalMap());
 
@@ -267,23 +278,9 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
             // Basis functions will have changed.
             getBasisResources().updateFromSolution(specularDecomposition);
 
-            log.info("Calculating error...");
+            log.debug("Calculating error...");
             errorCalculator.update();
             logError(errorCalculator.getReport());
-
-            // Save basis image visualization for reference and debugging
-            try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(context, specularBasisSettings))
-            {
-                basisImageCreator.createImages(this, debugDirectory);
-            }
-            catch (IOException e)
-            {
-                log.error("Error occurred while creating basis images:", e);
-            }
-
-            // write out diffuse texture for debugging
-            specularDecomposition.saveDiffuseMap(textureFitSettings.gamma, debugDirectory);
-        }
     }
 
     private void weightOptimizationIteration(SpecularDecomposition specularDecomposition,
@@ -347,11 +344,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
     private static void logError(ReadonlyErrorReport report)
     {
-        log.info("--------------------------------------------------");
-        log.info("Error: " + report.getError());
-        log.info("(Previous error: " + report.getPreviousError() + ')');
-        log.info("--------------------------------------------------");
-        log.info("");
+        log.debug("Error: " + report.getError() + " (Previous error: " + report.getPreviousError() + ")");
     }
 
     @Override
