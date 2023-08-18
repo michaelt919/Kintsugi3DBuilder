@@ -77,5 +77,6 @@
              text="Pack textures with glTF"/>
    <CheckBox fx:id="exportTextureLODsCheckbox" layoutX="270.0" layoutY="322.0" mnemonicParsing="false"
              text="Generate low-res textures"/>
+   <CheckBox fx:id="openViewerOnComplete" layoutX="270.0" layoutY="340.0" mnemonicParsing="false" text="Open Viewer once complete" />
 
 </AnchorPane>

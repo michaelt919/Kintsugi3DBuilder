@@ -1006,21 +1006,6 @@ public class MenubarController
         }
     }
 
-    private void handleException(String message, Exception e)
-    {
-        log.error("{}:", message, e);
-        Platform.runLater(() ->
-        {
-            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-            ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
-            Alert alert = new Alert(AlertType.ERROR, message + "\nSee the log for more info.", ok, showLog);
-            ((Button) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
-                help_console();
-            });
-            alert.show();
-        });
-    }
-
     public void launchViewerApp()
     {
         try
@@ -1035,5 +1020,20 @@ public class MenubarController
         {
             handleException("Failed to launch Kintsugi 3D Viewer", e);
         }
+    }
+
+    private void handleException(String message, Exception e)
+    {
+        log.error("{}:", message, e);
+        Platform.runLater(() ->
+        {
+            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+            ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
+            Alert alert = new Alert(AlertType.ERROR, message + "\nSee the log for more info.", ok, showLog);
+            ((Button) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
+                help_console();
+            });
+            alert.show();
+        });
     }
 }

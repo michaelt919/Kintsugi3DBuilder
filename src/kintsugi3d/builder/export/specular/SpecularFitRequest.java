@@ -21,6 +21,7 @@ import kintsugi3d.builder.fit.debug.FinalReconstruction;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.fit.SpecularOptimization;
 import kintsugi3d.builder.resources.specular.SpecularResources;
+import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -128,6 +129,11 @@ public class SpecularFitRequest implements ObservableIBRRequest, ObservableGraph
                 if (settings.getExportSettings().isGlTFEnabled())
                 {
                     saveGlTF(renderable.getActiveGeometry(), renderable.getActiveViewSet(), renderable.getSceneModel().getObjectModel());
+                }
+
+                if (settings.getExportSettings().isOpenViewerOnceComplete())
+                {
+                    Kintsugi3DViewerLauncher.launchViewer(new File(settings.getOutputDirectory(), "model.glb"));
                 }
 
 //            // Reconstruct if requested
