@@ -16,8 +16,8 @@
 #define IMAGE_BASED_RENDERING_ENABLED 0
 #endif
 
-#if IMAGE_BASED_RENDERING_ENABLED
+//#if IMAGE_BASED_RENDERING_ENABLED
 #include "ibr.glsl"
-#else
-#include "standard.glsl"
-#endif
+//#else
+//#include "standard.glsl"
+//#endif

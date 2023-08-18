@@ -44,7 +44,8 @@
 #if MATERIAL_EXPLORATION_MODE
 
 #include <colorappearance/material.glsl>
-#line 49 0
+#line 48 3101
+
 #undef SMITH_MASKING_SHADOWING
 #define SMITH_MASKING_SHADOWING 1
 
@@ -91,7 +92,7 @@
 #endif // !MATERIAL_EXPLORATION_MODE
 
 #include "../colorappearance/material.glsl"
-#line 108 0
+#line 96 3101
 
 #ifndef MIPMAPS_ENABLED
 #define MIPMAPS_ENABLED !BUEHLER_ALGORITHM
@@ -112,7 +113,7 @@
 #include "sort.glsl"
 #endif
 
-#line 133 0
+#line 117 3101
 
 uniform vec3 holeFillColor;
 
@@ -266,13 +267,13 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 normalDir, Mat
 
 vec3 getEnvironmentShading(vec3 normalDir, Material m)
 {
-#if MATERIAL_EXPLORATION_MODE
+    #if MATERIAL_EXPLORATION_MODE
     float maxLuminance = max(ANALYTIC_SPECULAR_COLOR.r, max(ANALYTIC_SPECULAR_COLOR.g, ANALYTIC_SPECULAR_COLOR.b))
     / (4 * ANALYTIC_ROUGHNESS * ANALYTIC_ROUGHNESS)
     + max(ANALYTIC_DIFFUSE_COLOR.r, max(ANALYTIC_DIFFUSE_COLOR.g, ANALYTIC_DIFFUSE_COLOR.b));
-#else
+    #else
     float maxLuminance = getMaxLuminance();
-#endif
+    #endif
 
     vec4 sum = vec4(0.0);
 
@@ -292,6 +293,20 @@ vec3 getEnvironmentShading(vec3 normalDir, Material m)
     {
         return vec3(0.0);
     }
+}
+
+
+vec3 specularFromPredictedMFD(LightingParameters l, Material m, vec4 predictedMFD)
+{
+    #if FRESNEL_EFFECT_ENABLED
+    vec3 mfdFresnelBase = m.specularColor * distTimesPi(l.nDotH, vec3(m.roughness));
+    vec3 mfdFresnelAnalytic = fresnel(mfdFresnelBase, vec3(getLuminance(mfdFresnelBase) / getLuminance(m.specularColor)), l.hDotV);
+    float grazingIntensity = getLuminance(max(vec3(0.0), predictedMFD.rgb) / m.specularColor);
+    return max(vec3(0.0), fresnel(predictedMFD.rgb, vec3(grazingIntensity), l.hDotV));
+    #else // !FRESNEL_EFFECT_ENABLED
+    vec3 mfdFresnelAnalytic = m.specularColor * distTimesPi(l.nDotH, vec3(m.roughness));
+    return max(vec3(0.0), predictedMFD.rgb);
+    #endif // FRESNEL_EFFECT_ENABLED
 }
 
 #if BUEHLER_ALGORITHM
@@ -390,6 +405,11 @@ vec4 computeBuehler(vec3 targetDirection, vec3 normalDir, Material m)
     {
         return vec4(sum.rgb / sum.a, clamp(1.0 / max(1.0, 1.0 + analyticWeight - weights[0]) /*(maxWeight - analyticWeight) / (maxWeight - weights[0])*/, 0, 1));
     }
+}
+
+vec3 specular(LightingParameters l, Material m)
+{
+    return specularFromPredictedMFD(l, m, computeBuehler(l.halfDir, l.normalDir, m));
 }
 
 #elif VIRTUAL_LIGHT_COUNT > 0
@@ -531,7 +551,12 @@ SPECULAR_PRECOMPUTATION precomputeSpecular(ViewingParameters v, Material m)
     return results;
 }
 
-#endif // BUEHLER_ALGORITHM
+vec3 specular(LightingParameters l, Material m, SPECULAR_PRECOMPUTATION p)
+{
+    return specularFromPredictedMFD(l, m, p[l.lightIndex]);
+}
+
+#endif
 
 vec3 global(ViewingParameters v, Material m)
 {
@@ -542,31 +567,6 @@ vec3 global(ViewingParameters v, Material m)
     envLighting += getEnvironmentShading(v.normalDir, m);
     return envLighting;
 }
-
-vec3 specularFromPredictedMFD(LightingParameters l, Material m, vec4 predictedMFD)
-{
-#if FRESNEL_EFFECT_ENABLED
-    vec3 mfdFresnelBase = m.specularColor * distTimesPi(l.nDotH, vec3(m.roughness));
-    vec3 mfdFresnelAnalytic = fresnel(mfdFresnelBase, vec3(getLuminance(mfdFresnelBase) / getLuminance(m.specularColor)), l.hDotV);
-    float grazingIntensity = getLuminance(max(vec3(0.0), predictedMFD.rgb) / m.specularColor);
-    return max(vec3(0.0), fresnel(predictedMFD.rgb, vec3(grazingIntensity), l.hDotV));
-#else // !FRESNEL_EFFECT_ENABLED
-    vec3 mfdFresnelAnalytic = m.specularColor * distTimesPi(l.nDotH, vec3(m.roughness));
-    return max(vec3(0.0), predictedMFD.rgb);
-#endif // FRESNEL_EFFECT_ENABLED
-}
-
-#ifdef SPECULAR_PRECOMPUTATION
-vec3 specular(LightingParameters l, Material m, SPECULAR_PRECOMPUTATION p)
-{
-    return specularFromPredictedMFD(l, m, p[l.lightIndex]);
-}
-#else
-vec3 specular(LightingParameters l, Material m)
-{
-    return specularFromPredictedMFD(l, m, computeBuehler(l.halfDir, l.normalDir, m));
-}
-#endif
 
 vec3 diffuse(LightingParameters l, Material m)
 {

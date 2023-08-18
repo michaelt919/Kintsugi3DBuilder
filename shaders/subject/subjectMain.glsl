@@ -14,6 +14,7 @@
 #define SUBJECT_MAIN_GLSL
 
 #include "subject.glsl"
+#line 18 3001
 
 in vec3 fNormal;
 in vec3 fTangent;
@@ -22,8 +23,6 @@ in vec3 fBitangent;
 layout(location = 1) out int fragObjectID;
 
 uniform int objectID;
-
-#line 27 3001
 
 #ifndef RELIGHTING_ENABLED
 #define RELIGHTING_ENABLED 0
@@ -44,15 +43,18 @@ uniform vec3 lightPosVirtual[VIRTUAL_LIGHT_COUNT];
 #endif // VIRTUAL_LIGHT_COUNT > 0
 
 #if !RELIGHTING_ENABLED
-#include "../colorappearance/colorappearance.glsl" // Need if relighting is not enabled to infer light direction
+#include <colorappearance/colorappearance.glsl> // Need if relighting is not enabled to infer light direction
+#line 48 3001
 #endif
 
 vec3 getLightVectorVirtual(int lightIndex)
 {
-#if RELIGHTING_ENABLED
+#if RELIGHTING_ENABLED && VIRTUAL_LIGHT_COUNT > 0
     return lightPosVirtual[lightIndex] - fPosition;
-#else
+#elif !RELIGHTING_ENABLED
     return transpose(mat3(model_view)) * lightPositions[getLightIndex(0)].xyz + viewPos - fPosition;
+#else // VIRTUAL_LIGHT_COUNT == 0
+    return vec3(0);
 #endif
 }
 
@@ -141,7 +143,7 @@ void main()
         lightDirUnNorm = transpose(mat3(model_view)) * lightPositions[getLightIndex(0)].xyz + viewPos - fPosition;
 #endif
         l.lightDir = normalize(lightDirUnNorm);
-        l.nDotL = max(0.0, dot(l.normalDir, l.viewDir));
+        l.nDotL = max(0.0, dot(l.normalDir, l.lightDir));
 
         if (l.nDotL > 0.0 && dot(triangleNormal, l.lightDir) > 0.0)
         {
@@ -178,9 +180,9 @@ void main()
                 vec3 lightVectorTransformed = (model_view * vec4(lightDirUnNorm, 0.0)).xyz;
                 vec3 pointRadiance;
 
-                #if RELIGHTING_ENABLED
+#if RELIGHTING_ENABLED
                 vec3 incidentRadiance = lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed);
-                #if SPOTLIGHTS_ENABLED
+#if SPOTLIGHTS_ENABLED
                 float lightDirCorrelation = max(0.0, dot(l.lightDir, -lightOrientationVirtual[i]));
                 float spotBoundaryDistance = lightSpotSizeVirtual[i] - sqrt(1 - lightDirCorrelation * lightDirCorrelation);
                 incidentRadiance *= clamp(
