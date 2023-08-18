@@ -15,6 +15,8 @@
 
 #line 17 1020
 
+in vec2 fTexCoord;
+
 #ifndef DIFFUSE_TEXTURE_ENABLED
 #define DIFFUSE_TEXTURE_ENABLED 0
 #endif
@@ -105,22 +107,23 @@ struct Material
 
 Material getMaterial()
 {
+    vec2 texCoords = getTexCoords();
     Material m;
 
 #if DIFFUSE_TEXTURE_ENABLED
-    m.diffuseColor = pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma));
+    m.diffuseColor = pow(texture(diffuseMap, texCoords).rgb, vec3(gamma));
 #else
     m.diffuseColor = DEFAULT_DIFFUSE_COLOR;
 #endif
 
 #if SPECULAR_TEXTURE_ENABLED
-    m.specularColor = max(vec3(0.04), pow(texture(specularMap, fTexCoord).rgb, vec3(gamma)));
+    m.specularColor = max(vec3(0.04), pow(texture(specularMap, texCoords).rgb, vec3(gamma)));
 #else
     m.specularColor = DEFAULT_SPECULAR_COLOR;
 #endif
 
 #if ROUGHNESS_TEXTURE_ENABLED
-    float sqrtRoughness = texture(roughnessMap, fTexCoord)[0];
+    float sqrtRoughness = texture(roughnessMap, texCoords)[0];
     m.roughness = sqrtRoughness * sqrtRoughness;
 #else
     m.roughness = DEFAULT_SPECULAR_ROUGHNESS;

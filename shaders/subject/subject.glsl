@@ -13,73 +13,64 @@
 #ifndef SUBJECT_GLSL
 #define SUBJECT_GLSL
 
-#line 14 3000
+#line 17 3000
 
 in vec3 fPosition;
-in vec2 fTexCoord;
-in vec3 fNormal;
-in vec3 fTangent;
-in vec3 fBitangent;
-
-layout(location = 0) out vec4 fragColor;
-layout(location = 1) out int fragObjectID;
 
 uniform mat4 model_view;
 uniform mat4 fullProjection;
 uniform vec3 viewPos;
 
-
-#ifndef RELIGHTING_ENABLED
-#define RELIGHTING_ENABLED 1
-#endif
-
-#ifndef SPOTLIGHTS_ENABLED
-#define SPOTLIGHTS_ENABLED 0
-#endif
-
-#ifndef SHADOWS_ENABLED
-#define SHADOWS_ENABLED 0
-#endif
+layout(location = 0) out vec4 fragColor;
 
 #ifndef FRESNEL_EFFECT_ENABLED
 #define FRESNEL_EFFECT_ENABLED 0
-#endif
-
-#ifndef ENVIRONMENT_ILLUMINATION_ENABLED
-#define ENVIRONMENT_ILLUMINATION_ENABLED 1
-#endif
+#else
+#ifndef RELIGHTING_ENABLED
+#undef FRESNEL_EFFECT_ENABLED
+#define FRESNEL_EFFECT_ENABLED 0
+#elif !RELIGHTING_ENABLED // RELIGHTING_ENABLED is defined
+#undef FRESNEL_EFFECT_ENABLED
+#define FRESNEL_EFFECT_ENABLED 0
+#endif // ifndef RELIGHTING_ENABLED
+#endif // ifndef FRESNEL_EFFECT_ENABLED
 
 #ifndef VIRTUAL_LIGHT_COUNT
+#ifdef RELIGHTING_ENABLED
 #if RELIGHTING_ENABLED
 #define VIRTUAL_LIGHT_COUNT 4
-#else
+#else // !RELIGHTING_ENABLED
 #define VIRTUAL_LIGHT_COUNT 1
-#endif
-#endif
+#endif // RELIGHTING_ENABLED
+#else // RELIGHTING_ENABLED not defined
+#define VIRTUAL_LIGHT_COUNT 1
+#endif // ifdef RELIGHTING_ENABLED
+#endif // ifdef VIRTUAL_LIGHT_COUNT
+
+vec3 getLightVectorVirtual(int lightIndex);
 
 #include "tonemap.glsl"
 
-uniform int objectID;
+struct ViewingParameters
+{
+    vec3 normalDir;
+    float nDotV;
+    vec3 viewDir;
+};
 
-#if VIRTUAL_LIGHT_COUNT > 0
+struct LightingParameters
+{
+    int lightIndex;
+    vec3 normalDir;
+    float nDotV;
+    vec3 viewDir;
+    float nDotL;
+    vec3 lightDir;
+    float nDotH;
+    vec3 halfDir;
+    float hDotV;
+};
 
-uniform vec3 lightIntensityVirtual[VIRTUAL_LIGHT_COUNT];
-
-#if RELIGHTING_ENABLED
-uniform vec3 lightPosVirtual[VIRTUAL_LIGHT_COUNT];
-uniform vec3 lightOrientationVirtual[VIRTUAL_LIGHT_COUNT];
-
-#if SPOTLIGHTS_ENABLED
-uniform float lightSpotSizeVirtual[VIRTUAL_LIGHT_COUNT];
-uniform float lightSpotTaperVirtual[VIRTUAL_LIGHT_COUNT];
-#endif // SPOTLIGHTS_ENABLED
-
-#if SHADOWS_ENABLED
-uniform sampler2DArray shadowMaps;
-uniform mat4 lightMatrixVirtual[VIRTUAL_LIGHT_COUNT];
-#endif // SHADOWS_ENABLED
-
-#endif // RELIGHTING_ENABLED
-#endif // VIRTUAL_LIGHT_COUNT > 0
+#include "environment.glsl"
 
 #endif // SUBJECT_GLSL
