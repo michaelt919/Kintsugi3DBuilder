@@ -15,11 +15,11 @@ package kintsugi3d.builder.resources.ibr;
 import java.util.List;
 
 import kintsugi3d.builder.resources.ibr.stream.GraphicsStreamFactory;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryResources;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
-import kintsugi3d.gl.material.MaterialResources;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.builder.core.StandardRenderingMode;
 import kintsugi3d.builder.core.ViewSet;
@@ -50,7 +50,7 @@ public interface IBRResources<ContextType extends Context<ContextType>> extends 
      * Diffuse, normal, specular, roughness maps
      * @return
      */
-    MaterialResources<ContextType> getMaterialResources();
+    SpecularMaterialResources<ContextType> getSpecularMaterialResources();
 
     /**
      * 1D textures for encoding and decoding
@@ -60,14 +60,23 @@ public interface IBRResources<ContextType extends Context<ContextType>> extends 
 
     /**
      * Refresh the luminance map in the view set and its corresponding textures.
+     * @param linearLuminanceValues
+     * @param encodedLuminanceValues
      */
     void updateLuminanceMap(double[] linearLuminanceValues, byte[] encodedLuminanceValues);
 
 
     /**
      * Refresh the light calibration in the view set and its corresponding uniform buffer data
+     * @param lightCalibration
      */
     void updateLightCalibration(Vector3 lightCalibration);
+
+    /**
+     * Replace the specular material resources (textures); releasing the old resources if they were present
+     * @param specularMaterialResources The new resources / textures
+     */
+    void replaceSpecularMaterialResources(SpecularMaterialResources<ContextType> specularMaterialResources);
 
     /**
      * Initialize any light intensities currently set to zero with the provided light intensity.

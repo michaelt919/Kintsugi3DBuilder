@@ -47,12 +47,10 @@ public class RecentLogMessageAppender extends AbstractAppender
     private static RecentLogMessageAppender INSTANCE;
     private final ObservableList<LogMessage> messages = FXCollections.observableArrayList();
     private final List<LogMessageListener> listeners = new ArrayList<>();
-    private final PatternLayout layout;
 
     protected RecentLogMessageAppender(String name, Filter filter, PatternLayout layout)
     {
         super(name, filter, layout);
-        this.layout = layout;
         INSTANCE = this;
     }
 

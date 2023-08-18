@@ -22,8 +22,6 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.*;
 import java.util.function.Predicate;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
@@ -46,12 +44,12 @@ import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
+import kintsugi3d.builder.core.StandardRenderingMode;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.javafx.FramebufferView;
 import kintsugi3d.gl.vecmath.Vector2;
@@ -60,7 +58,6 @@ import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.IBRRequestUI;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.core.LoadingMonitor;
-import kintsugi3d.builder.core.StandardRenderingMode;
 import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
@@ -357,11 +354,17 @@ public class MenubarController
 
     private void initToggleGroups()
     {
-        renderGroup.selectedToggleProperty().addListener((ob, o, n) ->
+        renderGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) ->
         {
-            if (n != null && n.getUserData() instanceof StandardRenderingMode)
+//            if (newValue != null && newValue.getUserData() instanceof String)
+//            {
+//                MultithreadModels.getInstance().getLoadingModel()
+//                    .requestFragmentShader(new File((String)newValue.getUserData()));
+//            }
+
+            if (newValue != null && newValue.getUserData() instanceof StandardRenderingMode)
             {
-                internalModels.getSettingsModel().set("renderingMode", n.getUserData());
+                internalModels.getSettingsModel().set("renderingMode", newValue.getUserData());
             }
         });
     }

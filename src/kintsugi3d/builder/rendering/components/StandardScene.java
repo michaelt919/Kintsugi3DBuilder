@@ -51,7 +51,7 @@ public class StandardScene<ContextType extends Context<ContextType>> extends Lit
     }
 
     @Override
-    public void initialize() throws Exception
+    public void initialize()
     {
         LightingResources<ContextType> lightingResources = getLightingResources();
 
@@ -78,8 +78,13 @@ public class StandardScene<ContextType extends Context<ContextType>> extends Lit
         }
     }
 
+    public IBRSubject<ContextType> getSubject()
+    {
+        return ibrSubject;
+    }
+
     @Override
-    public void reloadShaders() throws Exception
+    public void reloadShaders()
     {
         ibrSubject.reloadShaders();
         lightVisuals.reloadShaders();
@@ -91,7 +96,7 @@ public class StandardScene<ContextType extends Context<ContextType>> extends Lit
     }
 
     @Override
-    public void update() throws Exception
+    public void update()
     {
         ibrSubject.update();
         lightVisuals.update();
@@ -111,35 +116,38 @@ public class StandardScene<ContextType extends Context<ContextType>> extends Lit
     @Override
     public void drawInSubdivisions(FramebufferObject<ContextType> framebuffer, int subdivWidth, int subdivHeight, CameraViewport cameraViewport)
     {
-        // Draw "other components" first, which includes things that ignore the depth test first
-        // (environment or backplate)
-        otherComponents.forEach(component -> component.draw(framebuffer, cameraViewport));
-
-        // Hole fill color depends on whether in light calibration mode or not.
-        ibrSubject.getProgram().setUniform("holeFillColor", new Vector3(0.0f));
-
-        // Draw the actual object with the model transformation
-        ibrSubject.drawInSubdivisions(framebuffer, subdivWidth, subdivHeight, cameraViewport);
-
-        if (!sceneModel.getLightingModel().areLightWidgetsEthereal()
-                && IntStream.range(0, sceneModel.getLightingModel().getLightCount()).anyMatch(sceneModel.getLightingModel()::isLightWidgetEnabled))
+        if (ibrSubject.getProgram() != null)
         {
+            // Draw "other components" first, which includes things that ignore the depth test first
+            // (environment or backplate)
+            otherComponents.forEach(component -> component.draw(framebuffer, cameraViewport));
+
+            // Hole fill color depends on whether in light calibration mode or not.
+            ibrSubject.getProgram().setUniform("holeFillColor", new Vector3(0.0f));
+
+            // Draw the actual object with the model transformation
+            ibrSubject.drawInSubdivisions(framebuffer, subdivWidth, subdivHeight, cameraViewport);
+
+            if (!sceneModel.getLightingModel().areLightWidgetsEthereal()
+                && IntStream.range(0, sceneModel.getLightingModel().getLightCount()).anyMatch(sceneModel.getLightingModel()::isLightWidgetEnabled))
+            {
+                context.flush();
+
+                // Read buffers here if light widgets are ethereal (i.e. they cannot be clicked and should not be in the ID buffer)
+                sceneViewportModel.refreshBuffers(cameraViewport.getFullProjection(), framebuffer);
+            }
+
+            lightVisuals.draw(framebuffer, cameraViewport);
+
+            // Finish drawing
             context.flush();
 
-            // Read buffers here if light widgets are ethereal (i.e. they cannot be clicked and should not be in the ID buffer)
-            sceneViewportModel.refreshBuffers(cameraViewport.getFullProjection(), framebuffer);
-        }
-
-        lightVisuals.draw(framebuffer, cameraViewport);
-
-        // Finish drawing
-        context.flush();
-
-        if (!sceneModel.getLightingModel().areLightWidgetsEthereal()
+            if (!sceneModel.getLightingModel().areLightWidgetsEthereal()
                 && IntStream.range(0, sceneModel.getLightingModel().getLightCount()).anyMatch(sceneModel.getLightingModel()::isLightWidgetEnabled))
-        {
-            // Read buffers here if light widgets are not ethereal (i.e. they can be clicked and should be in the ID buffer)
-            sceneViewportModel.refreshBuffers(cameraViewport.getFullProjection(), framebuffer);
+            {
+                // Read buffers here if light widgets are not ethereal (i.e. they can be clicked and should be in the ID buffer)
+                sceneViewportModel.refreshBuffers(cameraViewport.getFullProjection(), framebuffer);
+            }
         }
     }
 

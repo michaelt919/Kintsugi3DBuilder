@@ -18,12 +18,15 @@ import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
 import kintsugi3d.builder.core.SceneModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 
 public class LightingResources<ContextType extends Context<ContextType>> implements AutoCloseable
 {
+    private static final Logger log = LoggerFactory.getLogger(LightingResources.class);
     private final ContextType context;
     private final SceneModel sceneModel;
 
@@ -32,6 +35,10 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
     private Texture3D<ContextType> shadowMaps;
     private FramebufferObject<ContextType> shadowFramebuffer;
     private Drawable<ContextType> shadowDrawable;
+
+    // A reference to the position buffer for the object casting shadows.
+    // Not managed or released by LightingResources
+    private VertexBuffer<ContextType> shadowCastingPositionBuffer;
 
     private Texture2D<ContextType> backplateTexture;
     private Cubemap<ContextType> environmentMap;
@@ -44,23 +51,57 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
         this.sceneModel = sceneModel;
     }
 
-    public void initialize() throws FileNotFoundException
+    public void initialize()
     {
-        shadowProgram = context.getShaderProgramBuilder()
+        shadowMaps = createShadowMaps();
+        shadowFramebuffer = context.buildFramebufferObject(2048, 2048)
+            .addDepthAttachment()
+            .createFramebufferObject();
+
+        this.screenSpaceDepthFBO = context.buildFramebufferObject(512, 512)
+            .addDepthAttachment(DepthAttachmentSpec.createFixedPointWithPrecision(16).setLinearFilteringEnabled(true))
+            .createFramebufferObject();
+
+        try
+        {
+            shadowProgram = context.getShaderProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "depth.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "depth.frag"))
+                    .createProgram();
+            shadowDrawable = context.createDrawable(shadowProgram);
+        }
+        catch (FileNotFoundException e)
+        {
+            log.error("Failed to load shader.", e);
+        }
+    }
+
+    public void reloadShadowShader()
+    {
+        try
+        {
+            ProgramObject<ContextType> newProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "depth.vert"))
                 .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "depth.frag"))
                 .createProgram();
 
-        shadowDrawable = context.createDrawable(shadowProgram);
+            if (shadowProgram != null)
+            {
+                shadowProgram.close();
+            }
 
-        shadowMaps = createShadowMaps();
-        shadowFramebuffer = context.buildFramebufferObject(2048, 2048)
-                .addDepthAttachment()
-                .createFramebufferObject();
+            shadowProgram = newProgram;
+            shadowDrawable = context.createDrawable(shadowProgram);
 
-        this.screenSpaceDepthFBO = context.buildFramebufferObject(512, 512)
-                .addDepthAttachment(DepthAttachmentSpec.createFixedPointWithPrecision(16).setLinearFilteringEnabled(true))
-                .createFramebufferObject();
+            if (shadowCastingPositionBuffer != null)
+            {
+                shadowDrawable.addVertexBuffer("position", shadowCastingPositionBuffer);
+            }
+        }
+        catch (FileNotFoundException|RuntimeException e)
+        {
+            log.error("Failed to load shader.", e);
+        }
     }
 
     public Texture2D<ContextType> getBackplateTexture()
@@ -106,9 +147,10 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
      * Does not take ownership of this buffer.
      * @param positionBuffer
      */
-    public void setPositionBuffer(VertexBuffer<ContextType> positionBuffer)
+    public void setShadowCastingPositionBuffer(VertexBuffer<ContextType> positionBuffer)
     {
         shadowDrawable.addVertexBuffer("position", positionBuffer);
+        this.shadowCastingPositionBuffer = positionBuffer;
     }
 
     public Matrix4 getLightProjection(int lightIndex)

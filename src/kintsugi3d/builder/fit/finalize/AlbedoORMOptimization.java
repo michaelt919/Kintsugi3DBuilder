@@ -16,7 +16,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import kintsugi3d.builder.resources.specular.SpecularResources;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.*;
@@ -53,12 +54,11 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
     private AlbedoORMOptimization(ContextType context, Texture2D<ContextType> occlusionMap, TextureFitSettings settings)
         throws FileNotFoundException
     {
-        // Graphics context
         this.occlusionMap = occlusionMap;
         estimationProgram = createProgram(context, occlusionMap != null);
         framebuffer = context.buildFramebufferObject(settings.width, settings.height)
-            .addColorAttachment(ColorFormat.RGBA32F) // total albedo
-            .addColorAttachment(ColorFormat.RGBA32F) // ORM
+            .addColorAttachment(ColorFormat.RGBA8) // total albedo
+            .addColorAttachment(ColorFormat.RGBA8) // ORM
             .createFramebufferObject();
 
         // Create basic rectangle vertex buffer
@@ -70,7 +70,74 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         estimationProgram.setUniform("gamma", settings.gamma);
     }
 
-    public void execute(SpecularResources<ContextType> specularFit)
+    public static <ContextType extends Context<ContextType>> AlbedoORMOptimization<ContextType> loadFromPriorSolution(
+        ContextType context, TextureFitSettings textureFitSettings, File priorSolutionDirectory) throws IOException
+    {
+        return new AlbedoORMOptimization<>(context, textureFitSettings, priorSolutionDirectory);
+    }
+
+    private AlbedoORMOptimization(ContextType context, TextureFitSettings settings, File priorSolutionDirectory)
+        throws IOException
+    {
+        FramebufferObjectBuilder<ContextType> fboBuilder = context.buildFramebufferObject(settings.width, settings.height);
+
+        File albedoMapFile = new File(priorSolutionDirectory, "albedo.png");
+        boolean hasAlbedo = albedoMapFile.exists();
+        if (hasAlbedo)
+        {
+            fboBuilder.addEmptyColorAttachment();
+        }
+        else
+        {
+            fboBuilder.addColorAttachment(ColorFormat.RGBA8);
+        }
+
+        File ormMapFile = new File(priorSolutionDirectory, "orm.png");
+        boolean hasORM = ormMapFile.exists();
+        if (hasORM)
+        {
+            fboBuilder.addEmptyColorAttachment();
+        }
+        else
+        {
+            fboBuilder.addColorAttachment(ColorFormat.RGBA8);
+        }
+
+        framebuffer = fboBuilder.createFramebufferObject();
+
+        if (hasAlbedo)
+        {
+            framebuffer.setColorAttachment(0,
+                context.getTextureFactory().build2DColorTextureFromFile(albedoMapFile, true)
+                    .setLinearFilteringEnabled(true).createTexture());
+        }
+
+        if (hasORM)
+        {
+            framebuffer.setColorAttachment(1,
+                context.getTextureFactory().build2DColorTextureFromFile(ormMapFile, true)
+                    .setLinearFilteringEnabled(true).createTexture());
+
+            // Copy ORM map and use it as occlusion map (to preserve the occlusion stored in the red channel of ORM)
+            this.occlusionMap = framebuffer.getColorAttachmentTexture(1).copy();
+        }
+        else
+        {
+            this.occlusionMap = null;
+        }
+
+        estimationProgram = createProgram(context, occlusionMap != null);
+
+        // Create basic rectangle vertex buffer
+        rect = context.createRectangle();
+        drawable = context.createDrawable(estimationProgram);
+        drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
+        drawable.addVertexBuffer("position", rect);
+
+        estimationProgram.setUniform("gamma", settings.gamma);
+    }
+
+    public void execute(SpecularMaterialResources<ContextType> specularFit)
     {
         // Set up shader program
         estimationProgram.setTexture("diffuseEstimate", specularFit.getDiffuseMap());

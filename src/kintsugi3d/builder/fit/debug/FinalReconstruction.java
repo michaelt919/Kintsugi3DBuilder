@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.concurrent.atomic.DoubleAdder;
 
-import kintsugi3d.builder.resources.specular.SpecularResources;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -60,7 +60,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         }
     }
 
-    public double reconstruct(SpecularResources<ContextType> specularFit, ProgramBuilder<ContextType> programBuilder,
+    public double reconstruct(SpecularMaterialResources<ContextType> specularFit, ProgramBuilder<ContextType> programBuilder,
         boolean reconstructAll, String reconstructName, String groundTruthName, File outputDirectory)
     {
         if (reconstructAll)

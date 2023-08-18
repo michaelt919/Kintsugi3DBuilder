@@ -52,37 +52,54 @@ public class GroundPlane<ContextType extends Context<ContextType>> implements Re
     }
 
     @Override
-    public void initialize() throws FileNotFoundException
+    public void initialize()
     {
         this.rectangleVertices = context.createRectangle();
 
-        groundPlaneStandardShader.initialize(StandardRenderingMode.LAMBERTIAN_SHADED);
-        groundPlaneDrawable = context.createDrawable(groundPlaneStandardShader.getProgram());
-        groundPlaneDrawable.addVertexBuffer("position", rectangleVertices);
-        groundPlaneDrawable.setVertexAttrib("normal", new Vector3(0, 0, 1));
-    }
-
-    @Override
-    public void update() throws FileNotFoundException
-    {
-        Map<String, Optional<Object>> defineMap = groundPlaneStandardShader.getPreprocessorDefines();
-
-        // Reloads shaders only if compiled settings have changed.
-        if (defineMap.entrySet().stream().anyMatch(
-                defineEntry -> !Objects.equals(groundPlaneDrawable.program().getDefine(defineEntry.getKey()), defineEntry.getValue())))
+        try
         {
-            log.info("Updating compiled render settings.");
-            reloadShaders();
+            groundPlaneStandardShader.initialize(StandardRenderingMode.LAMBERTIAN_SHADED);
+            groundPlaneDrawable = context.createDrawable(groundPlaneStandardShader.getProgram());
+            groundPlaneDrawable.addVertexBuffer("position", rectangleVertices);
+            groundPlaneDrawable.setVertexAttrib("normal", new Vector3(0, 0, 1));
+        }
+        catch (FileNotFoundException|RuntimeException e)
+        {
+            log.error("Failed to load shader.", e);
         }
     }
 
     @Override
-    public void reloadShaders() throws FileNotFoundException
+    public void update()
     {
-        groundPlaneStandardShader.reload(StandardRenderingMode.LAMBERTIAN_SHADED);
-        groundPlaneDrawable = context.createDrawable(groundPlaneStandardShader.getProgram());
-        groundPlaneDrawable.addVertexBuffer("position", rectangleVertices);
-        groundPlaneDrawable.setVertexAttrib("normal", new Vector3(0, 0, 1));
+        if (groundPlaneDrawable != null && groundPlaneDrawable.program() != null)
+        {
+            Map<String, Optional<Object>> defineMap = groundPlaneStandardShader.getPreprocessorDefines();
+
+            // Reloads shaders only if compiled settings have changed.
+            if (defineMap.entrySet().stream().anyMatch(
+                defineEntry -> !Objects.equals(groundPlaneDrawable.program().getDefine(defineEntry.getKey()), defineEntry.getValue())))
+            {
+                log.info("Updating compiled render settings.");
+                reloadShaders();
+            }
+        }
+    }
+
+    @Override
+    public void reloadShaders()
+    {
+        try
+        {
+            groundPlaneStandardShader.reload(StandardRenderingMode.LAMBERTIAN_SHADED);
+            groundPlaneDrawable = context.createDrawable(groundPlaneStandardShader.getProgram());
+            groundPlaneDrawable.addVertexBuffer("position", rectangleVertices);
+            groundPlaneDrawable.setVertexAttrib("normal", new Vector3(0, 0, 1));
+        }
+        catch (FileNotFoundException|RuntimeException e)
+        {
+            log.error("Failed to load shader.", e);
+        }
     }
 
     @Override

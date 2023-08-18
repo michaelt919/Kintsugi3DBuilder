@@ -13,7 +13,7 @@
  */
 
 #include "specularFit.glsl"
-#include <shaders/colorappearance/colorappearance_multi_as_single.glsl>
+#include <colorappearance/colorappearance_multi_as_single.glsl>
 #line 18 0
 
 uniform float errorGamma;

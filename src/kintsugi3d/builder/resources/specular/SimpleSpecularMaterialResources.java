@@ -17,22 +17,34 @@ import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Texture2D;
 
-public class SimpleSpecularResources<ContextType extends Context<ContextType>> implements SpecularResources<ContextType>
+public class SimpleSpecularMaterialResources<ContextType extends Context<ContextType>>
+    extends SpecularMaterialResourcesBase<ContextType>
 {
     private Texture2D<ContextType> diffuseMap;
     private Texture2D<ContextType> normalMap;
     private Texture2D<ContextType> constantMap;
-    private Texture2D<ContextType> quadraticMap;
+//    private Texture2D<ContextType> quadraticMap;
     private Texture2D<ContextType> specularReflectivityMap;
     private Texture2D<ContextType> specularRoughnessMap;
+    private Texture2D<ContextType> albedoMap;
+    private Texture2D<ContextType> ormMap;
     private BasisResources<ContextType> basisResources;
     private BasisWeightResources<ContextType> basisWeightResources;
+
+    private final ContextType context;
 
     /**
      * Package-visible default constructor
      */
-    SimpleSpecularResources()
+    SimpleSpecularMaterialResources(ContextType context)
     {
+        this.context = context;
+    }
+
+    @Override
+    public ContextType getContext()
+    {
+        return context;
     }
 
     @Override
@@ -67,11 +79,11 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
         return constantMap;
     }
 
-    @Override
-    public Texture2D<ContextType> getQuadraticMap()
-    {
-        return quadraticMap;
-    }
+//    @Override
+//    public Texture2D<ContextType> getQuadraticMap()
+//    {
+//        return quadraticMap;
+//    }
 
     @Override
     public Texture2D<ContextType> getSpecularReflectivityMap()
@@ -86,11 +98,22 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
     }
 
     @Override
+    public Texture2D<ContextType> getAlbedoMap()
+    {
+        return albedoMap;
+    }
+
+    @Override
+    public Texture2D<ContextType> getORMMap()
+    {
+        return ormMap;
+    }
+
+    @Override
     public BasisResources<ContextType> getBasisResources()
     {
         return basisResources;
     }
-
 
     @Override
     public BasisWeightResources<ContextType> getBasisWeightResources()
@@ -125,14 +148,14 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
         this.constantMap = constantMap;
     }
 
-    /**
-     * Sets the quadratic texture.  This object will take ownership of the normal map.
-     * @param quadraticMap
-     */
-    public void setQuadraticMap(Texture2D<ContextType> quadraticMap)
-    {
-        this.quadraticMap = quadraticMap;
-    }
+//    /**
+//     * Sets the quadratic texture.  This object will take ownership of the normal map.
+//     * @param quadraticMap
+//     */
+//    public void setQuadraticMap(Texture2D<ContextType> quadraticMap)
+//    {
+//        this.quadraticMap = quadraticMap;
+//    }
 
     /**
      * Sets the specular reflectivity texture.  This object will take ownership of the specular map.
@@ -150,6 +173,16 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
     public void setSpecularRoughnessMap(Texture2D<ContextType> specularRoughnessMap)
     {
         this.specularRoughnessMap = specularRoughnessMap;
+    }
+
+    public void setAlbedoMap(Texture2D<ContextType> albedoMap)
+    {
+        this.albedoMap = albedoMap;
+    }
+
+    public void setORMMap(Texture2D<ContextType> ormMap)
+    {
+        this.ormMap = ormMap;
     }
 
     public void setBasisResources(BasisResources<ContextType> basisResources)
@@ -170,13 +203,54 @@ public class SimpleSpecularResources<ContextType extends Context<ContextType>> i
     @Override
     public void close()
     {
-        diffuseMap.close();
-        normalMap.close();
-        constantMap.close();
-        quadraticMap.close();
-        specularReflectivityMap.close();
-        specularRoughnessMap.close();
-        basisResources.close();
-        basisWeightResources.close();
+        if (diffuseMap != null)
+        {
+            diffuseMap.close();
+        }
+
+        if (normalMap != null)
+        {
+            normalMap.close();
+        }
+
+        if (constantMap != null)
+        {
+            constantMap.close();
+        }
+
+//        if (quadraticMap != null)
+//        {
+//            quadraticMap.close();
+//        }
+
+        if (specularReflectivityMap != null)
+        {
+            specularReflectivityMap.close();
+        }
+
+        if (specularRoughnessMap != null)
+        {
+            specularRoughnessMap.close();
+        }
+
+        if (albedoMap != null)
+        {
+            albedoMap.close();
+        }
+
+        if (ormMap != null)
+        {
+            ormMap.close();
+        }
+
+        if (basisResources != null)
+        {
+            basisResources.close();
+        }
+
+        if (basisWeightResources != null)
+        {
+            basisWeightResources.close();
+        }
     }
 }

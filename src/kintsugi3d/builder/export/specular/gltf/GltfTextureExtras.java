@@ -10,7 +10,7 @@
  *
  */
 
-package kintsugi3d.builder.fit.gltf;
+package kintsugi3d.builder.export.specular.gltf;
 
 import java.util.HashMap;
 import java.util.Map;

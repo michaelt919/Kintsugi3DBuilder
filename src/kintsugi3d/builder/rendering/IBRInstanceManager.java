@@ -248,6 +248,12 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         }
     }
 
+    @Override
+    public void requestFragmentShader(File shaderFile)
+    {
+        ibrInstance.getDynamicResourceManager().requestFragmentShader(shaderFile);
+    }
+
     public IBRInstance<ContextType> getLoadedInstance()
     {
         return ibrInstance;

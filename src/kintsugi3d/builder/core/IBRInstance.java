@@ -21,6 +21,9 @@ import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.state.*;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+
 /**
  * Interface for the implementation of the actual image-based rendering / relighting technique.
  * @param <ContextType> The type of the graphics context that this implementation uses.

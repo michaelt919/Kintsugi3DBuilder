@@ -16,7 +16,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import kintsugi3d.builder.resources.specular.SpecularResources;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 
@@ -57,7 +57,7 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
             .createFramebufferObject();
     }
 
-    public void createImages(SpecularResources<ContextType> specularFit, File outputDirectory) throws IOException
+    public void createImages(SpecularMaterialResources<ContextType> specularFit, File outputDirectory) throws IOException
     {
         specularFit.getBasisResources().useWithShaderProgram(program);
         specularFit.getBasisWeightResources().useWithShaderProgram(program);

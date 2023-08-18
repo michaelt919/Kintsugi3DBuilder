@@ -66,6 +66,11 @@ public class LoadingModel
         this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, primaryViewName, loadOptionsModel);
     }
 
+    public void requestFragmentShader(File shaderFile)
+    {
+        this.handler.requestFragmentShader(shaderFile);
+    }
+
     public Optional<AbstractImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
     {
         return this.handler.loadEnvironmentMap(environmentMapFile);

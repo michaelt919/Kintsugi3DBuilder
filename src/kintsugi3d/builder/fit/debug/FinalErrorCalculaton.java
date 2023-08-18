@@ -19,7 +19,7 @@ import java.nio.FloatBuffer;
 import java.util.stream.IntStream;
 
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
-import kintsugi3d.builder.resources.specular.SpecularResources;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import org.lwjgl.BufferUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,9 +58,9 @@ public final class FinalErrorCalculaton
      * @param <ContextType>
      */
     public <ContextType extends Context<ContextType>> void validateNormalMap(
-        IBRResources<ContextType> resources, SpecularResources<ContextType> specularFit, PrintStream rmseOut)
+        IBRResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit, PrintStream rmseOut)
     {
-        if (CALCULATE_NORMAL_RMSE && resources.getMaterialResources().getNormalTexture() != null)
+        if (CALCULATE_NORMAL_RMSE && resources.getSpecularMaterialResources().getNormalMap() != null)
         {
             try (ProgramObject<ContextType> textureRectProgram = resources.getContext().getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_dynamic.vert"))
@@ -71,7 +71,7 @@ public final class FinalErrorCalculaton
             {
                 // Use the real geometry rather than a rectangle so that the normal map is masked properly for the part of the normal map used.
                 Drawable<ContextType> textureRect = resources.createDrawable(textureRectProgram);
-                textureRectProgram.setTexture("tex", resources.getMaterialResources().getNormalTexture());
+                textureRectProgram.setTexture("tex", resources.getSpecularMaterialResources().getNormalMap());
                 textureRectFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
                 textureRect.draw(PrimitiveMode.TRIANGLE_FAN, textureRectFBO);
 //                    textureRectFBO.saveColorBufferToFile(0, "PNG", new File(textureFitSettings.outputDirectory, "test_normalGT.png"));
@@ -110,7 +110,7 @@ public final class FinalErrorCalculaton
 
     public <ContextType extends Context<ContextType>> void calculateFinalErrorMetrics(
         ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
-        SpecularResources<ContextType> specularFit, ShaderBasedErrorCalculator<ContextType> basisErrorCalculator,
+        SpecularMaterialResources<ContextType> specularFit, ShaderBasedErrorCalculator<ContextType> basisErrorCalculator,
         PrintStream rmseOut)
     {
         try (ProgramObject<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(resources, programFactory))
@@ -171,7 +171,7 @@ public final class FinalErrorCalculaton
      */
     private <ContextType extends Context<ContextType>> void calculateGGXRMSE(
             ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
-            SpecularResources<ContextType> specularFit, Framebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
+            SpecularMaterialResources<ContextType> specularFit, Framebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
         throws FileNotFoundException
     {
         try (ProgramObject<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(resources, programFactory))

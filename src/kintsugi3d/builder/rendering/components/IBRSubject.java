@@ -30,7 +30,9 @@ import kintsugi3d.builder.rendering.StandardShader;
 import kintsugi3d.builder.util.KNNViewWeightGenerator;
 import kintsugi3d.util.ShadingParameterMode;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.AbstractList;
 import java.util.Map;
 import java.util.Objects;
@@ -68,38 +70,61 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
     }
 
     @Override
-    public void initialize() throws FileNotFoundException
+    public void initialize()
     {
-        standardShader.initialize(this.sceneModel.getSettingsModel() == null ?
-            StandardRenderingMode.IMAGE_BASED : this.sceneModel.getSettingsModel().get("renderingMode", StandardRenderingMode.class));
-        refreshDrawable();
-    }
-
-    @Override
-    public void update() throws FileNotFoundException
-    {
-        Map<String, Optional<Object>> defineMap = standardShader.getPreprocessorDefines();
-
-        // Reloads shaders only if compiled settings have changed.
-        if (getExpectedRenderingMode() != lastCompiledRenderingMode ||
-            defineMap.entrySet().stream().anyMatch(
-                defineEntry -> !Objects.equals(drawable.program().getDefine(defineEntry.getKey()), defineEntry.getValue())))
+        try
         {
-            log.info("Updating compiled render settings.");
-            reloadShaders();
+            standardShader.initialize(this.sceneModel.getSettingsModel() == null ?
+                StandardRenderingMode.IMAGE_BASED : this.sceneModel.getSettingsModel().get("renderingMode", StandardRenderingMode.class));
+            refreshDrawable();
+        }
+        catch(IOException|RuntimeException e)
+        {
+            log.error("Failed to load shader.", e);
         }
     }
 
     @Override
-    public void reloadShaders() throws FileNotFoundException
+    public void update()
     {
-        StandardRenderingMode renderingMode = getExpectedRenderingMode();
+        if (drawable != null && drawable.program() != null)
+        {
+            Map<String, Optional<Object>> defineMap = standardShader.getPreprocessorDefines();
 
-        // Force reload shaders
-        standardShader.reload(renderingMode);
-        refreshDrawable();
+            // Reloads shaders only if compiled settings have changed.
+            if (getExpectedRenderingMode() != lastCompiledRenderingMode ||
+                defineMap.entrySet().stream().anyMatch(
+                    defineEntry -> !Objects.equals(drawable.program().getDefine(defineEntry.getKey()), defineEntry.getValue())))
+            {
+                log.info("Updating compiled render settings.");
+                reloadShaders();
+            }
+        }
+    }
 
-        this.lastCompiledRenderingMode = renderingMode;
+    public void useFragmentShader(File fragmentShaderFile)
+    {
+        standardShader.setFragmentShaderFile(fragmentShaderFile);
+        reloadShaders();
+    }
+
+    @Override
+    public void reloadShaders()
+    {
+        try
+        {
+            StandardRenderingMode renderingMode = getExpectedRenderingMode();
+
+            // Force reload shaders
+            standardShader.reload(renderingMode);
+            refreshDrawable();
+
+            this.lastCompiledRenderingMode = renderingMode;
+        }
+        catch(IOException|RuntimeException e)
+        {
+            log.error("Failed to load shader.", e);
+        }
     }
 
     private void refreshDrawable()

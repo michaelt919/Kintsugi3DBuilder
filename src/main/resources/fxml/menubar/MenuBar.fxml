@@ -301,10 +301,10 @@
             <CheckMenuItem fx:id="shadowsCheckMenuItem" mnemonicParsing="false" selected="true" text="Shadows"/>
             <!--shadows check menu item is set as selected in the menubar controller
                     "selected" state is overwritten to "false" during binding-->
-            <CheckMenuItem fx:id="phyMaskingCheckMenuItem" mnemonicParsing="false"
-                           text="Physically based masking/shadowing"/>
-        </Menu>
-    </Menu>
+                 <CheckMenuItem fx:id="phyMaskingCheckMenuItem" mnemonicParsing="false" text="Physically based masking/shadowing" />
+             </Menu>
+         </items>
+      </Menu>
       <Menu text="Help">
           <MenuItem mnemonicParsing="false" onAction="#help_userManual" text="Processing Tool Documentation" />
           <MenuItem mnemonicParsing="false" onAction="#help_console" text="View Log" />

@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.rendering;
 
+import kintsugi3d.builder.rendering.components.IBRSubject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
@@ -31,6 +32,7 @@ import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.builder.state.SceneViewport;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -118,11 +120,14 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             lightCalibration.initialize();
 
             litRoot = new LitRoot<>(context, sceneModel);
-            litRoot.takeLitContentRoot(new StandardScene<>(resources, sceneModel, sceneViewportModel));
+            StandardScene<ContextType> scene = new StandardScene<>(resources, sceneModel, sceneViewportModel);
+            IBRSubject<ContextType> subject = scene.getSubject();
+            litRoot.takeLitContentRoot(scene);
             litRoot.initialize();
             litRoot.setShadowCaster(resources.getGeometryResources().positionBuffer);
 
-            this.dynamicResourceLoader = new DynamicResourceLoader<>(loadingMonitor, resources, litRoot.getLightingResources());
+            this.dynamicResourceLoader = new DynamicResourceLoader<>(loadingMonitor,
+                resources, subject, litRoot.getLightingResources());
 
             this.updateWorldSpaceDefinition();
 
@@ -381,6 +386,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     {
         return sceneViewportModel;
     }
+
 
     @Override
     public SceneModel getSceneModel()

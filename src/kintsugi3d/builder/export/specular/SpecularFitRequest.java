@@ -19,8 +19,8 @@ import java.io.PrintStream;
 
 import kintsugi3d.builder.fit.debug.FinalReconstruction;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
-import kintsugi3d.builder.fit.SpecularOptimization;
-import kintsugi3d.builder.resources.specular.SpecularResources;
+import kintsugi3d.builder.fit.SpecularFitProcess;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -29,7 +29,7 @@ import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.fit.gltf.SpecularFitGltfExporter;
+import kintsugi3d.builder.export.specular.gltf.SpecularFitGltfExporter;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
 import kintsugi3d.builder.resources.ibr.IBRResources;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
@@ -73,11 +73,11 @@ public class SpecularFitRequest implements ObservableIBRRequest, ObservableGraph
         try
         {
             // Perform the specular fit using prior basis solution.
-            SpecularResources<ContextType> specularFit;
+            SpecularMaterialResources<ContextType> specularFit;
 
             // Assume fitting from prior solution
             log.info("No Kintsugi 3D Builder project loaded; loading prior solution");
-            specularFit = new SpecularOptimization(settings).loadPriorSolution(context, settings.getPriorSolutionDirectory());
+            specularFit = new SpecularFitProcess(settings).loadPriorSolution(context, settings.getPriorSolutionDirectory());
 
             // Load just geometry, tonemapping, settings.
             SimpleLoadOptionsModel loadOptions = new SimpleLoadOptionsModel();
@@ -121,18 +121,11 @@ public class SpecularFitRequest implements ObservableIBRRequest, ObservableGraph
         try
         {
             // Perform the specular fit
-            // Close immediately after saving when this is just an export operation.
-            try(SpecularResources<ContextType> specularFit = new SpecularOptimization(settings)
-                .optimizeFit(renderable.getIBRResources()))
+            new SpecularFitProcess(settings).optimizeFit(renderable.getIBRResources());
+
+            if (settings.getExportSettings().isGlTFEnabled())
             {
-                if (settings.getExportSettings().isGlTFEnabled())
-                {
-                    saveGlTF(renderable.getActiveGeometry(), renderable.getActiveViewSet(), renderable.getSceneModel().getObjectModel());
-                }
-
-//            // Reconstruct if requested
-//            performReconstruction(renderable.getIBRResources(), specularFit);
-
+                saveGlTF(renderable.getActiveGeometry(), renderable.getActiveViewSet(), renderable.getSceneModel().getObjectModel());
             }
         }
         catch(IOException e) // thrown by createReflectanceProgram
@@ -142,7 +135,7 @@ public class SpecularFitRequest implements ObservableIBRRequest, ObservableGraph
     }
 
     private <ContextType extends Context<ContextType>> void performReconstruction(
-        ReadonlyIBRResources<ContextType> resources, SpecularResources<ContextType> specularFit)
+        ReadonlyIBRResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit)
         throws FileNotFoundException
     {
         // Create output directory

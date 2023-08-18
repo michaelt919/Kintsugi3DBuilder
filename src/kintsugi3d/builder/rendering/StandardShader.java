@@ -38,6 +38,8 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
 
     private ProgramObject<ContextType> program;
 
+    private File fragmentShaderFile;
+
     public StandardShader(IBRResourcesImageSpace<ContextType> resources, LightingResources<ContextType> lightingResources,
                           SceneModel sceneModel)
     {
@@ -57,6 +59,16 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
         {
             this.program = loadMainProgram(getPreprocessorDefines(), renderingMode);
         }
+    }
+
+    public File getFragmentShaderFile()
+    {
+        return fragmentShaderFile;
+    }
+
+    public void setFragmentShaderFile(File shaderFile)
+    {
+        this.fragmentShaderFile = shaderFile;
     }
 
     public void reload(StandardRenderingMode newRenderingMode) throws FileNotFoundException
@@ -89,10 +101,11 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
     private ProgramObject<ContextType> loadMainProgram(Map<String, Optional<Object>> defineMap, StandardRenderingMode renderingMode) throws FileNotFoundException
     {
         return this.getProgramBuilder(defineMap, renderingMode)
-                .define("SPOTLIGHTS_ENABLED", true)
-                .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
-                .createProgram();
+            .define("SPOTLIGHTS_ENABLED", true)
+            .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/subject/relight.frag"))
+//          .addShader(ShaderType.FRAGMENT, this.fragmentShaderFile)
+            .createProgram();
     }
 
     public Map<String, Optional<Object>> getPreprocessorDefines()
