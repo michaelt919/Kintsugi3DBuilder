@@ -26,6 +26,10 @@
                 <configuration>
                     <source>11</source>
                     <target>11</target>
+                    <compilerArgs>
+                        <arg>--add-exports</arg>
+                        <arg>java.desktop/sun.java2d.cmm=ALL-UNNAMED</arg>
+                    </compilerArgs>
                 </configuration>
                 <executions>
                     <execution>
