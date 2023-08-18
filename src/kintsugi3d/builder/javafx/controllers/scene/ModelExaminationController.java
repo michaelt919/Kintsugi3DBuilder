@@ -15,10 +15,6 @@ package kintsugi3d.builder.javafx.controllers.scene;
 import javafx.fxml.FXML;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
-import javafx.scene.image.Image;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.menubar.ImgSelectionThread;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
@@ -35,8 +31,7 @@ public class ModelExaminationController extends ImgThreadCompatibleController{
     public void init(MetashapeObjectChunk metashapeObjectChunk, Stage injectedStage){
         this.metashapeObjectChunk = metashapeObjectChunk;
         initTreeView();
-        this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
-
+        //this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
     }
 
     public void selectImageInTreeView() {
