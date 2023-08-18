@@ -34,10 +34,10 @@ import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
 import kintsugi3d.builder.resources.ibr.IBRResources;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
-import kintsugi3d.gl.interactive.GraphicsRequest;
+import kintsugi3d.gl.interactive.ObservableGraphicsRequest;
 import kintsugi3d.builder.state.ReadonlyObjectModel;
 
-public class SpecularFitRequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>, GraphicsRequest<ContextType>
+public class SpecularFitRequest implements ObservableIBRRequest, ObservableGraphicsRequest
 {
     private static final Logger log = LoggerFactory.getLogger(SpecularFitRequest.class);
     private final SpecularFitRequestParams settings;
@@ -48,10 +48,10 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
      * @param args args[0] is the project name; args[1] is the name of this class; args[2] is the output directory
      * @return the request object
      */
-    public static <ContextType extends Context<ContextType>> SpecularFitRequest<ContextType> create(
+    public static SpecularFitRequest create(
             Kintsugi3DBuilderState modelAccess, String... args)
     {
-        return new SpecularFitRequest<>(new SpecularFitRequestParams(
+        return new SpecularFitRequest(new SpecularFitRequestParams(
             new TextureFitSettings(2048, 2048, modelAccess.getSettingsModel().getFloat("gamma")),
             modelAccess.getSettingsModel(), new File(args[2])), modelAccess);
     }
@@ -68,7 +68,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
      *                 If this is unused, an "infinite loading" indicator will be displayed instead.
      */
     @Override
-    public void executeRequest(ContextType context, LoadingMonitor callback)
+    public <ContextType extends Context<ContextType>> void executeRequest(ContextType context, LoadingMonitor callback)
     {
         try
         {
@@ -81,8 +81,8 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
 
             // Load just geometry, tonemapping, settings.
             SimpleLoadOptionsModel loadOptions = new SimpleLoadOptionsModel();
-            loadOptions.setColorImagesRequested(false);
-            loadOptions.setDepthImagesRequested(false);
+            loadOptions.requestColorImages(false);
+            loadOptions.requestDepthImages(false);
 
             try(IBRResources<ContextType> resources = IBRResourcesImageSpace.getBuilderForContext(context)
                 .setLoadOptions(loadOptions)
@@ -116,7 +116,7 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
      *                 If this is unused, an "infinite loading" indicator will be displayed instead.
      */
     @Override
-    public void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback)
+    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback)
     {
         try
         {
@@ -141,7 +141,8 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
         }
     }
 
-    private void performReconstruction(ReadonlyIBRResources<ContextType> resources, SpecularResources<ContextType> specularFit)
+    private <ContextType extends Context<ContextType>> void performReconstruction(
+        ReadonlyIBRResources<ContextType> resources, SpecularResources<ContextType> specularFit)
         throws FileNotFoundException
     {
         // Create output directory
@@ -218,6 +219,12 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
             exporter.setDefaultNames();
             exporter.addWeightImages(settings.getSpecularBasisSettings().getBasisCount(), settings.getExportSettings().isCombineWeights());
 
+            // Add diffuse constant if requested
+            if (settings.shouldIncludeConstantTerm())
+            {
+                exporter.setDiffuseConstantUri("constant.png");
+            }
+
             // Deal with LODs if enabled
             if (settings.getExportSettings().isGenerateLowResTextures())
             {
@@ -225,6 +232,12 @@ public class SpecularFitRequest<ContextType extends Context<ContextType>> implem
                     settings.getExportSettings().getMinimumTextureResolution());
                 exporter.addWeightImageLods(settings.getSpecularBasisSettings().getBasisCount(),
                     settings.getTextureFitSettings().height, settings.getExportSettings().getMinimumTextureResolution());
+
+                if (settings.shouldIncludeConstantTerm())
+                {
+                    exporter.addDiffuseConstantLods("constant.png", settings.getTextureFitSettings().height,
+                            settings.getExportSettings().getMinimumTextureResolution());
+                }
             }
 
             exporter.write(new File(settings.getOutputDirectory(), "model.glb"));

@@ -32,34 +32,34 @@ public final class RequestFactoryImplementation implements RequestFactory
     }
 
     @Override
-    public <ContextType extends Context<ContextType>>  RenderRequestBuilder<ContextType> buildSingleFrameRenderRequest(
+    public RenderRequestBuilder buildSingleFrameRenderRequest(
             File fragmentShader, File outputDirectory, String outputImageName)
     {
         //noinspection UnnecessarilyQualifiedInnerClassAccess
-        return new SingleFrameRenderRequest.Builder<>(outputImageName, settingsModel, fragmentShader, outputDirectory);
+        return new SingleFrameRenderRequest.Builder(outputImageName, settingsModel, fragmentShader, outputDirectory);
     }
 
     @Override
-    public <ContextType extends Context<ContextType>>  RenderRequestBuilder<ContextType> buildMultiframeRenderRequest(
+    public RenderRequestBuilder buildMultiframeRenderRequest(
             File fragmentShader, File outputDirectory, int frameCount)
     {
         //noinspection UnnecessarilyQualifiedInnerClassAccess
-        return new MultiframeRenderRequest.Builder<>(frameCount, settingsModel, fragmentShader, outputDirectory);
+        return new MultiframeRenderRequest.Builder(frameCount, settingsModel, fragmentShader, outputDirectory);
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> RenderRequestBuilder<ContextType> buildMultiviewRenderRequest(
+    public RenderRequestBuilder buildMultiviewRenderRequest(
             File fragmentShader, File outputDirectory)
     {
         //noinspection UnnecessarilyQualifiedInnerClassAccess
-        return new MultiviewRenderRequest.Builder<>(settingsModel, fragmentShader, outputDirectory);
+        return new MultiviewRenderRequest.Builder(settingsModel, fragmentShader, outputDirectory);
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> RenderRequestBuilder<ContextType> buildMultiviewRetargetRenderRequest(
+    public RenderRequestBuilder buildMultiviewRetargetRenderRequest(
             File fragmentShader, File outputDirectory, File retargetViewSet)
     {
         //noinspection UnnecessarilyQualifiedInnerClassAccess
-        return new MultiviewRetargetRenderRequest.Builder<>(retargetViewSet, settingsModel, fragmentShader, outputDirectory);
+        return new MultiviewRetargetRenderRequest.Builder(retargetViewSet, settingsModel, fragmentShader, outputDirectory);
     }
 }

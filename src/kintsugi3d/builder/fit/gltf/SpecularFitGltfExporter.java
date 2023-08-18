@@ -46,7 +46,7 @@ public class SpecularFitGltfExporter
 
     private TextureInfo baseColorTexture, normalTexture, roughnessMetallicTexture;
 
-    private TextureInfo diffuseTexture, specularTexture;
+    private TextureInfo diffuseTexture, diffuseConstantTexture, specularTexture;
 
     GltfMaterialExtras extraData = new GltfMaterialExtras();
 
@@ -127,6 +127,27 @@ public class SpecularFitGltfExporter
             return;
 
         addLodsToTexture(diffuseTexture, baseUri, baseRes, minRes);
+    }
+
+    public void setDiffuseConstantUri(String uri)
+    {
+        if (diffuseConstantTexture == null)
+        {
+            diffuseConstantTexture = createRelativeTexture(uri, "diffuseConstant");
+            extraData.setDiffuseConstantTexture(diffuseConstantTexture);
+        }
+        else
+        {
+            setTextureUri(diffuseConstantTexture, uri);
+        }
+    }
+
+    public void addDiffuseConstantLods(String baseUri, int baseRes, int minRes)
+    {
+        if (diffuseConstantTexture == null)
+            return;
+
+        addLodsToTexture(diffuseConstantTexture, baseUri, baseRes, minRes);
     }
 
     public void setNormalUri(String uri)
@@ -402,7 +423,8 @@ public class SpecularFitGltfExporter
             {
                 Vector3 normal = new Vector3(normInBuffer.get(i), normInBuffer.get(i+1), normInBuffer.get(i+2));
 
-                // Ignore translation, only rotation and scale, but normalized so only non-uniform scale
+                // Ignore translation, only rotation and scale, but normalized to cancel uniform scale
+                // Non-uniform scale is unsupported
                 normal = transformation.getUpperLeft3x3().times(normal).normalized();
 
                 normOutBuffer.put(i, normal.x);

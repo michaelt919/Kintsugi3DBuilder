@@ -12,17 +12,19 @@
 
 package kintsugi3d.builder.core;
 
-public class SimpleLoadOptionsModel implements ReadonlyLoadOptionsModel
+public class SimpleLoadOptionsModel implements LoadOptionsModel
 {
-    private boolean colorImagesRequested;
-    private boolean mipmapsRequested;
-    private boolean compressionRequested;
-    private boolean alphaRequested;
-    private boolean depthImagesRequested;
-    private int depthImageWidth;
-    private int depthImageHeight;
-    private int previewImageWidth;
-    private int previewImageHeight;
+    private boolean colorImagesRequested = true;
+    private boolean mipmapsRequested = true;
+    private boolean compressionRequested = true;
+    private boolean alphaRequested = true;
+    private boolean iccTransformationRequested = true;
+    private boolean depthImagesRequested = true;
+    private int depthImageWidth = 512;
+    private int depthImageHeight = 512;
+    private int previewImageWidth = 1024;
+    private int previewImageHeight = 1024;
+    private int maxLoadingThreads = 12;
 
     @Override
     public boolean areColorImagesRequested()
@@ -36,6 +38,7 @@ public class SimpleLoadOptionsModel implements ReadonlyLoadOptionsModel
         return previewImageWidth;
     }
 
+    @Override
     public void setPreviewImageWidth(int previewImageWidth)
     {
         this.previewImageWidth = previewImageWidth;
@@ -47,12 +50,49 @@ public class SimpleLoadOptionsModel implements ReadonlyLoadOptionsModel
         return previewImageHeight;
     }
 
+    @Override
+    public void setColorImagesRequested(boolean colorImagesRequested)
+    {
+        this.colorImagesRequested = colorImagesRequested;
+    }
+
+    @Override
+    public void setMipmapsRequested(boolean mipmapsRequested)
+    {
+        this.mipmapsRequested = mipmapsRequested;
+    }
+
+    @Override
+    public void setCompressionRequested(boolean compressionRequested)
+    {
+        this.compressionRequested = compressionRequested;
+    }
+
+    @Override
+    public void setDepthImagesRequested(boolean depthImagesRequested)
+    {
+        this.depthImagesRequested = depthImagesRequested;
+    }
+
+    @Override
+    public void setDepthImageWidth(int depthImageWidth)
+    {
+        this.depthImageWidth = depthImageWidth;
+    }
+
+    @Override
+    public void setDepthImageHeight(int depthImageHeight)
+    {
+        this.depthImageHeight = depthImageHeight;
+    }
+
+    @Override
     public void setPreviewImageHeight(int previewImageHeight)
     {
         this.previewImageHeight = previewImageHeight;
     }
 
-    public SimpleLoadOptionsModel setColorImagesRequested(boolean colorImagesRequested)
+    public SimpleLoadOptionsModel requestColorImages(boolean colorImagesRequested)
     {
         this.colorImagesRequested = colorImagesRequested;
         return this;
@@ -64,7 +104,7 @@ public class SimpleLoadOptionsModel implements ReadonlyLoadOptionsModel
         return this.mipmapsRequested;
     }
 
-    public SimpleLoadOptionsModel setMipmapsRequested(boolean mipmapsRequested)
+    public SimpleLoadOptionsModel requstMipmaps(boolean mipmapsRequested)
     {
         this.mipmapsRequested = mipmapsRequested;
         return this;
@@ -82,16 +122,28 @@ public class SimpleLoadOptionsModel implements ReadonlyLoadOptionsModel
         return this.alphaRequested;
     }
 
-    public SimpleLoadOptionsModel setAlphaRequested(boolean alphaRequested)
+    public SimpleLoadOptionsModel requestAlpha(boolean alphaRequested)
     {
         this.alphaRequested = alphaRequested;
         return this;
     }
 
-    public SimpleLoadOptionsModel setCompressionRequested(boolean compressionRequested)
+    public SimpleLoadOptionsModel requestCompression(boolean compressionRequested)
     {
         this.compressionRequested = compressionRequested;
         return this;
+    }
+
+    @Override
+    public boolean isICCTransformationRequested()
+    {
+        return iccTransformationRequested;
+    }
+
+    @Override
+    public void setICCTransformationRequested(boolean iccTransformationRequested)
+    {
+        this.iccTransformationRequested = iccTransformationRequested;
     }
 
     @Override
@@ -100,7 +152,7 @@ public class SimpleLoadOptionsModel implements ReadonlyLoadOptionsModel
         return this.depthImagesRequested;
     }
 
-    public SimpleLoadOptionsModel setDepthImagesRequested(boolean depthImagesRequested)
+    public SimpleLoadOptionsModel requestDepthImages(boolean depthImagesRequested)
     {
         this.depthImagesRequested = depthImagesRequested;
         return this;
@@ -112,7 +164,7 @@ public class SimpleLoadOptionsModel implements ReadonlyLoadOptionsModel
         return this.depthImageWidth;
     }
 
-    public SimpleLoadOptionsModel setDepthImageWidth(int depthImageWidth)
+    public SimpleLoadOptionsModel requestDepthImageWidth(int depthImageWidth)
     {
         this.depthImageWidth = depthImageWidth;
         return this;
@@ -124,9 +176,21 @@ public class SimpleLoadOptionsModel implements ReadonlyLoadOptionsModel
         return this.depthImageHeight;
     }
 
-    public SimpleLoadOptionsModel setDepthImageHeight(int depthImageHeight)
+    public SimpleLoadOptionsModel requestDepthImageHeight(int depthImageHeight)
     {
         this.depthImageHeight = depthImageHeight;
         return this;
+    }
+
+    @Override
+    public int getMaxLoadingThreads()
+    {
+        return maxLoadingThreads;
+    }
+
+    @Override
+    public void setMaxLoadingThreads(int maxLoadingThreads)
+    {
+        this.maxLoadingThreads = maxLoadingThreads;
     }
 }

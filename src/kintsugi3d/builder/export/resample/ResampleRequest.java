@@ -24,7 +24,7 @@ import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 
-public class ResampleRequest<ContextType extends Context<ContextType>> implements IBRRequest<ContextType>
+public class ResampleRequest implements ObservableIBRRequest
 {
     private final int resampleWidth;
     private final int resampleHeight;
@@ -40,7 +40,7 @@ public class ResampleRequest<ContextType extends Context<ContextType>> implement
     }
 
     @Override
-    public void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws Exception
+    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws Exception
     {
         ReadonlyViewSet targetViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(resampleVSETFile);
 

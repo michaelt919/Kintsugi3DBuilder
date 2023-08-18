@@ -12,6 +12,8 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.builder.preferences.ReadOnlyUserPreferencesModel;
+import kintsugi3d.builder.preferences.UserPreferencesModel;
 import kintsugi3d.builder.state.*;
 
 public interface Kintsugi3DBuilderState
@@ -30,7 +32,7 @@ public interface Kintsugi3DBuilderState
     CanvasModel getCanvasModel();
 
     SceneViewportModel getSceneViewportModel();
-    ReadonlyLoadOptionsModel getLoadOptionsModel();
+    LoadOptionsModel getLoadOptionsModel();
     LoadingModel getLoadingModel();
 
     ProjectModel getProjectModel();

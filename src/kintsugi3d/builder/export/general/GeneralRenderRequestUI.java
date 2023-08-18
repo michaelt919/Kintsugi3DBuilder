@@ -141,7 +141,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
             File fragmentShader = new File(fragmentShaderField.getText());
             File outputDirectory = new File(exportDirectoryField.getText());
 
-            RenderRequestBuilder<ContextType> builder;
+            RenderRequestBuilder builder;
             switch(loopModeComboBox.getValue())
             {
                 case SINGLE_FRAME:

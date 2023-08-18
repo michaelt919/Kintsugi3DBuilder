@@ -95,7 +95,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                     IBRResourcesImageSpace.getBuilderForContext(this.context)
                         .setLoadingMonitor(this.loadingMonitor)
                         .setLoadOptions(loadOptions)
-                        .loadVSETFile(vsetFile));
+                        .loadVSETFile(vsetFile)
+                        .generateUndistortedPreviewImages());
 
             newItem.getSceneModel().setObjectModel(this.objectModel);
             newItem.getSceneModel().setCameraModel(this.cameraModel);
@@ -177,7 +178,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                         .setLoadingMonitor(this.loadingMonitor)
                         .setLoadOptions(loadOptions)
                         .loadAgisoftFiles(xmlFile, meshFile, imageDirectory)
-                        .setPrimaryView(primaryViewName));
+                        .setPrimaryView(primaryViewName)
+                        .generateUndistortedPreviewImages());
 
             newItem.getSceneModel().setObjectModel(this.objectModel);
             newItem.getSceneModel().setCameraModel(this.cameraModel);

@@ -12,23 +12,29 @@
 
 package kintsugi3d.builder.core;//Created by alexk on 7/31/2017.
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.core.ColorFormat;
 import kintsugi3d.gl.core.CompressionFormat;
 import kintsugi3d.gl.material.TextureLoadOptions;
 
+@JsonSerialize(as = LoadOptionsModel.class)
 public interface ReadonlyLoadOptionsModel
 {
     boolean areColorImagesRequested();
     boolean areMipmapsRequested();
     boolean isCompressionRequested();
     boolean isAlphaRequested();
+    boolean isICCTransformationRequested();
+    int getMaxLoadingThreads();
     boolean areDepthImagesRequested();
     int getDepthImageWidth();
     int getDepthImageHeight();
     int getPreviewImageWidth();
     int getPreviewImageHeight();
 
+    @JsonIgnore
     default TextureLoadOptions getTextureLoadOptions()
     {
         TextureLoadOptions options = new TextureLoadOptions();
@@ -55,8 +61,10 @@ public interface ReadonlyLoadOptionsModel
             colorTextureBuilder.setInternalFormat(ColorFormat.RGBA8);
         }
 
-        colorTextureBuilder.setMipmapsEnabled(this.areMipmapsRequested());
-        colorTextureBuilder.setLinearFilteringEnabled(true);
-        colorTextureBuilder.setMaxAnisotropy(16.0f);
+        colorTextureBuilder
+            .setMipmapsEnabled(this.areMipmapsRequested())
+            .setLinearFilteringEnabled(true)
+            .setMaxAnisotropy(16.0f)
+            .setICCTransformationRequested(this.isICCTransformationRequested());
     }
 }

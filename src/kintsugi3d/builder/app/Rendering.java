@@ -27,13 +27,14 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import javafx.application.Platform;
 import javafx.stage.Stage;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.interactive.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 import kintsugi3d.gl.builders.framebuffer.DefaultFramebufferFactory;
 import kintsugi3d.gl.core.DoubleFramebufferObject;
 import kintsugi3d.gl.glfw.CanvasWindow;
-import kintsugi3d.gl.interactive.InteractiveGraphics;
 import kintsugi3d.gl.opengl.OpenGLContext;
 import kintsugi3d.gl.opengl.OpenGLContextFactory;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -49,10 +50,6 @@ import kintsugi3d.builder.tools.KeyPressToolType;
 import kintsugi3d.builder.tools.ToolBindingModel;
 import kintsugi3d.builder.tools.ToolBindingModelImpl;
 import kintsugi3d.builder.tools.ToolBox.Builder;
-import kintsugi3d.gl.interactive.EventPollable;
-import kintsugi3d.gl.interactive.InitializationException;
-import kintsugi3d.gl.interactive.InteractiveApplication;
-import kintsugi3d.gl.interactive.Refreshable;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.util.CanvasInputController;
 import kintsugi3d.util.KeyPress;
@@ -63,6 +60,11 @@ public final class Rendering
     private static final Logger log = LoggerFactory.getLogger(Rendering.class);
     private Rendering()
     {
+    }
+
+    public static void runLater(GraphicsRequest request)
+    {
+        requestQueue.addBackgroundGraphicsRequest(request);
     }
 
     private static IBRRequestManager<OpenGLContext> requestQueue = null;
@@ -395,13 +397,7 @@ public final class Rendering
                 {
                     while (stage.isIconified() && requestQueue.isEmpty())
                     {
-                        try
-                        {
-                            Thread.sleep(1000);
-                        }
-                        catch (InterruptedException e)
-                        {
-                        }
+                        Thread.onSpinWait();
                     }
                 }
 
@@ -476,19 +472,23 @@ public final class Rendering
             {
                 Class<?> requestClass = Class.forName(args[1]);
                 Method createMethod = requestClass.getDeclaredMethod("create", Kintsugi3DBuilderState.class, String[].class);
-                if (IBRRequest.class.isAssignableFrom(createMethod.getReturnType())
+                if (ObservableIBRRequest.class.isAssignableFrom(createMethod.getReturnType())
                     && ((createMethod.getModifiers() & (Modifier.PUBLIC | Modifier.STATIC)) == (Modifier.PUBLIC | Modifier.STATIC)))
                 {
                     // Add request to the queue
-                    //noinspection unchecked
-                    Rendering.getRequestQueue().addIBRRequest(
-                        (IBRRequest<OpenGLContext>) createMethod.invoke(null, MultithreadModels.getInstance(), args));
+                    requestQueue.addIBRRequest((ObservableIBRRequest) createMethod.invoke(null, MultithreadModels.getInstance(), args));
 
                     // Quit after the request finishes
                     // Use IBRRequest (rather than GraphicsRequest) so that it gets queued up after the actual request,
                     // once the project has finished loading
-                    Rendering.getRequestQueue().addIBRRequest(
-                        (renderable, callback) -> WindowSynchronization.getInstance().quitWithoutConfirmation());
+                    requestQueue.addBackgroundIBRRequest(new IBRRequest()
+                    {
+                        @Override
+                        public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable)
+                        {
+                            WindowSynchronization.getInstance().quitWithoutConfirmation();
+                        }
+                    });
                 }
             }
             catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e)

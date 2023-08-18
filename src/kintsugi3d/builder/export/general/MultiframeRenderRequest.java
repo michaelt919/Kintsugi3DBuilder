@@ -18,23 +18,23 @@ import java.util.function.Consumer;
 
 import kintsugi3d.gl.core.*;
 import kintsugi3d.builder.core.IBRInstance;
-import kintsugi3d.builder.core.IBRRequest;
+import kintsugi3d.builder.core.ObservableIBRRequest;
 import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 
-class MultiframeRenderRequest<ContextType extends Context<ContextType>> extends RenderRequestBase<ContextType>
+class MultiframeRenderRequest extends RenderRequestBase
 {
     private final int frameCount;
 
     MultiframeRenderRequest(int width, int height, int frameCount, ReadonlySettingsModel settingsModel,
-        Consumer<Program<ContextType>> shaderSetupCallback, File vertexShader, File fragmentShader, File outputDirectory)
+        Consumer<Program<? extends Context<?>>> shaderSetupCallback, File vertexShader, File fragmentShader, File outputDirectory)
     {
         super(width, height, settingsModel, shaderSetupCallback, vertexShader, fragmentShader, outputDirectory);
         this.frameCount = frameCount;
     }
 
-    static class Builder<ContextType extends Context<ContextType>> extends BuilderBase<ContextType>
+    static class Builder extends BuilderBase
     {
         private final int frameCount;
 
@@ -45,15 +45,15 @@ class MultiframeRenderRequest<ContextType extends Context<ContextType>> extends 
         }
 
         @Override
-        public IBRRequest<ContextType> create()
+        public ObservableIBRRequest create()
         {
-            return new MultiframeRenderRequest<>(getWidth(), getHeight(), frameCount, getSettingsModel(), getShaderSetupCallback(),
+            return new MultiframeRenderRequest(getWidth(), getHeight(), frameCount, getSettingsModel(), getShaderSetupCallback(),
                 getVertexShader(), getFragmentShader(), getOutputDirectory());
         }
     }
 
     @Override
-    public void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
+    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
     {
         IBRResourcesImageSpace<ContextType> resources = renderable.getIBRResources();
 

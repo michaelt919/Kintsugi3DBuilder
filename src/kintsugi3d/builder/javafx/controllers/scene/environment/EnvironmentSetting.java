@@ -36,8 +36,8 @@ public class EnvironmentSetting implements DOMConvertable
     private final DoubleProperty backgroundIntensity = StaticUtilities.clamp(0, Double.MAX_VALUE, new SimpleDoubleProperty(1.0));
     private final DoubleProperty envRotation = StaticUtilities.wrapAround(-180, 180, new SimpleDoubleProperty());
     private final DoubleProperty envFilteringBias = new SimpleDoubleProperty(0);
-    private final Property<Color> envColor = new SimpleObjectProperty<>(Color.GRAY);
-    private final Property<Color> bpColor = new SimpleObjectProperty<>(Color.GRAY);
+    private final Property<Color> envColor = new SimpleObjectProperty<>(Color.valueOf("#222222"));
+    private final Property<Color> bpColor = new SimpleObjectProperty<>(Color.valueOf("#222222"));
     private final StringProperty name = new SimpleStringProperty("New Environment Map");
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final BooleanProperty envLoaded = new SimpleBooleanProperty();

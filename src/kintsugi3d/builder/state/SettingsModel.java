@@ -12,7 +12,16 @@
 
 package kintsugi3d.builder.state;//Created by alexk on 7/31/2017.
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import kintsugi3d.builder.preferences.serialization.SettingsModelDeserializer;
+import kintsugi3d.builder.preferences.serialization.SettingsModelSerializer;
+
+@JsonSerialize(as = SettingsModel.class, using = SettingsModelSerializer.class)
+@JsonDeserialize(as = SettingsModel.class, using = SettingsModelDeserializer.class)
 public interface SettingsModel extends ReadonlySettingsModel
 {
     <T> void set(String name, T value);
+    void copyFrom(SettingsModel other);
+    void createSetting(String name, Class<?> type, Object initialValue, boolean serialize);
 }

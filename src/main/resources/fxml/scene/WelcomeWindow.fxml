@@ -23,7 +23,7 @@
         <Button mnemonicParsing="false" onAction="#file_createProject" prefHeight="57.0" prefWidth="140.0"
                 text="Create Project"/>
         <SplitMenuButton fx:id="recentProjectsSplitMenuButton" alignment="CENTER_RIGHT" mnemonicParsing="false"
-                         onAction="#splitMenuButtonActions" onMouseEntered="#unrollMenu" onMouseExited="#hideMenu"
+                         onAction="#splitMenuButtonActions" onMouseExited="#hideMenu"
                          popupSide="RIGHT" prefHeight="57.0" prefWidth="140.0" text="Recent Projects"
                          textAlignment="CENTER">
         </SplitMenuButton>

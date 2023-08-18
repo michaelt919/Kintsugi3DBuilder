@@ -254,7 +254,8 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
             program.setTexture("screenSpaceDepthBuffer", lightingResources.getScreenSpaceDepthTexture());
         }
 
-        program.setUniform("ambientColor", sceneModel.getLightingModel().getAmbientLightColor());
+        program.setUniform("ambientColor",
+            sceneModel.getLightingModel().getAmbientLightColor().applyOperator(x -> Math.pow(x, gamma)));
     }
 
     @Override

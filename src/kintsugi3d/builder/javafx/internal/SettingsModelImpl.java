@@ -28,23 +28,37 @@ public class SettingsModelImpl extends SettingsModelBase
     private interface TypedProperty<T> extends Property<T>
     {
         Class<? extends T> getType();
+        boolean shouldSerialize();
     }
 
     private static class TypedPropertyGenericImpl<T> implements TypedProperty<T>
     {
         private final Property<T> base;
         private final Class<T> type;
+        private final boolean serialize;
 
-        TypedPropertyGenericImpl(Class<T> type, Property<T> base)
+        TypedPropertyGenericImpl(Class<T> type, Property<T> base, boolean serialize)
         {
             this.base = base;
             this.type = type;
+            this.serialize = serialize;
+        }
+
+        TypedPropertyGenericImpl(Class<T> type, Property<T> base)
+        {
+            this(type, base, false);
         }
 
         @Override
         public Class<T> getType()
         {
             return this.type;
+        }
+
+        @Override
+        public boolean shouldSerialize()
+        {
+            return serialize;
         }
 
         @Override
@@ -130,17 +144,30 @@ public class SettingsModelImpl extends SettingsModelBase
     {
         private final ObjectProperty<Object> base;
         private final Class<?> type;
+        private final boolean serialize;
 
-        TypedPropertyNonGenericImpl(Class<?> type, Object initialValue)
+        TypedPropertyNonGenericImpl(Class<?> type, Object initialValue, boolean serialize)
         {
             this.base = new SimpleObjectProperty<>(initialValue);
             this.type = type;
+            this.serialize = serialize;
+        }
+
+        TypedPropertyNonGenericImpl(Class<?> type, Object initialValue)
+        {
+            this(type, initialValue, false);
         }
 
         @Override
         public Class<?> getType()
         {
             return this.type;
+        }
+
+        @Override
+        public boolean shouldSerialize()
+        {
+            return serialize;
         }
 
         @Override
@@ -250,6 +277,12 @@ public class SettingsModelImpl extends SettingsModelBase
         {
             return nextEntry.getValue().getValue();
         }
+
+        @Override
+        public boolean shouldSerialize()
+        {
+            return nextEntry.getValue().shouldSerialize();
+        }
     }
 
     @Override
@@ -281,6 +314,17 @@ public class SettingsModelImpl extends SettingsModelBase
     public boolean exists(String name)
     {
         return settingsMap.containsKey(name);
+    }
+
+    @Override
+    public boolean shouldSerialize(String name)
+    {
+        if (exists(name))
+        {
+            return settingsMap.get(name).shouldSerialize();
+        }
+
+        return false;
     }
 
     @Override
@@ -330,7 +374,8 @@ public class SettingsModelImpl extends SettingsModelBase
         throw new NoSuchElementException("No setting called \"" + name + " exists of type " + settingType);
     }
 
-    private void createObjectSettingInternal(String name, Class<?> settingType, Object initialValue)
+    @Override
+    public void createSetting(String name, Class<?> settingType, Object initialValue, boolean serialize)
     {
         if(settingsMap.containsKey(name))
         {
@@ -338,31 +383,16 @@ public class SettingsModelImpl extends SettingsModelBase
         }
         else
         {
-            settingsMap.put(name, new TypedPropertyNonGenericImpl(settingType, initialValue));
+            settingsMap.put(name, new TypedPropertyNonGenericImpl(settingType, initialValue, serialize));
         }
     }
 
-    public void createBooleanSetting(String name, boolean initialValue)
-    {
-        createObjectSettingInternal(name, Boolean.class, initialValue);
-    }
-
-    public void createNumericSetting(String name, Number initialValue)
-    {
-        createObjectSettingInternal(name, Number.class, initialValue);
-    }
-
-    public void createObjectSetting(String name, Object initialValue)
-    {
-        createObjectSettingInternal(name, initialValue.getClass(), initialValue);
-    }
-
-    public <T> void createObjectSetting(String name, Class<T> settingType, T initialValue)
-    {
-        createObjectSettingInternal(name, settingType, initialValue);
-    }
-
     public <T> void createSettingFromProperty(String name, Class<T> settingType, Property<T> property)
+    {
+        createSettingFromProperty(name, settingType, property, false);
+    }
+
+    public <T> void createSettingFromProperty(String name, Class<T> settingType, Property<T> property, boolean serialize)
     {
         if (settingsMap.containsKey(name))
         {
@@ -374,7 +404,7 @@ public class SettingsModelImpl extends SettingsModelBase
         }
         else
         {
-            settingsMap.put(name, new TypedPropertyGenericImpl<>(settingType, property));
+            settingsMap.put(name, new TypedPropertyGenericImpl<>(settingType, property, serialize));
         }
     }
 }

@@ -42,6 +42,8 @@ import java.util.List;
 public class RecentLogMessageAppender extends AbstractAppender
 {
     private static final Logger logger = LoggerFactory.getLogger(RecentLogMessageAppender.class);
+    private static final int MAX_MESSAGES = 2000;
+    private static final int MESSAGE_TRUNC_SIZE = 10;
     private static RecentLogMessageAppender INSTANCE;
     private final ObservableList<LogMessage> messages = FXCollections.observableArrayList();
     private final List<LogMessageListener> listeners = new ArrayList<>();
@@ -107,7 +109,10 @@ public class RecentLogMessageAppender extends AbstractAppender
 
     private void clearOldMessages()
     {
-        //TODO
+        if (messages.size() > MAX_MESSAGES)
+        {
+            messages.remove(0, MESSAGE_TRUNC_SIZE);
+        }
     }
 
     private void dispatchEvents(LogMessage message)
