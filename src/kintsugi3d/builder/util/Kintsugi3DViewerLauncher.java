@@ -97,7 +97,8 @@ public class Kintsugi3DViewerLauncher
 
     private static Optional<File> getExecFromDirectory(File dir)
     {
-        File[] foundFiles = dir.listFiles((dir1, name) -> name.matches("^Kintsugi3DViewer(.exe)*$"));
+        // Match "Kintsugi3DViewer", "Kintsugi3DViewer.exe" and "Kintsugi3DViewer.app"
+        File[] foundFiles = dir.listFiles((dir1, name) -> name.matches("^Kintsugi3DViewer((.exe)|(.app))?$"));
         if (foundFiles != null && foundFiles.length > 0)
         {
             return Optional.of(foundFiles[0]);
