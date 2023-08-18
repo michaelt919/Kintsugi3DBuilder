@@ -111,6 +111,17 @@ Section /o "Desktop Shortcut" SectionDesktop
 
 SectionEnd
 
+; Optional: Run installer executable for Kintsugi 3D Viewer
+Section "Kintsugi 3D Viewer" SectionViewer
+
+    SetOutPath $TEMP
+
+    File "viewer\Kintsugi3DViewer-setup.exe"
+    ExecWait "$TEMP\Kintsugi3DViewer-setup.exe"
+    Delete "$TEMP\Kintsugi3DViewer-setup.exe"
+
+SectionEnd
+
 ; Uninstaller
 Section "Uninstall"
 
