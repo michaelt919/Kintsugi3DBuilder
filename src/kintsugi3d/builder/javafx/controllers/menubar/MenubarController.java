@@ -769,9 +769,9 @@ public class MenubarController
 
         try
         {
-            ColorCheckerImgSelectionController colorCheckerController =
-                    makeWindow("Color Checker", colorCheckerWindowOpen, "fxml/menubar/ColorCheckerImgSelection.fxml");
-            colorCheckerController.init(MultithreadModels.getInstance().getLoadingModel());
+            EyedropperController eyedropperController =
+                    makeWindow("Color Checker", colorCheckerWindowOpen, "fxml/menubar/EyedropperColorChecker.fxml");
+            eyedropperController.setLoadingModel(MultithreadModels.getInstance().getLoadingModel());
 
         }
         catch(Exception e)

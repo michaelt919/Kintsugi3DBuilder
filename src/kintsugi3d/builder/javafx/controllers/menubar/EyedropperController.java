@@ -16,6 +16,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -25,11 +26,14 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.builder.core.LoadingModel;
 
 import java.awt.*;
+import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +44,9 @@ import java.util.regex.Pattern;
 
 public class EyedropperController implements Initializable {
     private static final Logger log = LoggerFactory.getLogger(EyedropperController.class);
+
+    static final String[] validExtensions = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
+    @FXML private Button chooseImageButton;
 
     @FXML
     private Rectangle selectionRectangle;
@@ -88,8 +95,11 @@ public class EyedropperController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         SharedDataModel sharedDataModel = SharedDataModel.getInstance();
-        selectedFile = sharedDataModel.getSelectedImage();
-        colorPickerImgView.setImage(selectedFile);
+//        selectedFile = sharedDataModel.getSelectedImage();
+//        colorPickerImgView.setImage(selectedFile);
+
+        selectedFile = null;
+
         colorPickerImgView.setPreserveRatio(true);
         colorPickerImgView.setSmooth(true);
 
@@ -692,5 +702,20 @@ public class EyedropperController implements Initializable {
 
     private boolean isGoodLoadingModel(){
         return loadingModel.hasValidHandler();
+    }
+
+    public void selectImage(ActionEvent actionEvent) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Choose Image File");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", validExtensions));
+
+        Stage stage = (Stage) ((Node)actionEvent.getSource()).getScene().getWindow();
+        File file = fileChooser.showOpenDialog(stage);
+        if (file != null) {
+            //TODO: PULL IN TIF SUPPORT FROM COLOR CHECKER IMG SELECTION CONTROLLER
+            selectedFile = new Image(file.toURI().toString());
+            colorPickerImgView.setImage(selectedFile);
+            chooseImageButton.setVisible(false);
+        }
     }
 }
