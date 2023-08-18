@@ -24,6 +24,11 @@ import java.util.stream.Stream;
 
 public class Kintsugi3DViewerLauncher
 {
+    /**
+     * Attempts to find the executable location of an installed instance of Kintsugi 3D Viewer
+     * Searches first in the PATH env variable, then the registry (Windows only), then by relative path
+     * @return File to the viewer executable, if found
+     */
     public static Optional<File> getViewerExecutableLocation()
     {
         Optional<File> executable = getFromPath();
@@ -101,11 +106,22 @@ public class Kintsugi3DViewerLauncher
         return Optional.empty();
     }
 
-    public static void launchViewer() throws IOException
+    /**
+     * Launches a new instance of Kintsugi 3D Viewer with no model
+     * @throws IOException Unknown Error
+     * @throws IllegalStateException Kintsugi 3D Viewer is not installed or not found
+     */
+    public static void launchViewer() throws IOException, IllegalStateException
     {
         launchViewer(null);
     }
 
+    /**
+     * Launches a new instance of Kintsugi 3D Viewer with the given glb or gltf file as a parameter to open
+     * @param modelFile Path to the model file
+     * @throws IOException Unknown error
+     * @throws IllegalStateException Kintsugi 3D Viewer is not installed or not found
+     */
     public static void launchViewer(File modelFile) throws IOException, IllegalStateException
     {
         Optional<File> execOpt = getViewerExecutableLocation();
