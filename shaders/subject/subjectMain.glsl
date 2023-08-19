@@ -155,8 +155,8 @@ void main()
             float shadowMapDepth = texture(shadowMaps, vec3(projTexCoord.xy, i)).r;
 
             if (projTexCoord.x >= 0 && projTexCoord.x <= 1
-            && projTexCoord.y >= 0 && projTexCoord.y <= 1
-            && shadowMapDepth - depth >= -0.001)
+                && projTexCoord.y >= 0 && projTexCoord.y <= 1
+                && shadowMapDepth - depth >= -0.001)
 #endif
             {
                 l.halfDir = normalize(l.viewDir + l.lightDir);
