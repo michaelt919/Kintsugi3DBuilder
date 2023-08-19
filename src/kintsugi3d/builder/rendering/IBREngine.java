@@ -12,29 +12,28 @@
 
 package kintsugi3d.builder.rendering;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.rendering.components.IBRSubject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import kintsugi3d.builder.rendering.components.StandardScene;
+import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibrationRoot;
+import kintsugi3d.builder.rendering.components.lit.LitRoot;
+import kintsugi3d.builder.resources.DynamicResourceLoader;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
+import kintsugi3d.builder.state.SceneViewport;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.builders.framebuffer.DepthAttachmentSpec;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
+import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.rendering.components.StandardScene;
-import kintsugi3d.builder.resources.DynamicResourceLoader;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
-import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibrationRoot;
-import kintsugi3d.builder.rendering.components.lit.LitRoot;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
-import kintsugi3d.gl.interactive.InitializationException;
-import kintsugi3d.builder.state.SceneViewport;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Collection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class IBREngine<ContextType extends Context<ContextType>> implements IBRInstance<ContextType>
 {
@@ -121,11 +120,11 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
             litRoot = new LitRoot<>(context, sceneModel);
             StandardScene<ContextType> scene = new StandardScene<>(resources, sceneModel, sceneViewportModel);
-            IBRSubject<ContextType> subject = scene.getSubject();
             litRoot.takeLitContentRoot(scene);
             litRoot.initialize();
             litRoot.setShadowCaster(resources.getGeometryResources().positionBuffer);
 
+            IBRSubject<ContextType> subject = scene.getSubject();
             this.dynamicResourceLoader = new DynamicResourceLoader<>(loadingMonitor,
                 resources, subject, litRoot.getLightingResources());
 

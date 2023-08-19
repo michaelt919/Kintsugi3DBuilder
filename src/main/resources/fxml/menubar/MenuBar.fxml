@@ -16,8 +16,6 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
-<?import kintsugi3d.builder.core.*?>
-
 <AnchorPane prefHeight="720.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.MenubarController">
     <MenuBar styleClass="menu-bar" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <Menu mnemonicParsing="false" text="File">
@@ -221,58 +219,26 @@
             </items>
         </Menu>
         <Menu mnemonicParsing="false" text="Shading">
-            <RadioMenuItem mnemonicParsing="false" text="None" userData="None" visible="false">
-                <userData>
-                    <StandardRenderingMode fx:value="NONE" />
-                </userData>
-            </RadioMenuItem>
-            <RadioMenuItem mnemonicParsing="false" text="Wireframe" visible="false">
-                <userData>
-                    <StandardRenderingMode fx:value="WIREFRAME" />
-                </userData>
+            <RadioMenuItem mnemonicParsing="false" text="Simple specular" toggleGroup="$renderGroup">
                 <toggleGroup>
                     <ToggleGroup fx:id="renderGroup" />
                 </toggleGroup>
-            </RadioMenuItem>
-            <RadioMenuItem mnemonicParsing="false" text="Simple Lambertian" toggleGroup="$renderGroup" visible="false">
-                <userData>
-                    <StandardRenderingMode fx:value="LAMBERTIAN_SHADED" />
-                </userData>
-            </RadioMenuItem>
-            <RadioMenuItem mnemonicParsing="false" text="Simple specular" toggleGroup="$renderGroup">
-                <userData>
-                    <StandardRenderingMode fx:value="SPECULAR_SHADED" />
-                </userData>
-            </RadioMenuItem>
-            <RadioMenuItem mnemonicParsing="false" text="Solid textured" toggleGroup="$renderGroup" visible="false">
-                <userData>
-                    <StandardRenderingMode fx:value="SOLID_TEXTURED" />
-                </userData>
+                <userData>renderModes/simpleSpecular.frag</userData>
             </RadioMenuItem>
             <RadioMenuItem mnemonicParsing="false" text="Normal mapped" toggleGroup="$renderGroup">
-                <userData>
-                    <StandardRenderingMode fx:value="SPECULAR_NORMAL_TEXTURED" />
-                </userData>
+                <userData>renderModes/normalMapped.frag</userData>
             </RadioMenuItem>
             <RadioMenuItem mnemonicParsing="false" text="Textured Lambertian" toggleGroup="$renderGroup">
-                <userData>
-                    <StandardRenderingMode fx:value="LAMBERTIAN_DIFFUSE_TEXTURED" />
-                </userData>
+                <userData>renderModes/texturedLambertian.frag</userData>
             </RadioMenuItem>
             <RadioMenuItem mnemonicParsing="false" text="Textured material" toggleGroup="$renderGroup">
-                <userData>
-                    <StandardRenderingMode fx:value="MATERIAL_SHADED" />
-                </userData>
+                <userData>renderModes/texturedMaterial.frag</userData>
             </RadioMenuItem>
             <RadioMenuItem mnemonicParsing="false" selected="true" text="Image-based rendering (IBR)" toggleGroup="$renderGroup">
-                <userData>
-                    <StandardRenderingMode fx:value="IMAGE_BASED" />
-                </userData>
+                <userData>renderModes/ibrUntextured.frag</userData>
             </RadioMenuItem>
             <RadioMenuItem mnemonicParsing="false" text="IBR with textures" toggleGroup="$renderGroup">
-                <userData>
-                    <StandardRenderingMode fx:value="IMAGE_BASED_WITH_MATERIALS" />
-                </userData>
+                <userData>renderModes/ibrTextured.frag</userData>
             </RadioMenuItem>
         </Menu>
         <Menu mnemonicParsing="false" text="System Settings" visible="false">

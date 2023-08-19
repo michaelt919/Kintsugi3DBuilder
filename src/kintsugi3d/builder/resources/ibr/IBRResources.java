@@ -14,15 +14,14 @@ package kintsugi3d.builder.resources.ibr;
 
 import java.util.List;
 
+import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.resources.ibr.stream.GraphicsStreamFactory;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
-import kintsugi3d.gl.builders.ProgramBuilder;
-import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.Resource;
 import kintsugi3d.gl.geometry.GeometryResources;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.core.StandardRenderingMode;
-import kintsugi3d.builder.core.ViewSet;
 
 public interface IBRResources<ContextType extends Context<ContextType>> extends Resource, ReadonlyIBRResources<ContextType>
 {
@@ -86,19 +85,6 @@ public interface IBRResources<ContextType extends Context<ContextType>> extends 
      *                             scaled by the square reciprocal of distance from light.
      */
     void initializeLightIntensities(Vector3 lightIntensity, boolean infiniteLightSources);
-
-    /**
-     * Gets a shader program builder with preprocessor defines automatically injected based on the
-     * characteristics of this instance.
-     * This overload uses the default mode of RenderingMode.IMAGE_BASED.
-     * @return A program builder with preprocessor defines specified, ready to have the vertex and fragment shaders
-     * added as well as any additional application-specific preprocessor definitions.
-     */
-    @Override
-    default ProgramBuilder<ContextType> getShaderProgramBuilder()
-    {
-        return getShaderProgramBuilder(StandardRenderingMode.IMAGE_BASED);
-    }
 
     @Override
     default GraphicsStreamFactory<ContextType> streamFactory()

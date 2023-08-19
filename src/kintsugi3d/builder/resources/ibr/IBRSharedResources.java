@@ -18,22 +18,22 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.resources.specular.GenericMaterialResources;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.builders.ProgramBuilder;
-import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.Program;
+import kintsugi3d.gl.core.UniformBuffer;
 import kintsugi3d.gl.geometry.GeometryResources;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.material.*;
-import kintsugi3d.gl.material.TextureLoadOptions;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.core.StandardRenderingMode;
-import kintsugi3d.builder.core.ViewSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class IBRSharedResources<ContextType extends Context<ContextType>>
 {
@@ -436,7 +436,7 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
      * @return A program builder with all of the above preprocessor defines specified, ready to have the
      * vertex and fragment shaders added as well as any additional application-specific preprocessor definitions.
      */
-    public ProgramBuilder<ContextType> getShaderProgramBuilder(StandardRenderingMode renderingMode)
+    public ProgramBuilder<ContextType> getShaderProgramBuilder()
     {
         return context.getShaderProgramBuilder()
             .define("CAMERA_POSE_COUNT", viewSet.getCameraPoseCount())
@@ -444,11 +444,10 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
             .define("INFINITE_LIGHT_SOURCES", viewSet.areLightSourcesInfinite())
             .define("LUMINANCE_MAP_ENABLED", luminanceMapResources != null && luminanceMapResources.getLuminanceMap() != null)
             .define("INVERSE_LUMINANCE_MAP_ENABLED", luminanceMapResources != null && luminanceMapResources.getInverseLuminanceMap() != null)
-            .define("IMAGE_BASED_RENDERING_ENABLED", renderingMode.isImageBased())
-            .define("DIFFUSE_TEXTURE_ENABLED", specularMaterialResources.getDiffuseMap() != null && renderingMode.useDiffuseTexture())
-            .define("SPECULAR_TEXTURE_ENABLED", specularMaterialResources.getSpecularReflectivityMap() != null && renderingMode.useSpecularTextures())
-            .define("ROUGHNESS_TEXTURE_ENABLED", specularMaterialResources.getSpecularRoughnessMap() != null && renderingMode.useSpecularTextures())
-            .define("NORMAL_TEXTURE_ENABLED", specularMaterialResources.getNormalMap() != null && renderingMode.useNormalTexture());
+            .define("DIFFUSE_TEXTURE_ENABLED", specularMaterialResources.getDiffuseMap() != null)
+            .define("SPECULAR_TEXTURE_ENABLED", specularMaterialResources.getSpecularReflectivityMap() != null)
+            .define("ROUGHNESS_TEXTURE_ENABLED", specularMaterialResources.getSpecularRoughnessMap() != null)
+            .define("NORMAL_TEXTURE_ENABLED", specularMaterialResources.getNormalMap() != null);
     }
 
     public void setupShaderProgram(Program<ContextType> program)

@@ -12,23 +12,22 @@
 
 package kintsugi3d.builder.rendering;
 
-import kintsugi3d.gl.builders.ProgramBuilder;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.gl.vecmath.Vector4;
-import kintsugi3d.builder.core.SceneModel;
-import kintsugi3d.builder.core.StandardRenderingMode;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
-import kintsugi3d.builder.resources.LightingResources;
-import kintsugi3d.util.ShadingParameterMode;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
+import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.resources.LightingResources;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
+import kintsugi3d.gl.builders.ProgramBuilder;
+import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.gl.vecmath.Vector4;
+import kintsugi3d.util.ShadingParameterMode;
 
 public class StandardShader<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -38,7 +37,8 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
 
     private ProgramObject<ContextType> program;
 
-    private File fragmentShaderFile;
+    // Set default shader to be the untextured IBR shader
+    private File fragmentShaderFile = new File(new File("shaders", "rendermodes"), "ibrUntextured.frag");
 
     public StandardShader(IBRResourcesImageSpace<ContextType> resources, LightingResources<ContextType> lightingResources,
                           SceneModel sceneModel)
@@ -53,11 +53,11 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
         return program;
     }
 
-    public void initialize(StandardRenderingMode renderingMode) throws FileNotFoundException
+    public void initialize() throws FileNotFoundException
     {
         if (this.program == null)
         {
-            this.program = loadMainProgram(getPreprocessorDefines(), renderingMode);
+            this.program = loadMainProgram(getPreprocessorDefines());
         }
     }
 
@@ -71,9 +71,9 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
         this.fragmentShaderFile = shaderFile;
     }
 
-    public void reload(StandardRenderingMode newRenderingMode) throws FileNotFoundException
+    public void reload() throws FileNotFoundException
     {
-        ProgramObject<ContextType> newProgram = loadMainProgram(getPreprocessorDefines(), newRenderingMode);
+        ProgramObject<ContextType> newProgram = loadMainProgram(getPreprocessorDefines());
 
         if (this.program != null)
         {
@@ -83,9 +83,9 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
         this.program = newProgram;
     }
 
-    private ProgramBuilder<ContextType> getProgramBuilder(Map<String, Optional<Object>> defineMap, StandardRenderingMode renderingMode)
+    private ProgramBuilder<ContextType> getProgramBuilder(Map<String, Optional<Object>> defineMap)
     {
-        ProgramBuilder<ContextType> programBuilder = resources.getShaderProgramBuilder(renderingMode);
+        ProgramBuilder<ContextType> programBuilder = resources.getShaderProgramBuilder();
 
         for (Map.Entry<String, Optional<Object>> defineEntry : defineMap.entrySet())
         {
@@ -98,13 +98,12 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
         return programBuilder;
     }
 
-    private ProgramObject<ContextType> loadMainProgram(Map<String, Optional<Object>> defineMap, StandardRenderingMode renderingMode) throws FileNotFoundException
+    private ProgramObject<ContextType> loadMainProgram(Map<String, Optional<Object>> defineMap) throws FileNotFoundException
     {
-        return this.getProgramBuilder(defineMap, renderingMode)
+        return this.getProgramBuilder(defineMap)
             .define("SPOTLIGHTS_ENABLED", true)
             .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-            .addShader(ShaderType.FRAGMENT, new File("shaders/subject/relight.frag"))
-//          .addShader(ShaderType.FRAGMENT, this.fragmentShaderFile)
+            .addShader(ShaderType.FRAGMENT, this.fragmentShaderFile)
             .createProgram();
     }
 

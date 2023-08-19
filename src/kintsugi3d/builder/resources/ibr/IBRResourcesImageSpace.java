@@ -24,27 +24,26 @@ import javax.imageio.ImageIO;
 
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.app.Rendering;
-import kintsugi3d.gl.interactive.GraphicsRequest;
-import kintsugi3d.gl.interactive.ObservableGraphicsRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
+import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryMode;
 import kintsugi3d.gl.geometry.VertexGeometry;
+import kintsugi3d.gl.interactive.GraphicsRequest;
 import kintsugi3d.gl.material.TextureLoadOptions;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
-import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.util.ImageFinder;
 import kintsugi3d.util.ImageHelper;
 import kintsugi3d.util.ImageUndistorter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A class that encapsulates all of the GPU resources like vertex buffers, uniform buffers, and textures for a given
@@ -539,9 +538,9 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
      * vertex and fragment shaders added as well as any additional application-specific preprocessor definitions.
      */
     @Override
-    public ProgramBuilder<ContextType> getShaderProgramBuilder(StandardRenderingMode renderingMode)
+    public ProgramBuilder<ContextType> getShaderProgramBuilder()
     {
-        return getSharedResources().getShaderProgramBuilder(renderingMode)
+        return getSharedResources().getShaderProgramBuilder()
             .define("GEOMETRY_MODE", GeometryMode.PROJECT_3D_TO_2D) // should default to this, but just in case
             .define("GEOMETRY_TEXTURES_ENABLED", false) // should default to this, but just in case
             .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.IMAGE_SPACE) // should default to this, but just in case

@@ -12,14 +12,14 @@
 
 package kintsugi3d.gl.material;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.util.ImageFinder;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+
+import kintsugi3d.gl.core.*;
+import kintsugi3d.util.ImageFinder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // TODO Use more information from the material.  Currently just pulling texture names.
 // TODO use glTF instead of / in addition to OBJ material?
@@ -156,7 +156,7 @@ public class MaterialResources<ContextType extends Context<ContextType>> impleme
             File roughnessFile = finder.findImageFile(new File(textureDirectory, material.getRoughnessMap().getMapName()));
             log.info("Roughness texture found.");
             roughnessTexture = context.getTextureFactory().build2DColorTextureFromFile(roughnessFile, true)
-                .setInternalFormat(ColorFormat.RGB8)
+                .setInternalFormat(ColorFormat.R8)
                 .setMipmapsEnabled(loadOptions.areMipmapsRequested())
                 .setLinearFilteringEnabled(loadOptions.isLinearFilteringRequested())
                 .createTexture();

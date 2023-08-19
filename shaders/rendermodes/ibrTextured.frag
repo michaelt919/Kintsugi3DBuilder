@@ -12,12 +12,4 @@
  *
  */
 
-#ifndef IMAGE_BASED_RENDERING_ENABLED
-#define IMAGE_BASED_RENDERING_ENABLED 0
-#endif
-
-//#if IMAGE_BASED_RENDERING_ENABLED
-#include "ibr.glsl"
-//#else
-//#include "standard.glsl"
-//#endif
+#include <subject/ibr.glsl>
