@@ -12,23 +12,28 @@
 
 package kintsugi3d.builder.resources.ibr;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.builders.ColorTextureBuilder;
-import kintsugi3d.gl.builders.ProgramBuilder;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.geometry.*;
-import kintsugi3d.gl.material.TextureLoadOptions;
-import kintsugi3d.gl.vecmath.IntVector2;
-import kintsugi3d.builder.core.*;
-import kintsugi3d.util.ImageFinder;
-
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.function.Supplier;
+import javax.imageio.ImageIO;
+
+import kintsugi3d.builder.core.ColorAppearanceMode;
+import kintsugi3d.builder.core.LoadingMonitor;
+import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.gl.builders.ColorTextureBuilder;
+import kintsugi3d.gl.builders.ProgramBuilder;
+import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.geometry.GeometryMode;
+import kintsugi3d.gl.geometry.GeometryTextures;
+import kintsugi3d.gl.geometry.VertexGeometry;
+import kintsugi3d.gl.material.TextureLoadOptions;
+import kintsugi3d.gl.vecmath.IntVector2;
+import kintsugi3d.util.ImageFinder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> extends IBRResourcesBase<ContextType>
 {
@@ -197,9 +202,9 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
     }
 
     @Override
-    public ProgramBuilder<ContextType> getShaderProgramBuilder(StandardRenderingMode renderingMode)
+    public ProgramBuilder<ContextType> getShaderProgramBuilder()
     {
-        return getSharedResources().getShaderProgramBuilder(renderingMode)
+        return getSharedResources().getShaderProgramBuilder()
             .define("GEOMETRY_TEXTURES_ENABLED", true)
             .define("GEOMETRY_MODE", GeometryMode.RECTANGLE)
             .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.TEXTURE_SPACE);

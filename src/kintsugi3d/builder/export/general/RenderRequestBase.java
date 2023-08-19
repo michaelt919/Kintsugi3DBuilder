@@ -17,11 +17,10 @@ import java.io.FileNotFoundException;
 import java.nio.file.Paths;
 import java.util.function.Consumer;
 
-import kintsugi3d.gl.core.*;
 import kintsugi3d.builder.core.ObservableIBRRequest;
-import kintsugi3d.builder.core.StandardRenderingMode;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
+import kintsugi3d.gl.core.*;
 
 abstract class RenderRequestBase implements ObservableIBRRequest
 {
@@ -148,7 +147,7 @@ abstract class RenderRequestBase implements ObservableIBRRequest
         IBRResourcesImageSpace<ContextType> resources) throws FileNotFoundException
     {
         ProgramObject<ContextType> program =
-            resources.getShaderProgramBuilder(this.settingsModel.get("renderingMode", StandardRenderingMode.class))
+            resources.getShaderProgramBuilder()
                 .define("VISIBILITY_TEST_ENABLED", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"))
                 .define("SHADOW_TEST_ENABLED", resources.shadowTextures != null && this.settingsModel.getBoolean("occlusionEnabled"))
                 .define("PHYSICALLY_BASED_MASKING_SHADOWING", this.settingsModel.getBoolean("pbrGeometricAttenuationEnabled"))

@@ -12,31 +12,29 @@
 
 package kintsugi3d.builder.rendering.components;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
-import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.RenderedComponent;
-import kintsugi3d.builder.core.SceneModel;
-import kintsugi3d.builder.core.StandardRenderingMode;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
-import kintsugi3d.builder.resources.LightingResources;
-import kintsugi3d.builder.rendering.SceneViewportModel;
-import kintsugi3d.builder.rendering.StandardShader;
-import kintsugi3d.builder.util.KNNViewWeightGenerator;
-import kintsugi3d.util.ShadingParameterMode;
-
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.AbstractList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
+import kintsugi3d.builder.core.CameraViewport;
+import kintsugi3d.builder.core.RenderedComponent;
+import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.rendering.SceneViewportModel;
+import kintsugi3d.builder.rendering.StandardShader;
+import kintsugi3d.builder.resources.LightingResources;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
+import kintsugi3d.builder.util.KNNViewWeightGenerator;
+import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.util.ShadingParameterMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class IBRSubject<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
@@ -50,8 +48,6 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
     private Drawable<ContextType> drawable;
 
     private UniformBuffer<ContextType> weightBuffer;
-
-    private StandardRenderingMode lastCompiledRenderingMode = StandardRenderingMode.IMAGE_BASED;
 
     public IBRSubject(IBRResourcesImageSpace<ContextType> resources, LightingResources<ContextType> lightingResources,
                       SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
@@ -74,8 +70,7 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
     {
         try
         {
-            standardShader.initialize(this.sceneModel.getSettingsModel() == null ?
-                StandardRenderingMode.IMAGE_BASED : this.sceneModel.getSettingsModel().get("renderingMode", StandardRenderingMode.class));
+            standardShader.initialize();
             refreshDrawable();
         }
         catch(IOException|RuntimeException e)
@@ -92,8 +87,7 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
             Map<String, Optional<Object>> defineMap = standardShader.getPreprocessorDefines();
 
             // Reloads shaders only if compiled settings have changed.
-            if (getExpectedRenderingMode() != lastCompiledRenderingMode ||
-                defineMap.entrySet().stream().anyMatch(
+            if (defineMap.entrySet().stream().anyMatch(
                     defineEntry -> !Objects.equals(drawable.program().getDefine(defineEntry.getKey()), defineEntry.getValue())))
             {
                 log.info("Updating compiled render settings.");
@@ -113,13 +107,9 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
     {
         try
         {
-            StandardRenderingMode renderingMode = getExpectedRenderingMode();
-
             // Force reload shaders
-            standardShader.reload(renderingMode);
+            standardShader.reload();
             refreshDrawable();
-
-            this.lastCompiledRenderingMode = renderingMode;
         }
         catch(IOException|RuntimeException e)
         {
@@ -130,12 +120,6 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
     private void refreshDrawable()
     {
         this.drawable = resources.createDrawable(standardShader.getProgram());
-    }
-
-    private StandardRenderingMode getExpectedRenderingMode()
-    {
-        return this.sceneModel.getSettingsModel() == null ?  StandardRenderingMode.IMAGE_BASED
-            : this.sceneModel.getSettingsModel().get("renderingMode", StandardRenderingMode.class);
     }
 
     private void setupModelView(Program<ContextType> p, Matrix4 modelView)

@@ -12,23 +12,23 @@
 
 package kintsugi3d.builder.rendering.components;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.FramebufferObject;
-import kintsugi3d.gl.vecmath.Vector3;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.stream.IntStream;
+
 import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.core.SceneModel;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
-import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.lit.LitContent;
 import kintsugi3d.builder.rendering.components.scene.*;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.IntStream;
+import kintsugi3d.builder.resources.LightingResources;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.FramebufferObject;
+import kintsugi3d.gl.vecmath.Vector3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class StandardScene<ContextType extends Context<ContextType>> extends LitContent<ContextType>
 {
@@ -40,7 +40,7 @@ public class StandardScene<ContextType extends Context<ContextType>> extends Lit
 
     private IBRSubject<ContextType> ibrSubject;
     private LightVisuals<ContextType> lightVisuals;
-    private final List<RenderedComponent<ContextType>> otherComponents = new ArrayList<>();
+    private final Collection<RenderedComponent<ContextType>> otherComponents = new ArrayList<>();
 
     public StandardScene(IBRResourcesImageSpace<ContextType> resources, SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
     {
@@ -51,17 +51,14 @@ public class StandardScene<ContextType extends Context<ContextType>> extends Lit
     }
 
     @Override
-    public void initialize()
+    protected void onSetLightingResources()
     {
         LightingResources<ContextType> lightingResources = getLightingResources();
-
         // the actual subject for image-based rendering
         ibrSubject = new IBRSubject<>(resources, lightingResources, sceneModel, sceneViewportModel);
-        ibrSubject.initialize();
 
         // graphics resources for depicting the on-screen representation of lights
         lightVisuals = new LightVisuals<>(context, sceneModel, sceneViewportModel);
-        lightVisuals.initialize();
 
         // Backplate and environment must be first since they aren't depth tested.
         otherComponents.add(new Backplate<>(context, lightingResources, sceneModel));
@@ -70,6 +67,13 @@ public class StandardScene<ContextType extends Context<ContextType>> extends Lit
         // Foreground components that will be depth tested
         otherComponents.add(new Grid<>(context, sceneModel));
         otherComponents.add(new GroundPlane<>(resources, lightingResources, sceneModel, sceneViewportModel));
+    }
+
+    @Override
+    public void initialize()
+    {
+        ibrSubject.initialize();
+        lightVisuals.initialize();
 
         // Run initialization for each additional component
         for (RenderedComponent<ContextType> component : otherComponents)
