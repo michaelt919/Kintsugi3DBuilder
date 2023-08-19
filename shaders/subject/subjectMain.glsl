@@ -15,7 +15,7 @@
 
 #include "subject.glsl"
 #include <colorappearance/material.glsl>
-#line 18 3001
+#line 19 3001
 
 in vec3 fNormal;
 
@@ -43,7 +43,7 @@ uniform vec3 lightPosVirtual[VIRTUAL_LIGHT_COUNT];
 
 #if !RELIGHTING_ENABLED
 #include <colorappearance/colorappearance.glsl> // Need if relighting is not enabled to infer light direction
-#line 48 3001
+#line 47 3001
 #endif
 
 vec3 getLightVectorVirtual(int lightIndex)
