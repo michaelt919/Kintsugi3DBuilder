@@ -137,6 +137,10 @@ Material getMaterial()
 uniform sampler2D normalMap;
 
 #if TANGENT_SPACE_NORMAL_MAP
+
+in vec3 fTangent;
+in vec3 fBitangent;
+
 vec3 getTangentSpaceNormal(vec2 texCoord)
 {
     vec2 normalXY = texture(normalMap, texCoord).xy * 2 - 1;

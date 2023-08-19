@@ -14,11 +14,10 @@
 #define SUBJECT_MAIN_GLSL
 
 #include "subject.glsl"
+#include <colorappearance/material.glsl>
 #line 18 3001
 
 in vec3 fNormal;
-in vec3 fTangent;
-in vec3 fBitangent;
 
 layout(location = 1) out int fragObjectID;
 

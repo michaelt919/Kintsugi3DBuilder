@@ -17,8 +17,8 @@
 
 #line 19 3101
 
-#ifndef MATERIAL_EXPLORATION_MODE
-#define MATERIAL_EXPLORATION_MODE 0
+#ifndef ANALYTIC_MODE
+#define ANALYTIC_MODE 0
 #endif
 
 #ifndef BUEHLER_ALGORITHM
@@ -41,10 +41,26 @@
 #define ARCHIVING_2017_ENVIRONMENT_NORMALIZATION 0
 #endif
 
-#if MATERIAL_EXPLORATION_MODE
+#if !ANALYTIC_MODE
+
+#ifndef DEFAULT_DIFFUSE_COLOR
+#define DEFAULT_DIFFUSE_COLOR (vec3(0.0))
+#endif // DEFAULT_DIFFUSE_COLOR
+
+#ifndef DEFAULT_SPECULAR_COLOR
+#define DEFAULT_SPECULAR_COLOR (vec3(0.04))
+#endif // DEFAULT_SPECULAR_COLOR
+
+#ifndef DEFAULT_SPECULAR_ROUGHNESS
+#define DEFAULT_SPECULAR_ROUGHNESS (0.1); // TODO pass in a default?
+#endif
+
+#endif // !ANALYTIC_MODE
 
 #include <colorappearance/material.glsl>
-#line 48 3101
+#line 62 3101
+
+#if ANALYTIC_MODE
 
 #undef SMITH_MASKING_SHADOWING
 #define SMITH_MASKING_SHADOWING 1
@@ -73,26 +89,7 @@
 #define NORMAL_MAP_SCALE_ENABLED 1
 #define NORMAL_MAP_SCALE ANALYTIC_BUMP_HEIGHT
 
-#endif
-
-#if !MATERIAL_EXPLORATION_MODE
-
-#ifndef DEFAULT_DIFFUSE_COLOR
-#define DEFAULT_DIFFUSE_COLOR (vec3(0.0))
-#endif // DEFAULT_DIFFUSE_COLOR
-
-#ifndef DEFAULT_SPECULAR_COLOR
-#define DEFAULT_SPECULAR_COLOR (vec3(0.04))
-#endif // DEFAULT_SPECULAR_COLOR
-
-#ifndef DEFAULT_SPECULAR_ROUGHNESS
-#define DEFAULT_SPECULAR_ROUGHNESS (0.1); // TODO pass in a default?
-#endif
-
-#endif // !MATERIAL_EXPLORATION_MODE
-
-#include "../colorappearance/material.glsl"
-#line 96 3101
+#endif // ANALYTIC_MODE
 
 #ifndef MIPMAPS_ENABLED
 #define MIPMAPS_ENABLED !BUEHLER_ALGORITHM
@@ -104,7 +101,7 @@
 
 #include "../colorappearance/colorappearance.glsl"
 
-#if !MATERIAL_EXPLORATION_MODE
+#if !ANALYTIC_MODE
 #include "../colorappearance/imgspace.glsl"
 #endif
 
@@ -267,7 +264,7 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 normalDir, Mat
 
 vec3 getEnvironmentShading(vec3 normalDir, Material m)
 {
-    #if MATERIAL_EXPLORATION_MODE
+    #if ANALYTIC_MODE
     float maxLuminance = max(ANALYTIC_SPECULAR_COLOR.r, max(ANALYTIC_SPECULAR_COLOR.g, ANALYTIC_SPECULAR_COLOR.b))
     / (4 * ANALYTIC_ROUGHNESS * ANALYTIC_ROUGHNESS)
     + max(ANALYTIC_DIFFUSE_COLOR.r, max(ANALYTIC_DIFFUSE_COLOR.g, ANALYTIC_DIFFUSE_COLOR.b));
@@ -359,7 +356,7 @@ vec4 computeSampleSingle(int virtualIndex, vec3 normalDir, Material m, float max
 
 vec4 computeBuehler(vec3 targetDirection, vec3 normalDir, Material m)
 {
-#if MATERIAL_EXPLORATION_MODE
+#if ANALYTIC_MODE
     float maxLuminance = max(ANALYTIC_SPECULAR_COLOR.r, max(ANALYTIC_SPECULAR_COLOR.g, ANALYTIC_SPECULAR_COLOR.b))
     / (4 * ANALYTIC_ROUGHNESS * ANALYTIC_ROUGHNESS)
     + max(ANALYTIC_DIFFUSE_COLOR.r, max(ANALYTIC_DIFFUSE_COLOR.g, ANALYTIC_DIFFUSE_COLOR.b));
@@ -507,7 +504,7 @@ vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 normalDir, Materi
 
 SPECULAR_PRECOMPUTATION precomputeSpecular(ViewingParameters v, Material m)
 {
-#if MATERIAL_EXPLORATION_MODE
+#if ANALYTIC_MODE
     float maxLuminance = max(ANALYTIC_SPECULAR_COLOR.r, max(ANALYTIC_SPECULAR_COLOR.g, ANALYTIC_SPECULAR_COLOR.b))
     / (4 * ANALYTIC_ROUGHNESS * ANALYTIC_ROUGHNESS)
     + max(ANALYTIC_DIFFUSE_COLOR.r, max(ANALYTIC_DIFFUSE_COLOR.g, ANALYTIC_DIFFUSE_COLOR.b));
