@@ -12,14 +12,14 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import java.io.File;
-import java.io.IOException;
-
 import kintsugi3d.builder.export.specular.SpecularFitSerializer;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+
+import java.io.File;
+import java.io.IOException;
 
 public class BasisResources<ContextType extends Context<ContextType>> implements Resource, ContextBound<ContextType>
 {
@@ -105,33 +105,39 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
     {
         SpecularBasis basis = SpecularFitSerializer.deserializeBasisFunctions(priorSolutionDirectory);
 
-        NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
-
-        // Set up basis function buffer
-        NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3,
-            basis.getCount() * (basis.getResolution() + 1));
-
-
-        for (int b = 0; b < basis.getCount(); b++)
+        if (basis != null)
         {
-            // Copy basis functions by color channel into the basis map buffer that will eventually be sent to the GPU..
-            for (int m = 0; m <= basis.getResolution(); m++)
+            NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
+
+            // Set up basis function buffer
+            NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3,
+                basis.getCount() * (basis.getResolution() + 1));
+
+            for (int b = 0; b < basis.getCount(); b++)
             {
-                // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
-                basisMapBuffer.set(m + (basis.getResolution() + 1) * b, 0, basis.evaluateRed(b, m));
-                basisMapBuffer.set(m + (basis.getResolution() + 1) * b, 1, basis.evaluateGreen(b, m));
-                basisMapBuffer.set(m + (basis.getResolution() + 1) * b, 2, basis.evaluateBlue(b, m));
+                // Copy basis functions by color channel into the basis map buffer that will eventually be sent to the GPU..
+                for (int m = 0; m <= basis.getResolution(); m++)
+                {
+                    // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
+                    basisMapBuffer.set(m + (basis.getResolution() + 1) * b, 0, basis.evaluateRed(b, m));
+                    basisMapBuffer.set(m + (basis.getResolution() + 1) * b, 1, basis.evaluateGreen(b, m));
+                    basisMapBuffer.set(m + (basis.getResolution() + 1) * b, 2, basis.evaluateBlue(b, m));
+                }
             }
+
+            BasisResources<ContextType> resources = new BasisResources<>(context, basis.getCount(), basis.getResolution());
+
+            // Send the basis functions to the GPU.
+            resources.basisMaps.load(basisMapBuffer);
+
+            // Skip diffuse basis colors -- we'll optimize a diffuse map separately, so it shouldn't matter if they're all black.
+
+            return resources;
         }
-
-        BasisResources<ContextType> resources = new BasisResources<>(context, basis.getCount(), basis.getResolution());
-
-        // Send the basis functions to the GPU.
-        resources.basisMaps.load(basisMapBuffer);
-
-        // Skip diffuse basis colors -- we'll optimize a diffuse map separately, so it shouldn't matter if they're all black.
-
-        return resources;
+        else
+        {
+            return null;
+        }
     }
 
     public void useWithShaderProgram(Program<ContextType> program)

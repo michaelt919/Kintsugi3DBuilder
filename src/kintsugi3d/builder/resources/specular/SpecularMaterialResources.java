@@ -132,4 +132,101 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
     }
 
     void setupShaderProgram(Program<ContextType> program);
+
+    static <ContextType extends Context<ContextType>> SpecularMaterialResources<ContextType> makeNull(ContextType context)
+    {
+        return new SpecularMaterialResources<>()
+        {
+            @Override
+            public ContextType getContext()
+            {
+                return context;
+            }
+
+            @Override
+            public int getWidth()
+            {
+                return 0;
+            }
+
+            @Override
+            public int getHeight()
+            {
+                return 0;
+            }
+
+            @Override
+            public Texture2D<ContextType> getDiffuseMap()
+            {
+                return null;
+            }
+
+            @Override
+            public Texture2D<ContextType> getNormalMap()
+            {
+                return null;
+            }
+
+            @Override
+            public Texture2D<ContextType> getConstantMap()
+            {
+                return null;
+            }
+
+            @Override
+            public Texture2D<ContextType> getSpecularReflectivityMap()
+            {
+                return null;
+            }
+
+            @Override
+            public Texture2D<ContextType> getSpecularRoughnessMap()
+            {
+                return null;
+            }
+
+            @Override
+            public Texture2D<ContextType> getAlbedoMap()
+            {
+                return null;
+            }
+
+            @Override
+            public Texture2D<ContextType> getORMMap()
+            {
+                return null;
+            }
+
+            @Override
+            public BasisResources<ContextType> getBasisResources()
+            {
+                return null;
+            }
+
+            @Override
+            public BasisWeightResources<ContextType> getBasisWeightResources()
+            {
+                return null;
+            }
+
+            @Override
+            public void close()
+            {
+
+            }
+
+            @Override
+            public void blitCroppedAndScaled(int destX, int destY, int destWidth, int destHeight, SpecularMaterialResources<ContextType> readSource, int srcX, int srcY, int srcWidth, int srcHeight, boolean linearFiltering)
+            {
+                // Do nothing
+            }
+
+            @Override
+            public void setupShaderProgram(Program<ContextType> program)
+            {
+
+            }
+        };
+    }
+
 }

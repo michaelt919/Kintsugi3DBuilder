@@ -12,14 +12,6 @@
 
 package kintsugi3d.builder.fit;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.function.BiConsumer;
-
 import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.builder.export.specular.SpecularFitTextureRescaler;
 import kintsugi3d.builder.export.specular.WeightImageCreator;
@@ -33,10 +25,20 @@ import kintsugi3d.builder.resources.ibr.stream.GraphicsStreamResource;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.material.ReadonlyMaterial;
+import kintsugi3d.gl.material.ReadonlyMaterialTextureMap;
 import kintsugi3d.optimization.ShaderBasedErrorCalculator;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.function.BiConsumer;
 
 /**
  * Implement specular fit using algorithm described by Nam et al., 2018
@@ -44,7 +46,7 @@ import org.slf4j.LoggerFactory;
 public class SpecularFitProcess
 {
     private static final Logger log = LoggerFactory.getLogger(SpecularFitProcess.class);
-    private static final boolean DEBUG_IMAGES = false;
+    private static final boolean DEBUG_IMAGES = true;
     private static final boolean TRACE_IMAGES = false;
 
     private final SpecularFitRequestParams settings;
@@ -174,10 +176,10 @@ public class SpecularFitProcess
                 }
 
                 File geometryFile = sampled.getViewSet().getGeometryFile();
-                File inputNormalMap = geometryFile == null ? null :
-                    ImageFinder.getInstance()
-                        .tryFindImageFile(new File(geometryFile.getParentFile(),
-                            sampled.getGeometry().getMaterial().getNormalMap().getMapName()));
+                ReadonlyMaterial material = sampled.getGeometry().getMaterial();
+                ReadonlyMaterialTextureMap normalMap = material == null ? null : material.getNormalMap();
+                File inputNormalMap = geometryFile == null || material == null || normalMap == null ? null :
+                    ImageFinder.getInstance().tryFindImageFile(new File(geometryFile.getParentFile(), normalMap.getMapName()));
 
                 // Optimize weight maps and normal maps by blocks to fill the full resolution textures
                 optimizeBlocks(fullResolution, cache, sampledDecomposition, inputNormalMap);
@@ -210,15 +212,19 @@ public class SpecularFitProcess
 //                fullResolution.saveQuadraticMap(settings.getOutputDirectory());
                 }
 
-                // Save the final weight maps
-                int weightsPerImage = settings.getExportSettings().isCombineWeights() ? 4 : 1;
-                try (WeightImageCreator<ContextType> weightImageCreator = new WeightImageCreator<>(cache.getContext(), settings.getTextureFitSettings(), weightsPerImage))
+                // Save the packed weight maps for opening in viewer
+                if (settings.getExportSettings().isCombineWeights())
+                {
+                    try (WeightImageCreator<ContextType> weightImageCreator = new WeightImageCreator<>(cache.getContext(), settings.getTextureFitSettings(), 4))
+                    {
+                        weightImageCreator.createImages(fullResolution, settings.getOutputDirectory());
+                    }
+                }
+
+                // Save the unpacked weight maps for reloading the project in the future
+                try (WeightImageCreator<ContextType> weightImageCreator = new WeightImageCreator<>(cache.getContext(), settings.getTextureFitSettings(), 1))
                 {
                     weightImageCreator.createImages(fullResolution, settings.getOutputDirectory());
-                }
-                catch (Exception e)
-                {
-                    throw new RuntimeException(e);
                 }
 
                 // Save the final specular albedo and roughness maps

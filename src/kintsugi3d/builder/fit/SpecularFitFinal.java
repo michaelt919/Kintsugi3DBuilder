@@ -11,9 +11,6 @@
 
 package kintsugi3d.builder.fit;
 
-import java.io.File;
-import java.io.IOException;
-
 import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.builder.fit.finalize.AlbedoORMOptimization;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
@@ -21,6 +18,9 @@ import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.core.ColorFormat;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Texture2D;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Can do the roughness / ORM map fit, hole fill, etc., but should not need access to the original photographs
@@ -100,16 +100,22 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
         super(context, priorSolutionDirectory);
 
         // Load diffuse map
-        diffuseMap = context.getTextureFactory()
-            .build2DColorTextureFromFile(new File(priorSolutionDirectory, "diffuse.png"), true)
-            .setLinearFilteringEnabled(true)
-            .createTexture();
+        File diffuseMapFile = new File(priorSolutionDirectory, "diffuse.png");
+        diffuseMap = diffuseMapFile.exists() ?
+            context.getTextureFactory()
+                .build2DColorTextureFromFile(diffuseMapFile, true)
+                .setLinearFilteringEnabled(true)
+                .createTexture()
+            : null;
 
         // Load normal map
-        normalMap = context.getTextureFactory()
-            .build2DColorTextureFromFile(new File(priorSolutionDirectory, "normal.png"), true)
-            .setLinearFilteringEnabled(true)
-            .createTexture();
+        File normalMapFile = new File(priorSolutionDirectory, "normal.png");
+        normalMap = normalMapFile.exists() ?
+            context.getTextureFactory()
+                .build2DColorTextureFromFile(normalMapFile, true)
+                .setLinearFilteringEnabled(true)
+                .createTexture()
+            : null;
 
         // Load constant map
         File constantMapFile = new File(priorSolutionDirectory, "constant.png");
@@ -129,16 +135,34 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
 //                .createTexture()
 //            : null;
 
-        AlbedoORMOptimization<ContextType> albedoORMOptimizationTemp;
+        AlbedoORMOptimization<ContextType> albedoORMOptimizationTemp = null;
         try
         {
             albedoORMOptimizationTemp = AlbedoORMOptimization.loadFromPriorSolution(context, priorSolutionDirectory);
+
+            if (albedoORMOptimizationTemp.getAlbedoMap() == null)
+            {
+                // Load failed
+                albedoORMOptimizationTemp.close();
+
+                // Try to initialize based on diffuse map resolution
+                if (diffuseMap != null)
+                {
+                    albedoORMOptimizationTemp = AlbedoORMOptimization.createWithoutOcclusion(context,
+                        new TextureFitSettings(diffuseMap.getWidth(), diffuseMap.getHeight()));
+                }
+            }
         }
         catch (IOException e)
         {
-            albedoORMOptimizationTemp = AlbedoORMOptimization.createWithoutOcclusion(context,
-                new TextureFitSettings(diffuseMap.getWidth(), diffuseMap.getHeight()));
+            // Load failed; try to initialize based on diffuse map resolution
+            if (diffuseMap != null)
+            {
+                albedoORMOptimizationTemp = AlbedoORMOptimization.createWithoutOcclusion(context,
+                    new TextureFitSettings(diffuseMap.getWidth(), diffuseMap.getHeight()));
+            }
         }
+
         albedoORMOptimization = albedoORMOptimizationTemp;
     }
 
@@ -200,12 +224,12 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
     @Override
     public Texture2D<ContextType> getAlbedoMap()
     {
-        return albedoORMOptimization.getAlbedoMap();
+        return albedoORMOptimization == null ? null : albedoORMOptimization.getAlbedoMap();
     }
     @Override
     public Texture2D<ContextType> getORMMap()
     {
-        return albedoORMOptimization.getORMMap();
+        return albedoORMOptimization == null ? null : albedoORMOptimization.getORMMap();
     }
 
     public AlbedoORMOptimization<ContextType> getAlbedoORMOptimization()

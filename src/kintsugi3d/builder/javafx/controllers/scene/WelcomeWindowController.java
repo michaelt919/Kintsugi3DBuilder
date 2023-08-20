@@ -29,6 +29,7 @@ import kintsugi3d.builder.core.IBRRequestManager;
 import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.controllers.ProjectLoadHelper;
 import kintsugi3d.builder.javafx.controllers.menubar.LoaderController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.gl.core.Context;
@@ -188,7 +189,7 @@ public class WelcomeWindowController {
             try
             {
                 LoaderController loaderController = makeWindow("Load Files", loaderWindowOpen, 750, 330, "fxml/menubar/Loader.fxml");
-                loaderController.setCallback(() ->
+                loaderController.setLoadStartCallback(() ->
                 {
                     this.file_closeProject();
                     projectLoaded = true;
@@ -265,16 +266,10 @@ public class WelcomeWindowController {
 
         if (newVsetFile != null)
         {
-            MultithreadModels.getInstance().getLoadingModel().unload();
-
             this.vsetFile = newVsetFile;
-            File vsetFileRef = newVsetFile;
+            this.projectLoaded = true;
 
-            RecentProjects.updateRecentFiles(projectFile.getAbsolutePath());
-
-            projectLoaded = true;
-
-            new Thread(() -> MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFileRef.getPath(), vsetFileRef)).start();
+            ProjectLoadHelper.startLoad(projectFile, vsetFile);
         }
     }
 

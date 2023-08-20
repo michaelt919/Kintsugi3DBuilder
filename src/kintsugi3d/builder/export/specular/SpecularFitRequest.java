@@ -12,11 +12,6 @@
 
 package kintsugi3d.builder.export.specular;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
-
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.export.specular.gltf.SpecularFitGltfExporter;
 import kintsugi3d.builder.fit.SpecularFitProcess;
@@ -33,6 +28,11 @@ import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
 
 public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGraphicsRequest
 {
@@ -121,7 +121,7 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
         try
         {
             // Set the output directory based on the view set's texture fit file path
-            settings.setOutputDirectory(renderable.getActiveViewSet().getTextureFitFilePath());
+            settings.setOutputDirectory(renderable.getActiveViewSet().getSupportingFilesFilePath());
 
             // Perform the specular fit
             new SpecularFitProcess(settings).optimizeFit(renderable.getIBRResources());

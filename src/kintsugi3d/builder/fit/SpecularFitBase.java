@@ -12,10 +12,6 @@
 
 package kintsugi3d.builder.fit;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
 import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
@@ -28,11 +24,16 @@ import kintsugi3d.gl.core.Texture2D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
     extends SpecularMaterialResourcesBase<ContextType>
 {
     private static final Logger log = LoggerFactory.getLogger(SpecularFitBase.class);
 
+    private final ContextType context;
     private final BasisResources<ContextType> basisResources;
     private final BasisWeightResources<ContextType> basisWeightResources;
     private final boolean basisResourcesOwned;
@@ -50,6 +51,8 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
     protected SpecularFitBase(BasisResources<ContextType> basisResources, boolean basisResourcesOwned,
         TextureFitSettings textureFitSettings) throws FileNotFoundException
     {
+        this.context = basisResources.getContext();
+
         // Textures calculated on CPU and passed to GPU (not framebuffers): basis functions & weights
         this.basisResources = basisResources;
         this.basisResourcesOwned = basisResourcesOwned;
@@ -84,64 +87,81 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
      */
     protected SpecularFitBase(ContextType context, File priorSolutionDirectory) throws IOException
     {
+        this.context = context;
+
         // Textures calculated on CPU and passed to GPU (not framebuffers): basis functions & weights
         this.basisResources = BasisResources.loadFromPriorSolution(context, priorSolutionDirectory);
         this.basisResourcesOwned = true;
 
-        // Specular roughness / reflectivity module that manages its own resources
-        this.roughnessOptimization =
-            new RoughnessOptimizationSimple<>(basisResources, priorSolutionDirectory);
-        //new RoughnessOptimizationIterative<>(context, basisResources, this::getDiffuseMap, settings);
-        this.roughnessOptimization.clear();
+        if (this.basisResources != null)
+        {
+            // Specular roughness / reflectivity module that manages its own resources
+            this.roughnessOptimization =
+                new RoughnessOptimizationSimple<>(basisResources, priorSolutionDirectory);
+            //new RoughnessOptimizationIterative<>(context, basisResources, this::getDiffuseMap, settings);
+            // Don't clear it since the roughness and specular textures will be storing the images loaded from disk
 
-        this.basisWeightResources = BasisWeightResources.loadFromPriorSolution(
-            context, priorSolutionDirectory,
-            roughnessOptimization.getRoughnessTexture().getWidth(), roughnessOptimization.getRoughnessTexture().getHeight(),
-            basisResources.getBasisCount());
+            this.basisWeightResources = BasisWeightResources.loadFromPriorSolution(
+                context, priorSolutionDirectory,
+                roughnessOptimization.getRoughnessTexture().getWidth(), roughnessOptimization.getRoughnessTexture().getHeight(),
+                basisResources.getBasisCount());
 
-        this.roughnessOptimization.setInputWeights(basisWeightResources);
+            this.roughnessOptimization.setInputWeights(basisWeightResources);
+        }
+        else
+        {
+            roughnessOptimization = null;
+            basisWeightResources = null;
+        }
     }
 
     @Override
     public ContextType getContext()
     {
-        return basisResources.getContext();
+        return context;
     }
 
     @Override
     public int getWidth()
     {
-        return basisWeightResources.weightMaps.getWidth();
+        return basisWeightResources == null || basisWeightResources.weightMaps == null ? 0 : basisWeightResources.weightMaps.getWidth();
     }
 
     @Override
     public int getHeight()
     {
-        return basisWeightResources.weightMaps.getHeight();
+        return basisWeightResources == null || basisWeightResources.weightMaps == null ? 0 : basisWeightResources.weightMaps.getHeight();
     }
 
     @Override
     public void close()
     {
-        if (basisResourcesOwned)
+        if (basisResourcesOwned && basisResources != null)
         {
             basisResources.close();
         }
 
-        basisWeightResources.close();
-        roughnessOptimization.close();
+        if (basisWeightResources != null)
+        {
+            basisWeightResources.close();
+        }
+
+        if (roughnessOptimization != null)
+        {
+            roughnessOptimization.close();
+        }
     }
 
     @Override
     public final Texture2D<ContextType> getSpecularReflectivityMap()
     {
-        return roughnessOptimization.getReflectivityTexture();
+        return roughnessOptimization == null ? null : roughnessOptimization.getReflectivityTexture();
     }
 
     @Override
     public final Texture2D<ContextType> getSpecularRoughnessMap()
     {
-        return roughnessOptimization.getRoughnessTexture();
+        return roughnessOptimization == null ? null : roughnessOptimization.getRoughnessTexture();
     }
 
     /**

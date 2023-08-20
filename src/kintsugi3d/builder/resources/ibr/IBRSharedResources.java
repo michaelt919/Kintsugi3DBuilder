@@ -12,12 +12,6 @@
 
 package kintsugi3d.builder.resources.ibr;
 
-import java.io.IOException;
-import java.util.AbstractList;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.IntStream;
-
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.fit.SpecularFitFinal;
@@ -35,6 +29,12 @@ import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.AbstractList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.IntStream;
 
 final class IBRSharedResources<ContextType extends Context<ContextType>>
 {
@@ -155,16 +155,19 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
 
                 Material material = geometry.getMaterial();
 
-                if (viewSet.getTextureFitFilePath() != null) // Load texture fit from previous session
+                if (viewSet.getSupportingFilesFilePath() != null) // Load texture fit from previous session
                 {
+                    SpecularMaterialResources<ContextType> loadedFit;
                     try
                     {
-                        specularMaterialResources = SpecularFitFinal.loadFromPriorSolution(context, viewSet.getTextureFitFilePath());
+                        loadedFit = SpecularFitFinal.loadFromPriorSolution(context, viewSet.getSupportingFilesFilePath());
                     }
                     catch (IOException e)
                     {
                         log.error("An error occured while loading the previous specular fit (textures).", e);
+                        loadedFit = SpecularMaterialResources.makeNull(context);
                     }
+                    specularMaterialResources = loadedFit;
                 }
                 else if (material != null && viewSet.getGeometryFile() != null /* need an actual file path to load the textures */)
                 {
@@ -228,14 +231,14 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
                 else
                 {
                     // Neither a texture fit or an OBJ material: material is null
-                    this.specularMaterialResources = GenericMaterialResources.createNull();
+                    this.specularMaterialResources = SpecularMaterialResources.makeNull(context);
                 }
             }
             else
             {
                 this.cameraWeights = null;
                 this.cameraWeightBuffer = null;
-                this.specularMaterialResources = GenericMaterialResources.createNull();
+                this.specularMaterialResources = SpecularMaterialResources.makeNull(context);
             }
         }
         else
@@ -243,7 +246,7 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
             this.geometryResources = GeometryResources.createNullResources();
             this.cameraWeights = null;
             this.cameraWeightBuffer = null;
-            this.specularMaterialResources = GenericMaterialResources.createNull();
+            this.specularMaterialResources = SpecularMaterialResources.makeNull(context);
         }
     }
 
@@ -422,12 +425,9 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
 
     public void replaceSpecularMaterialResources(SpecularMaterialResources<ContextType> specularMaterialResources)
     {
-        if (this.specularMaterialResources != null)
-        {
-            this.specularMaterialResources.close();
-        }
+        this.specularMaterialResources.close();
 
-        this.specularMaterialResources = specularMaterialResources;
+        this.specularMaterialResources = specularMaterialResources == null ? SpecularMaterialResources.makeNull(context) : specularMaterialResources;
     }
 
     /**

@@ -12,19 +12,10 @@
 
 package kintsugi3d.builder.rendering;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.DoubleUnaryOperator;
-
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
 import kintsugi3d.builder.state.ReadonlyCameraModel;
 import kintsugi3d.builder.state.ReadonlyLightingModel;
 import kintsugi3d.builder.state.ReadonlyObjectModel;
@@ -38,6 +29,16 @@ import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.AbstractImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.DoubleUnaryOperator;
 
 public class IBRInstanceManager<ContextType extends Context<ContextType>> implements LoadingHandler, InteractiveRenderable<ContextType>
 {
@@ -55,8 +56,22 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     private ReadonlyLightingModel lightingModel;
     private ReadonlySettingsModel settingsModel;
 
+    private final List<Consumer<ViewSet>> viewSetLoadCallbacks
+        = Collections.synchronizedList(new ArrayList<>());
+
     private final List<Consumer<IBRInstance<ContextType>>> instanceLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>());
+
+    /**
+     * Adds callbacks that will be invoked when the view set has finished loading (but before the GPU resources are loaded).
+     * The callbacks will be cleared after being invoked.
+     * @param callback to add
+     */
+    @Override
+    public void addViewSetLoadCallback(Consumer<ViewSet> callback)
+    {
+        viewSetLoadCallbacks.add(callback);
+    }
 
     /**
      * Adds callbacks that will be invoked when the instance has finished loading.
@@ -94,80 +109,103 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         return ibrInstance == null ? null : ibrInstance.getActiveViewSet();
     }
 
+    private void invokeViewSetLoadCallbacks(ViewSet viewSet)
+    {
+        // Invoke callbacks
+        for (Consumer<ViewSet> callback : viewSetLoadCallbacks)
+        {
+            callback.accept(viewSet);
+        }
+
+        // Clear the list of callbacks for the next load.
+        instanceLoadCallbacks.clear();
+    }
+
+    private void loadInstance(String id, Builder<ContextType> builder) throws IOException
+    {
+        // Invoke callbacks now that view set is loaded
+        invokeViewSetLoadCallbacks(builder.getViewSet());
+
+        // Kick off request to generate preview resolution images
+        builder.generateUndistortedPreviewImages();
+
+        // Create the instance (will be initialized on the graphics thread)
+        IBRInstance<ContextType> newItem = new IBREngine<>(id, context, builder);
+
+        newItem.getSceneModel().setObjectModel(this.objectModel);
+        newItem.getSceneModel().setCameraModel(this.cameraModel);
+        newItem.getSceneModel().setLightingModel(this.lightingModel);
+        newItem.getSceneModel().setSettingsModel(this.settingsModel);
+
+        newItem.setLoadingMonitor(new LoadingMonitor()
+        {
+            @Override
+            public void startLoading()
+            {
+                if (loadingMonitor != null)
+                {
+                    loadingMonitor.startLoading();
+                }
+            }
+
+            @Override
+            public void setMaximum(double maximum)
+            {
+                if (loadingMonitor != null)
+                {
+                    loadingMonitor.setMaximum(maximum);
+                }
+            }
+
+            @Override
+            public void setProgress(double progress)
+            {
+                if (loadingMonitor != null)
+                {
+                    loadingMonitor.setProgress(progress);
+                }
+            }
+
+            @Override
+            public void loadingComplete()
+            {
+                double primaryViewDistance = newItem.getIBRResources().getPrimaryViewDistance();
+                Vector3 lightIntensity = new Vector3((float)(primaryViewDistance * primaryViewDistance));
+
+                newItem.getIBRResources().initializeLightIntensities(lightIntensity, false);
+                newItem.reloadShaders();
+
+                if (loadingMonitor != null)
+                {
+                    loadingMonitor.loadingComplete();
+                }
+            }
+
+            @Override
+            public void loadingFailed(Exception e)
+            {
+                if (loadingMonitor != null)
+                {
+                    loadingMonitor.loadingFailed(e);
+                }
+            }
+        });
+        newInstance = newItem;
+    }
+
     @Override
-    public void loadFromVSETFile(String id, File vsetFile, ReadonlyLoadOptionsModel loadOptions)
+    public void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions)
     {
         this.loadingMonitor.startLoading();
 
         try
         {
-            IBRInstance<ContextType> newItem =
-                new IBREngine<>(id, context,
-                    IBRResourcesImageSpace.getBuilderForContext(this.context)
-                        .setLoadingMonitor(this.loadingMonitor)
-                        .setLoadOptions(loadOptions)
-                        .loadVSETFile(vsetFile)
-                        .generateUndistortedPreviewImages());
+            Builder<ContextType> contextTypeBuilder = IBRResourcesImageSpace.getBuilderForContext(this.context)
+                .setLoadingMonitor(this.loadingMonitor)
+                .setLoadOptions(loadOptions)
+                .loadVSETFile(vsetFile, supportingFilesDirectory);
 
-            newItem.getSceneModel().setObjectModel(this.objectModel);
-            newItem.getSceneModel().setCameraModel(this.cameraModel);
-            newItem.getSceneModel().setLightingModel(this.lightingModel);
-            newItem.getSceneModel().setSettingsModel(this.settingsModel);
-
-            newItem.setLoadingMonitor(new LoadingMonitor()
-            {
-                @Override
-                public void startLoading()
-                {
-                    if (loadingMonitor != null)
-                    {
-                        loadingMonitor.startLoading();
-                    }
-                }
-
-                @Override
-                public void setMaximum(double maximum)
-                {
-                    if (loadingMonitor != null)
-                    {
-                        loadingMonitor.setMaximum(maximum);
-                    }
-                }
-
-                @Override
-                public void setProgress(double progress)
-                {
-                    if (loadingMonitor != null)
-                    {
-                        loadingMonitor.setProgress(progress);
-                    }
-                }
-
-                @Override
-                public void loadingComplete()
-                {
-                    double primaryViewDistance = newItem.getIBRResources().getPrimaryViewDistance();
-                    Vector3 lightIntensity = new Vector3((float)(primaryViewDistance * primaryViewDistance));
-
-                    newItem.getIBRResources().initializeLightIntensities(lightIntensity, false);
-                    newItem.reloadShaders();
-
-                    if (loadingMonitor != null)
-                    {
-                        loadingMonitor.loadingComplete();
-                    }
-                }
-
-                @Override
-                public void loadingFailed(Exception e)
-                {
-                    if (loadingMonitor != null)
-                    {
-                        loadingMonitor.loadingFailed(e);
-                    }
-                }
-            });
-            newInstance = newItem;
+            loadInstance(id, contextTypeBuilder);
         }
         catch (Exception e)
         {
@@ -183,75 +221,14 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
         try
         {
-            IBRInstance<ContextType> newItem =
-                new IBREngine<>(id, context,
-                    IBRResourcesImageSpace.getBuilderForContext(this.context)
-                        .setLoadingMonitor(this.loadingMonitor)
-                        .setLoadOptions(loadOptions)
-                        .loadAgisoftFiles(xmlFile, meshFile, imageDirectory)
-                        .setPrimaryView(primaryViewName)
-                        .generateUndistortedPreviewImages());
+            Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
+                .setLoadingMonitor(this.loadingMonitor)
+                .setLoadOptions(loadOptions)
+                .loadAgisoftFiles(xmlFile, meshFile, imageDirectory)
+                .setPrimaryView(primaryViewName);
 
-            newItem.getSceneModel().setObjectModel(this.objectModel);
-            newItem.getSceneModel().setCameraModel(this.cameraModel);
-            newItem.getSceneModel().setLightingModel(this.lightingModel);
-            newItem.getSceneModel().setSettingsModel(this.settingsModel);
-
-            newItem.setLoadingMonitor(new LoadingMonitor()
-            {
-                @Override
-                public void startLoading()
-                {
-                    if (loadingMonitor != null)
-                    {
-                        loadingMonitor.startLoading();
-                    }
-                }
-
-                @Override
-                public void setMaximum(double maximum)
-                {
-                    if (loadingMonitor != null)
-                    {
-                        loadingMonitor.setMaximum(maximum);
-                    }
-                }
-
-                @Override
-                public void setProgress(double progress)
-                {
-                    if (loadingMonitor != null)
-                    {
-                        loadingMonitor.setProgress(progress);
-                    }
-                }
-
-                @Override
-                public void loadingComplete()
-                {
-                    double primaryViewDistance = newItem.getIBRResources().getPrimaryViewDistance();
-
-                    Vector3 lightIntensity = new Vector3((float)(primaryViewDistance * primaryViewDistance));
-
-                    newItem.getIBRResources().initializeLightIntensities(lightIntensity, false);
-                    newItem.reloadShaders();
-
-                    if (loadingMonitor != null)
-                    {
-                        loadingMonitor.loadingComplete();
-                    }
-                }
-
-                @Override
-                public void loadingFailed(Exception e)
-                {
-                    if (loadingMonitor != null)
-                    {
-                        loadingMonitor.loadingFailed(e);
-                    }
-                }
-            });
-            newInstance = newItem;
+            // Invoke callbacks now that view set is loaded
+            loadInstance(id, builder);
         }
         catch(Exception e)
         {

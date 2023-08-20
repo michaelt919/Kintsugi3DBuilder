@@ -39,7 +39,7 @@ public class SimpleSpecularBasis implements SpecularBasis
         this.greenBasis = greenBasis;
         this.blueBasis = blueBasis;
         this.basisCount = redBasis.length;
-        this.basisResolution = redBasis[0].length;
+        this.basisResolution = redBasis[0].length - 1;
     }
 
     @Override

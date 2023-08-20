@@ -12,12 +12,12 @@
 
 package kintsugi3d.builder.io;
 
+import kintsugi3d.builder.core.ViewSet;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
-import kintsugi3d.builder.core.ViewSet;
 
 /**
  * Abstracts the idea of loading a view set from a file as a factory object.
@@ -26,16 +26,55 @@ import kintsugi3d.builder.core.ViewSet;
 @FunctionalInterface
 public interface ViewSetReader
 {
+
     /**
-     * Loads a view set from an input stream of bytes
-     * @param stream The input stream
+     * Loads a view set from an input file.
+     * The root directory and the supporting files directory will be set as specified.
+     * The supporting files directory may be overridden by a directory specified in the file.
+     * @param stream The file to load
+     * @param root
+     * @param supportingFilesDirectory
      * @return The view set
+     * @throws IOException If I/O errors occur while reading the file.
      */
-    ViewSet readFromStream(InputStream stream, File root) throws Exception;
+    ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory) throws Exception;
+
+    /**
+     * Loads a view set from an input file.
+     * By default, the view set's root directory as well as the supporting files directory will be set to the specified root.
+     * The supporting files directory may be overridden by a directory specified in the file.
+     * @param stream
+     * @param root
+     * @return The view set
+     * @throws IOException If I/O errors occur while reading the file.
+     */
+    default ViewSet readFromStream(InputStream stream, File root) throws Exception
+    {
+        // Use root directory as supporting files directory
+        return readFromStream(stream, root, root);
+    }
 
     /**
      * Loads a view set from an input file.
      * By default, the view set's root directory will be set to the parent directory of the specified file.
+     * The supporting files directory will be set as specified by default but may be overridden by a directory specified in the file.
+     * @param file The file to load
+     * @param supportingFilesDirectory
+     * @return The view set
+     * @throws IOException If I/O errors occur while reading the file.
+     */
+    default ViewSet readFromFile(File file, File supportingFilesDirectory) throws Exception
+    {
+        try (InputStream stream = new FileInputStream(file))
+        {
+            return readFromStream(stream, file.getParentFile(), supportingFilesDirectory);
+        }
+    }
+
+    /**
+     * Loads a view set from an input file.
+     * By default, the view set's root directory and supporting files direcotry will be set to the parent directory of the specified file.
+     * The supporting files directory may be overridden by a directory specified in the file.
      * @param file The file to load
      * @return The view set
      * @throws IOException If I/O errors occur while reading the file.

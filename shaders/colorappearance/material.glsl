@@ -117,7 +117,7 @@ Material getMaterial()
 #endif
 
 #if SPECULAR_TEXTURE_ENABLED
-    m.specularColor = max(vec3(0.04), pow(texture(specularMap, texCoords).rgb, vec3(gamma)));
+    m.specularColor = pow(texture(specularMap, texCoords).rgb, vec3(gamma));
 #else
     m.specularColor = DEFAULT_SPECULAR_COLOR;
 #endif

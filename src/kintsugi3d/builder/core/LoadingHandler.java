@@ -12,19 +12,21 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.util.AbstractImage;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
-
-import kintsugi3d.util.AbstractImage;
 
 public interface LoadingHandler 
 {
     boolean isInstanceLoaded();
+    void addViewSetLoadCallback(Consumer<ViewSet> callback);
     ViewSet getLoadedViewSet();
-    void loadFromVSETFile(String id, File vsetFile, ReadonlyLoadOptionsModel loadOptions);
+    void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions);
     void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory,
         String primaryViewName, ReadonlyLoadOptionsModel loadOptions);
 

@@ -12,13 +12,14 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.util.AbstractImage;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
-
-import kintsugi3d.util.AbstractImage;
 
 public class LoadingModel 
 {
@@ -60,14 +61,30 @@ public class LoadingModel
     {
         return this.handler != null && this.handler.isInstanceLoaded();
     }
+
+    public void addViewSetLoadCallback(Consumer<ViewSet> callback)
+    {
+        this.handler.addViewSetLoadCallback(callback);
+    }
+
     public ViewSet getLoadedViewSet()
     {
         return isInstanceLoaded() ? this.handler.getLoadedViewSet() : null;
     }
 
+    /**
+     * Uses parent of VSET file as supporting files directory, by default
+     * @param id
+     * @param vsetFile
+     */
     public void loadFromVSETFile(String id, File vsetFile)
     {
-        this.handler.loadFromVSETFile(id, vsetFile, loadOptionsModel);
+        this.handler.loadFromVSETFile(id, vsetFile, vsetFile.getParentFile(), loadOptionsModel);
+    }
+
+    public void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory)
+    {
+        this.handler.loadFromVSETFile(id, vsetFile, supportingFilesDirectory, loadOptionsModel);
     }
 
     public void loadFromAgisoftFiles(String id, File xmlFile, File meshFile, File undistortedImageDirectory, String primaryViewName)

@@ -12,16 +12,6 @@
 
 package kintsugi3d.builder.resources.ibr;
 
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Objects;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
-import javax.imageio.ImageIO;
-
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
@@ -44,6 +34,16 @@ import kintsugi3d.util.ImageHelper;
 import kintsugi3d.util.ImageUndistorter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Objects;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 /**
  * A class that encapsulates all of the GPU resources like vertex buffers, uniform buffers, and textures for a given
@@ -143,9 +143,9 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
-        public Builder<ContextType> loadVSETFile(File vsetFile) throws Exception
+        public Builder<ContextType> loadVSETFile(File vsetFile, File supportingFilesDirectory) throws Exception
         {
-            this.viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile);
+            this.viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile, supportingFilesDirectory);
             this.geometry = VertexGeometry.createFromOBJFile(this.viewSet.getGeometryFile());
 
             if (this.loadOptions != null)
@@ -176,6 +176,11 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             }
 
             return this;
+        }
+
+        public ViewSet getViewSet()
+        {
+            return viewSet;
         }
 
         public Builder<ContextType> useExistingViewSet(ViewSet existingViewSet)
@@ -217,7 +222,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
             if (imageDirectoryOverride != null)
             {
-                viewSet.setRelativeFullResImagePathName(viewSet.getRootDirectory().toPath().relativize(imageDirectoryOverride.toPath()).toString());
+                viewSet.setFullResImageDirectory(imageDirectoryOverride);
             }
 
             if (primaryViewName != null)
@@ -227,7 +232,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
             if (geometry != null)
             {
-                viewSet.setGeometryFileName(viewSet.getRootDirectory().toPath().relativize(geometry.getFilename().toPath()).toString());
+                viewSet.setGeometryFile(geometry.getFilename());
             }
             else if (viewSet.getGeometryFile() != null)
             {
@@ -533,7 +538,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
      *     <li>NORMAL_TEXTURE_ENABLED</li>
      * </ul>
      *
-     * @param renderingMode The rendering mode to use, which may change some of the preprocessor defines.
      * @return A program builder with all of the above preprocessor defines specified, ready to have the
      * vertex and fragment shaders added as well as any additional application-specific preprocessor definitions.
      */

@@ -12,19 +12,6 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar;
 
-import java.awt.*;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Scanner;
-import java.util.function.Predicate;
-
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -48,13 +35,11 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.util.StringConverter;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.WindowSynchronization;
-import kintsugi3d.builder.core.IBRRequestUI;
-import kintsugi3d.builder.core.Kintsugi3DBuilderState;
-import kintsugi3d.builder.core.LoadingModel;
-import kintsugi3d.builder.core.LoadingMonitor;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.controllers.ProjectLoadHelper;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
 import kintsugi3d.gl.core.Context;
@@ -64,6 +49,20 @@ import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.Scanner;
+import java.util.function.Predicate;
 
 public class MenubarController
 {
@@ -415,7 +414,8 @@ public class MenubarController
                 internalModels.getLoadOptionsModel().compression);
     }
 
-    private void bindSlidersToTxtFields() {
+    private void bindSlidersToTxtFields()
+    {
         //TODO: BIND INTENSITY SLIDERS TO TEXT FIELDS HERE
     }
 
@@ -434,11 +434,31 @@ public class MenubarController
             try
             {
                 LoaderController loaderController = makeWindow("Load Files", loaderWindowOpen, 750, 330, "fxml/menubar/Loader.fxml");
-                loaderController.setCallback(() ->
+                loaderController.setLoadStartCallback(() ->
                 {
-                    this.file_closeProject();
+                    projectFile = null;
+                    vsetFile = null;
+
+                    MultithreadModels.getInstance().getLoadingModel().unload();
                     projectLoaded = true;
                 });
+                loaderController.setViewSetCallback(viewSet ->
+                {
+                    // Force user to save the project before proceeding, so that they have a place to save the results
+                    file_saveProjectAs();
+
+                    if (Objects.equals(vsetFile, projectFile)) // Saved as a VSET
+                    {
+                        File filesDirectory = ViewSet.getDefaultSupportingFilesDirectory(projectFile);
+                        filesDirectory.mkdirs();
+
+                        viewSet.setRelativeSupportingFilesPathName(filesDirectory.getName());
+                    }
+                    else // Saved as a Kintsugi 3D project
+                    {
+                        viewSet.setRelativeSupportingFilesPathName("");
+                    }
+                }); // Force user to save the project after creating
             }
             catch (Exception e)
             {
@@ -476,36 +496,7 @@ public class MenubarController
             File selectedFile = projectFileChooser.showOpenDialog(window);
             if (selectedFile != null)
             {
-                this.projectFile = selectedFile;
-                File newVsetFile = null;
-
-                if (projectFile.getName().endsWith(".vset"))
-                {
-                    newVsetFile = projectFile;
-                }
-                else
-                {
-                    try
-                    {
-                        newVsetFile = internalModels.getProjectModel().openProjectFile(projectFile);
-                    }
-                    catch (Exception e)
-                    {
-                        handleException("An error occurred opening project", e);
-                    }
-                }
-
-                if (newVsetFile != null)
-                {
-                    MultithreadModels.getInstance().getLoadingModel().unload();
-
-                    this.vsetFile = newVsetFile;
-                    File vsetFileRef = newVsetFile;
-
-                    projectLoaded = true;
-
-                    new Thread(() -> MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFileRef.getPath(), vsetFileRef)).start();
-                }
+                openProjectFromFile(selectedFile);
             }
         }
     }
@@ -525,9 +516,6 @@ public class MenubarController
 
                 if (projectFile.getName().endsWith(".vset"))
                 {
-                    File filesDirectory = new File(projectFile + ".files");
-                    filesDirectory.mkdirs();
-
                     loadingModel.getLoadedViewSet().setRootDirectory(projectFile.getParentFile());
                     loadingModel.saveToVSETFile(projectFile);
                     this.vsetFile = projectFile;
@@ -535,7 +523,7 @@ public class MenubarController
                 }
                 else
                 {
-                    File filesDirectory = new File(projectFile + ".files");
+                    File filesDirectory = ViewSet.getDefaultSupportingFilesDirectory(projectFile);
                     filesDirectory.mkdirs();
                     this.vsetFile = new File(filesDirectory, projectFile + ".vset");
                     loadingModel.getLoadedViewSet().setRootDirectory(filesDirectory);
@@ -878,16 +866,10 @@ public class MenubarController
 
         if (newVsetFile != null)
         {
-            MultithreadModels.getInstance().getLoadingModel().unload();
-
             this.vsetFile = newVsetFile;
-            File vsetFileRef = newVsetFile;
+            this.projectLoaded = true;
 
-            RecentProjects.updateRecentFiles(projectFile.getAbsolutePath());
-
-            projectLoaded = true;
-
-            new Thread(() -> MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFileRef.getPath(), vsetFileRef)).start();
+            ProjectLoadHelper.startLoad(projectFile, vsetFile);
         }
     }
 
