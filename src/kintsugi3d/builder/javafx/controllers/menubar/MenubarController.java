@@ -50,6 +50,7 @@ import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.IBRRequestUI;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
+import kintsugi3d.builder.core.LoadingModel;
 import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.javafx.InternalModels;
@@ -520,16 +521,25 @@ public class MenubarController
         {
             try
             {
+                LoadingModel loadingModel = MultithreadModels.getInstance().getLoadingModel();
+
                 if (projectFile.getName().endsWith(".vset"))
                 {
-                    MultithreadModels.getInstance().getLoadingModel().saveToVSETFile(projectFile);
+                    File filesDirectory = new File(projectFile + ".files");
+                    filesDirectory.mkdirs();
+
+                    loadingModel.getLoadedViewSet().setRootDirectory(projectFile.getParentFile());
+                    loadingModel.saveToVSETFile(projectFile);
                     this.vsetFile = projectFile;
                     this.projectFile = null;
                 }
                 else
                 {
-                    this.vsetFile = new File(projectFile + ".vset");
-                    MultithreadModels.getInstance().getLoadingModel().saveToVSETFile(vsetFile);
+                    File filesDirectory = new File(projectFile + ".files");
+                    filesDirectory.mkdirs();
+                    this.vsetFile = new File(filesDirectory, projectFile + ".vset");
+                    loadingModel.getLoadedViewSet().setRootDirectory(filesDirectory);
+                    loadingModel.saveToVSETFile(vsetFile);
                     internalModels.getProjectModel().saveProjectFile(projectFile, vsetFile);
                 }
 

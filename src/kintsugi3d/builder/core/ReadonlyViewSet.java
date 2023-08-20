@@ -12,14 +12,14 @@
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.UUID;
+
+import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
 
 public interface ReadonlyViewSet
 {
@@ -82,6 +82,18 @@ public interface ReadonlyViewSet
      * @return imageFilePath The image file path.
      */
     String getRelativeFullResImagePathName();
+
+    /**
+     * Gets the file path of the texture fit results associated with this view set.
+     * @return The relative file path of the texture fit results.
+     */
+    File getTextureFitFilePath();
+
+    /**
+     * Gets the file path of the texture fit results associated with this view set, relative to the root directory.
+     * @return The relative file path of the texture fit results.
+     */
+    String getRelativeTextureFitPathName();
 
     /**
      * Gets the image file path for downscaled "preview" images for real-time rendering

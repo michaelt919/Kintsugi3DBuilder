@@ -12,9 +12,12 @@
 
 package kintsugi3d.builder.io;
 
-import kintsugi3d.builder.core.ViewSet;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
-import java.io.*;
+import kintsugi3d.builder.core.ViewSet;
 
 /**
  * Abstracts the idea of loading a view set from a file as a factory object.
@@ -41,8 +44,7 @@ public interface ViewSetReader
     {
         try (InputStream stream = new FileInputStream(file))
         {
-            ViewSet result = readFromStream(stream, file.getParentFile());
-            return result;
+            return readFromStream(stream, file.getParentFile());
         }
     }
 }

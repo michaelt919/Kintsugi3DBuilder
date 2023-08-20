@@ -16,12 +16,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
-import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
+import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.builder.core.TextureFitSettings;
 
 public final class AlbedoORMOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -66,65 +65,36 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         drawable = context.createDrawable(estimationProgram);
         drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
         drawable.addVertexBuffer("position", rect);
-
-        estimationProgram.setUniform("gamma", settings.gamma);
     }
 
     public static <ContextType extends Context<ContextType>> AlbedoORMOptimization<ContextType> loadFromPriorSolution(
-        ContextType context, TextureFitSettings textureFitSettings, File priorSolutionDirectory) throws IOException
+        ContextType context, File priorSolutionDirectory) throws IOException
     {
-        return new AlbedoORMOptimization<>(context, textureFitSettings, priorSolutionDirectory);
+        return new AlbedoORMOptimization<>(context, priorSolutionDirectory);
     }
 
-    private AlbedoORMOptimization(ContextType context, TextureFitSettings settings, File priorSolutionDirectory)
+    private AlbedoORMOptimization(ContextType context, File priorSolutionDirectory)
         throws IOException
     {
-        FramebufferObjectBuilder<ContextType> fboBuilder = context.buildFramebufferObject(settings.width, settings.height);
+        Texture2D<ContextType> albedoMap =
+            context.getTextureFactory()
+                .build2DColorTextureFromFile(new File(priorSolutionDirectory, "albedo.png"), true)
+                .setLinearFilteringEnabled(true).createTexture();
 
-        File albedoMapFile = new File(priorSolutionDirectory, "albedo.png");
-        boolean hasAlbedo = albedoMapFile.exists();
-        if (hasAlbedo)
-        {
-            fboBuilder.addEmptyColorAttachment();
-        }
-        else
-        {
-            fboBuilder.addColorAttachment(ColorFormat.RGBA8);
-        }
-
+        // Load ORM map and use it as occlusion map (to preserve the occlusion stored in the red channel of ORM)
         File ormMapFile = new File(priorSolutionDirectory, "orm.png");
-        boolean hasORM = ormMapFile.exists();
-        if (hasORM)
-        {
-            fboBuilder.addEmptyColorAttachment();
-        }
-        else
-        {
-            fboBuilder.addColorAttachment(ColorFormat.RGBA8);
-        }
+        this.occlusionMap = ormMapFile.exists() ?
+            context.getTextureFactory().build2DColorTextureFromFile(ormMapFile, true)
+                .setLinearFilteringEnabled(true).createTexture()
+            : null;
 
-        framebuffer = fboBuilder.createFramebufferObject();
-
-        if (hasAlbedo)
-        {
-            framebuffer.setColorAttachment(0,
-                context.getTextureFactory().build2DColorTextureFromFile(albedoMapFile, true)
-                    .setLinearFilteringEnabled(true).createTexture());
-        }
-
-        if (hasORM)
-        {
-            framebuffer.setColorAttachment(1,
-                context.getTextureFactory().build2DColorTextureFromFile(ormMapFile, true)
-                    .setLinearFilteringEnabled(true).createTexture());
-
-            // Copy ORM map and use it as occlusion map (to preserve the occlusion stored in the red channel of ORM)
-            this.occlusionMap = framebuffer.getColorAttachmentTexture(1).copy();
-        }
-        else
-        {
-            this.occlusionMap = null;
-        }
+        framebuffer =
+            context.buildFramebufferObject(albedoMap.getWidth(), albedoMap.getHeight())
+                .addEmptyColorAttachment() // Will copy in albedo map after FBO is created
+                .addColorAttachment(ColorFormat.RGBA8) // Will blit in ORM map after FBO is created
+                .createFramebufferObject();
+        framebuffer.setColorAttachment(0, albedoMap);
+        framebuffer.getColorAttachmentTexture(1).blitScaled(occlusionMap, true);
 
         estimationProgram = createProgram(context, occlusionMap != null);
 
@@ -133,12 +103,12 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         drawable = context.createDrawable(estimationProgram);
         drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
         drawable.addVertexBuffer("position", rect);
-
-        estimationProgram.setUniform("gamma", settings.gamma);
     }
 
-    public void execute(SpecularMaterialResources<ContextType> specularFit)
+    public void execute(SpecularMaterialResources<ContextType> specularFit, float gamma)
     {
+        estimationProgram.setUniform("gamma", gamma);
+
         // Set up shader program
         estimationProgram.setTexture("diffuseEstimate", specularFit.getDiffuseMap());
         estimationProgram.setTexture("specularEstimate", specularFit.getSpecularReflectivityMap());

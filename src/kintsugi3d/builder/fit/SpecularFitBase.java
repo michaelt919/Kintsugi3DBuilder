@@ -16,18 +16,17 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimization;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimizationSimple;
-import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResourcesBase;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Texture2D;
-import kintsugi3d.builder.core.TextureFitSettings;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
     extends SpecularMaterialResourcesBase<ContextType>
@@ -55,7 +54,7 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
         this.basisResources = basisResources;
         this.basisResourcesOwned = basisResourcesOwned;
         this.basisWeightResources = new BasisWeightResources<>(basisResources.getContext(),
-            textureFitSettings.width, textureFitSettings.height, basisResources.getSpecularBasisSettings().getBasisCount());
+            textureFitSettings.width, textureFitSettings.height, basisResources.getBasisCount());
 
         // Specular roughness / reflectivity module that manages its own resources
         this.roughnessOptimization =
@@ -74,7 +73,33 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
     protected SpecularFitBase(ContextType context, TextureFitSettings textureFitSettings,
         SpecularBasisSettings specularBasisSettings) throws FileNotFoundException
     {
-        this(new BasisResources<>(context, specularBasisSettings), true, textureFitSettings);
+        this(new BasisResources<>(context, specularBasisSettings.getBasisCount(), specularBasisSettings.getBasisResolution()),
+            true, textureFitSettings);
+    }
+
+    /**
+     * Basis resources and basis weight resources will be managed / owned by this instance
+     * Roughness and reflectivity textures will be loaded from prior solution
+     * @return
+     */
+    protected SpecularFitBase(ContextType context, File priorSolutionDirectory) throws IOException
+    {
+        // Textures calculated on CPU and passed to GPU (not framebuffers): basis functions & weights
+        this.basisResources = BasisResources.loadFromPriorSolution(context, priorSolutionDirectory);
+        this.basisResourcesOwned = true;
+
+        // Specular roughness / reflectivity module that manages its own resources
+        this.roughnessOptimization =
+            new RoughnessOptimizationSimple<>(basisResources, priorSolutionDirectory);
+        //new RoughnessOptimizationIterative<>(context, basisResources, this::getDiffuseMap, settings);
+        this.roughnessOptimization.clear();
+
+        this.basisWeightResources = BasisWeightResources.loadFromPriorSolution(
+            context, priorSolutionDirectory,
+            roughnessOptimization.getRoughnessTexture().getWidth(), roughnessOptimization.getRoughnessTexture().getHeight(),
+            basisResources.getBasisCount());
+
+        this.roughnessOptimization.setInputWeights(basisWeightResources);
     }
 
     @Override

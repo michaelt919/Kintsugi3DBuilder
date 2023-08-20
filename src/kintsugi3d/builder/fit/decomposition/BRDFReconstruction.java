@@ -13,16 +13,16 @@
 package kintsugi3d.builder.fit.decomposition;
 
 import kintsugi3d.builder.fit.ReflectanceData;
+import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.builder.resources.ibr.stream.GraphicsStream;
+import kintsugi3d.gl.vecmath.DoubleVector3;
+import kintsugi3d.optimization.MatrixSystem;
+import kintsugi3d.optimization.function.BasisFunctions;
+import kintsugi3d.optimization.function.OptimizedFunctions;
+import kintsugi3d.util.Counter;
 import org.ejml.data.DMatrixRMaj;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.vecmath.DoubleVector3;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-import kintsugi3d.builder.resources.ibr.stream.GraphicsStream;
-import kintsugi3d.optimization.function.BasisFunctions;
-import kintsugi3d.optimization.MatrixSystem;
-import kintsugi3d.optimization.function.OptimizedFunctions;
-import kintsugi3d.util.Counter;
 
 public class BRDFReconstruction
 {
@@ -36,7 +36,7 @@ public class BRDFReconstruction
     {
         this.stepBasis = stepBasis;
         this.settings = settings;
-        matrixSize = this.settings.getBasisCount() * (this.settings.getMicrofacetDistributionResolution() + 1);
+        matrixSize = this.settings.getBasisCount() * (this.settings.getBasisResolution() + 1);
     }
 
     public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularDecompositionFromScratch solution)
@@ -151,7 +151,7 @@ public class BRDFReconstruction
             sb.append("RHS, red for BRDF #").append(b).append(": ");
 
             sb.append(system.rhs[0].get(b));
-            for (int m = 0; m < settings.getMicrofacetDistributionResolution(); m++)
+            for (int m = 0; m < settings.getBasisResolution(); m++)
             {
                 sb.append(", ");
                 sb.append(system.rhs[0].get((m + 1) * settings.getBasisCount() + b));
@@ -161,7 +161,7 @@ public class BRDFReconstruction
             sb.append("RHS, green for BRDF #").append(b).append(": ");
 
             sb.append(system.rhs[1].get(b));
-            for (int m = 0; m < settings.getMicrofacetDistributionResolution(); m++)
+            for (int m = 0; m < settings.getBasisResolution(); m++)
             {
                 sb.append(", ");
                 sb.append(system.rhs[1].get((m + 1) * settings.getBasisCount() + b));
@@ -171,7 +171,7 @@ public class BRDFReconstruction
             sb.append("RHS, blue for BRDF #").append(b).append(": ");
 
             sb.append(system.rhs[2].get(b));
-            for (int m = 0; m < settings.getMicrofacetDistributionResolution(); m++)
+            for (int m = 0; m < settings.getBasisResolution(); m++)
             {
                 sb.append(", ");
                 sb.append(system.rhs[2].get((m + 1) * settings.getBasisCount() + b));

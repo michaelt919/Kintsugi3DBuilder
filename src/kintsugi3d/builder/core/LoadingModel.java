@@ -56,6 +56,15 @@ public class LoadingModel
         this.loadOptionsModel = loadOptionsModel;
     }
 
+    public boolean isInstanceLoaded()
+    {
+        return this.handler != null && this.handler.isInstanceLoaded();
+    }
+    public ViewSet getLoadedViewSet()
+    {
+        return isInstanceLoaded() ? this.handler.getLoadedViewSet() : null;
+    }
+
     public void loadFromVSETFile(String id, File vsetFile)
     {
         this.handler.loadFromVSETFile(id, vsetFile, loadOptionsModel);

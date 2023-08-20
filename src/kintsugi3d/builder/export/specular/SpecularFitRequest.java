@@ -17,27 +17,24 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import kintsugi3d.builder.fit.debug.FinalReconstruction;
-import kintsugi3d.builder.fit.SpecularFitProgramFactory;
+import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.export.specular.gltf.SpecularFitGltfExporter;
 import kintsugi3d.builder.fit.SpecularFitProcess;
+import kintsugi3d.builder.fit.SpecularFitProgramFactory;
+import kintsugi3d.builder.fit.debug.FinalReconstruction;
+import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
+import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import kintsugi3d.builder.state.ReadonlyObjectModel;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.export.specular.gltf.SpecularFitGltfExporter;
-import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
-import kintsugi3d.builder.resources.ibr.IBRResources;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
-import kintsugi3d.gl.interactive.ObservableGraphicsRequest;
-import kintsugi3d.builder.state.ReadonlyObjectModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class SpecularFitRequest implements ObservableIBRRequest, ObservableGraphicsRequest
+public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGraphicsRequest
 {
     private static final Logger log = LoggerFactory.getLogger(SpecularFitRequest.class);
     private final SpecularFitRequestParams settings;
@@ -51,9 +48,12 @@ public class SpecularFitRequest implements ObservableIBRRequest, ObservableGraph
     public static SpecularFitRequest create(
             Kintsugi3DBuilderState modelAccess, String... args)
     {
-        return new SpecularFitRequest(new SpecularFitRequestParams(
-            new TextureFitSettings(2048, 2048, modelAccess.getSettingsModel().getFloat("gamma")),
-            modelAccess.getSettingsModel(), new File(args[2])), modelAccess);
+        SpecularFitRequestParams params = new SpecularFitRequestParams(
+            new TextureFitSettings(2048, 2048),
+            modelAccess.getSettingsModel());
+        params.setGamma(modelAccess.getSettingsModel().getFloat("gamma"));
+        params.setOutputDirectory(new File(args[2]));
+        return new SpecularFitRequest(params, modelAccess);
     }
 
     public SpecularFitRequest(SpecularFitRequestParams settings, Kintsugi3DBuilderState modelAccess)
@@ -61,51 +61,51 @@ public class SpecularFitRequest implements ObservableIBRRequest, ObservableGraph
         this.settings = settings;
     }
 
-    /**
-     * This version loads a prior solution from file and thus doesn't require IBR resources to be loaded.
-     * @param context The graphics context to be used.
-     * @param callback A callback that can be fired to update the loading bar.
-     *                 If this is unused, an "infinite loading" indicator will be displayed instead.
-     */
-    @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(ContextType context, LoadingMonitor callback)
-    {
-        try
-        {
-            // Perform the specular fit using prior basis solution.
-            SpecularMaterialResources<ContextType> specularFit;
-
-            // Assume fitting from prior solution
-            log.info("No Kintsugi 3D Builder project loaded; loading prior solution");
-            specularFit = new SpecularFitProcess(settings).loadPriorSolution(context, settings.getPriorSolutionDirectory());
-
-            // Load just geometry, tonemapping, settings.
-            SimpleLoadOptionsModel loadOptions = new SimpleLoadOptionsModel();
-            loadOptions.requestColorImages(false);
-            loadOptions.requestDepthImages(false);
-
-            try(IBRResources<ContextType> resources = IBRResourcesImageSpace.getBuilderForContext(context)
-                .setLoadOptions(loadOptions)
-                .useExistingViewSet(settings.getReconstructionSettings().getReconstructionViewSet().copy())
-                .create())
-            {
-                if (settings.getExportSettings().isGlTFEnabled())
-                {
-                    saveGlTF(resources.getGeometry(), resources.getViewSet(), null);
-                }
-
-                // Reconstruct if requested
-                performReconstruction(resources, specularFit);
-
-                // Close specular fit immediately when this is just an export operation.
-                specularFit.close();
-            }
-        }
-        catch(IOException e)
-        {
-            log.error("Error executing specular fit request:", e);
-        }
-    }
+//    /**
+//     * This version loads a prior solution from file and thus doesn't require IBR resources to be loaded.
+//     * @param context The graphics context to be used.
+//     * @param callback A callback that can be fired to update the loading bar.
+//     *                 If this is unused, an "infinite loading" indicator will be displayed instead.
+//     */
+//    @Override
+//    public <ContextType extends Context<ContextType>> void executeRequest(ContextType context, LoadingMonitor callback)
+//    {
+//        try
+//        {
+//            // Perform the specular fit using prior basis solution.
+//            SpecularMaterialResources<ContextType> specularFit;
+//
+//            // Assume fitting from prior solution
+//            log.info("No Kintsugi 3D Builder project loaded; loading prior solution");
+//            specularFit = new SpecularFitProcess(settings).loadPriorSolution(context, settings.getPriorSolutionDirectory());
+//
+//            // Load just geometry, tonemapping, settings.
+//            SimpleLoadOptionsModel loadOptions = new SimpleLoadOptionsModel();
+//            loadOptions.requestColorImages(false);
+//            loadOptions.requestDepthImages(false);
+//
+//            try(IBRResources<ContextType> resources = IBRResourcesImageSpace.getBuilderForContext(context)
+//                .setLoadOptions(loadOptions)
+//                .useExistingViewSet(settings.getReconstructionSettings().getReconstructionViewSet().copy())
+//                .create())
+//            {
+//                if (settings.getExportSettings().isGlTFEnabled())
+//                {
+//                    saveGlTF(resources.getGeometry(), resources.getViewSet(), null);
+//                }
+//
+//                // Reconstruct if requested
+//                performReconstruction(resources, specularFit);
+//
+//                // Close specular fit immediately when this is just an export operation.
+//                specularFit.close();
+//            }
+//        }
+//        catch(IOException e)
+//        {
+//            log.error("Error executing specular fit request:", e);
+//        }
+//    }
 
     /**
      * This version optimizes from scratch and requires IBR resources.
@@ -120,6 +120,9 @@ public class SpecularFitRequest implements ObservableIBRRequest, ObservableGraph
     {
         try
         {
+            // Set the output directory based on the view set's texture fit file path
+            settings.setOutputDirectory(renderable.getActiveViewSet().getTextureFitFilePath());
+
             // Perform the specular fit
             new SpecularFitProcess(settings).optimizeFit(renderable.getIBRResources());
 
@@ -138,36 +141,39 @@ public class SpecularFitRequest implements ObservableIBRRequest, ObservableGraph
         ReadonlyIBRResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit)
         throws FileNotFoundException
     {
-        // Create output directory
-        settings.getOutputDirectory().mkdirs();
-
-        if (resources.getViewSet() != null)
+        if (settings.getOutputDirectory() != null)
         {
-            // Reconstruct images both from basis functions and from fitted roughness
-            SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(
-               settings.getIbrSettings(), settings.getSpecularBasisSettings());
-            FinalReconstruction<ContextType> reconstruction =
-                new FinalReconstruction<>(resources, settings.getTextureFitSettings(), settings.getReconstructionSettings());
+            // Create output directory
+            settings.getOutputDirectory().mkdirs();
 
-            log.info("Reconstructing ground truth images from basis representation:");
-            double reconstructionRMSE =
-                reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(resources, programFactory),
-                    settings.getReconstructionSettings().shouldReconstructAll(),
-                    "reconstruction", "ground-truth", settings.getOutputDirectory());
-
-            log.info("Reconstructing ground truth images from fitted roughness / specular color:");
-            double fittedRMSE =
-                reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(resources, programFactory),
-                    settings.getReconstructionSettings().shouldReconstructAll(),
-                    "fitted", null, settings.getOutputDirectory());
-
-            if (!settings.getReconstructionSettings().shouldReconstructAll()) // Write to just one RMSE file if only doing a single image per reconstruction method
+            if (resources.getViewSet() != null)
             {
-                try (PrintStream rmseOut = new PrintStream(new File(settings.getOutputDirectory(), "rmse.txt")))
-                // Text file containing error information
+                // Reconstruct images both from basis functions and from fitted roughness
+                SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(
+                    settings.getIbrSettings(), settings.getSpecularBasisSettings());
+                FinalReconstruction<ContextType> reconstruction =
+                    new FinalReconstruction<>(resources, settings.getTextureFitSettings(), settings.getReconstructionSettings());
+
+                log.info("Reconstructing ground truth images from basis representation:");
+                double reconstructionRMSE =
+                    reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(resources, programFactory),
+                        settings.getReconstructionSettings().shouldReconstructAll(),
+                        "reconstruction", "ground-truth", settings.getOutputDirectory());
+
+                log.info("Reconstructing ground truth images from fitted roughness / specular color:");
+                double fittedRMSE =
+                    reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(resources, programFactory),
+                        settings.getReconstructionSettings().shouldReconstructAll(),
+                        "fitted", null, settings.getOutputDirectory());
+
+                if (!settings.getReconstructionSettings().shouldReconstructAll()) // Write to just one RMSE file if only doing a single image per reconstruction method
                 {
-                    rmseOut.println("reconstruction, " + reconstructionRMSE);
-                    rmseOut.println("fitted, " + fittedRMSE);
+                    try (PrintStream rmseOut = new PrintStream(new File(settings.getOutputDirectory(), "rmse.txt")))
+                    // Text file containing error information
+                    {
+                        rmseOut.println("reconstruction, " + reconstructionRMSE);
+                        rmseOut.println("fitted, " + fittedRMSE);
+                    }
                 }
             }
         }
@@ -193,40 +199,43 @@ public class SpecularFitRequest implements ObservableIBRRequest, ObservableGraph
 
     public void saveGlTF(ReadonlyVertexGeometry geometry, ReadonlyViewSet viewSet, ReadonlyObjectModel objectModel)
     {
-        if (geometry == null)
+        if (settings.getOutputDirectory() != null)
         {
-            throw new IllegalArgumentException("Geometry is null; cannot export GLTF.");
-        }
-
-        log.info("Starting glTF export...");
-
-        try
-        {
-            Matrix4 rotation = viewSet == null ? Matrix4.IDENTITY : viewSet.getCameraPose(viewSet.getPrimaryViewIndex());
-            Vector3 translation = rotation.getUpperLeft3x3().times(geometry.getCentroid().times(-1.0f));
-            Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2), translation.asVector4(1.0f));
-
-            transform = objectModel == null ? Matrix4.IDENTITY : objectModel.getTransformationMatrix().times(transform);
-
-            SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(geometry, transform);
-            exporter.setDefaultNames();
-            exporter.addWeightImages(settings.getSpecularBasisSettings().getBasisCount(), settings.getExportSettings().isCombineWeights());
-
-            // Deal with LODs if enabled
-            if (settings.getExportSettings().isGenerateLowResTextures())
+            if (geometry == null)
             {
-                exporter.addAllDefaultLods(settings.getTextureFitSettings().height,
-                    settings.getExportSettings().getMinimumTextureResolution());
-                exporter.addWeightImageLods(settings.getSpecularBasisSettings().getBasisCount(),
-                    settings.getTextureFitSettings().height, settings.getExportSettings().getMinimumTextureResolution());
+                throw new IllegalArgumentException("Geometry is null; cannot export GLTF.");
             }
 
-            exporter.write(new File(settings.getOutputDirectory(), "model.glb"));
-            log.info("DONE!");
-        }
-        catch (IOException e)
-        {
-            log.error("Error occurred during glTF export:", e);
+            log.info("Starting glTF export...");
+
+            try
+            {
+                Matrix4 rotation = viewSet == null ? Matrix4.IDENTITY : viewSet.getCameraPose(viewSet.getPrimaryViewIndex());
+                Vector3 translation = rotation.getUpperLeft3x3().times(geometry.getCentroid().times(-1.0f));
+                Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2), translation.asVector4(1.0f));
+
+                transform = objectModel == null ? Matrix4.IDENTITY : objectModel.getTransformationMatrix().times(transform);
+
+                SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(geometry, transform);
+                exporter.setDefaultNames();
+                exporter.addWeightImages(settings.getSpecularBasisSettings().getBasisCount(), settings.getExportSettings().isCombineWeights());
+
+                // Deal with LODs if enabled
+                if (settings.getExportSettings().isGenerateLowResTextures())
+                {
+                    exporter.addAllDefaultLods(settings.getTextureFitSettings().height,
+                        settings.getExportSettings().getMinimumTextureResolution());
+                    exporter.addWeightImageLods(settings.getSpecularBasisSettings().getBasisCount(),
+                        settings.getTextureFitSettings().height, settings.getExportSettings().getMinimumTextureResolution());
+                }
+
+                exporter.write(new File(settings.getOutputDirectory(), "model.glb"));
+                log.info("DONE!");
+            }
+            catch (IOException e)
+            {
+                log.error("Error occurred during glTF export:", e);
+            }
         }
     }
 }

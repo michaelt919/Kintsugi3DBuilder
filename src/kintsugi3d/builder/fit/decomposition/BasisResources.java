@@ -12,30 +12,31 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
+import java.io.File;
+import java.io.IOException;
+
 import kintsugi3d.builder.export.specular.SpecularFitSerializer;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-
-import java.io.File;
-import java.io.IOException;
 
 public class BasisResources<ContextType extends Context<ContextType>> implements Resource, ContextBound<ContextType>
 {
     private final ContextType context;
     private final Texture2D<ContextType> basisMaps;
     private final UniformBuffer<ContextType> diffuseUniformBuffer;
-    private final SpecularBasisSettings specularBasisSettings;
+    private final int basisCount;
+    private final int basisResolution;
 
-    public BasisResources(ContextType context, SpecularBasisSettings specularBasisSettings)
+    public BasisResources(ContextType context, int basisCount, int basisResolution)
     {
         this.context = context;
-        this.specularBasisSettings = specularBasisSettings;
+        this.basisCount = basisCount;
+        this.basisResolution = basisResolution;
 
         this.basisMaps = context.getTextureFactory().build1DColorTextureArray(
-                specularBasisSettings.getMicrofacetDistributionResolution() + 1, specularBasisSettings.getBasisCount())
+                basisResolution + 1, basisCount)
             .setInternalFormat(ColorFormat.RGB32F)
             .setLinearFilteringEnabled(true)
             .setMipmapsEnabled(false)
@@ -51,27 +52,32 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
         return context;
     }
 
-    public SpecularBasisSettings getSpecularBasisSettings()
+    public int getBasisCount()
     {
-        return specularBasisSettings;
+        return basisCount;
+    }
+
+    public int getBasisResolution()
+    {
+        return basisResolution;
     }
 
     public void updateFromSolution(SpecularDecomposition solution)
     {
         NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
         NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3,
-            specularBasisSettings.getBasisCount() * (specularBasisSettings.getMicrofacetDistributionResolution() + 1));
-        NativeVectorBuffer diffuseNativeBuffer = factory.createEmpty(NativeDataType.FLOAT, 4, specularBasisSettings.getBasisCount());
+            basisCount * (basisResolution + 1));
+        NativeVectorBuffer diffuseNativeBuffer = factory.createEmpty(NativeDataType.FLOAT, 4, basisCount);
 
-        for (int b = 0; b < specularBasisSettings.getBasisCount(); b++)
+        for (int b = 0; b < basisCount; b++)
         {
             // Copy basis functions by color channel into the basis map buffer that will eventually be sent to the GPU..
-            for (int m = 0; m <= specularBasisSettings.getMicrofacetDistributionResolution(); m++)
+            for (int m = 0; m <= basisResolution; m++)
             {
                 // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
-                basisMapBuffer.set(m + (specularBasisSettings.getMicrofacetDistributionResolution() + 1) * b, 0, solution.evaluateRed(b, m));
-                basisMapBuffer.set(m + (specularBasisSettings.getMicrofacetDistributionResolution() + 1) * b, 1, solution.evaluateGreen(b, m));
-                basisMapBuffer.set(m + (specularBasisSettings.getMicrofacetDistributionResolution() + 1) * b, 2, solution.evaluateBlue(b, m));
+                basisMapBuffer.set(m + (basisResolution + 1) * b, 0, solution.evaluateRed(b, m));
+                basisMapBuffer.set(m + (basisResolution + 1) * b, 1, solution.evaluateGreen(b, m));
+                basisMapBuffer.set(m + (basisResolution + 1) * b, 2, solution.evaluateBlue(b, m));
             }
 
             // Store each channel of the diffuse albedo in the local buffer.
@@ -94,32 +100,38 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
      * @param priorSolutionDirectory The directory from which to load a prior solution.
      * @throws IOException If a part of the solution cannot be loaded form file.
      */
-    public void loadFromPriorSolution(File priorSolutionDirectory) throws IOException
+    public static <ContextType extends Context<ContextType>> BasisResources<ContextType> loadFromPriorSolution(
+        ContextType context, File priorSolutionDirectory) throws IOException
     {
+        SpecularBasis basis = SpecularFitSerializer.deserializeBasisFunctions(priorSolutionDirectory);
+
         NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
 
         // Set up basis function buffer
         NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3,
-            specularBasisSettings.getBasisCount() * (specularBasisSettings.getMicrofacetDistributionResolution() + 1));
+            basis.getCount() * (basis.getResolution() + 1));
 
-        SpecularBasis basis = SpecularFitSerializer.deserializeBasisFunctions(priorSolutionDirectory);
 
-        for (int b = 0; b < specularBasisSettings.getBasisCount(); b++)
+        for (int b = 0; b < basis.getCount(); b++)
         {
             // Copy basis functions by color channel into the basis map buffer that will eventually be sent to the GPU..
-            for (int m = 0; m <= specularBasisSettings.getMicrofacetDistributionResolution(); m++)
+            for (int m = 0; m <= basis.getResolution(); m++)
             {
                 // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
-                basisMapBuffer.set(m + (specularBasisSettings.getMicrofacetDistributionResolution() + 1) * b, 0, basis.evaluateRed(b, m));
-                basisMapBuffer.set(m + (specularBasisSettings.getMicrofacetDistributionResolution() + 1) * b, 1, basis.evaluateGreen(b, m));
-                basisMapBuffer.set(m + (specularBasisSettings.getMicrofacetDistributionResolution() + 1) * b, 2, basis.evaluateBlue(b, m));
+                basisMapBuffer.set(m + (basis.getResolution() + 1) * b, 0, basis.evaluateRed(b, m));
+                basisMapBuffer.set(m + (basis.getResolution() + 1) * b, 1, basis.evaluateGreen(b, m));
+                basisMapBuffer.set(m + (basis.getResolution() + 1) * b, 2, basis.evaluateBlue(b, m));
             }
         }
 
+        BasisResources<ContextType> resources = new BasisResources<>(context, basis.getCount(), basis.getResolution());
+
         // Send the basis functions to the GPU.
-        basisMaps.load(basisMapBuffer);
+        resources.basisMaps.load(basisMapBuffer);
 
         // Skip diffuse basis colors -- we'll optimize a diffuse map separately, so it shouldn't matter if they're all black.
+
+        return resources;
     }
 
     public void useWithShaderProgram(Program<ContextType> program)

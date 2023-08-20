@@ -17,23 +17,26 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.builder.fit.debug.BasisImageCreator;
 import kintsugi3d.builder.fit.decomposition.*;
 import kintsugi3d.builder.fit.finalize.FinalDiffuseOptimization;
 import kintsugi3d.builder.fit.normal.NormalOptimization;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.builder.fit.settings.NormalOptimizationSettings;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.builder.resources.ibr.stream.GraphicsStream;
 import kintsugi3d.builder.resources.ibr.stream.GraphicsStreamResource;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.Drawable;
+import kintsugi3d.gl.core.Program;
+import kintsugi3d.gl.core.Texture2D;
 import kintsugi3d.optimization.ReadonlyErrorReport;
 import kintsugi3d.optimization.ShaderBasedErrorCalculator;
 import kintsugi3d.optimization.function.GeneralizedSmoothStepBasis;
 import kintsugi3d.util.ColorList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A class that bundles all of the GPU resources for representing a final specular fit solution.
@@ -47,6 +50,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
     private final ReadonlyIBRResources<ContextType> resources;
     private final TextureFitSettings textureFitSettings;
+    private final float gamma;
 
     private final SpecularBasisSettings specularBasisSettings;
 
@@ -58,7 +62,8 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
     private SpecularFitOptimizable(
         ReadonlyIBRResources<ContextType> resources, BasisResources<ContextType> basisResources, boolean basisResourcesOwned,
-        SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings textureFitSettings,
+        SpecularBasisSettings specularBasisSettings, SpecularFitProgramFactory<ContextType> programFactory,
+        TextureFitSettings textureFitSettings, float gamma,
         NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
         throws FileNotFoundException
     {
@@ -66,7 +71,8 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         this.context = resources.getContext();
         this.resources = resources;
         this.textureFitSettings = textureFitSettings;
-        this.specularBasisSettings = basisResources.getSpecularBasisSettings();
+        this.gamma = gamma;
+        this.specularBasisSettings = specularBasisSettings;
         this.setupShaderProgram = program -> programFactory.setupShaderProgram(resources, program);
 
         // Final diffuse estimation
@@ -92,12 +98,12 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
     public static <ContextType extends Context<ContextType>> SpecularFitOptimizable<ContextType> createNew(
         ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings textureFitSettings,
-        SpecularBasisSettings specularBasisSettings, NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
+        float gamma, SpecularBasisSettings specularBasisSettings, NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
         throws FileNotFoundException
     {
         return new SpecularFitOptimizable<>(resources,
-            new BasisResources<>(resources.getContext(), specularBasisSettings), true,
-            programFactory, textureFitSettings, normalOptimizationSettings, includeConstantTerm);
+            new BasisResources<>(resources.getContext(), specularBasisSettings.getBasisCount(), specularBasisSettings.getBasisResolution()),
+                true, specularBasisSettings, programFactory, textureFitSettings, gamma, normalOptimizationSettings, includeConstantTerm);
     }
 
     public ReadonlyIBRResources<ContextType> getResources()
@@ -187,7 +193,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
                     }
 
                     // write out diffuse texture for debugging
-                    specularDecomposition.saveDiffuseMap(textureFitSettings.gamma, debugDirectory);
+                    specularDecomposition.saveDiffuseMap(gamma, debugDirectory);
                 }
 
                 getBasisResources().updateFromSolution(specularDecomposition);
@@ -224,7 +230,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
 
         // Estimate specular roughness and reflectivity.
         // This can cause error to increase but it's unclear if that poses a problem for convergence.
-        getRoughnessOptimization().execute();
+        getRoughnessOptimization().execute(gamma);
 
         if (debugDirectory != null)
         {
@@ -260,9 +266,9 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         BRDFReconstruction brdfReconstruction = new BRDFReconstruction(
             specularBasisSettings,
             new GeneralizedSmoothStepBasis(
-                specularBasisSettings.getMicrofacetDistributionResolution(),
+                specularBasisSettings.getBasisResolution(),
                 specularBasisSettings.getMetallicity(),
-                (int) Math.round(specularBasisSettings.getSpecularSmoothness() * specularBasisSettings.getMicrofacetDistributionResolution()),
+                (int) Math.round(specularBasisSettings.getSpecularSmoothness() * specularBasisSettings.getBasisResolution()),
                 x -> 3 * x * x - 2 * x * x * x)
 //                new StepBasis(settings.microfacetDistributionResolution, settings.getMetallicity())
         );
@@ -314,8 +320,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
                 specularDecomposition.saveWeightMaps(debugDirectory);
 
                 // write out diffuse texture for debugging
-                specularDecomposition.saveDiffuseMap(
-                    textureFitSettings.gamma, debugDirectory);
+                specularDecomposition.saveDiffuseMap(gamma, debugDirectory);
             }
         }
     }

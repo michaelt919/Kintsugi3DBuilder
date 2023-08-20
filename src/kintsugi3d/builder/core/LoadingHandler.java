@@ -23,8 +23,9 @@ import kintsugi3d.util.AbstractImage;
 public interface LoadingHandler 
 {
     boolean isInstanceLoaded();
+    ViewSet getLoadedViewSet();
     void loadFromVSETFile(String id, File vsetFile, ReadonlyLoadOptionsModel loadOptions);
-    void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory,
+    void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory,
         String primaryViewName, ReadonlyLoadOptionsModel loadOptions);
 
     void requestFragmentShader(File shaderFile);

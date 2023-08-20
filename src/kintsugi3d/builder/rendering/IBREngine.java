@@ -351,7 +351,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     }
 
     @Override
-    public ReadonlyViewSet getActiveViewSet()
+    public ViewSet getActiveViewSet()
     {
         return this.resources.getViewSet();
     }

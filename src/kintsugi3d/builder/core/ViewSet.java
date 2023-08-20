@@ -14,13 +14,10 @@ package kintsugi3d.builder.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
@@ -28,6 +25,8 @@ import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.ImageFinder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A class representing a collection of photographs, or views.
@@ -113,6 +112,11 @@ public final class ViewSet implements ReadonlyViewSet
      * The directory to be used for saving preview images.
      */
     private File previewImageDirectory;
+
+    /**
+     * The directory where the results of the texture / specular fitting are stored
+     */
+    private File textureFitDirectory;
 
     /**
      * The mesh file.
@@ -369,6 +373,7 @@ public final class ViewSet implements ReadonlyViewSet
         result.rootDirectory = this.rootDirectory;
         result.fullResImageDirectory = this.fullResImageDirectory;
         result.previewImageDirectory = this.previewImageDirectory;
+        result.textureFitDirectory = this.textureFitDirectory;
         result.geometryFile = this.geometryFile;
         result.infiniteLightSources = this.infiniteLightSources;
         result.recommendedNearPlane = this.recommendedNearPlane;
@@ -403,6 +408,7 @@ public final class ViewSet implements ReadonlyViewSet
         result.rootDirectory = this.rootDirectory;
         result.fullResImageDirectory = this.fullResImageDirectory;
         result.previewImageDirectory = this.previewImageDirectory;
+        result.textureFitDirectory = this.textureFitDirectory;
         result.geometryFile = this.geometryFile;
         result.infiniteLightSources = this.infiniteLightSources;
         result.recommendedNearPlane = this.recommendedNearPlane;
@@ -468,15 +474,6 @@ public final class ViewSet implements ReadonlyViewSet
         this.rootDirectory = rootDirectory;
     }
 
-    /**
-     * Changes the root directory while adjusting other file paths to still reference the original files.
-     * @param newRootDirectory The new root directory.
-     */
-    public void moveRootDirectory(Path newRootDirectory)
-    {
-        this.rootDirectory = newRootDirectory.toFile();
-    }
-
     @Override
     public String getGeometryFileName()
     {
@@ -531,6 +528,34 @@ public final class ViewSet implements ReadonlyViewSet
     public void setRelativeFullResImagePathName(String relativeImagePath)
     {
         this.fullResImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
+    }
+
+    @Override
+    public File getTextureFitFilePath()
+    {
+        return this.textureFitDirectory == null ? this.rootDirectory : this.textureFitDirectory;
+    }
+
+    @Override
+    public String getRelativeTextureFitPathName()
+    {
+        try
+        {
+            return this.rootDirectory.toPath().relativize(this.textureFitDirectory.toPath()).toString();
+        }
+        catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
+        {
+            return textureFitDirectory == null ? null : textureFitDirectory.toString();
+        }
+    }
+
+    /**
+     * Sets the file path of the texture fit results associated with this view set.
+     * @param relativeTextureFitPathName The file path of the texture fit results.
+     */
+    public void setRelativeTextureFitPathName(String relativeTextureFitPathName)
+    {
+        this.textureFitDirectory = this.rootDirectory.toPath().resolve(relativeTextureFitPathName).toFile();
     }
 
     @Override

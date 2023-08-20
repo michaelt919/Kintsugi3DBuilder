@@ -15,14 +15,13 @@ package kintsugi3d.builder.fit.decomposition;
 import java.util.stream.IntStream;
 
 import kintsugi3d.builder.fit.ReflectanceData;
-import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
-import org.ejml.data.DMatrixRMaj;
-import org.ejml.simple.SimpleMatrix;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.optimization.MatrixSystem;
 import kintsugi3d.optimization.function.BasisFunctions;
 import kintsugi3d.optimization.function.MatrixBuilder;
 import kintsugi3d.optimization.function.MatrixBuilderSample;
-import kintsugi3d.optimization.MatrixSystem;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.simple.SimpleMatrix;
 
 import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
 
@@ -83,7 +82,7 @@ final class ReflectanceMatrixBuilder
                 .mapToObj(p ->
                 {
                     MatrixBuilderSample sample = new MatrixBuilderSample(
-                        reflectanceData.getHalfwayIndex(p) * specularBasisSettings.getMicrofacetDistributionResolution(),
+                        reflectanceData.getHalfwayIndex(p) * specularBasisSettings.getBasisResolution(),
                         matrixBuilder.getBasisLibrary(), reflectanceData.getGeomRatio(p),
                         reflectanceData.getAdditionalWeight(p), b -> solution.getWeights(p).get(b),
                         reflectanceData.getRed(p), reflectanceData.getGreen(p), reflectanceData.getBlue(p));
@@ -100,7 +99,7 @@ final class ReflectanceMatrixBuilder
     {
         // Calculate the matrix products the slow way to make sure that the implementation is correct.
         SimpleMatrix mA = new SimpleMatrix(reflectanceData.size(),
-                specularBasisSettings.getBasisCount() * (specularBasisSettings.getMicrofacetDistributionResolution() + 1), DMatrixRMaj.class);
+                specularBasisSettings.getBasisCount() * (specularBasisSettings.getBasisResolution() + 1), DMatrixRMaj.class);
         SimpleMatrix yRed = new SimpleMatrix(reflectanceData.size(), 1);
         SimpleMatrix yGreen = new SimpleMatrix(reflectanceData.size(), 1);
         SimpleMatrix yBlue = new SimpleMatrix(reflectanceData.size(), 1);
@@ -116,8 +115,8 @@ final class ReflectanceMatrixBuilder
                 float addlWeight = (float)Math.sqrt(reflectanceData.getAdditionalWeight(p));
 
                 // Calculate which discretized MDF element the current sample belongs to.
-                double mExact = halfwayIndex * specularBasisSettings.getMicrofacetDistributionResolution();
-                int mFloor = Math.min(specularBasisSettings.getMicrofacetDistributionResolution() - 1, (int) Math.floor(mExact));
+                double mExact = halfwayIndex * specularBasisSettings.getBasisResolution();
+                int mFloor = Math.min(specularBasisSettings.getBasisResolution() - 1, (int) Math.floor(mExact));
 
                 yRed.set(p, addlWeight * reflectanceData.getRed(p));
                 yGreen.set(p, addlWeight * reflectanceData.getGreen(p));
@@ -135,10 +134,10 @@ final class ReflectanceMatrixBuilder
                     mA.set(p, b, addlWeight * solution.getWeights(p).get(b) * diffuseFactor);
 
                     // specular
-                    if (mExact < specularBasisSettings.getMicrofacetDistributionResolution())
+                    if (mExact < specularBasisSettings.getBasisResolution())
                     {
                         // Iterate over the available step functions in the basis.
-                        for (int s = 0; s < specularBasisSettings.getMicrofacetDistributionResolution(); s++)
+                        for (int s = 0; s < specularBasisSettings.getBasisResolution(); s++)
                         {
                             // Evaluate each step function twice, to the left and right of the current sample.
                             double fFloor = matrixBuilder.getBasisLibrary().evaluate(s, mFloor);

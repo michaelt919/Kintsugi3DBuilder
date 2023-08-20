@@ -1,27 +1,26 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
- * Copyright (c) 2019 The Regents of the University of Minnesota
+ *  Copyright (c) Michael Tetzlaff 2023
  *
- * Licensed under GPLv3
- * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *  Licensed under GPLv3
+ *  ( http://www.gnu.org/licenses/gpl-3.0.html )
  *
- * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ *  This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  *
+ *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.fit.finalize;
+package kintsugi3d.builder.fit;
 
 import java.io.File;
 import java.io.IOException;
 
-import kintsugi3d.builder.fit.SpecularFitBase;
+import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.fit.finalize.AlbedoORMOptimization;
+import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.core.ColorFormat;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Texture2D;
-import kintsugi3d.builder.core.TextureFitSettings;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 
 /**
  * Can do the roughness / ORM map fit, hole fill, etc., but should not need access to the original photographs
@@ -91,16 +90,14 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
     }
 
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> loadFromPriorSolution(
-        ContextType context, TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings,
-        File priorSolutionDirectory) throws IOException
+        ContextType context, File priorSolutionDirectory) throws IOException
     {
-        return new SpecularFitFinal<>(context, textureFitSettings, specularBasisSettings, priorSolutionDirectory);
+        return new SpecularFitFinal<>(context, priorSolutionDirectory);
     }
 
-    private SpecularFitFinal(ContextType context, TextureFitSettings textureFitSettings,
-        SpecularBasisSettings specularBasisSettings, File priorSolutionDirectory) throws IOException
+    private SpecularFitFinal(ContextType context, File priorSolutionDirectory) throws IOException
     {
-        super(context, textureFitSettings, specularBasisSettings);
+        super(context, priorSolutionDirectory);
 
         // Load diffuse map
         diffuseMap = context.getTextureFactory()
@@ -132,10 +129,17 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
 //                .createTexture()
 //            : null;
 
-        albedoORMOptimization = AlbedoORMOptimization.loadFromPriorSolution(context, textureFitSettings, priorSolutionDirectory);
-
-        getBasisResources().loadFromPriorSolution(priorSolutionDirectory);
-        getBasisWeightResources().loadFromPriorSolution(priorSolutionDirectory);
+        AlbedoORMOptimization<ContextType> albedoORMOptimizationTemp;
+        try
+        {
+            albedoORMOptimizationTemp = AlbedoORMOptimization.loadFromPriorSolution(context, priorSolutionDirectory);
+        }
+        catch (IOException e)
+        {
+            albedoORMOptimizationTemp = AlbedoORMOptimization.createWithoutOcclusion(context,
+                new TextureFitSettings(diffuseMap.getWidth(), diffuseMap.getHeight()));
+        }
+        albedoORMOptimization = albedoORMOptimizationTemp;
     }
 
     @Override

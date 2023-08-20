@@ -12,11 +12,11 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.gl.vecmath.DoubleVector3;
+import java.io.File;
+
 import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
-
-import java.io.File;
+import kintsugi3d.gl.vecmath.DoubleVector3;
 
 public class SpecularDecompositionFromExistingBasis extends SpecularDecompositionBase
 {
@@ -44,6 +44,18 @@ public class SpecularDecompositionFromExistingBasis extends SpecularDecompositio
     public double evaluateBlue(int b, int m)
     {
         return existingBasis.evaluateBlue(b, m);
+    }
+
+    @Override
+    public int getCount()
+    {
+        return existingBasis.getCount();
+    }
+
+    @Override
+    public int getResolution()
+    {
+        return existingBasis.getResolution();
     }
 
     @Override

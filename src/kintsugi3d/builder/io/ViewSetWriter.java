@@ -12,7 +12,10 @@
 
 package kintsugi3d.builder.io;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Objects;
 
 import kintsugi3d.builder.core.ReadonlyViewSet;
@@ -36,7 +39,7 @@ public interface ViewSetWriter
      * @param file The file to save
      * @throws Exception If any errors occur while saving the file.
      */
-    default void writeToFile(ReadonlyViewSet viewSet, File file) throws IOException
+    default void writeToFile(ViewSet viewSet, File file) throws IOException
     {
         try (OutputStream stream = new FileOutputStream(file))
         {
@@ -47,9 +50,8 @@ public interface ViewSetWriter
             }
             else
             {
-                ViewSet copy = viewSet.copy();
-                copy.moveRootDirectory(file.getParentFile().toPath());
-                writeToStream(copy, stream);
+                viewSet.setRootDirectory(file.getParentFile());
+                writeToStream(viewSet, stream);
             }
         }
     }

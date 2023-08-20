@@ -12,15 +12,15 @@
 
 package kintsugi3d.builder.fit.roughness;
 
-import kintsugi3d.builder.fit.decomposition.BasisResources;
-import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.*;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+
+import kintsugi3d.builder.fit.decomposition.BasisResources;
+import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
+import kintsugi3d.gl.core.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class RoughnessOptimizationBase<ContextType extends Context<ContextType>>
         implements RoughnessOptimization<ContextType>
@@ -31,15 +31,15 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
     protected final VertexBuffer<ContextType> rect;
     protected final Drawable<ContextType> specularRoughnessFitDrawable;
 
-    protected RoughnessOptimizationBase(BasisResources<ContextType> basisResources, BasisWeightResources<ContextType> weightResources, float gamma)
+    protected RoughnessOptimizationBase(BasisResources<ContextType> basisResources)
         throws FileNotFoundException
     {
         // Fit specular parameters from weighted basis functions
         specularRoughnessFitProgram = basisResources.getContext().getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/specularRoughnessFitNew.frag"))
-                .define("BASIS_COUNT", basisResources.getSpecularBasisSettings().getBasisCount())
-                .define("MICROFACET_DISTRIBUTION_RESOLUTION", basisResources.getSpecularBasisSettings().getMicrofacetDistributionResolution())
+                .define("BASIS_COUNT", basisResources.getBasisCount())
+                .define("MICROFACET_DISTRIBUTION_RESOLUTION", basisResources.getBasisResolution())
                 .createProgram();
 
         // Create basic rectangle vertex buffer
@@ -49,11 +49,13 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
 
         // Set up shader program
         specularRoughnessFitDrawable.addVertexBuffer("position", rect);
-        basisResources.useWithShaderProgram(specularRoughnessFitProgram);
-        weightResources.useWithShaderProgram(specularRoughnessFitProgram);
-        specularRoughnessFitProgram.setUniform("gamma", gamma);
         specularRoughnessFitProgram.setUniform("fittingGamma", 1.0f);
+    }
 
+    @Override
+    public final void setInputWeights(BasisWeightResources<ContextType> weightResources)
+    {
+        weightResources.useWithShaderProgram(specularRoughnessFitProgram);
     }
 
     @Override
@@ -79,8 +81,11 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
     }
 
     @Override
-    public void execute()
+    public void execute(float gamma)
     {
+        specularRoughnessFitProgram.setUniform("gamma", gamma);
+        specularRoughnessFitProgram.setUniform("gammaInv", 1.0f / gamma);
+
         // Fit specular so that we have a roughness estimate for masking/shadowing.
         getFramebuffer().clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
         getFramebuffer().clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);

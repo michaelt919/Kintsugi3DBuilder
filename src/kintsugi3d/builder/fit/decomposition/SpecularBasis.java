@@ -37,4 +37,7 @@ public interface SpecularBasis
      * @return the value of blue basis function b, at element m.
      */
     double evaluateBlue(int b, int m);
+
+    int getCount();
+    int getResolution();
 }

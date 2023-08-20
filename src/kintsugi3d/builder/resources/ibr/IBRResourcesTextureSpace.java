@@ -227,9 +227,9 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
         return drawable;
     }
 
-    public TextureFitSettings getTextureFitSettings(float gamma)
+    public TextureFitSettings getTextureFitSettings()
     {
-        return new TextureFitSettings(texWidth, texHeight, gamma);
+        return new TextureFitSettings(texWidth, texHeight);
     }
 
     @Override

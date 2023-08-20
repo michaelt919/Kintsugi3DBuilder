@@ -15,9 +15,8 @@ package kintsugi3d.builder.fit.decomposition;
 import java.util.function.IntFunction;
 
 import kintsugi3d.builder.fit.ReflectanceData;
-import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
-import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.optimization.LeastSquaresModel;
 
 import static java.lang.Math.PI;
@@ -67,7 +66,7 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
         float geomRatio = sampleData.getGeomRatio(systemIndex);
 
         // Precalculate frequently used values.
-        double mExact = halfwayIndex * specularBasisSettings.getMicrofacetDistributionResolution();
+        double mExact = halfwayIndex * specularBasisSettings.getBasisResolution();
 
         int m1 = (int)Math.floor(mExact);
         int m2 = m1 + 1;
@@ -78,7 +77,7 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
             // Evaluate the basis BRDF.
             // This will run a lot of times so write out vector math operations
             // to avoid unnecessary allocation of Vector objects
-            if (m1 < specularBasisSettings.getMicrofacetDistributionResolution())
+            if (m1 < specularBasisSettings.getBasisResolution())
             {
                 return new DoubleVector3(
                     solution.getDiffuseAlbedo(b).x / PI +
@@ -95,11 +94,11 @@ public class SpecularWeightModel implements LeastSquaresModel<ReflectanceData, D
             {
                 return new DoubleVector3(
                     solution.getDiffuseAlbedo(b).x / PI +
-                        solution.evaluateRed(b, specularBasisSettings.getMicrofacetDistributionResolution()) * geomRatio,
+                        solution.evaluateRed(b, specularBasisSettings.getBasisResolution()) * geomRatio,
                     solution.getDiffuseAlbedo(b).y / PI +
-                        solution.evaluateGreen(b, specularBasisSettings.getMicrofacetDistributionResolution()) * geomRatio,
+                        solution.evaluateGreen(b, specularBasisSettings.getBasisResolution()) * geomRatio,
                     solution.getDiffuseAlbedo(b).z / PI +
-                        solution.evaluateBlue(b, specularBasisSettings.getMicrofacetDistributionResolution()) * geomRatio);
+                        solution.evaluateBlue(b, specularBasisSettings.getBasisResolution()) * geomRatio);
             }
             else // if metallicity == 0, then the MDF should be 0 here
             {

@@ -12,19 +12,19 @@
 
 package kintsugi3d.builder.io;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.File;
+import java.io.InputStream;
+import java.util.*;
+
+import kintsugi3d.builder.core.DistortionProjection;
+import kintsugi3d.builder.core.SimpleProjection;
+import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
-import kintsugi3d.builder.core.DistortionProjection;
-import kintsugi3d.builder.core.SimpleProjection;
-import kintsugi3d.builder.core.ViewSet;
-
-import java.io.File;
-import java.io.InputStream;
-import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Handles loading view sets from the VSET text file format
@@ -90,6 +90,11 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                     case "i":
                     {
                         result.setRelativePreviewImagePathName(scanner.nextLine().trim());
+                        break;
+                    }
+                    case "t":
+                    {
+                        result.setRelativeTextureFitPathName(scanner.nextLine().trim());
                         break;
                     }
                     case "p":

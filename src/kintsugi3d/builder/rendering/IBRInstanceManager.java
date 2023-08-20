@@ -12,27 +12,32 @@
 
 package kintsugi3d.builder.rendering;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.Framebuffer;
-import kintsugi3d.gl.interactive.InteractiveRenderable;
-import kintsugi3d.gl.vecmath.Vector2;
-import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
-import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.builder.state.ReadonlyCameraModel;
 import kintsugi3d.builder.state.ReadonlyLightingModel;
 import kintsugi3d.builder.state.ReadonlyObjectModel;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.Framebuffer;
+import kintsugi3d.gl.interactive.InitializationException;
+import kintsugi3d.gl.interactive.InteractiveRenderable;
+import kintsugi3d.gl.vecmath.Vector2;
+import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.AbstractImage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class IBRInstanceManager<ContextType extends Context<ContextType>> implements LoadingHandler, InteractiveRenderable<ContextType>
 {
@@ -81,6 +86,12 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     public boolean isInstanceLoaded()
     {
         return ibrInstance != null;
+    }
+
+    @Override
+    public ViewSet getLoadedViewSet()
+    {
+        return ibrInstance == null ? null : ibrInstance.getActiveViewSet();
     }
 
     @Override

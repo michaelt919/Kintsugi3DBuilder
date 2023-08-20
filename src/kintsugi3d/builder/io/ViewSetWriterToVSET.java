@@ -15,9 +15,9 @@ package kintsugi3d.builder.io;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
+import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.core.ReadonlyViewSet;
 
 public final class ViewSetWriterToVSET implements ViewSetWriter
 {
@@ -57,6 +57,10 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         out.println();
         out.println("# Preview resolution image file path");
         out.println("i " + viewSet.getRelativePreviewImagePathName());
+
+        out.println();
+        out.println("# Texture fit results file path");
+        out.println("t " + viewSet.getRelativeTextureFitPathName());
 
         out.println();
         out.println("# Estimated near and far planes");

@@ -12,13 +12,19 @@
 
 package kintsugi3d.builder.fit.roughness;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
+import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
+import kintsugi3d.gl.core.ColorFormat;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.FramebufferObject;
+import kintsugi3d.gl.core.Texture2D;
 
 public class RoughnessOptimizationSimple<ContextType extends Context<ContextType>> extends RoughnessOptimizationBase<ContextType>
 {
@@ -28,7 +34,8 @@ public class RoughnessOptimizationSimple<ContextType extends Context<ContextType
         BasisWeightResources<ContextType> weightResources, TextureFitSettings settings)
         throws FileNotFoundException
     {
-        super(basisResources, weightResources, settings.gamma);
+        super(basisResources);
+        setInputWeights(weightResources);
 
         // Framebuffer for fitting and storing the specular parameter estimates (specular Fresnel color and roughness)
         specularTexFramebuffer = basisResources.getContext().buildFramebufferObject(
@@ -36,6 +43,54 @@ public class RoughnessOptimizationSimple<ContextType extends Context<ContextType
             .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGBA8).setLinearFilteringEnabled(true))
             .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGBA8).setLinearFilteringEnabled(true))
             .createFramebufferObject();
+    }
+
+    public RoughnessOptimizationSimple(BasisResources<ContextType> basisResources, File priorSolutionDirectory)
+        throws IOException
+    {
+        super(basisResources);
+
+        // Load specular and roughness maps from files
+        Texture2D<ContextType> specularTex = basisResources.getContext().getTextureFactory()
+            .build2DColorTextureFromFile(new File(priorSolutionDirectory, "specular.png"), true)
+            .setLinearFilteringEnabled(true)
+            .createTexture();
+        Texture2D<ContextType> roughnessTex = basisResources.getContext().getTextureFactory()
+            .build2DColorTextureFromFile(new File(priorSolutionDirectory, "roughness.png"), true)
+            .setLinearFilteringEnabled(true)
+            .createTexture();
+
+        // Framebuffer for fitting and storing the specular parameter estimates (specular Fresnel color and roughness)
+        FramebufferObjectBuilder<ContextType> fboBuilder = basisResources.getContext().buildFramebufferObject(
+                roughnessTex.getWidth(), roughnessTex.getHeight());
+
+        boolean needsBlit;
+        if (specularTex.getWidth() != roughnessTex.getWidth() || specularTex.getHeight() != roughnessTex.getHeight())
+        {
+            // Will need to blit to match resolution
+            fboBuilder.addColorAttachment(ColorFormat.RGBA8);
+            needsBlit = true;
+        }
+        else
+        {
+            fboBuilder.addEmptyColorAttachment();
+            needsBlit = false;
+        }
+
+        fboBuilder.addEmptyColorAttachment(); // Will later attach roughnessTex that has already been loaded
+
+        specularTexFramebuffer = fboBuilder.createFramebufferObject();
+
+        if (needsBlit)
+        {
+            specularTexFramebuffer.getColorAttachmentTexture(0).blitScaled(specularTex, true);
+        }
+        else
+        {
+            specularTexFramebuffer.setColorAttachment(0, specularTex);
+        }
+
+        specularTexFramebuffer.setColorAttachment(1, roughnessTex);
     }
 
     @Override

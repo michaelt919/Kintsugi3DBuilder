@@ -20,6 +20,7 @@ import java.util.stream.IntStream;
 
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.fit.SpecularFitFinal;
 import kintsugi3d.builder.resources.specular.GenericMaterialResources;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -82,8 +83,7 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
 
     private final float[] cameraWeights;
 
-    public IBRSharedResources(ContextType context, ViewSet viewSet, VertexGeometry geometry, TextureLoadOptions loadOptions)
-        throws IOException
+    IBRSharedResources(ContextType context, ViewSet viewSet, VertexGeometry geometry, TextureLoadOptions loadOptions)
     {
         this.context = context;
         this.viewSet = viewSet;
@@ -155,8 +155,21 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
 
                 Material material = geometry.getMaterial();
 
-                if (material != null && viewSet.getGeometryFile() != null /* need an actual file path to load the textures */)
+                if (viewSet.getTextureFitFilePath() != null) // Load texture fit from previous session
                 {
+                    try
+                    {
+                        specularMaterialResources = SpecularFitFinal.loadFromPriorSolution(context, viewSet.getTextureFitFilePath());
+                    }
+                    catch (IOException e)
+                    {
+                        log.error("An error occured while loading the previous specular fit (textures).", e);
+                    }
+                }
+                else if (material != null && viewSet.getGeometryFile() != null /* need an actual file path to load the textures */)
+                {
+                    // Load material from OBJ file
+
                     // Default texture names if not specified by the material
                     String prefix = viewSet.getGeometryFileName().split("\\.")[0];
 
@@ -214,6 +227,7 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
                 }
                 else
                 {
+                    // Neither a texture fit or an OBJ material: material is null
                     this.specularMaterialResources = GenericMaterialResources.createNull();
                 }
             }
@@ -432,7 +446,6 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
      *     <li>NORMAL_TEXTURE_ENABLED</li>
      * </ul>
      *
-     * @param renderingMode The rendering mode to use, which may change some of the preprocessor defines.
      * @return A program builder with all of the above preprocessor defines specified, ready to have the
      * vertex and fragment shaders added as well as any additional application-specific preprocessor definitions.
      */
