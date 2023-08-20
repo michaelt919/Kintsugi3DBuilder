@@ -47,6 +47,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     private final ContextType context;
 
     private boolean unloadRequested = false;
+    private ViewSet loadedViewSet;
     private IBRInstance<ContextType> ibrInstance = null;
     private IBRInstance<ContextType> newInstance = null;
     private LoadingMonitor loadingMonitor;
@@ -65,22 +66,30 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     /**
      * Adds callbacks that will be invoked when the view set has finished loading (but before the GPU resources are loaded).
      * The callbacks will be cleared after being invoked.
+     *
      * @param callback to add
      */
     @Override
     public void addViewSetLoadCallback(Consumer<ViewSet> callback)
     {
-        viewSetLoadCallbacks.add(callback);
+        synchronized (viewSetLoadCallbacks)
+        {
+            viewSetLoadCallbacks.add(callback);
+        }
     }
 
     /**
      * Adds callbacks that will be invoked when the instance has finished loading.
      * The callbacks will be cleared after being invoked.
+     *
      * @param callback to add
      */
     public void addInstanceLoadCallback(Consumer<IBRInstance<ContextType>> callback)
     {
-        instanceLoadCallbacks.add(callback);
+        synchronized (instanceLoadCallbacks)
+        {
+            instanceLoadCallbacks.add(callback);
+        }
     }
 
     public IBRInstanceManager(ContextType context)
@@ -106,25 +115,30 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     @Override
     public ViewSet getLoadedViewSet()
     {
-        return ibrInstance == null ? null : ibrInstance.getActiveViewSet();
+        return loadedViewSet;
     }
 
     private void invokeViewSetLoadCallbacks(ViewSet viewSet)
     {
-        // Invoke callbacks
-        for (Consumer<ViewSet> callback : viewSetLoadCallbacks)
+        synchronized (viewSetLoadCallbacks)
         {
-            callback.accept(viewSet);
-        }
+            // Invoke callbacks
+            for (Consumer<ViewSet> callback : viewSetLoadCallbacks)
+            {
+                callback.accept(viewSet);
+            }
 
-        // Clear the list of callbacks for the next load.
-        instanceLoadCallbacks.clear();
+            // Clear the list of callbacks for the next load.
+            viewSetLoadCallbacks.clear();
+        }
     }
 
     private void loadInstance(String id, Builder<ContextType> builder) throws IOException
     {
+        loadedViewSet = builder.getViewSet();
+
         // Invoke callbacks now that view set is loaded
-        invokeViewSetLoadCallbacks(builder.getViewSet());
+        invokeViewSetLoadCallbacks(loadedViewSet);
 
         // Kick off request to generate preview resolution images
         builder.generateUndistortedPreviewImages();
@@ -327,7 +341,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     @Override
     public void saveToVSETFile(File vsetFile) throws IOException
     {
-        ViewSetWriterToVSET.getInstance().writeToFile(ibrInstance.getActiveViewSet(), vsetFile);
+        ViewSetWriterToVSET.getInstance().writeToFile(loadedViewSet, vsetFile);
     }
 
     @Override
@@ -354,6 +368,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             {
                 ibrInstance.close();
                 ibrInstance = null;
+                loadedViewSet = null;
             }
 
             unloadRequested = false;

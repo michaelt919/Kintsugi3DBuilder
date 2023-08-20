@@ -76,6 +76,10 @@ public class LoaderController implements Initializable
         photoDirectoryChooser.setTitle("Select photo directory");
     }
 
+    public void init()
+    {
+    }
+
     public void setLoadStartCallback(Runnable callback)
     {
         this.loadStartCallback = callback;
@@ -184,9 +188,15 @@ public class LoaderController implements Initializable
     {
         if ((cameraFile != null) && (objFile != null) && (photoDir != null))
         {
-            loadStartCallback.run();
+            if (loadStartCallback != null)
+            {
+                loadStartCallback.run();
+            }
 
-            MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(viewSetCallback);
+            if (viewSetCallback != null)
+            {
+                MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(viewSetCallback);
+            }
 
             new Thread(() ->
                 MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(

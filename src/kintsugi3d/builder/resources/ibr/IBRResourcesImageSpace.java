@@ -108,6 +108,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         {
             this.viewSet.setPreviewImageResolution(loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
             String directoryName = String.format("%s/_%dx%d", viewSet.getUuid().toString(), loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
+
             this.viewSet.setRelativePreviewImagePathName(new File(ApplicationFolders.getPreviewImagesRootDirectory().toFile(), directoryName).toString());
         }
 
@@ -153,6 +154,11 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 updateViewSetFromLoadOptions();
             }
 
+            if (geometry != null)
+            {
+                viewSet.setGeometryFile(geometry.getFilename());
+            }
+
             return this;
         }
 
@@ -168,6 +174,11 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             {
                 this.imageDirectoryOverride = undistortedImageDirectory;
                 this.viewSet.setRelativeFullResImagePathName(cameraFile.getParentFile().toPath().relativize(undistortedImageDirectory.toPath()).toString());
+            }
+
+            if (geometry != null)
+            {
+                viewSet.setGeometryFile(geometry.getFilename());
             }
 
             if (this.loadOptions != null)
@@ -186,12 +197,24 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         public Builder<ContextType> useExistingViewSet(ViewSet existingViewSet)
         {
             this.viewSet = existingViewSet;
+
+            if (geometry != null)
+            {
+                viewSet.setGeometryFile(geometry.getFilename());
+            }
+
             return this;
         }
 
         public Builder<ContextType> useExistingGeometry(VertexGeometry existingGeometry)
         {
             this.geometry = existingGeometry;
+
+            if (viewSet != null)
+            {
+                viewSet.setGeometryFile(geometry.getFilename());
+            }
+
             return this;
         }
 
@@ -230,11 +253,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 viewSet.setPrimaryView(primaryViewName);
             }
 
-            if (geometry != null)
-            {
-                viewSet.setGeometryFile(geometry.getFilename());
-            }
-            else if (viewSet.getGeometryFile() != null)
+            if (geometry == null && viewSet.getGeometryFile() != null)
             {
                 // Load geometry if it wasn't specified but a view set was.
                 geometry = VertexGeometry.createFromOBJFile(viewSet.getGeometryFile());

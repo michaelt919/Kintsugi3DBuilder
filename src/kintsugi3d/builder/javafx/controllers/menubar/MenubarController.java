@@ -22,24 +22,24 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
-import javafx.stage.*;
 import javafx.stage.Window;
-import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.stage.*;
 import javafx.util.StringConverter;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.WindowSynchronization;
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.IBRRequestUI;
+import kintsugi3d.builder.core.Kintsugi3DBuilderState;
+import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.builder.javafx.controllers.ProjectLoadHelper;
+import kintsugi3d.builder.javafx.ProjectLoadState;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
 import kintsugi3d.gl.core.Context;
@@ -60,9 +60,7 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Objects;
 import java.util.Scanner;
-import java.util.function.Predicate;
 
 public class MenubarController
 {
@@ -82,7 +80,6 @@ public class MenubarController
     private final Flag advPhotoViewWindowOpen = new Flag(false);
     private final Flag systemMemoryWindowOpen = new Flag(false);
     private final Flag loadOptionsWindowOpen = new Flag(false);
-    private final Flag loaderWindowOpen = new Flag(false);
     private final Flag colorCheckerWindowOpen = new Flag(false);
     private final Flag unzipperOpen = new Flag(false);
     private final Flag consoleWindowOpen = new Flag(false);
@@ -145,8 +142,6 @@ public class MenubarController
 
     @FXML public TextField ambientLightIntensityTxtField;
 
-    @FXML private FileChooser projectFileChooser;
-
     @FXML private Menu exportMenu;
     @FXML private Menu recentProjectsMenu;
 
@@ -154,10 +149,6 @@ public class MenubarController
     @FXML private FramebufferView framebufferView;
 
     private Window window;
-
-    private File projectFile;
-    private File vsetFile;
-    private boolean projectLoaded;
 
     private Runnable userDocumentationHandler;
 
@@ -184,13 +175,7 @@ public class MenubarController
         this.internalModels = injectedInternalModels;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
 
-        projectFileChooser = new FileChooser();
-
-        projectFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
-        projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Full projects", "*.ibr"));
-        projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Standalone view sets", "*.vset"));
-
-        MultithreadModels.getInstance().getLoadingModel().setLoadingMonitor(new LoadingMonitor()
+        MultithreadModels.getInstance().getLoadingModel().addLoadingMonitor(new LoadingMonitor()
         {
             private double maximum = 0.0;
             private double progress = 0.0;
@@ -230,8 +215,6 @@ public class MenubarController
             public void loadingFailed(Exception e)
             {
                 loadingComplete();
-                projectLoaded = false;
-                handleException("An error occurred while loading project", e);
             }
         });
 
@@ -424,161 +407,33 @@ public class MenubarController
     @FXML
     private void file_createProject()
     {
-        if (loaderWindowOpen.get())
-        {
-            return;
-        }
-
-        if (confirmClose("Are you sure you want to create a new project?"))
-        {
-            try
-            {
-                LoaderController loaderController = makeWindow("Load Files", loaderWindowOpen, 750, 330, "fxml/menubar/Loader.fxml");
-                loaderController.setLoadStartCallback(() ->
-                {
-                    projectFile = null;
-                    vsetFile = null;
-
-                    MultithreadModels.getInstance().getLoadingModel().unload();
-                    projectLoaded = true;
-                });
-                loaderController.setViewSetCallback(viewSet ->
-                {
-                    // Force user to save the project before proceeding, so that they have a place to save the results
-                    file_saveProjectAs();
-
-                    if (Objects.equals(vsetFile, projectFile)) // Saved as a VSET
-                    {
-                        File filesDirectory = ViewSet.getDefaultSupportingFilesDirectory(projectFile);
-                        filesDirectory.mkdirs();
-
-                        viewSet.setRelativeSupportingFilesPathName(filesDirectory.getName());
-                    }
-                    else // Saved as a Kintsugi 3D project
-                    {
-                        viewSet.setRelativeSupportingFilesPathName("");
-                    }
-                }); // Force user to save the project after creating
-            }
-            catch (Exception e)
-            {
-                handleException("An error occurred creating project", e);
-            }
-        }
+        ProjectLoadState.getInstance().createProject(window);
     }
 
-    private boolean confirmClose(String text)
-    {
-        if (projectLoaded)
-        {
-            Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION,
-                    "If you click OK, any unsaved changes to the current project will be lost.");
-            confirmation.setTitle("Close Project Confirmation");
-            confirmation.setHeaderText(text);
 
-            //TODO: apply dark mode to popups
-            return confirmation.showAndWait()
-                .filter(Predicate.isEqual(ButtonType.OK))
-                .isPresent();
-        }
-        else
-        {
-            return true;
-        }
-    }
 
     @FXML
     private void file_openProject()
     {
-        if (confirmClose("Are you sure you want to open another project?"))
-        {
-            projectFileChooser.setTitle("Open project");
-            File selectedFile = projectFileChooser.showOpenDialog(window);
-            if (selectedFile != null)
-            {
-                openProjectFromFile(selectedFile);
-            }
-        }
+        ProjectLoadState.getInstance().openProjectWithPrompt(window);
     }
 
     @FXML
     private void file_saveProject()
     {
-        if (projectFile == null)
-        {
-            file_saveProjectAs();
-        }
-        else
-        {
-            try
-            {
-                LoadingModel loadingModel = MultithreadModels.getInstance().getLoadingModel();
-
-                if (projectFile.getName().endsWith(".vset"))
-                {
-                    loadingModel.getLoadedViewSet().setRootDirectory(projectFile.getParentFile());
-                    loadingModel.saveToVSETFile(projectFile);
-                    this.vsetFile = projectFile;
-                    this.projectFile = null;
-                }
-                else
-                {
-                    File filesDirectory = ViewSet.getDefaultSupportingFilesDirectory(projectFile);
-                    filesDirectory.mkdirs();
-                    this.vsetFile = new File(filesDirectory, projectFile + ".vset");
-                    loadingModel.getLoadedViewSet().setRootDirectory(filesDirectory);
-                    loadingModel.saveToVSETFile(vsetFile);
-                    internalModels.getProjectModel().saveProjectFile(projectFile, vsetFile);
-                }
-
-                //TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY
-                Dialog<ButtonType> saveInfo = new Alert(AlertType.INFORMATION,
-                        "Save Complete!");
-                saveInfo.setTitle("Save successful");
-                saveInfo.setHeaderText(projectFile.getName());
-                saveInfo.show();
-            }
-            catch(Exception e)
-            {
-                handleException("An error occurred saving project", e);
-            }
-        }
+        ProjectLoadState.getInstance().saveProject(window);
     }
 
     @FXML
     private void file_saveProjectAs()
     {
-        projectFileChooser.setTitle("Save project");
-        projectFileChooser.setSelectedExtensionFilter(projectFileChooser.getExtensionFilters().get(0));
-        if (projectFile != null)
-        {
-            projectFileChooser.setInitialFileName(projectFile.getName());
-            projectFileChooser.setInitialDirectory(projectFile.getParentFile());
-        }
-        else if (vsetFile != null)
-        {
-            projectFileChooser.setInitialFileName("");
-            projectFileChooser.setInitialDirectory(vsetFile.getParentFile());
-        }
-        File selectedFile = projectFileChooser.showSaveDialog(window);
-        if (selectedFile != null)
-        {
-            this.projectFile = selectedFile;
-            file_saveProject();
-        }
+        ProjectLoadState.getInstance().saveProjectAs(window);
     }
 
     @FXML
     private void file_closeProject()
     {
-        if (confirmClose("Are you sure you want to close the current project?"))
-        {
-            projectFile = null;
-            vsetFile = null;
-
-            MultithreadModels.getInstance().getLoadingModel().unload();
-            projectLoaded = false;
-        }
+        ProjectLoadState.getInstance().closeProjectAfterConfirmation();
     }
 
     @FXML
@@ -838,39 +693,9 @@ public class MenubarController
         }
     }
 
-    public void handleMenuItemSelection(MenuItem item) {
+    public static void handleMenuItemSelection(MenuItem item) {
         String projectName = item.getText();
-        openProjectFromFile(new File(projectName));
-    }
-
-    private void openProjectFromFile(File selectedFile) {
-        //open the project and update the recent files list
-        this.projectFile = selectedFile;
-        File newVsetFile = null;
-
-        if (projectFile.getName().endsWith(".vset"))
-        {
-            newVsetFile = projectFile;
-        }
-        else
-        {
-            try
-            {
-                newVsetFile = internalModels.getProjectModel().openProjectFile(projectFile);
-            }
-            catch (Exception e)
-            {
-                handleException("An error occurred while opening project", e);
-            }
-        }
-
-        if (newVsetFile != null)
-        {
-            this.vsetFile = newVsetFile;
-            this.projectLoaded = true;
-
-            ProjectLoadHelper.startLoad(projectFile, vsetFile);
-        }
+        ProjectLoadState.getInstance().openProjectFromFile(new File(projectName));
     }
 
     private void handleDirectoryDropdownSelection(ActionEvent actionEvent) {

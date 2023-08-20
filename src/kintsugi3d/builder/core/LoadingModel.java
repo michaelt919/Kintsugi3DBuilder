@@ -17,14 +17,71 @@ import kintsugi3d.util.AbstractImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
 public class LoadingModel 
 {
+    private static class AggregateLoadingMonitor implements LoadingMonitor
+    {
+        private final Collection<LoadingMonitor> subMonitors = new ArrayList<>();
+
+        void addSubMonitor(LoadingMonitor monitor)
+        {
+            subMonitors.add(monitor);
+        }
+
+        @Override
+        public void startLoading()
+        {
+            for (LoadingMonitor monitor : subMonitors)
+            {
+                monitor.startLoading();
+            }
+        }
+
+        @Override
+        public void setMaximum(double maximum)
+        {
+            for (LoadingMonitor monitor : subMonitors)
+            {
+                monitor.setMaximum(maximum);
+            }
+        }
+
+        @Override
+        public void setProgress(double progress)
+        {
+            for (LoadingMonitor monitor : subMonitors)
+            {
+                monitor.setProgress(progress);
+            }
+        }
+
+        @Override
+        public void loadingComplete()
+        {
+            for (LoadingMonitor monitor : subMonitors)
+            {
+                monitor.loadingComplete();
+            }
+        }
+
+        @Override
+        public void loadingFailed(Exception e)
+        {
+            for (LoadingMonitor monitor : subMonitors)
+            {
+                monitor.loadingFailed(e);
+            }
+        }
+    }
+
     private LoadingHandler handler;
-    private LoadingMonitor loadingMonitor;
+    private final AggregateLoadingMonitor loadingMonitor = new AggregateLoadingMonitor();
     private ReadonlyLoadOptionsModel loadOptionsModel;
 
     public LoadingMonitor getLoadingMonitor()
@@ -35,16 +92,12 @@ public class LoadingModel
     public void setLoadingHandler(LoadingHandler handler)
     {
         this.handler = handler;
-
-        if (this.loadingMonitor != null)
-        {
-            this.handler.setLoadingMonitor(loadingMonitor);
-        }
+        this.handler.setLoadingMonitor(loadingMonitor);
     }
 
-    public void setLoadingMonitor(LoadingMonitor monitor)
+    public void addLoadingMonitor(LoadingMonitor monitor)
     {
-        this.loadingMonitor = monitor;
+        this.loadingMonitor.addSubMonitor(monitor);
 
         if (this.handler != null)
         {
@@ -69,7 +122,7 @@ public class LoadingModel
 
     public ViewSet getLoadedViewSet()
     {
-        return isInstanceLoaded() ? this.handler.getLoadedViewSet() : null;
+        return this.handler.getLoadedViewSet();
     }
 
     /**

@@ -59,7 +59,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         out.println("i " + viewSet.getRelativePreviewImagePathName());
 
         out.println();
-        out.println("# Texture fit results file path");
+        out.println("# Supporting files (texture fit results) file path");
         out.println("t " + viewSet.getRelativeSupportingFilesPathName());
 
         out.println();

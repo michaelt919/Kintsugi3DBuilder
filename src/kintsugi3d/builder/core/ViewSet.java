@@ -483,7 +483,7 @@ public final class ViewSet implements ReadonlyViewSet
         }
         catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
-            return previewImageDirectory == null ? null : previewImageDirectory.toString();
+            return geometryFile == null ? null : geometryFile.toString();
         }
     }
 
@@ -638,6 +638,12 @@ public final class ViewSet implements ReadonlyViewSet
      */
     public void setRelativePreviewImagePathName(String relativeImagePath)
     {
+        if (this.fullResImageDirectory == null)
+        {
+            // If we didn't have a full res directory, use the old preview directory as our full res directory
+            this.fullResImageDirectory = previewImageDirectory;
+        }
+
         this.previewImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
     }
 
