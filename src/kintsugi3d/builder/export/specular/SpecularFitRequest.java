@@ -220,6 +220,12 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
                 exporter.setDefaultNames();
                 exporter.addWeightImages(settings.getSpecularBasisSettings().getBasisCount(), settings.getExportSettings().isCombineWeights());
 
+                // Add diffuse constant if requested
+                if (settings.shouldIncludeConstantTerm())
+                {
+                    exporter.setDiffuseConstantUri("constant.png");
+                }
+
                 // Deal with LODs if enabled
                 if (settings.getExportSettings().isGenerateLowResTextures())
                 {
@@ -227,6 +233,12 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
                         settings.getExportSettings().getMinimumTextureResolution());
                     exporter.addWeightImageLods(settings.getSpecularBasisSettings().getBasisCount(),
                         settings.getTextureFitSettings().height, settings.getExportSettings().getMinimumTextureResolution());
+
+                    if (settings.shouldIncludeConstantTerm())
+                    {
+                        exporter.addDiffuseConstantLods("constant.png", settings.getTextureFitSettings().height,
+                                settings.getExportSettings().getMinimumTextureResolution());
+                    }
                 }
 
                 exporter.write(new File(settings.getOutputDirectory(), "model.glb"));

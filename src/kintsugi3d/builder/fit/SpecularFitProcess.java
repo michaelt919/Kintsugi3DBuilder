@@ -430,6 +430,19 @@ public class SpecularFitProcess
         {
             SpecularFitTextureRescaler rescaler = new SpecularFitTextureRescaler(settings.getExportSettings());
             rescaler.rescaleAll(settings.getOutputDirectory(), settings.getSpecularBasisSettings().getBasisCount());
+
+            if (settings.shouldIncludeConstantTerm())
+            {
+                try
+                {
+                    rescaler.generateLodsFor(new File(settings.getOutputDirectory(), "constant.png"));
+                }
+                catch (IOException e)
+                {
+                    log.error("Failed to resize diffuse constant texture", e);
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 }

@@ -19,6 +19,8 @@ public class GltfMaterialExtras
 
     private TextureInfo diffuseTexture = null;
 
+    private TextureInfo diffuseConstantTexture = null;
+
     private TextureInfo specularTexture = null;
 
     private String basisFunctionsUri = null;
@@ -63,5 +65,15 @@ public class GltfMaterialExtras
     public void setDiffuseTexture(TextureInfo diffuseTexture)
     {
         this.diffuseTexture = diffuseTexture;
+    }
+
+    public TextureInfo getDiffuseConstantTexture()
+    {
+        return diffuseConstantTexture;
+    }
+
+    public void setDiffuseConstantTexture(TextureInfo diffuseConstantTexture)
+    {
+        this.diffuseConstantTexture = diffuseConstantTexture;
     }
 }

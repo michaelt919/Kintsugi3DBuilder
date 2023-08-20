@@ -36,7 +36,7 @@ public interface LoadOptionsModel extends ReadonlyLoadOptionsModel
         setCompressionRequested(otherModel.isCompressionRequested());
         setDepthImagesRequested(otherModel.areDepthImagesRequested());
         setDepthImageWidth(otherModel.getDepthImageWidth());
-        setDepthImageHeight(otherModel.getPreviewImageHeight());
+        setDepthImageHeight(otherModel.getDepthImageHeight());
         setPreviewImageHeight(otherModel.getPreviewImageHeight());
         setPreviewImageWidth(otherModel.getPreviewImageWidth());
     }

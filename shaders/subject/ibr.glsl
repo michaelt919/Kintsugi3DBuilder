@@ -17,8 +17,8 @@
 
 #line 19 3101
 
-#ifndef MATERIAL_EXPLORATION_MODE
-#define MATERIAL_EXPLORATION_MODE 0
+#ifndef ANALYTIC_MODE
+#define ANALYTIC_MODE 0
 #endif
 
 #ifndef BUEHLER_ALGORITHM
@@ -41,10 +41,27 @@
 #define ARCHIVING_2017_ENVIRONMENT_NORMALIZATION 0
 #endif
 
-#if MATERIAL_EXPLORATION_MODE
+#if !ANALYTIC_MODE
+
+#ifndef DEFAULT_DIFFUSE_COLOR
+#define DEFAULT_DIFFUSE_COLOR (vec3(0.0))
+#endif // DEFAULT_DIFFUSE_COLOR
+
+#ifndef DEFAULT_SPECULAR_COLOR
+#define DEFAULT_SPECULAR_COLOR (vec3(0.04))
+#endif // DEFAULT_SPECULAR_COLOR
+
+#ifndef DEFAULT_SPECULAR_ROUGHNESS
+#define DEFAULT_SPECULAR_ROUGHNESS (0.1); // TODO pass in a default?
+#endif
+
+#endif // !ANALYTIC_MODE
 
 #include <colorappearance/material.glsl>
-#line 49 0
+#line 62 3101
+
+#if ANALYTIC_MODE
+
 #undef SMITH_MASKING_SHADOWING
 #define SMITH_MASKING_SHADOWING 1
 
@@ -72,26 +89,7 @@
 #define NORMAL_MAP_SCALE_ENABLED 1
 #define NORMAL_MAP_SCALE ANALYTIC_BUMP_HEIGHT
 
-#endif
-
-#if !MATERIAL_EXPLORATION_MODE
-
-#ifndef DEFAULT_DIFFUSE_COLOR
-#define DEFAULT_DIFFUSE_COLOR (vec3(0.0))
-#endif // DEFAULT_DIFFUSE_COLOR
-
-#ifndef DEFAULT_SPECULAR_COLOR
-#define DEFAULT_SPECULAR_COLOR (vec3(0.04))
-#endif // DEFAULT_SPECULAR_COLOR
-
-#ifndef DEFAULT_SPECULAR_ROUGHNESS
-#define DEFAULT_SPECULAR_ROUGHNESS (0.1); // TODO pass in a default?
-#endif
-
-#endif // !MATERIAL_EXPLORATION_MODE
-
-#include "../colorappearance/material.glsl"
-#line 108 0
+#endif // ANALYTIC_MODE
 
 #ifndef MIPMAPS_ENABLED
 #define MIPMAPS_ENABLED !BUEHLER_ALGORITHM
@@ -103,7 +101,7 @@
 
 #include "../colorappearance/colorappearance.glsl"
 
-#if !MATERIAL_EXPLORATION_MODE
+#if !ANALYTIC_MODE
 #include "../colorappearance/imgspace.glsl"
 #endif
 
@@ -112,7 +110,7 @@
 #include "sort.glsl"
 #endif
 
-#line 133 0
+#line 114 3101
 
 uniform vec3 holeFillColor;
 
@@ -182,7 +180,7 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 normalDir, Mat
     float geomAttenSample = geom(m.roughness, nDotH, nDotV_sample, nDotL_sample, hDotV_sample);
 
     vec3 virtualViewDir =
-    normalize((cameraPose * vec4(viewPos, 1.0)).xyz - fragmentPos);
+        normalize((cameraPose * vec4(viewPos, 1.0)).xyz - fragmentPos);
     vec3 virtualLightDir = -reflect(virtualViewDir, sampleHalfDir);
     float nDotL_virtual = max(0, dot(normalDirCameraSpace, virtualLightDir));
     float nDotV_virtual = max(0.125, dot(normalDirCameraSpace, virtualViewDir));
@@ -246,9 +244,9 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 normalDir, Mat
 
     vec4 unweightedSample;
     unweightedSample.rgb = cosineWeightedBRDF
-    //        * getEnvironment(fPosition, transpose(mat3(cameraPose)) * virtualLightDir,
-    //            4 * hDotV_virtual * getCameraWeight(virtualIndex));
-    * getEnvironment(fPosition, transpose(mat3(cameraPose)) * virtualLightDir);
+//        * getEnvironment(fPosition, transpose(mat3(cameraPose)) * virtualLightDir,
+//            4 * hDotV_virtual * getCameraWeight(virtualIndex));
+        * getEnvironment(fPosition, transpose(mat3(cameraPose)) * virtualLightDir);
 
 #if SPECULAR_TEXTURE_ENABLED && ARCHIVING_2017_ENVIRONMENT_NORMALIZATION
     // Normalizes with respect to specular texture when available as described in our Archiving 2017 paper.
@@ -266,10 +264,10 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 normalDir, Mat
 
 vec3 getEnvironmentShading(vec3 normalDir, Material m)
 {
-#if MATERIAL_EXPLORATION_MODE
+#if ANALYTIC_MODE
     float maxLuminance = max(ANALYTIC_SPECULAR_COLOR.r, max(ANALYTIC_SPECULAR_COLOR.g, ANALYTIC_SPECULAR_COLOR.b))
-    / (4 * ANALYTIC_ROUGHNESS * ANALYTIC_ROUGHNESS)
-    + max(ANALYTIC_DIFFUSE_COLOR.r, max(ANALYTIC_DIFFUSE_COLOR.g, ANALYTIC_DIFFUSE_COLOR.b));
+            / (4 * ANALYTIC_ROUGHNESS * ANALYTIC_ROUGHNESS)
+        + max(ANALYTIC_DIFFUSE_COLOR.r, max(ANALYTIC_DIFFUSE_COLOR.g, ANALYTIC_DIFFUSE_COLOR.b));
 #else
     float maxLuminance = getMaxLuminance();
 #endif
@@ -286,12 +284,26 @@ vec3 getEnvironmentShading(vec3 normalDir, Material m)
     {
         return sum.rgb
         //    / VIEW_COUNT;
-        / sum.a;
+            / sum.a;
     }
     else
     {
         return vec3(0.0);
     }
+}
+
+
+vec3 specularFromPredictedMFD(LightingParameters l, Material m, vec4 predictedMFD)
+{
+#if FRESNEL_EFFECT_ENABLED
+    vec3 mfdFresnelBase = m.specularColor * distTimesPi(l.nDotH, vec3(m.roughness));
+    vec3 mfdFresnelAnalytic = fresnel(mfdFresnelBase, vec3(getLuminance(mfdFresnelBase) / getLuminance(m.specularColor)), l.hDotV);
+    float grazingIntensity = getLuminance(max(vec3(0.0), predictedMFD.rgb) / m.specularColor);
+    return max(vec3(0.0), fresnel(predictedMFD.rgb, vec3(grazingIntensity), l.hDotV));
+#else // !FRESNEL_EFFECT_ENABLED
+    vec3 mfdFresnelAnalytic = m.specularColor * distTimesPi(l.nDotH, vec3(m.roughness));
+    return max(vec3(0.0), predictedMFD.rgb);
+#endif // FRESNEL_EFFECT_ENABLED
 }
 
 #if BUEHLER_ALGORITHM
@@ -344,10 +356,10 @@ vec4 computeSampleSingle(int virtualIndex, vec3 normalDir, Material m, float max
 
 vec4 computeBuehler(vec3 targetDirection, vec3 normalDir, Material m)
 {
-#if MATERIAL_EXPLORATION_MODE
+#if ANALYTIC_MODE
     float maxLuminance = max(ANALYTIC_SPECULAR_COLOR.r, max(ANALYTIC_SPECULAR_COLOR.g, ANALYTIC_SPECULAR_COLOR.b))
-    / (4 * ANALYTIC_ROUGHNESS * ANALYTIC_ROUGHNESS)
-    + max(ANALYTIC_DIFFUSE_COLOR.r, max(ANALYTIC_DIFFUSE_COLOR.g, ANALYTIC_DIFFUSE_COLOR.b));
+            / (4 * ANALYTIC_ROUGHNESS * ANALYTIC_ROUGHNESS)
+        + max(ANALYTIC_DIFFUSE_COLOR.r, max(ANALYTIC_DIFFUSE_COLOR.g, ANALYTIC_DIFFUSE_COLOR.b));
 #else
     float maxLuminance = getMaxLuminance();
 #endif
@@ -392,6 +404,11 @@ vec4 computeBuehler(vec3 targetDirection, vec3 normalDir, Material m)
     }
 }
 
+vec3 specular(LightingParameters l, Material m)
+{
+    return specularFromPredictedMFD(l, m, computeBuehler(l.halfDir, l.normalDir, m));
+}
+
 #elif VIRTUAL_LIGHT_COUNT > 0
 
 vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 normalDir, Material m, float maxLuminance)
@@ -430,7 +447,7 @@ vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 normalDir, Materi
         {
             vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
             precomputedSample = sampleColor.a
-            * vec4(specularResid.rgb * 4 * nDotV / lightIntensity, geomAtten);
+                * vec4(specularResid.rgb * 4 * nDotV / lightIntensity, geomAtten);
 
         }
 #else
@@ -438,7 +455,7 @@ vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 normalDir, Materi
         {
             vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
             precomputedSample = sampleColor.a
-            * vec4(specularResid.rgb * 4 / lightIntensity, nDotL);
+                * vec4(specularResid.rgb * 4 / lightIntensity, nDotL);
         }
 #endif
     }
@@ -463,7 +480,7 @@ vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 normalDir, Materi
             vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
             float virtualNdotH = max(0, dot(normalDirCameraSpace, virtualHalfDir));
             float correlation = isotropyFactor * (nDotH * virtualNdotH + sqrt(1 - nDotH*nDotH) * sqrt(1 - virtualNdotH*virtualNdotH))
-            + (1 - isotropyFactor) * dot(virtualHalfDir, sampleHalfDir);
+                + (1 - isotropyFactor) * dot(virtualHalfDir, sampleHalfDir);
             float weight = 1.0 / max(0.000001, 1.0 - pow(max(0.0, correlation), weightExponent)) - 1.0;
             result[lightPass] = weight * precomputedSample;
 
@@ -487,10 +504,10 @@ vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 normalDir, Materi
 
 SPECULAR_PRECOMPUTATION precomputeSpecular(ViewingParameters v, Material m)
 {
-#if MATERIAL_EXPLORATION_MODE
+#if ANALYTIC_MODE
     float maxLuminance = max(ANALYTIC_SPECULAR_COLOR.r, max(ANALYTIC_SPECULAR_COLOR.g, ANALYTIC_SPECULAR_COLOR.b))
-    / (4 * ANALYTIC_ROUGHNESS * ANALYTIC_ROUGHNESS)
-    + max(ANALYTIC_DIFFUSE_COLOR.r, max(ANALYTIC_DIFFUSE_COLOR.g, ANALYTIC_DIFFUSE_COLOR.b));
+            / (4 * ANALYTIC_ROUGHNESS * ANALYTIC_ROUGHNESS)
+        + max(ANALYTIC_DIFFUSE_COLOR.r, max(ANALYTIC_DIFFUSE_COLOR.g, ANALYTIC_DIFFUSE_COLOR.b));
 #else
     float maxLuminance = getMaxLuminance();
 #endif
@@ -504,7 +521,7 @@ SPECULAR_PRECOMPUTATION precomputeSpecular(ViewingParameters v, Material m)
     for (int i = 0; i < VIEW_COUNT; i++)
     {
         vec4[VIRTUAL_LIGHT_COUNT] microfacetSample =
-        computeSample(i, v.normalDir, m, maxLuminance);
+            computeSample(i, v.normalDir, m, maxLuminance);
 
         for (int j = 0; j < VIRTUAL_LIGHT_COUNT; j++)
         {
@@ -531,7 +548,12 @@ SPECULAR_PRECOMPUTATION precomputeSpecular(ViewingParameters v, Material m)
     return results;
 }
 
-#endif // BUEHLER_ALGORITHM
+vec3 specular(LightingParameters l, Material m, SPECULAR_PRECOMPUTATION p)
+{
+    return specularFromPredictedMFD(l, m, p[l.lightIndex]);
+}
+
+#endif
 
 vec3 global(ViewingParameters v, Material m)
 {
@@ -542,31 +564,6 @@ vec3 global(ViewingParameters v, Material m)
     envLighting += getEnvironmentShading(v.normalDir, m);
     return envLighting;
 }
-
-vec3 specularFromPredictedMFD(LightingParameters l, Material m, vec4 predictedMFD)
-{
-#if FRESNEL_EFFECT_ENABLED
-    vec3 mfdFresnelBase = m.specularColor * distTimesPi(l.nDotH, vec3(m.roughness));
-    vec3 mfdFresnelAnalytic = fresnel(mfdFresnelBase, vec3(getLuminance(mfdFresnelBase) / getLuminance(m.specularColor)), l.hDotV);
-    float grazingIntensity = getLuminance(max(vec3(0.0), predictedMFD.rgb) / m.specularColor);
-    return max(vec3(0.0), fresnel(predictedMFD.rgb, vec3(grazingIntensity), l.hDotV));
-#else // !FRESNEL_EFFECT_ENABLED
-    vec3 mfdFresnelAnalytic = m.specularColor * distTimesPi(l.nDotH, vec3(m.roughness));
-    return max(vec3(0.0), predictedMFD.rgb);
-#endif // FRESNEL_EFFECT_ENABLED
-}
-
-#ifdef SPECULAR_PRECOMPUTATION
-vec3 specular(LightingParameters l, Material m, SPECULAR_PRECOMPUTATION p)
-{
-    return specularFromPredictedMFD(l, m, p[l.lightIndex]);
-}
-#else
-vec3 specular(LightingParameters l, Material m)
-{
-    return specularFromPredictedMFD(l, m, computeBuehler(l.halfDir, l.normalDir, m));
-}
-#endif
 
 vec3 diffuse(LightingParameters l, Material m)
 {
