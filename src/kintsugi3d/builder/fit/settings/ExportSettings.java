@@ -21,6 +21,7 @@ public class ExportSettings
 
     private boolean glTFEnabled = false;
     private boolean glTFPackTextures = false;
+    private boolean openViewerOnceComplete = false;
 
     public boolean isGlTFEnabled()
     {
@@ -70,5 +71,15 @@ public class ExportSettings
     public void setMinimumTextureResolution(int minimumTextureResolution)
     {
         this.minimumTextureResolution = minimumTextureResolution;
+    }
+
+    public boolean isOpenViewerOnceComplete()
+    {
+        return openViewerOnceComplete;
+    }
+
+    public void setOpenViewerOnceComplete(boolean openViewerOnceComplete)
+    {
+        this.openViewerOnceComplete = openViewerOnceComplete;
     }
 }

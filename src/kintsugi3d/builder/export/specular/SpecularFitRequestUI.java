@@ -68,6 +68,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
     @FXML private CheckBox exportGLTFCheckbox;
     @FXML private CheckBox exportGLTFPackedCheckbox;
     @FXML private CheckBox exportTextureLODsCheckbox;
+    @FXML private CheckBox openViewerOnComplete;
 
     @FXML private Button runButton;
 
@@ -205,6 +206,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
             settings.getSpecularBasisSettings().setBasisResolution(microfacetDistributionResolution);
 
             settings.getExportSettings().setCombineWeights(true /* combineWeightsCheckbox.isSelected() */);
+            settings.getExportSettings().setOpenViewerOnceComplete(openViewerOnComplete.isSelected());
 
             // Specular / general settings
             double convergenceTolerance = Double.parseDouble(convergenceToleranceTextField.getText());

@@ -71,6 +71,7 @@
                         <KeyCodeCombination alt="UP" code="P" control="ANY" meta="UP" shift="UP" shortcut="UP" />
                     </accelerator>
                 </MenuItem>
+                <MenuItem mnemonicParsing="false" onAction="#launchViewerApp" text="Launch Kintsugi 3D Viewer" />
             </items>
         </Menu>
         <Menu mnemonicParsing="false" text="Environment">
