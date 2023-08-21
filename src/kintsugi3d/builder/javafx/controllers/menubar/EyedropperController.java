@@ -46,16 +46,15 @@ public class EyedropperController implements Initializable {
     private static final Logger log = LoggerFactory.getLogger(EyedropperController.class);
 
     static final String[] validExtensions = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
-    @FXML private Button chooseImageButton;
+
+    @FXML private Button chooseImageButton; // appears on top of the image view pane --> visible upon opening
+    @FXML private Button chooseNewImageButton; //appears below the color selection txt fields --> hidden upon opening
+    @FXML private Button cropButton; //appears below the choose new image button --> hidden upon opening
+
+
 
     @FXML
     private Rectangle selectionRectangle;
-
-    @FXML
-    private Rectangle paletteColor0, paletteColor1, paletteColor2, paletteColor3, paletteColor4, paletteColor5, paletteColor6,
-            paletteColor7, paletteColor8, paletteColor9, paletteColor10, paletteColor11, paletteColor12, paletteColor13, paletteColor14;
-    private List<Rectangle> paletteColorRectangles;
-    private int selectedColorInsertIndex; //first index in color palette which does not have a color assigned to it
 
     @FXML
     private Rectangle finalSelectRect1, finalSelectRect2, finalSelectRect3, finalSelectRect4, finalSelectRect5, finalSelectRect6;
@@ -66,15 +65,10 @@ public class EyedropperController implements Initializable {
     private List<Button> colorSelectButtons;
 
     @FXML
-    private Button cropButton;
-
-    @FXML
     private Button applyButton;
     private boolean isCropping;//enabled by crop button and disabled when cropping is finished
     private boolean isSelecting;//enabled by "Select Color" buttons and disabled when selection is finished
     private boolean canResetCrop; //enabled when cropping is finished and disabled when crop is reset to default viewport
-    private boolean firstColorSelected;
-
     static final String DEFAULT_BUTTON_TEXT = "Select Color";
 
     @FXML
@@ -106,27 +100,8 @@ public class EyedropperController implements Initializable {
         isSelecting = false;
         isCropping = false;
         canResetCrop = false;
-        firstColorSelected = false;
-
-        selectedColorInsertIndex = 0;
 
         selectedColors = new ArrayList<>();
-        paletteColorRectangles = new ArrayList<>();
-        paletteColorRectangles.add(paletteColor0);
-        paletteColorRectangles.add(paletteColor1);
-        paletteColorRectangles.add(paletteColor2);
-        paletteColorRectangles.add(paletteColor3);
-        paletteColorRectangles.add(paletteColor4);
-        paletteColorRectangles.add(paletteColor5);
-        paletteColorRectangles.add(paletteColor6);
-        paletteColorRectangles.add(paletteColor7);
-        paletteColorRectangles.add(paletteColor8);
-        paletteColorRectangles.add(paletteColor9);
-        paletteColorRectangles.add(paletteColor10);
-        paletteColorRectangles.add(paletteColor11);
-        paletteColorRectangles.add(paletteColor12);
-        paletteColorRectangles.add(paletteColor13);
-        paletteColorRectangles.add(paletteColor14);
 
         colorSelectButtons = new ArrayList<>();
         colorSelectButtons.add(button1);
@@ -205,10 +180,8 @@ public class EyedropperController implements Initializable {
             // Set the color label text
             colorLabel.setText("Greyscale: " + Math.round(getGreyScaleDouble(averageColor)));
 
-            //display average color to user
-            updateAverageColorPreview(averageColor);
-
-            firstColorSelected = true;
+            //display average color to user, change text for corresponding text field
+            addSelectedColor(averageColor);
         }
 
         if(isCropping){
@@ -394,95 +367,36 @@ public class EyedropperController implements Initializable {
     }
 
     //returns false if the color is null or has already been added
-    public boolean addSelectedColor() {
-        //add selected color to palette
-        //if color is null, or has already been selected, return false
-        //else, find the highest rectangle in the palette which does not have a color
-        //      and change that rectangle's color to the selected color (kept track of using selectedColorInsertIndex)
-        //also, update the text field (to int. greyscale value) and its corresponding color square
-        Color newColor = (Color) averageColorPreview.getFill();
+    public boolean addSelectedColor(Color newColor) {
+        //update the text field (to int. greyscale value) and its corresponding color square
+        Button sourceButton = resetButtonsText();
 
-        if (firstColorSelected) {
-            //get the rectangle for the first empty color slot in palette
-            Rectangle rect = paletteColorRectangles.get(selectedColorInsertIndex);
-            if (!isColorInList(newColor)) {
-                rect.setFill(newColor);//only add color to palette if it is not a duplicate
-            }
+        if (sourceButton != null) {
+            //modify appropriate text field to average greyscale value
+            TextField partnerTxtField = getTextFieldForButton(sourceButton);
 
-            Button sourceButton = resetButtonsText();
-            if (sourceButton != null) {
-                //modify appropriate text field to average greyscale value
-                TextField partnerTxtField = getTextFieldForButton(sourceButton);
+            //java would use the wrong overload of round() if it used a double
+            Integer greyScale = Math.round((float)getGreyScaleDouble(newColor));
+            assert partnerTxtField != null;
+            partnerTxtField.setText(String.valueOf(greyScale));
 
-                //java would use the wrong overload of round() if it used a double
-                Integer greyScale = Math.round((float)getGreyScaleDouble(newColor));
-                partnerTxtField.setText(String.valueOf(greyScale));
+            //without these two lines, text field would not update properly
+            partnerTxtField.positionCaret(partnerTxtField.getText().length());
+            partnerTxtField.positionCaret(0);
 
-                //without these two lines, text field would not update properly
-                partnerTxtField.positionCaret(partnerTxtField.getText().length());
-                partnerTxtField.positionCaret(0);
+            //update square which contains the average color visual for the button
+            Rectangle partnerRectangle = getRectangleForButton(sourceButton);
+            updateFinalSelectRect(partnerRectangle);
 
-                //update square which contains the average color visual for the button
-                Rectangle partnerRectangle = getRectangleForButton(sourceButton);
-                updateFinalSelectRect(partnerRectangle);
-
-                //disable/enable apply button as needed
-                updateApplyButton();
-            }
-            else{
-                Toolkit.getDefaultToolkit().beep();
-                return false; //source button is null
-            }
-
-            ++selectedColorInsertIndex;
-            isSelecting = false;
-            return true;//color changed successfully
+            //disable/enable apply button as needed
+            updateApplyButton();
         }
-        Toolkit.getDefaultToolkit().beep();
-        return false;//no color has been selected yet
-    }
-
-    public void removeColor() {
-        if(selectedColorInsertIndex > 0){
-            Rectangle removeRect = null;
-            //find the rectangle which needs to be removed
-            //currently, program finds the rectangle which has the same color as the averageColorPreview
-            //averageColorPreview takes the color of the last selected rectangle
-            //TODO: SHOW HIGHLIGHTING AROUND RECTANGLE WHEN IT IS SELECTED?
-
-            for(Rectangle rect : paletteColorRectangles){
-                if(rect.getFill().equals(averageColorPreview.getFill())){
-                    removeRect = rect;
-                    break;
-                }
-            }
-
-            if (removeRect == null){//no rectangle matches the color of the average color preview
-                Toolkit.getDefaultToolkit().beep();
-                return;
-            }
-
-            //find removeRect's location in palette by getting the number at the end of its name
-            String rectID = removeRect.getId();
-            Pattern pattern = Pattern.compile("\\D*(\\d+)$");
-            Matcher matcher = pattern.matcher(rectID);
-            int startingIndex;
-            if (matcher.find()) {
-                String numberString = matcher.group(1);
-                startingIndex = Integer.parseInt(numberString);
-            }
-            else{
-                Toolkit.getDefaultToolkit().beep();
-                return;//TODO: PROPER SOLUTION?
-                //pretty sure this would only be reached if a rectangle was improperly named
-            }
-
-            //rect 3 color goes to rect 2, rect 2 color goes to rect 1, etc
-            for (int i = startingIndex; i < selectedColorInsertIndex; ++i){//from removed rectangle to last rect w/ assigned color
-                paletteColorRectangles.get(i).setFill(paletteColorRectangles.get(i + 1).getFill());
-            }
-            --selectedColorInsertIndex;
+        else{
+            Toolkit.getDefaultToolkit().beep();
+            return false; //source button is null
         }
+        isSelecting = false;
+        return true;//color changed successfully
     }
 
     private void updateFinalSelectRect(Rectangle rect) {//when a text field is updated, update the rectangle beside it
@@ -607,18 +521,9 @@ public class EyedropperController implements Initializable {
         }
     }
 
-    private boolean isColorInList(Color newColor) {
-        for (Rectangle rect : paletteColorRectangles) {
-            if (rect.getFill().equals(newColor))
-                return true;
-        }
-        return false;
-    }
-
     public void applyButtonPressed() {
-        boolean isGoodInput = areAllFieldsValid();//check to see if all text fields contain valid input
-
-        if(isGoodInput && isGoodLoadingModel()) {
+        //check to see if all text fields contain valid input, and model is loaded
+        if(areAllFieldsValid() && isGoodLoadingModel()) {
             loadingModel.setTonemapping(
                     new double[]{0.031, 0.090, 0.198, 0.362, 0.591, 0.900},
                     new byte[]
@@ -639,13 +544,13 @@ public class EyedropperController implements Initializable {
     }
 
     private boolean areAllFieldsValid(){
-        //only apply color calibration if all text fields are filled with good info (integers)
+        //only return true if all text fields are filled with good info (integers)
         for (TextField field : colorSelectTxtFields){//TODO: CHECK IF VALS ARE 0-255?
             if(!field.getText().matches("-?\\d+")){//regex to check if input is integer
                 return false;
             }
         }
-        return this.loadingModel.hasValidHandler();
+        return true;
     }
 
     public void enterColorSelectionMode(ActionEvent actionEvent) {
@@ -715,7 +620,14 @@ public class EyedropperController implements Initializable {
             //TODO: PULL IN TIF SUPPORT FROM COLOR CHECKER IMG SELECTION CONTROLLER
             selectedFile = new Image(file.toURI().toString());
             colorPickerImgView.setImage(selectedFile);
+
+            //update viewport
+            resetViewport(colorPickerImgView);
+
+            //update buttons
             chooseImageButton.setVisible(false);
+            chooseNewImageButton.setVisible(true);
+            cropButton.setVisible(true);
         }
     }
 }

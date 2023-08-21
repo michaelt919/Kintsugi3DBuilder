@@ -352,7 +352,6 @@
                         <KeyCodeCombination alt="UP" code="P" control="ANY" meta="UP" shift="UP" shortcut="UP" />
                     </accelerator>
                 </MenuItem>
-                <MenuItem mnemonicParsing="false" onAction="#file_colorChecker" text="Enter Color Checker Values... (DEPRECATED)" visible="false" />
                 <MenuItem mnemonicParsing="false" onAction="#unzip" text="Unzip Metashape File">
                     <accelerator>
                         <KeyCodeCombination alt="UP" code="M" control="ANY" meta="UP" shift="UP" shortcut="UP" />

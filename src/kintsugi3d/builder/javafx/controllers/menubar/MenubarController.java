@@ -301,21 +301,6 @@ public class MenubarController
             }
         });
 
-        //add graphic to settings button
-//        try {
-//            settingsButton.setGraphic(new ImageView(new Image(new File("ibr-icon.png").toURI().toURL().toString())));
-//            double scale = 0.5;
-//            settingsButton.setScaleX(scale);
-//            settingsButton.setScaleY(scale);
-//            settingsButton.setScaleZ(scale);
-//            settingsButton.setTranslateX(10);
-//            HBox parent = (HBox) settingsButton.getParent();
-//            parent.setTranslateY(-15);
-//        } catch (MalformedURLException e) {
-//            settingsButton.setText("System Settings");
-//            throw new RuntimeException(e);
-//        }
-
         RecentProjects.initializeMenubarController(this);
         updateRecentProjectsMenu();
 
@@ -583,26 +568,6 @@ public class MenubarController
         stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
 
         return stage;
-    }
-
-    public void file_colorChecker()
-    {
-        if (colorCheckerWindowOpen.get())
-        {
-            return;
-        }
-
-        try
-        {
-            ColorCheckerController colorCheckerController =
-                makeWindow("Color Checker", colorCheckerWindowOpen, "fxml/menubar/ColorChecker.fxml");
-            colorCheckerController.init(MultithreadModels.getInstance().getLoadingModel());
-
-        }
-        catch(Exception e)
-        {
-            handleException("An error occurred opening color checker", e);
-        }
     }
 
     public void unzip() {
