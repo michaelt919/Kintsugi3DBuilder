@@ -20,6 +20,7 @@ import java.util.Objects;
 import java.util.Optional;
 import javax.imageio.ImageIO;
 
+import kintsugi3d.builder.rendering.components.IBRSubject;
 import kintsugi3d.builder.resources.ibr.IBRResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
     private final ContextType context;
     private final IBRResources<ContextType> resources;
     private final LightingResources<ContextType> lightingResources;
+    private final IBRSubject<ContextType> subject;
 
     private boolean newEnvironmentDataAvailable;
     private EnvironmentMap newEnvironmentData;
@@ -47,7 +49,8 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
     private long environmentLastModified;
     private final Object loadEnvironmentLock = new Object();
 
-    @SuppressWarnings("FieldCanBeLocal")
+    private volatile File desiredShaderFile;
+
     private volatile File desiredEnvironmentFile;
 
     private boolean newBackplateDataAvailable;
@@ -64,18 +67,18 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
     private boolean newLightCalibrationAvailable;
     private Vector3 newLightCalibration;
 
-    @SuppressWarnings("FieldCanBeLocal")
     private volatile File desiredBackplateFile;
 
     private AbstractImage currentEnvironmentMap;
 
     public DynamicResourceLoader(LoadingMonitor loadingMonitor, IBRResources<ContextType> resources,
-                                 LightingResources<ContextType> lightingResources)
+        IBRSubject<ContextType> subject, LightingResources<ContextType> lightingResources)
     {
         this.loadingMonitor = loadingMonitor;
         this.context = resources.getContext();
         this.resources = resources;
         this.lightingResources = lightingResources;
+        this.subject = subject;
     }
 
     public void update()
@@ -90,6 +93,14 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
         {
             lightingResources.takeBackplateTexture(null);
             this.backplateUnloadRequested = false;
+        }
+
+        if (this.desiredShaderFile != null)
+        {
+            this.subject.useFragmentShader(desiredShaderFile);
+            this.subject.reloadShaders();
+
+            this.desiredShaderFile = null;
         }
 
         if (this.newEnvironmentDataAvailable)
@@ -192,6 +203,12 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
             this.resources.updateLightCalibration(this.newLightCalibration);
             this.newLightCalibrationAvailable = false;
         }
+    }
+
+    @Override
+    public void requestFragmentShader(File shaderFile)
+    {
+        this.desiredShaderFile = shaderFile;
     }
 
     @Override

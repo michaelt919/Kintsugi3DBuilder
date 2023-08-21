@@ -12,15 +12,15 @@
 
 package kintsugi3d.builder.fit.finalize;
 
+import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.gl.core.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-
-import kintsugi3d.builder.resources.specular.SpecularResources;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.builder.core.TextureFitSettings;
 
 public final class AlbedoORMOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -53,12 +53,11 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
     private AlbedoORMOptimization(ContextType context, Texture2D<ContextType> occlusionMap, TextureFitSettings settings)
         throws FileNotFoundException
     {
-        // Graphics context
         this.occlusionMap = occlusionMap;
         estimationProgram = createProgram(context, occlusionMap != null);
         framebuffer = context.buildFramebufferObject(settings.width, settings.height)
-            .addColorAttachment(ColorFormat.RGBA32F) // total albedo
-            .addColorAttachment(ColorFormat.RGBA32F) // ORM
+            .addColorAttachment(ColorFormat.RGBA8) // total albedo
+            .addColorAttachment(ColorFormat.RGBA8) // ORM
             .createFramebufferObject();
 
         // Create basic rectangle vertex buffer
@@ -66,12 +65,59 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         drawable = context.createDrawable(estimationProgram);
         drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
         drawable.addVertexBuffer("position", rect);
-
-        estimationProgram.setUniform("gamma", settings.gamma);
     }
 
-    public void execute(SpecularResources<ContextType> specularFit)
+    public static <ContextType extends Context<ContextType>> AlbedoORMOptimization<ContextType> loadFromPriorSolution(
+        ContextType context, File priorSolutionDirectory) throws IOException
     {
+        return new AlbedoORMOptimization<>(context, priorSolutionDirectory);
+    }
+
+    private AlbedoORMOptimization(ContextType context, File priorSolutionDirectory)
+        throws IOException
+    {
+        File albedoMapFile = new File(priorSolutionDirectory, "albedo.png");
+        Texture2D<ContextType> albedoMap = albedoMapFile.exists() ?
+            context.getTextureFactory()
+                .build2DColorTextureFromFile(albedoMapFile, true)
+                .setLinearFilteringEnabled(true).createTexture()
+            : null;
+
+        // Load ORM map and use it as occlusion map (to preserve the occlusion stored in the red channel of ORM)
+        File ormMapFile = new File(priorSolutionDirectory, "orm.png");
+        this.occlusionMap = ormMapFile.exists() ?
+            context.getTextureFactory().build2DColorTextureFromFile(ormMapFile, true)
+                .setLinearFilteringEnabled(true).createTexture()
+            : null;
+
+        if (albedoMap != null)
+        {
+            framebuffer =
+                context.buildFramebufferObject(albedoMap.getWidth(), albedoMap.getHeight())
+                    .addEmptyColorAttachment() // Will copy in albedo map after FBO is created
+                    .addColorAttachment(ColorFormat.RGBA8) // Will blit in ORM map after FBO is created
+                    .createFramebufferObject();
+            framebuffer.setColorAttachment(0, albedoMap);
+            framebuffer.getColorAttachmentTexture(1).blitScaled(occlusionMap, true);
+
+            estimationProgram = createProgram(context, occlusionMap != null);
+
+            // Create basic rectangle vertex buffer
+            rect = context.createRectangle();
+            drawable = context.createDrawable(estimationProgram);
+            drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
+            drawable.addVertexBuffer("position", rect);
+        }
+        else
+        {
+            drawable = null;
+        }
+    }
+
+    public void execute(SpecularMaterialResources<ContextType> specularFit, float gamma)
+    {
+        estimationProgram.setUniform("gamma", gamma);
+
         // Set up shader program
         estimationProgram.setTexture("diffuseEstimate", specularFit.getDiffuseMap());
         estimationProgram.setTexture("specularEstimate", specularFit.getSpecularReflectivityMap());
@@ -90,7 +136,6 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         // Estimate albedo and roughness; passthrough occlusion if it is present
         framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
         framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-        framebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
         drawable.draw(framebuffer);
     }
 
@@ -100,30 +145,32 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         if (estimationProgram != null)
         {
             estimationProgram.close();
-            estimationProgram = null;
         }
 
         if (framebuffer != null)
         {
             framebuffer.close();
-            framebuffer = null;
         }
 
         if (rect != null)
         {
             rect.close();
-            rect = null;
+        }
+
+        if (occlusionMap != null)
+        {
+            occlusionMap.close();
         }
     }
 
     public Texture2D<ContextType> getAlbedoMap()
     {
-        return framebuffer.getColorAttachmentTexture(0);
+        return framebuffer == null ? null : framebuffer.getColorAttachmentTexture(0);
     }
 
     public Texture2D<ContextType> getORMMap()
     {
-        return framebuffer.getColorAttachmentTexture(1);
+        return framebuffer == null ? null : framebuffer.getColorAttachmentTexture(1);
     }
 
     public void saveTextures(File outputDirectory)

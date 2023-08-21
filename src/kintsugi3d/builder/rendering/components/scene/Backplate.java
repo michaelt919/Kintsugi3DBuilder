@@ -12,17 +12,22 @@
 
 package kintsugi3d.builder.rendering.components.scene;
 
+import kintsugi3d.builder.rendering.IBREngine;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.builder.state.BackgroundMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 
 public class Backplate<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(Backplate.class);
     private final ContextType context;
     private final LightingResources<ContextType> lightingResources;
     private final SceneModel sceneModel;
@@ -39,23 +44,54 @@ public class Backplate<ContextType extends Context<ContextType>> implements Rend
     }
 
     @Override
-    public void initialize() throws Exception
+    public void initialize()
     {
         this.rectangleVertices = context.createRectangle();
 
-        this.tintedTexProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
-                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "texture_tint.frag"))
-                .createProgram();
+        try
+        {
+            this.tintedTexProgram = context.getShaderProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "texture_tint.frag"))
+                    .createProgram();
+        }
+        catch (FileNotFoundException|RuntimeException e)
+        {
+            log.error("Failed to load shader.", e);
+        }
 
         this.tintedTexDrawable = context.createDrawable(tintedTexProgram);
         this.tintedTexDrawable.addVertexBuffer("position", this.rectangleVertices);
     }
 
     @Override
-    public void reloadShaders() throws Exception
+    public void reloadShaders()
     {
+        if (this.tintedTexProgram != null)
+        {
 
+            try
+            {
+                ProgramObject<ContextType> newProgram = context.getShaderProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "texture_tint.frag"))
+                    .createProgram();
+
+                if (this.tintedTexProgram != null)
+                {
+                    this.tintedTexProgram.close();
+                }
+
+                this.tintedTexProgram = newProgram;
+
+                this.tintedTexDrawable = context.createDrawable(tintedTexProgram);
+                this.tintedTexDrawable.addVertexBuffer("position", this.rectangleVertices);
+            }
+            catch (FileNotFoundException|RuntimeException e)
+            {
+                log.error("Failed to load shader.", e);
+            }
+        }
     }
 
     @Override

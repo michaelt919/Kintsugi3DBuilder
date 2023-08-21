@@ -72,6 +72,18 @@ public interface ReadonlyViewSet
     File getGeometryFile();
 
     /**
+     * Gets the file path of the supporting files (i.e. texture fit results) associated with this view set.
+     * @return The absolute file path of the supporting files.
+     */
+    File getSupportingFilesFilePath();
+
+    /**
+     * Gets the file path of the supporting files (i.e. texture fit results) associated with this view set, relative to the root directory.
+     * @return The relative file path of the supporting files.
+     */
+    String getRelativeSupportingFilesPathName();
+
+    /**
      * Gets the full resolution image file path associated with this view set.
      * @return The image file path.
      */

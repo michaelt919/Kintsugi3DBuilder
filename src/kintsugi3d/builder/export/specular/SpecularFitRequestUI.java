@@ -12,15 +12,10 @@
 
 package kintsugi3d.builder.export.specular;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
@@ -30,12 +25,18 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.app.ApplicationFolders;
+import kintsugi3d.builder.core.IBRRequestQueue;
+import kintsugi3d.builder.core.IBRRequestUI;
+import kintsugi3d.builder.core.Kintsugi3DBuilderState;
+import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
+import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
-import kintsugi3d.builder.io.ViewSetReaderFromVSET;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
 public class SpecularFitRequestUI implements IBRRequestUI
 {
@@ -194,17 +195,16 @@ public class SpecularFitRequestUI implements IBRRequestUI
 
             SpecularFitRequestParams settings = new SpecularFitRequestParams(new TextureFitSettings(
                     Integer.parseInt(widthTextField.getText()),
-                    Integer.parseInt(heightTextField.getText()),
-                    modelAccess.getSettingsModel().getFloat("gamma")),
-                modelAccess.getSettingsModel(),
-                new File(exportDirectoryField.getText()));
+                    Integer.parseInt(heightTextField.getText())),
+                modelAccess.getSettingsModel());
+            settings.setGamma(modelAccess.getSettingsModel().getFloat("gamma"));
 
             int basisCount = Integer.parseInt(basisCountTextField.getText());
             settings.getSpecularBasisSettings().setBasisCount(basisCount);
             int microfacetDistributionResolution = Integer.parseInt(mfdResolutionTextField.getText());
-            settings.getSpecularBasisSettings().setMicrofacetDistributionResolution(microfacetDistributionResolution);
+            settings.getSpecularBasisSettings().setBasisResolution(microfacetDistributionResolution);
 
-            settings.getExportSettings().setCombineWeights(combineWeightsCheckbox.isSelected());
+            settings.getExportSettings().setCombineWeights(true /* combineWeightsCheckbox.isSelected() */);
 
             // Specular / general settings
             double convergenceTolerance = Double.parseDouble(convergenceToleranceTextField.getText());
@@ -226,37 +226,37 @@ public class SpecularFitRequestUI implements IBRRequestUI
 
             // Settings which shouldn't usually need to be changed
             settings.getSpecularBasisSettings().setSmithMaskingShadowingEnabled(smithCheckBox.isSelected());
-            boolean levenbergMarquardtEnabled = levenbergMarquardtCheckBox.isSelected();
+            boolean levenbergMarquardtEnabled = true; //levenbergMarquardtCheckBox.isSelected();
             settings.getNormalOptimizationSettings().setLevenbergMarquardtEnabled(levenbergMarquardtEnabled);
             int unsuccessfulLMIterationsAllowed = Integer.parseInt(unsuccessfulLMIterationsTextField.getText());
             settings.getNormalOptimizationSettings().setUnsuccessfulLMIterationsAllowed(unsuccessfulLMIterationsAllowed);
-            boolean reconstructAll = reconstructAllCheckBox.isSelected();
-            settings.getReconstructionSettings().setReconstructAll(reconstructAll);
+//            boolean reconstructAll = reconstructAllCheckBox.isSelected();
+            settings.getReconstructionSettings().setReconstructAll(false /* reconstructAll*/);
 
             settings.getExportSettings().setGenerateLowResTextures(exportTextureLODsCheckbox.isSelected());
 
             // glTF export settings
-            settings.getExportSettings().setGlTFEnabled(exportGLTFCheckbox.isSelected());
+            settings.getExportSettings().setGlTFEnabled(true /* exportGLTFCheckbox.isSelected() */);
             settings.getExportSettings().setGlTFPackTextures(exportGLTFPackedCheckbox.isSelected());
 
-            if (reconstructionViewSetField.getText() != null && !reconstructionViewSetField.getText().isEmpty())
-            {
-                // Reconstruction view set
-                try
-                {
-                    ReadonlyViewSet reconstructionViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(
-                        new File(reconstructionViewSetField.getText()));
-                    settings.getReconstructionSettings().setReconstructionViewSet(reconstructionViewSet);
-                }
-                catch (Exception e)
-                {
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Invalid view set");
-                    alert.setHeaderText("Reconstruction view set is invalid.");
-                    alert.setContentText("Please try another view set or leave the field blank to use the view set for the current model.");
-                    log.error("Invalid view set error:", e);
-                }
-            }
+//            if (reconstructionViewSetField.getText() != null && !reconstructionViewSetField.getText().isEmpty())
+//            {
+//                // Reconstruction view set
+//                try
+//                {
+//                    ReadonlyViewSet reconstructionViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(
+//                        new File(reconstructionViewSetField.getText()));
+//                    settings.getReconstructionSettings().setReconstructionViewSet(reconstructionViewSet);
+//                }
+//                catch (Exception e)
+//                {
+//                    Alert alert = new Alert(Alert.AlertType.ERROR);
+//                    alert.setTitle("Invalid view set");
+//                    alert.setHeaderText("Reconstruction view set is invalid.");
+//                    alert.setContentText("Please try another view set or leave the field blank to use the view set for the current model.");
+//                    log.error("Invalid view set error:", e);
+//                }
+//            }
 
             // Image cache settings
             settings.getImageCacheSettings().setCacheParentDirectory(ApplicationFolders.getFitCacheRootDirectory().toFile());
@@ -268,17 +268,17 @@ public class SpecularFitRequestUI implements IBRRequestUI
 
             SpecularFitRequest request = new SpecularFitRequest(settings, modelAccess);
 
-            if (priorSolutionCheckBox.isSelected() && priorSolutionField.getText() != null && !priorSolutionField.getText().isEmpty())
-            {
-                // Run as a "Graphics request" that doesn't require IBR resources to be loaded (since we're using a prior solution)
-                settings.setPriorSolutionDirectory(new File(priorSolutionField.getText()));
-                requestQueue.addGraphicsRequest(request);
-            }
-            else
-            {
+//            if (priorSolutionCheckBox.isSelected() && priorSolutionField.getText() != null && !priorSolutionField.getText().isEmpty())
+//            {
+//                // Run as a "Graphics request" that doesn't require IBR resources to be loaded (since we're using a prior solution)
+//                settings.setPriorSolutionDirectory(new File(priorSolutionField.getText()));
+//                requestQueue.addGraphicsRequest(request);
+//            }
+//            else
+//            {
                 // Run as an IBR request that optimizes from scratch.
                 requestQueue.addIBRRequest(request);
-            }
+//            }
         });
     }
 }

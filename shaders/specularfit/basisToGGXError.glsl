@@ -20,9 +20,9 @@ float calculateError(vec3 diffuse, vec3 reflectivity, float roughness)
 
     float roughnessSquared = roughness * roughness;
 
-    for (int m = 1; m < MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+    for (int m = 1; m < BASIS_RESOLUTION; m++)
     {
-        float sqrtAngle = float(m) / float(MICROFACET_DISTRIBUTION_RESOLUTION);
+        float sqrtAngle = float(m) / float(BASIS_RESOLUTION);
         float nDotH = cos(sqrtAngle * sqrtAngle * PI / 3.0);
         float nDotHSq = nDotH * nDotH;
 

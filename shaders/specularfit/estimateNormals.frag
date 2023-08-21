@@ -22,8 +22,8 @@ layout(location = 1) out vec4 dampingOut;
 //uniform float dampingFactor;
 uniform sampler2D dampingTex;
 
-#ifndef MICROFACET_DISTRIBUTION_RESOLUTION
-#define MICROFACET_DISTRIBUTION_RESOLUTION 90
+#ifndef BASIS_RESOLUTION
+#define BASIS_RESOLUTION 90
 #endif
 
 #ifndef USE_LEVENBERG_MARQUARDT
@@ -38,8 +38,8 @@ vec3 getMFDGradient(float nDotH)
 {
     vec3 estimate = vec3(0);
     float wMid = sqrt(max(0.0, acos(nDotH) * 3.0 / PI));
-    float wLow = wMid - 1.0 / MICROFACET_DISTRIBUTION_RESOLUTION;
-    float wHigh = wMid + 1.0 / MICROFACET_DISTRIBUTION_RESOLUTION;
+    float wLow = wMid - 1.0 / BASIS_RESOLUTION;
+    float wHigh = wMid + 1.0 / BASIS_RESOLUTION;
 
     for (int b = 0; b < BASIS_COUNT; b++)
     {
@@ -80,7 +80,7 @@ void main()
     mat3 tangentToObject = constructTBNExact();
     vec3 triangleNormal = tangentToObject[2];
 
-    vec2 prevNormalXY = texture(normalEstimate, fTexCoord).xy * 2 - vec2(1.0);
+    vec2 prevNormalXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
     vec3 prevNormalTS = vec3(prevNormalXY, sqrt(1 - dot(prevNormalXY, prevNormalXY)));
 
     vec3 fittingTangent = normalize(vec3(1, 0, 0) - prevNormalTS.x * prevNormalTS);
@@ -119,7 +119,7 @@ void main()
             // "Light intensity" is defined in such a way that we need to multiply by pi to be properly normalized.
             vec3 incidentRadiance = PI * getLightIntensity(k) / dot(lightDisplacement, lightDisplacement);
 
-            float roughness = texture(roughnessEstimate, fTexCoord)[0];
+            float roughness = texture(roughnessMap, fTexCoord)[0];
             float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
 
             vec3 actualReflectanceTimesNDotL = imgColor.rgb / incidentRadiance;

@@ -12,19 +12,6 @@
 
 package kintsugi3d.builder.javafx;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleFloatProperty;
@@ -37,21 +24,30 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
-import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.SynchronizedWindow;
 import kintsugi3d.builder.app.WindowSynchronization;
-import kintsugi3d.builder.core.StandardRenderingMode;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.scene.RootSceneController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
+import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
+import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerializer;
+import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.util.ShadingParameterMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class MainApplication extends Application
 {
@@ -261,7 +257,6 @@ public class MainApplication extends Application
         settingsModel.createSettingFromProperty("occlusionBias", Number.class,
             StaticUtilities.clamp(0, 0.1, new SimpleFloatProperty(0.0025f)), true);
         settingsModel.createObjectSetting("weightMode", ShadingParameterMode.PER_PIXEL, true);
-        settingsModel.createObjectSetting("renderingMode", StandardRenderingMode.IMAGE_BASED);
         settingsModel.createBooleanSetting("is3DGridEnabled", false, true);
         settingsModel.createBooleanSetting("compassEnabled", false, true);
         settingsModel.createBooleanSetting("multisamplingEnabled", false, true);
@@ -335,12 +330,12 @@ public class MainApplication extends Application
             WindowSynchronization.getInstance().quit();
         });
 
-        welcomeStage.setOnCloseRequest(event ->
-        {
-            // Consume the event and let the window synchronization system close the stage later if the user confirms that they want to exit.
-            event.consume();
-            WindowSynchronization.getInstance().quit();
-        });
+//        welcomeStage.setOnCloseRequest(event ->
+//        {
+//            // Consume the event and let the window synchronization system close the stage later if the user confirms that they want to exit.
+//            event.consume();
+//            WindowSynchronization.getInstance().quit();
+//        });
 
         // Focus synchronization not working quite right.
 //        sceneStage.focusedProperty().addListener(event ->

@@ -52,107 +52,107 @@ class EventCollector
         return listenerManager;
     }
 
-    void canvasPos(Consumer<CanvasPositionListener> event)
+    synchronized void canvasPos(Consumer<CanvasPositionListener> event)
     {
         this.canvasPos.add(event);
     }
 
-    void canvasSize(Consumer<CanvasSizeListener> event)
+    synchronized void canvasSize(Consumer<CanvasSizeListener> event)
     {
         this.canvasSize.add(event);
     }
 
-    void windowClose(Consumer<WindowCloseListener> event)
+    synchronized void windowClose(Consumer<WindowCloseListener> event)
     {
         this.windowClose.add(event);
     }
 
-    void canvasRefresh(Consumer<CanvasRefreshListener> event)
+    synchronized void canvasRefresh(Consumer<CanvasRefreshListener> event)
     {
         this.canvasRefresh.add(event);
     }
 
-    void windowFocusLost(Consumer<WindowFocusLostListener> event)
+    synchronized void windowFocusLost(Consumer<WindowFocusLostListener> event)
     {
         this.windowFocusLost.add(event);
     }
 
-    void windowFocusGained(Consumer<WindowFocusGainedListener> event)
+    synchronized void windowFocusGained(Consumer<WindowFocusGainedListener> event)
     {
         this.windowFocusGained.add(event);
     }
 
-    void windowIconified(Consumer<WindowIconifiedListener> event)
+    synchronized void windowIconified(Consumer<WindowIconifiedListener> event)
     {
         this.windowIconified.add(event);
     }
 
-    void windowRestored(Consumer<WindowRestoredListener> event)
+    synchronized void windowRestored(Consumer<WindowRestoredListener> event)
     {
         this.windowRestored.add(event);
     }
 
-    void framebufferSize(Consumer<FramebufferSizeListener> event)
+    synchronized void framebufferSize(Consumer<FramebufferSizeListener> event)
     {
         this.framebufferSize.add(event);
     }
 
-    void keyPress(Consumer<KeyPressListener> event)
+    synchronized void keyPress(Consumer<KeyPressListener> event)
     {
         this.keyPress.add(event);
     }
 
-    void keyRelease(Consumer<KeyReleaseListener> event)
+    synchronized void keyRelease(Consumer<KeyReleaseListener> event)
     {
         this.keyRelease.add(event);
     }
 
-    void keyType(Consumer<KeyTypeListener> event)
+    synchronized void keyType(Consumer<KeyTypeListener> event)
     {
         this.keyType.add(event);
     }
 
-    void character(Consumer<CharacterListener> event)
+    synchronized void character(Consumer<CharacterListener> event)
     {
         this.character.add(event);
     }
 
-    void charMods(Consumer<CharacterModifiersListener> event)
+    synchronized void charMods(Consumer<CharacterModifiersListener> event)
     {
         this.charMods.add(event);
     }
 
-    void mouseButtonPress(Consumer<MouseButtonPressListener> event)
+    synchronized void mouseButtonPress(Consumer<MouseButtonPressListener> event)
     {
         this.mouseButtonPress.add(event);
     }
 
-    void mouseButtonRelease(Consumer<MouseButtonReleaseListener> event)
+    synchronized void mouseButtonRelease(Consumer<MouseButtonReleaseListener> event)
     {
         this.mouseButtonRelease.add(event);
     }
 
-    void cursorPos(Consumer<CursorPositionListener> event)
+    synchronized void cursorPos(Consumer<CursorPositionListener> event)
     {
         this.cursorPos.add(event);
     }
 
-    void cursorEnter(Consumer<CursorEnteredListener> event)
+    synchronized void cursorEnter(Consumer<CursorEnteredListener> event)
     {
         this.cursorEnter.add(event);
     }
 
-    void cursorExit(Consumer<CursorExitedListener> event)
+    synchronized void cursorExit(Consumer<CursorExitedListener> event)
     {
         this.cursorExit.add(event);
     }
 
-    void scroll(Consumer<ScrollListener> event)
+    synchronized void scroll(Consumer<ScrollListener> event)
     {
         this.scroll.add(event);
     }
 
-    private <L> void pollEvents(Queue<Consumer<L>> eventQueue, Iterable<L> listeners)
+    private synchronized <L> void pollEvents(Queue<Consumer<L>> eventQueue, Iterable<L> listeners)
     {
         while(!eventQueue.isEmpty())
         {

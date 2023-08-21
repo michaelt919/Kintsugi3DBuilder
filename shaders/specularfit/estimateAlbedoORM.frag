@@ -12,7 +12,7 @@
  *
  */
 
-#include <shaders/colorappearance/linearize.glsl>
+#include <colorappearance/linearize.glsl>
 #line 17 0
 
 #ifndef OCCLUSION_TEXTURE_ENABLED

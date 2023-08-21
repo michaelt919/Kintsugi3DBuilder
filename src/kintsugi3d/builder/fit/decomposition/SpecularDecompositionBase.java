@@ -12,19 +12,19 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.builder.export.specular.SpecularFitSerializer;
-import org.ejml.data.DMatrixRMaj;
-import org.ejml.simple.SimpleMatrix;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.builder.core.TextureFitSettings;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.IntStream;
+
+import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.export.specular.SpecularFitSerializer;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.simple.SimpleMatrix;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class SpecularDecompositionBase implements SpecularDecomposition
 {
@@ -48,6 +48,7 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
     {
         return textureFitSettings;
     }
+
 
     @Override
     public boolean areWeightsValid(int texelIndex)

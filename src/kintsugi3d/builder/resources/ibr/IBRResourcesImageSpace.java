@@ -12,6 +12,30 @@
 
 package kintsugi3d.builder.resources.ibr;
 
+import kintsugi3d.builder.app.ApplicationFolders;
+import kintsugi3d.builder.app.Rendering;
+import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
+import kintsugi3d.builder.io.ViewSetReaderFromVSET;
+import kintsugi3d.gl.builders.ColorTextureBuilder;
+import kintsugi3d.gl.builders.ProgramBuilder;
+import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.geometry.GeometryMode;
+import kintsugi3d.gl.geometry.VertexGeometry;
+import kintsugi3d.gl.interactive.GraphicsRequest;
+import kintsugi3d.gl.material.TextureLoadOptions;
+import kintsugi3d.gl.nativebuffer.NativeDataType;
+import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
+import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.util.ImageFinder;
+import kintsugi3d.util.ImageHelper;
+import kintsugi3d.util.ImageUndistorter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.Arrays;
@@ -20,31 +44,6 @@ import java.util.Objects;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
-import javax.imageio.ImageIO;
-
-import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.app.Rendering;
-import kintsugi3d.gl.interactive.GraphicsRequest;
-import kintsugi3d.gl.interactive.ObservableGraphicsRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.builders.ColorTextureBuilder;
-import kintsugi3d.gl.builders.ProgramBuilder;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.geometry.GeometryMode;
-import kintsugi3d.gl.geometry.VertexGeometry;
-import kintsugi3d.gl.material.TextureLoadOptions;
-import kintsugi3d.gl.nativebuffer.NativeDataType;
-import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
-import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
-import kintsugi3d.builder.io.ViewSetReaderFromVSET;
-import kintsugi3d.util.ImageFinder;
-import kintsugi3d.util.ImageHelper;
-import kintsugi3d.util.ImageUndistorter;
 
 /**
  * A class that encapsulates all of the GPU resources like vertex buffers, uniform buffers, and textures for a given
@@ -109,6 +108,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         {
             this.viewSet.setPreviewImageResolution(loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
             String directoryName = String.format("%s/_%dx%d", viewSet.getUuid().toString(), loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
+
             this.viewSet.setRelativePreviewImagePathName(new File(ApplicationFolders.getPreviewImagesRootDirectory().toFile(), directoryName).toString());
         }
 
@@ -144,14 +144,19 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
-        public Builder<ContextType> loadVSETFile(File vsetFile) throws Exception
+        public Builder<ContextType> loadVSETFile(File vsetFile, File supportingFilesDirectory) throws Exception
         {
-            this.viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile);
+            this.viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile, supportingFilesDirectory);
             this.geometry = VertexGeometry.createFromOBJFile(this.viewSet.getGeometryFile());
 
             if (this.loadOptions != null)
             {
                 updateViewSetFromLoadOptions();
+            }
+
+            if (geometry != null)
+            {
+                viewSet.setGeometryFile(geometry.getFilename());
             }
 
             return this;
@@ -171,6 +176,11 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 this.viewSet.setRelativeFullResImagePathName(cameraFile.getParentFile().toPath().relativize(undistortedImageDirectory.toPath()).toString());
             }
 
+            if (geometry != null)
+            {
+                viewSet.setGeometryFile(geometry.getFilename());
+            }
+
             if (this.loadOptions != null)
             {
                 updateViewSetFromLoadOptions();
@@ -179,15 +189,32 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
+        public ViewSet getViewSet()
+        {
+            return viewSet;
+        }
+
         public Builder<ContextType> useExistingViewSet(ViewSet existingViewSet)
         {
             this.viewSet = existingViewSet;
+
+            if (geometry != null)
+            {
+                viewSet.setGeometryFile(geometry.getFilename());
+            }
+
             return this;
         }
 
         public Builder<ContextType> useExistingGeometry(VertexGeometry existingGeometry)
         {
             this.geometry = existingGeometry;
+
+            if (viewSet != null)
+            {
+                viewSet.setGeometryFile(geometry.getFilename());
+            }
+
             return this;
         }
 
@@ -218,7 +245,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
             if (imageDirectoryOverride != null)
             {
-                viewSet.setRelativeFullResImagePathName(viewSet.getRootDirectory().toPath().relativize(imageDirectoryOverride.toPath()).toString());
+                viewSet.setFullResImageDirectory(imageDirectoryOverride);
             }
 
             if (primaryViewName != null)
@@ -226,11 +253,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 viewSet.setPrimaryView(primaryViewName);
             }
 
-            if (geometry != null)
-            {
-                viewSet.setGeometryFileName(viewSet.getRootDirectory().toPath().relativize(geometry.getFilename().toPath()).toString());
-            }
-            else if (viewSet.getGeometryFile() != null)
+            if (geometry == null && viewSet.getGeometryFile() != null)
             {
                 // Load geometry if it wasn't specified but a view set was.
                 geometry = VertexGeometry.createFromOBJFile(viewSet.getGeometryFile());
@@ -534,14 +557,13 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
      *     <li>NORMAL_TEXTURE_ENABLED</li>
      * </ul>
      *
-     * @param renderingMode The rendering mode to use, which may change some of the preprocessor defines.
      * @return A program builder with all of the above preprocessor defines specified, ready to have the
      * vertex and fragment shaders added as well as any additional application-specific preprocessor definitions.
      */
     @Override
-    public ProgramBuilder<ContextType> getShaderProgramBuilder(StandardRenderingMode renderingMode)
+    public ProgramBuilder<ContextType> getShaderProgramBuilder()
     {
-        return getSharedResources().getShaderProgramBuilder(renderingMode)
+        return getSharedResources().getShaderProgramBuilder()
             .define("GEOMETRY_MODE", GeometryMode.PROJECT_3D_TO_2D) // should default to this, but just in case
             .define("GEOMETRY_TEXTURES_ENABLED", false) // should default to this, but just in case
             .define("COLOR_APPEARANCE_MODE", ColorAppearanceMode.IMAGE_SPACE) // should default to this, but just in case

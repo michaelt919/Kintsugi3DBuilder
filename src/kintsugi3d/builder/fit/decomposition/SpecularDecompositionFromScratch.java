@@ -16,20 +16,20 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-
 import javax.imageio.ImageIO;
 
+import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.builder.export.specular.SpecularFitSerializer;
+import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.gl.vecmath.DoubleVector3;
+import kintsugi3d.gl.vecmath.DoubleVector4;
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.vecmath.DoubleVector3;
-import kintsugi3d.gl.vecmath.DoubleVector4;
-import kintsugi3d.builder.core.TextureFitSettings;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 
-public class SpecularDecompositionFromScratch extends SpecularDecompositionBase {
+public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
+{
     private static final Logger log = LoggerFactory.getLogger(SpecularDecompositionFromScratch.class);
 
     private final DoubleVector3[] diffuseAlbedos;
@@ -52,13 +52,13 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase 
         }
 
         specularRed = new SimpleMatrix(
-            this.specularBasisSettings.getMicrofacetDistributionResolution() + 1,
+            this.specularBasisSettings.getBasisResolution() + 1,
             this.specularBasisSettings.getBasisCount(), DMatrixRMaj.class);
         specularGreen = new SimpleMatrix(
-            this.specularBasisSettings.getMicrofacetDistributionResolution() + 1,
+            this.specularBasisSettings.getBasisResolution() + 1,
             this.specularBasisSettings.getBasisCount(), DMatrixRMaj.class);
         specularBlue = new SimpleMatrix(
-            this.specularBasisSettings.getMicrofacetDistributionResolution() + 1,
+            this.specularBasisSettings.getBasisResolution() + 1,
             this.specularBasisSettings.getBasisCount(), DMatrixRMaj.class);
     }
 
@@ -78,6 +78,18 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase 
     public double evaluateBlue(int b, int m)
     {
         return specularBlue.get(m, b);
+    }
+
+    @Override
+    public int getCount()
+    {
+        return specularBasisSettings.getBasisCount();
+    }
+
+    @Override
+    public int getResolution()
+    {
+        return specularBasisSettings.getBasisResolution();
     }
 
     @Override
@@ -110,7 +122,7 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase 
     public void saveBasisFunctions(File outputDirectory)
     {
         SpecularFitSerializer.serializeBasisFunctions(specularBasisSettings.getBasisCount(),
-            specularBasisSettings.getMicrofacetDistributionResolution(), this, outputDirectory);
+            specularBasisSettings.getBasisResolution(), this, outputDirectory);
     }
 
     @Override

@@ -12,18 +12,76 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.util.AbstractImage;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
-
-import kintsugi3d.util.AbstractImage;
 
 public class LoadingModel 
 {
+    private static class AggregateLoadingMonitor implements LoadingMonitor
+    {
+        private final Collection<LoadingMonitor> subMonitors = new ArrayList<>();
+
+        void addSubMonitor(LoadingMonitor monitor)
+        {
+            subMonitors.add(monitor);
+        }
+
+        @Override
+        public void startLoading()
+        {
+            for (LoadingMonitor monitor : subMonitors)
+            {
+                monitor.startLoading();
+            }
+        }
+
+        @Override
+        public void setMaximum(double maximum)
+        {
+            for (LoadingMonitor monitor : subMonitors)
+            {
+                monitor.setMaximum(maximum);
+            }
+        }
+
+        @Override
+        public void setProgress(double progress)
+        {
+            for (LoadingMonitor monitor : subMonitors)
+            {
+                monitor.setProgress(progress);
+            }
+        }
+
+        @Override
+        public void loadingComplete()
+        {
+            for (LoadingMonitor monitor : subMonitors)
+            {
+                monitor.loadingComplete();
+            }
+        }
+
+        @Override
+        public void loadingFailed(Exception e)
+        {
+            for (LoadingMonitor monitor : subMonitors)
+            {
+                monitor.loadingFailed(e);
+            }
+        }
+    }
+
     private LoadingHandler handler;
-    private LoadingMonitor loadingMonitor;
+    private final AggregateLoadingMonitor loadingMonitor = new AggregateLoadingMonitor();
     private ReadonlyLoadOptionsModel loadOptionsModel;
 
     public LoadingMonitor getLoadingMonitor()
@@ -34,21 +92,12 @@ public class LoadingModel
     public void setLoadingHandler(LoadingHandler handler)
     {
         this.handler = handler;
-
-        if (this.loadingMonitor != null)
-        {
-            this.handler.setLoadingMonitor(loadingMonitor);
-        }
+        this.handler.setLoadingMonitor(loadingMonitor);
     }
 
-    public void setLoadingMonitor(LoadingMonitor monitor)
+    public void addLoadingMonitor(LoadingMonitor monitor)
     {
-        this.loadingMonitor = monitor;
-
-        if (this.handler != null)
-        {
-            this.handler.setLoadingMonitor(monitor);
-        }
+        this.loadingMonitor.addSubMonitor(monitor);
     }
 
     public void setLoadOptionsModel(ReadonlyLoadOptionsModel loadOptionsModel)
@@ -56,14 +105,44 @@ public class LoadingModel
         this.loadOptionsModel = loadOptionsModel;
     }
 
+    public boolean isInstanceLoaded()
+    {
+        return this.handler != null && this.handler.isInstanceLoaded();
+    }
+
+    public void addViewSetLoadCallback(Consumer<ViewSet> callback)
+    {
+        this.handler.addViewSetLoadCallback(callback);
+    }
+
+    public ViewSet getLoadedViewSet()
+    {
+        return this.handler.getLoadedViewSet();
+    }
+
+    /**
+     * Uses parent of VSET file as supporting files directory, by default
+     * @param id
+     * @param vsetFile
+     */
     public void loadFromVSETFile(String id, File vsetFile)
     {
-        this.handler.loadFromVSETFile(id, vsetFile, loadOptionsModel);
+        this.handler.loadFromVSETFile(id, vsetFile, vsetFile.getParentFile(), loadOptionsModel);
+    }
+
+    public void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory)
+    {
+        this.handler.loadFromVSETFile(id, vsetFile, supportingFilesDirectory, loadOptionsModel);
     }
 
     public void loadFromAgisoftFiles(String id, File xmlFile, File meshFile, File undistortedImageDirectory, String primaryViewName)
     {
         this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, primaryViewName, loadOptionsModel);
+    }
+
+    public void requestFragmentShader(File shaderFile)
+    {
+        this.handler.requestFragmentShader(shaderFile);
     }
 
     public Optional<AbstractImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException

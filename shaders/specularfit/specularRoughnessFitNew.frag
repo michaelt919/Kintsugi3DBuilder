@@ -38,7 +38,7 @@ MFDEval evalMFD(int m, float weights[BASIS_COUNT])
 {
     MFDEval result;
 
-    float sqrtAngle = float(m) / float(MICROFACET_DISTRIBUTION_RESOLUTION);
+    float sqrtAngle = float(m) / float(BASIS_RESOLUTION);
     result.thetaH = sqrtAngle * sqrtAngle * PI / 3.0;
     result.nDotH = cos(result.thetaH);
 
@@ -78,7 +78,7 @@ void main()
 //    vec4 colorSum = vec4(0.0);
 
     // start with m=1 since m=0 has an integrand of zero.
-    for (int m = 1; m <= MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+    for (int m = 1; m <= BASIS_RESOLUTION; m++)
     {
         MFDEval eval = evalMFD(m, weights);
 
@@ -102,7 +102,7 @@ void main()
     }
 
     // Handle the tail (60 to 90 degree range)
-    MFDEval evalTail = evalMFD(MICROFACET_DISTRIBUTION_RESOLUTION, weights);
+    MFDEval evalTail = evalMFD(BASIS_RESOLUTION, weights);
 
     // Integral of cos(theta) * sin(theta) from 0 degrees to 90 degrees should be 1/2=0.5
     // Integral of cos(theta) * sin(theta) from 60 degrees to 90 degrees should be 1/8=0.125 (25% of total)
@@ -117,7 +117,7 @@ void main()
 
     vec2 sums = vec2(0.0);
 
-    for (int m = 0; m <= MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+    for (int m = 0; m <= BASIS_RESOLUTION; m++)
     {
         MFDEval eval = evalMFD(m, weights);
         float nDotHSq = eval.nDotH * eval.nDotH;

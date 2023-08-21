@@ -1,3 +1,5 @@
+#version 330
+
 /*
  * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
@@ -10,46 +12,37 @@
  *
  */
 
-#line 14 1020
+// Disable all textures
 
-#ifndef DIFFUSE_TEXTURE_ENABLED
+#ifdef DIFFUSE_TEXTURE_ENABLED
+#undef DIFFUSE_TEXTURE_ENABLED
 #define DIFFUSE_TEXTURE_ENABLED 0
 #endif
 
-#ifndef SPECULAR_TEXTURE_ENABLED
-#define SPECULAR_TEXTURE_ENABLED 0
-#endif
-
-#ifndef ROUGHNESS_TEXTURE_ENABLED
-#define ROUGHNESS_TEXTURE_ENABLED 0
-#endif
-
-#ifndef NORMAL_TEXTURE_ENABLED
+#ifdef NORMAL_TEXTURE_ENABLED
+#undef NORMAL_TEXTURE_ENABLED
 #define NORMAL_TEXTURE_ENABLED 0
 #endif
 
-#ifndef TANGENT_SPACE_NORMAL_MAP
-#define TANGENT_SPACE_NORMAL_MAP 1
+#ifdef SPECULAR_TEXTURE_ENABLED
+#undef SPECULAR_TEXTURE_ENABLED
+#define SPECULAR_TEXTURE_ENABLED 0
 #endif
 
-#if DIFFUSE_TEXTURE_ENABLED
-uniform sampler2D diffuseMap;
+#ifdef ROUGHNESS_TEXTURE_ENABLED
+#undef ROUGHNESS_TEXTURE_ENABLED
+#define ROUGHNESS_TEXTURE_ENABLED 0
 #endif
 
-#if SPECULAR_TEXTURE_ENABLED
-uniform sampler2D specularMap;
+#ifdef ALBEDO_TEXTURE_ENABLED
+#undef ALBEDO_TEXTURE_ENABLED
+#define ALBEDO_TEXTURE_ENABLED 0
 #endif
 
-#if ROUGHNESS_TEXTURE_ENABLED
-uniform sampler2D roughnessMap;
+#ifdef ORM_TEXTURE_ENABLED
+#undef ORM_TEXTURE_ENABLED
+#define ORM_TEXTURE_ENABLED 0
 #endif
 
-#if NORMAL_TEXTURE_ENABLED
-uniform sampler2D normalMap;
 
-vec3 getNormal(vec2 texCoord)
-{
-    vec2 normalXY = texture(normalMap, texCoord).xy * 2 - 1;
-    return vec3(normalXY, 1.0 - dot(normalXY, normalXY));
-}
-#endif
+#include <subject/standard.glsl>

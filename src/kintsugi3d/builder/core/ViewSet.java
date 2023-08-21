@@ -12,15 +12,6 @@
 
 package kintsugi3d.builder.core;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
@@ -28,6 +19,14 @@ import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.ImageFinder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A class representing a collection of photographs, or views.
@@ -113,6 +112,11 @@ public final class ViewSet implements ReadonlyViewSet
      * The directory to be used for saving preview images.
      */
     private File previewImageDirectory;
+
+    /**
+     * The directory where the results of the texture / specular fitting are stored
+     */
+    private File supportingFilesDirectory;
 
     /**
      * The mesh file.
@@ -369,6 +373,7 @@ public final class ViewSet implements ReadonlyViewSet
         result.rootDirectory = this.rootDirectory;
         result.fullResImageDirectory = this.fullResImageDirectory;
         result.previewImageDirectory = this.previewImageDirectory;
+        result.supportingFilesDirectory = this.supportingFilesDirectory;
         result.geometryFile = this.geometryFile;
         result.infiniteLightSources = this.infiniteLightSources;
         result.recommendedNearPlane = this.recommendedNearPlane;
@@ -403,6 +408,7 @@ public final class ViewSet implements ReadonlyViewSet
         result.rootDirectory = this.rootDirectory;
         result.fullResImageDirectory = this.fullResImageDirectory;
         result.previewImageDirectory = this.previewImageDirectory;
+        result.supportingFilesDirectory = this.supportingFilesDirectory;
         result.geometryFile = this.geometryFile;
         result.infiniteLightSources = this.infiniteLightSources;
         result.recommendedNearPlane = this.recommendedNearPlane;
@@ -468,15 +474,6 @@ public final class ViewSet implements ReadonlyViewSet
         this.rootDirectory = rootDirectory;
     }
 
-    /**
-     * Changes the root directory while adjusting other file paths to still reference the original files.
-     * @param newRootDirectory The new root directory.
-     */
-    public void moveRootDirectory(Path newRootDirectory)
-    {
-        this.rootDirectory = newRootDirectory.toFile();
-    }
-
     @Override
     public String getGeometryFileName()
     {
@@ -486,7 +483,7 @@ public final class ViewSet implements ReadonlyViewSet
         }
         catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
-            return previewImageDirectory == null ? null : previewImageDirectory.toString();
+            return geometryFile == null ? null : geometryFile.toString();
         }
     }
 
@@ -505,22 +502,95 @@ public final class ViewSet implements ReadonlyViewSet
         return geometryFile;
     }
 
+    /**
+     * Sets the absolute path of the geometry file associated with this view set.
+     * @param geometryFile The geometry file.
+     */
+    public void setGeometryFile(File geometryFile)
+    {
+        this.geometryFile = geometryFile;
+    }
+
+    public static File getDefaultSupportingFilesDirectory(File projectFile)
+    {
+        return new File(projectFile.getParentFile(), projectFile.getName() + ".files");
+    }
+
+    @Override
+    public File getSupportingFilesFilePath()
+    {
+        // Fallback to root directory if no supporting files defined
+        return this.supportingFilesDirectory == null ? this.rootDirectory : this.supportingFilesDirectory;
+    }
+
+    @Override
+    public String getRelativeSupportingFilesPathName()
+    {
+        File supportingFilesFilePath = this.getSupportingFilesFilePath();
+        try
+        {
+            return this.rootDirectory.toPath().relativize(supportingFilesFilePath.toPath()).toString();
+        }
+        catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
+        {
+            return supportingFilesFilePath == null ? null : supportingFilesFilePath.toString();
+        }
+    }
+
+    /**
+     * Sets the absolute file path of the supporting files (i.e. texture fit results) associated with this view set.
+     * @param relativeSupportingFilesDirectory The file path of the supporting files directory.
+     */
+    public void setSupportingFilesDirectory(File relativeSupportingFilesDirectory)
+    {
+        this.supportingFilesDirectory = relativeSupportingFilesDirectory;
+    }
+
+    /**
+     * Sets the relative ile path of the supporting files (i.e. texture fit results) associated with this view set.
+     * @param relativeSupportingFilesPathName The file path of the supporting files directory.
+     */
+    public void setRelativeSupportingFilesPathName(String relativeSupportingFilesPathName)
+    {
+        this.supportingFilesDirectory = this.rootDirectory.toPath().resolve(relativeSupportingFilesPathName).toFile();
+    }
+
     @Override
     public File getFullResImageFilePath()
     {
-        return this.fullResImageDirectory == null ? this.rootDirectory : this.fullResImageDirectory;
+        if (this.fullResImageDirectory == null)
+        {
+            // If no full res images, just use preview images as full res, or root directory as last fallback
+            return this.previewImageDirectory == null ? this.rootDirectory : this.previewImageDirectory;
+        }
+        else
+        {
+            return this.fullResImageDirectory;
+        }
+    }
+
+
+    /**
+     * Sets the absolute image file directory associated with this view set.
+     * @param absoluteImageDirectory The image file path.
+     */
+    public void setFullResImageDirectory(File absoluteImageDirectory)
+    {
+        this.fullResImageDirectory = absoluteImageDirectory;
     }
 
     @Override
     public String getRelativeFullResImagePathName()
     {
+        File fullResImageFilePath = getFullResImageFilePath();
+
         try
         {
-            return this.rootDirectory.toPath().relativize(this.fullResImageDirectory.toPath()).toString();
+            return this.rootDirectory.toPath().relativize(fullResImageFilePath.toPath()).toString();
         }
         catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
-            return fullResImageDirectory == null ? null : fullResImageDirectory.toString();
+            return fullResImageFilePath == null ? null : fullResImageFilePath.toString();
         }
     }
 
@@ -536,19 +606,29 @@ public final class ViewSet implements ReadonlyViewSet
     @Override
     public File getPreviewImageFilePath()
     {
-        return this.previewImageDirectory == null ? this.rootDirectory : this.previewImageDirectory;
+        if (this.previewImageDirectory == null)
+        {
+            // If no preview images, default to just using full res images, or root directory as last fallback
+            return this.fullResImageDirectory == null ? this.rootDirectory : this.fullResImageDirectory;
+        }
+        else
+        {
+            return this.previewImageDirectory;
+        }
     }
 
     @Override
     public String getRelativePreviewImagePathName()
     {
+        File previewImageFilePath = this.getPreviewImageFilePath();
+
         try
         {
-            return this.rootDirectory.toPath().relativize(this.previewImageDirectory.toPath()).toString();
+            return this.rootDirectory.toPath().relativize(previewImageFilePath.toPath()).toString();
         }
         catch (IllegalArgumentException | NullPointerException e) //If the root and other directories are located under different drive letters on windows
         {
-            return previewImageDirectory == null ? null : previewImageDirectory.toString();
+            return previewImageFilePath == null ? null : previewImageFilePath.toString();
         }
     }
 
@@ -558,6 +638,12 @@ public final class ViewSet implements ReadonlyViewSet
      */
     public void setRelativePreviewImagePathName(String relativeImagePath)
     {
+        if (this.fullResImageDirectory == null)
+        {
+            // If we didn't have a full res directory, use the old preview directory as our full res directory
+            this.fullResImageDirectory = previewImageDirectory;
+        }
+
         this.previewImageDirectory = this.rootDirectory.toPath().resolve(relativeImagePath).toFile();
     }
 

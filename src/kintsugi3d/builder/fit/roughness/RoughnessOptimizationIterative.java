@@ -12,16 +12,16 @@
 
 package kintsugi3d.builder.fit.roughness;
 
+import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.core.*;
-import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.optimization.ErrorReport;
 import kintsugi3d.optimization.ShaderBasedOptimization;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -55,7 +55,8 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
             throws FileNotFoundException
     {
         // Inherit from base class to facilitate initial fit.
-        super(basisResources, basisWeightResources, settings.gamma);
+        super(basisResources);
+        setInputWeights(basisWeightResources);
         this.settings = settings;
         this.convergenceTolerance = convergenceTolerance;
         this.unsuccessfulLMIterationsAllowed = unsuccessfulLMIterationsAllowed;
@@ -87,15 +88,10 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
         roughnessOptimization.addSetupCallback((estimationProgram, backFramebuffer) ->
         {
             // Bind previous estimate textures to the shader
-            estimationProgram.setTexture("diffuseEstimate", getDiffuseTexture.get());
+            estimationProgram.setTexture("diffuseMap", getDiffuseTexture.get());
             estimationProgram.setTexture("specularEstimate", getReflectivityTexture()); // front FBO, attachment 0
-            estimationProgram.setTexture("roughnessEstimate", getRoughnessTexture()); // front FBO, attachment 1
+            estimationProgram.setTexture("roughnessMap", getRoughnessTexture()); // front FBO, attachment 1
             estimationProgram.setTexture("dampingTex", roughnessOptimization.getFrontFramebuffer().getColorAttachmentTexture(2));
-
-            // Gamma correction constants
-            float gamma = settings.gamma;
-            estimationProgram.setUniform("gamma", gamma);
-            estimationProgram.setUniform("gammaInv", 1.0f / gamma);
 
             // Clear framebuffer
             backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -120,11 +116,11 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
     }
 
     @Override
-    public void execute()
+    public void execute(float gamma)
     {
         // Generate initial estimate
         // Renders directly into "front" framebuffer which is fine for the first pass since then we don't have to swap
-        super.execute();
+        super.execute(gamma);
 
         // Set damping factor to 1.0 initially at each position.
         roughnessOptimization.getFrontFramebuffer().clearColorBuffer(2, 1.0f, 1.0f, 1.0f, 1.0f);

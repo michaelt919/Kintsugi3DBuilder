@@ -12,15 +12,15 @@
 
 package kintsugi3d.builder.io;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import kintsugi3d.builder.core.DistortionProjection;
+import kintsugi3d.builder.core.SimpleProjection;
+import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
-import kintsugi3d.builder.core.DistortionProjection;
-import kintsugi3d.builder.core.SimpleProjection;
-import kintsugi3d.builder.core.ViewSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.InputStream;
@@ -45,12 +45,13 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
     }
 
     @Override
-    public ViewSet readFromStream(InputStream stream, File root)
+    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory)
     {
         Date timestamp = new Date();
 
         ViewSet result = new ViewSet(128);
         result.setRootDirectory(root);
+        result.setSupportingFilesDirectory(supportingFilesDirectory);
 
         float gamma = 2.2f;
 
@@ -90,6 +91,11 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                     case "i":
                     {
                         result.setRelativePreviewImagePathName(scanner.nextLine().trim());
+                        break;
+                    }
+                    case "t":
+                    {
+                        result.setRelativeSupportingFilesPathName(scanner.nextLine().trim());
                         break;
                     }
                     case "p":
@@ -261,21 +267,13 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
             result.getLightIntensityList().add(Vector3.ZERO);
         }
 
-        if (result.getRelativeFullResImagePathName() == null && result.getRelativePreviewImagePathName() != null)
-        {
-            // If no full res images, just use preview images as full res
-            result.setRelativeFullResImagePathName(result.getRelativePreviewImagePathName());
-        }
-        else if (result.getRelativePreviewImagePathName() == null && result.getRelativeFullResImagePathName() != null)
-        {
-            // Conversely, if no preview images, default to just using full res images
-            result.setRelativePreviewImagePathName(result.getRelativeFullResImagePathName());
-        }
-
         if (result.getGeometryFile() == null)
         {
             result.setGeometryFileName("manifold.obj"); // Used by some really old datasets
         }
+
+        // Make sure the supporting files directory exists
+        result.getSupportingFilesFilePath().mkdirs();
 
         log.info("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
