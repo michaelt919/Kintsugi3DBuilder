@@ -12,13 +12,13 @@
 
 package kintsugi3d.builder.export.specular;
 
-import kintsugi3d.builder.resources.specular.SpecularResources;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.builder.core.TextureFitSettings;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+
+import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.gl.core.*;
 
 public class WeightImageCreator<ContextType extends Context<ContextType>> implements Resource
 {
@@ -50,12 +50,12 @@ public class WeightImageCreator<ContextType extends Context<ContextType>> implem
             .createFramebufferObject();
     }
 
-    public void createImages(SpecularResources<ContextType> specularFit, File outputDirectory) throws IOException
+    public void createImages(SpecularMaterialResources<ContextType> specularFit, File outputDirectory) throws IOException
     {
         specularFit.getBasisWeightResources().useWithShaderProgram(program);
         drawable.program().setUniform("weightStride", weightsPerImage);
 
-        int basisCount = specularFit.getBasisResources().getSpecularBasisSettings().getBasisCount();
+        int basisCount = specularFit.getBasisResources().getBasisCount();
 
         // Loop over the index of each final image to export
         for (int i = 0; i < basisCount; i += weightsPerImage)

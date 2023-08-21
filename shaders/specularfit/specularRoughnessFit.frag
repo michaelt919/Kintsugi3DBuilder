@@ -49,7 +49,7 @@ void main()
     vec3 sumNumerator = vec3(0);
     vec3 sumDenominator = vec3(0);
 
-    for (int m = 1; m < MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+    for (int m = 1; m < BASIS_RESOLUTION; m++)
     {
         vec3 f = vec3(0);
         for (int b = 0; b < BASIS_COUNT; b++)
@@ -57,7 +57,7 @@ void main()
             f += weights[b] * texelFetch(basisFunctions, ivec2(m, b), 0).rgb;
         }
 
-        float sqrtAngle = float(m) / float(MICROFACET_DISTRIBUTION_RESOLUTION);
+        float sqrtAngle = float(m) / float(BASIS_RESOLUTION);
         float nDotH = cos(sqrtAngle * sqrtAngle * PI / 3.0);
         float nDotHSq = nDotH * nDotH;
 

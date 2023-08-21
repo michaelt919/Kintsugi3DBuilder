@@ -31,6 +31,7 @@ public class SpecularFitRequestParams
 
     private double convergenceTolerance = 0.00001;
     private double preliminaryConvergenceTolerance = 0.01;
+    private float gamma = 2.2f;
 
     private boolean shouldIncludeConstantTerm;
 
@@ -42,7 +43,7 @@ public class SpecularFitRequestParams
      * Constructs an object to hold the settings for specular texture fitting.
      * @param textureFitSettings General settings for texture fitting (resolution, output directory)
      */
-    public SpecularFitRequestParams(TextureFitSettings textureFitSettings, ReadonlySettingsModel ibrSettings, File outputDirectory)
+    public SpecularFitRequestParams(TextureFitSettings textureFitSettings, ReadonlySettingsModel ibrSettings)
     {
         if (textureFitSettings == null)
         {
@@ -60,15 +61,6 @@ public class SpecularFitRequestParams
         else
         {
             this.ibrSettings = ibrSettings;
-        }
-
-        if (outputDirectory == null)
-        {
-            throw new IllegalArgumentException("Output directory cannot be null.");
-        }
-        else
-        {
-            this.outputDirectory = outputDirectory;
         }
     }
 
@@ -159,6 +151,16 @@ public class SpecularFitRequestParams
         }
 
         this.preliminaryConvergenceTolerance = preliminaryConvergenceTolerance;
+    }
+
+    public float getGamma()
+    {
+        return gamma;
+    }
+
+    public void setGamma(float gamma)
+    {
+        this.gamma = gamma;
     }
 
     public boolean shouldIncludeConstantTerm()

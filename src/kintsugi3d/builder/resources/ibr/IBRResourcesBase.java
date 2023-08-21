@@ -12,9 +12,9 @@
 
 package kintsugi3d.builder.resources.ibr;
 
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.geometry.GeometryResources;
-import kintsugi3d.gl.material.MaterialResources;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.builder.core.ViewSet;
 
@@ -73,9 +73,9 @@ public abstract class IBRResourcesBase<ContextType extends Context<ContextType>>
 
 
     @Override
-    public final MaterialResources<ContextType> getMaterialResources()
+    public final SpecularMaterialResources<ContextType> getSpecularMaterialResources()
     {
-        return sharedResources.getMaterialResources();
+        return sharedResources.getSpecularMaterialResources();
     }
 
     @Override
@@ -104,6 +104,12 @@ public abstract class IBRResourcesBase<ContextType extends Context<ContextType>>
         }
 
         sharedResources.updateLightData();
+    }
+
+    @Override
+    public void replaceSpecularMaterialResources(SpecularMaterialResources<ContextType> specularMaterialResources)
+    {
+        sharedResources.replaceSpecularMaterialResources(specularMaterialResources);
     }
 
     @Override

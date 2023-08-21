@@ -16,11 +16,11 @@ in vec3 fPosition;
 in vec2 fTexCoord;
 // normal and tagnent will be declared by constructTBN.glsl
 
-uniform sampler2D diffuseEstimate;
-uniform sampler2D normalEstimate;
-uniform sampler2D roughnessEstimate;
+uniform sampler2D diffuseMap;
+uniform sampler2D normalMap;
+uniform sampler2D roughnessMap;
 
-#include <shaders/colorappearance/colorappearance_dynamic.glsl>
+#include <colorappearance/colorappearance_dynamic.glsl>
 
 #if COLOR_APPEARANCE_MODE == COLOR_APPEARANCE_MODE_ANALYTIC
 // For debugging or generating comparisons and figures.
@@ -28,12 +28,12 @@ uniform sampler2D roughnessEstimate;
 #define NORMAL_TEXTURE_ENABLED 1
 #endif
 
-#include <shaders/relight/reflectanceequations.glsl>
+#include <colorappearance/reflectanceequations.glsl>
 
 #define COSINE_CUTOFF 0.0
 
-#ifndef MICROFACET_DISTRIBUTION_RESOLUTION
-#define MICROFACET_DISTRIBUTION_RESOLUTION 90
+#ifndef BASIS_RESOLUTION
+#define BASIS_RESOLUTION 90
 #endif
 
 #include "evaluateBRDF.glsl"

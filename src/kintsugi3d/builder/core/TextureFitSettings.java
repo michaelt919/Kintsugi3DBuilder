@@ -16,9 +16,8 @@ public class TextureFitSettings
 {
     public final int width;
     public final int height;
-    public final float gamma;
 
-    public TextureFitSettings(int width, int height, float gamma)
+    public TextureFitSettings(int width, int height)
     {
         if (width <= 0)
         {
@@ -28,13 +27,8 @@ public class TextureFitSettings
         {
             throw new IllegalArgumentException("Texture height must be greater than zero.");
         }
-        else if (gamma <= 0)
-        {
-            throw new IllegalArgumentException("Gamma must be greater than zero.");
-        }
 
         this.width = width;
         this.height = height;
-        this.gamma = gamma;
     }
 }

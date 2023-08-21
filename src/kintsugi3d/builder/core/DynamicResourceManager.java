@@ -21,6 +21,8 @@ import java.util.Optional;
 
 public interface DynamicResourceManager
 {
+    void requestFragmentShader(File shaderFile);
+
     /**
      * Load a new backplate image.
      * @param backplateFile The backplate image file.

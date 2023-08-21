@@ -16,9 +16,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import kintsugi3d.builder.resources.specular.SpecularResources;
-import kintsugi3d.gl.core.*;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.gl.core.*;
 
 public class BasisImageCreator<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -52,12 +52,12 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
         this.settings = settings;
 
         framebuffer = context.buildFramebufferObject(
-            2 * this.settings.getMicrofacetDistributionResolution() + 1, 2 * this.settings.getMicrofacetDistributionResolution() + 1)
+            2 * this.settings.getBasisResolution() + 1, 2 * this.settings.getBasisResolution() + 1)
             .addColorAttachment(ColorFormat.RGBA8)
             .createFramebufferObject();
     }
 
-    public void createImages(SpecularResources<ContextType> specularFit, File outputDirectory) throws IOException
+    public void createImages(SpecularMaterialResources<ContextType> specularFit, File outputDirectory) throws IOException
     {
         specularFit.getBasisResources().useWithShaderProgram(program);
         specularFit.getBasisWeightResources().useWithShaderProgram(program);

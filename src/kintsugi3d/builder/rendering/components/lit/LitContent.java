@@ -12,15 +12,15 @@
 
 package kintsugi3d.builder.rendering.components.lit;
 
-import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.resources.LightingResources;
+import kintsugi3d.gl.core.Context;
 
 public abstract class LitContent<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
     private LightingResources<ContextType> lightingResources;
 
-    protected LightingResources<ContextType> getLightingResources()
+    protected final LightingResources<ContextType> getLightingResources()
     {
         return lightingResources;
     }
@@ -28,5 +28,8 @@ public abstract class LitContent<ContextType extends Context<ContextType>> imple
     void setLightingResources(LightingResources<ContextType> lightingResources)
     {
         this.lightingResources = lightingResources;
+        onSetLightingResources();
     }
+
+    protected abstract void onSetLightingResources();
 }

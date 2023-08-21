@@ -12,14 +12,17 @@
 
 package kintsugi3d.builder.fit.roughness;
 
+import java.io.File;
+
+import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.resources.specular.SpecularTextures;
 import kintsugi3d.gl.core.Context;
-import java.io.File;
 
 public interface RoughnessOptimization<ContextType extends Context<ContextType>> extends SpecularTextures<ContextType>, AutoCloseable
 {
+    void setInputWeights(BasisWeightResources<ContextType> weightResources);
     void clear();
-    void execute();
+    void execute(float gamma);
     void saveTextures(File outputDirectory);
 
     @Override

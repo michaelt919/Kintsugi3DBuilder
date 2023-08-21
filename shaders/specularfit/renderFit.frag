@@ -26,7 +26,7 @@ uniform sampler2D specularEstimate;
 
 void main()
 {
-    vec2 sqrtRoughness_Mask = texture(roughnessEstimate, fTexCoord).ra;
+    vec2 sqrtRoughness_Mask = texture(roughnessMap, fTexCoord).ra;
     float filteredMask = sqrtRoughness_Mask[1];
 
     if (filteredMask == 0.0)
@@ -37,13 +37,13 @@ void main()
 
     float roughness = sqrtRoughness_Mask[0] * sqrtRoughness_Mask[0] / (filteredMask * filteredMask);
 
-    vec3 diffuseColor = pow(texture(diffuseEstimate, fTexCoord).rgb / filteredMask, vec3(gamma));
+    vec3 diffuseColor = pow(texture(diffuseMap, fTexCoord).rgb / filteredMask, vec3(gamma));
     vec3 specularColor = pow(texture(specularEstimate, fTexCoord).rgb / filteredMask, vec3(gamma));
 
     mat3 tangentToObject = constructTBNExact();
     vec3 triangleNormal = tangentToObject[2];
 
-    vec2 normalDirXY = texture(normalEstimate, fTexCoord).xy * 2 - vec2(1.0);
+    vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
     vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
     vec3 normal = tangentToObject * normalDirTS;
 

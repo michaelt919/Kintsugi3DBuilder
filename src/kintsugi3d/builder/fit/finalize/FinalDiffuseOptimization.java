@@ -12,19 +12,19 @@
 
 package kintsugi3d.builder.fit.finalize;
 
+import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.fit.SpecularFitProgramFactory;
+import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
+import kintsugi3d.gl.core.*;
+import kintsugi3d.util.ShaderHoleFill;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Objects;
-
-import kintsugi3d.builder.fit.SpecularFitProgramFactory;
-import kintsugi3d.builder.resources.specular.SpecularResources;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.builder.core.TextureFitSettings;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
-import kintsugi3d.util.ShaderHoleFill;
 
 public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -68,19 +68,19 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         if (includeConstant)
         {
             builder.addColorAttachment(ColorFormat.RGBA8); // Add attachment for storing constant term texture
-            builder.addColorAttachment(ColorFormat.RGBA8); // Add attachment for storing quadratic term texture
+//            builder.addColorAttachment(ColorFormat.RGBA8); // Add attachment for storing quadratic term texture
         }
 
         return builder.createFramebufferObject();
     }
 
-    public void execute(SpecularResources<ContextType> specularFit)
+    public void execute(SpecularMaterialResources<ContextType> specularFit)
     {
         // Set up diffuse estimation shader program
         specularFit.getBasisResources().useWithShaderProgram(estimationProgram);
         specularFit.getBasisWeightResources().useWithShaderProgram(estimationProgram);
-        estimationProgram.setTexture("normalEstimate", specularFit.getNormalMap());
-        estimationProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
+        estimationProgram.setTexture("normalMap", specularFit.getNormalMap());
+        estimationProgram.setTexture("roughnessMap", specularFit.getSpecularRoughnessMap());
 
         // Second framebuffer for filling holes (used to double-buffer the first framebuffer)
         // Placed outside of try-with-resources since it might end up being the primary framebuffer after filling holes.
@@ -144,10 +144,10 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
         return framebuffer.getColorAttachmentTexture(1);
     }
 
-    public Texture2D<ContextType> getQuadraticMap()
-    {
-        return framebuffer.getColorAttachmentTexture(2);
-    }
+//    public Texture2D<ContextType> getQuadraticMap()
+//    {
+//        return framebuffer.getColorAttachmentTexture(2);
+//    }
 
     public boolean includesConstantMap()
     {

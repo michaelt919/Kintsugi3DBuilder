@@ -12,14 +12,6 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar;
 
-import java.awt.*;
-import java.io.File;
-import java.net.URL;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.ResourceBundle;
-import java.util.stream.IntStream;
-
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -30,13 +22,23 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.*;
-import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
+import javafx.stage.FileChooser.ExtensionFilter;
 import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+import java.io.File;
+import java.net.URL;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.ResourceBundle;
+import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 public class LoaderController implements Initializable
 {
@@ -58,7 +60,8 @@ public class LoaderController implements Initializable
     private File objFile;
     private File photoDir;
 
-    private Runnable callback;
+    private Runnable loadStartCallback;
+    private Consumer<ViewSet> viewSetCallback;
 
     @Override
     public void initialize(URL location, ResourceBundle resources)
@@ -73,9 +76,18 @@ public class LoaderController implements Initializable
         photoDirectoryChooser.setTitle("Select photo directory");
     }
 
-    public void setCallback(Runnable callback)
+    public void init()
     {
-        this.callback = callback;
+    }
+
+    public void setLoadStartCallback(Runnable callback)
+    {
+        this.loadStartCallback = callback;
+    }
+
+    public void setViewSetCallback(Consumer<ViewSet> callback)
+    {
+        this.viewSetCallback = callback;
     }
 
     /**
@@ -176,7 +188,15 @@ public class LoaderController implements Initializable
     {
         if ((cameraFile != null) && (objFile != null) && (photoDir != null))
         {
-            callback.run();
+            if (loadStartCallback != null)
+            {
+                loadStartCallback.run();
+            }
+
+            if (viewSetCallback != null)
+            {
+                MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(viewSetCallback);
+            }
 
             new Thread(() ->
                 MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(

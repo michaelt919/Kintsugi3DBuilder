@@ -12,14 +12,14 @@
 
 package kintsugi3d.builder.io;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import kintsugi3d.builder.core.DistortionProjection;
+import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
-import kintsugi3d.builder.core.DistortionProjection;
-import kintsugi3d.builder.core.ViewSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
@@ -27,7 +27,10 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.File;
 import java.io.InputStream;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Handles loading view sets from a camera definition file exported in XML format from Agisoft PhotoScan.
@@ -158,7 +161,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     }
 
     @Override
-    public ViewSet readFromStream(InputStream stream, File root) throws XMLStreamException
+    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory) throws XMLStreamException
     {
         Map<String, Sensor> sensorSet = new Hashtable<>();
         HashSet<Camera> cameraSet = new HashSet<>();
@@ -549,6 +552,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
         ViewSet result = new ViewSet(cameraSet.size());
         result.setRootDirectory(root);
+        result.setSupportingFilesDirectory(supportingFilesDirectory);
 
         Sensor[] sensors = sensorSet.values().toArray(new Sensor[0]);
 

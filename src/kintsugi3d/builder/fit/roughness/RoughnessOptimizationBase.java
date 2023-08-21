@@ -14,9 +14,9 @@ package kintsugi3d.builder.fit.roughness;
 
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
+import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -31,15 +31,15 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
     protected final VertexBuffer<ContextType> rect;
     protected final Drawable<ContextType> specularRoughnessFitDrawable;
 
-    protected RoughnessOptimizationBase(BasisResources<ContextType> basisResources, BasisWeightResources<ContextType> weightResources, float gamma)
+    protected RoughnessOptimizationBase(BasisResources<ContextType> basisResources)
         throws FileNotFoundException
     {
         // Fit specular parameters from weighted basis functions
         specularRoughnessFitProgram = basisResources.getContext().getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/specularRoughnessFitNew.frag"))
-                .define("BASIS_COUNT", basisResources.getSpecularBasisSettings().getBasisCount())
-                .define("MICROFACET_DISTRIBUTION_RESOLUTION", basisResources.getSpecularBasisSettings().getMicrofacetDistributionResolution())
+                .define("BASIS_COUNT", basisResources.getBasisCount())
+                .define("BASIS_RESOLUTION", basisResources.getBasisResolution())
                 .createProgram();
 
         // Create basic rectangle vertex buffer
@@ -49,11 +49,15 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
 
         // Set up shader program
         specularRoughnessFitDrawable.addVertexBuffer("position", rect);
-        basisResources.useWithShaderProgram(specularRoughnessFitProgram);
-        weightResources.useWithShaderProgram(specularRoughnessFitProgram);
-        specularRoughnessFitProgram.setUniform("gamma", gamma);
         specularRoughnessFitProgram.setUniform("fittingGamma", 1.0f);
+        basisResources.useWithShaderProgram(specularRoughnessFitProgram);
 
+    }
+
+    @Override
+    public final void setInputWeights(BasisWeightResources<ContextType> weightResources)
+    {
+        weightResources.useWithShaderProgram(specularRoughnessFitProgram);
     }
 
     @Override
@@ -69,18 +73,21 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
     @Override
     public Texture2D<ContextType> getReflectivityTexture()
     {
-        return getFramebuffer().getColorAttachmentTexture(0);
+        return getFramebuffer() == null ? null : getFramebuffer().getColorAttachmentTexture(0);
     }
 
     @Override
     public Texture2D<ContextType> getRoughnessTexture()
     {
-        return getFramebuffer().getColorAttachmentTexture(1);
+        return getFramebuffer() == null ? null : getFramebuffer().getColorAttachmentTexture(1);
     }
 
     @Override
-    public void execute()
+    public void execute(float gamma)
     {
+        specularRoughnessFitProgram.setUniform("gamma", gamma);
+        specularRoughnessFitProgram.setUniform("gammaInv", 1.0f / gamma);
+
         // Fit specular so that we have a roughness estimate for masking/shadowing.
         getFramebuffer().clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
         getFramebuffer().clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -92,10 +99,10 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
     {
         try
         {
-            Framebuffer<ContextType> contextTypeFramebuffer1 = getFramebuffer();
-            contextTypeFramebuffer1.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(outputDirectory, "specular.png"));
-            Framebuffer<ContextType> contextTypeFramebuffer = getFramebuffer();
-            contextTypeFramebuffer.getTextureReaderForColorAttachment(1).saveToFile("PNG", new File(outputDirectory, "roughness.png"));
+            getFramebuffer().getTextureReaderForColorAttachment(0)
+                .saveToFile("PNG", new File(outputDirectory, "specular.png"));
+            getFramebuffer().getTextureReaderForColorAttachment(1)
+                .saveToFile("PNG", new File(outputDirectory, "roughness.png"));
         }
         catch (IOException e)
         {

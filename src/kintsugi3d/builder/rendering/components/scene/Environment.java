@@ -20,11 +20,15 @@ import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.state.BackgroundMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 
 public class Environment<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(Environment.class);
     private final ContextType context;
     private final LightingResources<ContextType> lightingResources;
     private final SceneModel sceneModel;
@@ -45,35 +49,50 @@ public class Environment<ContextType extends Context<ContextType>> implements Re
     }
 
     @Override
-    public void initialize() throws Exception
+    public void initialize()
     {
         this.rectangleVertices = context.createRectangle();
 
-        this.environmentBackgroundProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
-                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
-                .createProgram();
+        try
+        {
+            this.environmentBackgroundProgram = context.getShaderProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
+                    .createProgram();
 
-        this.environmentBackgroundDrawable = context.createDrawable(environmentBackgroundProgram);
-        this.environmentBackgroundDrawable.addVertexBuffer("position", this.rectangleVertices);
+            this.environmentBackgroundDrawable = context.createDrawable(environmentBackgroundProgram);
+            this.environmentBackgroundDrawable.addVertexBuffer("position", this.rectangleVertices);
+        }
+        catch (FileNotFoundException|RuntimeException e)
+        {
+            log.error("Failed to load shader.", e);
+        }
     }
 
     @Override
-    public void reloadShaders() throws Exception
+    public void reloadShaders()
     {
-        ProgramObject<ContextType> newEnvironmentBackgroundProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
-                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
-                .createProgram();
-
-        if (this.environmentBackgroundProgram != null)
+        ProgramObject<ContextType> newEnvironmentBackgroundProgram = null;
+        try
         {
-            this.environmentBackgroundProgram.close();
-        }
+            newEnvironmentBackgroundProgram = context.getShaderProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
+                    .createProgram();
 
-        this.environmentBackgroundProgram = newEnvironmentBackgroundProgram;
-        this.environmentBackgroundDrawable = context.createDrawable(environmentBackgroundProgram);
-        this.environmentBackgroundDrawable.addVertexBuffer("position", rectangleVertices);
+            if (this.environmentBackgroundProgram != null)
+            {
+                this.environmentBackgroundProgram.close();
+            }
+
+            this.environmentBackgroundProgram = newEnvironmentBackgroundProgram;
+            this.environmentBackgroundDrawable = context.createDrawable(environmentBackgroundProgram);
+            this.environmentBackgroundDrawable.addVertexBuffer("position", rectangleVertices);
+        }
+        catch (FileNotFoundException|RuntimeException e)
+        {
+            log.error("Failed to load shader.", e);
+        }
     }
 
     @Override

@@ -38,7 +38,7 @@ public class LitRoot<ContextType extends Context<ContextType>> implements Render
     }
 
     @Override
-    public void initialize() throws Exception
+    public void initialize()
     {
         // i.e. shadow map, environment map, etc.
         lightingResources.initialize();
@@ -46,15 +46,14 @@ public class LitRoot<ContextType extends Context<ContextType>> implements Render
     }
 
     @Override
-    public void reloadShaders() throws Exception
+    public void reloadShaders()
     {
-        // TODO reload shadow program?
-
+        lightingResources.reloadShadowShader();
         litContentRoot.reloadShaders();
     }
 
     @Override
-    public void update() throws Exception
+    public void update()
     {
         litContentRoot.update();
     }
@@ -122,6 +121,6 @@ public class LitRoot<ContextType extends Context<ContextType>> implements Render
      */
     public void setShadowCaster(VertexBuffer<ContextType> shadowCaster)
     {
-        lightingResources.setPositionBuffer(shadowCaster);
+        lightingResources.setShadowCastingPositionBuffer(shadowCaster);
     }
 }
