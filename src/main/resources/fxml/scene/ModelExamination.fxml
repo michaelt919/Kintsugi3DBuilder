@@ -4,7 +4,6 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 
 <!--
   ~ Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
@@ -23,25 +22,11 @@
         <padding>
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
         </padding>
-      <VBox>
-         <children>
-              <TreeView fx:id="chunkTreeView" maxHeight="-Infinity" onMouseClicked="#selectImageInTreeView" prefHeight="229.0" prefWidth="448.0" />
-               <TextFlow fx:id="textFlow" lineSpacing="5.0" maxHeight="90.0" minHeight="20.0" prefHeight="20.0" prefWidth="326.0" textAlignment="CENTER" VBox.vgrow="ALWAYS">
-                   <VBox.margin>
-                       <Insets bottom="15.0" left="5.0" right="5.0" top="5.0" />
-                   </VBox.margin>
-               <children>
-                      <Text fx:id="imgViewText" fontSmoothingType="LCD" styleClass="text" text="No Image Selected" textOrigin="TOP" wrappingWidth="447.99998474121094" />
-               </children>
-               </TextFlow>
-         </children>
-      </VBox>
         <VBox spacing="10.0">
-            <ImageView fx:id="chunkViewerImgView" fitHeight="309.0" fitWidth="299.0" pickOnBounds="true"
-                       preserveRatio="true"/>
-            <CheckBox mnemonicParsing="false" text="Lambert Mode"/>
-            <CheckBox layoutX="10.0" layoutY="319.0" mnemonicParsing="false" text="Enable Specularity"/>
+            <CheckBox mnemonicParsing="false" text="Lambert Mode" />
+            <CheckBox layoutX="10.0" layoutY="319.0" mnemonicParsing="false" text="Enable Specularity" />
         </VBox>
-<!--        <fx:include fx:id="framebufferView" source="../menubar/FramebufferView.fxml"/>-->
+        <fx:include fx:id="framebufferView" source="../menubar/FramebufferView.fxml"/>
     </HBox>
+   <Button fx:id="continueButton" mnemonicParsing="false" onAction="#openObjectOrientation" text="Continue" AnchorPane.bottomAnchor="30.0" AnchorPane.rightAnchor="30.0" />
 </AnchorPane>

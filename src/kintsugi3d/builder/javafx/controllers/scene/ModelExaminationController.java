@@ -12,9 +12,12 @@
 
 package kintsugi3d.builder.javafx.controllers.scene;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.SnapshotParameters;
-import javafx.scene.control.TreeItem;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.menubar.ImgSelectionThread;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
@@ -22,48 +25,28 @@ import kintsugi3d.gl.javafx.FramebufferView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 public class ModelExaminationController extends ImgThreadCompatibleController{
     private static final Logger log = LoggerFactory.getLogger(ModelExaminationController.class);
-    private ImgSelectionThread loadImgThread;
 
     @FXML private FramebufferView framebufferView;
 
     public void init(MetashapeObjectChunk metashapeObjectChunk, Stage injectedStage){
         this.metashapeObjectChunk = metashapeObjectChunk;
-        initTreeView();
-        //this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
+        this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
     }
 
-    public void selectImageInTreeView() {
-        //selectedItem holds the cameraID associated with the image
-        TreeItem<String> selectedItem = chunkTreeView.getSelectionModel().getSelectedItem();
-        if (selectedItem != null &&
-                selectedItem.getValue() != null &&
-                selectedItem.isLeaf()) {
+    public void openObjectOrientation(ActionEvent actionEvent) throws IOException {
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/scene/ObjectOrientation.fxml"));
+        Parent newRoot = fxmlLoader.load();
+        ObjectOrientationController controller = fxmlLoader.getController();
 
-            String imageName = selectedItem.getValue();
-            updateImageText(imageName);
-            imgViewText.setText(imgViewText.getText() + " (preview)");
+        Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
+        controller.init(metashapeObjectChunk, stage);
 
-
-            //set thumbnail as main image, then update to full resolution later
-            setThumbnailAsFullImage(selectedItem);
-
-            //if loadImgThread is running, kill it and start a new one
-            if(loadImgThread != null && loadImgThread.isActive()){
-                loadImgThread.stopThread();
-            }
-
-            loadImgThread = new ImgSelectionThread(imageName,this);
-            Thread myThread = new Thread(loadImgThread);
-            myThread.start();
-        }
-    }
-
-    private void setThumbnailAsFullImage(TreeItem<String> selectedItem) {
-        //use thumbnail as main image
-        //used if image is not found, or if larger resolution image is being loaded
-        chunkViewerImgView.setImage(selectedItem.getGraphic().
-                snapshot(new SnapshotParameters(), null));
+        Scene scene = new Scene(newRoot);
+        stage.setScene(scene);
+        stage.show();
     }
 }
