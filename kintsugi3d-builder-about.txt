@@ -1,5 +1,5 @@
 Kintsugi 3D Builder
-Version: 0.3.3
+Version: 0.3.4
 Originally written by:
 Michael Tetzlaff (University of Minnesota / University of Wisconsin - Stout) - lead developer
 Alex Kautz (University of Rochester) - contributor
