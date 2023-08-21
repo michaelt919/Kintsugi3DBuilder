@@ -14,6 +14,7 @@ package kintsugi3d.builder.fit.finalize;
 
 import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,8 +57,10 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         this.occlusionMap = occlusionMap;
         estimationProgram = createProgram(context, occlusionMap != null);
         framebuffer = context.buildFramebufferObject(settings.width, settings.height)
-            .addColorAttachment(ColorFormat.RGBA8) // total albedo
-            .addColorAttachment(ColorFormat.RGBA8) // ORM
+            .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGBA8)
+                .setLinearFilteringEnabled(true)) // total albedo
+            .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGBA8)
+                .setLinearFilteringEnabled(true)) // ORM
             .createFramebufferObject();
 
         // Create basic rectangle vertex buffer
@@ -80,14 +83,16 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         Texture2D<ContextType> albedoMap = albedoMapFile.exists() ?
             context.getTextureFactory()
                 .build2DColorTextureFromFile(albedoMapFile, true)
-                .setLinearFilteringEnabled(true).createTexture()
+                .setLinearFilteringEnabled(true)
+                .createTexture()
             : null;
 
         // Load ORM map and use it as occlusion map (to preserve the occlusion stored in the red channel of ORM)
         File ormMapFile = new File(priorSolutionDirectory, "orm.png");
         this.occlusionMap = ormMapFile.exists() ?
             context.getTextureFactory().build2DColorTextureFromFile(ormMapFile, true)
-                .setLinearFilteringEnabled(true).createTexture()
+                .setLinearFilteringEnabled(true)
+                .createTexture()
             : null;
 
         if (albedoMap != null)
@@ -95,7 +100,8 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
             framebuffer =
                 context.buildFramebufferObject(albedoMap.getWidth(), albedoMap.getHeight())
                     .addEmptyColorAttachment() // Will copy in albedo map after FBO is created
-                    .addColorAttachment(ColorFormat.RGBA8) // Will blit in ORM map after FBO is created
+                    .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGBA8)
+                        .setLinearFilteringEnabled(true)) // Will blit in ORM map after FBO is created
                     .createFramebufferObject();
             framebuffer.setColorAttachment(0, albedoMap);
             framebuffer.getColorAttachmentTexture(1).blitScaled(occlusionMap, true);
