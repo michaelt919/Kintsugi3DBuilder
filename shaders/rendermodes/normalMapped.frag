@@ -1,3 +1,5 @@
+#version 330
+
 /*
  * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
@@ -10,38 +12,31 @@
  *
  */
 
-package kintsugi3d.builder.fit.gltf;
+// Disable all textures except normal map and occlusion
 
-import de.javagl.jgltf.impl.v2.TextureInfo;
+#ifdef DIFFUSE_TEXTURE_ENABLED
+#undef DIFFUSE_TEXTURE_ENABLED
+#define DIFFUSE_TEXTURE_ENABLED 0
+#endif
 
-import java.util.ArrayList;
-import java.util.List;
+#ifdef SPECULAR_TEXTURE_ENABLED
+#undef SPECULAR_TEXTURE_ENABLED
+#define SPECULAR_TEXTURE_ENABLED 0
+#endif
 
-public class GltfMaterialSpecularWeights
-{
+#ifdef ROUGHNESS_TEXTURE_ENABLED
+#undef ROUGHNESS_TEXTURE_ENABLED
+#define ROUGHNESS_TEXTURE_ENABLED 0
+#endif
 
-    private int stride = 4;
+#ifdef ALBEDO_TEXTURE_ENABLED
+#undef ALBEDO_TEXTURE_ENABLED
+#define ALBEDO_TEXTURE_ENABLED 0
+#endif
 
-    private List<TextureInfo> textures = new ArrayList<>();
+#ifdef ORM_TEXTURE_ENABLED
+#undef ORM_TEXTURE_ENABLED
+#define ORM_TEXTURE_ENABLED 0
+#endif
 
-    public List<TextureInfo> getTextures()
-    {
-        return textures;
-    }
-
-    public void addTexture(TextureInfo texture)
-    {
-        textures.add(texture);
-    }
-
-    public int getStride()
-    {
-        return stride;
-    }
-
-    public void setStride(int stride)
-    {
-        this.stride = stride;
-    }
-
-}
+#include <subject/standard.glsl>

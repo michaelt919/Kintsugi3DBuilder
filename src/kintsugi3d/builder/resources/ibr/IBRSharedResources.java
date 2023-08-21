@@ -12,26 +12,29 @@
 
 package kintsugi3d.builder.resources.ibr;
 
+import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.fit.SpecularFitFinal;
+import kintsugi3d.builder.resources.specular.GenericMaterialResources;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.gl.builders.ProgramBuilder;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.Program;
+import kintsugi3d.gl.core.UniformBuffer;
+import kintsugi3d.gl.geometry.GeometryResources;
+import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
+import kintsugi3d.gl.geometry.VertexGeometry;
+import kintsugi3d.gl.material.*;
+import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+import kintsugi3d.gl.vecmath.Vector3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.util.AbstractList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.builders.ProgramBuilder;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.geometry.GeometryResources;
-import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
-import kintsugi3d.gl.geometry.VertexGeometry;
-import kintsugi3d.gl.material.*;
-import kintsugi3d.gl.material.TextureLoadOptions;
-import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
-import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.core.StandardRenderingMode;
-import kintsugi3d.builder.core.ViewSet;
 
 final class IBRSharedResources<ContextType extends Context<ContextType>>
 {
@@ -70,7 +73,7 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
      */
     private final GeometryResources<ContextType> geometryResources;
 
-    private final MaterialResources<ContextType> materialResources;
+    private SpecularMaterialResources<ContextType> specularMaterialResources;
 
     private final LuminanceMapResources<ContextType> luminanceMapResources;
 
@@ -80,8 +83,7 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
 
     private final float[] cameraWeights;
 
-    public IBRSharedResources(ContextType context, ViewSet viewSet, VertexGeometry geometry, TextureLoadOptions loadOptions)
-        throws IOException
+    IBRSharedResources(ContextType context, ViewSet viewSet, VertexGeometry geometry, TextureLoadOptions loadOptions)
     {
         this.context = context;
         this.viewSet = viewSet;
@@ -153,8 +155,24 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
 
                 Material material = geometry.getMaterial();
 
-                if (material != null && viewSet.getGeometryFile() != null /* need an actual file path to load the textures */)
+                if (viewSet.getSupportingFilesFilePath() != null) // Load texture fit from previous session
                 {
+                    SpecularMaterialResources<ContextType> loadedFit;
+                    try
+                    {
+                        loadedFit = SpecularFitFinal.loadFromPriorSolution(context, viewSet.getSupportingFilesFilePath());
+                    }
+                    catch (IOException e)
+                    {
+                        log.error("An error occured while loading the previous specular fit (textures).", e);
+                        loadedFit = SpecularMaterialResources.makeNull(context);
+                    }
+                    specularMaterialResources = loadedFit;
+                }
+                else if (material != null && viewSet.getGeometryFile() != null /* need an actual file path to load the textures */)
+                {
+                    // Load material from OBJ file
+
                     // Default texture names if not specified by the material
                     String prefix = viewSet.getGeometryFileName().split("\\.")[0];
 
@@ -196,18 +214,31 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
                     TextureLoadOptions mtlLoadOptions = new TextureLoadOptions();
                     mtlLoadOptions.setCompressionRequested(loadOptions.isCompressionRequested());
                     mtlLoadOptions.setMipmapsRequested(loadOptions.areMipmapsRequested());
-                    this.materialResources = material.createResources(context, viewSet.getGeometryFile().getParentFile(), mtlLoadOptions);
+                    this.specularMaterialResources = GenericMaterialResources.wrap(
+                        () ->
+                        {
+                            try
+                            {
+                                return material.createResources(context, viewSet.getGeometryFile().getParentFile(), mtlLoadOptions);
+                            }
+                            catch (IOException e)
+                            {
+                                log.error("An error occured while loading material resources (textures)", e);
+                                return MaterialResources.createNull();
+                            }
+                        });
                 }
                 else
                 {
-                    this.materialResources = MaterialResources.createNull();
+                    // Neither a texture fit or an OBJ material: material is null
+                    this.specularMaterialResources = SpecularMaterialResources.makeNull(context);
                 }
             }
             else
             {
                 this.cameraWeights = null;
                 this.cameraWeightBuffer = null;
-                this.materialResources = MaterialResources.createNull();
+                this.specularMaterialResources = SpecularMaterialResources.makeNull(context);
             }
         }
         else
@@ -215,7 +246,7 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
             this.geometryResources = GeometryResources.createNullResources();
             this.cameraWeights = null;
             this.cameraWeightBuffer = null;
-            this.materialResources = MaterialResources.createNull();
+            this.specularMaterialResources = SpecularMaterialResources.makeNull(context);
         }
     }
 
@@ -354,9 +385,9 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
     /**
      * Diffuse, normal, specular, roughness maps
      */
-    public MaterialResources<ContextType> getMaterialResources()
+    public SpecularMaterialResources<ContextType> getSpecularMaterialResources()
     {
-        return materialResources;
+        return specularMaterialResources;
     }
 
     public LuminanceMapResources<ContextType> getLuminanceMapResources()
@@ -392,6 +423,13 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
         }
     }
 
+    public void replaceSpecularMaterialResources(SpecularMaterialResources<ContextType> specularMaterialResources)
+    {
+        this.specularMaterialResources.close();
+
+        this.specularMaterialResources = specularMaterialResources == null ? SpecularMaterialResources.makeNull(context) : specularMaterialResources;
+    }
+
     /**
      * Gets a shader program builder with the following preprocessor defines automatically injected based on the
      * characteristics of this instance:
@@ -408,23 +446,39 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
      *     <li>NORMAL_TEXTURE_ENABLED</li>
      * </ul>
      *
-     * @param renderingMode The rendering mode to use, which may change some of the preprocessor defines.
      * @return A program builder with all of the above preprocessor defines specified, ready to have the
      * vertex and fragment shaders added as well as any additional application-specific preprocessor definitions.
      */
-    public ProgramBuilder<ContextType> getShaderProgramBuilder(StandardRenderingMode renderingMode)
+    public ProgramBuilder<ContextType> getShaderProgramBuilder()
     {
-        return context.getShaderProgramBuilder()
+        boolean basisEnabled = specularMaterialResources.getBasisResources() != null
+            && specularMaterialResources.getBasisWeightResources() != null;
+
+        ProgramBuilder<ContextType> builder = context.getShaderProgramBuilder()
             .define("CAMERA_POSE_COUNT", viewSet.getCameraPoseCount())
             .define("LIGHT_COUNT", viewSet.getLightCount())
             .define("INFINITE_LIGHT_SOURCES", viewSet.areLightSourcesInfinite())
             .define("LUMINANCE_MAP_ENABLED", luminanceMapResources != null && luminanceMapResources.getLuminanceMap() != null)
             .define("INVERSE_LUMINANCE_MAP_ENABLED", luminanceMapResources != null && luminanceMapResources.getInverseLuminanceMap() != null)
-            .define("IMAGE_BASED_RENDERING_ENABLED", renderingMode.isImageBased())
-            .define("DIFFUSE_TEXTURE_ENABLED", materialResources.getDiffuseTexture() != null && renderingMode.useDiffuseTexture())
-            .define("SPECULAR_TEXTURE_ENABLED", materialResources.getSpecularTexture() != null && renderingMode.useSpecularTextures())
-            .define("ROUGHNESS_TEXTURE_ENABLED", materialResources.getRoughnessTexture() != null && renderingMode.useSpecularTextures())
-            .define("NORMAL_TEXTURE_ENABLED", materialResources.getNormalTexture() != null && renderingMode.useNormalTexture());
+            .define("DIFFUSE_TEXTURE_ENABLED", specularMaterialResources.getDiffuseMap() != null)
+            .define("NORMAL_TEXTURE_ENABLED", specularMaterialResources.getNormalMap() != null)
+            .define("SPECULAR_TEXTURE_ENABLED", specularMaterialResources.getSpecularReflectivityMap() != null)
+            .define("ROUGHNESS_TEXTURE_ENABLED", specularMaterialResources.getSpecularRoughnessMap() != null)
+            .define("OCCLUSION_TEXTURE_ENABLED", specularMaterialResources.getOcclusionMap() != null)
+            .define("ALBEDO_TEXTURE_ENABLED", specularMaterialResources.getAlbedoMap() != null)
+            .define("ORM_TEXTURE_ENABLED", specularMaterialResources.getORMMap() != null)
+            .define("BASIS_ENABLED", basisEnabled);
+
+        if (basisEnabled)
+        {
+            builder
+                .define("BASIS_COUNT", specularMaterialResources.getBasisResources().getBasisCount())
+                .define("BASIS_RESOLUTION", specularMaterialResources.getBasisResources().getBasisResolution());
+        }
+
+        return builder;
+
+
     }
 
     public void setupShaderProgram(Program<ContextType> program)
@@ -449,7 +503,7 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
         program.setUniform("gamma", this.getViewSet().getGamma());
 
         getLuminanceMapResources().setupShaderProgram(program);
-        getMaterialResources().setupShaderProgram(program);
+        getSpecularMaterialResources().setupShaderProgram(program);
     }
 
     public void close()
@@ -460,7 +514,7 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
         this.lightIntensityBuffer.close();
         this.lightIndexBuffer.close();
         this.geometryResources.close();
-        this.materialResources.close();
+        this.specularMaterialResources.close();
         this.luminanceMapResources.close();
     }
 }

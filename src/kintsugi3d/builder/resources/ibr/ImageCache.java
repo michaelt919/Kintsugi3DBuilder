@@ -12,18 +12,7 @@
 
 package kintsugi3d.builder.resources.ibr;
 
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.util.Arrays;
-import java.util.Random;
-import java.util.Scanner;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import javax.imageio.ImageIO;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import kintsugi3d.builder.core.SimpleLoadOptionsModel;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryFramebuffer;
 import kintsugi3d.gl.geometry.GeometryTextures;
@@ -34,8 +23,21 @@ import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Vector4;
-import kintsugi3d.builder.core.SimpleLoadOptionsModel;
 import kintsugi3d.util.BufferedImageBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.Random;
+import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class ImageCache<ContextType extends Context<ContextType>>
 {
@@ -207,6 +209,12 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
     private void readSampleLocationsFromFile() throws IOException
     {
+        // Sometimes the interrupted flag gets stuck on and needs to be reset or all File IO on the thread will fail.
+        if (Thread.interrupted())
+        {
+            log.warn("Thread interrupted", new Throwable("Thread interrupted"));
+        }
+
         try(Scanner scanner = new Scanner(getSampleLocationsFile()))
         {
             // Loop over columns

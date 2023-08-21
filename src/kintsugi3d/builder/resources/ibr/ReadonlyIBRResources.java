@@ -12,14 +12,13 @@
 
 package kintsugi3d.builder.resources.ibr;
 
+import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.resources.ibr.stream.GraphicsStreamFactory;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Drawable;
 import kintsugi3d.gl.core.Program;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.core.StandardRenderingMode;
 
 public interface ReadonlyIBRResources<ContextType extends Context<ContextType>>
 {
@@ -53,12 +52,9 @@ public interface ReadonlyIBRResources<ContextType extends Context<ContextType>>
      * Gets a shader program builder with any required preprocessor defines automatically injected based on the
      * characteristics of this instance.
      *
-     * @param renderingMode The rendering mode to use, which may change some of the preprocessor defines.
      * @return A program builder with preprocessor defines specified, ready to have the vertex and fragment shaders
      * added as well as any additional application-specific preprocessor definitions.
      */
-    ProgramBuilder<ContextType> getShaderProgramBuilder(StandardRenderingMode renderingMode);
-
     ProgramBuilder<ContextType> getShaderProgramBuilder();
 
     /**

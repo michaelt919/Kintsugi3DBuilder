@@ -12,14 +12,14 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
+import kintsugi3d.builder.state.SceneViewport;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Framebuffer;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.interactive.InteractiveRenderable;
 import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
-import kintsugi3d.builder.state.*;
 
 /**
  * Interface for the implementation of the actual image-based rendering / relighting technique.
@@ -76,7 +76,7 @@ public interface IBRInstance<ContextType extends Context<ContextType>> extends I
      *
      * @return The view set.
      */
-    ReadonlyViewSet getActiveViewSet();
+    ViewSet getActiveViewSet();
 
     /**
      * Gets the geometry mesh for the currently loaded object.

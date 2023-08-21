@@ -20,12 +20,15 @@ import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import kintsugi3d.builder.core.ViewSet;
 
-import java.awt.Toolkit;
+import java.awt.*;
 import java.io.File;
+import java.util.function.Consumer;
 
 public class CreateProjectController {
-    private Runnable callback;
+    private Runnable loadStartCallback;
+    private Consumer<ViewSet> viewSetCallback;
 
     @FXML public TextField projectNameTxtField;
     @FXML public ChoiceBox<String> directoryChoices;
@@ -76,9 +79,14 @@ public class CreateProjectController {
         }
     }
 
-    public void setCallback(Runnable callback)
+    public void setLoadStartCallback(Runnable callback)
     {
-        this.callback = callback;
+        this.loadStartCallback = callback;
+    }
+
+    public void setViewSetCallback(Consumer<ViewSet> callback)
+    {
+        this.viewSetCallback = callback;
     }
 
     public void createProject() {

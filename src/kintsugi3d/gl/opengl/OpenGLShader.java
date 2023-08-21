@@ -24,12 +24,16 @@ import kintsugi3d.gl.core.Shader;
 import kintsugi3d.gl.exceptions.IllegalShaderDefineException;
 import kintsugi3d.gl.exceptions.ShaderCompileFailureException;
 import kintsugi3d.gl.exceptions.ShaderPreprocessingFailureException;
+import kintsugi3d.gl.material.Material;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 
 class OpenGLShader implements Shader<OpenGLContext>
 {
+    private static final Logger log = LoggerFactory.getLogger(OpenGLShader.class);
     private static final Pattern QUOTATION_MARK_PATTERN = Pattern.compile("['\"]");
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s");
     protected final OpenGLContext context;
@@ -100,6 +104,12 @@ class OpenGLShader implements Shader<OpenGLContext>
         int lineCounter = 1;
         boolean definesAdded = defines.isEmpty();
 
+        // Sometimes the interrupted flag gets stuck on and needs to be reset or all File IO on the thread will fail.
+        if (Thread.interrupted())
+        {
+            log.warn("Thread interrupted", new Throwable("Thread interrupted"));
+        }
+
         try(Scanner scanner = new Scanner(file))
         {
             while (scanner.hasNextLine())
@@ -160,7 +170,8 @@ class OpenGLShader implements Shader<OpenGLContext>
                     }
                     else if (parts[1].charAt(0) == '<' && parts[1].charAt(parts[1].length() - 1) == '>')
                     {
-                        includeFile = new File(parts[1].substring(1, parts[1].length() - 1));
+                        // Find the include file in the "shaders" directory.
+                        includeFile = new File("shaders", parts[1].substring(1, parts[1].length() - 1));
                     }
                     else
                     {

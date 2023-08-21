@@ -25,17 +25,17 @@ layout(location = 0) out vec4 errorOut;
 uniform float gamma;
 uniform float gammaInv;
 
-uniform sampler2D diffuseEstimate;
+uniform sampler2D diffuseMap;
 uniform sampler2D specularEstimate;
-uniform sampler2D roughnessEstimate;
+uniform sampler2D roughnessMap;
 
 void main()
 {
     vec3 reflectivity = pow(texture(specularEstimate, fTexCoord).rgb, vec3(gamma));
-    float sqrtRoughness = texture(roughnessEstimate, fTexCoord)[0];
+    float sqrtRoughness = texture(roughnessMap, fTexCoord)[0];
     float roughness = sqrtRoughness * sqrtRoughness;
     vec3 diffuse = pow(texture(diffuseColor, fTexCoord).rgb, vec3(gamma));
 
     errorOut = vec4(vec3(calculateError(diffuse, reflectivity, roughness)),
-        MICROFACET_DISTRIBUTION_RESOLUTION - 1);
+        BASIS_RESOLUTION - 1);
 }

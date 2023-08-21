@@ -46,13 +46,13 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
     }
 
     @Override
-    public void initialize() throws Exception
+    public void initialize()
     {
         contentRoot.initialize();
     }
 
     @Override
-    public void reloadShaders() throws Exception
+    public void reloadShaders()
     {
         contentRoot.reloadShaders();
     }

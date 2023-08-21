@@ -12,8 +12,6 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import kintsugi3d.builder.fit.decomposition.SpecularBasis;
-
 import java.util.stream.IntStream;
 
 public class SimpleSpecularBasis implements SpecularBasis
@@ -22,18 +20,26 @@ public class SimpleSpecularBasis implements SpecularBasis
     private final double[][] greenBasis;
     private final double[][] blueBasis;
 
-    public SimpleSpecularBasis(int basisCount, int microfacetDistributionResolution)
+    private final int basisCount;
+    private final int basisResolution;
+
+    public SimpleSpecularBasis(int basisCount, int basisResolution)
     {
-        redBasis = IntStream.range(0, basisCount).mapToObj(b -> new double[microfacetDistributionResolution + 1]).toArray(double[][]::new);
-        greenBasis = IntStream.range(0, basisCount).mapToObj(b -> new double[microfacetDistributionResolution + 1]).toArray(double[][]::new);
-        blueBasis = IntStream.range(0, basisCount).mapToObj(b -> new double[microfacetDistributionResolution + 1]).toArray(double[][]::new);
+        redBasis = IntStream.range(0, basisCount).mapToObj(b -> new double[basisResolution + 1]).toArray(double[][]::new);
+        greenBasis = IntStream.range(0, basisCount).mapToObj(b -> new double[basisResolution + 1]).toArray(double[][]::new);
+        blueBasis = IntStream.range(0, basisCount).mapToObj(b -> new double[basisResolution + 1]).toArray(double[][]::new);
+        this.basisCount = basisCount;
+        this.basisResolution = basisResolution;
     }
 
+    @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
     public SimpleSpecularBasis(double[][] redBasis, double[][] greenBasis, double[][] blueBasis)
     {
         this.redBasis = redBasis;
         this.greenBasis = greenBasis;
         this.blueBasis = blueBasis;
+        this.basisCount = redBasis.length;
+        this.basisResolution = redBasis[0].length - 1;
     }
 
     @Override
@@ -52,6 +58,18 @@ public class SimpleSpecularBasis implements SpecularBasis
     public double evaluateBlue(int b, int m)
     {
         return blueBasis[b][m];
+    }
+
+    @Override
+    public int getCount()
+    {
+        return basisCount;
+    }
+
+    @Override
+    public int getResolution()
+    {
+        return basisResolution;
     }
 
     /**

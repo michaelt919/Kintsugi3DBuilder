@@ -17,11 +17,11 @@
 
 layout(location = 0) out vec4 diffuseOut;
 layout(location = 1) out vec4 constantOut;
-layout(location = 2) out vec4 quadraticOut;
+//layout(location = 2) out vec4 quadraticOut;
 
 void main()
 {
-    float sqrtRoughness = texture(roughnessEstimate, fTexCoord)[0];
+    float sqrtRoughness = texture(roughnessMap, fTexCoord)[0];
     float roughness = sqrtRoughness * sqrtRoughness;
 
     vec3 position = getPosition();
@@ -29,7 +29,7 @@ void main()
     mat3 tangentToObject = constructTBNExact();
     vec3 triangleNormal = tangentToObject[2];
 
-    vec2 fittedNormalXY = texture(normalEstimate, fTexCoord).xy * 2 - vec2(1.0);
+    vec2 fittedNormalXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
     vec3 fittedNormalTS = vec3(fittedNormalXY, sqrt(1 - dot(fittedNormalXY, fittedNormalXY)));
     vec3 fittedNormal = tangentToObject * fittedNormalTS;
 

@@ -24,6 +24,8 @@ import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -34,6 +36,7 @@ import java.io.FileNotFoundException;
  */
 public class LightVisuals<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(LightVisuals.class);
     private final ContextType context;
     private final SceneModel sceneModel;
     private final SceneViewportModel<ContextType> sceneViewportModel;
@@ -68,34 +71,12 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
     }
 
     @Override
-    public void initialize() throws FileNotFoundException
+    public void initialize()
     {
         this.rectangleVertices = context.createRectangle();
-
-        this.solidProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
-                .createProgram();
         this.widgetVertices = context.createVertexBuffer()
-                .setData(NativeVectorBufferFactory.getInstance()
-                        .createFromFloatArray(3, 3, -1, -1, 0, 1, -1, 0, 0, 1, 0));
-
-        this.widgetDrawable = context.createDrawable(this.solidProgram);
-        this.widgetDrawable.addVertexBuffer("position", widgetVertices);
-
-        this.lightProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "light.frag"))
-                .createProgram();
-        this.lightDrawable = context.createDrawable(this.lightProgram);
-        this.lightDrawable.addVertexBuffer("position", rectangleVertices);
-
-        this.circleProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "circle.frag"))
-                .createProgram();
-        this.circleDrawable = context.createDrawable(this.circleProgram);
-        this.circleDrawable.addVertexBuffer("position", rectangleVertices);
+            .setData(NativeVectorBufferFactory.getInstance()
+                .createFromFloatArray(3, 3, -1, -1, 0, 1, -1, 0, 0, 1, 0));
 
         NativeVectorBuffer lightTextureData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 4096);
 
@@ -133,54 +114,90 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
                 .setLinearFilteringEnabled(true)
                 .setMipmapsEnabled(true)
                 .createTexture();
-    }
 
-    @Override
-    public void reloadShaders() throws FileNotFoundException
-    {
-        ProgramObject<ContextType> newLightProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "light.frag"))
-                .createProgram();
-
-        if (this.lightProgram != null)
+        try
         {
-            this.lightProgram.close();
-        }
-
-        this.lightProgram = newLightProgram;
-        this.lightDrawable = context.createDrawable(this.lightProgram);
-        this.lightDrawable.addVertexBuffer("position", rectangleVertices);
-
-        ProgramObject<ContextType> newWidgetProgram = context.getShaderProgramBuilder()
+            this.solidProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
                 .createProgram();
 
-        if (this.solidProgram != null)
-        {
-            this.solidProgram.close();
-        }
+            this.widgetDrawable = context.createDrawable(this.solidProgram);
+            this.widgetDrawable.addVertexBuffer("position", widgetVertices);
 
-        this.solidProgram = newWidgetProgram;
-
-        this.widgetDrawable = context.createDrawable(this.solidProgram);
-        this.widgetDrawable.addVertexBuffer("position", widgetVertices);
-
-        ProgramObject<ContextType> newCircleProgram = context.getShaderProgramBuilder()
+            this.lightProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "circle.frag"))
+                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "scene"), "light.frag"))
+                .createProgram();
+            this.lightDrawable = context.createDrawable(this.lightProgram);
+            this.lightDrawable.addVertexBuffer("position", rectangleVertices);
+
+            this.circleProgram = context.getShaderProgramBuilder()
+                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "scene"), "circle.frag"))
+                .createProgram();
+            this.circleDrawable = context.createDrawable(this.circleProgram);
+            this.circleDrawable.addVertexBuffer("position", rectangleVertices);
+        }
+        catch (FileNotFoundException|RuntimeException e)
+        {
+            log.error("Failed to load shader.", e);
+        }
+    }
+
+    @Override
+    public void reloadShaders()
+    {
+        try
+        {
+            ProgramObject<ContextType> newLightProgram = context.getShaderProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "scene"), "light.frag"))
+                    .createProgram();
+
+            if (this.lightProgram != null)
+            {
+                this.lightProgram.close();
+            }
+
+            this.lightProgram = newLightProgram;
+            this.lightDrawable = context.createDrawable(this.lightProgram);
+            this.lightDrawable.addVertexBuffer("position", rectangleVertices);
+
+            ProgramObject<ContextType> newWidgetProgram = context.getShaderProgramBuilder()
+                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
                 .createProgram();
 
-        if (this.circleProgram != null)
-        {
-            this.circleProgram.close();
+            if (this.solidProgram != null)
+            {
+                this.solidProgram.close();
+            }
+
+            this.solidProgram = newWidgetProgram;
+
+            this.widgetDrawable = context.createDrawable(this.solidProgram);
+            this.widgetDrawable.addVertexBuffer("position", widgetVertices);
+
+            ProgramObject<ContextType> newCircleProgram = context.getShaderProgramBuilder()
+                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "scene"), "circle.frag"))
+                .createProgram();
+
+            if (this.circleProgram != null)
+            {
+                this.circleProgram.close();
+            }
+
+            this.circleProgram = newCircleProgram;
+
+            this.circleDrawable = context.createDrawable(this.circleProgram);
+            this.circleDrawable.addVertexBuffer("position", rectangleVertices);
         }
-
-        this.circleProgram = newCircleProgram;
-
-        this.circleDrawable = context.createDrawable(this.circleProgram);
-        this.circleDrawable.addVertexBuffer("position", rectangleVertices);
+        catch (FileNotFoundException|RuntimeException e)
+        {
+            log.error("Failed to load shader.", e);
+        }
     }
 
     @Override

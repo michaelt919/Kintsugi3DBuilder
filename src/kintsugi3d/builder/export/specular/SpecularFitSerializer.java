@@ -15,10 +15,11 @@ package kintsugi3d.builder.export.specular;
 import kintsugi3d.builder.fit.decomposition.SimpleSpecularBasis;
 import kintsugi3d.builder.fit.decomposition.SpecularBasis;
 import kintsugi3d.builder.fit.decomposition.SpecularBasisWeights;
+import kintsugi3d.gl.core.Texture3D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.Texture3D;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -28,7 +29,6 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import javax.imageio.ImageIO;
 
 public class SpecularFitSerializer
 {
@@ -89,14 +89,15 @@ public class SpecularFitSerializer
 
     public static String getWeightFileName(int weightMapIndex, int weightsPerChannel)
     {
+        int scaledWeightMapIndex = weightMapIndex;
         if (weightsPerChannel <= 1)
         {
-            return String.format("weights%02d.png", weightMapIndex);
+            return String.format("weights%02d.png", scaledWeightMapIndex);
         }
         else
         {
-            weightMapIndex *= weightsPerChannel;
-            return String.format("weights%02d%02d.png", weightMapIndex, weightMapIndex + (weightsPerChannel - 1));
+            scaledWeightMapIndex *= weightsPerChannel;
+            return String.format("weights%02d%02d.png", scaledWeightMapIndex, scaledWeightMapIndex + (weightsPerChannel - 1));
         }
     }
 
@@ -156,68 +157,75 @@ public class SpecularFitSerializer
     {
         File basisFile = new File(priorSolutionDirectory, getBasisFunctionsFilename());
 
-        // Test to figure out the resolution
-        int numElements; // Technically this is "microfacetDistributionResolution + 1" the way it's defined elsewhere
-        try (Scanner in = new Scanner(basisFile))
+        if (basisFile.exists())
         {
-            String testLine = in.nextLine();
-            String[] elements = testLine.split("\\s*,+\\s*");
-            if (elements[elements.length - 1].isBlank()) // detect trailing comma
+            // Test to figure out the resolution
+            int numElements; // Technically this is "microfacetDistributionResolution + 1" the way it's defined elsewhere
+            try (Scanner in = new Scanner(basisFile))
             {
-                // Don't count the blank element after the trailing comma, or the leading identifier on each line.
-                numElements = elements.length - 2;
+                String testLine = in.nextLine();
+                String[] elements = testLine.split("\\s*,+\\s*");
+                if (elements[elements.length - 1].isBlank()) // detect trailing comma
+                {
+                    // Don't count the blank element after the trailing comma, or the leading identifier on each line.
+                    numElements = elements.length - 2;
+                }
+                else
+                {
+                    // Don't count the leading identifier on each line.
+                    numElements = elements.length - 1;
+                }
             }
-            else
+
+            // Now actually parse the file
+            try (Scanner in = new Scanner(basisFile))
             {
-                // Don't count the leading identifier on each line.
-                numElements = elements.length - 1;
+                List<double[]> redBasis = new ArrayList<>(8);
+                List<double[]> greenBasis = new ArrayList<>(8);
+                List<double[]> blueBasis = new ArrayList<>(8);
+
+                in.useDelimiter("\\s*[,\\n\\r]+\\s*"); // CSV
+
+                int b = 0;
+                while (in.hasNext())
+                {
+                    // Beginning a new basis function for each RGB component.
+                    redBasis.add(new double[numElements]);
+                    greenBasis.add(new double[numElements]);
+                    blueBasis.add(new double[numElements]);
+
+                    in.next(); // "Red#{b}"
+                    for (int m = 0; m < numElements; m++)
+                    {
+                        redBasis.get(b)[m] = in.nextDouble();
+                    }
+                    // newline
+
+                    in.next(); // "Green#{b}"
+                    for (int m = 0; m < numElements; m++)
+                    {
+                        greenBasis.get(b)[m] = in.nextDouble();
+                    }
+                    // newline
+
+                    in.next(); // "Blue#{b}"
+                    for (int m = 0; m < numElements; m++)
+                    {
+                        blueBasis.get(b)[m] = in.nextDouble();
+                    }
+                    // newline
+
+                    b++;
+                }
+                // newline
+
+                return new SimpleSpecularBasis(
+                    redBasis.toArray(double[][]::new), greenBasis.toArray(double[][]::new), blueBasis.toArray(double[][]::new));
             }
         }
-
-        // Now actually parse the file
-        try (Scanner in = new Scanner(basisFile))
+        else
         {
-            List<double[]> redBasis = new ArrayList<>(8);
-            List<double[]> greenBasis = new ArrayList<>(8);
-            List<double[]> blueBasis = new ArrayList<>(8);
-
-            in.useDelimiter("\\s*[,\\n\\r]+\\s*"); // CSV
-
-            int b = 0;
-            while (in.hasNext())
-            {
-                // Beginning a new basis function for each RGB component.
-                redBasis.add(new double[numElements]);
-                greenBasis.add(new double[numElements]);
-                blueBasis.add(new double[numElements]);
-
-                in.next(); // "Red#{b}"
-                for (int m = 0; m < numElements; m++)
-                {
-                    redBasis.get(b)[m] = in.nextDouble();
-                }
-                // newline
-
-                in.next(); // "Green#{b}"
-                for (int m = 0; m < numElements; m++)
-                {
-                    greenBasis.get(b)[m] = in.nextDouble();
-                }
-                // newline
-
-                in.next(); // "Blue#{b}"
-                for (int m = 0; m < numElements; m++)
-                {
-                    blueBasis.get(b)[m] = in.nextDouble();
-                }
-                // newline
-
-                b++;
-            }
-            // newline
-
-            return new SimpleSpecularBasis(
-                redBasis.toArray(double[][]::new), greenBasis.toArray(double[][]::new), blueBasis.toArray(double[][]::new));
+            return null;
         }
     }
 }

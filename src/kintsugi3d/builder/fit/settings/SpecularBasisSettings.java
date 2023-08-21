@@ -15,7 +15,7 @@ package kintsugi3d.builder.fit.settings;
 public class SpecularBasisSettings
 {
     private int basisCount = 8;
-    private int microfacetDistributionResolution = 90;
+    private int basisResolution = 90;
     private double specularSmoothness = 0.0;
     private double metallicity = 0.0;
 
@@ -47,23 +47,23 @@ public class SpecularBasisSettings
     /**
      * @return The number of discrete values in the definition of the specular lobe.
      */
-    public int getMicrofacetDistributionResolution()
+    public int getBasisResolution()
     {
-        return microfacetDistributionResolution;
+        return basisResolution;
     }
 
     /**
-     * @param microfacetDistributionResolution The number of discrete values in the definition of the specular lobe.
+     * @param basisResolution The number of discrete values in the definition of the specular lobe.
      */
-    public void setMicrofacetDistributionResolution(int microfacetDistributionResolution)
+    public void setBasisResolution(int basisResolution)
     {
-        if (microfacetDistributionResolution <= 0)
+        if (basisResolution <= 0)
         {
-            throw new IllegalArgumentException("Microfacet distribution resolution must be greater than zero.");
+            throw new IllegalArgumentException("Basis resolution must be greater than zero.");
         }
         else
         {
-            this.microfacetDistributionResolution = microfacetDistributionResolution;
+            this.basisResolution = basisResolution;
         }
     }
 

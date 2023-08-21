@@ -12,24 +12,24 @@
 
 package kintsugi3d.builder.fit.debug;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.concurrent.atomic.DoubleAdder;
-
-import kintsugi3d.builder.resources.specular.SpecularResources;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.builders.ProgramBuilder;
-import kintsugi3d.gl.core.ColorFormat;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.Framebuffer;
 import kintsugi3d.builder.core.Projection;
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.builder.fit.settings.ReconstructionSettings;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.gl.builders.ProgramBuilder;
+import kintsugi3d.gl.core.ColorFormat;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.Framebuffer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.concurrent.atomic.DoubleAdder;
 
 public class FinalReconstruction<ContextType extends Context<ContextType>>
 {
@@ -60,7 +60,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         }
     }
 
-    public double reconstruct(SpecularResources<ContextType> specularFit, ProgramBuilder<ContextType> programBuilder,
+    public double reconstruct(SpecularMaterialResources<ContextType> specularFit, ProgramBuilder<ContextType> programBuilder,
         boolean reconstructAll, String reconstructName, String groundTruthName, File outputDirectory)
     {
         if (reconstructAll)
@@ -86,10 +86,10 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
             {
                 specularFit.getBasisResources().useWithShaderProgram(program);
                 specularFit.getBasisWeightResources().useWithShaderProgram(program);
-                program.setTexture("normalEstimate", specularFit.getNormalMap());
+                program.setTexture("normalMap", specularFit.getNormalMap());
                 program.setTexture("specularEstimate", specularFit.getSpecularReflectivityMap());
-                program.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
-                program.setTexture("diffuseEstimate", specularFit.getDiffuseMap());
+                program.setTexture("roughnessMap", specularFit.getSpecularRoughnessMap());
+                program.setTexture("diffuseMap", specularFit.getDiffuseMap());
 
                 if (specularFit.getConstantMap() != null)
                 {

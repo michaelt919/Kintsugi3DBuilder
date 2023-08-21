@@ -12,14 +12,14 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import java.io.File;
-import java.io.IOException;
-
 import kintsugi3d.builder.export.specular.SpecularFitSerializer;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+
+import java.io.File;
+import java.io.IOException;
 
 @SuppressWarnings("PublicField")
 public class BasisWeightResources<ContextType extends Context<ContextType>>
@@ -41,13 +41,11 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
             context.getTextureFactory().build2DColorTextureArray(width, height, basisCount)
                 .setInternalFormat(ColorFormat.R32F)
                 .setLinearFilteringEnabled(true)
-                .setMipmapsEnabled(false)
                 .createTexture(),
             // Weight mask:
             context.getTextureFactory().build2DColorTexture(width, height)
                 .setInternalFormat(ColorFormat.R8)
                 .setLinearFilteringEnabled(true)
-                .setMipmapsEnabled(false)
                 .createTexture());
     }
 
@@ -103,27 +101,32 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
     /**
      * Loads weight maps and basis functions from a prior solution.
      * Does not load diffuse basis colors, so a diffuse map should instead be optimized to cover diffuse.
+     * @param context
      * @param priorSolutionDirectory The directory from which to load a prior solution.
+     * @param basisCount
      * @throws IOException If a part of the solution cannot be loaded form file.
      */
-    public void loadFromPriorSolution(File priorSolutionDirectory) throws IOException
+    public static <ContextType extends Context<ContextType>> BasisWeightResources<ContextType> loadFromPriorSolution(
+        ContextType context, File priorSolutionDirectory, int width, int height, int basisCount) throws IOException
     {
-        NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
+        BasisWeightResources<ContextType> resources = new BasisWeightResources<>(context, width, height, basisCount);
 
         // Fill trivial weight mask.
-        NativeVectorBuffer weightMaskBuffer = factory.createEmpty(NativeDataType.FLOAT, 1,
+        NativeVectorBuffer weightMaskBuffer = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1,
             width * height);
         for (int p = 0; p < width * height; p++)
         {
             weightMaskBuffer.set(p, 0, 1.0);
         }
-        weightMask.load(weightMaskBuffer);
+        resources.weightMask.load(weightMaskBuffer);
 
         for (int b = 0; b < basisCount; b++)
         {
             // Load weight maps
-            weightMaps.loadLayer(b, new File(priorSolutionDirectory, SpecularFitSerializer.getWeightFileName(b)), true);
+            resources.weightMaps.loadLayer(b, new File(priorSolutionDirectory, SpecularFitSerializer.getWeightFileName(b)), true);
         }
+
+        return resources;
     }
 
     public void useWithShaderProgram(Program<ContextType> program)

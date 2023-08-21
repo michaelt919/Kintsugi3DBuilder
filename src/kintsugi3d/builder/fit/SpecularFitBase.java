@@ -12,26 +12,28 @@
 
 package kintsugi3d.builder.fit;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
+import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimization;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimizationSimple;
-import kintsugi3d.builder.resources.specular.SpecularResources;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResourcesBase;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Texture2D;
-import kintsugi3d.builder.core.TextureFitSettings;
-import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public abstract class SpecularFitBase<ContextType extends Context<ContextType>> implements SpecularResources<ContextType>
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
+    extends SpecularMaterialResourcesBase<ContextType>
 {
     private static final Logger log = LoggerFactory.getLogger(SpecularFitBase.class);
 
+    private final ContextType context;
     private final BasisResources<ContextType> basisResources;
     private final BasisWeightResources<ContextType> basisWeightResources;
     private final boolean basisResourcesOwned;
@@ -49,11 +51,13 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
     protected SpecularFitBase(BasisResources<ContextType> basisResources, boolean basisResourcesOwned,
         TextureFitSettings textureFitSettings) throws FileNotFoundException
     {
+        this.context = basisResources.getContext();
+
         // Textures calculated on CPU and passed to GPU (not framebuffers): basis functions & weights
         this.basisResources = basisResources;
         this.basisResourcesOwned = basisResourcesOwned;
         this.basisWeightResources = new BasisWeightResources<>(basisResources.getContext(),
-            textureFitSettings.width, textureFitSettings.height, basisResources.getSpecularBasisSettings().getBasisCount());
+            textureFitSettings.width, textureFitSettings.height, basisResources.getBasisCount());
 
         // Specular roughness / reflectivity module that manages its own resources
         this.roughnessOptimization =
@@ -72,43 +76,92 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
     protected SpecularFitBase(ContextType context, TextureFitSettings textureFitSettings,
         SpecularBasisSettings specularBasisSettings) throws FileNotFoundException
     {
-        this(new BasisResources<>(context, specularBasisSettings), true, textureFitSettings);
+        this(new BasisResources<>(context, specularBasisSettings.getBasisCount(), specularBasisSettings.getBasisResolution()),
+            true, textureFitSettings);
+    }
+
+    /**
+     * Basis resources and basis weight resources will be managed / owned by this instance
+     * Roughness and reflectivity textures will be loaded from prior solution
+     * @return
+     */
+    protected SpecularFitBase(ContextType context, File priorSolutionDirectory) throws IOException
+    {
+        this.context = context;
+
+        // Textures calculated on CPU and passed to GPU (not framebuffers): basis functions & weights
+        this.basisResources = BasisResources.loadFromPriorSolution(context, priorSolutionDirectory);
+        this.basisResourcesOwned = true;
+
+        if (this.basisResources != null)
+        {
+            // Specular roughness / reflectivity module that manages its own resources
+            this.roughnessOptimization =
+                new RoughnessOptimizationSimple<>(basisResources, priorSolutionDirectory);
+            //new RoughnessOptimizationIterative<>(context, basisResources, this::getDiffuseMap, settings);
+            // Don't clear it since the roughness and specular textures will be storing the images loaded from disk
+
+            this.basisWeightResources = BasisWeightResources.loadFromPriorSolution(
+                context, priorSolutionDirectory,
+                roughnessOptimization.getRoughnessTexture().getWidth(), roughnessOptimization.getRoughnessTexture().getHeight(),
+                basisResources.getBasisCount());
+
+            this.roughnessOptimization.setInputWeights(basisWeightResources);
+        }
+        else
+        {
+            roughnessOptimization = null;
+            basisWeightResources = null;
+        }
+    }
+
+    @Override
+    public ContextType getContext()
+    {
+        return context;
     }
 
     @Override
     public int getWidth()
     {
-        return basisWeightResources.weightMaps.getWidth();
+        return basisWeightResources == null || basisWeightResources.weightMaps == null ? 0 : basisWeightResources.weightMaps.getWidth();
     }
 
     @Override
     public int getHeight()
     {
-        return basisWeightResources.weightMaps.getHeight();
+        return basisWeightResources == null || basisWeightResources.weightMaps == null ? 0 : basisWeightResources.weightMaps.getHeight();
     }
 
     @Override
     public void close()
     {
-        if (basisResourcesOwned)
+        if (basisResourcesOwned && basisResources != null)
         {
             basisResources.close();
         }
 
-        basisWeightResources.close();
-        roughnessOptimization.close();
+        if (basisWeightResources != null)
+        {
+            basisWeightResources.close();
+        }
+
+        if (roughnessOptimization != null)
+        {
+            roughnessOptimization.close();
+        }
     }
 
     @Override
     public final Texture2D<ContextType> getSpecularReflectivityMap()
     {
-        return roughnessOptimization.getReflectivityTexture();
+        return roughnessOptimization == null ? null : roughnessOptimization.getReflectivityTexture();
     }
 
     @Override
     public final Texture2D<ContextType> getSpecularRoughnessMap()
     {
-        return roughnessOptimization.getRoughnessTexture();
+        return roughnessOptimization == null ? null : roughnessOptimization.getRoughnessTexture();
     }
 
     /**
@@ -173,16 +226,15 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>> 
         }
     }
 
-    public void saveQuadraticMap(File outputDirectory)
-    {
-        try
-        {
-            getQuadraticMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "quadratic.png"));
-        }
-        catch (IOException e)
-        {
-            log.error("An error occurred saving diffuse map:", e);
-        }
-    }
-
+//    public void saveQuadraticMap(File outputDirectory)
+//    {
+//        try
+//        {
+//            getQuadraticMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "quadratic.png"));
+//        }
+//        catch (IOException e)
+//        {
+//            log.error("An error occurred saving diffuse map:", e);
+//        }
+//    }
 }

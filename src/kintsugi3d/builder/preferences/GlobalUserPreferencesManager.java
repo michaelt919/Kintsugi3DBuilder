@@ -67,8 +67,8 @@ public class GlobalUserPreferencesManager
 
     private void inject()
     {
-        MultithreadModels.getInstance().getLoadOptionsModel().copyFrom(preferencesModel.getLoadOptions());
-        MultithreadModels.getInstance().getSettingsModel().copyFrom(preferencesModel.getSettings());
+//        MultithreadModels.getInstance().getLoadOptionsModel().copyFrom(preferencesModel.getLoadOptions());
+//        MultithreadModels.getInstance().getSettingsModel().copyFrom(preferencesModel.getSettings());
     }
 
     private void collect()

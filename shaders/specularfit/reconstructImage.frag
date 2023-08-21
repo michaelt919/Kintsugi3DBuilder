@@ -27,7 +27,7 @@ void main()
     mat3 tangentToObject = constructTBNExact();
     vec3 triangleNormal = tangentToObject[2];
 
-    vec2 normalDirXY = texture(normalEstimate, fTexCoord).xy * 2 - vec2(1.0);
+    vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
     vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
     vec3 normal = tangentToObject * normalDirTS;
 
@@ -40,7 +40,7 @@ void main()
     float nDotL = max(0.0, dot(normal, light));
     float nDotV = max(0.0, dot(normal, view));
     float hDotV = max(0.0, dot(halfway, view));
-    float sqrtRoughness = texture(roughnessEstimate, fTexCoord)[0];
+    float sqrtRoughness = texture(roughnessMap, fTexCoord)[0];
     float roughness = sqrtRoughness * sqrtRoughness;
     float geomRatio;
 
@@ -58,7 +58,7 @@ void main()
 
     if (nDotL > 0.0)
     {
-        vec3 brdf = pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma)) / PI + geomRatio * getMFDEstimate(nDotH);
+        vec3 brdf = pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma)) / PI + geomRatio * getMFDEstimate(nDotH);
         fragColor = vec4(pow(incidentRadiance * nDotL * brdf, vec3(1.0 / gamma)), 1.0);
     }
     else

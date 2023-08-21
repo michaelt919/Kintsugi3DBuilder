@@ -19,12 +19,15 @@ import kintsugi3d.gl.vecmath.Vector4;
 import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.core.SceneModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 
 public class Grid<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(Grid.class);
     private final ContextType context;
     private final SceneModel sceneModel;
 
@@ -39,13 +42,8 @@ public class Grid<ContextType extends Context<ContextType>> implements RenderedC
     }
 
     @Override
-    public void initialize() throws FileNotFoundException
+    public void initialize()
     {
-        this.solidProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
-                .createProgram();
-
         float[] grid = new float[252];
         for (int i = 0; i < 21; i++)
         {
@@ -70,28 +68,46 @@ public class Grid<ContextType extends Context<ContextType>> implements RenderedC
                 .setData(NativeVectorBufferFactory.getInstance()
                         .createFromFloatArray(3, 84, grid));
 
-        this.gridDrawable = context.createDrawable(this.solidProgram);
-        this.gridDrawable.addVertexBuffer("position", gridVertices);
-    }
-
-    @Override
-    public void reloadShaders() throws FileNotFoundException
-    {
-
-        ProgramObject<ContextType> newSolidProgram = context.getShaderProgramBuilder()
+        try
+        {
+            this.solidProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
                 .createProgram();
-
-        if (this.solidProgram != null)
-        {
-            this.solidProgram.close();
+            this.gridDrawable = context.createDrawable(this.solidProgram);
+            this.gridDrawable.addVertexBuffer("position", gridVertices);
         }
+        catch (FileNotFoundException|RuntimeException e)
+        {
+            log.error("Failed to load shader.", e);
+        }
+    }
 
-        this.solidProgram = newSolidProgram;
+    @Override
+    public void reloadShaders()
+    {
+        ProgramObject<ContextType> newSolidProgram = null;
+        try
+        {
+            newSolidProgram = context.getShaderProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
+                    .createProgram();
 
-        this.gridDrawable = context.createDrawable(this.solidProgram);
-        this.gridDrawable.addVertexBuffer("position", gridVertices);
+            if (this.solidProgram != null)
+            {
+                this.solidProgram.close();
+            }
+
+            this.solidProgram = newSolidProgram;
+
+            this.gridDrawable = context.createDrawable(this.solidProgram);
+            this.gridDrawable.addVertexBuffer("position", gridVertices);
+        }
+        catch (FileNotFoundException|RuntimeException e)
+        {
+            log.error("Failed to load shader.", e);
+        }
     }
 
     @Override

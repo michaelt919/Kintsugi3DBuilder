@@ -17,23 +17,23 @@ import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.vecmath.Matrix4;
 
+import java.io.IOException;
+
 public interface RenderedComponent<ContextType extends Context<ContextType>> extends AutoCloseable
 {
-    void initialize() throws Exception;
+    void initialize();
 
     /**
      * May reload shaders if compiled settings have changed
-     * @throws Exception
      */
-    default void update() throws Exception
+    default void update()
     {
     }
 
     /**
      * Force reload shaders
-     * @throws Exception
      */
-    void reloadShaders() throws Exception;
+    void reloadShaders();
 
     void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport);
 
