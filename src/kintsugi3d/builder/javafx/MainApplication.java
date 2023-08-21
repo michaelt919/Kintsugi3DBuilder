@@ -12,16 +12,6 @@
 
 package kintsugi3d.builder.javafx;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleFloatProperty;
@@ -48,6 +38,16 @@ import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.util.ShadingParameterMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class MainApplication extends Application
 {
@@ -330,12 +330,12 @@ public class MainApplication extends Application
             WindowSynchronization.getInstance().quit();
         });
 
-        welcomeStage.setOnCloseRequest(event ->
-        {
-            // Consume the event and let the window synchronization system close the stage later if the user confirms that they want to exit.
-            event.consume();
-            WindowSynchronization.getInstance().quit();
-        });
+//        welcomeStage.setOnCloseRequest(event ->
+//        {
+//            // Consume the event and let the window synchronization system close the stage later if the user confirms that they want to exit.
+//            event.consume();
+//            WindowSynchronization.getInstance().quit();
+//        });
 
         // Focus synchronization not working quite right.
 //        sceneStage.focusedProperty().addListener(event ->

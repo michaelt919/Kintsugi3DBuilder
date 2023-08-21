@@ -12,10 +12,6 @@
 
 package kintsugi3d.builder.export.specular;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -37,6 +33,10 @@ import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
 public class SpecularFitRequestUI implements IBRRequestUI
 {
@@ -204,7 +204,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
             int microfacetDistributionResolution = Integer.parseInt(mfdResolutionTextField.getText());
             settings.getSpecularBasisSettings().setBasisResolution(microfacetDistributionResolution);
 
-            settings.getExportSettings().setCombineWeights(combineWeightsCheckbox.isSelected());
+            settings.getExportSettings().setCombineWeights(true /* combineWeightsCheckbox.isSelected() */);
 
             // Specular / general settings
             double convergenceTolerance = Double.parseDouble(convergenceToleranceTextField.getText());
@@ -230,13 +230,13 @@ public class SpecularFitRequestUI implements IBRRequestUI
             settings.getNormalOptimizationSettings().setLevenbergMarquardtEnabled(levenbergMarquardtEnabled);
             int unsuccessfulLMIterationsAllowed = Integer.parseInt(unsuccessfulLMIterationsTextField.getText());
             settings.getNormalOptimizationSettings().setUnsuccessfulLMIterationsAllowed(unsuccessfulLMIterationsAllowed);
-            boolean reconstructAll = reconstructAllCheckBox.isSelected();
-            settings.getReconstructionSettings().setReconstructAll(reconstructAll);
+//            boolean reconstructAll = reconstructAllCheckBox.isSelected();
+            settings.getReconstructionSettings().setReconstructAll(false /* reconstructAll*/);
 
             settings.getExportSettings().setGenerateLowResTextures(exportTextureLODsCheckbox.isSelected());
 
             // glTF export settings
-            settings.getExportSettings().setGlTFEnabled(exportGLTFCheckbox.isSelected());
+            settings.getExportSettings().setGlTFEnabled(true /* exportGLTFCheckbox.isSelected() */);
             settings.getExportSettings().setGlTFPackTextures(exportGLTFPackedCheckbox.isSelected());
 
 //            if (reconstructionViewSetField.getText() != null && !reconstructionViewSetField.getText().isEmpty())

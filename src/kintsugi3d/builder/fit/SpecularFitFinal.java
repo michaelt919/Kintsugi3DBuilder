@@ -53,7 +53,6 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
             .build2DColorTexture(textureFitSettings.width, textureFitSettings.height)
             .setInternalFormat(ColorFormat.RGB8)
             .setLinearFilteringEnabled(true)
-            .setMipmapsEnabled(true)
             .createTexture();
 
         // Allocate normal map
@@ -61,7 +60,6 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
             .build2DColorTexture(textureFitSettings.width, textureFitSettings.height)
             .setInternalFormat(ColorFormat.RGB8)
             .setLinearFilteringEnabled(true)
-            .setMipmapsEnabled(true)
             .createTexture();
 
         // Allocate constant map
@@ -70,7 +68,6 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
                 .build2DColorTexture(textureFitSettings.width, textureFitSettings.height)
                 .setInternalFormat(ColorFormat.RGB8)
                 .setLinearFilteringEnabled(true)
-                .setMipmapsEnabled(true)
                 .createTexture()
             : null;
 

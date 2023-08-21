@@ -98,11 +98,6 @@ public class LoadingModel
     public void addLoadingMonitor(LoadingMonitor monitor)
     {
         this.loadingMonitor.addSubMonitor(monitor);
-
-        if (this.handler != null)
-        {
-            this.handler.setLoadingMonitor(monitor);
-        }
     }
 
     public void setLoadOptionsModel(ReadonlyLoadOptionsModel loadOptionsModel)

@@ -12,14 +12,14 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import java.io.File;
-import java.io.IOException;
-
 import kintsugi3d.builder.export.specular.SpecularFitSerializer;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+
+import java.io.File;
+import java.io.IOException;
 
 @SuppressWarnings("PublicField")
 public class BasisWeightResources<ContextType extends Context<ContextType>>
@@ -41,13 +41,11 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
             context.getTextureFactory().build2DColorTextureArray(width, height, basisCount)
                 .setInternalFormat(ColorFormat.R32F)
                 .setLinearFilteringEnabled(true)
-                .setMipmapsEnabled(false)
                 .createTexture(),
             // Weight mask:
             context.getTextureFactory().build2DColorTexture(width, height)
                 .setInternalFormat(ColorFormat.R8)
                 .setLinearFilteringEnabled(true)
-                .setMipmapsEnabled(false)
                 .createTexture());
     }
 
