@@ -23,11 +23,23 @@
         <RollingFile name="fileLogger">
             <PatternLayout pattern="${LOG_PATTERN}"/>
             <FileName>${sys:Kintsugi3D.logDir:-.}/Kintsugi3DBuilder.log</FileName>
-            <FilePattern>${sys:Kintsugi3D.logDir:-.}/Kintsugi3DBuilder-%d{yyyy-MM-dd}.log</FilePattern>
+            <FilePattern>${sys:Kintsugi3D.logDir:-.}/Kintsugi3DBuilder-%d{yyyy-MM-dd}-%i.log</FilePattern>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1" modulate="true" />
-                <SizeBasedTriggeringPolicy size="10MB" />
+                <SizeBasedTriggeringPolicy size="25MB" />
             </Policies>
+            <DefaultRolloverStrategy>
+                <Delete basePath="${sys:Kintsugi3D.logDir:-.}" maxDepth="1">
+                    <!-- Delete any log files that (are older than 60 days, but always keep the 10 most recent files) OR (the oldest files when total exceeds 250MB) -->
+                    <IfFileName glob="Kintsugi3DBuilder-*.log" />
+                    <IfAny>
+                        <IfLastModified age="60d">
+                            <IfAccumulatedFileCount exceeds="10" />
+                        </IfLastModified>
+                        <IfAccumulatedFileSize exceeds="250MB" />
+                    </IfAny>
+                </Delete>
+            </DefaultRolloverStrategy>
         </RollingFile>
         <RecentLogMessageAppender name="guiConsole">
             <PatternLayout pattern="${LOG_PATTERN}"/>
