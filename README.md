@@ -36,3 +36,4 @@ There are additional requirements for building the installer executable using th
 - NSIS must be installed on the system. [Download Nullsoft Scriptable Install System](https://nsis.sourceforge.io/Download)
 - The NSIS install folder must be added to your `PATH` environment variable.
 - A JRE must be located at `jre`. The `install` lifecycle *will fail* without the `jre` folder.
+- The Kintsugi 3D Viewer installer, `Kintsugi3DViewer-setup.exe` must be located at `viewer/Kintsugi3DViewer-setup.exe`. The `install` lifecycle *will fail* without this.
