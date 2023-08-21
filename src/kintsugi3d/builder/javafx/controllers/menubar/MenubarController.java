@@ -31,6 +31,16 @@ import javafx.scene.image.Image;
 import javafx.stage.Window;
 import javafx.stage.*;
 import javafx.util.StringConverter;
+import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
+import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
+import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
+import kintsugi3d.util.RecentProjects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.javafx.FramebufferView;
+import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.IBRRequestUI;
@@ -301,21 +311,6 @@ public class MenubarController
             }
         });
 
-        //add graphic to settings button
-//        try {
-//            settingsButton.setGraphic(new ImageView(new Image(new File("ibr-icon.png").toURI().toURL().toString())));
-//            double scale = 0.5;
-//            settingsButton.setScaleX(scale);
-//            settingsButton.setScaleY(scale);
-//            settingsButton.setScaleZ(scale);
-//            settingsButton.setTranslateX(10);
-//            HBox parent = (HBox) settingsButton.getParent();
-//            parent.setTranslateY(-15);
-//        } catch (MalformedURLException e) {
-//            settingsButton.setText("System Settings");
-//            throw new RuntimeException(e);
-//        }
-
         RecentProjects.initializeMenubarController(this);
         updateRecentProjectsMenu();
 
@@ -585,26 +580,6 @@ public class MenubarController
         return stage;
     }
 
-    public void file_colorChecker()
-    {
-        if (colorCheckerWindowOpen.get())
-        {
-            return;
-        }
-
-        try
-        {
-            ColorCheckerController colorCheckerController =
-                makeWindow("Color Checker", colorCheckerWindowOpen, "fxml/menubar/ColorChecker.fxml");
-            colorCheckerController.init(MultithreadModels.getInstance().getLoadingModel());
-
-        }
-        catch(Exception e)
-        {
-            handleException("An error occurred opening color checker", e);
-        }
-    }
-
     public void unzip() {
         try {
             UnzipFileSelectionController unzipFileSelectionController =
@@ -626,9 +601,9 @@ public class MenubarController
 
         try
         {
-            ColorCheckerImgSelectionController colorCheckerController =
-                    makeWindow("Color Checker", colorCheckerWindowOpen, "fxml/menubar/ColorCheckerImgSelection.fxml");
-            colorCheckerController.init(MultithreadModels.getInstance().getLoadingModel());
+            EyedropperController eyedropperController =
+                    makeWindow("Color Checker", colorCheckerWindowOpen, "fxml/menubar/EyedropperColorChecker.fxml");
+            eyedropperController.setLoadingModel(MultithreadModels.getInstance().getLoadingModel());
 
         }
         catch(Exception e)
@@ -823,6 +798,22 @@ public class MenubarController
         catch (IOException e)
         {
             log.error("An error occurred opening the settings modal:", e);
+        }
+    }
+
+    public void launchViewerApp()
+    {
+        try
+        {
+            Kintsugi3DViewerLauncher.launchViewer();
+        }
+        catch (IllegalStateException e)
+        {
+            handleException("Kintsugi 3D Viewer was not found on this computer. Check that it is installed.", e);
+        }
+        catch (Exception e)
+        {
+            handleException("Failed to launch Kintsugi 3D Viewer", e);
         }
     }
 

@@ -55,5 +55,5 @@
    <CheckBox fx:id="exportGLTFCheckbox" layoutX="14.0" layoutY="322.0" mnemonicParsing="false" selected="true" text="Export glTF" visible="false" />
    <CheckBox fx:id="exportGLTFPackedCheckbox" disable="true" layoutX="110.0" layoutY="322.0" mnemonicParsing="false" text="Pack textures with glTF" visible="false" />
    <CheckBox fx:id="exportTextureLODsCheckbox" layoutX="270.0" layoutY="322.0" mnemonicParsing="false" text="Generate low-res textures" />
-
+   <CheckBox fx:id="openViewerOnComplete" layoutX="270.0" layoutY="340.0" mnemonicParsing="false" text="Open Viewer once complete" />
 </AnchorPane>

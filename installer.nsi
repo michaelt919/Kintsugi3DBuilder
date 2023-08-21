@@ -10,14 +10,17 @@ RequestExecutionLevel admin
 Unicode True
 ManifestDPIAware True
 
-InstallDir $PROGRAMFILES\Kintsugi3DBuilder
-
-InstallDirRegKey HKLM "Software\Kintsugi3DBuilder" "Install_Dir"
+InstallDir $PROGRAMFILES64\Kintsugi3DBuilder
 
 ; MUI Settings
 !define MUI_ICON "ibr.ico"
 !define MUI_UNICON "ibr.ico"
 !define MUI_ABORTWARNING
+!define MUI_FINISHPAGE_RUN
+!define MUI_FINISHPAGE_RUN_TEXT "Start Kintsugi 3D Builder"
+!define MUI_FINISHPAGE_RUN_FUNCTION "LaunchLink"
+!define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
+!define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\kintsugi3d-builder-about.txt"
 
 ; ---------------------------
 
@@ -42,6 +45,7 @@ InstallDirRegKey HKLM "Software\Kintsugi3DBuilder" "Install_Dir"
 Section "Kintsugi 3D Builder (required)" SectionApp
 
     SectionIn RO
+    SetRegView 64
 
     SetOutPath $INSTDIR
     File "target\Kintsugi3DBuilder.exe"
@@ -53,11 +57,16 @@ Section "Kintsugi 3D Builder (required)" SectionApp
     SetOutPath "$INSTDIR\shaders"
     File /r "shaders\*"
 
+    ; Include JRE
+    SetOutPath "$INSTDIR\jre"
+    File /r "jre\*"
+
     ; Write install directory registry key
     WriteRegStr HKLM "SOFTWARE\Kintsugi3DBuilder" "Install_Dir" "$INSTDIR"
 
     ; Write uninstall keys to registry
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DBuilder" "DisplayName" "Kintsugi 3D Builder"
+    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DBuilder" "DefaultIcon" "$INSTDIR\Kintsugi3DBuilder.exe,0"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DBuilder" "UninstallString" '"$INSTDIR\uninstall.exe"'
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DBuilder" "NoModify" 1
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DBuilder" "NoRepair" 1
@@ -65,12 +74,24 @@ Section "Kintsugi 3D Builder (required)" SectionApp
 
 SectionEnd
 
-; Bundled JRE
-Section "Bundled Java Runtime" SectionJava
+; Optional File Type associations
+Section "File Type Associations" SectionAssociation
 
-    ; Include JRE
-    SetOutPath "$INSTDIR\jre"
-    File /r "jre\*"
+    SetRegView 64
+
+    ; Associate .ibr files as Kintsugi 3D Builder Projects
+    WriteRegStr HKCR ".ibr" "" "Kintsugi3DBuilder.Project"
+
+    WriteRegStr HKCR "Kintsugi3DBuilder.Project" "" "Kintsugi 3D Builder Project"
+    WriteRegStr HKCR "Kintsugi3DBuilder.Project\DefaultIcon" "" "$INSTDIR\Kintsugi3DBuilder.exe,0"
+    WriteRegStr HKCR "Kintsugi3DBuilder.Project\Shell\Open\Command" "" '"$INSTDIR\Kintsugi3DBuilder.exe" "%1"'
+
+    ; Associate .vset files as Kintsugi 3D Builder Viewsets
+    WriteRegStr HKCR ".vset" "" "Kintsugi3DBuilder.Viewset"
+
+    WriteRegStr HKCR "Kintsugi3DBuilder.Viewset" "" "Kintsugi 3D Builder Viewset"
+    WriteRegStr HKCR "Kintsugi3DBuilder.Viewset\DefaultIcon" "" "$INSTDIR\Kintsugi3DBuilder.exe,0"
+    WriteRegStr HKCR "Kintsugi3DBuilder.Viewset\Shell\Open\Command" "" '"$INSTDIR\Kintsugi3DBuilder.exe" "%1"'
 
 SectionEnd
 
@@ -83,25 +104,77 @@ Section "Start Menu Shortcuts" SectionShortcut
 
 SectionEnd
 
+; Optional and default disabled Desktop shortcut
+Section /o "Desktop Shortcut" SectionDesktop
+
+    CreateShortcut "$DESKTOP\Kintsugi 3D Builder.lnk" "$INSTDIR\Kintsugi3DBuilder.exe"
+
+SectionEnd
+
+; Optional: Run installer executable for Kintsugi 3D Viewer
+Section "Kintsugi 3D Viewer" SectionViewer
+
+    SetOutPath $TEMP
+
+    File "viewer\Kintsugi3DViewer-setup.exe"
+    ExecWait "$TEMP\Kintsugi3DViewer-setup.exe"
+    Delete "$TEMP\Kintsugi3DViewer-setup.exe"
+
+SectionEnd
+
 ; Uninstaller
 Section "Uninstall"
+
+    SetRegView 64
 
     ; Remove directories
     RMDir /r "$SMPROGRAMS\Kintsugi3DBuilder"
     RMDir /r "$INSTDIR"
 
+    ; Remove Desktop Shortcut
+    Delete "$DESKTOP\Kintsugi 3D Builder.lnk"
+
     ; Remove registry keys
     DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DBuilder"
     DeleteRegKey HKLM "SOFTWARE\Kintsugi3DBuilder"
 
+    ; Remove file type associations
+    DeleteRegKey HKCR ".ibr"
+    DeleteRegKey HKCR ".vset"
+    DeleteRegKey HKCR "Kintsugi3DBuilder.Project"
+    DeleteRegKey HKCR "Kintsugi3DBuilder.Viewset"
+
 SectionEnd
 
-LangString DESC_SectionApp ${LANG_ENGLISH} "The main Kintsugi 3D Builder Application"
-LangString DESC_SectionJava ${LANG_ENGLISH} "Install a bundled Java 11 Runtime Environment (JRE). Leaving this option unchecked will require installing Java 11 manually for Kintsugi 3D Builder to function."
+; Run the application if requested after installation
+Function LaunchLink
+
+  ExecShell "" "$INSTDIR\Kintsugi3DBuilder.exe"
+
+FunctionEnd
+
+; Init function, read previous installation directory
+Function .onInit
+
+	SetRegView 64
+	ClearErrors
+	ReadRegStr $0 HKLM "Software\Kintsugi3DBuilder" "Install_Dir"
+
+	${If} ${Errors}
+    ${Else}
+         StrCpy $INSTDIR $0
+    ${EndIf}
+
+FunctionEnd
+
+LangString DESC_SectionApp ${LANG_ENGLISH} "The main Kintsugi 3D Builder Application. This will also install a local instance of the Java 11 Runtime that is necessary to run the application."
+LangString DESC_SectionAssociation ${LANG_ENGLISH} "Set up Kintsugi 3D Builder Project file associations (.ibr and .vset)"
 LangString DESC_SectionShortcut ${LANG_ENGLISH} "Install shortcuts so the application can be launched from the start menu"
+LangString DESC_SectionDesktop ${LANG_ENGLISH} "Add a shortcut to Kintsugi 3D Builder to the desktop"
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionApp} $(DESC_SectionApp)
-!insertmacro MUI_DESCRIPTION_TEXT ${SectionJava} $(DESC_SectionJava)
+!insertmacro MUI_DESCRIPTION_TEXT ${SectionAssociation} $(DESC_SectionAssociation)
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionShortcut} $(DESC_SectionShortcut)
+!insertmacro MUI_DESCRIPTION_TEXT ${SectionDesktop} $(DESC_SectionDesktop)
 !insertmacro MUI_FUNCTION_DESCRIPTION_END

@@ -21,6 +21,7 @@ import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.builder.state.ReadonlyObjectModel;
+import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
@@ -129,6 +130,11 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
             if (settings.getExportSettings().isGlTFEnabled())
             {
                 saveGlTF(renderable.getActiveGeometry(), renderable.getActiveViewSet(), renderable.getSceneModel().getObjectModel());
+            }
+
+            if (settings.getExportSettings().isOpenViewerOnceComplete())
+            {
+                Kintsugi3DViewerLauncher.launchViewer(new File(settings.getOutputDirectory(), "model.glb"));
             }
         }
         catch(IOException e) // thrown by createReflectanceProgram

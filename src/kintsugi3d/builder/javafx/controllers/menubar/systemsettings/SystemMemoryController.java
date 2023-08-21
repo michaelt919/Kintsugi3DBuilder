@@ -15,6 +15,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
+import kintsugi3d.builder.app.ApplicationFolders;
+import kintsugi3d.builder.app.OperatingSystem;
 import kintsugi3d.builder.javafx.InternalModels;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +24,7 @@ import kintsugi3d.builder.util.Launch4jConfiguration;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.AccessDeniedException;
 import java.util.ResourceBundle;
 
 public class SystemMemoryController implements Initializable, SystemSettingsControllerBase
@@ -59,11 +62,25 @@ public class SystemMemoryController implements Initializable, SystemSettingsCont
 
         try
         {
-            configuration.write();
+            try
+            {
+                configuration.write();
+            }
+            catch (AccessDeniedException e)
+            {
+                log.warn("The current user does not have sufficient privileges to write to launch4j configuration file", e);
+                log.warn("Attempting to write as superuser, this will prompt for UAC!");
+                configuration.writeAsSuperuser();
+            }
         }
         catch (IOException e)
         {
-            log.error("An error occurred saving jvm settings:", e);
+            log.error("Failed to write to launch4j configuration file", e);
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Kintsugi 3D Builder");
+            alert.setHeaderText("Writing failed");
+            alert.setContentText("Kintsugi 3D Builder failed to write to the configuration file. Try restarting Kintsugi 3D Builder as administrator and try again.");
+            alert.show();
         }
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);

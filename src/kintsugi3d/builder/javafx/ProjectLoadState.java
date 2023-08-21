@@ -301,6 +301,10 @@ public final class ProjectLoadState
                 .loadFromVSETFile(vsetFile.getPath(), vsetFile))
                 .start();
         }
+
+        //TODO: update color checker here, if the window for it is open
+        //right now, the model will load but the color checker's apply button
+        //  does not update until the text fields are changed
     }
 
     public void openProjectFromFile(File selectedFile)

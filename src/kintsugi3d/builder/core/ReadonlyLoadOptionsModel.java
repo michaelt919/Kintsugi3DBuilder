@@ -19,6 +19,9 @@ import kintsugi3d.gl.core.ColorFormat;
 import kintsugi3d.gl.core.CompressionFormat;
 import kintsugi3d.gl.material.TextureLoadOptions;
 
+/**
+ * For serialization purposes, this class should always return primitives
+ */
 @JsonSerialize(as = LoadOptionsModel.class)
 public interface ReadonlyLoadOptionsModel
 {

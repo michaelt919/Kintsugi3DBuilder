@@ -424,7 +424,7 @@ public final class Rendering
         }
 
         // Process CLI args after the main window has loaded.
-        MainApplication.addStartListener(st -> processArgs(args));
+        processArgs(args);
 
         try
         {
