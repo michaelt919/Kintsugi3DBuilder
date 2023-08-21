@@ -12,8 +12,6 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import java.util.stream.IntStream;
-
 import kintsugi3d.builder.fit.ReflectanceData;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.optimization.MatrixSystem;
@@ -22,6 +20,8 @@ import kintsugi3d.optimization.function.MatrixBuilder;
 import kintsugi3d.optimization.function.MatrixBuilderSample;
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
+
+import java.util.stream.IntStream;
 
 import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
 
@@ -123,7 +123,7 @@ final class ReflectanceMatrixBuilder
                 yBlue.set(p, addlWeight * reflectanceData.getBlue(p));
 
                 // When floor and exact are the same, t = 1.0.  When exact is almost a whole increment greater than floor, t approaches 0.0.
-                // If mFloor is clamped to MICROFACET_DISTRIBUTION_RESOLUTION -1, then mExact will be much larger, so t = 0.0.
+                // If mFloor is clamped to BASIS_RESOLUTION -1, then mExact will be much larger, so t = 0.0.
                 double t = Math.max(0.0, 1.0 + mFloor - mExact);
 
                 double diffuseFactor = matrixBuilder.getMetallicity() * geomRatio + (1 - matrixBuilder.getMetallicity());

@@ -10,8 +10,8 @@
  *
  */
 
-#ifndef STANDARD_GLSL
-#define STANDARD_GLSL
+#ifndef BASIS_GLSL
+#define BASIS_GLSL
 
 #include "subject.glsl"
 
@@ -38,8 +38,9 @@ uniform vec3 defaultDiffuseColor;
 #endif
 
 #include <colorappearance/material.glsl>
+#include <specularfit/evaluateBRDF.glsl>
 
-#line 43 3100
+#line 49 3102
 
 vec3 global(ViewingParameters v, Material m)
 {
@@ -49,10 +50,12 @@ vec3 global(ViewingParameters v, Material m)
 vec3 specular(LightingParameters l, Material m)
 {
 #if FRESNEL_EFFECT_ENABLED
-    vec3 mfdFresnelBase = m.specularColor * distTimesPi(l.nDotH, vec3(m.roughness));
+    // Multiply by PI since the fit was done in a divided-by-pi space in terms of diffuse albedo,
+    // but we implicitly do our real-time calculations in a pre-multiplied by pi space (i.e. no division by pi for diffuse).
+    vec3 mfdFresnelBase = PI * getBRDFEstimate(l.nDotH, 1.0); // set G to 1.0 since masking / shading is handled by subjectMain
     return fresnel(mfdFresnelBase, vec3(getLuminance(mfdFresnelBase) / getLuminance(m.specularColor)), l.hDotV);
 #else // !FRESNEL_EFFECT_ENABLED
-    return m.specularColor * distTimesPi(l.nDotH, vec3(m.roughness));
+    return PI * getBRDFEstimate(l.nDotH, 1.0); // set G to 1.0 since masking / shading is handled by subjectMain
 #endif // FRESNEL_EFFECT_ENABLED
 }
 
@@ -63,4 +66,4 @@ vec3 diffuse(LightingParameters l, Material m)
 
 #include "subjectMain.glsl"
 
-#endif // STANDARD_GLSL
+#endif // BASIS_GLSL

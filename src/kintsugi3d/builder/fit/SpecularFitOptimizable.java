@@ -12,11 +12,6 @@
 
 package kintsugi3d.builder.fit;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.function.Consumer;
-
 import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.builder.fit.debug.BasisImageCreator;
 import kintsugi3d.builder.fit.decomposition.*;
@@ -37,6 +32,11 @@ import kintsugi3d.optimization.function.GeneralizedSmoothStepBasis;
 import kintsugi3d.util.ColorList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.function.Consumer;
 
 /**
  * A class that bundles all of the GPU resources for representing a final specular fit solution.
@@ -152,7 +152,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
             () ->
             {
                 // Use the current front normal buffer for extracting reflectance information.
-                reflectanceStream.getProgram().setTexture("normalEstimate", getNormalMap());
+                reflectanceStream.getProgram().setTexture("normalMap", getNormalMap());
 
                 weightAndNormalIteration(specularDecomposition, reflectanceStream, weightOptimization,
                     convergenceTolerance, errorCalculator, debugDirectory);
@@ -176,7 +176,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
             () ->
             {
                 // Use the current front normal buffer for extracting reflectance information.
-                reflectanceStream.getProgram().setTexture("normalEstimate", getNormalMap());
+                reflectanceStream.getProgram().setTexture("normalMap", getNormalMap());
 
                 basisOptimizationIteration(specularDecomposition, reflectanceStreamParallel, errorCalculator);
 
@@ -219,7 +219,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         getBasisWeightResources().updateFromSolution(specularDecomposition);
 
         // Use the current front normal buffer for calculating error.
-        errorCalculator.getProgram().setTexture("normalEstimate", getNormalMap());
+        errorCalculator.getProgram().setTexture("normalMap", getNormalMap());
         calculateError(errorCalculator);
 
         if (errorCalculator.getReport().getError() > 0.0 // error == 0 probably only if there are no valid pixels
@@ -246,7 +246,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         // Setup reflectance extraction program
         setupShaderProgram.accept(reflectanceStream.getProgram());
 
-        reflectanceStream.getProgram().setTexture("roughnessEstimate", getSpecularRoughnessMap());
+        reflectanceStream.getProgram().setTexture("roughnessMap", getSpecularRoughnessMap());
     }
 
     private void calculateError(ShaderBasedErrorCalculator<ContextType> errorCalculator)
@@ -281,7 +281,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
             specularDecomposition);
 
             // Use the current front normal buffer for calculating error.
-            errorCalculator.getProgram().setTexture("normalEstimate", getNormalMap());
+            errorCalculator.getProgram().setTexture("normalMap", getNormalMap());
 
             // Prepare for error calculation on the GPU.
             // Basis functions will have changed.
@@ -332,7 +332,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         normalOptimization.execute(normalMap ->
             {
                 // Update program to use the new front buffer for error calculation.
-                errorCalculator.getProgram().setTexture("normalEstimate", normalMap);
+                errorCalculator.getProgram().setTexture("normalMap", normalMap);
                 calculateError(errorCalculator);
                 return errorCalculator.getReport();
             },

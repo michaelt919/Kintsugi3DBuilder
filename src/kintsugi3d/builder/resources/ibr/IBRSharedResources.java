@@ -451,16 +451,34 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
      */
     public ProgramBuilder<ContextType> getShaderProgramBuilder()
     {
-        return context.getShaderProgramBuilder()
+        boolean basisEnabled = specularMaterialResources.getBasisResources() != null
+            && specularMaterialResources.getBasisWeightResources() != null;
+
+        ProgramBuilder<ContextType> builder = context.getShaderProgramBuilder()
             .define("CAMERA_POSE_COUNT", viewSet.getCameraPoseCount())
             .define("LIGHT_COUNT", viewSet.getLightCount())
             .define("INFINITE_LIGHT_SOURCES", viewSet.areLightSourcesInfinite())
             .define("LUMINANCE_MAP_ENABLED", luminanceMapResources != null && luminanceMapResources.getLuminanceMap() != null)
             .define("INVERSE_LUMINANCE_MAP_ENABLED", luminanceMapResources != null && luminanceMapResources.getInverseLuminanceMap() != null)
             .define("DIFFUSE_TEXTURE_ENABLED", specularMaterialResources.getDiffuseMap() != null)
+            .define("NORMAL_TEXTURE_ENABLED", specularMaterialResources.getNormalMap() != null)
             .define("SPECULAR_TEXTURE_ENABLED", specularMaterialResources.getSpecularReflectivityMap() != null)
             .define("ROUGHNESS_TEXTURE_ENABLED", specularMaterialResources.getSpecularRoughnessMap() != null)
-            .define("NORMAL_TEXTURE_ENABLED", specularMaterialResources.getNormalMap() != null);
+            .define("OCCLUSION_TEXTURE_ENABLED", specularMaterialResources.getOcclusionMap() != null)
+            .define("ALBEDO_TEXTURE_ENABLED", specularMaterialResources.getAlbedoMap() != null)
+            .define("ORM_TEXTURE_ENABLED", specularMaterialResources.getORMMap() != null)
+            .define("BASIS_ENABLED", basisEnabled);
+
+        if (basisEnabled)
+        {
+            builder
+                .define("BASIS_COUNT", specularMaterialResources.getBasisResources().getBasisCount())
+                .define("BASIS_RESOLUTION", specularMaterialResources.getBasisResources().getBasisResolution());
+        }
+
+        return builder;
+
+
     }
 
     public void setupShaderProgram(Program<ContextType> program)

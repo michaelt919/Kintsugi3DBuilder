@@ -24,4 +24,15 @@
 #define ROUGHNESS_TEXTURE_ENABLED 0
 #endif
 
+#ifdef ALBEDO_TEXTURE_ENABLED
+#undef ALBEDO_TEXTURE_ENABLED
+#define ALBEDO_TEXTURE_ENABLED 0
+#endif
+
+#ifdef ORM_TEXTURE_ENABLED
+#undef ORM_TEXTURE_ENABLED
+#define ORM_TEXTURE_ENABLED 0
+#endif
+
+
 #include <subject/standard.glsl>

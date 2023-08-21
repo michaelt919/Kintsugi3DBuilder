@@ -34,9 +34,9 @@ layout(location = 0) out vec4 specularColor;
 layout(location = 1) out vec4 sqrtRoughness;
 layout(location = 2) out vec4 dampingErrorOut;
 
-uniform sampler2D diffuseEstimate;
+uniform sampler2D diffuseMap;
 uniform sampler2D specularEstimate;
-uniform sampler2D roughnessEstimate;
+uniform sampler2D roughnessMap;
 uniform sampler2D dampingTex;
 
 // TODO: This is an attempt at implementing Levenberg-Marquardt for GGX roughness estimation, but it doesn't work and hasn't been debugged.
@@ -49,14 +49,14 @@ void main()
     float dampingFactor = dampingError[0];
     vec3 reflectivityGammaPrev = texture(specularEstimate, fTexCoord).rgb;
     vec3 reflectivity = pow(reflectivityGammaPrev, vec3(gamma));
-    float sqrtRoughnessPrev = texture(roughnessEstimate, fTexCoord)[0];
+    float sqrtRoughnessPrev = texture(roughnessMap, fTexCoord)[0];
     float roughness = sqrtRoughnessPrev * sqrtRoughnessPrev;
     float roughnessSquared = roughness * roughness;
-    vec3 diffuse = pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma));
+    vec3 diffuse = pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma));
 
-    for (int m = 1; m < MICROFACET_DISTRIBUTION_RESOLUTION; m++)
+    for (int m = 1; m < BASIS_RESOLUTION; m++)
     {
-        float sqrtAngle = float(m) / float(MICROFACET_DISTRIBUTION_RESOLUTION);
+        float sqrtAngle = float(m) / float(BASIS_RESOLUTION);
         float nDotH = cos(sqrtAngle * sqrtAngle * PI / 3.0);
         float nDotHSq = nDotH * nDotH;
         float sqrtDenominator = (roughnessSquared - 1) * nDotHSq + 1;

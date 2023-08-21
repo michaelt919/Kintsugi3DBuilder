@@ -12,11 +12,6 @@
 
 package kintsugi3d.builder.fit.roughness;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.function.Supplier;
-import java.util.stream.IntStream;
-
 import kintsugi3d.builder.core.TextureFitSettings;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
@@ -27,6 +22,11 @@ import kintsugi3d.optimization.ErrorReport;
 import kintsugi3d.optimization.ShaderBasedOptimization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 /**
  * TODO: sketched out but not fully functional; may not be needed
@@ -88,9 +88,9 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
         roughnessOptimization.addSetupCallback((estimationProgram, backFramebuffer) ->
         {
             // Bind previous estimate textures to the shader
-            estimationProgram.setTexture("diffuseEstimate", getDiffuseTexture.get());
+            estimationProgram.setTexture("diffuseMap", getDiffuseTexture.get());
             estimationProgram.setTexture("specularEstimate", getReflectivityTexture()); // front FBO, attachment 0
-            estimationProgram.setTexture("roughnessEstimate", getRoughnessTexture()); // front FBO, attachment 1
+            estimationProgram.setTexture("roughnessMap", getRoughnessTexture()); // front FBO, attachment 1
             estimationProgram.setTexture("dampingTex", roughnessOptimization.getFrontFramebuffer().getColorAttachmentTexture(2));
 
             // Clear framebuffer

@@ -12,22 +12,22 @@
 
 package kintsugi3d.builder.fit.normal;
 
+import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.fit.SpecularFitProgramFactory;
+import kintsugi3d.builder.fit.settings.NormalOptimizationSettings;
+import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
+import kintsugi3d.gl.builders.ProgramBuilder;
+import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
+import kintsugi3d.gl.core.*;
+import kintsugi3d.optimization.ReadonlyErrorReport;
+import kintsugi3d.optimization.ShaderBasedOptimization;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.function.Function;
-
-import kintsugi3d.builder.fit.SpecularFitProgramFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.builders.ProgramBuilder;
-import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.builder.core.TextureFitSettings;
-import kintsugi3d.builder.fit.settings.NormalOptimizationSettings;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
-import kintsugi3d.optimization.ReadonlyErrorReport;
-import kintsugi3d.optimization.ShaderBasedOptimization;
 
 public class NormalOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -71,7 +71,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         estimateNormals.addSetupCallback((estimationProgram, backFramebuffer) ->
         {
             // Update normal estimation program to use the new front buffer.
-            estimationProgram.setTexture("normalEstimate", estimateNormals.getFrontFramebuffer().getColorAttachmentTexture(0));
+            estimationProgram.setTexture("normalMap", estimateNormals.getFrontFramebuffer().getColorAttachmentTexture(0));
             estimationProgram.setTexture("dampingTex", estimateNormals.getFrontFramebuffer().getColorAttachmentTexture(1));
 
             // Clear framebuffer

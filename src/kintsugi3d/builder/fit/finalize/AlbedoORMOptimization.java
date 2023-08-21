@@ -136,7 +136,6 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         // Estimate albedo and roughness; passthrough occlusion if it is present
         framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
         framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-        framebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
         drawable.draw(framebuffer);
     }
 
@@ -160,7 +159,7 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
 
         if (occlusionMap != null)
         {
-            occlusionMap.close();;
+            occlusionMap.close();
         }
     }
 

@@ -41,7 +41,7 @@ float calculateError(vec3 position, vec3 triangleNormal, vec3 estimatedNormal)
         {
             float hDotV = max(0.0, dot(halfway, view));
 
-            float roughness = texture(roughnessEstimate, fTexCoord)[0];
+            float roughness = texture(roughnessMap, fTexCoord)[0];
             float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
 
             vec3 reflectanceEstimate = getBRDFEstimate(nDotH, maskingShadowing / (4 * nDotL * nDotV));

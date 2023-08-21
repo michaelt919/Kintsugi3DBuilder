@@ -24,12 +24,12 @@ layout(location = 0) out vec4 errorOut;
 
 void main()
 {
-    vec2 sqrtRoughness_Mask = texture(roughnessEstimate, fTexCoord).ra;
+    vec2 sqrtRoughness_Mask = texture(roughnessMap, fTexCoord).ra;
     float filteredMask = sqrtRoughness_Mask[1];
 
     float roughness = sqrtRoughness_Mask[0] * sqrtRoughness_Mask[0];
 
-    vec3 diffuseColor = pow(clamp(texture(diffuseEstimate, fTexCoord).rgb, 0, 1), vec3(gamma));
+    vec3 diffuseColor = pow(clamp(texture(diffuseMap, fTexCoord).rgb, 0, 1), vec3(gamma));
     vec3 specularColor = pow(texture(specularEstimate, fTexCoord).rgb, vec3(gamma));
 
     vec3 position = getPosition();
@@ -37,7 +37,7 @@ void main()
     mat3 tangentToObject = constructTBNExact();
     vec3 triangleNormal = tangentToObject[2];
 
-    vec2 fittedNormalXY = texture(normalEstimate, fTexCoord).xy * 2 - vec2(1.0);
+    vec2 fittedNormalXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
     vec3 fittedNormalTS = vec3(fittedNormalXY, sqrt(1 - dot(fittedNormalXY, fittedNormalXY)));
     vec3 fittedNormal = tangentToObject * fittedNormalTS;
 

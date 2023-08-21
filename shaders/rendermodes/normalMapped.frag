@@ -12,7 +12,7 @@
  *
  */
 
-// Disable all textures except normal map
+// Disable all textures except normal map and occlusion
 
 #ifdef DIFFUSE_TEXTURE_ENABLED
 #undef DIFFUSE_TEXTURE_ENABLED
@@ -27,6 +27,16 @@
 #ifdef ROUGHNESS_TEXTURE_ENABLED
 #undef ROUGHNESS_TEXTURE_ENABLED
 #define ROUGHNESS_TEXTURE_ENABLED 0
+#endif
+
+#ifdef ALBEDO_TEXTURE_ENABLED
+#undef ALBEDO_TEXTURE_ENABLED
+#define ALBEDO_TEXTURE_ENABLED 0
+#endif
+
+#ifdef ORM_TEXTURE_ENABLED
+#undef ORM_TEXTURE_ENABLED
+#define ORM_TEXTURE_ENABLED 0
 #endif
 
 #include <subject/standard.glsl>

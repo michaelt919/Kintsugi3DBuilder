@@ -231,8 +231,12 @@
             <RadioMenuItem mnemonicParsing="false" text="Textured Lambertian" toggleGroup="$renderGroup">
                 <userData>renderModes/texturedLambertian.frag</userData>
             </RadioMenuItem>
-            <RadioMenuItem mnemonicParsing="false" text="Textured material" toggleGroup="$renderGroup">
+            <RadioMenuItem mnemonicParsing="false" text="Material (metallicity)" toggleGroup="$renderGroup" userData="renderModes/texturedORMMaterial.frag">
+            </RadioMenuItem>
+            <RadioMenuItem mnemonicParsing="false" text="Material (reflectivity)" toggleGroup="$renderGroup">
                 <userData>renderModes/texturedMaterial.frag</userData>
+            </RadioMenuItem>
+            <RadioMenuItem mnemonicParsing="false" text="Material (basis)" toggleGroup="$renderGroup" userData="renderModes/basisMaterial.frag">
             </RadioMenuItem>
             <RadioMenuItem mnemonicParsing="false" selected="true" text="Image-based rendering (IBR)" toggleGroup="$renderGroup">
                 <userData>renderModes/ibrUntextured.frag</userData>
@@ -369,10 +373,10 @@
         <Button mnemonicParsing="false" onAction="#help_about" text="About" />
         <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" visible="false" />
     </HBox>
+    <fx:include fx:id="framebufferView" source="FramebufferView.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="33.0" VBox.vgrow="ALWAYS" />
     <ProgressBar fx:id="progressBar" layoutY="31.0" prefWidth="1280.0" progress="0.0" visible="false" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="31.0" VBox.vgrow="ALWAYS">
         <VBox.margin>
             <Insets />
         </VBox.margin>
     </ProgressBar>
-    <fx:include fx:id="framebufferView" source="FramebufferView.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="33.0" VBox.vgrow="ALWAYS" />
 </AnchorPane>

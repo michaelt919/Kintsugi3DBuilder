@@ -18,6 +18,10 @@
 uniform sampler2DArray weightMaps;
 uniform sampler1DArray basisFunctions;
 
+#ifndef PI
+#define PI 3.1415926535897932384626433832795
+#endif
+
 #ifndef BASIS_COUNT
 #define BASIS_COUNT 8
 #endif
@@ -70,8 +74,8 @@ vec3 getBRDFEstimate(float nDotH, float geomFactor)
     return estimate;
 }
 
-#ifndef MICROFACET_DISTRIBUTION_RESOLUTION
-#define MICROFACET_DISTRIBUTION_RESOLUTION 90
+#ifndef BASIS_RESOLUTION
+#define BASIS_RESOLUTION 90
 #endif
 
 #endif // EVALUATE_BRDF_GLSL

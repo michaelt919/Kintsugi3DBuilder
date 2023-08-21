@@ -46,7 +46,7 @@ import java.util.function.BiConsumer;
 public class SpecularFitProcess
 {
     private static final Logger log = LoggerFactory.getLogger(SpecularFitProcess.class);
-    private static final boolean DEBUG_IMAGES = true;
+    private static final boolean DEBUG_IMAGES = false;
     private static final boolean TRACE_IMAGES = false;
 
     private final SpecularFitRequestParams settings;
@@ -424,8 +424,8 @@ public class SpecularFitProcess
         Drawable<ContextType> errorCalcDrawable = resources.createDrawable(errorCalcProgram);
         specularFit.getBasisResources().useWithShaderProgram(errorCalcProgram);
         specularFit.getBasisWeightResources().useWithShaderProgram(errorCalcProgram);
-        errorCalcProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
-        errorCalcProgram.setTexture("normalEstimate", specularFit.getNormalMap());
+        errorCalcProgram.setTexture("roughnessMap", specularFit.getSpecularRoughnessMap());
+        errorCalcProgram.setTexture("normalMap", specularFit.getNormalMap());
         errorCalcProgram.setUniform("errorGamma", 1.0f);
         return errorCalcDrawable;
     }

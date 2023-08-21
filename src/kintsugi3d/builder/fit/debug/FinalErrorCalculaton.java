@@ -12,23 +12,23 @@
 
 package kintsugi3d.builder.fit.debug;
 
+import kintsugi3d.builder.fit.SpecularFitProgramFactory;
+import kintsugi3d.builder.resources.ibr.IBRResources;
+import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.vecmath.DoubleVector2;
+import kintsugi3d.gl.vecmath.DoubleVector3;
+import kintsugi3d.optimization.ShaderBasedErrorCalculator;
+import org.lwjgl.BufferUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.nio.FloatBuffer;
 import java.util.stream.IntStream;
-
-import kintsugi3d.builder.fit.SpecularFitProgramFactory;
-import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
-import org.lwjgl.BufferUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.vecmath.DoubleVector2;
-import kintsugi3d.gl.vecmath.DoubleVector3;
-import kintsugi3d.builder.resources.ibr.IBRResources;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
-import kintsugi3d.optimization.ShaderBasedErrorCalculator;
 
 /**
  * A module that performs some final steps to finish a specular fit: filling holes in the weight maps, and calculating some final error statistics.
@@ -128,9 +128,9 @@ public final class FinalErrorCalculaton
             Drawable<ContextType> finalErrorCalcDrawable = resources.createDrawable(finalErrorCalcProgram);
             specularFit.getBasisResources().useWithShaderProgram(finalErrorCalcProgram);
             specularFit.getBasisWeightResources().useWithShaderProgram(finalErrorCalcProgram);
-            finalErrorCalcProgram.setTexture("normalEstimate", specularFit.getNormalMap());
-            finalErrorCalcProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
-            finalErrorCalcProgram.setTexture("diffuseEstimate", specularFit.getDiffuseMap());
+            finalErrorCalcProgram.setTexture("normalMap", specularFit.getNormalMap());
+            finalErrorCalcProgram.setTexture("roughnessMap", specularFit.getSpecularRoughnessMap());
+            finalErrorCalcProgram.setTexture("diffuseMap", specularFit.getDiffuseMap());
 
             if (specularFit.getConstantMap() != null)
             {
@@ -177,10 +177,10 @@ public final class FinalErrorCalculaton
         try (ProgramObject<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(resources, programFactory))
         {
             Drawable<ContextType> ggxErrorCalcDrawable = resources.createDrawable(ggxErrorCalcProgram);
-            ggxErrorCalcProgram.setTexture("normalEstimate", specularFit.getNormalMap());
+            ggxErrorCalcProgram.setTexture("normalMap", specularFit.getNormalMap());
             ggxErrorCalcProgram.setTexture("specularEstimate", specularFit.getSpecularReflectivityMap());
-            ggxErrorCalcProgram.setTexture("roughnessEstimate", specularFit.getSpecularRoughnessMap());
-            ggxErrorCalcProgram.setTexture("diffuseEstimate", specularFit.getDiffuseMap());
+            ggxErrorCalcProgram.setTexture("roughnessMap", specularFit.getSpecularRoughnessMap());
+            ggxErrorCalcProgram.setTexture("diffuseMap", specularFit.getDiffuseMap());
 
             if (specularFit.getConstantMap() != null)
             {

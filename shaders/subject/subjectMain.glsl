@@ -88,6 +88,16 @@ uniform float lightSpotSizeVirtual[VIRTUAL_LIGHT_COUNT];
 uniform float lightSpotTaperVirtual[VIRTUAL_LIGHT_COUNT];
 #endif // SPOTLIGHTS_ENABLED
 
+vec3 global(ViewingParameters v, Material m);
+vec3 diffuse(LightingParameters l, Material m);
+
+#ifdef SPECULAR_PRECOMPUTATION
+SPECULAR_PRECOMPUTATION precomputeSpecular(ViewingParameters v, Material m);
+vec3 specular(LightingParameters l, Material m, SPECULAR_PRECOMPUTATION p);
+#else
+vec3 specular(LightingParameters l, Material m);
+#endif
+
 void main()
 {
     vec3 triangleNormal = normalize(fNormal);

@@ -39,7 +39,7 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/specularfit/specularRoughnessFitNew.frag"))
                 .define("BASIS_COUNT", basisResources.getBasisCount())
-                .define("MICROFACET_DISTRIBUTION_RESOLUTION", basisResources.getBasisResolution())
+                .define("BASIS_RESOLUTION", basisResources.getBasisResolution())
                 .createProgram();
 
         // Create basic rectangle vertex buffer

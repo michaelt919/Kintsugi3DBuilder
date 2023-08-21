@@ -12,37 +12,4 @@
  *
  */
 
-// Disable all textures
-
-#ifdef DIFFUSE_TEXTURE_ENABLED
-#undef DIFFUSE_TEXTURE_ENABLED
-#define DIFFUSE_TEXTURE_ENABLED 0
-#endif
-
-#ifdef NORMAL_TEXTURE_ENABLED
-#undef NORMAL_TEXTURE_ENABLED
-#define NORMAL_TEXTURE_ENABLED 0
-#endif
-
-#ifdef SPECULAR_TEXTURE_ENABLED
-#undef SPECULAR_TEXTURE_ENABLED
-#define SPECULAR_TEXTURE_ENABLED 0
-#endif
-
-#ifdef ROUGHNESS_TEXTURE_ENABLED
-#undef ROUGHNESS_TEXTURE_ENABLED
-#define ROUGHNESS_TEXTURE_ENABLED 0
-#endif
-
-#ifdef ALBEDO_TEXTURE_ENABLED
-#undef ALBEDO_TEXTURE_ENABLED
-#define ALBEDO_TEXTURE_ENABLED 0
-#endif
-
-#ifdef ORM_TEXTURE_ENABLED
-#undef ORM_TEXTURE_ENABLED
-#define ORM_TEXTURE_ENABLED 0
-#endif
-
-
-#include <subject/standard.glsl>
+#include <subject/basis.glsl>

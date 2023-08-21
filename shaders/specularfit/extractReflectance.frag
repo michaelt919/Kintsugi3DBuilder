@@ -31,7 +31,7 @@ void main()
     mat3 tangentToObject = constructTBNExact();
     vec3 triangleNormal = tangentToObject[2];
 
-    vec2 normalDirXY = texture(normalEstimate, fTexCoord).xy * 2 - vec2(1.0);
+    vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
     vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
     vec3 normal = tangentToObject * normalDirTS;
 
@@ -47,7 +47,7 @@ void main()
         // "Light intensity" is defined in such a way that we need to multiply by pi to be properly normalized.
         vec3 irradiance = nDotL * PI * lightIntensity / dot(lightDisplacement, lightDisplacement);
 
-        float roughness = texture(roughnessEstimate, fTexCoord)[0];
+        float roughness = texture(roughnessMap, fTexCoord)[0];
         float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
 
         reflectance_visibility = vec4(imgColor.rgb / irradiance, imgColor.a);

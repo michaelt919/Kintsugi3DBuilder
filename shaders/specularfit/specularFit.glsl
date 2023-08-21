@@ -16,9 +16,9 @@ in vec3 fPosition;
 in vec2 fTexCoord;
 // normal and tagnent will be declared by constructTBN.glsl
 
-uniform sampler2D diffuseEstimate;
-uniform sampler2D normalEstimate;
-uniform sampler2D roughnessEstimate;
+uniform sampler2D diffuseMap;
+uniform sampler2D normalMap;
+uniform sampler2D roughnessMap;
 
 #include <colorappearance/colorappearance_dynamic.glsl>
 
@@ -32,8 +32,8 @@ uniform sampler2D roughnessEstimate;
 
 #define COSINE_CUTOFF 0.0
 
-#ifndef MICROFACET_DISTRIBUTION_RESOLUTION
-#define MICROFACET_DISTRIBUTION_RESOLUTION 90
+#ifndef BASIS_RESOLUTION
+#define BASIS_RESOLUTION 90
 #endif
 
 #include "evaluateBRDF.glsl"
