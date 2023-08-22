@@ -146,7 +146,7 @@ public class MainApplication extends Application
     @Override
     public void start(Stage primaryStage) throws IOException
     {
-        primaryStage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+        primaryStage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
 
         //get FXML URLs
         String menuBarFXMLFileName = "fxml/menubar/MenuBar.fxml";
@@ -182,13 +182,13 @@ public class MainApplication extends Application
         primaryStage.setMaximized(true);
 
         Stage welcomeStage = new Stage();
-        welcomeStage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+        welcomeStage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
         welcomeStage.setTitle("Welcome!");
         welcomeStage.setScene(new Scene(welcomeRoot));
         welcomeStage.initOwner(primaryStage.getScene().getWindow());
 
         Stage sceneStage = new Stage();
-        sceneStage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+        sceneStage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
         sceneStage.setTitle("Scene");
         sceneStage.setScene(new Scene(sceneRoot));
 
@@ -220,7 +220,7 @@ public class MainApplication extends Application
 
 //        Parent libraryRoot = libraryFXMLLoader.load();
 //        Stage libraryStage = new Stage();
-//        libraryStage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+//        libraryStage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
 //        libraryStage.setTitle("Library");
 //        libraryStage.setScene(new Scene(libraryRoot));
 

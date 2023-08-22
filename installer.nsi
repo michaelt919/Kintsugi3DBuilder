@@ -13,8 +13,8 @@ ManifestDPIAware True
 InstallDir $PROGRAMFILES64\Kintsugi3DBuilder
 
 ; MUI Settings
-!define MUI_ICON "ibr.ico"
-!define MUI_UNICON "ibr.ico"
+!define MUI_ICON "Kintsugi3D.ico"
+!define MUI_UNICON "Kintsugi3D.ico"
 !define MUI_ABORTWARNING
 !define MUI_FINISHPAGE_RUN
 !define MUI_FINISHPAGE_RUN_TEXT "Start Kintsugi 3D Builder"
@@ -49,8 +49,8 @@ Section "Kintsugi 3D Builder (required)" SectionApp
 
     SetOutPath $INSTDIR
     File "target\Kintsugi3DBuilder.exe"
-    File "ibr.ico"
-    File "ibr-icon.png"
+    File "Kintsugi3D.ico"
+    File "Kintsugi3D-icon.png"
     File "kintsugi3d-builder-about.txt"
 
     ; Include shaders

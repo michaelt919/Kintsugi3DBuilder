@@ -93,7 +93,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
         svdRequestUI.modelAccess = modelAccess;
 
         svdRequestUI.stage = new Stage();
-        svdRequestUI.stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+        svdRequestUI.stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
         svdRequestUI.stage.setTitle("Specular fit request");
         svdRequestUI.stage.setScene(new Scene(parent));
         svdRequestUI.stage.initOwner(window);

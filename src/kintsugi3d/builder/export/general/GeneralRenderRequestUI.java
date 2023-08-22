@@ -110,7 +110,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
 
         try
         {
-            INSTANCE.stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+            INSTANCE.stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
         }
         catch (MalformedURLException e)
         {
