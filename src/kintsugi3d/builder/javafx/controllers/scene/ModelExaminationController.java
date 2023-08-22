@@ -12,8 +12,10 @@
 
 package kintsugi3d.builder.javafx.controllers.scene;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.SnapshotParameters;
+import javafx.scene.control.Alert;
 import javafx.scene.control.TreeItem;
 import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.menubar.ImgSelectionThread;
@@ -21,6 +23,11 @@ import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.gl.javafx.FramebufferView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
 
 public class ModelExaminationController extends ImgThreadCompatibleController{
     private static final Logger log = LoggerFactory.getLogger(ModelExaminationController.class);
@@ -65,5 +72,31 @@ public class ModelExaminationController extends ImgThreadCompatibleController{
         //used if image is not found, or if larger resolution image is being loaded
         chunkViewerImgView.setImage(selectedItem.getGraphic().
                 snapshot(new SnapshotParameters(), null));
+    }
+
+    public void skipOnboarding(ActionEvent actionEvent) {
+        //TODO: imp.
+    }
+
+    public void aboutObjectOrientation() {
+        //TODO: finish about txt here
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        List<String> lines = null;
+        try {
+            lines = Files.readAllLines(new File("about-object-orientation.txt").toPath());
+            String contentText = String.join(System.lineSeparator(), lines);
+            alert.setContentText(contentText);
+            alert.setHeaderText("About Object Orientation");
+            alert.setTitle("About Object Orientation");
+            alert.show();
+        } catch (IOException e) {
+            log.error("An error occurred showing about window:", e);
+        }
+
+    }
+
+    public void rotateImage() {
+        //rotate in 90 degree increments
+        chunkViewerImgView.setRotate((chunkViewerImgView.getRotate() + 90) % 360);
     }
 }

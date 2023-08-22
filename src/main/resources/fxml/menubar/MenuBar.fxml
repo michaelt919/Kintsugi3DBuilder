@@ -72,6 +72,7 @@
                     </accelerator>
                 </MenuItem>
                 <MenuItem mnemonicParsing="false" onAction="#launchViewerApp" text="Launch Kintsugi 3D Viewer" />
+                <MenuItem mnemonicParsing="false" onAction="#simulateNewWorkflow" text="Simulate New Workflow (UNFINISHED)"/>
             </items>
         </Menu>
         <Menu mnemonicParsing="false" text="Environment">
