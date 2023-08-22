@@ -215,6 +215,7 @@ public class ImportDataController implements Initializable {
                     metashapeObject,chunkSelectionChoiceBox.getValue());
 
             Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
+
             controller.init(metashapeObjectChunk, stage);
 
             Scene scene = new Scene(newRoot);

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<!--
+  ~ Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  ~
+  -->
+
+<AnchorPane prefHeight="400.0" prefWidth="650.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.ObjectOrientationController">
+    <HBox spacing="10.0">
+        <padding>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+        </padding>
+        <VBox>
+            <TreeView fx:id="chunkTreeView" maxHeight="-Infinity" onMouseClicked="#selectImageInTreeView" prefHeight="229.0" prefWidth="448.0" />
+            <TextFlow fx:id="textFlow" lineSpacing="5.0" maxHeight="90.0" minHeight="20.0" prefHeight="20.0" prefWidth="326.0" textAlignment="CENTER" VBox.vgrow="ALWAYS">
+                <VBox.margin>
+                    <Insets bottom="15.0" left="5.0" right="5.0" top="5.0" />
+                </VBox.margin>
+                <Text fx:id="imgViewText" fontSmoothingType="LCD" styleClass="text" text="No Image Selected" textOrigin="TOP" wrappingWidth="447.99998474121094" />
+            </TextFlow>
+        </VBox>
+        <VBox spacing="10.0">
+            <ImageView fx:id="chunkViewerImgView" fitHeight="309.0" fitWidth="299.0" pickOnBounds="true" preserveRatio="true" />
+        </VBox>
+    </HBox>
+    <Button fx:id="continueButton" mnemonicParsing="false" text="Continue" AnchorPane.bottomAnchor="30.0" AnchorPane.rightAnchor="30.0" />
+</AnchorPane>
