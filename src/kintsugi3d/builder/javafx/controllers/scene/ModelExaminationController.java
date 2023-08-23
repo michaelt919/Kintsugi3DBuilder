@@ -39,7 +39,7 @@ public class ModelExaminationController extends ImgThreadCompatibleController{
     public void init(MetashapeObjectChunk metashapeObjectChunk, Stage injectedStage){
         this.metashapeObjectChunk = metashapeObjectChunk;
         initTreeView();
-        //this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
+        this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
     }
 
     public void selectImageInTreeView() {
@@ -99,5 +99,10 @@ public class ModelExaminationController extends ImgThreadCompatibleController{
     public void rotateImage() {
         //rotate in 90 degree increments
         chunkViewerImgView.setRotate((chunkViewerImgView.getRotate() + 90) % 360);
+    }
+
+    public void loadData(ActionEvent actionEvent) {
+        //TODO: imp.
+        //activates when the continue button is pressed
     }
 }
