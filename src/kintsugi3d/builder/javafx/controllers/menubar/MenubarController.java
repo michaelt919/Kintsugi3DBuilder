@@ -311,7 +311,6 @@ public class MenubarController
             }
         });
 
-        RecentProjects.initializeMenubarController(this);
         updateRecentProjectsMenu();
 
         //add "Default Path" and "Choose Location..." items to choiceBox
@@ -649,23 +648,8 @@ public class MenubarController
         }
     }
 
-    public void updateRecentProjectsMenu() {//TODO: FORMAT ----- PROJECT NAME --> PATH
-        //TODO: REMOVE REPETITION WITH WELCOME WINDOW CONTROLLER
-        recentProjectsMenu.getItems().clear();
-
-        ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
-
-        recentProjectsMenu.getItems().addAll(recentItems);
-
-        //disable button if there are no recent projects
-        if(recentProjectsMenu.getItems().isEmpty()){
-            recentProjectsMenu.setDisable(true);
-        }
-
-        //attach event handlers to all menu items
-        for (MenuItem item : recentItems){
-            item.setOnAction(event -> handleMenuItemSelection(item));
-        }
+    public void updateRecentProjectsMenu() {
+        RecentProjects.updateRecentProjectsControl(recentProjectsMenu);
     }
 
     public static void handleMenuItemSelection(MenuItem item) {

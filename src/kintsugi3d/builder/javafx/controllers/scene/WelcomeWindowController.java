@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.javafx.controllers.scene;
 
+import com.sun.javafx.menu.MenuBase;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.MenuItem;
@@ -105,23 +106,8 @@ public class WelcomeWindowController
 //        });
     }
 
-    public void updateRecentProjectsButton() {//TODO: FORMAT ----- PROJECT NAME --> PATH
-        //TODO: REMOVE REPETITION WITH MENUBARCONTROLLER
-        recentProjectsSplitMenuButton.getItems().clear();
-
-        ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
-
-        recentProjectsSplitMenuButton.getItems().addAll(recentItems);
-
-        //disable button if there are no recent projects
-        if(recentProjectsSplitMenuButton.getItems().isEmpty()){
-            recentProjectsSplitMenuButton.setDisable(true);
-        }
-
-        //attach event handlers to all menu items
-        for (MenuItem item : recentItems){
-            item.setOnAction(event -> handleMenuItemSelection(item));
-        }
+    public void updateRecentProjectsButton() {
+        RecentProjects.updateRecentProjectsControl(recentProjectsSplitMenuButton);
     }
 
     public void handleMenuItemSelection(MenuItem item) {

@@ -12,8 +12,11 @@
 
 package kintsugi3d.util;
 
+import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SplitMenuButton;
 import kintsugi3d.builder.app.ApplicationFolders;
+import kintsugi3d.builder.javafx.ProjectLoadState;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 
@@ -25,7 +28,6 @@ import java.util.List;
 public class RecentProjects {
 
     private static WelcomeWindowController welcomeWindowController;
-    private static MenubarController menubarController;
     private static File recentProjectsFile = new File(ApplicationFolders.getUserAppDirectory().toFile(), "recentFiles.txt");
 
     private RecentProjects(){throw new IllegalStateException("Utility class");};
@@ -86,14 +88,67 @@ public class RecentProjects {
 
         //update list of recent projects in program
         welcomeWindowController.updateRecentProjectsButton();
-        menubarController.updateRecentProjectsMenu();
+        MenubarController.getInstance().updateRecentProjectsMenu();
     }
 
     public static void initializeWelcomeWindowController(WelcomeWindowController welcomeWindowController) {
         RecentProjects.welcomeWindowController = welcomeWindowController;
     }
 
-    public static void initializeMenubarController(MenubarController menubarController) {
-        RecentProjects.menubarController = menubarController;
+    public static void updateRecentProjectsControl(Object menu) {
+        //change formatting in menu? Currently just the path of the object
+        if (menu instanceof Menu){
+            Menu castedMenu = (Menu) menu;
+            updateRecentProjectsMenu(castedMenu);
+        }
+
+        else if (menu instanceof SplitMenuButton){
+            SplitMenuButton castedSplitMenuButton = (SplitMenuButton) menu;
+            updateRecentProjectsSplitMenuButton(castedSplitMenuButton);
+        }
+    }
+
+    //looks like updateRecentProjectsMenu() and updateRecentProjectsSplitMenuButton should
+    //be merged into one function because they have identical code, but no class encompasses them
+    //both while maintaining menu functionality (getItems(), setDisable(), etc.)
+    private static void updateRecentProjectsMenu(Menu menu){
+        menu.getItems().clear();
+
+        ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
+
+        menu.getItems().addAll(recentItems);
+
+        //disable button if there are no recent projects
+        if (menu.getItems().isEmpty()) {
+            menu.setDisable(true);
+        }
+
+        //attach event handlers to all menu items
+        for (MenuItem item : recentItems) {
+            item.setOnAction(event -> handleMenuItemSelection(item));
+        }
+    }
+
+    private static void updateRecentProjectsSplitMenuButton(SplitMenuButton menu){
+        menu.getItems().clear();
+
+        ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
+
+        menu.getItems().addAll(recentItems);
+
+        //disable button if there are no recent projects
+        if (menu.getItems().isEmpty()) {
+            menu.setDisable(true);
+        }
+
+        //attach event handlers to all menu items
+        for (MenuItem item : recentItems) {
+            item.setOnAction(event -> handleMenuItemSelection(item));
+        }
+    }
+
+    private static void handleMenuItemSelection(MenuItem item) {
+        String projectName = item.getText();
+        ProjectLoadState.getInstance().openProjectFromFile(new File(projectName));
     }
 }
