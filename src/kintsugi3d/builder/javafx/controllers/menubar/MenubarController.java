@@ -37,7 +37,6 @@ import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.javafx.FramebufferView;
 import kintsugi3d.gl.vecmath.Vector2;
@@ -50,15 +49,7 @@ import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectLoadState;
-import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
-import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.javafx.FramebufferView;
-import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.util.Flag;
-import kintsugi3d.util.RecentProjects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.File;
@@ -162,7 +153,7 @@ public class MenubarController
 
     private Runnable userDocumentationHandler;
 
-    final Number DEFAULT_VALUE = 1024;
+    final static Number DEFAULT_VALUE = 1024;
     private IntegerProperty widthIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
     private IntegerProperty heightIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
 
@@ -394,6 +385,7 @@ public class MenubarController
     private void bindSlidersToTxtFields()
     {
         //TODO: BIND INTENSITY SLIDERS TO TEXT FIELDS HERE
+        //ignore now that this setting is in the system settings modal?
     }
 
     //Menubar->File
