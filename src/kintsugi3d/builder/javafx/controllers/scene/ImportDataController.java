@@ -14,10 +14,8 @@ package kintsugi3d.builder.javafx.controllers.scene;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
@@ -36,10 +34,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.ResourceBundle;
 
 public class ImportDataController {
     private static final Logger log = LoggerFactory.getLogger(ImportDataController.class);
@@ -152,27 +148,9 @@ public class ImportDataController {
         metashapePsxFile = fileChooser.showOpenDialog(stage);
 
         if(isMetashapeObjectLoaded()){
-            loadMetashapeObject.setText("Loaded");
-            loadMetashapeObject.setFill(Paint.valueOf("Green"));
-
-            //load chunks into chunk selection module
-            MetashapeObject metashapeObject = new MetashapeObject();
-            ArrayList<String> chunkNames = (ArrayList<String>)
-                    metashapeObject.loadChunkNamesFromPSX(metashapePsxFile.getAbsolutePath());
-
-            chunkSelectionChoiceBox.getItems().clear();
-            chunkSelectionChoiceBox.getItems().addAll(chunkNames);
-
-            chunkSelectionChoiceBox.setDisable(false);
-
-            //initialize choice box to first option instead of null option
-            if (chunkSelectionChoiceBox.getItems() != null &&
-                    chunkSelectionChoiceBox.getItems().get(0) != null){
-                chunkSelectionChoiceBox.setValue(chunkSelectionChoiceBox.getItems().get(0));
-            }
+            MetashapeObject metashapeObject = new MetashapeObject(metashapePsxFile.getAbsolutePath());
+            initMetashapeObject(metashapeObject);
         }
-
-        updateOkButtonAndSeparatorBar();
     }
 
     @FXML
@@ -229,7 +207,7 @@ public class ImportDataController {
         //  metashape psx is loaded
         //  or
         //  all three other components are loaded
-        return isMetashapeObjectLoaded() || (cameraFile != null && (objFile != null) && (photoDir != null));
+        return isMetashapeObjectLoaded() || (cameraFile != null && objFile != null && photoDir != null);
     }
 
     private boolean isMetashapeObjectLoaded() {
@@ -251,7 +229,7 @@ public class ImportDataController {
     }
 
     @FXML
-    private void cancelButtonPress()
+    private void cancelButtonPress()//TODO: needs to reset the framebufferview, right now it closes the program
     {
         close();
     }
@@ -301,6 +279,14 @@ public class ImportDataController {
 
         loadMetashapeObject.setText("Loaded");
         loadMetashapeObject.setFill(Paint.valueOf("Green"));
+
+        updateOkButtonAndSeparatorBar();
+    }
+
+    public void initMetashapeObjectChunk(MetashapeObjectChunk metashapeObjectChunk){
+        initMetashapeObject(metashapeObjectChunk.getMetashapeObject());
+        chunkSelectionChoiceBox.setValue(metashapeObjectChunk.getChunkName());
+
     }
 
     public void initHost(AnchorPane frame) {

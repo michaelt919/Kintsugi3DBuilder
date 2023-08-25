@@ -76,9 +76,10 @@ public abstract class ImgThreadCompatibleController {
                 String thumbnailImgPath = metashapeObjectChunk.getThumbnailImgPathFromCamId(cameraID);
 
                 thumbnailImgView = new ImageView(thumbnailImagePairsList.get(thumbnailImgPath));
-            } catch (IndexOutOfBoundsException e) {
+            } catch (Exception e) {
                 //thumbnail not found in thumbnailImageList
                 thumbnailImgView = new ImageView(new Image(new File("question-mark.png").toURI().toString()));
+                //TODO: does not assign the ? png to lost thumbnails anymore
             }
             thumbnailImgView.setFitWidth(THUMBNAIL_SIZE);
             thumbnailImgView.setFitHeight(THUMBNAIL_SIZE);

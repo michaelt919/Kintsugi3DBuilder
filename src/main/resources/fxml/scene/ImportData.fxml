@@ -16,8 +16,7 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<GridPane fx:id="root" alignment="CENTER" hgap="10.0" prefHeight="295.0" prefWidth="975.0"
-          styleClass="grid-pane" stylesheets="@../kintsugiStyling.css" vgap="10.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.ImportDataController">
+<GridPane fx:id="root" alignment="CENTER" hgap="10.0" prefHeight="295.0" prefWidth="1275.0" styleClass="grid-pane" stylesheets="@../kintsugiStyling.css" vgap="10.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.ImportDataController">
       <columnConstraints>
       <ColumnConstraints hgrow="SOMETIMES" maxWidth="352.3333485921224" minWidth="10.0" prefWidth="228.0" />
       <ColumnConstraints hgrow="SOMETIMES" maxWidth="275.0" minWidth="10.0" prefWidth="43.0" />
@@ -32,9 +31,9 @@
       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
       </rowConstraints>
       <padding>
-          <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+          <Insets bottom="10.0" left="200.0" right="10.0" top="50.0" />
       </padding>
-      <Text strokeType="OUTSIDE" styleClass="text" strokeWidth="0.0" text="Camera Positions&#10;(Agisoft Metashape XML file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+      <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text" text="Camera Positions&#10;(Agisoft Metashape XML file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
           <font>
               <Font name="Monospaced Regular" size="14.0" />
           </font>
@@ -42,7 +41,7 @@
               <Insets />
           </GridPane.margin>
       </Text>
-      <Text layoutX="76.0" styleClass="text" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Mesh&#10;(Wavefront OBJ file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+      <Text layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text" text="Mesh&#10;(Wavefront OBJ file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
           <font>
               <Font name="Monospaced Regular" size="14.0" />
           </font>
@@ -50,7 +49,7 @@
               <Insets />
           </GridPane.margin>
       </Text>
-      <Text layoutX="272.0" styleClass="text" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Images&#10;(Directory containing images (.png, .jpg))" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="4" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+      <Text layoutX="272.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text" text="Images&#10;(Directory containing images (.png, .jpg))" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="4" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
           <font>
               <Font name="Monospaced Regular" size="14.0" />
           </font>
@@ -109,10 +108,10 @@
          </padding>
          <HBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
              <Label styleClass="label" text="Primary view:  " />
-             <ChoiceBox styleClass="choicebox" fx:id="primaryViewChoiceBox" prefWidth="400.0" />
+             <ChoiceBox fx:id="primaryViewChoiceBox" prefWidth="400.0" styleClass="choicebox" />
          </HBox>
          <HBox alignment="CENTER_RIGHT" spacing="30.0" HBox.hgrow="ALWAYS">
-             <Button mnemonicParsing="false" onAction="#cancelButtonPress" text="Cancel">
+             <Button cancelButton="true" disable="true" mnemonicParsing="false" onAction="#cancelButtonPress" text="Cancel">
                  <font>
                      <Font name="System Bold" size="18.0" />
                  </font>
@@ -140,11 +139,11 @@
          <Font size="18.0" />
       </font>
    </Button>
-   <Text styleClass="text" layoutX="287.0" layoutY="196.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Metashape File (.psx)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.rowIndex="2">
+   <Text layoutX="287.0" layoutY="196.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text" text="Metashape File (.psx)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.rowIndex="2">
       <font>
          <Font name="Monospaced Regular" size="14.0" />
       </font>
    </Text>
    <Separator fx:id="separatorBar" orientation="VERTICAL" prefHeight="200.0" style="-fx-background-color: red;" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowSpan="4" />
-     <ChoiceBox fx:id="chunkSelectionChoiceBox" styleClass="choicebox" disable="true" prefHeight="25.0" prefWidth="223.0" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
+     <ChoiceBox fx:id="chunkSelectionChoiceBox" disable="true" prefHeight="25.0" prefWidth="223.0" styleClass="choicebox" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
 </GridPane>
