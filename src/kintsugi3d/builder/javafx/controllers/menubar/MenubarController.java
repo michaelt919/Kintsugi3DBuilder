@@ -28,16 +28,17 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Window;
 import javafx.stage.*;
 import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
+import kintsugi3d.builder.javafx.controllers.scene.SettingsReviewController;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.javafx.FramebufferView;
 import kintsugi3d.gl.vecmath.Vector2;
@@ -50,16 +51,7 @@ import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectLoadState;
-import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
-import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.javafx.FramebufferView;
-import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.util.Flag;
-import kintsugi3d.util.RecentProjects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -74,6 +66,7 @@ import java.util.Scanner;
 
 public class MenubarController
 {
+    public AnchorPane framebufferViewHost;
     String defaultAutosavePath = "C:\\";//TODO: WILL CHANGE WHEN FILE STRUCTURE IS CEMENTED
 
     String defaultAutosaveSelection = "Default Path: --> " + defaultAutosavePath;
@@ -832,10 +825,41 @@ public class MenubarController
         });
     }
 
-    public void simulateNewWorkflow() throws IOException {
-        Flag flag = new Flag(false);//TODO: this flag is not really used for anything
+    public void simulateNewWorkflow() {
 
-        makeWindow("New Workflow", flag, "fxml/scene/SettingsReview.fxml");
+        Parent newContent = null;
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/scene/SettingsReview.fxml"));
+            newContent = loader.load();
 
+            //initialize controller
+            SettingsReviewController controller = loader.getController();
+            controller.initHost(framebufferViewHost);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (newContent != null) {
+            framebufferViewHost.getChildren().setAll(newContent);
+        }
+    }
+
+    public void resetFrameBufferViewHost(){
+        Parent newContent = null;
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menubar/FramebufferView.fxml"));
+            newContent = loader.load();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (newContent != null) {
+            framebufferViewHost.getChildren().setAll(newContent);
+
+            framebufferView = (FramebufferView) framebufferViewHost.getChildren().get(0);
+            framebufferView.registerKeyAndWindowEventsFromStage((Stage) window);
+        }
     }
 }

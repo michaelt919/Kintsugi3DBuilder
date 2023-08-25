@@ -44,6 +44,7 @@
                <Button mnemonicParsing="false" onAction="#aboutObjectOrientation" text="About Object Orientation (UNFINISHED)" />
                <Button mnemonicParsing="false" onAction="#rotateImage" text="Rotate Image" />
                <Button layoutX="10.0" layoutY="135.0" mnemonicParsing="false" onAction="#loadData" text="Load Data" />
+               <Button layoutX="10.0" layoutY="135.0" mnemonicParsing="false" onAction="#prevWindow" text="Return to Data Selection" />
             </children>
          </VBox>
         </VBox>

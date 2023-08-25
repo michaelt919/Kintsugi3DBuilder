@@ -14,4 +14,4 @@
   ~
   -->
 
-<FramebufferView xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" prefWidth="800" prefHeight="800"/>
+<FramebufferView xmlns="http://javafx.com/javafx" prefWidth="800" prefHeight="800"/>

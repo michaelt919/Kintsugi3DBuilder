@@ -125,6 +125,14 @@ public class MetashapeObject {
         return chunkNames;
     }
 
+    public List<String> getChunkNamesDynamic(String psxFilePath){
+        if (chunkNames != null){
+            return chunkNames;
+        }
+
+        return loadChunkNamesFromPSX(psxFilePath);
+    }
+
     public Map<String, String> getChunkZipPathPairs(){
         return chunkZipPathPairs;
     }

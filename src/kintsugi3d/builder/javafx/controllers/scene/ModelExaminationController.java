@@ -14,9 +14,14 @@ package kintsugi3d.builder.javafx.controllers.scene;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TreeItem;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.menubar.ImgSelectionThread;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
@@ -42,7 +47,8 @@ public class ModelExaminationController extends ImgThreadCompatibleController{
         this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
     }
 
-    public void selectImageInTreeView() {
+    @FXML
+    private void selectImageInTreeView() {
         //selectedItem holds the cameraID associated with the image
         TreeItem<String> selectedItem = chunkTreeView.getSelectionModel().getSelectedItem();
         if (selectedItem != null &&
@@ -75,11 +81,13 @@ public class ModelExaminationController extends ImgThreadCompatibleController{
                 snapshot(new SnapshotParameters(), null));
     }
 
-    public void skipOnboarding(ActionEvent actionEvent) {
+    @FXML
+    private void skipOnboarding(ActionEvent actionEvent) {
         //TODO: imp.
     }
 
-    public void aboutObjectOrientation() {
+    @FXML
+    private void aboutObjectOrientation() {
         //TODO: finish about txt here
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         List<String> lines = null;
@@ -96,13 +104,35 @@ public class ModelExaminationController extends ImgThreadCompatibleController{
 
     }
 
-    public void rotateImage() {
+    @FXML
+    private void rotateImage() {
         //rotate in 90 degree increments
         chunkViewerImgView.setRotate((chunkViewerImgView.getRotate() + 90) % 360);
     }
 
-    public void loadData(ActionEvent actionEvent) {
+    @FXML
+    private void loadData(ActionEvent actionEvent) {
         //TODO: imp.
         //activates when the continue button is pressed
+    }
+
+    @FXML
+    private void prevWindow(ActionEvent actionEvent) throws IOException {
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/scene/ImportData.fxml"));
+        Parent root = fxmlLoader.load();
+
+        ImportDataController controller = fxmlLoader.getController();
+
+        //can init other settings in a similar way
+        controller.initMetashapeObject(metashapeObjectChunk.getMetashapeObject());
+
+        Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
+        Scene scene = new Scene(root);
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    public void initHost(AnchorPane frame) {
+        this.frame = frame;
     }
 }

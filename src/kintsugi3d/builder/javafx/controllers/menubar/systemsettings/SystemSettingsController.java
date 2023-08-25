@@ -24,7 +24,6 @@ import java.io.IOException;
 public class SystemSettingsController {
 
     public AnchorPane settingsFxmlHost;//holds the fxml which contains whatever settings the user is modifying
-    //TODO: NEED TO REAPPLY ALL DEFAULT CHECKBOX SETTINGS
     @FXML
     private ListView<String> settingsListView;
 

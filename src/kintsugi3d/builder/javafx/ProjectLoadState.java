@@ -282,6 +282,7 @@ public final class ProjectLoadState
 
     private static void startLoad(File projectFile, File vsetFile)
     {
+        MenubarController.getInstance().resetFrameBufferViewHost();
         MultithreadModels.getInstance().getLoadingModel().unload();
 
         RecentProjects.updateRecentFiles(projectFile.getAbsolutePath());

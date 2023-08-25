@@ -13,27 +13,40 @@ package kintsugi3d.builder.javafx.controllers.scene;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
+import javafx.scene.layout.AnchorPane;
+
 
 import java.io.IOException;
 
 public class SettingsReviewController {
+    private AnchorPane frame;
+
     public void skipOnboarding(ActionEvent actionEvent) {
         //TODO: imp., probably just close onboarding windows and open other Kintsugi windows
     }
 
-    public void continueProjectCreation(ActionEvent actionEvent) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/scene/ImportData.fxml"));
-        Parent root = fxmlLoader.load();
+    public void continueProjectCreation(){
+        Parent newContent = null;
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/scene/ImportData.fxml"));
+            newContent = loader.load();
 
-        Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
-        Scene scene = new Scene(root);
-        stage.setScene(scene);
-        stage.show();
+            //initialize controller
+            ImportDataController controller = loader.getController();
+            controller.initHost(frame);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (newContent != null) {
+            frame.getChildren().setAll(newContent);
+        }
     }
 
 
+    public void initHost(AnchorPane frame) {
+        this.frame = frame;
+    }
 }

@@ -22,6 +22,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Separator;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
@@ -40,7 +41,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.ResourceBundle;
 
-public class ImportDataController implements Initializable {
+public class ImportDataController {
     private static final Logger log = LoggerFactory.getLogger(ImportDataController.class);
 
     @FXML private ChoiceBox<String> chunkSelectionChoiceBox;
@@ -69,9 +70,9 @@ public class ImportDataController implements Initializable {
 
     private Runnable callback;
     private File metashapePsxFile;
+    private AnchorPane frame;
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources)
+    public void init()
     {
 
         setHomeDir(new File(System.getProperty("user.home")));
@@ -192,35 +193,34 @@ public class ImportDataController implements Initializable {
     }
 
     @FXML
-    private void okButtonPress(ActionEvent actionEvent) throws IOException {
+    private void okButtonPress(ActionEvent actionEvent){
         if (areComponentsLoaded())
         {
-//            callback.run();
-//
-//            new Thread(() ->
-//                    MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(
-//                            cameraFile.getPath(), cameraFile, objFile, photoDir,
-//                            primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
-//                    .start();
+            Parent newContent = null;
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/scene/ModelExamination.fxml"));
+                newContent = loader.load();
 
-            //open 3d viewport/model examination window
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/scene/ModelExamination.fxml"));
-            Parent newRoot = fxmlLoader.load();
+                //initialize controller
+                ModelExaminationController controller = loader.getController();
+                controller.initHost(frame);
+                //TODO: what conditionals to put here?
+                MetashapeObject metashapeObject = new MetashapeObject(metashapePsxFile.getAbsolutePath());
+                MetashapeObjectChunk metashapeObjectChunk = new MetashapeObjectChunk(
+                        metashapeObject,chunkSelectionChoiceBox.getValue());
 
-            ModelExaminationController controller = fxmlLoader.getController();
+                Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
+                controller.init(metashapeObjectChunk, stage);
 
-            //TODO: what conditionals to put here?
-            MetashapeObject metashapeObject = new MetashapeObject(metashapePsxFile.getAbsolutePath());
-            MetashapeObjectChunk metashapeObjectChunk = new MetashapeObjectChunk(
-                    metashapeObject,chunkSelectionChoiceBox.getValue());
 
-            Stage stage = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-            controller.init(metashapeObjectChunk, stage);
+            if (newContent != null) {
+                frame.getChildren().setAll(newContent);
+            }
 
-            Scene scene = new Scene(newRoot);
-            stage.setScene(scene);
-            stage.show();
         }
     }
 
@@ -280,5 +280,30 @@ public class ImportDataController implements Initializable {
         return thisStage;
     }
 
+    public void initMetashapeObject(MetashapeObject metashapeObject){
 
+        this.metashapePsxFile = new File(metashapeObject.getPsxFilePath());
+
+        //load chunks into chunk selection module
+        ArrayList<String> chunkNames = (ArrayList<String>) metashapeObject.
+                getChunkNamesDynamic(metashapeObject.getPsxFilePath());
+
+        chunkSelectionChoiceBox.getItems().clear();
+        chunkSelectionChoiceBox.getItems().addAll(chunkNames);
+
+        chunkSelectionChoiceBox.setDisable(false);
+
+        //initialize choice box to first option instead of null option
+        if (chunkSelectionChoiceBox.getItems() != null &&
+                chunkSelectionChoiceBox.getItems().get(0) != null){
+            chunkSelectionChoiceBox.setValue(chunkSelectionChoiceBox.getItems().get(0));
+        }
+
+        loadMetashapeObject.setText("Loaded");
+        loadMetashapeObject.setFill(Paint.valueOf("Green"));
+    }
+
+    public void initHost(AnchorPane frame) {
+        this.frame = frame;
+    }
 }
