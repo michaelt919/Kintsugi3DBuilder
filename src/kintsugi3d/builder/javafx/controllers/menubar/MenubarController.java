@@ -15,6 +15,7 @@ package kintsugi3d.builder.javafx.controllers.menubar;
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -24,6 +25,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
@@ -37,7 +39,6 @@ import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.javafx.FramebufferView;
 import kintsugi3d.gl.vecmath.Vector2;
@@ -50,15 +51,7 @@ import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectLoadState;
-import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
-import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.javafx.FramebufferView;
-import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.util.Flag;
-import kintsugi3d.util.RecentProjects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.File;
@@ -97,14 +90,17 @@ public class MenubarController
 
     private Flag aboutWindowOpen = new Flag(false);
 
+    @FXML private MenuBar menubar;
 
     @FXML private ProgressBar progressBar;
 
     //toggle groups
     @FXML private ToggleGroup renderGroup;
 
-    public Menu aboutMenu;
-    public Button settingsButton;
+    @FXML private Menu aboutMenu;
+    @FXML private Button settingsButton;
+    @FXML private Button aboutButton;
+
 
     //menu items
     //TODO: ORGANIZE CHECK MENU ITEMS
@@ -132,6 +128,9 @@ public class MenubarController
     @FXML private CheckMenuItem reduceViewportResolutionCheckMenuItem;
     @FXML private CheckMenuItem darkModeCheckMenuItem;
     @FXML private CheckMenuItem standAlone3dViewerCheckMenuItem;
+
+    @FXML private CheckBox hideUICheckbox;
+
     @FXML public ChoiceBox<String> autosaveOptionsChoiceBox;
 
     @FXML private CheckMenuItem imageCompressionCheckMenuItem;
@@ -814,5 +813,55 @@ public class MenubarController
             });
             alert.show();
         });
+    }
+
+    public void hideUI() {
+        boolean isChecked = hideUICheckbox.isSelected();
+
+        if (isChecked) {
+            hideUICheckbox.setOpacity(0.5);
+
+            enableGhostMode(menubar);
+            enableGhostMode(settingsButton);
+            enableGhostMode(aboutButton);
+
+            ObservableList<Menu> list = menubar.getMenus();
+            for (Menu menu: list){
+                enableGhostModeForMenus(menu);
+            }
+        }
+        else{
+            menubar.setOpacity(1);
+            settingsButton.setOpacity(1);
+            aboutButton.setOpacity(1);
+            hideUICheckbox.setOpacity(1);
+
+            disableGhostMode(menubar);
+            disableGhostMode(settingsButton);
+            disableGhostMode(aboutButton);
+        }
+    }
+
+    private void enableGhostModeForMenus(Menu menu) {
+        menu.setOnShowing(event -> {
+            menubar.setOpacity(1);
+            menubar.setOnMouseExited(event1-> menubar.setOpacity(1));
+        });
+
+
+        menu.setOnHidden(event-> enableGhostMode(menubar));
+    }
+
+    private void enableGhostMode(Control control) {
+        control.setOpacity(0);
+        control.setOnMouseClicked(event -> control.setOpacity(1));
+        control.setOnMouseEntered(event-> control.setOpacity(0.5));
+        control.setOnMouseExited(event -> control.setOpacity(0));
+    }
+
+    private void disableGhostMode(Control control){
+        control.setOnMouseClicked(event -> control.setOpacity(1));
+        control.setOnMouseEntered(event-> control.setOpacity(1));
+        control.setOnMouseExited(event -> control.setOpacity(1));
     }
 }

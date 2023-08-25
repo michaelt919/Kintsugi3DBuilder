@@ -16,8 +16,9 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
+
 <AnchorPane prefHeight="720.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.MenubarController">
-    <MenuBar styleClass="menu-bar" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+    <MenuBar fx:id="menubar" styleClass="menu-bar" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <Menu mnemonicParsing="false" text="File">
             <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="New Project">
                 <accelerator>
@@ -370,8 +371,8 @@
     </MenuBar>
     <HBox alignment="CENTER_LEFT" spacing="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
         <Button fx:id="settingsButton" contentDisplay="CENTER" mnemonicParsing="false" onAction="#openSystemSettingsModal" prefHeight="25.0" prefWidth="80.0" text="Settings" />
-        <Button mnemonicParsing="false" onAction="#help_about" text="About" />
-        <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" visible="false" />
+        <Button fx:id="aboutButton" mnemonicParsing="false" onAction="#help_about" text="About" />
+        <CheckBox fx:id="hideUICheckbox" mnemonicParsing="false" onAction="#hideUI" text="Hide UI" />
     </HBox>
     <fx:include fx:id="framebufferView" source="FramebufferView.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="33.0" VBox.vgrow="ALWAYS" />
     <ProgressBar fx:id="progressBar" layoutY="31.0" prefWidth="1280.0" progress="0.0" visible="false" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="31.0" VBox.vgrow="ALWAYS">
