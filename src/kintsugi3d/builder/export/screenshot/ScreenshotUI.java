@@ -64,7 +64,7 @@ public class ScreenshotUI implements IBRRequestUI
         ScreenshotUI screenshotUI = fxmlLoader.getController();
 
         screenshotUI.stage = new Stage();
-        screenshotUI.stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+        screenshotUI.stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
         screenshotUI.stage.setTitle("Screenshot request");
         screenshotUI.stage.setScene(new Scene(parent));
         screenshotUI.stage.initOwner(window);

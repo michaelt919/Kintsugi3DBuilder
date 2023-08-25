@@ -24,7 +24,7 @@
         <center>
             <Pane fx:id="colorPickerPane" onMouseDragged="#handleMouseDragged" onMousePressed="#handleMousePressed" onMouseReleased="#handleMouseReleased" prefHeight="400.0" prefWidth="399.0">
                 <ImageView fx:id="colorPickerImgView" fitHeight="350.0" fitWidth="350.0" layoutX="25.0" layoutY="30.0" pickOnBounds="true" preserveRatio="true" />
-                <Rectangle fx:id="selectionRectangle" fill="TRANSPARENT" stroke="#9c00ff" />
+                <Rectangle fx:id="selectionRectangle" fill="TRANSPARENT" stroke="#D4AA00" />
             <Button fx:id="chooseImageButton" alignment="CENTER" contentDisplay="TOP" layoutX="105.0" layoutY="150.0" mnemonicParsing="false" onAction="#selectImage" prefHeight="75.0" prefWidth="175.0" text="Choose Image...">
                <font>
                   <Font size="21.0" />

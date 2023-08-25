@@ -52,6 +52,7 @@ import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectLoadState;
 import kintsugi3d.util.Flag;
+
 import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -155,7 +156,7 @@ public class MenubarController
 
     private Runnable userDocumentationHandler;
 
-    final Number DEFAULT_VALUE = 1024;
+    final static Number DEFAULT_VALUE = 1024;
     private IntegerProperty widthIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
     private IntegerProperty heightIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
 
@@ -304,7 +305,6 @@ public class MenubarController
             }
         });
 
-        RecentProjects.initializeMenubarController(this);
         updateRecentProjectsMenu();
 
         //add "Default Path" and "Choose Location..." items to choiceBox
@@ -388,6 +388,7 @@ public class MenubarController
     private void bindSlidersToTxtFields()
     {
         //TODO: BIND INTENSITY SLIDERS TO TEXT FIELDS HERE
+        //ignore now that this setting is in the system settings modal?
     }
 
     //Menubar->File
@@ -514,7 +515,7 @@ public class MenubarController
         FXMLLoader fxmlLoader = new FXMLLoader(url);
         Parent root = fxmlLoader.load();
         Stage stage = new Stage();
-        stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+        stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
         stage.setTitle(title);
         stage.setScene(new Scene(root));
         stage.initOwner(this.window);
@@ -540,7 +541,7 @@ public class MenubarController
         FXMLLoader fxmlLoader = new FXMLLoader(url);
         Parent root = fxmlLoader.load();
         Stage stage = new Stage();
-        stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+        stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
         stage.setTitle(title);
         stage.setScene(new Scene(root, width, height));
         stage.initOwner(this.window);
@@ -562,7 +563,7 @@ public class MenubarController
         FXMLLoader fxmlLoader = new FXMLLoader(url);
         Parent root = fxmlLoader.load();
         Stage stage = new Stage();
-        stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+        stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
         stage.setTitle(title);
         stage.setScene(new Scene(root));
         stage.initOwner(this.window);
@@ -642,23 +643,8 @@ public class MenubarController
         }
     }
 
-    public void updateRecentProjectsMenu() {//TODO: FORMAT ----- PROJECT NAME --> PATH
-        //TODO: REMOVE REPETITION WITH WELCOME WINDOW CONTROLLER
-        recentProjectsMenu.getItems().clear();
-
-        ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
-
-        recentProjectsMenu.getItems().addAll(recentItems);
-
-        //disable button if there are no recent projects
-        if(recentProjectsMenu.getItems().isEmpty()){
-            recentProjectsMenu.setDisable(true);
-        }
-
-        //attach event handlers to all menu items
-        for (MenuItem item : recentItems){
-            item.setOnAction(event -> handleMenuItemSelection(item));
-        }
+    public void updateRecentProjectsMenu() {
+        RecentProjects.updateRecentProjectsControl(recentProjectsMenu);
     }
 
     public static void handleMenuItemSelection(MenuItem item) {

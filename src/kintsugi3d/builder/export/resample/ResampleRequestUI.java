@@ -60,7 +60,7 @@ public class ResampleRequestUI implements IBRRequestUI
         ResampleRequestUI resampleRequestUI = fxmlLoader.getController();
 
         resampleRequestUI.stage = new Stage();
-        resampleRequestUI.stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+        resampleRequestUI.stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
         resampleRequestUI.stage.setTitle("Resample request");
         resampleRequestUI.stage.setScene(new Scene(parent));
         resampleRequestUI.stage.initOwner(window);

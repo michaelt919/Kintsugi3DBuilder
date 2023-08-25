@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar;
 
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -32,26 +33,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.builder.core.LoadingModel;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.DoubleUnaryOperator;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class EyedropperController implements Initializable {
     private static final Logger log = LoggerFactory.getLogger(EyedropperController.class);
 
     static final String[] validExtensions = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
+    private static EyedropperController instance;
 
     @FXML private Button chooseImageButton; // appears on top of the image view pane --> visible upon opening
     @FXML private Button chooseNewImageButton; //appears below the color selection txt fields --> hidden upon opening
     @FXML private Button cropButton; //appears below the choose new image button --> hidden upon opening
-
-
 
     @FXML
     private Rectangle selectionRectangle;
@@ -83,15 +84,21 @@ public class EyedropperController implements Initializable {
     private Image selectedFile;
     @FXML private Rectangle averageColorPreview = new Rectangle(); //displays the average color of selection
 
-
     private LoadingModel loadingModel = new LoadingModel();
 
+    public EyedropperController()
+    {
+        instance = this;
+    }
+
+    public static EyedropperController getInstance()
+    {
+        //intended to be used to update the apply button after a project is loaded
+        //this does not work yet
+        return instance;
+    }
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        SharedDataModel sharedDataModel = SharedDataModel.getInstance();
-//        selectedFile = sharedDataModel.getSelectedImage();
-//        colorPickerImgView.setImage(selectedFile);
-
         selectedFile = null;
 
         colorPickerImgView.setPreserveRatio(true);
@@ -190,12 +197,11 @@ public class EyedropperController implements Initializable {
         }
     }
 
-    public void enterCropMode() {
+    @FXML
+    private void enterCropMode() {
         //same button is used for cropping and resetting cropping
         if(canResetCrop){//button text is "Reset Crop"
-            resetViewport(colorPickerImgView);
-            cropButton.setText("Crop");
-            canResetCrop = false;
+            resetCrop();
         }
         else{//button text is "Crop"
             cropButton.setText("Cropping...");
@@ -205,6 +211,12 @@ public class EyedropperController implements Initializable {
         resetButtonsText();
         isSelecting = false;
         selectionRectangle.setVisible(false);
+    }
+
+    private void resetCrop() {
+        resetViewport(colorPickerImgView);
+        cropButton.setText("Crop");
+        canResetCrop = false;
     }
 
     private void cropImage() {
@@ -222,21 +234,6 @@ public class EyedropperController implements Initializable {
         cropButton.setText("Reset Crop");
 
         selectionRectangle.setVisible(false);
-    }
-
-    private void updateAverageColorPreview(Color newColor) {
-        Color prevColor = (Color) averageColorPreview.getFill();
-        if (!prevColor.equals(newColor))//change the stroke of the box to the previous color, if color changes
-            averageColorPreview.setStroke(prevColor);
-
-        averageColorPreview.setFill(newColor);
-    }
-
-    @FXML//used so the rectangles in color palette can update the average color preview
-    public void updateAverageColorPreview(MouseEvent mouseEvent){
-        Rectangle sourceRect = (Rectangle) mouseEvent.getSource();
-        Color rectColor = (Color) sourceRect.getFill();
-        updateAverageColorPreview(rectColor);
     }
 
     private Color getAvgColorFromSelection(){
@@ -340,13 +337,6 @@ public class EyedropperController implements Initializable {
         return Color.color(averageRed, averageGreen, averageBlue);
     }
 
-    private String getRGBString(Color color) {
-        int r = (int) (color.getRed() * 255);
-        int g = (int) (color.getGreen() * 255);
-        int b = (int) (color.getBlue() * 255);
-        return r + ", " + g + ", " + b;
-    }
-
     private double getGreyScaleDouble(Color color){
         //new calculation uses weighted scaling
         double redVal = color.getRed();
@@ -367,7 +357,8 @@ public class EyedropperController implements Initializable {
     }
 
     //returns false if the color is null or has already been added
-    public boolean addSelectedColor(Color newColor) {
+    @FXML
+    private boolean addSelectedColor(Color newColor) {
         //update the text field (to int. greyscale value) and its corresponding color square
         Button sourceButton = resetButtonsText();
 
@@ -404,9 +395,9 @@ public class EyedropperController implements Initializable {
 
         double greyScale;
         try{
-            greyScale = Integer.valueOf(txtField.getText());
+            greyScale = Integer.parseInt(txtField.getText());
         }
-        catch(NumberFormatException e){
+        catch(NumberFormatException | NullPointerException e){
             greyScale = 0;
         }
 
@@ -423,7 +414,8 @@ public class EyedropperController implements Initializable {
         rect.setVisible(true);
     }
 
-    public void updatesFromTextField(KeyEvent event){
+    @FXML
+    private void updatesFromTextField(KeyEvent event){
         //whenever a text field is updated, update its partner color rectangle and change the visibility of the Apply button
         //if all text fields contain valid info, make the Apply button functional
         //if not, make the button not functional
@@ -433,9 +425,9 @@ public class EyedropperController implements Initializable {
         updateApplyButton();
     }
 
-    private void updateApplyButton() {
+    public void updateApplyButton() {
         //only enable apply button if all fields contain good data (integers) and model is loaded
-        if(areAllFieldsValid() && isGoodLoadingModel()){//TODO: KEEPS BUTTON DISABLED IF NEW MODEL IS LOADED IN
+        if(areAllFieldsValid() && hasGoodLoadingModel()){//TODO: KEEPS BUTTON DISABLED IF NEW MODEL IS LOADED IN
                                                         //only updates setDisable() when text field is modified
             applyButton.setDisable(false);
         }
@@ -521,9 +513,9 @@ public class EyedropperController implements Initializable {
         }
     }
 
-    public void applyButtonPressed() {
+    @FXML private void applyButtonPressed() {
         //check to see if all text fields contain valid input, and model is loaded
-        if(areAllFieldsValid() && isGoodLoadingModel()) {
+        if(areAllFieldsValid() && hasGoodLoadingModel()) {
             loadingModel.setTonemapping(
                     new double[]{0.031, 0.090, 0.198, 0.362, 0.591, 0.900},
                     new byte[]
@@ -539,7 +531,7 @@ public class EyedropperController implements Initializable {
         else{
             Toolkit.getDefaultToolkit().beep();
             //TODO: PROBABLY CHANGE THIS VERIFICATION METHOD
-            System.err.println("Please fill all fields and load a model before performing color calibration.");
+            log.error("Please fill all fields and load a model before performing color calibration.");
         }
     }
 
@@ -553,7 +545,8 @@ public class EyedropperController implements Initializable {
         return true;
     }
 
-    public void enterColorSelectionMode(ActionEvent actionEvent) {
+    @FXML
+    private void enterColorSelectionMode(ActionEvent actionEvent) {
         //change text of button to indicate selection
         Button sourceButton = (Button) actionEvent.getSource();
         resetButtonsText();
@@ -577,13 +570,10 @@ public class EyedropperController implements Initializable {
     }
 
     public void setLoadingModel(LoadingModel loadingModel){
-        //TODO: THIS FUNCTION IS NOT CALLED IF THE COLOR CHECKER IS OPENED BEFORE THE MODEL IS LOADED
-        //close color checker when new model is loaded?
-
         this.loadingModel = loadingModel;
 
         //initialize txtFields with their respective values
-        if (isGoodLoadingModel()){
+        if (hasGoodLoadingModel()){
             DoubleUnaryOperator luminanceEncoding = loadingModel.getLuminanceEncodingFunction();
             txtField1.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.031))));
             txtField2.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.090))));
@@ -601,15 +591,16 @@ public class EyedropperController implements Initializable {
         }
         else{
             //TODO: WHAT TO DO IF NO MODEL FOUND?
-            System.err.println("Could not bring in luminance encodings: no model found");
+            log.error("Could not bring in luminance encodings: no model found");
         }
     }
 
-    private boolean isGoodLoadingModel(){
+    private boolean hasGoodLoadingModel(){
         return loadingModel.hasValidHandler();
     }
 
-    public void selectImage(ActionEvent actionEvent) {
+    @FXML
+    private void selectImage(ActionEvent actionEvent) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose Image File");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", validExtensions));
@@ -617,17 +608,28 @@ public class EyedropperController implements Initializable {
         Stage stage = (Stage) ((Node)actionEvent.getSource()).getScene().getWindow();
         File file = fileChooser.showOpenDialog(stage);
         if (file != null) {
-            //TODO: PULL IN TIF SUPPORT FROM COLOR CHECKER IMG SELECTION CONTROLLER
-            selectedFile = new Image(file.toURI().toString());
-            colorPickerImgView.setImage(selectedFile);
-
-            //update viewport
-            resetViewport(colorPickerImgView);
+            //convert tiff image if necessary
+            if (file.getAbsolutePath().toLowerCase().matches(".*\\.tiff?")) {
+                BufferedImage bufferedImage;
+                try {
+                    bufferedImage = ImageIO.read(file);
+                    colorPickerImgView.setImage(SwingFXUtils.toFXImage(bufferedImage, null));
+                } catch (IOException e) {
+                    log.error("Could not convert tif image: ", e);
+                }
+            }
+            else {
+                selectedFile = new Image(file.toURI().toString());
+                colorPickerImgView.setImage(selectedFile);
+            }
 
             //update buttons
             chooseImageButton.setVisible(false);
             chooseNewImageButton.setVisible(true);
             cropButton.setVisible(true);
+
+            //reset viewport and crop button text
+            resetCrop();
         }
     }
 }

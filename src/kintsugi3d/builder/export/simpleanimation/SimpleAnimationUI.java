@@ -60,7 +60,7 @@ public class SimpleAnimationUI implements IBRRequestUI
         SimpleAnimationUI simpleAnimationUI = fxmlLoader.getController();
 
         simpleAnimationUI.stage = new Stage();
-        simpleAnimationUI.stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+        simpleAnimationUI.stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
         simpleAnimationUI.stage.setTitle("Animation request");
         simpleAnimationUI.stage.setScene(new Scene(parent));
         simpleAnimationUI.stage.initOwner(window);

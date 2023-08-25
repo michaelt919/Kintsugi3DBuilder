@@ -175,6 +175,9 @@ public class SpecularFitProcess
                     }
                 }
 
+                // Basis functions are not spatial, so we want to just copy for future use
+                fullResolution.getBasisResources().copyFrom(sampledFit.getBasisResources());
+
                 File geometryFile = sampled.getViewSet().getGeometryFile();
                 ReadonlyMaterial material = sampled.getGeometry().getMaterial();
                 ReadonlyMaterialTextureMap normalMap = material == null ? null : material.getNormalMap();

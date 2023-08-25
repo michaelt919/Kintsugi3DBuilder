@@ -75,7 +75,7 @@
                     <accelerator>
                         <KeyCodeCombination alt="UP" code="B" control="ANY" meta="UP" shift="UP" shortcut="UP" />
                     </accelerator></MenuItem>
-                <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Export Specular Fit...">
+                <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Specular Fit...">
                     <accelerator>
                         <KeyCodeCombination alt="UP" code="P" control="ANY" meta="UP" shift="UP" shortcut="UP" />
                     </accelerator>

@@ -170,7 +170,7 @@ public final class ProjectLoadState
         FXMLLoader fxmlLoader = new FXMLLoader(url);
         Parent root = fxmlLoader.load();
         Stage stage = new Stage();
-        stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+        stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
         stage.setTitle(title);
         stage.setScene(sceneFactory.apply(root));
         stage.initOwner(parentWindow);
