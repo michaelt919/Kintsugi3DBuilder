@@ -90,7 +90,6 @@ public class MenubarController
 
     private Flag aboutWindowOpen = new Flag(false);
 
-    @FXML private MenuBar menubar;
 
     @FXML private ProgressBar progressBar;
 
@@ -98,8 +97,12 @@ public class MenubarController
     @FXML private ToggleGroup renderGroup;
 
     @FXML private Menu aboutMenu;
+
+    @FXML private MenuBar menubar;
     @FXML private Button settingsButton;
     @FXML private Button aboutButton;
+
+    private ArrayList<Control> menubarControls;
 
 
     //menu items
@@ -161,6 +164,7 @@ public class MenubarController
 
     private Runnable userDocumentationHandler;
 
+    final static double PARTIAL_OPACITY = 0.5;
     final Number DEFAULT_VALUE = 1024;
     private IntegerProperty widthIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
     private IntegerProperty heightIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
@@ -321,6 +325,11 @@ public class MenubarController
 
         //attach event handler (this cannot be done in scenebuilder)
         autosaveOptionsChoiceBox.setOnAction(this::handleDirectoryDropdownSelection);
+
+        menubarControls = new ArrayList<>();
+        menubarControls.add(menubar);
+        menubarControls.add(settingsButton);
+        menubarControls.add(aboutButton);
     }
 
 
@@ -808,9 +817,7 @@ public class MenubarController
             ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
             ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
             Alert alert = new Alert(AlertType.ERROR, message + "\nSee the log for more info.", ok, showLog);
-            ((Button) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
-                help_console();
-            });
+            ((Button) alert.getDialogPane().lookupButton(showLog)).setOnAction(event ->help_console());
             alert.show();
         });
     }
@@ -819,11 +826,11 @@ public class MenubarController
         boolean isChecked = hideUICheckbox.isSelected();
 
         if (isChecked) {
-            hideUICheckbox.setOpacity(0.5);
+            hideUICheckbox.setOpacity(PARTIAL_OPACITY);
 
-            enableGhostMode(menubar);
-            enableGhostMode(settingsButton);
-            enableGhostMode(aboutButton);
+            for(Control item : menubarControls){
+                enableGhostMode(item);
+            }
 
             ObservableList<Menu> list = menubar.getMenus();
             for (Menu menu: list){
@@ -831,32 +838,48 @@ public class MenubarController
             }
         }
         else{
-            menubar.setOpacity(1);
-            settingsButton.setOpacity(1);
-            aboutButton.setOpacity(1);
-            hideUICheckbox.setOpacity(1);
+            for(Control item : menubarControls){
+                item.setOpacity(1);
+                disableGhostMode(item);
+            }
 
-            disableGhostMode(menubar);
-            disableGhostMode(settingsButton);
-            disableGhostMode(aboutButton);
+            hideUICheckbox.setOpacity(1);
         }
     }
 
     private void enableGhostModeForMenus(Menu menu) {
         menu.setOnShowing(event -> {
             menubar.setOpacity(1);
-            menubar.setOnMouseExited(event1-> menubar.setOpacity(1));
+            menubar.setOnMouseExited(event1->menubar.setOpacity(1));
+            menubar.setOnMouseEntered(event1->{
+                menubar.setOpacity(1);
+                settingsButton.setOpacity(PARTIAL_OPACITY);
+                aboutButton.setOpacity(PARTIAL_OPACITY);
+            });
         });
 
-
-        menu.setOnHidden(event-> enableGhostMode(menubar));
+        menu.setOnHidden(event-> {
+            for(Control item : menubarControls){
+                enableGhostMode(item);
+            }
+        });
     }
 
     private void enableGhostMode(Control control) {
-        control.setOpacity(0);
+        control.setOpacity(PARTIAL_OPACITY);
         control.setOnMouseClicked(event -> control.setOpacity(1));
-        control.setOnMouseEntered(event-> control.setOpacity(0.5));
-        control.setOnMouseExited(event -> control.setOpacity(0));
+
+        control.setOnMouseEntered(event-> {
+            for (Control item: menubarControls){
+                item.setOpacity(PARTIAL_OPACITY);
+            }
+        });
+
+        control.setOnMouseExited(event -> {
+            for (Control item: menubarControls){
+                item.setOpacity(0);
+            }
+        });
     }
 
     private void disableGhostMode(Control control){
