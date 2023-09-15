@@ -89,6 +89,12 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
     }
 
     @Override
+    public void update()
+    {
+        contentRoot.update();
+    }
+
+    @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
         Matrix4 viewSnap = snapToView(cameraViewport.getView());
