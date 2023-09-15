@@ -38,14 +38,15 @@ public class Kintsugi3DViewerLauncher
             try
             {
                 executable = getFromRegistry();
-            } catch (IOException | InterruptedException ignored)
+            }
+            catch (IOException | InterruptedException ignored)
             {
             }
         }
 
         if (executable.isEmpty())
         {
-            executable = getExecFromDirectory(new File("../Kintsugi3DViewer"));
+            executable = getExecFromDirectory(new File(""));
         }
 
         return executable;

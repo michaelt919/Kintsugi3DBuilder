@@ -74,24 +74,53 @@ Section "Kintsugi 3D Builder (required)" SectionApp
 
 SectionEnd
 
+; Optional: Run installer executable for Kintsugi 3D Viewer
+Section "Kintsugi 3D Viewer" SectionViewer
+
+    SetOutPath $INSTDIR
+    File "viewer\Kintsugi3DViewer.exe"
+
+SectionEnd
+
+Var ViewerInstalled
+
 ; Optional File Type associations
 Section "File Type Associations" SectionAssociation
 
     SetRegView 64
+        ; Associate .ibr files as Kintsugi 3D Builder Projects
+        WriteRegStr HKCR ".ibr" "" "Kintsugi3DBuilder.Project"
 
-    ; Associate .ibr files as Kintsugi 3D Builder Projects
-    WriteRegStr HKCR ".ibr" "" "Kintsugi3DBuilder.Project"
+        WriteRegStr HKCR "Kintsugi3DBuilder.Project" "" "Kintsugi 3D Builder Project"
+        WriteRegStr HKCR "Kintsugi3DBuilder.Project\DefaultIcon" "" "$INSTDIR\Kintsugi3DBuilder.exe,0"
+        WriteRegStr HKCR "Kintsugi3DBuilder.Project\Shell\Open\Command" "" '"$INSTDIR\Kintsugi3DBuilder.exe" "%1"'
 
-    WriteRegStr HKCR "Kintsugi3DBuilder.Project" "" "Kintsugi 3D Builder Project"
-    WriteRegStr HKCR "Kintsugi3DBuilder.Project\DefaultIcon" "" "$INSTDIR\Kintsugi3DBuilder.exe,0"
-    WriteRegStr HKCR "Kintsugi3DBuilder.Project\Shell\Open\Command" "" '"$INSTDIR\Kintsugi3DBuilder.exe" "%1"'
+        ; Associate .vset files as Kintsugi 3D Builder Viewsets
+        WriteRegStr HKCR ".vset" "" "Kintsugi3DBuilder.Viewset"
 
-    ; Associate .vset files as Kintsugi 3D Builder Viewsets
-    WriteRegStr HKCR ".vset" "" "Kintsugi3DBuilder.Viewset"
+        WriteRegStr HKCR "Kintsugi3DBuilder.Viewset" "" "Kintsugi 3D Builder Viewset"
+        WriteRegStr HKCR "Kintsugi3DBuilder.Viewset\DefaultIcon" "" "$INSTDIR\Kintsugi3DBuilder.exe,0"
+        WriteRegStr HKCR "Kintsugi3DBuilder.Viewset\Shell\Open\Command" "" '"$INSTDIR\Kintsugi3DBuilder.exe" "%1"'
 
-    WriteRegStr HKCR "Kintsugi3DBuilder.Viewset" "" "Kintsugi 3D Builder Viewset"
-    WriteRegStr HKCR "Kintsugi3DBuilder.Viewset\DefaultIcon" "" "$INSTDIR\Kintsugi3DBuilder.exe,0"
-    WriteRegStr HKCR "Kintsugi3DBuilder.Viewset\Shell\Open\Command" "" '"$INSTDIR\Kintsugi3DBuilder.exe" "%1"'
+    SectionGetFlags ${SectionViewer} $ViewerInstalled
+    ${If} $ViewerInstalled == 1
+        ; Associations for Kintsugi 3D Viewer
+        WriteRegStr HKCR ".glb\OpenWithProgids" "Kintsugi3DViewer.glb" ""
+        WriteRegStr HKCR ".gltf\OpenWithProgids" "Kintsugi3DViewer.gltf" ""
+
+        WriteRegStr HKCR "Kintsugi3DViewer.glb" "" "Kintsugi 3D Viewer"
+        WriteRegStr HKCR "Kintsugi3DViewer.gltf" "" "Kintsugi 3D Viewer"
+
+        WriteRegStr HKCR "Kintsugi3DViewer.glb\DefaultIcon" "" "$INSTDIR\Kintsugi3DViewer.exe,0"
+        WriteRegStr HKCR "Kintsugi3DViewer.glb\Shell\Open\Command" "" '"$INSTDIR\Kintsugi3DViewer.exe" "%1"'
+        WriteRegStr HKCR "Kintsugi3DViewer.gltf\DefaultIcon" "" "$INSTDIR\Kintsugi3DViewer.exe,0"
+        WriteRegStr HKCR "Kintsugi3DViewer.gltf\Shell\Open\Command" "" '"$INSTDIR\Kintsugi3DViewer.exe" "%1"'
+
+        WriteRegStr HKCR "Applications\Kintsugi3DViewer.exe\DefaultIcon" "" "$INSTDIR\Kintsugi3DViewer.exe,0"
+        WriteRegStr HKCR "Applications\Kintsugi3DViewer.exe\Shell\Open\Command" "" '"$INSTDIR\Kintsugi3DViewer.exe" "%1"'
+        WriteRegStr HKCR "Applications\Kintsugi3DViewer.exe\SupportedTypes" ".gltf" ""
+        WriteRegStr HKCR "Applications\Kintsugi3DViewer.exe\SupportedTypes" ".glb" ""
+    ${EndIf}
 
 SectionEnd
 
@@ -102,6 +131,10 @@ Section "Start Menu Shortcuts" SectionShortcut
     CreateShortcut "$SMPROGRAMS\Kintsugi3DBuilder\Uninstall.lnk" "$INSTDIR\uninstall.exe"
     CreateShortcut "$SMPROGRAMS\Kintsugi3DBuilder\Kintsugi 3D Builder.lnk" "$INSTDIR\Kintsugi3DBuilder.exe"
 
+    SectionGetFlags ${SectionViewer} $ViewerInstalled
+    ${If} $ViewerInstalled == 1
+        CreateShortcut "$SMPROGRAMS\Kintsugi3DBuilder\Kintsugi 3D Viewer.lnk" "$INSTDIR\Kintsugi3DViewer.exe"
+    ${EndIf}
 SectionEnd
 
 ; Optional and default disabled Desktop shortcut
@@ -109,16 +142,10 @@ Section /o "Desktop Shortcut" SectionDesktop
 
     CreateShortcut "$DESKTOP\Kintsugi 3D Builder.lnk" "$INSTDIR\Kintsugi3DBuilder.exe"
 
-SectionEnd
-
-; Optional: Run installer executable for Kintsugi 3D Viewer
-Section "Kintsugi 3D Viewer" SectionViewer
-
-    SetOutPath $TEMP
-
-    File "viewer\Kintsugi3DViewer-setup.exe"
-    ExecWait "$TEMP\Kintsugi3DViewer-setup.exe"
-    Delete "$TEMP\Kintsugi3DViewer-setup.exe"
+    SectionGetFlags ${SectionViewer} $ViewerInstalled
+    ${If} $ViewerInstalled == 1
+        CreateShortcut "$DESKTOP\Kintsugi 3D Viewer.lnk" "$INSTDIR\Kintsugi3DViewer.exe"
+    ${EndIf}
 
 SectionEnd
 
@@ -129,20 +156,29 @@ Section "Uninstall"
 
     ; Remove directories
     RMDir /r "$SMPROGRAMS\Kintsugi3DBuilder"
+    RMDir /r "$SMPROGRAMS\Kintsugi3DViewer"
     RMDir /r "$INSTDIR"
 
     ; Remove Desktop Shortcut
     Delete "$DESKTOP\Kintsugi 3D Builder.lnk"
+    Delete "$DESKTOP\Kintsugi 3D Viewer.lnk"
 
     ; Remove registry keys
     DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DBuilder"
     DeleteRegKey HKLM "SOFTWARE\Kintsugi3DBuilder"
+    DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Kintsugi3DViewer"
+    DeleteRegKey HKLM "SOFTWARE\Kintsugi3DViewer"
 
     ; Remove file type associations
     DeleteRegKey HKCR ".ibr"
     DeleteRegKey HKCR ".vset"
     DeleteRegKey HKCR "Kintsugi3DBuilder.Project"
     DeleteRegKey HKCR "Kintsugi3DBuilder.Viewset"
+    DeleteRegKey HKCR "Applications\Kintsugi3DViewer.exe"
+    DeleteRegKey HKCR "Kintsugi3DViewer.glb"
+    DeleteRegKey HKCR "Kintsugi3DViewer.gltf"
+    DeleteRegValue HKCR ".glb\OpenWithProgids" "Kintsugi3DViewer.glb"
+    DeleteRegValue HKCR ".gltf\OpenWithProgids" "Kintsugi3DViewer.gltf"
 
 SectionEnd
 
@@ -168,12 +204,14 @@ Function .onInit
 FunctionEnd
 
 LangString DESC_SectionApp ${LANG_ENGLISH} "The main Kintsugi 3D Builder Application. This will also install a local instance of the Java 11 Runtime that is necessary to run the application."
+LangString DESC_SectionViewer ${LANG_ENGLISH} "Kintsugi 3D Viewer Application.  This allows the Viewer to be launched from the Builder application for previewing the results as they will appear in the Viewer app."
 LangString DESC_SectionAssociation ${LANG_ENGLISH} "Set up Kintsugi 3D Builder Project file associations (.ibr and .vset)"
 LangString DESC_SectionShortcut ${LANG_ENGLISH} "Install shortcuts so the application can be launched from the start menu"
 LangString DESC_SectionDesktop ${LANG_ENGLISH} "Add a shortcut to Kintsugi 3D Builder to the desktop"
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionApp} $(DESC_SectionApp)
+!insertmacro MUI_DESCRIPTION_TEXT ${SectionViewer} $(DESC_SectionViewer)
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionAssociation} $(DESC_SectionAssociation)
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionShortcut} $(DESC_SectionShortcut)
 !insertmacro MUI_DESCRIPTION_TEXT ${SectionDesktop} $(DESC_SectionDesktop)
