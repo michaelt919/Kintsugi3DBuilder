@@ -102,6 +102,11 @@ float geom(float roughness, float nDotH, float nDotV, float nDotL, float hDotV)
     return result;
 }
 
+float geom(float roughness, LightingParameters l)
+{
+    return geom(roughness, l.nDotH, l.nDotV, l.nDotL, l.hDotV);
+}
+
 vec3 computeMicrofacetDistributionGGX(float nDotH, vec3 roughness)
 {
     vec3 roughnessSquared = roughness * roughness;

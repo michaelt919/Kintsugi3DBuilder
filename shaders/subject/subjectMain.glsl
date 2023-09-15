@@ -101,10 +101,8 @@ vec3 specular(LightingParameters l, Material m);
 void main()
 {
     vec3 triangleNormal = normalize(fNormal);
-    ViewingParameters v;
-    v.normalDir = getRefinedWorldSpaceNormal(triangleNormal);
+    ViewingParameters v = buildViewingParameters(getRefinedWorldSpaceNormal(triangleNormal), viewPos - fPosition);
 
-    v.viewDir = normalize(viewPos - fPosition);
     float nDotV_triangle = dot(triangleNormal, v.viewDir);
 
     // Flip normals if necessary, but don't do anything if nDotV is zero.
@@ -120,8 +118,6 @@ void main()
     //        fragColor = vec4(0, 0, 0, 1);
     //        return;
     //    }
-
-    v.nDotV = max(0.0, dot(v.normalDir, v.viewDir));
 
     Material m = getMaterial();
 
@@ -139,20 +135,7 @@ void main()
 
     for (int i = 0; i < VIRTUAL_LIGHT_COUNT; i++)
     {
-        LightingParameters l;
-        l.lightIndex = i;
-        l.normalDir = v.normalDir;
-        l.viewDir = v.viewDir;
-        l.nDotV = v.nDotV;
-
-        vec3 lightDirUnNorm = getLightVectorVirtual(i);
-#if RELIGHTING_ENABLED
-        lightDirUnNorm = lightPosVirtual[i] - fPosition;
-#else
-        lightDirUnNorm = transpose(mat3(model_view)) * lightPositions[getLightIndex(0)].xyz + viewPos - fPosition;
-#endif
-        l.lightDir = normalize(lightDirUnNorm);
-        l.nDotL = max(0.0, dot(l.normalDir, l.lightDir));
+        LightingParameters l = buildLightingParameters(i, getLightVectorVirtual(i), v);
 
         if (l.nDotL > 0.0 && dot(triangleNormal, l.lightDir) > 0.0)
         {
@@ -169,10 +152,6 @@ void main()
                 && shadowMapDepth - depth >= -0.001)
 #endif
             {
-                l.halfDir = normalize(l.viewDir + l.lightDir);
-                l.hDotV = dot(l.halfDir, l.viewDir);
-                l.nDotH = dot(l.normalDir, l.halfDir);
-
 #ifdef SPECULAR_PRECOMPUTATION
                 vec3 mfdFresnel = specular(l, m, precomputation);
 #else
@@ -186,7 +165,7 @@ void main()
                 cosineWeightedReflectance += mfdFresnel * l.nDotL / 4;
 #endif
 
-                vec3 lightVectorTransformed = (model_view * vec4(lightDirUnNorm, 0.0)).xyz;
+                vec3 lightVectorTransformed = (model_view * vec4(l.lightDirUnnorm, 0.0)).xyz;
                 vec3 pointRadiance;
 
 #if RELIGHTING_ENABLED

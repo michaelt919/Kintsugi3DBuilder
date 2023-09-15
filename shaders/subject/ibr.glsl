@@ -25,10 +25,6 @@
 #define BUEHLER_ALGORITHM 1
 #endif
 
-#ifndef USE_HEAPSORT
-#define USE_HEAPSORT 1
-#endif
-
 #ifndef SORTING_SAMPLE_COUNT
 #define SORTING_SAMPLE_COUNT 5
 #endif
@@ -58,7 +54,7 @@
 #endif // !ANALYTIC_MODE
 
 #include <colorappearance/material.glsl>
-#line 62 3101
+#line 58 3101
 
 #if ANALYTIC_MODE
 
@@ -110,7 +106,7 @@
 #include "sort.glsl"
 #endif
 
-#line 114 3101
+#line 110 3101
 
 uniform vec3 holeFillColor;
 
@@ -145,6 +141,21 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float m
     }
 }
 
+LightingParameters getCameraSpaceLightingForSample(int virtualSampleIndex, vec3 worldSpaceNormalDir, mat4 cameraPose)
+{
+    // All in camera space
+    vec3 fragmentPos = (cameraPose * vec4(fPosition, 1.0)).xyz;
+    return buildLightingParameters(virtualSampleIndex,
+    /* normal: */ normalize((cameraPose * vec4(worldSpaceNormalDir, 0.0)).xyz),
+    /* view: */ -fragmentPos,
+    /* light: */ lightPositions[getLightIndex(virtualSampleIndex)].xyz - fragmentPos);
+}
+
+LightingParameters getCameraSpaceLightingForSample(int virtualSampleIndex, vec3 worldSpaceNormalDir)
+{
+    return getCameraSpaceLightingForSample(virtualSampleIndex, worldSpaceNormalDir, getCameraPose(virtualSampleIndex));
+}
+
 struct EnvironmentSample
 {
     vec4 sampleResult;
@@ -152,47 +163,36 @@ struct EnvironmentSample
     float sampleWeight;
 };
 
-EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 normalDir, Material m, float maxLuminance)
+EnvironmentSample computeEnvironmentSample(int virtualSampleIndex, ViewingParameters targetView, Material m, float maxLuminance)
 {
-    mat4 cameraPose = getCameraPose(virtualIndex);
-    vec3 fragmentPos = (cameraPose * vec4(fPosition, 1.0)).xyz;
-    vec3 normalDirCameraSpace = normalize((cameraPose * vec4(normalDir, 0.0)).xyz);
-    vec3 sampleViewDir = normalize(-fragmentPos);
-    float nDotV_sample = max(0, dot(normalDirCameraSpace, sampleViewDir));
-
     // All in camera space
-    vec3 sampleLightDirUnnorm = lightPositions[getLightIndex(virtualIndex)].xyz - fragmentPos;
-    float lightDistSquared = dot(sampleLightDirUnnorm, sampleLightDirUnnorm);
-    vec3 sampleLightDir = sampleLightDirUnnorm * inversesqrt(lightDistSquared);
-    vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
-    vec3 lightIntensity = getLightIntensity(virtualIndex);
+    mat4 cameraPose = getCameraPose(virtualSampleIndex);
+    LightingParameters sampleLighting = getCameraSpaceLightingForSample(virtualSampleIndex, targetView.normalDir, cameraPose);
+
+    vec3 lightIntensity = getLightIntensity(virtualSampleIndex);
 
 #if !INFINITE_LIGHT_SOURCES
-    lightIntensity /= lightDistSquared;
+    lightIntensity /= sampleLighting.lightDistSquared;
 #endif
 
-    float nDotL_sample = max(0, dot(normalDirCameraSpace, sampleLightDir));
-    float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
-    float hDotV_sample = max(0, dot(sampleHalfDir, sampleViewDir));
+    vec3 diffuseContrib = m.diffuseColor * sampleLighting.nDotL * lightIntensity;
 
-    vec3 diffuseContrib = m.diffuseColor * nDotL_sample * lightIntensity;
+    float geomAttenSample = geom(m.roughness, sampleLighting);
 
-    float geomAttenSample = geom(m.roughness, nDotH, nDotV_sample, nDotL_sample, hDotV_sample);
-
-    vec3 virtualViewDir =
-        normalize((cameraPose * vec4(viewPos, 1.0)).xyz - fragmentPos);
-    vec3 virtualLightDir = -reflect(virtualViewDir, sampleHalfDir);
-    float nDotL_virtual = max(0, dot(normalDirCameraSpace, virtualLightDir));
-    float nDotV_virtual = max(0.125, dot(normalDirCameraSpace, virtualViewDir));
-    float hDotV_virtual = max(0, dot(sampleHalfDir, virtualViewDir));
-    float geomAttenVirtual = geom(m.roughness, nDotH, nDotV_virtual, nDotL_virtual, hDotV_virtual);
+    LightingParameters envLighting;
+    envLighting.normalDir = sampleLighting.normalDir; // transformed into camera space already
+    envLighting.halfDir = sampleLighting.halfDir;
+    envLighting.viewDir = normalize(mat3(cameraPose) * targetView.viewDir);
+    envLighting.lightDir = -reflect(targetView.viewDir, sampleLighting.halfDir);
+    calculateLightingCosines(envLighting);
+    float geomAttenEnv = geom(m.roughness, envLighting);
 
     vec3 mfdFresnel;
     float mfdMono;
     vec3 mfdNewFresnel;
     float validSpecular = 1.0;
 
-    if (nDotV_sample <= 0.0 || nDotL_sample <= 0.0 || geomAttenSample <= 0.0)
+    if (sampleLighting.nDotV <= 0.0 || sampleLighting.nDotL <= 0.0 || geomAttenSample <= 0.0)
     {
         mfdFresnel = vec3(0.0);
         mfdMono = 0.0;
@@ -201,7 +201,7 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 normalDir, Mat
     }
     else
     {
-        vec4 sampleColor = getLinearColor(virtualIndex);
+        vec4 sampleColor = getLinearColor(virtualSampleIndex);
 
         if (sampleColor.a == 0.0)
         {
@@ -210,7 +210,7 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 normalDir, Mat
         }
         else
         {
-            vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL_sample, maxLuminance);
+            vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, sampleLighting.nDotL, maxLuminance);
 
             // Light intensities in view set files are assumed to be pre-divided by pi.
             // Or alternatively, the result of getLinearColor gives a result
@@ -219,40 +219,40 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 normalDir, Mat
             vec3 mfdFresnelGeom = specularResid.rgb / (lightIntensity * PI);
 
 #if PHYSICALLY_BASED_MASKING_SHADOWING
-            mfdFresnel = mfdFresnelGeom * 4 * nDotV_sample / geomAttenSample;
+            mfdFresnel = mfdFresnelGeom * 4 * sampleLighting.nDotV / geomAttenSample;
 #else
-            mfdFresnel = mfdFresnelGeom * 4 / nDotL_sample;
+            mfdFresnel = mfdFresnelGeom * 4 / sampleLighting.nDotL;
 #endif
         }
 
         mfdMono = getLuminance(mfdFresnel / m.specularColor);
 
 #if FRESNEL_EFFECT_ENABLED
-        mfdNewFresnel = fresnel(mfdFresnel, vec3(mfdMono), hDotV_virtual);
+        mfdNewFresnel = fresnel(mfdFresnel, vec3(mfdMono), envLighting.hDotV);
 #else
         mfdNewFresnel = mfdFresnel;
 #endif
     }
 
-    vec3 cosineWeightedBRDF = mfdNewFresnel * geomAttenVirtual / (4 * nDotV_virtual);
+    vec3 cosineWeightedBRDF = mfdNewFresnel * geomAttenEnv / (4 * envLighting.nDotV);
 
 #if DISCRETE_DIFFUSE_ENVIRONMENT
-    cosineWeightedBRDF += m.diffuseColor * nDotL_virtual / PI;
+    cosineWeightedBRDF += m.diffuseColor * envLighting.nDotL / PI;
 #endif
 
-    float weight = 4 * hDotV_virtual * (getCameraWeight(virtualIndex) * 4 * PI * VIEW_COUNT);
+    float weight = 4 * envLighting.hDotV * (getCameraWeight(virtualSampleIndex) * 4 * PI * VIEW_COUNT);
 
     vec4 unweightedSample;
     unweightedSample.rgb = cosineWeightedBRDF
 //        * getEnvironment(fPosition, transpose(mat3(cameraPose)) * virtualLightDir,
-//            4 * hDotV_virtual * getCameraWeight(virtualIndex));
-        * getEnvironment(fPosition, transpose(mat3(cameraPose)) * virtualLightDir);
+//            4 * hDotV_virtual * getCameraWeight(virtualSampleIndex));
+        * getEnvironment(fPosition, transpose(mat3(cameraPose)) * envLighting.lightDir);
 
 #if SPECULAR_TEXTURE_ENABLED && ARCHIVING_2017_ENVIRONMENT_NORMALIZATION
     // Normalizes with respect to specular texture when available as described in our Archiving 2017 paper.
-    unweightedSample.a = mfdMono * geomAttenVirtual / (4 * nDotV_virtual);
+    unweightedSample.a = mfdMono * geomAttenEnv / (4 * nDotV_virtual);
 #else
-    unweightedSample.a = sign(validSpecular) * nDotL_virtual / PI;
+    unweightedSample.a = sign(validSpecular) * envLighting.nDotL / PI;
 #endif
 
     return EnvironmentSample(unweightedSample * weight, mfdMono, weight);
@@ -262,7 +262,7 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 normalDir, Mat
     // Everything gets normalized at the end again anyways.
 }
 
-vec3 getEnvironmentShading(vec3 normalDir, Material m)
+vec3 getEnvironmentShading(ViewingParameters v, Material m)
 {
 #if ANALYTIC_MODE
     float maxLuminance = max(ANALYTIC_SPECULAR_COLOR.r, max(ANALYTIC_SPECULAR_COLOR.g, ANALYTIC_SPECULAR_COLOR.b))
@@ -276,7 +276,7 @@ vec3 getEnvironmentShading(vec3 normalDir, Material m)
 
     for (int i = 0; i < VIEW_COUNT; i++)
     {
-        EnvironmentSample envSample = computeEnvironmentSample(i, normalDir, m, maxLuminance);
+        EnvironmentSample envSample = computeEnvironmentSample(i, v, m, maxLuminance);
         sum += envSample.sampleResult;
     }
 
@@ -306,47 +306,45 @@ vec3 specularFromPredictedMFD(LightingParameters l, Material m, vec4 predictedMF
 #endif // FRESNEL_EFFECT_ENABLED
 }
 
-#if BUEHLER_ALGORITHM
-
-vec4 computeSampleSingle(int virtualIndex, vec3 normalDir, Material m, float maxLuminance)
+vec4 computeSampleSingle(int virtualSampleIndex, LightingParameters sampleLighting, Material m, float maxLuminance)
 {
-    // All in camera space
-    mat4 cameraPose = getCameraPose(virtualIndex);
-    vec3 fragmentPos = (cameraPose * vec4(fPosition, 1.0)).xyz;
-    vec3 sampleViewDir = normalize(-fragmentPos);
-    vec3 sampleLightDirUnnorm = lightPositions[getLightIndex(virtualIndex)].xyz - fragmentPos;
-    float lightDistSquared = dot(sampleLightDirUnnorm, sampleLightDirUnnorm);
-    vec3 sampleLightDir = sampleLightDirUnnorm * inversesqrt(lightDistSquared);
-    vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
-    vec3 normalDirCameraSpace = normalize((cameraPose * vec4(normalDir, 0.0)).xyz);
-    float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
-    float nDotL = max(0, dot(normalDirCameraSpace, sampleLightDir));
-    float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
-    float hDotV = max(0, dot(sampleHalfDir, sampleViewDir));
-
     vec4 precomputedSample = vec4(0);
 
-    if (nDotL > 0 && nDotV > 0)
+    if (sampleLighting.nDotL > 0 && sampleLighting.nDotV > 0)
     {
-        float geomAtten = geom(m.roughness, nDotH, nDotV, nDotL, hDotV);
+        float geomAtten = geom(m.roughness, sampleLighting);
 
-        vec4 sampleColor = getLinearColor(virtualIndex);
+        vec4 sampleColor = getLinearColor(virtualSampleIndex);
         if (sampleColor.a > 0.0)
         {
-            vec3 lightIntensity = getLightIntensity(virtualIndex);
+            vec3 lightIntensity = getLightIntensity(virtualSampleIndex);
 
 #if !INFINITE_LIGHT_SOURCES
-            lightIntensity /= lightDistSquared;
+            lightIntensity /= sampleLighting.lightDistSquared;
 #endif
 
-            vec3 diffuseContrib = m.diffuseColor * nDotL * lightIntensity;
+            vec3 diffuseContrib = m.diffuseColor * sampleLighting.nDotL * lightIntensity;
 
 #if PHYSICALLY_BASED_MASKING_SHADOWING
-            vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
-            return sampleColor.a * vec4(specularResid.rgb * 4 * nDotV / lightIntensity, geomAtten);
+            if (geomAtten > 0.0)
+            {
+                vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, sampleLighting.nDotL, maxLuminance);
+                return sampleColor.a * vec4(specularResid.rgb * 4 * sampleLighting.nDotV / lightIntensity, geomAtten);
+            }
+            else
+            {
+                return vec4(0.0);
+            }
 #else
-            vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
-            return sampleColor.a * vec4(specularResid.rgb * 4 / lightIntensity, nDotL);
+            if (sampleLighting.nDotL != 0.0)
+            {
+                vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, sampleLighting.nDotL, maxLuminance);
+                return sampleColor.a * vec4(specularResid.rgb * 4 / lightIntensity, sampleLighting.nDotL);
+            }
+            else
+            {
+                return vec4(0.0);
+            }
 #endif
         }
     }
@@ -354,6 +352,14 @@ vec4 computeSampleSingle(int virtualIndex, vec3 normalDir, Material m, float max
     return vec4(0.0);
 }
 
+
+vec4 computeSampleSingle(int virtualSampleIndex, vec3 normalDir, Material m, float maxLuminance)
+{
+    return computeSampleSingle(virtualSampleIndex,
+        getCameraSpaceLightingForSample(virtualSampleIndex, normalDir), m, maxLuminance);
+}
+
+#if BUEHLER_ALGORITHM
 vec4 computeBuehler(vec3 targetDirection, vec3 normalDir, Material m)
 {
 #if ANALYTIC_MODE
@@ -376,7 +382,8 @@ vec4 computeBuehler(vec3 targetDirection, vec3 normalDir, Material m)
     vec4 samples[SORTING_SAMPLE_COUNT - 1];
     for (int i = 1; i < SORTING_SAMPLE_COUNT; i++)
     {
-        samples[i - 1] = computeSampleSingle(indices[i], normalDir, m, maxLuminance);
+        LightingParameters sampleLighting = getCameraSpaceLightingForSample(indices[i], normalDir);
+        samples[i - 1] = computeSampleSingle(indices[i], sampleLighting, m, maxLuminance);
         maxSampleLuminance = max(maxSampleLuminance, getLuminance(samples[i - 1].rgb));
     }
 
@@ -411,76 +418,35 @@ vec3 specular(LightingParameters l, Material m)
 
 #elif VIRTUAL_LIGHT_COUNT > 0
 
-vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 normalDir, Material m, float maxLuminance)
+vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualSampleIndex, ViewingParameters targetView, Material m, float maxLuminance)
 {
     // All in camera space
-    mat4 cameraPose = getCameraPose(virtualIndex);
-    vec3 fragmentPos = (cameraPose * vec4(fPosition, 1.0)).xyz;
-    vec3 sampleViewDir = normalize(-fragmentPos);
-    vec3 sampleLightDirUnnorm = lightPositions[getLightIndex(virtualIndex)].xyz - fragmentPos;
-    float lightDistSquared = dot(sampleLightDirUnnorm, sampleLightDirUnnorm);
-    vec3 sampleLightDir = sampleLightDirUnnorm * inversesqrt(lightDistSquared);
-    vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
-    vec3 normalDirCameraSpace = normalize((cameraPose * vec4(normalDir, 0.0)).xyz);
-    float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
-    float nDotL = max(0, dot(normalDirCameraSpace, sampleLightDir));
-    float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
-    float hDotV = max(0, dot(sampleHalfDir, sampleViewDir));
-
-    vec4 precomputedSample = vec4(0);
-
-    float geomAtten = geom(m.roughness, nDotH, nDotV, nDotL, hDotV);
-
-    vec4 sampleColor = getLinearColor(virtualIndex);
-    if (sampleColor.a > 0.0)
-    {
-        vec3 lightIntensity = getLightIntensity(virtualIndex);
-
-#if !INFINITE_LIGHT_SOURCES
-        lightIntensity /= lightDistSquared;
-#endif
-
-        vec3 diffuseContrib = m.diffuseColor * nDotL * lightIntensity;
-
-#if PHYSICALLY_BASED_MASKING_SHADOWING
-        if (geomAtten > 0.0)
-        {
-            vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
-            precomputedSample = sampleColor.a
-                * vec4(specularResid.rgb * 4 * nDotV / lightIntensity, geomAtten);
-
-        }
-#else
-        if (nDotL != 0.0)
-        {
-            vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
-            precomputedSample = sampleColor.a
-                * vec4(specularResid.rgb * 4 / lightIntensity, nDotL);
-        }
-#endif
-    }
+    mat4 cameraPose = getCameraPose(virtualSampleIndex);
+    LightingParameters sampleLighting = getCameraSpaceLightingForSample(virtualSampleIndex, targetView.normalDir, cameraPose);
+    vec4 precomputedSample = computeSampleSingle(virtualSampleIndex, sampleLighting, m, maxLuminance);
 
     if (precomputedSample.w != 0)
     {
-        mat3 tangentToObject = mat3(1.0);
-
-        vec3 virtualViewDir = normalize((cameraPose * vec4(viewPos, 1.0)).xyz - fragmentPos);
+        ViewingParameters targetViewCameraSpace;
+        targetViewCameraSpace.viewDir = normalize(mat3(cameraPose) * targetView.viewDir);
+        targetViewCameraSpace.normalDir = sampleLighting.normalDir;
+        targetViewCameraSpace.nDotV = max(0.0, dot(targetViewCameraSpace.normalDir, targetViewCameraSpace.viewDir));
 
         vec4 result[VIRTUAL_LIGHT_COUNT];
 
         for (int lightPass = 0; lightPass < VIRTUAL_LIGHT_COUNT; lightPass++)
         {
 #if PRECOMPUTED_VIEW_WEIGHTS_ENABLED
-            result[lightPass] = getViewWeight(virtualIndex) * precomputedSample;
+            result[lightPass] = getViewWeight(virtualSampleIndex) * precomputedSample;
 #else
-
-            vec3 virtualLightDir = normalize(mat3(cameraPose) * getLightVectorVirtual(lightPass));
+            LightingParameters targetLighting = buildLightingParameters(lightPass,
+                mat3(cameraPose) * getLightVectorVirtual(lightPass), targetViewCameraSpace);
 
             // Compute sample weight
-            vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
-            float virtualNdotH = max(0, dot(normalDirCameraSpace, virtualHalfDir));
-            float correlation = isotropyFactor * (nDotH * virtualNdotH + sqrt(1 - nDotH*nDotH) * sqrt(1 - virtualNdotH*virtualNdotH))
-                + (1 - isotropyFactor) * dot(virtualHalfDir, sampleHalfDir);
+            float correlation =
+                isotropyFactor * (sampleLighting.nDotH * targetLighting.nDotH
+                    + sqrt(1 - sampleLighting.nDotH*sampleLighting.nDotH) * sqrt(1 - targetLighting.nDotH * targetLighting.nDotH))
+                + (1 - isotropyFactor) * dot(targetLighting.halfDir, sampleLighting.halfDir);
             float weight = 1.0 / max(0.000001, 1.0 - pow(max(0.0, correlation), weightExponent)) - 1.0;
             result[lightPass] = weight * precomputedSample;
 
@@ -520,8 +486,7 @@ SPECULAR_PRECOMPUTATION precomputeSpecular(ViewingParameters v, Material m)
 
     for (int i = 0; i < VIEW_COUNT; i++)
     {
-        vec4[VIRTUAL_LIGHT_COUNT] microfacetSample =
-            computeSample(i, v.normalDir, m, maxLuminance);
+        vec4[VIRTUAL_LIGHT_COUNT] microfacetSample = computeSample(i, v, m, maxLuminance);
 
         for (int j = 0; j < VIRTUAL_LIGHT_COUNT; j++)
         {
@@ -561,7 +526,7 @@ vec3 global(ViewingParameters v, Material m)
 #if !DISCRETE_DIFFUSE_ENVIRONMENT
     envLighting += m.diffuseColor * getEnvironmentDiffuse(v.normalDir);
 #endif
-    envLighting += getEnvironmentShading(v.normalDir, m);
+    envLighting += getEnvironmentShading(v, m);
     return envLighting;
 }
 

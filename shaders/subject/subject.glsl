@@ -66,10 +66,68 @@ struct LightingParameters
     vec3 viewDir;
     float nDotL;
     vec3 lightDir;
+    vec3 lightDirUnnorm;
+    float lightDistSquared;
     float nDotH;
     vec3 halfDir;
     float hDotV;
 };
+
+ViewingParameters buildViewingParameters(vec3 normalDir, vec3 viewDirUnnorm)
+{
+    ViewingParameters v;
+    v.normalDir = normalDir;
+    v.viewDir = normalize(viewDirUnnorm);
+    v.nDotV = max(0.0, dot(v.normalDir, v.viewDir));
+    return v;
+}
+
+void calculateLightingCosines(inout LightingParameters l)
+{
+    l.nDotH = max(0, dot(l.normalDir, l.halfDir));
+    l.nDotL = max(0, dot(l.normalDir, l.lightDir));
+    l.nDotV = max(0, dot(l.normalDir, l.viewDir));
+    l.hDotV = max(0, dot(l.halfDir, l.viewDir));
+}
+
+void calculateLightingParameters(inout LightingParameters l)
+{
+    l.lightDistSquared = dot(l.lightDirUnnorm, l.lightDirUnnorm);
+    l.lightDir = l.lightDirUnnorm * inversesqrt(l.lightDistSquared);
+    l.halfDir = normalize(l.viewDir + l.lightDir);
+    calculateLightingCosines(l);
+}
+
+LightingParameters buildLightingParameters(int lightIndex, vec3 normalDir, vec3 viewDirUnnorm, vec3 lightDirUnnorm)
+{
+    LightingParameters l;
+    l.lightIndex = lightIndex;
+    l.normalDir = normalDir;
+    l.viewDir = normalize(viewDirUnnorm);
+    l.lightDirUnnorm = lightDirUnnorm;
+    calculateLightingParameters(l);
+    return l;
+}
+
+LightingParameters buildLightingParameters(int lightIndex, vec3 lightDirUnnorm, ViewingParameters v)
+{
+    LightingParameters l;
+    l.lightIndex = lightIndex;
+    l.normalDir = v.normalDir;
+    l.viewDir = v.viewDir;
+    l.lightDirUnnorm = lightDirUnnorm;
+    calculateLightingParameters(l);
+    return l;
+}
+
+ViewingParameters getViewingParameters(LightingParameters l)
+{
+    ViewingParameters v;
+    v.viewDir = l.viewDir;
+    v.normalDir = l.normalDir;
+    v.nDotV = l.nDotV;
+    return v;
+}
 
 #include "environment.glsl"
 
