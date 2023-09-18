@@ -46,7 +46,7 @@ public class Kintsugi3DViewerLauncher
 
         if (executable.isEmpty())
         {
-            executable = getExecFromDirectory(new File(""));
+            executable = getExecFromDirectory(new File("."));
         }
 
         return executable;
