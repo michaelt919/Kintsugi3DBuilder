@@ -56,6 +56,11 @@
 #include <colorappearance/material.glsl>
 #line 58 3101
 
+float geom(float roughness, LightingParameters l)
+{
+    return geom(roughness, l.nDotH, l.nDotV, l.nDotL, l.hDotV);
+}
+
 #if ANALYTIC_MODE
 
 #undef SMITH_MASKING_SHADOWING

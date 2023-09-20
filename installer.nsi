@@ -127,13 +127,13 @@ SectionEnd
 ; Optional start menu shortcuts
 Section "Start Menu Shortcuts" SectionShortcut
 
-    CreateDirectory "$SMPROGRAMS\Kintsugi3DBuilder"
-    CreateShortcut "$SMPROGRAMS\Kintsugi3DBuilder\Uninstall.lnk" "$INSTDIR\uninstall.exe"
-    CreateShortcut "$SMPROGRAMS\Kintsugi3DBuilder\Kintsugi 3D Builder.lnk" "$INSTDIR\Kintsugi3DBuilder.exe"
+    CreateDirectory "$SMPROGRAMS\Kintsugi 3D"
+    CreateShortcut "$SMPROGRAMS\Kintsugi 3D\Uninstall Kintsugi 3D.lnk" "$INSTDIR\uninstall.exe"
+    CreateShortcut "$SMPROGRAMS\Kintsugi 3D\Kintsugi 3D Builder.lnk" "$INSTDIR\Kintsugi3DBuilder.exe"
 
     SectionGetFlags ${SectionViewer} $ViewerInstalled
     ${If} $ViewerInstalled == 1
-        CreateShortcut "$SMPROGRAMS\Kintsugi3DBuilder\Kintsugi 3D Viewer.lnk" "$INSTDIR\Kintsugi3DViewer.exe"
+        CreateShortcut "$SMPROGRAMS\Kintsugi 3D\Kintsugi 3D Viewer.lnk" "$INSTDIR\Kintsugi3DViewer.exe"
     ${EndIf}
 SectionEnd
 
@@ -155,8 +155,7 @@ Section "Uninstall"
     SetRegView 64
 
     ; Remove directories
-    RMDir /r "$SMPROGRAMS\Kintsugi3DBuilder"
-    RMDir /r "$SMPROGRAMS\Kintsugi3DViewer"
+    RMDir /r "$SMPROGRAMS\Kintsugi 3D"
     RMDir /r "$INSTDIR"
 
     ; Remove Desktop Shortcut
