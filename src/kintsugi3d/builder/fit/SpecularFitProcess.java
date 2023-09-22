@@ -176,7 +176,8 @@ public class SpecularFitProcess
                 }
 
                 // Basis functions are not spatial, so we want to just copy for future use
-                fullResolution.getBasisResources().copyFrom(sampledFit.getBasisResources());
+                // Copy from CPU since 1D texture arrays can't apparently be attached to an FBO (as necessary for blitting)
+                fullResolution.getBasisResources().updateFromSolution(sampledDecomposition);
 
                 File geometryFile = sampled.getViewSet().getGeometryFile();
                 ReadonlyMaterial material = sampled.getGeometry().getMaterial();

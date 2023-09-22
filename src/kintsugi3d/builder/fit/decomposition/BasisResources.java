@@ -152,13 +152,4 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
         basisMaps.close();
         diffuseUniformBuffer.close();
     }
-
-    public void copyFrom(BasisResources<ContextType> source)
-    {
-        // Use the same number of basis functions (i.e. "height") as it needs to be a one-to-one transfer,
-        // but resize across the angular resolution (i.e. "width") as necessary.
-        // Don't use linear filtering as we don't want any chance of basis functions blurring together.
-        basisMaps.blitCroppedAndScaled(0, 0, basisMaps.getWidth(), source.basisMaps.getHeight(),
-            source.basisMaps, 0, 0, source.basisMaps.getWidth(), source.basisMaps.getHeight(), false);
-    }
 }
