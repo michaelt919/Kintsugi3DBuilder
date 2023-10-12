@@ -12,7 +12,7 @@
 
 package kintsugi3d.builder.fit.finalize;
 
-import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
@@ -35,7 +35,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
 
     // Final diffuse estimation program
     private final ProgramObject<ContextType> estimationProgram;
-    private final TextureFitSettings textureFitSettings;
+    private final TextureResolution textureResolution;
 
     private final boolean includeConstant;
 
@@ -45,13 +45,13 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
     private final Drawable<ContextType> drawable;
 
     public FinalDiffuseOptimization(ReadonlyIBRResources<ContextType> resources,
-        SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings settings, boolean includeConstant)
+        SpecularFitProgramFactory<ContextType> programFactory, TextureResolution settings, boolean includeConstant)
         throws FileNotFoundException
     {
         this.context = resources.getContext();
         this.estimationProgram = includeConstant ? createDiffuseTranslucentEstimationProgram(resources, programFactory)
             : createDiffuseEstimationProgram(resources, programFactory);
-        this.textureFitSettings = settings;
+        this.textureResolution = settings;
         this.includeConstant = includeConstant;
 
         framebuffer = createFramebuffer(context, settings, includeConstant);
@@ -59,7 +59,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
     }
 
     private static <ContextType extends Context<ContextType>> FramebufferObject<ContextType> createFramebuffer(
-        ContextType context, TextureFitSettings texSettings, boolean includeConstant)
+        ContextType context, TextureResolution texSettings, boolean includeConstant)
     {
         FramebufferObjectBuilder<ContextType> builder = context
             .buildFramebufferObject(texSettings.width, texSettings.height)
@@ -84,7 +84,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
 
         // Second framebuffer for filling holes (used to double-buffer the first framebuffer)
         // Placed outside of try-with-resources since it might end up being the primary framebuffer after filling holes.
-        FramebufferObject<ContextType> framebuffer2 = createFramebuffer(context, textureFitSettings, includeConstant);
+        FramebufferObject<ContextType> framebuffer2 = createFramebuffer(context, textureResolution, includeConstant);
 
         // Will reference the framebuffer that is in front after hole filling if everything is successful.
         FramebufferObject<ContextType> finalDiffuse = null;

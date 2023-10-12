@@ -12,9 +12,8 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.export.specular.SpecularFitTextureRescaler;
-import kintsugi3d.builder.export.specular.WeightImageCreator;
 import kintsugi3d.builder.fit.debug.BasisImageCreator;
 import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
 import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromExistingBasis;
@@ -123,7 +122,7 @@ public class SpecularFitProcess
         // Create space for the solution.
         // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.
         SpecularFitFinal<ContextType> fullResolution = SpecularFitFinal.createEmpty(original,
-            settings.getTextureFitSettings(), settings.getSpecularBasisSettings(), settings.shouldIncludeConstantTerm());
+            settings.getTextureResolution(), settings.getSpecularBasisSettings(), settings.shouldIncludeConstantTerm());
 
         try (IBRResourcesTextureSpace<ContextType> sampled = cache.createSampledResources())
         {
@@ -132,7 +131,7 @@ public class SpecularFitProcess
             // (should be the case already from generating the cache, but good to do just in case)
             context.getState().disableBackFaceCulling();
 
-            TextureFitSettings sampledSettings = sampled.getTextureFitSettings();
+            TextureResolution sampledSettings = sampled.getTextureResolution();
             SpecularDecompositionFromScratch sampledDecomposition = new SpecularDecompositionFromScratch(sampledSettings, settings.getSpecularBasisSettings());
 
             // Initialize weights using K-means.
@@ -189,6 +188,9 @@ public class SpecularFitProcess
                 optimizeBlocks(fullResolution, cache, sampledDecomposition, inputNormalMap);
             }
 
+            // Generate albedo / ORM maps at full resolution (does not require loaded source images)
+            fullResolution.getAlbedoORMOptimization().execute(fullResolution, settings.getGamma());
+
             Duration duration = Duration.between(start, Instant.now());
             log.info("Total processing time: " + duration);
 
@@ -206,37 +208,7 @@ public class SpecularFitProcess
 
             if (settings.getOutputDirectory() != null)
             {
-                // Save the final diffuse and normal maps
-                fullResolution.saveDiffuseMap(settings.getOutputDirectory());
-                fullResolution.saveNormalMap(settings.getOutputDirectory());
-
-                if (settings.shouldIncludeConstantTerm())
-                {
-                    fullResolution.saveConstantMap(settings.getOutputDirectory());
-//                fullResolution.saveQuadraticMap(settings.getOutputDirectory());
-                }
-
-                // Save the packed weight maps for opening in viewer
-                if (settings.getExportSettings().isCombineWeights())
-                {
-                    try (WeightImageCreator<ContextType> weightImageCreator = new WeightImageCreator<>(cache.getContext(), settings.getTextureFitSettings(), 4))
-                    {
-                        weightImageCreator.createImages(fullResolution, settings.getOutputDirectory());
-                    }
-                }
-
-                // Save the unpacked weight maps for reloading the project in the future
-                try (WeightImageCreator<ContextType> weightImageCreator = new WeightImageCreator<>(cache.getContext(), settings.getTextureFitSettings(), 1))
-                {
-                    weightImageCreator.createImages(fullResolution, settings.getOutputDirectory());
-                }
-
-                // Save the final specular albedo and roughness maps
-                fullResolution.getRoughnessOptimization().saveTextures(settings.getOutputDirectory());
-
-                // Generate albedo / ORM maps at full resolution (does not require loaded source images)
-                fullResolution.getAlbedoORMOptimization().execute(fullResolution, settings.getGamma());
-                fullResolution.getAlbedoORMOptimization().saveTextures(settings.getOutputDirectory());
+                fullResolution.saveAll(settings.getOutputDirectory());
             }
 
             return fullResolution;
@@ -290,7 +262,7 @@ public class SpecularFitProcess
 
                     try (IBRResourcesTextureSpace<ContextType> blockResources = blockResourceFactory.createBlockResources(i, j))
                     {
-                        TextureFitSettings blockSettings = blockResources.getTextureFitSettings();
+                        TextureResolution blockSettings = blockResources.getTextureResolution();
                         try (SpecularFitOptimizable<ContextType> blockOptimization = SpecularFitOptimizable.createNew(
                             blockResources, programFactory, blockSettings, settings.getGamma(), settings.getSpecularBasisSettings(),
                             settings.getNormalOptimizationSettings(), settings.shouldIncludeConstantTerm()))
@@ -345,7 +317,7 @@ public class SpecularFitProcess
         SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
 
         // Create new texture fit settings with a resolution that matches the IBRResources, but the same gamma as specified by the user.
-        TextureFitSettings texFitSettings = resources.getTextureFitSettings();
+        TextureResolution texFitSettings = resources.getTextureResolution();
 
         try
         (
@@ -388,7 +360,7 @@ public class SpecularFitProcess
 //
 //        // Generate albedo / ORM maps
 //        try(AlbedoORMOptimization<ContextType> albedoORM = /* TODO: load occlusion map from Metashape project if this function continues to be needed */
-//                AlbedoORMOptimization.createWithoutOcclusion(context, settings.getTextureFitSettings()))
+//                AlbedoORMOptimization.createWithoutOcclusion(context, settings.getTextureResolution()))
 //        {
 //            albedoORM.execute(solution, settings.getGamma());
 //            albedoORM.saveTextures(settings.getOutputDirectory());

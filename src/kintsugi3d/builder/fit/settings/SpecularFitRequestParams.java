@@ -14,13 +14,13 @@ package kintsugi3d.builder.fit.settings;
 
 import java.io.File;
 
-import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.resources.ibr.ImageCacheSettings;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 
 public class SpecularFitRequestParams
 {
-    private final TextureFitSettings textureFitSettings;
+    private final TextureResolution textureResolution;
     private final ReadonlySettingsModel ibrSettings;
     private final NormalOptimizationSettings normalOptimizationSettings = new NormalOptimizationSettings();
     private final SpecularBasisSettings specularBasisSettings = new SpecularBasisSettings();
@@ -41,17 +41,17 @@ public class SpecularFitRequestParams
 
     /**
      * Constructs an object to hold the settings for specular texture fitting.
-     * @param textureFitSettings General settings for texture fitting (resolution, output directory)
+     * @param textureResolution General settings for texture fitting (resolution, output directory)
      */
-    public SpecularFitRequestParams(TextureFitSettings textureFitSettings, ReadonlySettingsModel ibrSettings)
+    public SpecularFitRequestParams(TextureResolution textureResolution, ReadonlySettingsModel ibrSettings)
     {
-        if (textureFitSettings == null)
+        if (textureResolution == null)
         {
             throw new IllegalArgumentException("Texture fit settings cannot be null.");
         }
         else
         {
-            this.textureFitSettings = textureFitSettings;
+            this.textureResolution = textureResolution;
         }
 
         if (ibrSettings == null)
@@ -64,9 +64,9 @@ public class SpecularFitRequestParams
         }
     }
 
-    public TextureFitSettings getTextureFitSettings()
+    public TextureResolution getTextureResolution()
     {
-        return textureFitSettings;
+        return textureResolution;
     }
 
     public ReadonlySettingsModel getIbrSettings()

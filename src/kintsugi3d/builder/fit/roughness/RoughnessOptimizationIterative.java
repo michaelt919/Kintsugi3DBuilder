@@ -12,7 +12,7 @@
 
 package kintsugi3d.builder.fit.roughness;
 
-import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -36,7 +36,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
         extends RoughnessOptimizationBase<ContextType>
 {
     private static final Logger log = LoggerFactory.getLogger(RoughnessOptimizationIterative.class);
-    private final TextureFitSettings settings;
+    private final TextureResolution settings;
 
     private final ShaderBasedOptimization<ContextType> roughnessOptimization;
 //    private Program<ContextType> errorCalcProgram;
@@ -50,7 +50,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
      * @throws FileNotFoundException
      */
     public RoughnessOptimizationIterative(BasisResources<ContextType> basisResources,
-        BasisWeightResources<ContextType> basisWeightResources, TextureFitSettings settings,
+        BasisWeightResources<ContextType> basisWeightResources, TextureResolution settings,
         Supplier<Texture2D<ContextType>> getDiffuseTexture, double convergenceTolerance, int unsuccessfulLMIterationsAllowed)
             throws FileNotFoundException
     {

@@ -12,7 +12,7 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-public interface SpecularBasis
+public interface SpecularBasis // TODO: avoid use of anonymous classes, add copy() method to improve robustness
 {
     /**
      * Evaluates a red basis function

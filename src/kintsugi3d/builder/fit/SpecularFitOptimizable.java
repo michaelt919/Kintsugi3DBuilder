@@ -12,7 +12,7 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.debug.BasisImageCreator;
 import kintsugi3d.builder.fit.decomposition.*;
 import kintsugi3d.builder.fit.finalize.FinalDiffuseOptimization;
@@ -49,7 +49,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     private final ContextType context;
 
     private final ReadonlyIBRResources<ContextType> resources;
-    private final TextureFitSettings textureFitSettings;
+    private final TextureResolution textureResolution;
     private final float gamma;
 
     private final SpecularBasisSettings specularBasisSettings;
@@ -63,27 +63,27 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     private SpecularFitOptimizable(
         ReadonlyIBRResources<ContextType> resources, BasisResources<ContextType> basisResources, boolean basisResourcesOwned,
         SpecularBasisSettings specularBasisSettings, SpecularFitProgramFactory<ContextType> programFactory,
-        TextureFitSettings textureFitSettings, float gamma,
+        TextureResolution textureResolution, float gamma,
         NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
         throws FileNotFoundException
     {
-        super(basisResources, basisResourcesOwned, textureFitSettings);
+        super(basisResources, basisResourcesOwned, textureResolution);
         this.context = resources.getContext();
         this.resources = resources;
-        this.textureFitSettings = textureFitSettings;
+        this.textureResolution = textureResolution;
         this.gamma = gamma;
         this.specularBasisSettings = specularBasisSettings;
         this.setupShaderProgram = program -> programFactory.setupShaderProgram(resources, program);
 
         // Final diffuse estimation
-        diffuseOptimization = new FinalDiffuseOptimization<>(resources, programFactory, textureFitSettings, includeConstantTerm);
+        diffuseOptimization = new FinalDiffuseOptimization<>(resources, programFactory, textureResolution, includeConstantTerm);
 
         // Normal optimization module that manages its own resources
         normalOptimization = new NormalOptimization<>(
             resources,
             programFactory,
             estimationProgram -> getNormalDrawable(estimationProgram, programFactory),
-            textureFitSettings, normalOptimizationSettings);
+            textureResolution, normalOptimizationSettings);
     }
 
     private Drawable<ContextType> getNormalDrawable(Program<ContextType> estimationProgram,
@@ -97,13 +97,13 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     }
 
     public static <ContextType extends Context<ContextType>> SpecularFitOptimizable<ContextType> createNew(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory, TextureFitSettings textureFitSettings,
+        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory, TextureResolution textureResolution,
         float gamma, SpecularBasisSettings specularBasisSettings, NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
         throws FileNotFoundException
     {
         return new SpecularFitOptimizable<>(resources,
             new BasisResources<>(resources.getContext(), specularBasisSettings.getBasisCount(), specularBasisSettings.getBasisResolution()),
-                true, specularBasisSettings, programFactory, textureFitSettings, gamma, normalOptimizationSettings, includeConstantTerm);
+                true, specularBasisSettings, programFactory, textureResolution, gamma, normalOptimizationSettings, includeConstantTerm);
     }
 
     public ReadonlyIBRResources<ContextType> getResources()
@@ -111,9 +111,9 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         return resources;
     }
 
-    public TextureFitSettings getTextureFitSettings()
+    public TextureResolution getTextureResolution()
     {
-        return textureFitSettings;
+        return textureResolution;
     }
 
     public SpecularBasisSettings getSpecularBasisSettings()
@@ -143,7 +143,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         prepareForOptimization(reflectanceStream);
 
         // Track how the error improves over iterations of the whole algorithm.
-        SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(textureFitSettings, specularBasisSettings);
+        SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(textureResolution, specularBasisSettings);
 
         // Run once just in case
         getBasisResources().updateFromSolution(specularDecomposition);
@@ -167,7 +167,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         prepareForOptimization(reflectanceStream);
 
         // Track how the error improves over iterations of the whole algorithm.
-        SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(textureFitSettings, specularBasisSettings);
+        SpecularWeightOptimization weightOptimization = new SpecularWeightOptimization(textureResolution, specularBasisSettings);
 
         // Instantiate once so that the memory buffers can be reused.
         GraphicsStream<ColorList[]> reflectanceStreamParallel = reflectanceStream.parallel();
@@ -298,7 +298,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         int weightBlockSize = weightOptimization.getWeightBlockSize();
 
         // Make sure there are enough blocks for any pixels that don't go into the weight blocks evenly.
-        int blockCount = (textureFitSettings.width * textureFitSettings.height + weightBlockSize - 1) / weightBlockSize;
+        int blockCount = (textureResolution.width * textureResolution.height + weightBlockSize - 1) / weightBlockSize;
 
         // Initially assume that all texels are invalid.
         specularDecomposition.invalidateWeights();

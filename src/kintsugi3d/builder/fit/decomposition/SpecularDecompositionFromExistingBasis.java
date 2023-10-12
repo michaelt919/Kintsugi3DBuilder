@@ -13,72 +13,41 @@
 package kintsugi3d.builder.fit.decomposition;
 
 import java.io.File;
+import java.util.List;
 
-import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 
 public class SpecularDecompositionFromExistingBasis extends SpecularDecompositionBase
 {
-    private final SpecularDecomposition existingBasis;
+    private final List<DoubleVector3> diffuseAlbedos;
+    private final SpecularBasis specularBasis;
+    private final SpecularBasisSettings settings;
 
-    public SpecularDecompositionFromExistingBasis(TextureFitSettings textureFitSettings, SpecularDecomposition existingBasis)
+    public SpecularDecompositionFromExistingBasis(TextureResolution textureResolution, SpecularDecomposition existingDecomposition)
     {
-        super(textureFitSettings, existingBasis.getSpecularBasisSettings().getBasisCount());
-        this.existingBasis = existingBasis;
+        super(textureResolution, existingDecomposition.getSpecularBasis().getCount());
+        this.diffuseAlbedos = existingDecomposition.getDiffuseAlbedos();
+        this.specularBasis = existingDecomposition.getSpecularBasis();
+        this.settings = existingDecomposition.getSpecularBasisSettings();
     }
 
     @Override
-    public double evaluateRed(int b, int m)
+    public List<DoubleVector3> getDiffuseAlbedos()
     {
-        return existingBasis.evaluateRed(b, m);
+        return diffuseAlbedos;
     }
 
     @Override
-    public double evaluateGreen(int b, int m)
+    public SpecularBasis getSpecularBasis()
     {
-        return existingBasis.evaluateGreen(b, m);
-    }
-
-    @Override
-    public double evaluateBlue(int b, int m)
-    {
-        return existingBasis.evaluateBlue(b, m);
-    }
-
-    @Override
-    public int getCount()
-    {
-        return existingBasis.getCount();
-    }
-
-    @Override
-    public int getResolution()
-    {
-        return existingBasis.getResolution();
-    }
-
-    @Override
-    public DoubleVector3 getDiffuseAlbedo(int basisIndex)
-    {
-        return existingBasis.getDiffuseAlbedo(basisIndex);
-    }
-
-    @Override
-    public void saveBasisFunctions(File outputDirectory)
-    {
-        existingBasis.saveBasisFunctions(outputDirectory);
-    }
-
-    @Override
-    public void saveDiffuseMap(double gamma, File outputDirectory)
-    {
-        existingBasis.saveDiffuseMap(gamma, outputDirectory);
+        return specularBasis;
     }
 
     @Override
     public SpecularBasisSettings getSpecularBasisSettings()
     {
-        return existingBasis.getSpecularBasisSettings();
+        return settings;
     }
 }

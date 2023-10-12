@@ -12,43 +12,67 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.export.specular.SpecularFitSerializer;
+import kintsugi3d.gl.vecmath.DoubleVector3;
+import kintsugi3d.gl.vecmath.DoubleVector4;
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
 
 public abstract class SpecularDecompositionBase implements SpecularDecomposition
 {
     private static final Logger log = LoggerFactory.getLogger(SpecularDecompositionBase.class);
     private final SimpleMatrix[] weightsByTexel;
     private final boolean[] weightsValidity;
-    private final TextureFitSettings textureFitSettings;
+    private final TextureResolution textureResolution;
 
-    protected SpecularDecompositionBase(TextureFitSettings textureFitSettings, int basisCount)
+    protected SpecularDecompositionBase(TextureResolution textureResolution, int basisCount)
     {
-        weightsByTexel = IntStream.range(0, textureFitSettings.width * textureFitSettings.height)
+        weightsByTexel = IntStream.range(0, textureResolution.width * textureResolution.height)
             .mapToObj(p -> new SimpleMatrix(basisCount, 1, DMatrixRMaj.class))
             .toArray(SimpleMatrix[]::new);
-        weightsValidity = new boolean[textureFitSettings.width * textureFitSettings.height];
-        this.textureFitSettings = textureFitSettings;
-
+        weightsValidity = new boolean[textureResolution.width * textureResolution.height];
+        this.textureResolution = textureResolution;
     }
 
     @Override
-    public TextureFitSettings getTextureFitSettings()
+    public SpecularBasisWeights getWeights()
     {
-        return textureFitSettings;
+        return new SpecularBasisWeights()
+        {
+            @Override
+            public double getWeight(int b, int p)
+            {
+                return weightsByTexel[p].get(b);
+            }
+
+            @Override
+            public boolean areWeightsValid(int p)
+            {
+                return weightsValidity[p];
+            }
+        };
     }
 
+    @Override
+    public TextureResolution getTextureResolution()
+    {
+        return textureResolution;
+    }
 
     @Override
     public boolean areWeightsValid(int texelIndex)
@@ -100,9 +124,9 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
         // TODO Quick hack; should be replaced with something more robust.
         log.info("Filling holes...");
 
-        int texelCount = textureFitSettings.width * textureFitSettings.height;
+        int texelCount = textureResolution.width * textureResolution.height;
 
-        for (int i = 0; i < Math.max(textureFitSettings.width, textureFitSettings.height); i++)
+        for (int i = 0; i < Math.max(textureResolution.width, textureResolution.height); i++)
         {
             Collection<Integer> filledPositions = new HashSet<>(256);
             for (int p = 0; p < texelCount; p++)
@@ -111,8 +135,8 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
                 {
                     int left = (texelCount + p - 1) % texelCount;
                     int right = (p + 1) % texelCount;
-                    int up = (texelCount + p - textureFitSettings.width) % texelCount;
-                    int down = (p + textureFitSettings.width) % texelCount;
+                    int up = (texelCount + p - textureResolution.width) % texelCount;
+                    int down = (p + textureResolution.width) % texelCount;
 
                     int count = 0;
 
@@ -168,9 +192,59 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
     }
 
     @Override
+    public DoubleVector3 getDiffuseAlbedo(int basisIndex)
+    {
+        return getDiffuseAlbedos().get(basisIndex);
+    }
+
+    @Override
+    public void saveDiffuseMap(double gamma, File outputDirectory)
+    {
+        BufferedImage diffuseImg = new BufferedImage(getTextureResolution().width, getTextureResolution().height, BufferedImage.TYPE_INT_ARGB);
+        int[] diffuseDataPacked = new int[getTextureResolution().width * getTextureResolution().height];
+        for (int p = 0; p < getTextureResolution().width * getTextureResolution().height; p++)
+        {
+            DoubleVector4 diffuseSum = DoubleVector4.ZERO;
+
+            for (int b = 0; b < getSpecularBasis().getCount(); b++)
+            {
+                diffuseSum = diffuseSum.plus(getDiffuseAlbedo(b).asVector4(1.0)
+                    .times(getWeight(b, p)));
+            }
+
+            if (diffuseSum.w > 0)
+            {
+                DoubleVector3 diffuseAvgGamma = diffuseSum.getXYZ().dividedBy(diffuseSum.w).applyOperator(x -> Math.min(1.0, Math.pow(x, 1.0 / gamma)));
+
+                // Flip vertically
+                int dataBufferIndex = p % getTextureResolution().width + getTextureResolution().width * (getTextureResolution().height - p / getTextureResolution().width - 1);
+                diffuseDataPacked[dataBufferIndex] = new Color((float) diffuseAvgGamma.x, (float) diffuseAvgGamma.y, (float) diffuseAvgGamma.z).getRGB();
+            }
+        }
+
+        diffuseImg.setRGB(0, 0, diffuseImg.getWidth(), diffuseImg.getHeight(), diffuseDataPacked, 0, diffuseImg.getWidth());
+
+        try
+        {
+            ImageIO.write(diffuseImg, "PNG", new File(outputDirectory, "diffuse_frombasis.png"));
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred while saving diffuse map:", e);
+        }
+    }
+
+    @Override
+    public void saveBasisFunctions(File outputDirectory)
+    {
+        SpecularFitSerializer.serializeBasisFunctions(getSpecularBasis().getCount(),
+            getSpecularBasisSettings().getBasisResolution(), getSpecularBasis(), outputDirectory);
+    }
+
+    @Override
     public void saveWeightMaps(File outputDirectory)
     {
         SpecularFitSerializer.saveWeightImages(
-            getSpecularBasisSettings().getBasisCount(), textureFitSettings.width, textureFitSettings.height, this, outputDirectory);
+            getSpecularBasisSettings().getBasisCount(), textureResolution.width, textureResolution.height, getWeights(), outputDirectory);
     }
 }

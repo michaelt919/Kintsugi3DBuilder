@@ -368,6 +368,7 @@ public final class ProjectLoadState
                 if (projectFile.getName().endsWith(".vset"))
                 {
                     loadingModel.getLoadedViewSet().setRootDirectory(projectFile.getParentFile());
+                    loadingModel.getLoadedViewSet().setSupportingFilesDirectory(ViewSet.getDefaultSupportingFilesDirectory(projectFile));
                     loadingModel.saveToVSETFile(projectFile);
                     this.vsetFile = projectFile;
                     this.projectFile = null;
@@ -377,9 +378,11 @@ public final class ProjectLoadState
                     File filesDirectory = ViewSet.getDefaultSupportingFilesDirectory(projectFile);
                     filesDirectory.mkdirs();
                     loadingModel.getLoadedViewSet().setRootDirectory(filesDirectory);
+                    loadingModel.getLoadedViewSet().setSupportingFilesDirectory(filesDirectory);
                     this.vsetFile = new File(filesDirectory, projectFile.getName() + ".vset");
                     loadingModel.saveToVSETFile(vsetFile);
                     InternalModels.getInstance().getProjectModel().saveProjectFile(projectFile, vsetFile);
+                    // TODO save textures
                 }
 
                 //TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY

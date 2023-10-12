@@ -16,7 +16,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
@@ -31,7 +31,7 @@ public class RoughnessOptimizationSimple<ContextType extends Context<ContextType
     private final FramebufferObject<ContextType> specularTexFramebuffer;
 
     public RoughnessOptimizationSimple(BasisResources<ContextType> basisResources,
-        BasisWeightResources<ContextType> weightResources, TextureFitSettings settings)
+        BasisWeightResources<ContextType> weightResources, TextureResolution settings)
         throws FileNotFoundException
     {
         super(basisResources);

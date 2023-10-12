@@ -17,7 +17,7 @@ import java.util.Collections;
 import kintsugi3d.builder.fit.ReflectanceData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.builder.resources.ibr.stream.GraphicsStream;
 import kintsugi3d.optimization.NonNegativeWeightOptimization;
@@ -26,25 +26,25 @@ public class SpecularWeightOptimization
 {
     private static final Logger log = LoggerFactory.getLogger(SpecularWeightOptimization.class);
     private final NonNegativeWeightOptimization base;
-    private final TextureFitSettings textureFitSettings;
+    private final TextureResolution textureResolution;
     private final SpecularBasisSettings specularBasisSettings;
 
     private final int weightBlockSize;
 
-    public SpecularWeightOptimization(TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings,
+    public SpecularWeightOptimization(TextureResolution textureResolution, SpecularBasisSettings specularBasisSettings,
           int weightBlockSize)
     {
-        this.textureFitSettings = textureFitSettings;
+        this.textureResolution = textureResolution;
         this.specularBasisSettings = specularBasisSettings;
         this.weightBlockSize = weightBlockSize;
         base = new NonNegativeWeightOptimization(weightBlockSize, this.specularBasisSettings.getBasisCount(),
             Collections.singletonList(b -> 1.0), Collections.singletonList(1.0)); // Equality constraint to ensure that the weights sum up to 1.0.
     }
 
-    public SpecularWeightOptimization(TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings)
+    public SpecularWeightOptimization(TextureResolution textureResolution, SpecularBasisSettings specularBasisSettings)
     {
         // Default weight block size (only one weight block)
-        this(textureFitSettings, specularBasisSettings, textureFitSettings.width * textureFitSettings.height);
+        this(textureResolution, specularBasisSettings, textureResolution.width * textureResolution.height);
     }
 
     public int getWeightBlockSize()
@@ -60,7 +60,7 @@ public class SpecularWeightOptimization
         base.buildMatrices(viewStream, new SpecularWeightModel(solution, this.specularBasisSettings),
             // If a pixel is valid in some view, mark it as such in the solution.
             p -> solution.setWeightsValidity(p, true),
-            pStart, Math.min(pStart + weightBlockSize, textureFitSettings.width * textureFitSettings.height));
+            pStart, Math.min(pStart + weightBlockSize, textureResolution.width * textureResolution.height));
 
         // Dampen so that it doesn't "snap" to the optimal solution right away.
         // TODO expose the damping factor as a setting.
@@ -69,7 +69,7 @@ public class SpecularWeightOptimization
         log.info("Finished building matrices; solving now...");
 
         // Optimize the weights and store the result in the SpecularDecomposition.
-        if (pStart + weightBlockSize > textureFitSettings.width * textureFitSettings.height)
+        if (pStart + weightBlockSize > textureResolution.width * textureResolution.height)
         {
             base.optimizeWeights(p -> solution.areWeightsValid(pStart + p),
                 (p, weights) ->
@@ -79,7 +79,7 @@ public class SpecularWeightOptimization
 //                        weights.extractMatrix(0, weights.numRows() - 1, 0, 1).scale(0.5)
 //                            .plus(solution.getWeights(pStart + p).scale(0.5)));
                 },
-                NonNegativeWeightOptimization.DEFAULT_TOLERANCE_SCALE, textureFitSettings.width * textureFitSettings.height - pStart);
+                NonNegativeWeightOptimization.DEFAULT_TOLERANCE_SCALE, textureResolution.width * textureResolution.height - pStart);
         }
         else
         {

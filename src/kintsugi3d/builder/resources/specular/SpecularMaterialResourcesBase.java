@@ -12,14 +12,24 @@
 
 package kintsugi3d.builder.resources.specular;
 
+import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.export.specular.WeightImageCreator;
+import kintsugi3d.builder.fit.SpecularFitBase;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
 import kintsugi3d.gl.core.SamplerType;
 import kintsugi3d.gl.core.Texture;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
 
 public abstract class SpecularMaterialResourcesBase<ContextType extends Context<ContextType>>
     implements SpecularMaterialResources<ContextType>
 {
+    private static final Logger log = LoggerFactory.getLogger(SpecularMaterialResourcesBase.class);
+
     private static <ContextType extends Context<ContextType>> void useTextureSafe(
         Program<ContextType> program, String textureName, Texture<ContextType> texture)
     {
@@ -54,5 +64,188 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         {
             this.getBasisWeightResources().useWithShaderProgram(program);
         }
+    }
+
+    public void saveDiffuseMap(File outputDirectory)
+    {
+        try
+        {
+            if (getDiffuseMap() != null)
+            {
+                getDiffuseMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "diffuse.png"));
+            }
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred saving diffuse map.", e);
+        }
+    }
+
+    public void saveNormalMap(File outputDirectory)
+    {
+        try
+        {
+            if (getNormalMap() != null)
+            {
+                getNormalMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "normal.png"));
+            }
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred saving normal map.", e);
+        }
+    }
+
+    public void saveSpecularReflectivityMap(File outputDirectory)
+    {
+        try
+        {
+            if (getSpecularReflectivityMap() != null)
+            {
+                getSpecularReflectivityMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "specular.png"));
+            }
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred saving specular reflectivity map.", e);
+        }
+    }
+
+    public void saveSpecularRoughnessMap(File outputDirectory)
+    {
+        try
+        {
+            if (getSpecularRoughnessMap() != null)
+            {
+                getSpecularRoughnessMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "roughness.png"));
+            }
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred saving specular roughness map.", e);
+        }
+    }
+
+    public void saveConstantMap(File outputDirectory)
+    {
+        try
+        {
+            if (getConstantMap() != null)
+            {
+                getConstantMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "constant.png"));
+            }
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred saving constant map.", e);
+        }
+    }
+
+//    public void saveQuadraticMap(File outputDirectory)
+//    {
+//        try
+//        {
+//            if (getQuadraticMap() != null)
+//            {
+//                getQuadraticMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "quadratic.png"));
+//            }
+//        }
+//        catch (IOException e)
+//        {
+//            log.error("An error occurred saving quadratic map:", e);
+//        }
+//    }
+
+    public void saveOcclusionMap(File outputDirectory)
+    {
+        try
+        {
+            if (getOcclusionMap() != null)
+            {
+                getOcclusionMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "occlusion.png"));
+            }
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred saving constant map.", e);
+        }
+    }
+
+    public void saveAlbedoMap(File outputDirectory)
+    {
+        try
+        {
+            if (getAlbedoMap() != null)
+            {
+                getAlbedoMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "albedo.png"));
+            }
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred saving albedo map.", e);
+        }
+    }
+
+    public void saveORMMap(File outputDirectory)
+    {
+        try
+        {
+            if (getORMMap() != null)
+            {
+                getORMMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "orm.png"));
+            }
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred saving ORM map.", e);
+        }
+    }
+
+    public void savePackedWeightMaps(File outputDirectory) throws IOException
+    {
+        // Save the packed weight maps for opening in viewer
+        try (WeightImageCreator<ContextType> weightImageCreator =
+             new WeightImageCreator<>(getContext(), TextureResolution.of(getBasisWeightResources().weightMaps), 4))
+        {
+            weightImageCreator.createImages(this, outputDirectory);
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred saving packed weight maps.", e);
+        }
+    }
+
+    public void saveUnpackedWeightMaps(File outputDirectory) throws IOException
+    {
+        // Save the unpacked weight maps for reloading the project in the future
+        try (WeightImageCreator<ContextType> weightImageCreator =
+             new WeightImageCreator<>(getContext(), TextureResolution.of(getBasisWeightResources().weightMaps), 1))
+        {
+            weightImageCreator.createImages(this, outputDirectory);
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred saving unpacked weight maps.", e);
+        }
+    }
+
+    /**
+     * Saves all resources to the specified output directory
+     * @param outputDirectory
+     */
+    public void saveAll(File outputDirectory) throws IOException
+    {
+        saveDiffuseMap(outputDirectory);
+        saveNormalMap(outputDirectory);
+        saveConstantMap(outputDirectory);
+        saveOcclusionMap(outputDirectory);
+        saveAlbedoMap(outputDirectory);
+        saveORMMap(outputDirectory);
+        saveSpecularReflectivityMap(outputDirectory);
+        saveSpecularRoughnessMap(outputDirectory);
+        savePackedWeightMaps(outputDirectory);
+        saveUnpackedWeightMaps(outputDirectory);
+
+        // TODO: Save basis functions
     }
 }

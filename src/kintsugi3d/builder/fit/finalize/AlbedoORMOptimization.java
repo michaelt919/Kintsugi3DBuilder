@@ -12,7 +12,7 @@
 
 package kintsugi3d.builder.fit.finalize;
 
-import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.core.*;
@@ -38,20 +38,20 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
     private final Texture2D<ContextType> occlusionMap;
 
     public static <ContextType extends Context<ContextType>> AlbedoORMOptimization<ContextType> createWithOcclusion(
-        Texture2D<ContextType> occlusionMap, TextureFitSettings settings)
+        Texture2D<ContextType> occlusionMap, TextureResolution settings)
         throws FileNotFoundException
     {
         return new AlbedoORMOptimization<>(occlusionMap.getContext(), occlusionMap, settings);
     }
 
     public static <ContextType extends Context<ContextType>> AlbedoORMOptimization<ContextType> createWithoutOcclusion(
-        ContextType context, TextureFitSettings settings)
+        ContextType context, TextureResolution resolution)
         throws FileNotFoundException
     {
-        return new AlbedoORMOptimization<>(context, null, settings);
+        return new AlbedoORMOptimization<>(context, null, resolution);
     }
 
-    private AlbedoORMOptimization(ContextType context, Texture2D<ContextType> occlusionMap, TextureFitSettings settings)
+    private AlbedoORMOptimization(ContextType context, Texture2D<ContextType> occlusionMap, TextureResolution settings)
         throws FileNotFoundException
     {
         this.occlusionMap = occlusionMap;

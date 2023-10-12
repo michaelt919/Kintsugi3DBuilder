@@ -12,7 +12,7 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimization;
@@ -31,8 +31,6 @@ import java.io.IOException;
 public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
     extends SpecularMaterialResourcesBase<ContextType>
 {
-    private static final Logger log = LoggerFactory.getLogger(SpecularFitBase.class);
-
     private final ContextType context;
     private final BasisResources<ContextType> basisResources;
     private final BasisWeightResources<ContextType> basisWeightResources;
@@ -45,11 +43,11 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
      * @param basisResources
      * @param basisResourcesOwned If false, basis resources will not be managed / owned by this instance and will never be destroyed by this instance.
      *                            Basis weight resources, however, will always be managed / owned and destroyed when this instance is closed.
-     * @param textureFitSettings
+     * @param textureResolution
      * @throws FileNotFoundException
      */
     protected SpecularFitBase(BasisResources<ContextType> basisResources, boolean basisResourcesOwned,
-        TextureFitSettings textureFitSettings) throws FileNotFoundException
+        TextureResolution textureResolution) throws FileNotFoundException
     {
         this.context = basisResources.getContext();
 
@@ -57,11 +55,11 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
         this.basisResources = basisResources;
         this.basisResourcesOwned = basisResourcesOwned;
         this.basisWeightResources = new BasisWeightResources<>(basisResources.getContext(),
-            textureFitSettings.width, textureFitSettings.height, basisResources.getBasisCount());
+            textureResolution.width, textureResolution.height, basisResources.getBasisCount());
 
         // Specular roughness / reflectivity module that manages its own resources
         this.roughnessOptimization =
-            new RoughnessOptimizationSimple<>(basisResources, basisWeightResources, textureFitSettings);
+            new RoughnessOptimizationSimple<>(basisResources, basisWeightResources, textureResolution);
         //new RoughnessOptimizationIterative<>(context, basisResources, this::getDiffuseMap, settings);
         this.roughnessOptimization.clear();
     }
@@ -69,15 +67,15 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
     /**
      * Basis resources and basis weight resources will be managed / owned by this instance
      * @param context
-     * @param textureFitSettings
+     * @param textureResolution
      * @param specularBasisSettings
      * @throws FileNotFoundException
      */
-    protected SpecularFitBase(ContextType context, TextureFitSettings textureFitSettings,
+    protected SpecularFitBase(ContextType context, TextureResolution textureResolution,
         SpecularBasisSettings specularBasisSettings) throws FileNotFoundException
     {
         this(new BasisResources<>(context, specularBasisSettings.getBasisCount(), specularBasisSettings.getBasisResolution()),
-            true, textureFitSettings);
+            true, textureResolution);
     }
 
     /**
@@ -190,51 +188,4 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
         return roughnessOptimization;
     }
 
-    public void saveDiffuseMap(File outputDirectory)
-    {
-        try
-        {
-            getDiffuseMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "diffuse.png"));
-        }
-        catch (IOException e)
-        {
-            log.error("An error occurred saving diffuse map:", e);
-        }
-    }
-
-    public void saveNormalMap(File outputDirectory)
-    {
-        try
-        {
-            getNormalMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "normal.png"));
-        }
-        catch (IOException e)
-        {
-            log.error("An error occurred saving normal map:", e);
-        }
-    }
-
-    public void saveConstantMap(File outputDirectory)
-    {
-        try
-        {
-            getConstantMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "constant.png"));
-        }
-        catch (IOException e)
-        {
-            log.error("An error occurred saving diffuse map:", e);
-        }
-    }
-
-//    public void saveQuadraticMap(File outputDirectory)
-//    {
-//        try
-//        {
-//            getQuadraticMap().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, "quadratic.png"));
-//        }
-//        catch (IOException e)
-//        {
-//            log.error("An error occurred saving diffuse map:", e);
-//        }
-//    }
 }

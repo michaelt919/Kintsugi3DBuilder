@@ -12,7 +12,7 @@
 
 package kintsugi3d.builder.fit.normal;
 
-import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.fit.settings.NormalOptimizationSettings;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
@@ -42,14 +42,14 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         ReadonlyIBRResources<ContextType> resources,
         SpecularFitProgramFactory<ContextType> programFactory,
         Function<Program<ContextType>, Drawable<ContextType>> drawableFactory,
-        TextureFitSettings textureFitSettings, NormalOptimizationSettings normalOptimizationSettings)
+        TextureResolution textureResolution, NormalOptimizationSettings normalOptimizationSettings)
         throws FileNotFoundException
     {
         this.normalOptimizationSettings = normalOptimizationSettings;
 
         estimateNormals = new ShaderBasedOptimization<>(
             getNormalEstimationProgramBuilder(resources, programFactory),
-            resources.getContext().buildFramebufferObject(textureFitSettings.width, textureFitSettings.height)
+            resources.getContext().buildFramebufferObject(textureResolution.width, textureResolution.height)
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F)
                     .setLinearFilteringEnabled(true))
                 .addColorAttachment(ColorFormat.R32F), // Damping factor while fitting,
@@ -60,7 +60,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
 
         smoothNormals = new ShaderBasedOptimization<>(
             getNormalSmoothProgramBuilder(resources, programFactory),
-            resources.getContext().buildFramebufferObject(textureFitSettings.width, textureFitSettings.height)
+            resources.getContext().buildFramebufferObject(textureResolution.width, textureResolution.height)
                 .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB32F)
                     .setLinearFilteringEnabled(true)),
             drawableFactory);

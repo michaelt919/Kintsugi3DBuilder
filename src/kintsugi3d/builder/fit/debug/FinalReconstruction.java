@@ -14,7 +14,7 @@ package kintsugi3d.builder.fit.debug;
 
 import kintsugi3d.builder.core.Projection;
 import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.settings.ReconstructionSettings;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
@@ -40,7 +40,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
     private final int imageWidth;
     private final int imageHeight;
 
-    public FinalReconstruction(ReadonlyIBRResources<ContextType> resources, TextureFitSettings textureFitSettings, ReconstructionSettings reconstructionSettings)
+    public FinalReconstruction(ReadonlyIBRResources<ContextType> resources, TextureResolution textureResolution, ReconstructionSettings reconstructionSettings)
     {
         this.resources = resources;
         this.reconstructionSettings = reconstructionSettings;
@@ -50,12 +50,12 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
             resources.getViewSet().getPrimaryViewIndex()));
         if (defaultProj.getAspectRatio() < 1.0)
         {
-            imageWidth = textureFitSettings.width;
+            imageWidth = textureResolution.width;
             imageHeight = Math.round(imageWidth / defaultProj.getAspectRatio());
         }
         else
         {
-            imageHeight = textureFitSettings.height;
+            imageHeight = textureResolution.height;
             imageWidth = Math.round(imageHeight * defaultProj.getAspectRatio());
         }
     }

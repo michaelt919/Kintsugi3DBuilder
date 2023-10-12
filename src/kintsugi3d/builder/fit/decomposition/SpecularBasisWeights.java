@@ -12,7 +12,7 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-public interface SpecularBasisWeights
+public interface SpecularBasisWeights // TODO: avoid use of anonymous classes, add copy() method to improve robustness
 {
     /**
      * Gets the weight for a basis function at a particular sample p.

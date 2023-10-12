@@ -50,7 +50,7 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
             Kintsugi3DBuilderState modelAccess, String... args)
     {
         SpecularFitRequestParams params = new SpecularFitRequestParams(
-            new TextureFitSettings(2048, 2048),
+            new TextureResolution(2048, 2048),
             modelAccess.getSettingsModel());
         params.setGamma(modelAccess.getSettingsModel().getFloat("gamma"));
         params.setOutputDirectory(new File(args[2]));
@@ -61,52 +61,6 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
     {
         this.settings = settings;
     }
-
-//    /**
-//     * This version loads a prior solution from file and thus doesn't require IBR resources to be loaded.
-//     * @param context The graphics context to be used.
-//     * @param callback A callback that can be fired to update the loading bar.
-//     *                 If this is unused, an "infinite loading" indicator will be displayed instead.
-//     */
-//    @Override
-//    public <ContextType extends Context<ContextType>> void executeRequest(ContextType context, LoadingMonitor callback)
-//    {
-//        try
-//        {
-//            // Perform the specular fit using prior basis solution.
-//            SpecularMaterialResources<ContextType> specularFit;
-//
-//            // Assume fitting from prior solution
-//            log.info("No Kintsugi 3D Builder project loaded; loading prior solution");
-//            specularFit = new SpecularFitProcess(settings).loadPriorSolution(context, settings.getPriorSolutionDirectory());
-//
-//            // Load just geometry, tonemapping, settings.
-//            SimpleLoadOptionsModel loadOptions = new SimpleLoadOptionsModel();
-//            loadOptions.requestColorImages(false);
-//            loadOptions.requestDepthImages(false);
-//
-//            try(IBRResources<ContextType> resources = IBRResourcesImageSpace.getBuilderForContext(context)
-//                .setLoadOptions(loadOptions)
-//                .useExistingViewSet(settings.getReconstructionSettings().getReconstructionViewSet().copy())
-//                .create())
-//            {
-//                if (settings.getExportSettings().isGlTFEnabled())
-//                {
-//                    saveGlTF(resources.getGeometry(), resources.getViewSet(), null);
-//                }
-//
-//                // Reconstruct if requested
-//                performReconstruction(resources, specularFit);
-//
-//                // Close specular fit immediately when this is just an export operation.
-//                specularFit.close();
-//            }
-//        }
-//        catch(IOException e)
-//        {
-//            log.error("Error executing specular fit request:", e);
-//        }
-//    }
 
     /**
      * This version optimizes from scratch and requires IBR resources.
@@ -126,6 +80,9 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
 
             // Perform the specular fit
             new SpecularFitProcess(settings).optimizeFit(renderable.getIBRResources());
+
+            // Perform reconstruction
+            performReconstruction(renderable.getIBRResources(), renderable.getIBRResources().getSpecularMaterialResources());
 
             if (settings.getExportSettings().isGlTFEnabled())
             {
@@ -158,7 +115,7 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
                 SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(
                     settings.getIbrSettings(), settings.getSpecularBasisSettings());
                 FinalReconstruction<ContextType> reconstruction =
-                    new FinalReconstruction<>(resources, settings.getTextureFitSettings(), settings.getReconstructionSettings());
+                    new FinalReconstruction<>(resources, settings.getTextureResolution(), settings.getReconstructionSettings());
 
                 log.info("Reconstructing ground truth images from basis representation:");
                 double reconstructionRMSE =
@@ -235,14 +192,14 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
                 // Deal with LODs if enabled
                 if (settings.getExportSettings().isGenerateLowResTextures())
                 {
-                    exporter.addAllDefaultLods(settings.getTextureFitSettings().height,
+                    exporter.addAllDefaultLods(settings.getTextureResolution().height,
                         settings.getExportSettings().getMinimumTextureResolution());
                     exporter.addWeightImageLods(settings.getSpecularBasisSettings().getBasisCount(),
-                        settings.getTextureFitSettings().height, settings.getExportSettings().getMinimumTextureResolution());
+                        settings.getTextureResolution().height, settings.getExportSettings().getMinimumTextureResolution());
 
                     if (settings.shouldIncludeConstantTerm())
                     {
-                        exporter.addDiffuseConstantLods("constant.png", settings.getTextureFitSettings().height,
+                        exporter.addDiffuseConstantLods("constant.png", settings.getTextureResolution().height,
                                 settings.getExportSettings().getMinimumTextureResolution());
                     }
                 }

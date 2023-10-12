@@ -16,7 +16,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.core.*;
 
@@ -30,7 +30,7 @@ public class WeightImageCreator<ContextType extends Context<ContextType>> implem
     private final Drawable<ContextType> drawable;
     private final FramebufferObject<ContextType> framebuffer;
 
-    public WeightImageCreator(ContextType context, TextureFitSettings settings, int weightsPerImage) throws FileNotFoundException
+    public WeightImageCreator(ContextType context, TextureResolution resolution, int weightsPerImage) throws FileNotFoundException
     {
         this.weightsPerImage = weightsPerImage;
 
@@ -45,7 +45,7 @@ public class WeightImageCreator<ContextType extends Context<ContextType>> implem
         drawable.addVertexBuffer("position", rect);
         drawable.setDefaultPrimitiveMode(PrimitiveMode.TRIANGLE_FAN);
 
-        framebuffer = context.buildFramebufferObject(settings.width, settings.height)
+        framebuffer = context.buildFramebufferObject(resolution.width, resolution.height)
             .addColorAttachment(ColorFormat.RGBA8)
             .createFramebufferObject();
     }

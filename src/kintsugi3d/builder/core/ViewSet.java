@@ -539,11 +539,11 @@ public final class ViewSet implements ReadonlyViewSet
 
     /**
      * Sets the absolute file path of the supporting files (i.e. texture fit results) associated with this view set.
-     * @param relativeSupportingFilesDirectory The file path of the supporting files directory.
+     * @param supportingFilesDirectory The file path of the supporting files directory.
      */
-    public void setSupportingFilesDirectory(File relativeSupportingFilesDirectory)
+    public void setSupportingFilesDirectory(File supportingFilesDirectory)
     {
-        this.supportingFilesDirectory = relativeSupportingFilesDirectory;
+        this.supportingFilesDirectory = supportingFilesDirectory;
     }
 
     /**

@@ -54,7 +54,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
     {
         try (ProgramObject<ContextType> averageProgram = createAverageProgram(programFactory);
              FramebufferObject<ContextType> framebuffer =
-                resources.getContext().buildFramebufferObject(solution.getTextureFitSettings().width, solution.getTextureFitSettings().height)
+                resources.getContext().buildFramebufferObject(solution.getTextureResolution().width, solution.getTextureResolution().height)
                     .addColorAttachment(ColorFormat.RGBA32F)
                     .createFramebufferObject())
         {
@@ -104,8 +104,8 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
 
     public void saveDebugImage(SpecularDecomposition solution, File outputDirectory)
     {
-        int width = solution.getTextureFitSettings().width;
-        int height = solution.getTextureFitSettings().height;
+        int width = solution.getTextureResolution().width;
+        int height = solution.getTextureResolution().height;
 
         BufferedImage weightImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         int[] weightDataPacked = new int[width * height];

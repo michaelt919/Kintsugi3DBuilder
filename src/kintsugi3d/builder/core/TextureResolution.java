@@ -12,12 +12,15 @@
 
 package kintsugi3d.builder.core;
 
-public class TextureFitSettings
+import kintsugi3d.gl.core.Texture2D;
+import kintsugi3d.gl.core.Texture3D;
+
+public class TextureResolution
 {
     public final int width;
     public final int height;
 
-    public TextureFitSettings(int width, int height)
+    public TextureResolution(int width, int height)
     {
         if (width <= 0)
         {
@@ -30,5 +33,25 @@ public class TextureFitSettings
 
         this.width = width;
         this.height = height;
+    }
+
+    /**
+     * Bundles width and height of a texture
+     * @param texture
+     * @return
+     */
+    public static TextureResolution of(Texture2D<?> texture)
+    {
+        return new TextureResolution(texture.getWidth(), texture.getHeight());
+    }
+
+    /**
+     * Bundles width and height of a texture; ignores depth
+     * @param texture
+     * @return
+     */
+    public static TextureResolution of(Texture3D<?> texture)
+    {
+        return new TextureResolution(texture.getWidth(), texture.getHeight());
     }
 }

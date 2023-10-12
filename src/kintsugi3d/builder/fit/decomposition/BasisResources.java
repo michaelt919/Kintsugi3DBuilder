@@ -29,6 +29,8 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
     private final int basisCount;
     private final int basisResolution;
 
+    private SpecularBasis specularBasis;
+
     public BasisResources(ContextType context, int basisCount, int basisResolution)
     {
         this.context = context;
@@ -52,6 +54,11 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
         return context;
     }
 
+    public SpecularBasis getSpecularBasis()
+    {
+        return specularBasis;
+    }
+
     public int getBasisCount()
     {
         return basisCount;
@@ -64,6 +71,8 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
 
     public void updateFromSolution(SpecularDecomposition solution)
     {
+        this.specularBasis = solution.getSpecularBasis();
+
         NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
         NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3,
             basisCount * (basisResolution + 1));
@@ -75,9 +84,9 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
             for (int m = 0; m <= basisResolution; m++)
             {
                 // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
-                basisMapBuffer.set(m + (basisResolution + 1) * b, 0, solution.evaluateRed(b, m));
-                basisMapBuffer.set(m + (basisResolution + 1) * b, 1, solution.evaluateGreen(b, m));
-                basisMapBuffer.set(m + (basisResolution + 1) * b, 2, solution.evaluateBlue(b, m));
+                basisMapBuffer.set(m + (basisResolution + 1) * b, 0, this.specularBasis.evaluateRed(b, m));
+                basisMapBuffer.set(m + (basisResolution + 1) * b, 1, this.specularBasis.evaluateGreen(b, m));
+                basisMapBuffer.set(m + (basisResolution + 1) * b, 2, this.specularBasis.evaluateBlue(b, m));
             }
 
             // Store each channel of the diffuse albedo in the local buffer.
@@ -126,6 +135,7 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
             }
 
             BasisResources<ContextType> resources = new BasisResources<>(context, basis.getCount(), basis.getResolution());
+            resources.specularBasis = basis;
 
             // Send the basis functions to the GPU.
             resources.basisMaps.load(basisMapBuffer);

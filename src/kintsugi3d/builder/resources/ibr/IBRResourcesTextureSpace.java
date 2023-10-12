@@ -21,7 +21,7 @@ import javax.imageio.ImageIO;
 
 import kintsugi3d.builder.core.ColorAppearanceMode;
 import kintsugi3d.builder.core.LoadingMonitor;
-import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -227,9 +227,9 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
         return drawable;
     }
 
-    public TextureFitSettings getTextureFitSettings()
+    public TextureResolution getTextureResolution()
     {
-        return new TextureFitSettings(texWidth, texHeight);
+        return new TextureResolution(texWidth, texHeight);
     }
 
     @Override

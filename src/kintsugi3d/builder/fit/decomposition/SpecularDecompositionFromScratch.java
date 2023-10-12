@@ -12,17 +12,13 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import javax.imageio.ImageIO;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
-import kintsugi3d.builder.core.TextureFitSettings;
-import kintsugi3d.builder.export.specular.SpecularFitSerializer;
+import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.gl.vecmath.DoubleVector3;
-import kintsugi3d.gl.vecmath.DoubleVector4;
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 import org.slf4j.Logger;
@@ -39,9 +35,9 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
 
     private final SpecularBasisSettings specularBasisSettings;
 
-    public SpecularDecompositionFromScratch(TextureFitSettings textureFitSettings, SpecularBasisSettings specularBasisSettings)
+    public SpecularDecompositionFromScratch(TextureResolution textureResolution, SpecularBasisSettings specularBasisSettings)
     {
-        super(textureFitSettings, specularBasisSettings.getBasisCount());
+        super(textureResolution, specularBasisSettings.getBasisCount());
         this.specularBasisSettings = specularBasisSettings;
 
         diffuseAlbedos = new DoubleVector3[this.specularBasisSettings.getBasisCount()];
@@ -63,39 +59,46 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
     }
 
     @Override
-    public double evaluateRed(int b, int m)
+    public List<DoubleVector3> getDiffuseAlbedos()
     {
-        return specularRed.get(m, b);
+        return Collections.unmodifiableList(Arrays.asList(diffuseAlbedos));
     }
 
     @Override
-    public double evaluateGreen(int b, int m)
+    public SpecularBasis getSpecularBasis()
     {
-        return specularGreen.get(m, b);
-    }
+        return new SpecularBasis()
+        {
+            @Override
+            public double evaluateRed(int b, int m)
+            {
+                return specularRed.get(m, b);
+            }
 
-    @Override
-    public double evaluateBlue(int b, int m)
-    {
-        return specularBlue.get(m, b);
-    }
+            @Override
+            public double evaluateGreen(int b, int m)
+            {
+                return specularGreen.get(m, b);
+            }
 
-    @Override
-    public int getCount()
-    {
-        return specularBasisSettings.getBasisCount();
-    }
+            @Override
+            public double evaluateBlue(int b, int m)
+            {
+                return specularBlue.get(m, b);
+            }
 
-    @Override
-    public int getResolution()
-    {
-        return specularBasisSettings.getBasisResolution();
-    }
+            @Override
+            public int getCount()
+            {
+                return specularBasisSettings.getBasisCount();
+            }
 
-    @Override
-    public DoubleVector3 getDiffuseAlbedo(int basisIndex)
-    {
-        return diffuseAlbedos[basisIndex];
+            @Override
+            public int getResolution()
+            {
+                return specularBasisSettings.getBasisResolution();
+            }
+        };
     }
 
     public void setDiffuseAlbedo(int basisIndex, DoubleVector3 diffuseAlbedo)
@@ -116,50 +119,6 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
     public SimpleMatrix getSpecularBlue()
     {
         return specularBlue;
-    }
-
-    @Override
-    public void saveBasisFunctions(File outputDirectory)
-    {
-        SpecularFitSerializer.serializeBasisFunctions(specularBasisSettings.getBasisCount(),
-            specularBasisSettings.getBasisResolution(), this, outputDirectory);
-    }
-
-    @Override
-    public void saveDiffuseMap(double gamma, File outputDirectory)
-    {
-        BufferedImage diffuseImg = new BufferedImage(getTextureFitSettings().width, getTextureFitSettings().height, BufferedImage.TYPE_INT_ARGB);
-        int[] diffuseDataPacked = new int[getTextureFitSettings().width * getTextureFitSettings().height];
-        for (int p = 0; p < getTextureFitSettings().width * getTextureFitSettings().height; p++)
-        {
-            DoubleVector4 diffuseSum = DoubleVector4.ZERO;
-
-            for (int b = 0; b < specularBasisSettings.getBasisCount(); b++)
-            {
-                diffuseSum = diffuseSum.plus(diffuseAlbedos[b].asVector4(1.0)
-                    .times(getWeight(b, p)));
-            }
-
-            if (diffuseSum.w > 0)
-            {
-                DoubleVector3 diffuseAvgGamma = diffuseSum.getXYZ().dividedBy(diffuseSum.w).applyOperator(x -> Math.min(1.0, Math.pow(x, 1.0 / gamma)));
-
-                // Flip vertically
-                int dataBufferIndex = p % getTextureFitSettings().width + getTextureFitSettings().width * (getTextureFitSettings().height - p / getTextureFitSettings().width - 1);
-                diffuseDataPacked[dataBufferIndex] = new Color((float) diffuseAvgGamma.x, (float) diffuseAvgGamma.y, (float) diffuseAvgGamma.z).getRGB();
-            }
-        }
-
-        diffuseImg.setRGB(0, 0, diffuseImg.getWidth(), diffuseImg.getHeight(), diffuseDataPacked, 0, diffuseImg.getWidth());
-
-        try
-        {
-            ImageIO.write(diffuseImg, "PNG", new File(outputDirectory, "diffuse_frombasis.png"));
-        }
-        catch (IOException e)
-        {
-            log.error("An error occurred while saving diffuse map:", e);
-        }
     }
 
     @Override

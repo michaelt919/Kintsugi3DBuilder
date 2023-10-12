@@ -28,7 +28,7 @@ import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.core.IBRRequestQueue;
 import kintsugi3d.builder.core.IBRRequestUI;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
-import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
@@ -194,7 +194,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
         {
             //stage.close();
 
-            SpecularFitRequestParams settings = new SpecularFitRequestParams(new TextureFitSettings(
+            SpecularFitRequestParams settings = new SpecularFitRequestParams(new TextureResolution(
                     Integer.parseInt(widthTextField.getText()),
                     Integer.parseInt(heightTextField.getText())),
                 modelAccess.getSettingsModel());
@@ -262,10 +262,10 @@ public class SpecularFitRequestUI implements IBRRequestUI
 
             // Image cache settings
             settings.getImageCacheSettings().setCacheParentDirectory(ApplicationFolders.getFitCacheRootDirectory().toFile());
-            settings.getImageCacheSettings().setTextureWidth(settings.getTextureFitSettings().width);
-            settings.getImageCacheSettings().setTextureHeight(settings.getTextureFitSettings().height);
+            settings.getImageCacheSettings().setTextureWidth(settings.getTextureResolution().width);
+            settings.getImageCacheSettings().setTextureHeight(settings.getTextureResolution().height);
             settings.getImageCacheSettings().setTextureSubdiv( // TODO expose this in the interface
-                (int)Math.ceil(Math.max(settings.getTextureFitSettings().width, settings.getTextureFitSettings().height) / 256.0));
+                (int)Math.ceil(Math.max(settings.getTextureResolution().width, settings.getTextureResolution().height) / 256.0));
             settings.getImageCacheSettings().setSampledSize(256); // TODO expose this in the interface
 
             SpecularFitRequest request = new SpecularFitRequest(settings, modelAccess);

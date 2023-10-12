@@ -71,7 +71,6 @@ public abstract class IBRResourcesBase<ContextType extends Context<ContextType>>
         return sharedResources.getGeometryResources();
     }
 
-
     @Override
     public final SpecularMaterialResources<ContextType> getSpecularMaterialResources()
     {

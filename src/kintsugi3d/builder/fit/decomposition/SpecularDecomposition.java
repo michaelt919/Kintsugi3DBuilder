@@ -14,19 +14,28 @@ package kintsugi3d.builder.fit.decomposition;
 
 import org.ejml.simple.SimpleMatrix;
 import kintsugi3d.gl.vecmath.DoubleVector3;
-import kintsugi3d.builder.core.TextureFitSettings;
+import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 
 import java.io.File;
 import java.util.List;
 
-public interface SpecularDecomposition extends SpecularBasis, SpecularBasisWeights
+public interface SpecularDecomposition
 {
-    TextureFitSettings getTextureFitSettings();
+    List<DoubleVector3> getDiffuseAlbedos();
+
+    SpecularBasis getSpecularBasis();
+    SpecularBasisWeights getWeights();
+
+    TextureResolution getTextureResolution();
 
     SpecularBasisSettings getSpecularBasisSettings();
 
     DoubleVector3 getDiffuseAlbedo(int basisIndex);
+
+    boolean areWeightsValid(int texelIndex);
+
+    double getWeight(int b, int p);
 
     SimpleMatrix getWeights(int texelIndex);
 
