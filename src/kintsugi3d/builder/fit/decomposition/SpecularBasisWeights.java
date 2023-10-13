@@ -12,6 +12,8 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
+import java.io.File;
+
 public interface SpecularBasisWeights // TODO: avoid use of anonymous classes, add copy() method to improve robustness
 {
     /**
@@ -28,4 +30,8 @@ public interface SpecularBasisWeights // TODO: avoid use of anonymous classes, a
      * @return true if all weights are valid; false if no weights are valid at sample p.
      */
     boolean areWeightsValid(int p);
+
+    int getCount();
+
+    void save(File outputDirectory);
 }

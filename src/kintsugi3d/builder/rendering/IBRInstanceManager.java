@@ -12,7 +12,9 @@
 
 package kintsugi3d.builder.rendering;
 
+import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
@@ -40,7 +42,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
-public class IBRInstanceManager<ContextType extends Context<ContextType>> implements LoadingHandler, InteractiveRenderable<ContextType>
+public class IBRInstanceManager<ContextType extends Context<ContextType>> implements IOHandler, InteractiveRenderable<ContextType>
 {
     private static final Logger log = LoggerFactory.getLogger(IBRInstanceManager.class);
 
@@ -342,6 +344,26 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     public void saveToVSETFile(File vsetFile) throws IOException
     {
         ViewSetWriterToVSET.getInstance().writeToFile(loadedViewSet, vsetFile);
+    }
+
+    @Override
+    public void saveMaterialFiles(File materialDirectory, Runnable finishedCallback)
+    {
+        Rendering.runLater(() ->
+        {
+            ibrInstance.getIBRResources().getSpecularMaterialResources().saveAll(materialDirectory);
+
+            if (finishedCallback != null)
+            {
+                finishedCallback.run();
+            }
+        });
+    }
+
+    @Override
+    public void saveGlTF(File outputDirectory, ExportSettings settings)
+    {
+        ibrInstance.saveGlTF(outputDirectory, settings);
     }
 
     @Override

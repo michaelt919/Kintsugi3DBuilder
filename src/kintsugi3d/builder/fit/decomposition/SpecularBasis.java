@@ -12,6 +12,8 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
+import java.io.File;
+
 public interface SpecularBasis // TODO: avoid use of anonymous classes, add copy() method to improve robustness
 {
     /**
@@ -40,4 +42,6 @@ public interface SpecularBasis // TODO: avoid use of anonymous classes, add copy
 
     int getCount();
     int getResolution();
+
+    void save(File outputDirectory);
 }

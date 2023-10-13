@@ -12,11 +12,13 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.export.specular.SpecularFitSerializer;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import org.ejml.data.DMatrixRMaj;
@@ -69,6 +71,9 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
     {
         return new SpecularBasis()
         {
+            final int count = specularBasisSettings.getBasisCount();
+            final int resolution = specularBasisSettings.getBasisResolution();
+
             @Override
             public double evaluateRed(int b, int m)
             {
@@ -90,13 +95,19 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
             @Override
             public int getCount()
             {
-                return specularBasisSettings.getBasisCount();
+                return count;
             }
 
             @Override
             public int getResolution()
             {
-                return specularBasisSettings.getBasisResolution();
+                return resolution;
+            }
+
+            @Override
+            public void save(File outputDirectory)
+            {
+                SpecularFitSerializer.serializeBasisFunctions(count, resolution, this, outputDirectory);
             }
         };
     }

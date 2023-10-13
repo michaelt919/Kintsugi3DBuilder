@@ -48,7 +48,7 @@ import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.builder.javafx.ProjectLoadState;
+import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.util.Flag;
 
 import java.awt.*;
@@ -393,7 +393,7 @@ public class MenubarController
     @FXML
     private void file_createProject()
     {
-        ProjectLoadState.getInstance().createProject(window);
+        ProjectIO.getInstance().createProject(window);
     }
 
 
@@ -401,25 +401,25 @@ public class MenubarController
     @FXML
     private void file_openProject()
     {
-        ProjectLoadState.getInstance().openProjectWithPrompt(window);
+        ProjectIO.getInstance().openProjectWithPrompt(window);
     }
 
     @FXML
     private void file_saveProject()
     {
-        ProjectLoadState.getInstance().saveProject(window);
+        ProjectIO.getInstance().saveProject(window);
     }
 
     @FXML
     private void file_saveProjectAs()
     {
-        ProjectLoadState.getInstance().saveProjectAs(window);
+        ProjectIO.getInstance().saveProjectAs(window);
     }
 
     @FXML
     private void file_closeProject()
     {
-        ProjectLoadState.getInstance().closeProjectAfterConfirmation();
+        ProjectIO.getInstance().closeProjectAfterConfirmation();
     }
 
     @FXML
@@ -646,7 +646,7 @@ public class MenubarController
 
     public static void handleMenuItemSelection(MenuItem item) {
         String projectName = item.getText();
-        ProjectLoadState.getInstance().openProjectFromFile(new File(projectName));
+        ProjectIO.getInstance().openProjectFromFile(new File(projectName));
     }
 
     private void handleDirectoryDropdownSelection(ActionEvent actionEvent) {

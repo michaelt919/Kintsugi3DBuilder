@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.util.AbstractImage;
 
 import java.io.File;
@@ -23,7 +24,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
-public class LoadingModel 
+public class IOModel
 {
     private static class AggregateLoadingMonitor implements LoadingMonitor
     {
@@ -80,7 +81,7 @@ public class LoadingModel
         }
     }
 
-    private LoadingHandler handler;
+    private IOHandler handler;
     private final AggregateLoadingMonitor loadingMonitor = new AggregateLoadingMonitor();
     private ReadonlyLoadOptionsModel loadOptionsModel;
 
@@ -89,7 +90,7 @@ public class LoadingModel
         return loadingMonitor;
     }
 
-    public void setLoadingHandler(LoadingHandler handler)
+    public void setLoadingHandler(IOHandler handler)
     {
         this.handler = handler;
         this.handler.setLoadingMonitor(loadingMonitor);
@@ -159,6 +160,22 @@ public class LoadingModel
     {
         this.handler.saveToVSETFile(vsetFile);
     }
+
+    public void saveMaterialFiles(File materialDirectory, Runnable finishedCallback)
+    {
+        this.handler.saveMaterialFiles(materialDirectory, finishedCallback);
+    }
+
+    public void saveGlTF(File outputDirectory, ExportSettings settings)
+    {
+        this.handler.saveGlTF(outputDirectory, settings);
+    }
+
+    public void saveGlTF(File outputDirectory)
+    {
+        this.handler.saveGlTF(outputDirectory, new ExportSettings() /* defaults */);
+    }
+
 
     public DoubleUnaryOperator getLuminanceEncodingFunction()
     {

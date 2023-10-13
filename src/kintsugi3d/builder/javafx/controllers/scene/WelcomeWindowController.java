@@ -12,7 +12,6 @@
 
 package kintsugi3d.builder.javafx.controllers.scene;
 
-import com.sun.javafx.menu.MenuBase;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.MenuItem;
@@ -24,7 +23,7 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.IBRRequestManager;
 import kintsugi3d.builder.javafx.InternalModels;
-import kintsugi3d.builder.javafx.ProjectLoadState;
+import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
@@ -32,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.ArrayList;
 
 public class WelcomeWindowController
 {
@@ -112,7 +110,7 @@ public class WelcomeWindowController
 
     public void handleMenuItemSelection(MenuItem item) {
         String projectName = item.getText();
-        ProjectLoadState.getInstance().openProjectFromFile(new File(projectName));
+        ProjectIO.getInstance().openProjectFromFile(new File(projectName));
     }
 
     public void splitMenuButtonActions(ActionEvent actionEvent) {
@@ -132,18 +130,18 @@ public class WelcomeWindowController
     @FXML
     private void file_createProject()
     {
-        if (!ProjectLoadState.getInstance().isCreateProjectWindowOpen())
+        if (!ProjectIO.getInstance().isCreateProjectWindowOpen())
         {
-            ProjectLoadState.getInstance().createProject(parentWindow);
+            ProjectIO.getInstance().createProject(parentWindow);
             updateRecentProjectsButton();
         }
     }
 
     public void createProject()
     {
-        if (!ProjectLoadState.getInstance().isCreateProjectWindowOpen())
+        if (!ProjectIO.getInstance().isCreateProjectWindowOpen())
         {
-            ProjectLoadState.getInstance().createProjectNew(parentWindow);
+            ProjectIO.getInstance().createProjectNew(parentWindow);
             updateRecentProjectsButton();
         }
     }
@@ -151,14 +149,14 @@ public class WelcomeWindowController
     @FXML
     private void file_openProject()//TODO: CHANGE NAMING CONVENTION? (file_...)
     {
-        ProjectLoadState.getInstance().openProjectWithPrompt(parentWindow);
+        ProjectIO.getInstance().openProjectWithPrompt(parentWindow);
     }
 
     @FXML
     private void file_closeProject()
     {
         //TODO: DISABLE THIS BUTTON IF NO PROJECT IS OPEN?
-        ProjectLoadState.getInstance().closeProjectAfterConfirmation();
+        ProjectIO.getInstance().closeProjectAfterConfirmation();
     }
 
     //TODO: HIDE WELCOME WINDOW WHEN A PROJECT IS MADE/OPENED

@@ -14,7 +14,6 @@ package kintsugi3d.builder.resources.specular;
 
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.export.specular.WeightImageCreator;
-import kintsugi3d.builder.fit.SpecularFitBase;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
 import kintsugi3d.gl.core.SamplerType;
@@ -66,6 +65,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
     }
 
+    @Override
     public void saveDiffuseMap(File outputDirectory)
     {
         try
@@ -81,6 +81,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
     }
 
+    @Override
     public void saveNormalMap(File outputDirectory)
     {
         try
@@ -96,6 +97,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
     }
 
+    @Override
     public void saveSpecularReflectivityMap(File outputDirectory)
     {
         try
@@ -111,6 +113,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
     }
 
+    @Override
     public void saveSpecularRoughnessMap(File outputDirectory)
     {
         try
@@ -126,6 +129,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
     }
 
+    @Override
     public void saveConstantMap(File outputDirectory)
     {
         try
@@ -156,6 +160,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
 //        }
 //    }
 
+    @Override
     public void saveOcclusionMap(File outputDirectory)
     {
         try
@@ -171,6 +176,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
     }
 
+    @Override
     public void saveAlbedoMap(File outputDirectory)
     {
         try
@@ -186,6 +192,7 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
     }
 
+    @Override
     public void saveORMMap(File outputDirectory)
     {
         try
@@ -201,7 +208,8 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
     }
 
-    public void savePackedWeightMaps(File outputDirectory) throws IOException
+    @Override
+    public void savePackedWeightMaps(File outputDirectory)
     {
         // Save the packed weight maps for opening in viewer
         try (WeightImageCreator<ContextType> weightImageCreator =
@@ -215,7 +223,8 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
     }
 
-    public void saveUnpackedWeightMaps(File outputDirectory) throws IOException
+    @Override
+    public void saveUnpackedWeightMaps(File outputDirectory)
     {
         // Save the unpacked weight maps for reloading the project in the future
         try (WeightImageCreator<ContextType> weightImageCreator =
@@ -229,11 +238,18 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
     }
 
+    @Override
+    public void saveBasisFunctions(File outputDirectory)
+    {
+        getBasisResources().getSpecularBasis().save(outputDirectory);
+    }
+
     /**
      * Saves all resources to the specified output directory
      * @param outputDirectory
      */
-    public void saveAll(File outputDirectory) throws IOException
+    @Override
+    public void saveAll(File outputDirectory)
     {
         saveDiffuseMap(outputDirectory);
         saveNormalMap(outputDirectory);
@@ -245,7 +261,6 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         saveSpecularRoughnessMap(outputDirectory);
         savePackedWeightMaps(outputDirectory);
         saveUnpackedWeightMaps(outputDirectory);
-
-        // TODO: Save basis functions
+        saveBasisFunctions(outputDirectory);
     }
 }

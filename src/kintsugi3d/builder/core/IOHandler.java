@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.util.AbstractImage;
 
 import java.io.File;
@@ -21,7 +22,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
-public interface LoadingHandler 
+public interface IOHandler
 {
     boolean isInstanceLoaded();
     void addViewSetLoadCallback(Consumer<ViewSet> callback);
@@ -36,6 +37,9 @@ public interface LoadingHandler
     void loadBackplate(File backplateFile) throws FileNotFoundException;
 
     void saveToVSETFile(File vsetFile) throws IOException;
+    void saveMaterialFiles(File materialDirectory, Runnable finishedCallback);
+
+    void saveGlTF(File outputDirectory, ExportSettings settings);
 
     void unload();
 

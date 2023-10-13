@@ -16,6 +16,9 @@ import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.gl.core.*;
 
+import java.io.File;
+import java.io.IOException;
+
 public interface SpecularMaterialResources<ContextType extends Context<ContextType>>
     extends AutoCloseable, ContextBound<ContextType>, Blittable<SpecularMaterialResources<ContextType>>
 {
@@ -212,7 +215,6 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
             @Override
             public void close()
             {
-
             }
 
             @Override
@@ -224,9 +226,91 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
             @Override
             public void setupShaderProgram(Program<ContextType> program)
             {
+            }
 
+            @Override
+            public void saveDiffuseMap(File outputDirectory)
+            {
+            }
+
+            @Override
+            public void saveNormalMap(File outputDirectory)
+            {
+            }
+
+            @Override
+            public void saveSpecularReflectivityMap(File outputDirectory)
+            {
+            }
+
+            @Override
+            public void saveSpecularRoughnessMap(File outputDirectory)
+            {
+            }
+
+            @Override
+            public void saveConstantMap(File outputDirectory)
+            {
+            }
+
+            @Override
+            public void saveOcclusionMap(File outputDirectory)
+            {
+            }
+
+            @Override
+            public void saveAlbedoMap(File outputDirectory)
+            {
+            }
+
+            @Override
+            public void saveORMMap(File outputDirectory)
+            {
+            }
+
+            @Override
+            public void savePackedWeightMaps(File outputDirectory)
+            {
+            }
+
+            @Override
+            public void saveUnpackedWeightMaps(File outputDirectory)
+            {
+            }
+
+            @Override
+            public void saveBasisFunctions(File outputDirectory)
+            {
+            }
+
+            @Override
+            public void saveAll(File outputDirectory)
+            {
             }
         };
     }
 
+    void saveDiffuseMap(File outputDirectory);
+
+    void saveNormalMap(File outputDirectory);
+
+    void saveSpecularReflectivityMap(File outputDirectory);
+
+    void saveSpecularRoughnessMap(File outputDirectory);
+
+    void saveConstantMap(File outputDirectory);
+
+    void saveOcclusionMap(File outputDirectory);
+
+    void saveAlbedoMap(File outputDirectory);
+
+    void saveORMMap(File outputDirectory);
+
+    void savePackedWeightMaps(File outputDirectory);
+
+    void saveUnpackedWeightMaps(File outputDirectory);
+
+    void saveBasisFunctions(File outputDirectory);
+
+    void saveAll(File outputDirectory);
 }

@@ -17,6 +17,7 @@ import kintsugi3d.builder.export.specular.gltf.SpecularFitGltfExporter;
 import kintsugi3d.builder.fit.SpecularFitProcess;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.fit.debug.FinalReconstruction;
+import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
@@ -86,7 +87,7 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
 
             if (settings.getExportSettings().isGlTFEnabled())
             {
-                saveGlTF(renderable.getActiveGeometry(), renderable.getActiveViewSet(), renderable.getSceneModel().getObjectModel());
+                renderable.saveGlTF(settings.getOutputDirectory(), settings.getExportSettings());
             }
 
             if (settings.getExportSettings().isOpenViewerOnceComplete())
@@ -160,57 +161,5 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
                 new File("shaders/specularfit/renderFit.frag"));
     }
 
-    public void saveGlTF(ReadonlyVertexGeometry geometry, ReadonlyViewSet viewSet, ReadonlyObjectModel objectModel)
-    {
-        if (settings.getOutputDirectory() != null)
-        {
-            if (geometry == null)
-            {
-                throw new IllegalArgumentException("Geometry is null; cannot export GLTF.");
-            }
 
-            log.info("Starting glTF export...");
-
-            try
-            {
-                Matrix4 rotation = viewSet == null ? Matrix4.IDENTITY : viewSet.getCameraPose(viewSet.getPrimaryViewIndex());
-                Vector3 translation = rotation.getUpperLeft3x3().times(geometry.getCentroid().times(-1.0f));
-                Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2), translation.asVector4(1.0f));
-
-                transform = objectModel == null ? Matrix4.IDENTITY : objectModel.getTransformationMatrix().times(transform);
-
-                SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(geometry, transform);
-                exporter.setDefaultNames();
-                exporter.addWeightImages(settings.getSpecularBasisSettings().getBasisCount(), settings.getExportSettings().isCombineWeights());
-
-                // Add diffuse constant if requested
-                if (settings.shouldIncludeConstantTerm())
-                {
-                    exporter.setDiffuseConstantUri("constant.png");
-                }
-
-                // Deal with LODs if enabled
-                if (settings.getExportSettings().isGenerateLowResTextures())
-                {
-                    exporter.addAllDefaultLods(settings.getTextureResolution().height,
-                        settings.getExportSettings().getMinimumTextureResolution());
-                    exporter.addWeightImageLods(settings.getSpecularBasisSettings().getBasisCount(),
-                        settings.getTextureResolution().height, settings.getExportSettings().getMinimumTextureResolution());
-
-                    if (settings.shouldIncludeConstantTerm())
-                    {
-                        exporter.addDiffuseConstantLods("constant.png", settings.getTextureResolution().height,
-                                settings.getExportSettings().getMinimumTextureResolution());
-                    }
-                }
-
-                exporter.write(new File(settings.getOutputDirectory(), "model.glb"));
-                log.info("DONE!");
-            }
-            catch (IOException e)
-            {
-                log.error("Error occurred during glTF export:", e);
-            }
-        }
-    }
 }

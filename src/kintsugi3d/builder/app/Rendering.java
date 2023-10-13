@@ -42,7 +42,6 @@ import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.window.*;
 import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.javafx.MainApplication;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.rendering.IBRInstanceManager;
 import kintsugi3d.builder.tools.DragToolType;
@@ -65,6 +64,18 @@ public final class Rendering
     public static void runLater(GraphicsRequest request)
     {
         requestQueue.addBackgroundGraphicsRequest(request);
+    }
+
+    public static void runLater(Runnable runnable)
+    {
+        requestQueue.addBackgroundGraphicsRequest(new GraphicsRequest()
+        {
+            @Override
+            public <ContextType extends Context<ContextType>> void executeRequest(ContextType context) throws Exception
+            {
+                runnable.run();
+            }
+        });
     }
 
     private static IBRRequestManager<OpenGLContext> requestQueue = null;
@@ -174,7 +185,7 @@ public final class Rendering
         ExtendedCameraModel cameraModel = MultithreadModels.getInstance().getCameraModel();
         ExtendedObjectModel objectModel = MultithreadModels.getInstance().getObjectModel();
         SettingsModel settingsModel = MultithreadModels.getInstance().getSettingsModel();
-        LoadingModel loadingModel = MultithreadModels.getInstance().getLoadingModel();
+        IOModel ioModel = MultithreadModels.getInstance().getLoadingModel();
 
         // Bind tools
         ToolBindingModel toolBindingModel = new ToolBindingModelImpl();
@@ -303,7 +314,7 @@ public final class Rendering
 
         canvasInputController.addAsCanvasListener(canvas);
 
-        loadingModel.setLoadingHandler(instanceManager);
+        ioModel.setLoadingHandler(instanceManager);
 
         instanceManager.setObjectModel(() -> Matrix4.IDENTITY);
         instanceManager.setCameraModel(cameraModel);
@@ -340,31 +351,31 @@ public final class Rendering
             @Override
             public void startLoading()
             {
-                loadingModel.getLoadingMonitor().startLoading();
+                ioModel.getLoadingMonitor().startLoading();
             }
 
             @Override
             public void setMaximum(double maximum)
             {
-                loadingModel.getLoadingMonitor().setMaximum(maximum);
+                ioModel.getLoadingMonitor().setMaximum(maximum);
             }
 
             @Override
             public void setProgress(double progress)
             {
-                loadingModel.getLoadingMonitor().setProgress(progress);
+                ioModel.getLoadingMonitor().setProgress(progress);
             }
 
             @Override
             public void loadingComplete()
             {
-                loadingModel.getLoadingMonitor().loadingComplete();
+                ioModel.getLoadingMonitor().loadingComplete();
             }
 
             @Override
             public void loadingFailed(Exception e)
             {
-                loadingModel.getLoadingMonitor().loadingFailed(e);
+                ioModel.getLoadingMonitor().loadingFailed(e);
             }
         });
 
@@ -432,7 +443,7 @@ public final class Rendering
         }
         catch(RuntimeException|InitializationException e)
         {
-            Optional.ofNullable(loadingModel.getLoadingMonitor()).ifPresent(loadingMonitor -> loadingMonitor.loadingFailed(e));
+            Optional.ofNullable(ioModel.getLoadingMonitor()).ifPresent(loadingMonitor -> loadingMonitor.loadingFailed(e));
             throw e;
         }
     }

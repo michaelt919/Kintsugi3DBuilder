@@ -31,7 +31,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.builder.core.LoadingModel;
+import kintsugi3d.builder.core.IOModel;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -84,7 +84,7 @@ public class EyedropperController implements Initializable {
     private Image selectedFile;
     @FXML private Rectangle averageColorPreview = new Rectangle(); //displays the average color of selection
 
-    private LoadingModel loadingModel = new LoadingModel();
+    private IOModel ioModel = new IOModel();
 
     public EyedropperController()
     {
@@ -516,7 +516,7 @@ public class EyedropperController implements Initializable {
     @FXML private void applyButtonPressed() {
         //check to see if all text fields contain valid input, and model is loaded
         if(areAllFieldsValid() && hasGoodLoadingModel()) {
-            loadingModel.setTonemapping(
+            ioModel.setTonemapping(
                     new double[]{0.031, 0.090, 0.198, 0.362, 0.591, 0.900},
                     new byte[]
                             {
@@ -569,12 +569,12 @@ public class EyedropperController implements Initializable {
         return sourceButton;
     }
 
-    public void setLoadingModel(LoadingModel loadingModel){
-        this.loadingModel = loadingModel;
+    public void setLoadingModel(IOModel ioModel){
+        this.ioModel = ioModel;
 
         //initialize txtFields with their respective values
         if (hasGoodLoadingModel()){
-            DoubleUnaryOperator luminanceEncoding = loadingModel.getLuminanceEncodingFunction();
+            DoubleUnaryOperator luminanceEncoding = ioModel.getLuminanceEncodingFunction();
             txtField1.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.031))));
             txtField2.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.090))));
             txtField3.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.198))));
@@ -596,7 +596,7 @@ public class EyedropperController implements Initializable {
     }
 
     private boolean hasGoodLoadingModel(){
-        return loadingModel.hasValidHandler();
+        return ioModel.hasValidHandler();
     }
 
     @FXML

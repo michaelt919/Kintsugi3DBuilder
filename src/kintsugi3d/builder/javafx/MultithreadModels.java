@@ -13,12 +13,8 @@
 package kintsugi3d.builder.javafx;//Created by alexk on 7/19/2017.
 
 import kintsugi3d.builder.core.LoadOptionsModel;
-import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
-import kintsugi3d.builder.preferences.ReadOnlyUserPreferencesModel;
-import kintsugi3d.builder.preferences.UserPreferencesModel;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
-import kintsugi3d.builder.core.LoadingModel;
-import kintsugi3d.builder.core.ReadonlyLoadOptionsModel;
+import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.javafx.multithread.*;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.builder.state.impl.CanvasModelImpl;
@@ -36,7 +32,7 @@ public final class MultithreadModels implements Kintsugi3DBuilderState
     private final LoadOptionsModel loadOptionsModel;
     private final SceneViewportModel sceneViewportModel;
     private final CanvasModel canvasModel;
-    private final LoadingModel loadingModel;
+    private final IOModel ioModel;
 
     private static final MultithreadModels INSTANCE = new MultithreadModels();
 
@@ -56,8 +52,8 @@ public final class MultithreadModels implements Kintsugi3DBuilderState
         sceneViewportModel = new SceneViewportModelImpl();
         loadOptionsModel = InternalModels.getInstance().getLoadOptionsModel();
         canvasModel = new CanvasModelImpl();
-        loadingModel = new LoadingModel();
-        loadingModel.setLoadOptionsModel(loadOptionsModel);
+        ioModel = new IOModel();
+        ioModel.setLoadOptionsModel(loadOptionsModel);
     }
 
     @Override
@@ -97,9 +93,9 @@ public final class MultithreadModels implements Kintsugi3DBuilderState
     }
 
     @Override
-    public LoadingModel getLoadingModel()
+    public IOModel getLoadingModel()
     {
-        return loadingModel;
+        return ioModel;
     }
 
     @Override

@@ -13,10 +13,13 @@
 package kintsugi3d.builder.rendering;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
 import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.export.specular.gltf.SpecularFitGltfExporter;
+import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.rendering.components.IBRSubject;
 import kintsugi3d.builder.rendering.components.StandardScene;
 import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibrationRoot;
@@ -24,6 +27,7 @@ import kintsugi3d.builder.rendering.components.lit.LitRoot;
 import kintsugi3d.builder.resources.DynamicResourceLoader;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.builder.state.SceneViewport;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.builders.framebuffer.DepthAttachmentSpec;
@@ -391,5 +395,65 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     public SceneModel getSceneModel()
     {
         return sceneModel;
+    }
+
+    @Override
+    public void saveGlTF(File outputDirectory, ExportSettings settings)
+    {
+        if (outputDirectory != null)
+        {
+            if (getActiveGeometry() == null)
+            {
+                throw new IllegalArgumentException("Geometry is null; cannot export GLTF.");
+            }
+
+            log.info("Starting glTF export...");
+
+            try
+            {
+                Matrix4 rotation = getActiveViewSet() == null ? Matrix4.IDENTITY : getActiveViewSet().getCameraPose(getActiveViewSet().getPrimaryViewIndex());
+                Vector3 translation = rotation.getUpperLeft3x3().times(getActiveGeometry().getCentroid().times(-1.0f));
+                Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2),
+                    translation.asVector4(1.0f));
+
+                transform = getSceneModel().getObjectModel() == null ? Matrix4.IDENTITY : getSceneModel().getObjectModel().getTransformationMatrix().times(transform);
+
+                SpecularFitGltfExporter exporter = SpecularFitGltfExporter.fromVertexGeometry(getActiveGeometry(), transform);
+                exporter.setDefaultNames();
+
+                SpecularMaterialResources<ContextType> material = getIBRResources().getSpecularMaterialResources();
+                exporter.addWeightImages(material.getBasisResources().getBasisCount(), settings.isCombineWeights());
+
+                // Add diffuse constant if requested
+                boolean constantMap = material.getConstantMap() != null
+                    && material.getConstantMap().getWidth() > 0 && material.getConstantMap().getHeight() > 0;
+
+                if (constantMap)
+                {
+                    exporter.setDiffuseConstantUri("constant.png");
+                }
+
+                // Deal with LODs if enabled
+                if (settings.isGenerateLowResTextures())
+                {
+                    exporter.addAllDefaultLods(material.getHeight(), settings.getMinimumTextureResolution());
+                    exporter.addWeightImageLods(material.getBasisResources().getBasisCount(), material.getHeight(),
+                        settings.getMinimumTextureResolution());
+
+                    if (constantMap)
+                    {
+                        exporter.addDiffuseConstantLods("constant.png", material.getHeight(),
+                            settings.getMinimumTextureResolution());
+                    }
+                }
+
+                exporter.write(new File(outputDirectory, "model.glb"));
+                log.info("DONE!");
+            }
+            catch (IOException e)
+            {
+                log.error("Error occurred during glTF export:", e);
+            }
+        }
     }
 }

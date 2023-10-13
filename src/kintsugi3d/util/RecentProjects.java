@@ -16,7 +16,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SplitMenuButton;
 import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.javafx.ProjectLoadState;
+import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 
@@ -149,6 +149,6 @@ public class RecentProjects {
 
     private static void handleMenuItemSelection(MenuItem item) {
         String projectName = item.getText();
-        ProjectLoadState.getInstance().openProjectFromFile(new File(projectName));
+        ProjectIO.getInstance().openProjectFromFile(new File(projectName));
     }
 }

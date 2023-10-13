@@ -156,11 +156,11 @@ public class SpecularFitProcess
                     errorCalculator, TRACE_IMAGES && settings.getOutputDirectory() != null ? settings.getOutputDirectory() : null), sampledFit
                 );
 
-                if (settings.getOutputDirectory() != null)
-                {
-                    // Save the final basis functions
-                    sampledDecomposition.saveBasisFunctions(settings.getOutputDirectory());
-                }
+//                if (settings.getOutputDirectory() != null)
+//                {
+//                    // Save the final basis functions
+//                    sampledDecomposition.saveBasisFunctions(settings.getOutputDirectory());
+//                }
 
                 if (DEBUG_IMAGES && settings.getOutputDirectory() != null)
                 {

@@ -24,6 +24,7 @@ import java.util.stream.IntStream;
 
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.export.specular.SpecularFitSerializer;
+import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.gl.vecmath.DoubleVector4;
 import org.ejml.data.DMatrixRMaj;
@@ -54,6 +55,8 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
     {
         return new SpecularBasisWeights()
         {
+            final int count = getSpecularBasisSettings().getBasisCount();
+
             @Override
             public double getWeight(int b, int p)
             {
@@ -64,6 +67,19 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
             public boolean areWeightsValid(int p)
             {
                 return weightsValidity[p];
+            }
+
+            @Override
+            public int getCount()
+            {
+                return count;
+            }
+
+            @Override
+            public void save(File outputDirectory)
+            {
+                SpecularFitSerializer.saveWeightImages(
+                    count, textureResolution.width, textureResolution.height, this, outputDirectory);
             }
         };
     }
@@ -237,14 +253,12 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
     @Override
     public void saveBasisFunctions(File outputDirectory)
     {
-        SpecularFitSerializer.serializeBasisFunctions(getSpecularBasis().getCount(),
-            getSpecularBasisSettings().getBasisResolution(), getSpecularBasis(), outputDirectory);
+        getSpecularBasis().save(outputDirectory);
     }
 
     @Override
     public void saveWeightMaps(File outputDirectory)
     {
-        SpecularFitSerializer.saveWeightImages(
-            getSpecularBasisSettings().getBasisCount(), textureResolution.width, textureResolution.height, getWeights(), outputDirectory);
+        getWeights().save(outputDirectory);
     }
 }

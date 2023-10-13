@@ -220,7 +220,7 @@ public class SpecularFitGltfExporter
 
     public void addWeightImages(int basisCount)
     {
-        addWeightImages(basisCount, false);
+        addWeightImages(basisCount, true);
     }
 
     public void addWeightImages(int basisCount, boolean combined)

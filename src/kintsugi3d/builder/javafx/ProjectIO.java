@@ -21,9 +21,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
-import kintsugi3d.builder.core.LoadingModel;
+import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.javafx.controllers.menubar.LoaderController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.scene.CreateProjectController;
@@ -40,15 +41,15 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public final class ProjectLoadState
+public final class ProjectIO
 {
-    private static final ProjectLoadState INSTANCE = new ProjectLoadState();
-    public static ProjectLoadState getInstance()
+    private static final ProjectIO INSTANCE = new ProjectIO();
+    public static ProjectIO getInstance()
     {
         return INSTANCE;
     }
 
-    private static final Logger log = LoggerFactory.getLogger(ProjectLoadState.class);
+    private static final Logger log = LoggerFactory.getLogger(ProjectIO.class);
 
     private File projectFile;
     private File vsetFile;
@@ -72,7 +73,7 @@ public final class ProjectLoadState
         return projectFileChooser;
     }
 
-    private ProjectLoadState()
+    private ProjectIO()
     {
         // Try to initialize file chooser in advance of when it will be needed.
         Platform.runLater(this::getProjectFileChooserSafe);
@@ -353,6 +354,14 @@ public final class ProjectLoadState
         }
     }
 
+    /**
+     * NOTE: After "Save As", view set will share the same UUID as the original project,
+     * including the preview resolution images and specular fit cache in the user's AppData folder.
+     * Not sure if this is a feature or a bug -- so long as the view set doesn't change, this will reduce
+     * the footprint on the user's hard drive.  But problems could happen if the ability to modify the
+     * actual views (add / remove view) later on down the road.
+     * @param parentWindow
+     */
     public void saveProject(Window parentWindow)
     {
         if (projectFile == null)
@@ -363,36 +372,42 @@ public final class ProjectLoadState
         {
             try
             {
-                LoadingModel loadingModel = MultithreadModels.getInstance().getLoadingModel();
+                IOModel ioModel = MultithreadModels.getInstance().getLoadingModel();
 
+                File filesDirectory = ViewSet.getDefaultSupportingFilesDirectory(projectFile);
                 if (projectFile.getName().endsWith(".vset"))
                 {
-                    loadingModel.getLoadedViewSet().setRootDirectory(projectFile.getParentFile());
-                    loadingModel.getLoadedViewSet().setSupportingFilesDirectory(ViewSet.getDefaultSupportingFilesDirectory(projectFile));
-                    loadingModel.saveToVSETFile(projectFile);
+                    ioModel.getLoadedViewSet().setRootDirectory(projectFile.getParentFile());
+                    ioModel.getLoadedViewSet().setSupportingFilesDirectory(filesDirectory);
+                    ioModel.saveToVSETFile(projectFile);
                     this.vsetFile = projectFile;
                     this.projectFile = null;
                 }
                 else
                 {
-                    File filesDirectory = ViewSet.getDefaultSupportingFilesDirectory(projectFile);
                     filesDirectory.mkdirs();
-                    loadingModel.getLoadedViewSet().setRootDirectory(filesDirectory);
-                    loadingModel.getLoadedViewSet().setSupportingFilesDirectory(filesDirectory);
+                    ioModel.getLoadedViewSet().setRootDirectory(filesDirectory);
+                    ioModel.getLoadedViewSet().setSupportingFilesDirectory(filesDirectory);
                     this.vsetFile = new File(filesDirectory, projectFile.getName() + ".vset");
-                    loadingModel.saveToVSETFile(vsetFile);
+                    ioModel.saveToVSETFile(vsetFile);
                     InternalModels.getInstance().getProjectModel().saveProjectFile(projectFile, vsetFile);
-                    // TODO save textures
                 }
 
-                //TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY
-                Platform.runLater(() ->
+                ioModel.saveGlTF(filesDirectory);
+
+                // Save textures and basis funtions (will be deferred to graphics thread).
+                ioModel.saveMaterialFiles(filesDirectory, () ->
                 {
-                    Dialog<ButtonType> saveInfo = new Alert(Alert.AlertType.INFORMATION,
+                    // Display message when all textures have been saved on graphics thread.
+                    //TODO: MAKE PRETTIER, LOOK INTO NULL SAFETY
+                    Platform.runLater(() ->
+                    {
+                        Dialog<ButtonType> saveInfo = new Alert(Alert.AlertType.INFORMATION,
                             "Save Complete!");
-                    saveInfo.setTitle("Save successful");
-                    saveInfo.setHeaderText(projectFile.getName());
-                    saveInfo.show();
+                        saveInfo.setTitle("Save successful");
+                        saveInfo.setHeaderText(projectFile.getName());
+                        saveInfo.show();
+                    });
                 });
             }
             catch(Exception e)
@@ -431,6 +446,14 @@ public final class ProjectLoadState
         }
     }
 
+    /**
+     * NOTE: After "Save As", view set will share the same UUID as the original project,
+     * including the preview resolution images and specular fit cache in the user's AppData folder.
+     * Not sure if this is a feature or a bug -- so long as the view set doesn't change, this will reduce
+     * the footprint on the user's hard drive.  But problems could happen if the ability to modify the
+     * actual views (add / remove view) later on down the road.
+     * @param parentWindow
+     */
     public void saveProjectAs(Window parentWindow)
     {
         saveProjectAs(parentWindow, null);

@@ -12,6 +12,9 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
+import kintsugi3d.builder.export.specular.SpecularFitSerializer;
+
+import java.io.File;
 import java.util.stream.IntStream;
 
 public class SimpleSpecularBasis implements SpecularBasis
@@ -70,6 +73,12 @@ public class SimpleSpecularBasis implements SpecularBasis
     public int getResolution()
     {
         return basisResolution;
+    }
+
+    @Override
+    public void save(File outputDirectory)
+    {
+        SpecularFitSerializer.serializeBasisFunctions(basisCount, basisResolution, this, outputDirectory);
     }
 
     /**

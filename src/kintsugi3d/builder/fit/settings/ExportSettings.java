@@ -14,12 +14,12 @@ package kintsugi3d.builder.fit.settings;
 
 public class ExportSettings
 {
-    private boolean combineWeights = false;
+    private boolean combineWeights = true;
 
     private boolean generateLowResTextures = false;
     private int minimumTextureResolution = 128;
 
-    private boolean glTFEnabled = false;
+    private boolean glTFEnabled = true;
     private boolean glTFPackTextures = false;
     private boolean openViewerOnceComplete = false;
 
