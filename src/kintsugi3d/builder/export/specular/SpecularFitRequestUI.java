@@ -41,32 +41,21 @@ import java.net.URL;
 public class SpecularFitRequestUI implements IBRRequestUI
 {
     private static final Logger log = LoggerFactory.getLogger(SpecularFitRequestUI.class);
-
     @FXML private CheckBox smithCheckBox;
-    @FXML private CheckBox levenbergMarquardtCheckBox;
     @FXML private TextField unsuccessfulLMIterationsTextField;
     @FXML private TextField widthTextField;
     @FXML private TextField heightTextField;
-    @FXML private TextField exportDirectoryField;
 
     @FXML private TextField basisCountTextField;
-    @FXML private CheckBox combineWeightsCheckbox;
     @FXML private TextField mfdResolutionTextField;
     @FXML private TextField convergenceToleranceTextField;
     @FXML private TextField specularSmoothnessTextField;
     @FXML private TextField metallicityTextField;
+    @FXML private CheckBox translucencyCheckBox;
     @FXML private CheckBox normalRefinementCheckBox;
     @FXML private TextField minNormalDampingTextField;
     @FXML private TextField normalSmoothingIterationsTextField;
 
-    @FXML private CheckBox reconstructAllCheckBox;
-    @FXML private TextField reconstructionViewSetField;
-
-    @FXML private CheckBox priorSolutionCheckBox;
-    @FXML private TextField priorSolutionField;
-
-    @FXML private CheckBox exportGLTFCheckbox;
-    @FXML private CheckBox exportGLTFPackedCheckbox;
     @FXML private CheckBox exportTextureLODsCheckbox;
     @FXML private CheckBox openViewerOnComplete;
 
@@ -98,85 +87,6 @@ public class SpecularFitRequestUI implements IBRRequestUI
         svdRequestUI.stage.setScene(new Scene(parent));
         svdRequestUI.stage.initOwner(window);
         return svdRequestUI;
-    }
-
-    @FXML
-    private void exportDirectoryButtonAction()
-    {
-        this.directoryChooser.setTitle("Choose an export directory");
-        if (exportDirectoryField.getText().isEmpty())
-        {
-            if (lastDirectory != null)
-            {
-                this.directoryChooser.setInitialDirectory(lastDirectory);
-            }
-        }
-        else
-        {
-            File currentValue = new File(exportDirectoryField.getText());
-            this.directoryChooser.setInitialDirectory(currentValue);
-        }
-        File file = this.directoryChooser.showDialog(stage.getOwner());
-        if (file != null)
-        {
-            exportDirectoryField.setText(file.toString());
-            lastDirectory = file;
-        }
-    }
-
-    @FXML
-    public void reconstructionViewSetButtonAction()
-    {
-        this.fileChooser.setTitle("Choose an view set for image reconstruction");
-        this.fileChooser.setSelectedExtensionFilter( // Doesn't work; not sure why.
-            new FileChooser.ExtensionFilter("View Set files", "*.vset"));
-        if (reconstructionViewSetField.getText().isEmpty())
-        {
-            // Default for when the text field is empty.
-            if (lastViewSet != null)
-            {
-                // There was a previously selected view set, use that one.
-                this.fileChooser.setInitialDirectory(lastViewSet.getParentFile());
-                this.fileChooser.setInitialFileName(lastViewSet.getName());
-            }
-        }
-        else
-        {
-            // If the text field is not empty, use the current value as the starting directory in the file dialog.
-            File currentValue = new File(reconstructionViewSetField.getText());
-            this.fileChooser.setInitialDirectory(currentValue.getParentFile());
-            this.fileChooser.setInitialFileName(currentValue.getName());
-        }
-        File file = this.fileChooser.showOpenDialog(stage.getOwner());
-        if (file != null)
-        {
-            reconstructionViewSetField.setText(file.toString());
-            lastViewSet = file;
-        }
-    }
-
-    @FXML
-    public void priorSolutionButtonAction()
-    {
-        this.directoryChooser.setTitle("Choose a folder containing the prior solution");
-        if (priorSolutionField.getText().isEmpty())
-        {
-            if (lastDirectory != null)
-            {
-                this.directoryChooser.setInitialDirectory(lastDirectory);
-            }
-        }
-        else
-        {
-            File currentValue = new File(priorSolutionField.getText());
-            this.directoryChooser.setInitialDirectory(currentValue);
-        }
-        File file = this.directoryChooser.showDialog(stage.getOwner());
-        if (file != null)
-        {
-            priorSolutionField.setText(file.toString());
-            lastDirectory = file;
-        }
     }
 
     @FXML
@@ -215,6 +125,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
             settings.getSpecularBasisSettings().setSpecularSmoothness(specularSmoothness);
             double metallicity = Double.parseDouble(metallicityTextField.getText());
             settings.getSpecularBasisSettings().setMetallicity(metallicity);
+            settings.setShouldIncludeConstantTerm(translucencyCheckBox.isSelected());
 
             // Normal estimation settings
             boolean normalRefinementEnabled = normalRefinementCheckBox.isSelected();
@@ -228,37 +139,17 @@ public class SpecularFitRequestUI implements IBRRequestUI
 
             // Settings which shouldn't usually need to be changed
             settings.getSpecularBasisSettings().setSmithMaskingShadowingEnabled(smithCheckBox.isSelected());
-            boolean levenbergMarquardtEnabled = true; //levenbergMarquardtCheckBox.isSelected();
+            boolean levenbergMarquardtEnabled = true;
             settings.getNormalOptimizationSettings().setLevenbergMarquardtEnabled(levenbergMarquardtEnabled);
             int unsuccessfulLMIterationsAllowed = Integer.parseInt(unsuccessfulLMIterationsTextField.getText());
             settings.getNormalOptimizationSettings().setUnsuccessfulLMIterationsAllowed(unsuccessfulLMIterationsAllowed);
-//            boolean reconstructAll = reconstructAllCheckBox.isSelected();
-            settings.getReconstructionSettings().setReconstructAll(false /* reconstructAll*/);
+            settings.getReconstructionSettings().setReconstructAll(false);
 
             settings.getExportSettings().setGenerateLowResTextures(exportTextureLODsCheckbox.isSelected());
 
             // glTF export settings
-            settings.getExportSettings().setGlTFEnabled(true /* exportGLTFCheckbox.isSelected() */);
-            settings.getExportSettings().setGlTFPackTextures(exportGLTFPackedCheckbox.isSelected());
-
-//            if (reconstructionViewSetField.getText() != null && !reconstructionViewSetField.getText().isEmpty())
-//            {
-//                // Reconstruction view set
-//                try
-//                {
-//                    ReadonlyViewSet reconstructionViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(
-//                        new File(reconstructionViewSetField.getText()));
-//                    settings.getReconstructionSettings().setReconstructionViewSet(reconstructionViewSet);
-//                }
-//                catch (Exception e)
-//                {
-//                    Alert alert = new Alert(Alert.AlertType.ERROR);
-//                    alert.setTitle("Invalid view set");
-//                    alert.setHeaderText("Reconstruction view set is invalid.");
-//                    alert.setContentText("Please try another view set or leave the field blank to use the view set for the current model.");
-//                    log.error("Invalid view set error:", e);
-//                }
-//            }
+            settings.getExportSettings().setGlTFEnabled(true);
+            settings.getExportSettings().setGlTFPackTextures(false);
 
             // Image cache settings
             settings.getImageCacheSettings().setCacheParentDirectory(ApplicationFolders.getFitCacheRootDirectory().toFile());

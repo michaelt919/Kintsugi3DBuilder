@@ -18,6 +18,7 @@ import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.builder.state.ReadonlyCameraModel;
 import kintsugi3d.builder.state.ReadonlyLightingModel;
 import kintsugi3d.builder.state.ReadonlyObjectModel;
@@ -349,21 +350,38 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     @Override
     public void saveMaterialFiles(File materialDirectory, Runnable finishedCallback)
     {
-        Rendering.runLater(() ->
+        if (ibrInstance == null || ibrInstance.getIBRResources() == null
+            || ibrInstance.getIBRResources().getSpecularMaterialResources() != null)
         {
-            ibrInstance.getIBRResources().getSpecularMaterialResources().saveAll(materialDirectory);
-
             if (finishedCallback != null)
             {
                 finishedCallback.run();
             }
-        });
+        }
+        else
+        {
+            SpecularMaterialResources<ContextType> material
+                = ibrInstance.getIBRResources().getSpecularMaterialResources();
+
+            Rendering.runLater(() ->
+            {
+                material.saveAll(materialDirectory);
+
+                if (finishedCallback != null)
+                {
+                    finishedCallback.run();
+                }
+            });
+        }
     }
 
     @Override
     public void saveGlTF(File outputDirectory, ExportSettings settings)
     {
-        ibrInstance.saveGlTF(outputDirectory, settings);
+        if (ibrInstance != null)
+        {
+            ibrInstance.saveGlTF(outputDirectory, settings);
+        }
     }
 
     @Override
