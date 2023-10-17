@@ -351,7 +351,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     public void saveMaterialFiles(File materialDirectory, Runnable finishedCallback)
     {
         if (ibrInstance == null || ibrInstance.getIBRResources() == null
-            || ibrInstance.getIBRResources().getSpecularMaterialResources() != null)
+            || ibrInstance.getIBRResources().getSpecularMaterialResources() == null)
         {
             if (finishedCallback != null)
             {
