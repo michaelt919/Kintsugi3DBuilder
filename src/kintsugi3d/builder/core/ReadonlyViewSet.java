@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.builder.metrics.ViewRMSE;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -181,6 +182,8 @@ public interface ReadonlyViewSet
      * @return The index of the light source.
      */
     int getLightIndex(int poseIndex);
+
+    ViewRMSE getViewErrorMetrics(int poseIndex);
 
     /**
      * Gets the number of camera poses defined in this view set.

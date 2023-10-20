@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.builder.metrics.ViewRMSE;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
@@ -26,6 +27,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -87,6 +89,8 @@ public final class ViewSet implements ReadonlyViewSet
      * A list containing the relative name of the image file corresponding to each view.
      */
     private final List<String> imageFileNames;
+
+    private final List<ViewRMSE> viewErrorMetrics;
 
     /**
      * The reference linear luminance values used for decoding pixel colors.
@@ -161,6 +165,7 @@ public final class ViewSet implements ReadonlyViewSet
         this.cameraProjectionIndexList = new ArrayList<>(initialCapacity);
         this.lightIndexList = new ArrayList<>(initialCapacity);
         this.imageFileNames = new ArrayList<>(initialCapacity);
+        this.viewErrorMetrics = new ArrayList<>(initialCapacity);
 
         // Often these lists will have just one element
         this.cameraProjectionList = new ArrayList<>(1);
@@ -206,6 +211,11 @@ public final class ViewSet implements ReadonlyViewSet
     public List<String> getImageFileNames()
     {
         return imageFileNames;
+    }
+
+    public List<ViewRMSE> getViewErrorMetrics()
+    {
+        return viewErrorMetrics;
     }
 
     @Override
@@ -357,6 +367,7 @@ public final class ViewSet implements ReadonlyViewSet
             result.cameraProjectionIndexList.add(this.cameraProjectionIndexList.get(i));
             result.lightIndexList.add(this.lightIndexList.get(i));
             result.imageFileNames.add(this.imageFileNames.get(i));
+            result.viewErrorMetrics.add(this.viewErrorMetrics.get(i));
         }
 
         result.cameraProjectionList.addAll(this.cameraProjectionList);
@@ -397,6 +408,7 @@ public final class ViewSet implements ReadonlyViewSet
         result.lightIntensityList.addAll(this.lightIntensityList);
         result.lightIndexList.addAll(this.lightIndexList);
         result.imageFileNames.addAll(this.imageFileNames);
+        result.viewErrorMetrics.addAll(this.viewErrorMetrics);
 
         if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
         {
@@ -441,11 +453,12 @@ public final class ViewSet implements ReadonlyViewSet
 
             result.cameraPoseList.add(cameraPose);
             result.cameraPoseInvList.add(cameraPose.quickInverse(0.001f));
+
+            result.viewErrorMetrics.add(new ViewRMSE());
         }
 
         return result;
     }
-
 
     @Override
     public Matrix4 getCameraPose(int poseIndex)
@@ -748,6 +761,12 @@ public final class ViewSet implements ReadonlyViewSet
     public int getLightIndex(int poseIndex)
     {
         return this.lightIndexList.get(poseIndex);
+    }
+
+    @Override
+    public ViewRMSE getViewErrorMetrics(int poseIndex)
+    {
+        return this.viewErrorMetrics.get(poseIndex);
     }
 
     @Override
