@@ -211,37 +211,46 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
     @Override
     public void savePackedWeightMaps(File outputDirectory)
     {
-        // Save the packed weight maps for opening in viewer
-        try (WeightImageCreator<ContextType> weightImageCreator =
-             new WeightImageCreator<>(getContext(), TextureResolution.of(getBasisWeightResources().weightMaps), 4))
+        if (getBasisWeightResources() != null)
         {
-            weightImageCreator.createImages(this, outputDirectory);
-        }
-        catch (IOException e)
-        {
-            log.error("An error occurred saving packed weight maps.", e);
+            // Save the packed weight maps for opening in viewer
+            try (WeightImageCreator<ContextType> weightImageCreator =
+                     new WeightImageCreator<>(getContext(), TextureResolution.of(getBasisWeightResources().weightMaps), 4))
+            {
+                weightImageCreator.createImages(this, outputDirectory);
+            }
+            catch (IOException e)
+            {
+                log.error("An error occurred saving packed weight maps.", e);
+            }
         }
     }
 
     @Override
     public void saveUnpackedWeightMaps(File outputDirectory)
     {
-        // Save the unpacked weight maps for reloading the project in the future
-        try (WeightImageCreator<ContextType> weightImageCreator =
-             new WeightImageCreator<>(getContext(), TextureResolution.of(getBasisWeightResources().weightMaps), 1))
+        if (getBasisWeightResources() != null)
         {
-            weightImageCreator.createImages(this, outputDirectory);
-        }
-        catch (IOException e)
-        {
-            log.error("An error occurred saving unpacked weight maps.", e);
+            // Save the unpacked weight maps for reloading the project in the future
+            try (WeightImageCreator<ContextType> weightImageCreator =
+                     new WeightImageCreator<>(getContext(), TextureResolution.of(getBasisWeightResources().weightMaps), 1))
+            {
+                weightImageCreator.createImages(this, outputDirectory);
+            }
+            catch (IOException e)
+            {
+                log.error("An error occurred saving unpacked weight maps.", e);
+            }
         }
     }
 
     @Override
     public void saveBasisFunctions(File outputDirectory)
     {
-        getBasisResources().getSpecularBasis().save(outputDirectory);
+        if (getBasisResources() != null)
+        {
+            getBasisResources().getSpecularBasis().save(outputDirectory);
+        }
     }
 
     /**

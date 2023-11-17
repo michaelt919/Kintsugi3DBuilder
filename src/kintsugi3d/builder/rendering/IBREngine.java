@@ -422,7 +422,11 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
                 exporter.setDefaultNames();
 
                 SpecularMaterialResources<ContextType> material = getIBRResources().getSpecularMaterialResources();
-                exporter.addWeightImages(material.getBasisResources().getBasisCount(), settings.isCombineWeights());
+
+                if (material.getBasisResources() != null)
+                {
+                    exporter.addWeightImages(material.getBasisResources().getBasisCount(), settings.isCombineWeights());
+                }
 
                 // Add diffuse constant if requested
                 boolean constantMap = material.getConstantMap() != null
@@ -437,8 +441,12 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
                 if (settings.isGenerateLowResTextures())
                 {
                     exporter.addAllDefaultLods(material.getHeight(), settings.getMinimumTextureResolution());
-                    exporter.addWeightImageLods(material.getBasisResources().getBasisCount(), material.getHeight(),
-                        settings.getMinimumTextureResolution());
+
+                    if (material.getBasisResources() != null)
+                    {
+                        exporter.addWeightImageLods(material.getBasisResources().getBasisCount(), material.getHeight(),
+                            settings.getMinimumTextureResolution());
+                    }
 
                     if (constantMap)
                     {
