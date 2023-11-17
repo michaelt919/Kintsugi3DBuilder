@@ -20,7 +20,7 @@ public class ColorAppearanceRMSE
     private double linear = Double.POSITIVE_INFINITY;
     private double sRGB = Double.POSITIVE_INFINITY;
     private double encoded = Double.POSITIVE_INFINITY;
-    private int sampleCount = 0;
+    private long sampleCount = 0;
 
     public double getLinear()
     {
@@ -52,12 +52,12 @@ public class ColorAppearanceRMSE
         this.encoded = encoded;
     }
 
-    public int getSampleCount()
+    public long getSampleCount()
     {
         return sampleCount;
     }
 
-    public void setSampleCount(int sampleCount)
+    public void setSampleCount(long sampleCount)
     {
         this.sampleCount = sampleCount;
     }

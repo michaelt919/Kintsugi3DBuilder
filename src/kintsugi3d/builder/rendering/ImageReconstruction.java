@@ -19,6 +19,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
+import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -67,11 +68,13 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
      * @param groundTruthAction
      * @return x-component stores rmse, y-component stores pixel count after masking
      */
-    public DoubleVector2 executeOnce(ReadonlyViewSet viewSet, int viewIndex,
+    public ColorAppearanceRMSE executeOnce(ReadonlyViewSet viewSet, int viewIndex,
         Consumer<Framebuffer<ContextType>> reconstructionAction,
         Consumer<Framebuffer<ContextType>> groundTruthAction)
         throws IOException
     {
+        float gamma = viewSet.getGamma();  // TODO: use proper sRGB, not gamma correction
+
         // Reconstruct the view
         drawable.program().setUniform("model_view", viewSet.getCameraPose(viewIndex));
         drawable.program().setUniform("projection",
@@ -83,7 +86,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
             viewSet.getCameraPoseInverse(viewIndex).times(viewSet.getLightPosition(viewSet.getLightIndex(viewIndex)).asPosition()).getXYZ());
         drawable.program().setUniform("reconstructionLightIntensity",
             viewSet.getLightIntensity(viewSet.getLightIndex(viewIndex)));
-        drawable.program().setUniform("gamma", viewSet.getGamma());
+        drawable.program().setUniform("gamma", gamma);
 
         for (int i = 0; i < framebuffer.getColorAttachmentCount(); i++)
         {
@@ -127,7 +130,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
             groundTruthProgram.setUniform("reconstructionLightIntensity",
                 viewSet.getLightIntensity(viewSet.getLightIndex(viewIndex)));
             groundTruthProgram.setTexture("image", groundTruthTex);
-            groundTruthProgram.setUniform("gamma", viewSet.getGamma());
+            groundTruthProgram.setUniform("gamma", gamma);
 
             // Clear a single color buffer and depth buffer
             // Use transparent so that we can tell which pixels should be masked
@@ -150,11 +153,11 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                 .filter(p -> groundTruth[4 * p + 3] > 0.0) // only count pixels where we have geometry (mask out the rest)
                 .count();
 
-            double rmse = Math.sqrt( // root
+            ColorAppearanceRMSE totalRMSE = Math.sqrt( // root
                 IntStream.range(0, groundTruth.length / 4)
                     .parallel()
                     .filter(p -> groundTruth[4 * p + 3] > 0.0) // only count pixels where we have geometry (mask out the rest)
-                    .mapToDouble(p ->
+                    .mapToObj(p ->
                     {
                         DoubleVector3 groundTruthRGB = new DoubleVector3(groundTruth[4 * p], groundTruth[4 * p + 1], groundTruth[4 * p + 2]);
                         DoubleVector3 reconstructedRGB = new DoubleVector3(reconstruction[4 * p], reconstruction[4 * p + 1], reconstruction[4 * p + 2]);
@@ -162,12 +165,23 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                         // Handle NaN values -- replace with black
                         reconstructedRGB = reconstructedRGB.applyOperator(x -> Double.isNaN(x) ? 0.0 : x);
 
-                        DoubleVector3 error = groundTruthRGB.minus(reconstructedRGB);
-                        return error.dot(error) / 3; // mean squared error for the three channels
+                        ColorAppearanceRMSE sampleRMSE = new ColorAppearanceRMSE();
+
+                        DoubleVector3 sRGBError = groundTruthRGB.minus(reconstructedRGB);
+                        sampleRMSE.setSRGB(sRGBError.dot(sRGBError) / 3); // mean squared error for the three channels
+
+                        DoubleVector3 linearError = groundTruthRGB.applyOperator(x -> Math.pow(x, gamma))
+                            .minus(reconstructedRGB.applyOperator(x -> Math.pow(x, gamma)));
+                        sampleRMSE.setLinear(linearError.dot(linearError) / 3);
+
+                        // TODO: encoded / tonemapped RMSE
+
+                        return sampleRMSE;
                     })
                     .average().orElse(0.0)); // mean over pixels
 
-            log.info("Raw RMSE: " + rmse);
+            log.info("Raw sRGB RMSE: " + totalRMSE.getSRGB());
+            log.info("Raw linear RMSE: " + totalRMSE.getLinear());
 
             // Multiply by the true whitepoint luminance (for an encoded value of 1.0) divided by pi, gamma corrected.
             // To match the original images dynamic range, the cosine-weighted reflectance values in the framebuffer
@@ -175,10 +189,19 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
             // Multiplying will reconvert the RMSE back to being in terms of cosine-weighted, normalized reflectance.
             double decodedWhitePoint = viewSet.getLuminanceEncoding().decodeFunction.applyAsDouble(255.0);
             log.info("Decoded white point (as reflectance * pi): " + decodedWhitePoint);
-            double normalizedRMSE = rmse * Math.pow(decodedWhitePoint / Math.PI, 1.0 / viewSet.getGamma());
-            log.info("Normalized RMSE (* white point / pi): " + normalizedRMSE);
 
-            return new DoubleVector2(normalizedRMSE, sampleCount);
+            double normalizedSRGBRMSE = totalRMSE.getSRGB() * Math.pow(decodedWhitePoint / Math.PI, 1.0 / gamma);
+            log.info("Normalized sRGB RMSE (* white point / pi): " + normalizedSRGBRMSE);
+
+            double normalizedLinearRMSE = totalRMSE.getLinear() * decodedWhitePoint / Math.PI;
+            log.info("Normalized linear RMSE (* white point / pi): " + normalizedLinearRMSE);
+
+            ColorAppearanceRMSE finalRMSE = new ColorAppearanceRMSE();
+            finalRMSE.setSRGB(normalizedSRGBRMSE);
+            finalRMSE.setLinear(normalizedLinearRMSE);
+            finalRMSE.setSampleCount(sampleCount);
+
+            return finalRMSE;
         }
     }
 
@@ -192,7 +215,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
     public void execute(ReadonlyViewSet viewSet,
         BiConsumer<Integer, Framebuffer<ContextType>> reconstructionAction,
         BiConsumer<Integer, Framebuffer<ContextType>> groundTruthAction,
-        BiConsumer<Integer, DoubleVector2> rmseAction)
+        BiConsumer<Integer, ColorAppearanceRMSE> rmseAction)
     {
         for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
         {
@@ -200,7 +223,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
 
             try
             {
-                DoubleVector2 rmseInfo = executeOnce(viewSet, viewIndex,
+                ColorAppearanceRMSE rmseInfo = executeOnce(viewSet, viewIndex,
                     fbo -> reconstructionAction.accept(viewIndex, fbo),
                     fbo -> groundTruthAction.accept(viewIndex, fbo));
                 rmseAction.accept(viewIndex, rmseInfo);
