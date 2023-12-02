@@ -80,7 +80,11 @@ public class RecentLogMessageAppender extends AbstractAppender
                 event.getThrown()
         );
 
-        messages.add(message);
+        synchronized(messages)
+        {
+            messages.add(message);
+        }
+
         dispatchEvents(message);
         clearOldMessages();
     }
@@ -107,9 +111,12 @@ public class RecentLogMessageAppender extends AbstractAppender
 
     private void clearOldMessages()
     {
-        if (messages.size() > MAX_MESSAGES)
+        synchronized (messages)
         {
-            messages.remove(0, MESSAGE_TRUNC_SIZE);
+            if (messages.size() > MAX_MESSAGES)
+            {
+                messages.remove(0, MESSAGE_TRUNC_SIZE);
+            }
         }
     }
 

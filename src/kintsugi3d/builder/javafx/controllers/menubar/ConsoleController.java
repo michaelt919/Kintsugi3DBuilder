@@ -117,7 +117,10 @@ public class ConsoleController implements Initializable
 
         if (toggleButtonPause.isSelected())
         {
-            items = FXCollections.observableArrayList(logMessages.getMessages());
+            synchronized (logMessages.getMessages())
+            {
+                items = FXCollections.observableArrayList(logMessages.getMessages());
+            }
         }
         else
         {
