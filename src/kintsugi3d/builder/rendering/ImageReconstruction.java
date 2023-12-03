@@ -19,16 +19,15 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
+import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.vecmath.DoubleVector2;
 import kintsugi3d.gl.vecmath.DoubleVector3;
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -168,11 +167,11 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                         ColorAppearanceRMSE sampleRMSE = new ColorAppearanceRMSE();
 
                         DoubleVector3 sRGBError = groundTruthRGB.minus(reconstructedRGB);
-                        sampleRMSE.setSRGB(sRGBError.dot(sRGBError) / 3); // mean squared error for the three channels
+                        sampleRMSE.setNormalizedSRGB(sRGBError.dot(sRGBError) / 3); // mean squared error for the three channels
 
                         DoubleVector3 linearError = groundTruthRGB.applyOperator(x -> Math.pow(x, gamma))
                             .minus(reconstructedRGB.applyOperator(x -> Math.pow(x, gamma)));
-                        sampleRMSE.setLinear(linearError.dot(linearError) / 3);
+                        sampleRMSE.setNormalizedLinear(linearError.dot(linearError) / 3);
 
                         // TODO: encoded / tonemapped RMSE
 
@@ -180,8 +179,8 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                     })
                     .average().orElse(0.0)); // mean over pixels
 
-            log.info("Raw sRGB RMSE: " + totalRMSE.getSRGB());
-            log.info("Raw linear RMSE: " + totalRMSE.getLinear());
+            log.info("Raw sRGB RMSE: " + totalRMSE.getNormalizedSRGB());
+            log.info("Raw linear RMSE: " + totalRMSE.getNormalizedLinear());
 
             // Multiply by the true whitepoint luminance (for an encoded value of 1.0) divided by pi, gamma corrected.
             // To match the original images dynamic range, the cosine-weighted reflectance values in the framebuffer
@@ -190,15 +189,15 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
             double decodedWhitePoint = viewSet.getLuminanceEncoding().decodeFunction.applyAsDouble(255.0);
             log.info("Decoded white point (as reflectance * pi): " + decodedWhitePoint);
 
-            double normalizedSRGBRMSE = totalRMSE.getSRGB() * Math.pow(decodedWhitePoint / Math.PI, 1.0 / gamma);
+            double normalizedSRGBRMSE = totalRMSE.getNormalizedSRGB() * Math.pow(decodedWhitePoint / Math.PI, 1.0 / gamma);
             log.info("Normalized sRGB RMSE (* white point / pi): " + normalizedSRGBRMSE);
 
-            double normalizedLinearRMSE = totalRMSE.getLinear() * decodedWhitePoint / Math.PI;
+            double normalizedLinearRMSE = totalRMSE.getNormalizedLinear() * decodedWhitePoint / Math.PI;
             log.info("Normalized linear RMSE (* white point / pi): " + normalizedLinearRMSE);
 
             ColorAppearanceRMSE finalRMSE = new ColorAppearanceRMSE();
-            finalRMSE.setSRGB(normalizedSRGBRMSE);
-            finalRMSE.setLinear(normalizedLinearRMSE);
+            finalRMSE.setNormalizedSRGB(normalizedSRGBRMSE);
+            finalRMSE.setNormalizedLinear(normalizedLinearRMSE);
             finalRMSE.setSampleCount(sampleCount);
 
             return finalRMSE;

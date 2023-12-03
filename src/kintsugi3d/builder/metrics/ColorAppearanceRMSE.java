@@ -17,39 +17,39 @@ package kintsugi3d.builder.metrics;
  */
 public class ColorAppearanceRMSE
 {
-    private double linear = Double.POSITIVE_INFINITY;
-    private double sRGB = Double.POSITIVE_INFINITY;
-    private double encoded = Double.POSITIVE_INFINITY;
+    private double normalizedLinear = Double.POSITIVE_INFINITY;
+    private double normalizedSRGB = Double.POSITIVE_INFINITY;
+    private double encodedGroundTruth = Double.POSITIVE_INFINITY;
     private long sampleCount = 0;
 
-    public double getLinear()
+    public double getNormalizedLinear()
     {
-        return linear;
+        return normalizedLinear;
     }
 
-    public void setLinear(double linear)
+    public void setNormalizedLinear(double normalizedLinear)
     {
-        this.linear = linear;
+        this.normalizedLinear = normalizedLinear;
     }
 
-    public double getSRGB()
+    public double getNormalizedSRGB()
     {
-        return sRGB;
+        return normalizedSRGB;
     }
 
-    public void setSRGB(double sRGB)
+    public void setNormalizedSRGB(double normalizedSRGB)
     {
-        this.sRGB = sRGB;
+        this.normalizedSRGB = normalizedSRGB;
     }
 
-    public double getEncoded()
+    public double getEncodedGroundTruth()
     {
-        return encoded;
+        return encodedGroundTruth;
     }
 
-    public void setEncoded(double encoded)
+    public void setEncodedGroundTruth(double encodedGroundTruth)
     {
-        this.encoded = encoded;
+        this.encodedGroundTruth = encodedGroundTruth;
     }
 
     public long getSampleCount()
