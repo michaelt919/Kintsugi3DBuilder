@@ -17,7 +17,6 @@
 
 uniform vec3 reconstructionCameraPos;
 uniform vec3 reconstructionLightPos;
-uniform vec3 reconstructionLightIntensity;
 // gamma defined in colorappearance.glsl
 
 layout(location = 0) out vec4 fragColor;
@@ -36,32 +35,15 @@ void main()
     }
 
     float roughness = sqrtRoughness_Mask[0] * sqrtRoughness_Mask[0] / (filteredMask * filteredMask);
-
     vec3 diffuseColor = pow(texture(diffuseMap, fTexCoord).rgb / filteredMask, vec3(gamma));
     vec3 specularColor = pow(texture(specularEstimate, fTexCoord).rgb / filteredMask, vec3(gamma));
 
-    mat3 tangentToObject = constructTBNExact();
-    vec3 triangleNormal = tangentToObject[2];
-
-    vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
-    vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
-    vec3 normal = tangentToObject * normalDirTS;
-
-    vec3 position = getPosition();
-    vec3 lightDisplacement = reconstructionLightPos - position;
-    vec3 light = normalize(lightDisplacement);
-    vec3 view = normalize(reconstructionCameraPos - position);
-    vec3 halfway = normalize(light + view);
-    float nDotH = max(0.0, dot(normal, halfway));
-    float nDotL = max(0.0, dot(normal, light));
-    float nDotV = max(0.0, dot(normal, view));
-    float hDotV = max(0.0, dot(halfway, view));
-    vec3 incidentRadianceOverPi = 1.0 / linearizeColor(vec3(1));
-
-    vec3 specular = incidentRadianceOverPi * distTimesPi(nDotH, vec3(roughness))
-        * geom(roughness, nDotH, nDotV, nDotL, hDotV)
-        * fresnel(specularColor.rgb, vec3(1), hDotV) / (4 * nDotV);
+    LightingParameters l = calculateLightingParameters(reconstructionCameraPos, reconstructionLightPos);
+    vec3 specular = distTimesPi(l.nDotH, vec3(roughness))
+        * geom(roughness, l.nDotH, l.nDotV, l.nDotL, l.hDotV)
+        * fresnel(specularColor.rgb, vec3(1), l.hDotV) / (4 * l.nDotV * PI);
 
     // Reflectance is implicitly multiplied by n dot l.
-    fragColor = vec4(pow(diffuseColor * nDotL * incidentRadianceOverPi + specular, vec3(1.0 / gamma)), 1.0);
+    // Gamma correction intentionally omitted for error calculation.
+    fragColor = vec4(diffuseColor * l.nDotL / PI + specular, 1.0);
 }

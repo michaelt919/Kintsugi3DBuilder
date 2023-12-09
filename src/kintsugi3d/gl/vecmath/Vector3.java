@@ -183,6 +183,16 @@ public class Vector3 implements Iterable<Float>
         return new Vector3(this.x/s, this.y/s, this.z/s);
     }
 
+    public Vector3 times(Vector3 other)
+    {
+        return new Vector3(this.x * other.x, this.y * other.y, this.z * other.z);
+    }
+
+    public Vector3 dividedBy(Vector3 other)
+    {
+        return new Vector3(this.x / other.x, this.y / other.y, this.z / other.z);
+    }
+
     /**
      * Compute the dot product (scalar product) of this vector and another given vector.
      * @param other The vector to use when computing the dot product.

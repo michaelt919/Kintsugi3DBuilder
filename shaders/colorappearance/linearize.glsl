@@ -58,11 +58,6 @@ float getMaxLuminance()
     return maxLuminance;
 }
 
-float getMaxTonemappingScale()
-{
-    return 5.0;
-}
-
 vec3 linearizeColor(vec3 nonlinearColor)
 {
     vec3 linearColor;
@@ -78,25 +73,19 @@ vec3 linearizeColor(vec3 nonlinearColor)
         vec3 colorGamma = pow(nonlinearColor, vec3(gamma));
 
         // Step 2: convert to CIE luminance
-        // Clamp to 1 so that the ratio computed in step 3 is well defined
-        // if the luminance value somehow exceeds 1.0
-        float luminanceNonlinear = getLuminance(colorGamma);
+        float pseudoLuminance = getLuminance(colorGamma);
 
-        float maxLuminance = getMaxLuminance();
-
-        if (luminanceNonlinear > 1.0)
+        if (pseudoLuminance > 1.0)
         {
             linearColor = colorGamma * maxLuminance;
         }
         else
         {
-            // Step 3: determine the ratio between the linear and nonlinear luminance
+            // Step 3: determine the ratio between the true luminance and pseudo- (encoded) luminance
             // Reapply gamma correction to the single luminance value
-            float scale = min(getMaxTonemappingScale() * maxLuminance,
-                texture(luminanceMap, pow(luminanceNonlinear, 1.0 / gamma)).r / luminanceNonlinear);
+            float scale = texture(luminanceMap, pow(pseudoLuminance, 1.0 / gamma)).r / pseudoLuminance;
 
-            // Step 4: return the color, scaled to have the correct luminance,
-            // but the original saturation and hue.
+            // Step 4: return the color, scaled to have the correct luminance, but the original saturation and hue.
             linearColor = colorGamma * scale;
         }
     }

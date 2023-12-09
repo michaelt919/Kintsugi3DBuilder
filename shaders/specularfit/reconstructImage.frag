@@ -17,54 +17,38 @@
 
 uniform vec3 reconstructionCameraPos;
 uniform vec3 reconstructionLightPos;
-uniform vec3 reconstructionLightIntensity;
 // gamma defined in colorappearance.glsl
 
 layout(location = 0) out vec4 fragColor;
 
 void main()
 {
-    mat3 tangentToObject = constructTBNExact();
-    vec3 triangleNormal = tangentToObject[2];
-
-    vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
-    vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
-    vec3 normal = tangentToObject * normalDirTS;
-
-    vec3 position = getPosition();
-    vec3 lightDisplacement = reconstructionLightPos - position;
-    vec3 light = normalize(lightDisplacement);
-    vec3 view = normalize(reconstructionCameraPos - position);
-    vec3 halfway = normalize(light + view);
-    float nDotH = max(0.0, dot(normal, halfway));
-    float nDotL = max(0.0, dot(normal, light));
-    float nDotV = max(0.0, dot(normal, view));
-    float hDotV = max(0.0, dot(halfway, view));
     float sqrtRoughness = texture(roughnessMap, fTexCoord)[0];
     float roughness = sqrtRoughness * sqrtRoughness;
     float geomRatio;
 
-    if (nDotL > 0.0 && nDotV > 0.0)
+    LightingParameters l = calculateLightingParameters(reconstructionCameraPos, reconstructionLightPos);
+    if (l.nDotL > 0.0 && l.nDotV > 0.0)
     {
-        float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-        geomRatio = maskingShadowing / (4 * nDotL * nDotV);
+        float maskingShadowing = geom(roughness, l.nDotH, l.nDotV, l.nDotL, l.hDotV);
+        geomRatio = maskingShadowing / (4 * l.nDotL * l.nDotV);
     }
-    else if (nDotL > 0.0)
+    else if (l.nDotL > 0.0)
     {
-        geomRatio = 0.5 / (roughness * nDotL); // Limit as n dot v goes to zero.
+        geomRatio = 0.5 / (roughness * l.nDotL); // Limit as n dot v goes to zero.
     }
 
-    vec3 incidentRadiance = PI / linearizeColor(vec3(1));
-
-    if (nDotL > 0.0)
+    if (l.nDotL > 0.0)
     {
         vec3 brdf = pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma)) / PI + geomRatio * getMFDEstimate(nDotH);
-        fragColor = vec4(pow(incidentRadiance * nDotL * brdf, vec3(1.0 / gamma)), 1.0);
+        fragColor = vec4(pow(l.nDotL * brdf, vec3(1.0 / gamma)), 1.0);
     }
     else
     {
         // Limit as n dot l and n dot v both go to zero.
-        vec3 mfd = getMFDEstimate(nDotH);
-        fragColor = vec4(pow(incidentRadiance * mfd * 0.5 / roughness, vec3(1.0 / gamma)), 1.0);
+        vec3 mfd = getMFDEstimate(l.nDotH);
+
+        // Gamma correction intentionally omitted for error calculation.
+        fragColor = vec4(mfd * 0.5 / roughness, 1.0);
     }
 }

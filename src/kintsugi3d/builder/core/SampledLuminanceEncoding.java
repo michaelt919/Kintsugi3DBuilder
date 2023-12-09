@@ -14,6 +14,7 @@ package kintsugi3d.builder.core;
 
 import java.util.function.DoubleUnaryOperator;
 
+import kintsugi3d.builder.resources.ibr.LuminanceMapResources;
 import kintsugi3d.gl.core.ColorFormat;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Texture1D;
@@ -21,8 +22,9 @@ import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
-import kintsugi3d.builder.resources.ibr.LuminanceMapResources;
+import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.util.CubicHermiteSpline;
+import kintsugi3d.util.SRGB;
 
 public class SampledLuminanceEncoding 
 {
@@ -117,6 +119,77 @@ public class SampledLuminanceEncoding
         }
 
         return sampledEncodeFunction;
+    }
+
+    public DoubleVector3 encode(DoubleVector3 decoded)
+    {
+        if (decoded.x <= 0.0 && decoded.y <= 0.0 && decoded.z <= 0.0)
+        {
+            return DoubleVector3.ZERO;
+        }
+        else
+        {
+            // Step 1: convert to CIE luminance
+            double luminance = SRGB.luminanceFromLinear(decoded);
+
+            double maxLuminance = decodeFunction.applyAsDouble(1.0);
+
+            if (luminance > 1.0)
+            {
+                // outside the range of the ColorChecker
+                // remap linear color to the original [0, 1] range and convert to sRGB
+                return SRGB.fromLinear(decoded.dividedBy(maxLuminance));
+            }
+            else
+            {
+                // Step 2: determine the ratio between the true luminance and pseudo- (encoded) luminance
+                // Reapply sRGB decoding to the single luminance value
+                // greyscale so component is arbitrary
+                double pseudoLuminance = SRGB.toLinear(new DoubleVector3(encodeFunction.applyAsDouble(luminance))).y;
+                double scale = pseudoLuminance / luminance;
+
+                // Step 3: calculate the pseudo-linear color, scaled to pseudo- (encoded) luminance, but the original saturation and hue.
+                DoubleVector3 pseudoLinear = decoded.times(scale);
+
+                // Step 4: convert to sRGB
+                return SRGB.fromLinear(pseudoLinear);
+            }
+        }
+    }
+
+    public DoubleVector3 decode(DoubleVector3 encoded)
+    {
+        if (encoded.x <= 0.0 && encoded.y <= 0.0 && encoded.z <= 0.0)
+        {
+            return DoubleVector3.ZERO;
+        }
+        else
+        {
+            // Step 1: convert sRGB to pseudo-linear
+            DoubleVector3 psuedoLinear = SRGB.toLinear(encoded);
+
+            // Step 2: convert to CIE luminance
+            double pseudoLuminance = SRGB.luminanceFromLinear(psuedoLinear);
+
+            double maxLuminance = decodeFunction.applyAsDouble(1.0);
+
+            if (pseudoLuminance > 1.0)
+            {
+                // outside the range of the ColorChecker
+                return psuedoLinear.times(maxLuminance);
+            }
+            else
+            {
+                // Step 3: determine the ratio between the true luminance and pseudo- (encoded) luminance
+                // Reapply sRGB encoding to the single luminance value
+                // greyscale so component is arbitrary
+                double trueLuminance = decodeFunction.applyAsDouble(SRGB.fromLinear(new DoubleVector3(pseudoLuminance)).y);
+                double scale = trueLuminance / pseudoLuminance;
+
+                // Step 4: return the color, scaled to have the correct luminance, but the original saturation and hue.
+                return psuedoLinear.times(scale);
+            }
+        }
     }
 
     public <ContextType extends Context<ContextType>> Texture1D<ContextType> createLuminanceMap(ContextType context)

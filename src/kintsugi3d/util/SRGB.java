@@ -15,8 +15,12 @@ package kintsugi3d.util;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.gl.vecmath.Vector3;
 
-public class SRGB
+public final class SRGB
 {
+    private SRGB()
+    {
+    }
+
     /**
      * Converts sRGB to linear
      * @param sRGBColor
@@ -47,6 +51,7 @@ public class SRGB
         return toLinear(sRGBColor.asDoublePrecision()).asSinglePrecision();
     }
 
+
     /**
      * Converts linear to sRGB
      * @param linearColor
@@ -62,8 +67,38 @@ public class SRGB
             }
             else
             {
-                return (1.055) * Math.pow(x, 1.0/2.4) - 0.055;
+                return 1.055 * Math.pow(x, 1.0/2.4) - 0.055;
             }
         });
+    }
+
+    /**
+     * Converts linear to sRGB
+     * @param linearColor
+     * @return
+     */
+    public static Vector3 fromLinear(Vector3 linearColor)
+    {
+        return fromLinear(linearColor.asDoublePrecision()).asSinglePrecision();
+    }
+
+    public static double luminanceFromLinear(DoubleVector3 linearColor)
+    {
+        return linearColor.dot(new DoubleVector3(0.2126729, 0.7151522, 0.0721750));
+    }
+
+    public static float luminanceFromLinear(Vector3 linearColor)
+    {
+        return (float)luminanceFromLinear(linearColor.asDoublePrecision());
+    }
+
+    public static double luminanceFromSRGB(DoubleVector3 sRGBColor)
+    {
+        return luminanceFromLinear(toLinear(sRGBColor));
+    }
+
+    public static float luminanceFromSRGB(Vector3 sRGBColor)
+    {
+        return luminanceFromLinear(toLinear(sRGBColor));
     }
 }

@@ -132,6 +132,16 @@ public class DoubleVector3 implements Iterable<Double>
         return new DoubleVector3(this.x/s, this.y/s, this.z/s);
     }
 
+    public DoubleVector3 times(DoubleVector3 other)
+    {
+        return new DoubleVector3(this.x * other.x, this.y * other.y, this.z * other.z);
+    }
+
+    public DoubleVector3 dividedBy(DoubleVector3 other)
+    {
+        return new DoubleVector3(this.x / other.x, this.y / other.y, this.z / other.z);
+    }
+
     public double dot(DoubleVector3 other)
     {
         return this.x * other.x + this.y * other.y + this.z * other.z;
