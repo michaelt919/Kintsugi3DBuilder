@@ -17,6 +17,7 @@ import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.fit.settings.ReconstructionSettings;
+import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
@@ -27,10 +28,15 @@ import kintsugi3d.gl.core.Framebuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.DoubleAdder;
+import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 import java.util.function.IntFunction;
 
@@ -63,8 +69,8 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         }
     }
 
-    public double reconstruct(IntFunction<DoubleConsumer> rmseConsumers, SpecularMaterialResources<ContextType> specularFit,
-        ProgramBuilder<ContextType> programBuilder, File debugDirectory, File groundTruthDirectory)
+    public List<ColorAppearanceRMSE> reconstruct(SpecularMaterialResources<ContextType> specularFit,
+            ProgramBuilder<ContextType> programBuilder, File debugDirectory, File groundTruthDirectory)
     {
         if (debugDirectory != null)
         {
@@ -111,42 +117,41 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
                 reconstructionViewSet = resources.getViewSet();
             }
 
-            DoubleAdder totalMSE = new DoubleAdder();
-            DoubleAdder totalPixels = new DoubleAdder();
+            List<ColorAppearanceRMSE> rmseOut = new ArrayList<>(reconstructionViewSet.getCameraPoseCount());
 
             // Run the reconstruction and save the results to file
-            reconstruction.execute(reconstructionViewSet,
-                (k, reconstructionFramebuffer) ->
-                {   if (debugDirectory != null)
-                    {
-                        saveImageToFile(debugDirectory, k, reconstructionFramebuffer);
-                    }
-                },
-                (k, groundTruthFramebuffer) ->
-                {
-                    if (groundTruthDirectory != null)
-                    {
-                        saveImageToFile(groundTruthDirectory, k, groundTruthFramebuffer);
-                    }
-                },
-                (k, rmse) ->
-                {
-                    // Record RMSE
-                    rmseConsumers.apply(k).accept(rmse.x);
-                    totalMSE.add(rmse.x * rmse.x * rmse.y /* rmse.y = pixel count after masking */);
-                    //noinspection SuspiciousNameCombination
-                    totalPixels.add(rmse.y /* pixel count after masking */);
-                });
+            for (int k = 0; k < reconstructionViewSet.getCameraPoseCount(); k++)
+            {
+                int viewIndex = k;
 
-            // Report average RMSE across all views
-            double avgRMSE = Math.sqrt(totalMSE.doubleValue() / totalPixels.doubleValue());
-            log.info("Average RMSE across all views: " + avgRMSE);
-            return avgRMSE;
+                BufferedImage groundTruth = ImageIO.read(reconstructionViewSet.findFullResImageFile(viewIndex));
+
+                ColorAppearanceRMSE rmse = reconstruction.execute(reconstructionViewSet, viewIndex,
+                    reconstructionFramebuffer ->
+                    {
+                        if (debugDirectory != null) {
+                            saveImageToFile(debugDirectory, viewIndex, reconstructionFramebuffer);
+                        }
+                    },
+                    TODO,
+                    groundTruth);
+                    /*groundTruthFramebuffer ->
+                    {
+                        if (groundTruthDirectory != null) {
+                            saveImageToFile(groundTruthDirectory, viewIndex, groundTruthFramebuffer);
+                        }
+                    }*/
+
+                // Record RMSE
+                rmseOut.add(rmse);
+            }
+
+            return rmseOut;
         }
         catch (IOException e)
         {
             log.error("An error occurred during reconstruction:", e);
-            return Double.NaN;
+            return null;
         }
     }
 

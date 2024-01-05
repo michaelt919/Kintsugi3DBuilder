@@ -57,6 +57,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
      * @param viewSet
      * @param viewIndex
      * @param reconstructionAction
+     * @param incidentRadianceLookup
      * @param groundTruth
      * @return x-component stores rmse, y-component stores pixel count after masking
      */
@@ -163,29 +164,9 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         totalRMSE.setEncodedGroundTruth(totalRMSEPacked.x);
         totalRMSE.setNormalizedSRGB(totalRMSEPacked.y);
         totalRMSE.setNormalizedLinear(totalRMSEPacked.z);
+        totalRMSE.setSampleCount(sampleCount);
 
-        log.info("Raw sRGB RMSE: " + totalRMSE.getNormalizedSRGB());
-        log.info("Raw linear RMSE: " + totalRMSE.getNormalizedLinear());
-
-        // Multiply by the true whitepoint luminance (for an encoded value of 1.0) divided by pi, gamma corrected.
-        // To match the original images dynamic range, the cosine-weighted reflectance values in the framebuffer
-        // will have been pre-divided by this value / PI, then gamma corrected.
-        // Multiplying will reconvert the RMSE back to being in terms of cosine-weighted, normalized reflectance.
-        double decodedWhitePoint = viewSet.getLuminanceEncoding().decodeFunction.applyAsDouble(255.0);
-        log.info("Decoded white point (as reflectance * pi): " + decodedWhitePoint);
-
-        double normalizedSRGBRMSE = totalRMSE.getNormalizedSRGB() * Math.pow(decodedWhitePoint / Math.PI, 1.0 / gamma);
-        log.info("Normalized sRGB RMSE (* white point / pi): " + normalizedSRGBRMSE);
-
-        double normalizedLinearRMSE = totalRMSE.getNormalizedLinear() * decodedWhitePoint / Math.PI;
-        log.info("Normalized linear RMSE (* white point / pi): " + normalizedLinearRMSE);
-
-        ColorAppearanceRMSE finalRMSE = new ColorAppearanceRMSE();
-        finalRMSE.setNormalizedSRGB(normalizedSRGBRMSE);
-        finalRMSE.setNormalizedLinear(normalizedLinearRMSE);
-        finalRMSE.setSampleCount(sampleCount);
-
-        return finalRMSE;
+        return totalRMSE;
     }
 
     @Override
