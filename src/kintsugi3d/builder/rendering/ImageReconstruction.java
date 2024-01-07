@@ -22,10 +22,11 @@ import java.util.stream.IntStream;
 
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
-import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
-import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.Drawable;
+import kintsugi3d.gl.core.Framebuffer;
+import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.util.SRGB;
 import org.slf4j.Logger;
@@ -34,21 +35,12 @@ import org.slf4j.LoggerFactory;
 public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable
 {
     private static final Logger log = LoggerFactory.getLogger(ImageReconstruction.class);
-    private final ProgramObject<ContextType> program;
-
-    private final Drawable<ContextType> drawable;
 
     private final FramebufferObject<ContextType> framebuffer;
 
-    public ImageReconstruction(ReadonlyIBRResources<ContextType> resources, ProgramBuilder<ContextType> programBuilder,
-                               FramebufferObjectBuilder<ContextType> framebufferObjectBuilder, Consumer<Program<ContextType>> programSetup)
+    public ImageReconstruction(FramebufferObjectBuilder<ContextType> framebufferObjectBuilder)
         throws FileNotFoundException
     {
-        this.program = programBuilder.createProgram();
-        resources.setupShaderProgram(program);
-        programSetup.accept(program);
-        this.drawable = resources.createDrawable(program);
-
         this.framebuffer = framebufferObjectBuilder.createFramebufferObject();
     }
 
@@ -61,8 +53,8 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
      * @param groundTruth
      * @return x-component stores rmse, y-component stores pixel count after masking
      */
-    public ColorAppearanceRMSE execute(ReadonlyViewSet viewSet, int viewIndex, Consumer<Framebuffer<ContextType>> reconstructionAction,
-        IntFunction<DoubleVector3> incidentRadianceLookup, BufferedImage groundTruth)
+    public ColorAppearanceRMSE execute(ReadonlyViewSet viewSet, int viewIndex, Drawable<ContextType> drawable,
+        Consumer<Framebuffer<ContextType>> reconstructionAction, IntFunction<DoubleVector3> incidentRadianceLookup, BufferedImage groundTruth)
         throws IOException
     {
         float gamma = viewSet.getGamma();  // TODO: use proper sRGB, not gamma correction
@@ -172,7 +164,6 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
     @Override
     public void close()
     {
-        program.close();
         framebuffer.close();
     }
 }

@@ -18,6 +18,7 @@ package kintsugi3d.gl.core;
  * @author Michael Tetzlaff
  *
  */
+@SuppressWarnings("InterfaceMayBeAnnotatedFunctional")
 public interface Resource extends AutoCloseable
 {
     /**

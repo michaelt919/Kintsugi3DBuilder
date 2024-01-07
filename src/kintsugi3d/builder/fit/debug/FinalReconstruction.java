@@ -12,33 +12,27 @@
 
 package kintsugi3d.builder.fit.debug;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.imageio.ImageIO;
+
 import kintsugi3d.builder.core.Projection;
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.fit.settings.ReconstructionSettings;
 import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
-import kintsugi3d.gl.core.ColorFormat;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.Framebuffer;
+import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.DoubleAdder;
-import java.util.function.Consumer;
-import java.util.function.DoubleConsumer;
-import java.util.function.IntFunction;
 
 public class FinalReconstruction<ContextType extends Context<ContextType>>
 {
@@ -69,8 +63,10 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         }
     }
 
-    public List<ColorAppearanceRMSE> reconstruct(SpecularMaterialResources<ContextType> specularFit,
-            ProgramBuilder<ContextType> programBuilder, File debugDirectory, File groundTruthDirectory)
+    public Map<String, List<ColorAppearanceRMSE>> reconstruct(SpecularMaterialResources<ContextType> specularFit,
+            Map<String, ProgramBuilder<ContextType>> reconstructionProgramBuilders,
+            ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
+            File debugDirectory, File groundTruthDirectory)
     {
         if (debugDirectory != null)
         {
@@ -84,14 +80,20 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         }
 
         // Create reconstruction provider
-        try (ImageReconstruction<ContextType> reconstruction = new ImageReconstruction<>(
-            resources,
-            programBuilder,
+        try (ResourceMap<String, ProgramObject<ContextType>> programMap = new ResourceMap<>(reconstructionProgramBuilders.size());
+            ImageReconstruction<ContextType> reconstruction = new ImageReconstruction<>(
             resources.getContext().buildFramebufferObject(imageWidth, imageHeight)
                 .addColorAttachment(ColorFormat.RGBA32F)
-                .addDepthAttachment(),
-            program ->
+                .addDepthAttachment()))
+        {
+            Map<String, Drawable<ContextType>> drawableMap = new HashMap<>(reconstructionProgramBuilders.size());
+
+            for (var entry : reconstructionProgramBuilders.entrySet())
             {
+                ProgramObject<ContextType> program = entry.getValue().createProgram();
+                programMap.put(entry.getKey(), program);
+                resources.setupShaderProgram(program);
+
                 specularFit.getBasisResources().useWithShaderProgram(program);
                 specularFit.getBasisWeightResources().useWithShaderProgram(program);
                 program.setTexture("normalMap", specularFit.getNormalMap());
@@ -104,8 +106,10 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
                     // TODO add support for constant maps in reconstruction shaders (if reconstruction isn't scrapped altogether)
                     program.setTexture("constantEstimate", specularFit.getConstantMap());
                 }
-            }))
-        {
+
+                drawableMap.put(entry.getKey(), resources.createDrawable(program));
+            }
+
             // Use the same view set as for fitting if another wasn't specified for reconstruction.
             ReadonlyViewSet reconstructionViewSet;
             if (reconstructionSettings.getReconstructionViewSet() != null)
@@ -126,7 +130,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
 
                 BufferedImage groundTruth = ImageIO.read(reconstructionViewSet.findFullResImageFile(viewIndex));
 
-                ColorAppearanceRMSE rmse = reconstruction.execute(reconstructionViewSet, viewIndex,
+                ColorAppearanceRMSE rmse = reconstruction.execute(reconstructionViewSet, viewIndex, TODO,
                     reconstructionFramebuffer ->
                     {
                         if (debugDirectory != null) {
