@@ -14,11 +14,13 @@ package kintsugi3d.gl.builders;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.function.Supplier;
 
-import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.ProgramObject;
+import kintsugi3d.gl.core.Shader;
+import kintsugi3d.gl.core.ShaderType;
 
-public interface ProgramBuilder<ContextType extends Context<ContextType>> extends Supplier<Program<ContextType>>
+public interface ProgramBuilder<ContextType extends Context<ContextType>>
 {
     ProgramBuilder<ContextType> define(String key, Object value);
     ProgramBuilder<ContextType> addShader(Shader<ContextType> shader);
