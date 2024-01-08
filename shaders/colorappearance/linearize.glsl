@@ -77,7 +77,7 @@ vec3 linearizeColor(vec3 nonlinearColor)
 
         if (pseudoLuminance > 1.0)
         {
-            linearColor = colorGamma * maxLuminance;
+            linearColor = colorGamma * getMaxLuminance();
         }
         else
         {

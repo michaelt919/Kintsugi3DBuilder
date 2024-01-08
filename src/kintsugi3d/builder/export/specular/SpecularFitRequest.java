@@ -38,6 +38,8 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
     private static final Logger log = LoggerFactory.getLogger(SpecularFitRequest.class);
     private final SpecularFitRequestParams settings;
 
+    private static final boolean DEBUG_IMAGES = false;
+
     /**
      * Default constructor for CLI args requests
      * @param modelAccess
@@ -120,21 +122,22 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
                         "basis", getBasisModelReconstructionProgramBuilder(resources, specularFit, programFactory),
                         "reflectivity", getReflectivityModelReconstructionProgramBuilder(resources, specularFit, programFactory)),
                     getIncidentRadianceProgramBuilder(resources, programFactory),
-                    settings.getOutputDirectory(), new File(settings.getOutputDirectory(), "ground-truth"));
+                    DEBUG_IMAGES ? settings.getOutputDirectory() : null,
+                    DEBUG_IMAGES ? new File(settings.getOutputDirectory(), "ground-truth") : null);
 
                 double reconstructionRMSE = rmseList.stream().mapToDouble(map ->
                     {
                         double rmse = map.get("basis").getEncodedGroundTruth();
                         return rmse * rmse; // mean of mean-squared errors
                     })
-                    .sum();
+                    .average().orElse(0.0);
 
                 double fittedRMSE = rmseList.stream().mapToDouble(map ->
                     {
                         double rmse = map.get("reflectivity").getEncodedGroundTruth();
                         return rmse * rmse; // mean of mean-squared errors
                     })
-                    .sum();
+                    .average().orElse(0.0);
 
                 if (!settings.getReconstructionSettings().shouldReconstructAll()) // Write to just one RMSE file if only doing a single image per reconstruction method
                 {

@@ -12,7 +12,12 @@
  *
  */
 
+in vec3 fPosition;
+
 #include "../common/usegeom.glsl"
+#line 19 0
+
+#define PI 3.1415926535897932384626433832795
 
 uniform vec3 reconstructionLightPos;
 uniform vec3 reconstructionLightIntensity;

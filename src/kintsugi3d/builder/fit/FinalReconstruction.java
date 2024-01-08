@@ -78,10 +78,21 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
             groundTruthDirectory.mkdirs();
         }
 
+        // Use the same view set as for fitting if another wasn't specified for reconstruction.
+        ReadonlyViewSet reconstructionViewSet;
+        if (reconstructionSettings.getReconstructionViewSet() != null)
+        {
+            reconstructionViewSet = reconstructionSettings.getReconstructionViewSet();
+        }
+        else
+        {
+            reconstructionViewSet = resources.getViewSet();
+        }
+
         try (@SuppressWarnings("MismatchedQueryAndUpdateOfCollection") ResourceMap<String, ProgramObject<ContextType>> programMap
                 = new ResourceMap<>(reconstructionProgramBuilders.size());
             ImageReconstruction<ContextType> reconstruction = new ImageReconstruction<>(
-                reconstructionSettings.getReconstructionViewSet(),
+                reconstructionViewSet,
                 resources.getContext().buildFramebufferObject(imageWidth, imageHeight)
                     .addColorAttachment(ColorFormat.RGBA32F)
                     .addDepthAttachment(),
@@ -111,17 +122,6 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
                 }
 
                 drawableMap.put(entry.getKey(), resources.createDrawable(program));
-            }
-
-            // Use the same view set as for fitting if another wasn't specified for reconstruction.
-            ReadonlyViewSet reconstructionViewSet;
-            if (reconstructionSettings.getReconstructionViewSet() != null)
-            {
-                reconstructionViewSet = reconstructionSettings.getReconstructionViewSet();
-            }
-            else
-            {
-                reconstructionViewSet = resources.getViewSet();
             }
 
             List<Map<String, ColorAppearanceRMSE>> rmseOut = new ArrayList<>(reconstructionViewSet.getCameraPoseCount());

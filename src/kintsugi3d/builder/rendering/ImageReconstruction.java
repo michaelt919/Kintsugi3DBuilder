@@ -13,7 +13,6 @@
 package kintsugi3d.builder.rendering;
 
 import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.FloatBuffer;
@@ -30,6 +29,7 @@ import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.util.SRGB;
+import org.lwjgl.*;
 
 public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable, Iterable<ReconstructionView<ContextType>>
 {
@@ -59,10 +59,10 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         this.incidentRadianceDrawable = resources.createDrawable(incidentRadianceProgram);
 
         FramebufferSize reconstructionSize = reconstructionFramebuffer.getSize();
-        reconstructionBuffer = FloatBuffer.allocate(reconstructionSize.width * reconstructionSize.height * 4);
+        reconstructionBuffer = BufferUtils.createFloatBuffer(reconstructionSize.width * reconstructionSize.height * 4);
 
         FramebufferSize incidentRadianceSize = incidentRadianceFramebuffer.getSize(); // should be the same as reconstruction size
-        incidentRadianceBuffer = FloatBuffer.allocate(incidentRadianceSize.width * incidentRadianceSize.height * 4);
+        incidentRadianceBuffer = BufferUtils.createFloatBuffer(incidentRadianceSize.width * incidentRadianceSize.height * 4);
     }
 
     private static <ContextType extends Context<ContextType>> void render(
@@ -120,10 +120,12 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         {
             return new ReconstructionView<>()
             {
+                private final int index = ReconstructionIterator.this.viewIndex;
+
                 @Override
                 public int getIndex()
                 {
-                    return viewIndex;
+                    return index;
                 }
 
                 @Override
@@ -144,7 +146,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                     float gamma = viewSet.getGamma();
                     drawable.program().setUniform("gamma", gamma);
 
-                    render(viewSet, viewIndex, drawable, reconstructionFramebuffer);
+                    render(viewSet, index, drawable, reconstructionFramebuffer);
 
                     reconstructionFramebuffer.getTextureReaderForColorAttachment(0).readFloatingPointRGBA(reconstructionBuffer);
 
@@ -152,8 +154,6 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                         .parallel()
                         .filter(p -> reconstructionBuffer.get(4 * p + 3) > 0.0) // only count pixels where we have geometry (mask out the rest)
                         .count();
-
-                    ColorModel colorModel = groundTruth.getColorModel();
 
                     DoubleVector3 totalRMSEPacked =
                         IntStream.range(0, reconstructionBuffer.limit() / 4)
@@ -166,7 +166,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                                 int rgb = groundTruth.getRGB(x, y);
 
                                 DoubleVector3 groundTruthEncoded =
-                                    new DoubleVector3(colorModel.getRed(rgb) / 255.0, colorModel.getGreen(rgb) / 255.0, colorModel.getBlue(rgb) / 255.0);
+                                    new DoubleVector3(((rgb >>> 16) & 0xFF) / 255.0, ((rgb >>> 8) & 0xFF) / 255.0, (rgb & 0xFF) / 255.0);
                                 DoubleVector3 incidentRadiance =
                                     new DoubleVector3(incidentRadianceBuffer.get(4 * p), incidentRadianceBuffer.get(4 * p + 1), incidentRadianceBuffer.get(4 * p + 2));
                                 DoubleVector3 reconstructedLinear =
@@ -183,7 +183,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
 
                                 if (viewSet.getLuminanceEncoding() != null)
                                 {
-                                    reconstructedEncoded = viewSet.getLuminanceEncoding().encode(reconstructedLinear.times(incidentRadiance));
+                                    reconstructedEncoded = viewSet.getLuminanceEncoding().encode(reconstructedLinear.times(incidentRadiance)).dividedBy(255.0);
                                     groundTruthLinear = viewSet.getLuminanceEncoding().decode(groundTruthEncoded).dividedBy(incidentRadiance);
                                     groundTruthSRGB = SRGB.fromLinear(groundTruthLinear);
                                 }
@@ -231,8 +231,9 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
             if (hasNext())
             {
                 refresh();
+                ReconstructionView<ContextType> view = makeReconstructionView();
                 viewIndex++;
-                return makeReconstructionView();
+                return view;
             }
             else
             {

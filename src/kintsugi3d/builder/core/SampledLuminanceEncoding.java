@@ -132,7 +132,7 @@ public class SampledLuminanceEncoding
             // Step 1: convert to CIE luminance
             double luminance = SRGB.luminanceFromLinear(decoded);
 
-            double maxLuminance = decodeFunction.applyAsDouble(1.0);
+            double maxLuminance = decodeFunction.applyAsDouble(255.0);
 
             if (luminance > 1.0)
             {
@@ -145,14 +145,14 @@ public class SampledLuminanceEncoding
                 // Step 2: determine the ratio between the true luminance and pseudo- (encoded) luminance
                 // Reapply sRGB decoding to the single luminance value
                 // greyscale so component is arbitrary
-                double pseudoLuminance = SRGB.toLinear(new DoubleVector3(encodeFunction.applyAsDouble(luminance))).y;
+                double pseudoLuminance = SRGB.toLinear(new DoubleVector3(encodeFunction.applyAsDouble(luminance) / 255.0)).y;
                 double scale = pseudoLuminance / luminance;
 
                 // Step 3: calculate the pseudo-linear color, scaled to pseudo- (encoded) luminance, but the original saturation and hue.
                 DoubleVector3 pseudoLinear = decoded.times(scale);
 
                 // Step 4: convert to sRGB
-                return SRGB.fromLinear(pseudoLinear);
+                return SRGB.fromLinear(pseudoLinear).times(255.0);
             }
         }
     }
@@ -166,12 +166,12 @@ public class SampledLuminanceEncoding
         else
         {
             // Step 1: convert sRGB to pseudo-linear
-            DoubleVector3 psuedoLinear = SRGB.toLinear(encoded);
+            DoubleVector3 psuedoLinear = SRGB.toLinear(encoded.dividedBy(255.0));
 
             // Step 2: convert to CIE luminance
             double pseudoLuminance = SRGB.luminanceFromLinear(psuedoLinear);
 
-            double maxLuminance = decodeFunction.applyAsDouble(1.0);
+            double maxLuminance = decodeFunction.applyAsDouble(255.0);
 
             if (pseudoLuminance > 1.0)
             {
@@ -183,7 +183,7 @@ public class SampledLuminanceEncoding
                 // Step 3: determine the ratio between the true luminance and pseudo- (encoded) luminance
                 // Reapply sRGB encoding to the single luminance value
                 // greyscale so component is arbitrary
-                double trueLuminance = decodeFunction.applyAsDouble(SRGB.fromLinear(new DoubleVector3(pseudoLuminance)).y);
+                double trueLuminance = decodeFunction.applyAsDouble(SRGB.fromLinear(new DoubleVector3(pseudoLuminance)).y * 255.0);
                 double scale = trueLuminance / pseudoLuminance;
 
                 // Step 4: return the color, scaled to have the correct luminance, but the original saturation and hue.
