@@ -1,25 +1,20 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
- * Copyright (c) 2019 The Regents of the University of Minnesota
+ *  Copyright (c) Michael Tetzlaff 2024
  *
- * Licensed under GPLv3
- * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *  Licensed under GPLv3
+ *  ( http://www.gnu.org/licenses/gpl-3.0.html )
  *
- * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ *  This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  *
+ *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.fit.debug;
+package kintsugi3d.builder.fit;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.imageio.ImageIO;
+import java.util.*;
 
 import kintsugi3d.builder.core.Projection;
 import kintsugi3d.builder.core.ReadonlyViewSet;
@@ -27,6 +22,7 @@ import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.settings.ReconstructionSettings;
 import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.rendering.ImageReconstruction;
+import kintsugi3d.builder.rendering.ReconstructionView;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -36,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 public class FinalReconstruction<ContextType extends Context<ContextType>>
 {
-    private static final Logger log = LoggerFactory.getLogger(FinalReconstruction.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FinalReconstruction.class);
     private final ReadonlyIBRResources<ContextType> resources;
     private final ReconstructionSettings reconstructionSettings;
 
@@ -63,15 +59,18 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         }
     }
 
-    public Map<String, List<ColorAppearanceRMSE>> reconstruct(SpecularMaterialResources<ContextType> specularFit,
+    public List<Map<String, ColorAppearanceRMSE>> reconstruct(SpecularMaterialResources<ContextType> specularFit,
             Map<String, ProgramBuilder<ContextType>> reconstructionProgramBuilders,
             ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
             File debugDirectory, File groundTruthDirectory)
     {
         if (debugDirectory != null)
         {
-            // Create directory for reconstructions from basis functions
-            debugDirectory.mkdirs();
+            for (String reconstructionType : reconstructionProgramBuilders.keySet())
+            {
+                // Create directory for reconstructions from basis functions
+                new File(debugDirectory, reconstructionType).mkdirs();
+            }
         }
 
         if (groundTruthDirectory != null)
@@ -79,12 +78,17 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
             groundTruthDirectory.mkdirs();
         }
 
-        // Create reconstruction provider
-        try (ResourceMap<String, ProgramObject<ContextType>> programMap = new ResourceMap<>(reconstructionProgramBuilders.size());
+        try (@SuppressWarnings("MismatchedQueryAndUpdateOfCollection") ResourceMap<String, ProgramObject<ContextType>> programMap
+                = new ResourceMap<>(reconstructionProgramBuilders.size());
             ImageReconstruction<ContextType> reconstruction = new ImageReconstruction<>(
-            resources.getContext().buildFramebufferObject(imageWidth, imageHeight)
-                .addColorAttachment(ColorFormat.RGBA32F)
-                .addDepthAttachment()))
+                reconstructionSettings.getReconstructionViewSet(),
+                resources.getContext().buildFramebufferObject(imageWidth, imageHeight)
+                    .addColorAttachment(ColorFormat.RGBA32F)
+                    .addDepthAttachment(),
+                resources.getContext().buildFramebufferObject(imageWidth, imageHeight)
+                    .addColorAttachment(ColorFormat.RGBA32F)
+                    .addDepthAttachment(),
+                incidentRadianceProgramBuilder, resources))
         {
             Map<String, Drawable<ContextType>> drawableMap = new HashMap<>(reconstructionProgramBuilders.size());
 
@@ -103,8 +107,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
 
                 if (specularFit.getConstantMap() != null)
                 {
-                    // TODO add support for constant maps in reconstruction shaders (if reconstruction isn't scrapped altogether)
-                    program.setTexture("constantEstimate", specularFit.getConstantMap());
+                    program.setTexture("constantMap", specularFit.getConstantMap());
                 }
 
                 drawableMap.put(entry.getKey(), resources.createDrawable(program));
@@ -121,40 +124,38 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
                 reconstructionViewSet = resources.getViewSet();
             }
 
-            List<ColorAppearanceRMSE> rmseOut = new ArrayList<>(reconstructionViewSet.getCameraPoseCount());
+            List<Map<String, ColorAppearanceRMSE>> rmseOut = new ArrayList<>(reconstructionViewSet.getCameraPoseCount());
 
             // Run the reconstruction and save the results to file
-            for (int k = 0; k < reconstructionViewSet.getCameraPoseCount(); k++)
+            for (ReconstructionView<ContextType> view : reconstruction)
             {
-                int viewIndex = k;
+                LOG.info("View {}:", view.getIndex());
+                // Allocate hash map for the current view
+                rmseOut.add(new HashMap<>(drawableMap.size()));
 
-                BufferedImage groundTruth = ImageIO.read(reconstructionViewSet.findFullResImageFile(viewIndex));
+                for (var entry : drawableMap.entrySet())
+                {
+                    ColorAppearanceRMSE rmse = view.reconstruct(entry.getValue());
 
-                ColorAppearanceRMSE rmse = reconstruction.execute(reconstructionViewSet, viewIndex, TODO,
-                    reconstructionFramebuffer ->
+                    if (debugDirectory != null)
                     {
-                        if (debugDirectory != null) {
-                            saveImageToFile(debugDirectory, viewIndex, reconstructionFramebuffer);
-                        }
-                    },
-                    TODO,
-                    groundTruth);
-                    /*groundTruthFramebuffer ->
-                    {
-                        if (groundTruthDirectory != null) {
-                            saveImageToFile(groundTruthDirectory, viewIndex, groundTruthFramebuffer);
-                        }
-                    }*/
+                        saveImageToFile(new File(debugDirectory, entry.getKey()), view.getIndex(), view.getReconstructionFramebuffer());
+                    }
 
-                // Record RMSE
-                rmseOut.add(rmse);
+                    // Record RMSE
+                    rmseOut.get(view.getIndex()).put(entry.getKey(), rmse);
+
+                    LOG.info("{}: \nencoded ground truth = {}\nnormalized sRGB = {}\nnormalized linear = {}",
+                        entry.getKey(), rmse.getEncodedGroundTruth(), rmse.getNormalizedSRGB(), rmse.getNormalizedLinear());
+                }
             }
 
             return rmseOut;
         }
-        catch (IOException e)
+        // NoSuchElementException thrown if there's an error reading a ground truth image from the view set
+        catch (FileNotFoundException | NoSuchElementException e)
         {
-            log.error("An error occurred during reconstruction:", e);
+            LOG.error("An error occurred during reconstruction:", e);
             return null;
         }
     }
@@ -168,7 +169,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         }
         catch (IOException e)
         {
-            log.error("An error occurred while saving image:", e);
+            LOG.error("An error occurred while saving image:", e);
         }
     }
 
@@ -180,7 +181,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         }
         catch (IOException e)
         {
-            log.error("An error occurred while saving image:", e);
+            LOG.error("An error occurred while saving image:", e);
         }
     }
 }

@@ -20,6 +20,27 @@ uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
 uniform sampler2D roughnessMap;
 
+#ifndef USE_CONSTANT_MAP
+#define USE_CONSTANT_MAP 0
+#endif
+
+#if USE_CONSTANT_MAP
+uniform sampler2D constantMap;
+
+vec3 getConstantTerm()
+{
+    return texture(constantMap, fTexCoord).rgb;
+}
+
+#else
+
+vec3 getConstantTerm()
+{
+    return vec3(0);
+}
+
+#endif
+
 #include <colorappearance/colorappearance_dynamic.glsl>
 
 #if COLOR_APPEARANCE_MODE == COLOR_APPEARANCE_MODE_ANALYTIC

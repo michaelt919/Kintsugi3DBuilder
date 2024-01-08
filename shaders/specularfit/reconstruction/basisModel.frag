@@ -12,7 +12,7 @@
  *
  */
 
-#include "specularFit.glsl"
+#include "../specularFit.glsl"
 #line 17 0
 
 uniform vec3 reconstructionCameraPos;
@@ -38,10 +38,16 @@ void main()
         geomRatio = 0.5 / (roughness * l.nDotL); // Limit as n dot v goes to zero.
     }
 
+    // Constant term for pseudo-translucency
+    // Division by PI since it's fit on the same scale as diffuse
+    vec3 constant = pow(getConstantTerm(), vec3(gamma)) / PI;
+
     if (l.nDotL > 0.0)
     {
-        vec3 brdf = pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma)) / PI + geomRatio * getMFDEstimate(nDotH);
-        fragColor = vec4(pow(l.nDotL * brdf, vec3(1.0 / gamma)), 1.0);
+        vec3 brdf = pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma)) / PI + geomRatio * getMFDEstimate(l.nDotH);
+
+        // Gamma correction intentionally omitted for error calculation.
+        fragColor = vec4(l.nDotL * brdf + constant, 1.0);
     }
     else
     {
@@ -49,6 +55,6 @@ void main()
         vec3 mfd = getMFDEstimate(l.nDotH);
 
         // Gamma correction intentionally omitted for error calculation.
-        fragColor = vec4(mfd * 0.5 / roughness, 1.0);
+        fragColor = vec4(mfd * 0.5 / roughness + constant, 1.0);
     }
 }

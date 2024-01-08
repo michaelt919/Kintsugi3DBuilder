@@ -12,29 +12,26 @@
 
 package kintsugi3d.builder.export.specular;
 
-import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.export.specular.gltf.SpecularFitGltfExporter;
-import kintsugi3d.builder.fit.SpecularFitProcess;
-import kintsugi3d.builder.fit.SpecularFitProgramFactory;
-import kintsugi3d.builder.fit.debug.FinalReconstruction;
-import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
-import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
-import kintsugi3d.builder.state.ReadonlyObjectModel;
-import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
-import kintsugi3d.gl.builders.ProgramBuilder;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.List;
+import java.util.Map;
+
+import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.fit.FinalReconstruction;
+import kintsugi3d.builder.fit.SpecularFitProcess;
+import kintsugi3d.builder.fit.SpecularFitProgramFactory;
+import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
+import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
+import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
+import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
+import kintsugi3d.gl.builders.ProgramBuilder;
+import kintsugi3d.gl.core.Context;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGraphicsRequest
 {
@@ -118,25 +115,34 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
                 FinalReconstruction<ContextType> reconstruction =
                     new FinalReconstruction<>(resources, settings.getTextureResolution(), settings.getReconstructionSettings());
 
-                log.info("Reconstructing ground truth images from basis representation:");
-                double reconstructionRMSE =
-                    reconstruction.reconstruct(specularFit, getImageReconstructionProgramBuilder(resources, programFactory),
-                        settings.getReconstructionSettings().shouldReconstructAll(),
-                        "reconstruction", "ground-truth", settings.getOutputDirectory());
+                log.info("Reconstructing:");
+                List<Map<String, ColorAppearanceRMSE>> rmseList = reconstruction.reconstruct(specularFit, Map.of(
+                        "basis", getBasisModelReconstructionProgramBuilder(resources, specularFit, programFactory),
+                        "reflectivity", getReflectivityModelReconstructionProgramBuilder(resources, specularFit, programFactory)),
+                    getIncidentRadianceProgramBuilder(resources, programFactory),
+                    settings.getOutputDirectory(), new File(settings.getOutputDirectory(), "ground-truth"));
 
-                log.info("Reconstructing ground truth images from fitted roughness / specular color:");
-                double fittedRMSE =
-                    reconstruction.reconstruct(specularFit, getFittedImageReconstructionProgramBuilder(resources, programFactory),
-                        settings.getReconstructionSettings().shouldReconstructAll(),
-                        "fitted", null, settings.getOutputDirectory());
+                double reconstructionRMSE = rmseList.stream().mapToDouble(map ->
+                    {
+                        double rmse = map.get("basis").getEncodedGroundTruth();
+                        return rmse * rmse; // mean of mean-squared errors
+                    })
+                    .sum();
+
+                double fittedRMSE = rmseList.stream().mapToDouble(map ->
+                    {
+                        double rmse = map.get("reflectivity").getEncodedGroundTruth();
+                        return rmse * rmse; // mean of mean-squared errors
+                    })
+                    .sum();
 
                 if (!settings.getReconstructionSettings().shouldReconstructAll()) // Write to just one RMSE file if only doing a single image per reconstruction method
                 {
                     try (PrintStream rmseOut = new PrintStream(new File(settings.getOutputDirectory(), "rmse.txt")))
                     // Text file containing error information
                     {
-                        rmseOut.println("reconstruction, " + reconstructionRMSE);
-                        rmseOut.println("fitted, " + fittedRMSE);
+                        rmseOut.println("basis, " + reconstructionRMSE);
+                        rmseOut.println("reflectivity, " + fittedRMSE);
                     }
                 }
             }
@@ -144,22 +150,31 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
     }
 
     private static <ContextType extends Context<ContextType>>
-    ProgramBuilder<ContextType> getImageReconstructionProgramBuilder(
+    ProgramBuilder<ContextType> getIncidentRadianceProgramBuilder(
         ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,
-                new File("shaders/common/imgspace.vert"),
-                new File("shaders/specularfit/reconstructImage.frag"));
+            new File("shaders/common/imgspace.vert"),
+            new File("shaders/specularfit/incidentRadiance.frag"));
     }
 
     private static <ContextType extends Context<ContextType>>
-    ProgramBuilder<ContextType> getFittedImageReconstructionProgramBuilder(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
+    ProgramBuilder<ContextType> getBasisModelReconstructionProgramBuilder(
+        ReadonlyIBRResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit, SpecularFitProgramFactory<ContextType> programFactory)
     {
         return programFactory.getShaderProgramBuilder(resources,
                 new File("shaders/common/imgspace.vert"),
-                new File("shaders/specularfit/renderFit.frag"));
+                new File("shaders/specularfit/reconstruction/basisModel.frag"))
+            .define("USE_CONSTANT_MAP", specularFit.getConstantMap() != null);
     }
 
-
+    private static <ContextType extends Context<ContextType>>
+    ProgramBuilder<ContextType> getReflectivityModelReconstructionProgramBuilder(
+        ReadonlyIBRResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit, SpecularFitProgramFactory<ContextType> programFactory)
+    {
+        return programFactory.getShaderProgramBuilder(resources,
+                new File("shaders/common/imgspace.vert"),
+                new File("shaders/specularfit/reconstruction/reflectivityModel.frag"))
+            .define("USE_CONSTANT_MAP", specularFit.getConstantMap() != null);
+    }
 }
