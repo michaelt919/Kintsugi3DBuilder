@@ -21,6 +21,7 @@ import java.util.Map;
 
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.FinalReconstruction;
+import kintsugi3d.builder.fit.ReconstructionShaders;
 import kintsugi3d.builder.fit.SpecularFitProcess;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
@@ -28,7 +29,6 @@ import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
-import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,9 +119,9 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
 
                 log.info("Reconstructing:");
                 List<Map<String, ColorAppearanceRMSE>> rmseList = reconstruction.reconstruct(specularFit, Map.of(
-                        "basis", getBasisModelReconstructionProgramBuilder(resources, specularFit, programFactory),
-                        "reflectivity", getReflectivityModelReconstructionProgramBuilder(resources, specularFit, programFactory)),
-                    getIncidentRadianceProgramBuilder(resources, programFactory),
+                        "basis", ReconstructionShaders.getBasisModelReconstructionProgramBuilder(resources, specularFit, programFactory),
+                        "reflectivity", ReconstructionShaders.getReflectivityModelReconstructionProgramBuilder(resources, specularFit, programFactory)),
+                    ReconstructionShaders.getIncidentRadianceProgramBuilder(resources, programFactory),
                     DEBUG_IMAGES ? settings.getOutputDirectory() : null,
                     DEBUG_IMAGES ? new File(settings.getOutputDirectory(), "ground-truth") : null);
 
@@ -150,34 +150,5 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
                 }
             }
         }
-    }
-
-    private static <ContextType extends Context<ContextType>>
-    ProgramBuilder<ContextType> getIncidentRadianceProgramBuilder(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
-    {
-        return programFactory.getShaderProgramBuilder(resources,
-            new File("shaders/common/imgspace.vert"),
-            new File("shaders/specularfit/incidentRadiance.frag"));
-    }
-
-    private static <ContextType extends Context<ContextType>>
-    ProgramBuilder<ContextType> getBasisModelReconstructionProgramBuilder(
-        ReadonlyIBRResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit, SpecularFitProgramFactory<ContextType> programFactory)
-    {
-        return programFactory.getShaderProgramBuilder(resources,
-                new File("shaders/common/imgspace.vert"),
-                new File("shaders/specularfit/reconstruction/basisModel.frag"))
-            .define("USE_CONSTANT_MAP", specularFit.getConstantMap() != null);
-    }
-
-    private static <ContextType extends Context<ContextType>>
-    ProgramBuilder<ContextType> getReflectivityModelReconstructionProgramBuilder(
-        ReadonlyIBRResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit, SpecularFitProgramFactory<ContextType> programFactory)
-    {
-        return programFactory.getShaderProgramBuilder(resources,
-                new File("shaders/common/imgspace.vert"),
-                new File("shaders/specularfit/reconstruction/reflectivityModel.frag"))
-            .define("USE_CONSTANT_MAP", specularFit.getConstantMap() != null);
     }
 }

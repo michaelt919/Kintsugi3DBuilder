@@ -46,7 +46,7 @@ public interface ViewSetReader
      * @param stream
      * @param root
      * @return The view set
-     * @throws IOException If I/O errors occur while reading the file.
+     * @throws Exception If errors occur while reading the file.
      */
     default ViewSet readFromStream(InputStream stream, File root) throws Exception
     {
@@ -61,7 +61,7 @@ public interface ViewSetReader
      * @param file The file to load
      * @param supportingFilesDirectory
      * @return The view set
-     * @throws IOException If I/O errors occur while reading the file.
+     * @throws Exception If errors occur while reading the file.
      */
     default ViewSet readFromFile(File file, File supportingFilesDirectory) throws Exception
     {

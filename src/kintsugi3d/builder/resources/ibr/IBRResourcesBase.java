@@ -30,13 +30,13 @@ public abstract class IBRResourcesBase<ContextType extends Context<ContextType>>
      */
     private final boolean ownerOfSharedResources;
 
-    protected IBRResourcesBase(IBRSharedResources<ContextType> sharedResources, boolean ownerOfSharedResources)
+    IBRResourcesBase(IBRSharedResources<ContextType> sharedResources, boolean ownerOfSharedResources)
     {
         this.sharedResources = sharedResources;
         this.ownerOfSharedResources = ownerOfSharedResources;
     }
 
-    protected IBRSharedResources<ContextType> getSharedResources()
+    IBRSharedResources<ContextType> getSharedResources()
     {
         return sharedResources;
     }

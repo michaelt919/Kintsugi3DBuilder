@@ -42,13 +42,6 @@ vec3 getConstantTerm()
 #endif
 
 #include <colorappearance/colorappearance_dynamic.glsl>
-
-#if COLOR_APPEARANCE_MODE == COLOR_APPEARANCE_MODE_ANALYTIC
-// For debugging or generating comparisons and figures.
-#undef NORMAL_TEXTURE_ENABLED
-#define NORMAL_TEXTURE_ENABLED 1
-#endif
-
 #include <colorappearance/reflectanceequations.glsl>
 
 #define COSINE_CUTOFF 0.0

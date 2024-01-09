@@ -16,7 +16,7 @@ public class SpecularBasisSettings
 {
     private int basisCount = 8;
     private int basisResolution = 90;
-    private double specularSmoothness = 0.0;
+    private double specularSmoothness = 1.0;
     private double metallicity = 0.0;
 
     private boolean smithMaskingShadowingEnabled = true;
