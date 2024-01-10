@@ -506,7 +506,7 @@ public final class ViewSet implements ReadonlyViewSet
      */
     public void setGeometryFileName(String fileName)
     {
-        this.geometryFile = this.rootDirectory.toPath().resolve(fileName).toFile();
+        this.geometryFile = fileName == null ? null : this.rootDirectory.toPath().resolve(fileName).toFile();
     }
 
     @Override

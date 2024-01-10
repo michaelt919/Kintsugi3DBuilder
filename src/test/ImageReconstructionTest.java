@@ -19,9 +19,13 @@ import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.builder.rendering.ImageReconstruction;
+import kintsugi3d.builder.rendering.ReconstructionView;
 import kintsugi3d.builder.resources.ibr.IBRResourcesAnalytic;
 import kintsugi3d.builder.state.impl.SimpleSettingsModel;
 import kintsugi3d.gl.core.ColorFormat;
+import kintsugi3d.gl.core.Drawable;
+import kintsugi3d.gl.core.Program;
+import kintsugi3d.gl.core.ProgramObject;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.glfw.CanvasWindow;
 import kintsugi3d.gl.opengl.OpenGLContext;
@@ -43,7 +47,7 @@ class ImageReconstructionTest
         try
         {
             viewSet = ViewSetReaderFromVSET.getInstance().readFromStream(
-                    getClass().getClassLoader().getResourceAsStream("Structured34View.vset"), null);
+                    getClass().getClassLoader().getResourceAsStream("test/Structured34View.vset"), null);
         }
         catch (Exception e)
         {
@@ -54,10 +58,10 @@ class ImageReconstructionTest
             OpenGLContextFactory.getInstance().buildWindow("Kintsugi 3D Builder Tests", 1, 1).create().getContext();
 
         Potato potato = new Potato(50, 0.75f, 0.1f, 250000);
-        PipedOutputStream out = new PipedOutputStream();
-        PipedInputStream in = new PipedInputStream();
-        out.connect(in);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
         potato.writeToStream(new PrintStream(out));
+
+        ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
         VertexGeometry geometry = VertexGeometry.createFromOBJStream(in);
 
         SimpleSettingsModel ibrSettings = new SimpleSettingsModel();
@@ -71,7 +75,7 @@ class ImageReconstructionTest
             ibrSettings, specularBasisSettings);
 
         try(IBRResourcesAnalytic<OpenGLContext> resources = new IBRResourcesAnalytic<>(context, viewSet, geometry);
-            ImageReconstruction<OpenGLContext> reconstruction = new ImageReconstruction<OpenGLContext>(
+            ImageReconstruction<OpenGLContext> reconstruction = new ImageReconstruction<>(
                 viewSet,
                 context.buildFramebufferObject(256, 256)
                         .addColorAttachment(ColorFormat.RGBA32F)
@@ -80,8 +84,17 @@ class ImageReconstructionTest
                         .addColorAttachment(ColorFormat.RGBA32F)
                         .addDepthAttachment(),
                 ReconstructionShaders.getIncidentRadianceProgramBuilder(resources, programFactory),
-                resources))
+                resources);
+            ProgramObject<OpenGLContext> analyticWithNoise = programFactory.getShaderProgramBuilder(resources,
+                    new File("shaders/common/imgspace.vert"),
+                    new File("shaders/test/renderWithNoise.frag"))
+                    .createProgram())
         {
+            Drawable<OpenGLContext> drawable = resources.createDrawable(analyticWithNoise);
+            for (ReconstructionView<OpenGLContext> view : reconstruction)
+            {
+                view.reconstruct(drawable);
+            }
         }
     }
 }

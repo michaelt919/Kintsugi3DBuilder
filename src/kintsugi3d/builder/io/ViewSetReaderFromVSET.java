@@ -273,13 +273,16 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
             result.getLightIntensityList().add(Vector3.ZERO);
         }
 
-        if (result.getGeometryFile() == null)
+        if (result.getGeometryFile() == null && result.getRootDirectory() != null)
         {
             result.setGeometryFileName("manifold.obj"); // Used by some really old datasets
         }
 
-        // Make sure the supporting files directory exists
-        result.getSupportingFilesFilePath().mkdirs();
+        if (result.getSupportingFilesFilePath() != null)
+        {
+            // Make sure the supporting files directory exists
+            result.getSupportingFilesFilePath().mkdirs();
+        }
 
         log.info("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
