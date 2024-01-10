@@ -9,15 +9,15 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  *
  */
+#line 13 4000
 
 #if !GEOMETRY_TEXTURES_ENABLED // position not needed if geometry textures are being used
 in vec3 fPosition;
 #endif
 in vec2 fTexCoord;
-// normal and tagnent will be declared by constructTBN.glsl
+// normal and tangent will be declared by constructTBN.glsl
 
 uniform sampler2D diffuseMap;
-uniform sampler2D normalMap;
 uniform sampler2D roughnessMap;
 
 #ifndef USE_CONSTANT_MAP
@@ -51,35 +51,4 @@ vec3 getConstantTerm()
 #endif
 
 #include "evaluateBRDF.glsl"
-#include "../common/constructTBN.glsl"
-
-struct LightingParameters
-{
-    float nDotH;
-    float nDotL;
-    float nDotV;
-    float hDotV;
-};
-
-LightingParameters calculateLightingParameters(vec3 lightPos, vec3 cameraPos)
-{
-    mat3 tangentToObject = constructTBNExact();
-    vec3 triangleNormal = tangentToObject[2];
-
-    vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
-    vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
-    vec3 normal = tangentToObject * normalDirTS;
-
-    vec3 position = getPosition();
-    vec3 lightDisplacement = lightPos - position;
-    vec3 light = normalize(lightDisplacement);
-    vec3 view = normalize(cameraPos - position);
-    vec3 halfway = normalize(light + view);
-
-    LightingParameters l;
-    l.nDotH = max(0.0, dot(normal, halfway));
-    l.nDotL = max(0.0, dot(normal, light));
-    l.nDotV = max(0.0, dot(normal, view));
-    l.hDotV = max(0.0, dot(halfway, view));
-    return l;
-}
+#include "lightingParameters.glsl"

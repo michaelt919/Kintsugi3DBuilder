@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
+import java.util.function.IntFunction;
 import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
 
@@ -34,6 +35,7 @@ import org.lwjgl.*;
 public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable, Iterable<ReconstructionView<ContextType>>
 {
     private final ReadonlyViewSet viewSet;
+    private final IntFunction<IntFunction<DoubleVector3>> groundTruthLoader;
 
     private final FramebufferObject<ContextType> incidentRadianceFramebuffer;
     private final ProgramObject<ContextType> incidentRadianceProgram;
@@ -45,11 +47,46 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
     private final FloatBuffer reconstructionBuffer;
 
     public ImageReconstruction(
+        ReadonlyViewSet viewSet,
+        FramebufferObjectBuilder<ContextType> framebufferObjectBuilder,
+        FramebufferObjectBuilder<ContextType> incidentRadianceFramebufferObjectBuilder,
+        ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
+        ReadonlyIBRResources<ContextType> resources)
+        throws FileNotFoundException
+    {
+        this(viewSet, framebufferObjectBuilder, incidentRadianceFramebufferObjectBuilder, incidentRadianceProgramBuilder, resources,
+            viewIndex ->
+            {
+                // load new ground truth
+                try
+                {
+                    BufferedImage groundTruthImage = ImageIO.read(viewSet.findFullResImageFile(viewIndex));
+
+                    return p ->
+                    {
+                        int x = p % groundTruthImage.getWidth();
+                        int y = groundTruthImage.getHeight() - 1 - p / groundTruthImage.getWidth();
+                        int rgb = groundTruthImage.getRGB(x, y);
+
+                        return new DoubleVector3(((rgb >>> 16) & 0xFF) / 255.0, ((rgb >>> 8) & 0xFF) / 255.0, (rgb & 0xFF) / 255.0);
+                    };
+                }
+                catch (IOException e)
+                {
+                    //noinspection ThrowInsideCatchBlockWhichIgnoresCaughtException,ProhibitedExceptionThrown
+                    throw new RuntimeException(e.toString());
+                }
+            }
+        );
+    }
+
+    public ImageReconstruction(
             ReadonlyViewSet viewSet,
             FramebufferObjectBuilder<ContextType> framebufferObjectBuilder,
             FramebufferObjectBuilder<ContextType> incidentRadianceFramebufferObjectBuilder,
             ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
-            ReadonlyIBRResources<ContextType> resources)
+            ReadonlyIBRResources<ContextType> resources,
+            IntFunction<IntFunction<DoubleVector3>> groundTruthLoader)
         throws FileNotFoundException
     {
         this.viewSet = viewSet;
@@ -57,6 +94,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         this.incidentRadianceFramebuffer = incidentRadianceFramebufferObjectBuilder.createFramebufferObject();
         this.incidentRadianceProgram = incidentRadianceProgramBuilder.createProgram();
         this.incidentRadianceDrawable = resources.createDrawable(incidentRadianceProgram);
+        this.groundTruthLoader = groundTruthLoader;
 
         FramebufferSize reconstructionSize = reconstructionFramebuffer.getSize();
         reconstructionBuffer = BufferUtils.createFloatBuffer(reconstructionSize.width * reconstructionSize.height * 4);
@@ -96,20 +134,12 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
     public final class ReconstructionIterator implements ListIterator<ReconstructionView<ContextType>>
     {
         private int viewIndex = 0;
-        private BufferedImage groundTruth;
+        private IntFunction<DoubleVector3> currentGroundTruth;
 
         private void refresh()
         {
             // load new ground truth
-            try
-            {
-                groundTruth = ImageIO.read(viewSet.findFullResImageFile(viewIndex));
-            }
-            catch (IOException e)
-            {
-                //noinspection ThrowInsideCatchBlockWhichIgnoresCaughtException
-                throw new NoSuchElementException(e.toString());
-            }
+            currentGroundTruth = groundTruthLoader.apply(viewIndex);
 
             // render incident radiance for this view
             render(viewSet, viewIndex, incidentRadianceDrawable, incidentRadianceFramebuffer);
@@ -161,12 +191,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                             .filter(p -> reconstructionBuffer.get(4 * p + 3) > 0.0) // only count pixels where we have geometry (mask out the rest)
                             .mapToObj(p ->
                             {
-                                int x = p % groundTruth.getWidth();
-                                int y = groundTruth.getHeight() - 1 - p / groundTruth.getWidth();
-                                int rgb = groundTruth.getRGB(x, y);
-
-                                DoubleVector3 groundTruthEncoded =
-                                    new DoubleVector3(((rgb >>> 16) & 0xFF) / 255.0, ((rgb >>> 8) & 0xFF) / 255.0, (rgb & 0xFF) / 255.0);
+                                DoubleVector3 groundTruthEncoded = currentGroundTruth.apply(p);
                                 DoubleVector3 incidentRadiance =
                                     new DoubleVector3(incidentRadianceBuffer.get(4 * p), incidentRadianceBuffer.get(4 * p + 1), incidentRadianceBuffer.get(4 * p + 2));
                                 DoubleVector3 reconstructedLinear =
@@ -176,23 +201,9 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                                 reconstructedLinear = reconstructedLinear.applyOperator(z -> Double.isNaN(z) ? 0.0 : z);
 
                                 DoubleVector3 reconstructedSRGB = SRGB.fromLinear(reconstructedLinear);
-
-                                DoubleVector3 reconstructedEncoded;
-                                DoubleVector3 groundTruthLinear;
-                                DoubleVector3 groundTruthSRGB;
-
-                                if (viewSet.getLuminanceEncoding() != null)
-                                {
-                                    reconstructedEncoded = viewSet.getLuminanceEncoding().encode(reconstructedLinear.times(incidentRadiance)).dividedBy(255.0);
-                                    groundTruthLinear = viewSet.getLuminanceEncoding().decode(groundTruthEncoded).dividedBy(incidentRadiance);
-                                    groundTruthSRGB = SRGB.fromLinear(groundTruthLinear);
-                                }
-                                else
-                                {
-                                    reconstructedEncoded = reconstructedSRGB;
-                                    groundTruthSRGB = groundTruthEncoded;
-                                    groundTruthLinear = SRGB.toLinear(groundTruthSRGB);
-                                }
+                                DoubleVector3 reconstructedEncoded = viewSet.getLuminanceEncoding().encode(reconstructedLinear.times(incidentRadiance)).dividedBy(255.0);
+                                DoubleVector3 groundTruthLinear = viewSet.getLuminanceEncoding().decode(groundTruthEncoded.times(255.0)).dividedBy(incidentRadiance);
+                                DoubleVector3 groundTruthSRGB = SRGB.fromLinear(groundTruthLinear);
 
                                 DoubleVector3 encodedError = groundTruthEncoded.minus(reconstructedEncoded);
                                 double encodedSqError = encodedError.dot(encodedError) / 3; // mean squared error for the three channels
