@@ -47,6 +47,7 @@ class ImageReconstructionTest
     private static final File TEST_OUTPUT_DIR = new File("test-output");
 
     private ViewSet potatoViewSet;
+    private ViewSet potatoViewSetTonemapped;
     private OpenGLContext context;
     private VertexGeometry potatoGeometry;
 
@@ -54,10 +55,11 @@ class ImageReconstructionTest
     void setUp() throws Exception
     {
         potatoViewSet = ViewSetReaderFromVSET.getInstance().readFromStream(getClass().getClassLoader().getResourceAsStream("test/Structured34View.vset"), null);
+        potatoViewSetTonemapped = potatoViewSet.copy();
 
-//        // Using tonemapping from the Guan Yu dataset
-//        potatoViewSet.setTonemapping(2.2f, new double [] { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 },
-//            new byte [] { 50, 105, (byte)140, (byte)167, (byte)176, (byte)185 });
+        // Using tonemapping from the Guan Yu dataset
+        potatoViewSetTonemapped.setTonemapping(2.2f, new double [] { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 },
+            new byte [] { 50, 105, (byte)140, (byte)167, (byte)176, (byte)185 });
 
         context = OpenGLContextFactory.getInstance().buildWindow("Kintsugi 3D Builder Tests", 1, 1).create().getContext();
         context.getState().enableDepthTest();
@@ -80,7 +82,7 @@ class ImageReconstructionTest
     @DisplayName("Normalized linear reconstruction error")
     void normalizedLinear() throws IOException
     {
-        multiTest(
+        BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> programCreator =
             (programFactory, resources) ->
             {
                 try
@@ -94,15 +96,20 @@ class ImageReconstructionTest
                 {
                     throw new RuntimeException(e);
                 }
-            },
-            (rmse, noiseScale) -> assertEquals(noiseScale / (float) Math.sqrt(12.0f), rmse.getNormalizedLinear(), 0.001));
+            };
+
+        BiConsumer<ColorAppearanceRMSE, Float> validation =
+            (rmse, noiseScale) -> assertEquals(noiseScale / (float) Math.sqrt(12.0f), rmse.getNormalizedLinear(), 0.001);
+
+        multiTest(potatoViewSet, programCreator, ImageReconstructionTest::createGroundTruthProgramGamma, validation);
+        multiTest(potatoViewSetTonemapped, programCreator, ImageReconstructionTest::createGroundTruthProgramSRGB, validation);
     }
 
     @Test
     @DisplayName("Normalized sRGB reconstruction error")
     void normalizedSRGB() throws IOException
     {
-        multiTest(
+        BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> programCreator =
             (programFactory, resources) ->
             {
                 try
@@ -116,15 +123,20 @@ class ImageReconstructionTest
                 {
                     throw new RuntimeException(e);
                 }
-            },
-            (rmse, noiseScale) -> assertEquals(noiseScale / (float) Math.sqrt(12.0f), rmse.getNormalizedSRGB(), 0.001));
+            };
+
+        BiConsumer<ColorAppearanceRMSE, Float> validation =
+            (rmse, noiseScale) -> assertEquals(noiseScale / (float) Math.sqrt(12.0f), rmse.getNormalizedSRGB(), 0.001);
+
+        multiTest(potatoViewSet, programCreator, ImageReconstructionTest::createGroundTruthProgramGamma, validation);
+        multiTest(potatoViewSetTonemapped, programCreator, ImageReconstructionTest::createGroundTruthProgramSRGB, validation);
     }
 
     @Test
     @DisplayName("Tonemapped and lit reconstruction error")
     void tonemappedLit() throws IOException
     {
-        multiTest(
+        BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> programCreator =
             (programFactory, resources) ->
             {
                 try
@@ -138,12 +150,51 @@ class ImageReconstructionTest
                 {
                     throw new RuntimeException(e);
                 }
-            },
-            (rmse, noiseScale) -> assertEquals(noiseScale / (float) Math.sqrt(12.0f), rmse.getEncodedGroundTruth(), 0.001));
+            };
+
+        BiConsumer<ColorAppearanceRMSE, Float> validation =
+            (rmse, noiseScale) -> assertEquals(noiseScale / (float) Math.sqrt(12.0f), rmse.getEncodedGroundTruth(), 0.001);
+
+        multiTest(potatoViewSet, programCreator, ImageReconstructionTest::createGroundTruthProgramGamma, validation);
+        multiTest(potatoViewSetTonemapped, programCreator, ImageReconstructionTest::createGroundTruthProgramSRGB, validation);
+    }
+
+    static ProgramObject<OpenGLContext> createGroundTruthProgramGamma(SpecularFitProgramFactory<OpenGLContext> programFactory, IBRResourcesAnalytic<OpenGLContext> resources)
+    {
+        try
+        {
+            return programFactory.getShaderProgramBuilder(resources,
+                    new File("shaders/common/imgspace.vert"),
+                    new File("shaders/test/syntheticTonemapped.frag"))
+                .define("SRGB_TONEMAPPING_ENABLED", 0)
+                .createProgram();
+        }
+        catch (FileNotFoundException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    static ProgramObject<OpenGLContext> createGroundTruthProgramSRGB(SpecularFitProgramFactory<OpenGLContext> programFactory, IBRResourcesAnalytic<OpenGLContext> resources)
+    {
+        try
+        {
+            return programFactory.getShaderProgramBuilder(resources,
+                    new File("shaders/common/imgspace.vert"),
+                    new File("shaders/test/syntheticTonemapped.frag"))
+                .define("SRGB_TONEMAPPING_ENABLED", 1)
+                .createProgram();
+        }
+        catch (FileNotFoundException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
     void multiTest(
+        ViewSet viewSet,
         BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> testProgramCreator,
+        BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
         BiConsumer<ColorAppearanceRMSE, Float> validationByNoiseScale)  throws IOException
     {
         float[] noiseScaleTests = { 0.0f, 0.1f, 0.25f, 0.5f, 1.0f };
@@ -151,18 +202,22 @@ class ImageReconstructionTest
         for (float noiseScale : noiseScaleTests)
         {
             testSynthetic(
+                viewSet,
                 (programFactory, resources) ->
                 {
                     ProgramObject<OpenGLContext> program = testProgramCreator.apply(programFactory, resources);
                     program.setUniform("noiseScale", noiseScale);
                     return program;
                 },
+                groundTruthProgramCreator,
                 rmse -> validationByNoiseScale.accept(rmse, noiseScale));
         }
     }
 
     private void testSynthetic(
+        ViewSet viewSet,
         BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> testProgramCreator,
+        BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
         Consumer<ColorAppearanceRMSE> validation) throws IOException
     {
         SimpleSettingsModel ibrSettings = new SimpleSettingsModel();
@@ -174,11 +229,8 @@ class ImageReconstructionTest
 
         SpecularFitProgramFactory<OpenGLContext> programFactory = new SpecularFitProgramFactory<>(ibrSettings, specularBasisSettings);
 
-        try (IBRResourcesAnalytic<OpenGLContext> resources = new IBRResourcesAnalytic<>(context, potatoViewSet, potatoGeometry);
-            ProgramObject<OpenGLContext> groundTruthProgram = programFactory.getShaderProgramBuilder(resources,
-                    new File("shaders/common/imgspace.vert"),
-                    new File("shaders/test/syntheticTonemapped.frag"))
-                .createProgram())
+        try (IBRResourcesAnalytic<OpenGLContext> resources = new IBRResourcesAnalytic<>(context, viewSet, potatoGeometry);
+            ProgramObject<OpenGLContext> groundTruthProgram = groundTruthProgramCreator.apply(programFactory, resources))
         {
             groundTruthProgram.setUniform("noiseScale", 0.0f);
             Drawable<OpenGLContext> groundTruthDrawable = resources.createDrawable(groundTruthProgram);
@@ -201,19 +253,20 @@ class ImageReconstructionTest
                     viewIndex ->
                     {
                         // TODO: use proper sRGB when possible, not gamma correction
-                        float gamma = potatoViewSet.getGamma();
+                        float gamma = viewSet.getGamma();
                         groundTruthProgram.setUniform("gamma", gamma);
+                        groundTruthProgram.setUniform("renderGamma", gamma);
 
-                        groundTruthProgram.setUniform("model_view", potatoViewSet.getCameraPose(viewIndex));
+                        groundTruthProgram.setUniform("model_view", viewSet.getCameraPose(viewIndex));
                         groundTruthProgram.setUniform("projection",
-                            potatoViewSet.getCameraProjection(potatoViewSet.getCameraProjectionIndex(viewIndex)).getProjectionMatrix(
-                                potatoViewSet.getRecommendedNearPlane(), potatoViewSet.getRecommendedFarPlane()));
+                            viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewIndex)).getProjectionMatrix(
+                                viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
                         groundTruthProgram.setUniform("reconstructionCameraPos",
-                            potatoViewSet.getCameraPoseInverse(viewIndex).getColumn(3).getXYZ());
+                            viewSet.getCameraPoseInverse(viewIndex).getColumn(3).getXYZ());
                         groundTruthProgram.setUniform("reconstructionLightPos",
-                            potatoViewSet.getCameraPoseInverse(viewIndex).times(potatoViewSet.getLightPosition(potatoViewSet.getLightIndex(viewIndex)).asPosition()).getXYZ());
+                            viewSet.getCameraPoseInverse(viewIndex).times(viewSet.getLightPosition(viewSet.getLightIndex(viewIndex)).asPosition()).getXYZ());
                         groundTruthProgram.setUniform("reconstructionLightIntensity",
-                            potatoViewSet.getLightIntensity(potatoViewSet.getLightIndex(viewIndex)));
+                            viewSet.getLightIntensity(viewSet.getLightIndex(viewIndex)));
 
                         groundTruthFBO.clearColorBuffer(0, 0, 0, 0, 0);
                         groundTruthFBO.clearDepthBuffer();
@@ -234,7 +287,7 @@ class ImageReconstructionTest
                     groundTruthFBO.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(TEST_OUTPUT_DIR, "reference.png"));
 
                     // Pass light intensity for noise generation methods that depend on it.
-                    syntheticWithNoise.setUniform("reconstructionLightIntensity", potatoViewSet.getLightIntensity(potatoViewSet.getLightIndex(view.getIndex())));
+                    syntheticWithNoise.setUniform("reconstructionLightIntensity", viewSet.getLightIntensity(viewSet.getLightIndex(view.getIndex())));
 
                     ColorAppearanceRMSE rmse = view.reconstruct(drawable);
                     view.getReconstructionFramebuffer().getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(TEST_OUTPUT_DIR, "test.png"));

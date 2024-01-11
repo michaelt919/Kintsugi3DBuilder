@@ -134,7 +134,7 @@ public class SampledLuminanceEncoding
 
             double maxLuminance = decodeFunction.applyAsDouble(255.0);
 
-            if (luminance > 1.0)
+            if (luminance >= maxLuminance)
             {
                 // outside the range of the ColorChecker
                 // remap linear color to the original [0, 1] range and convert to sRGB

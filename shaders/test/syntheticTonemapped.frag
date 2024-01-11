@@ -20,7 +20,7 @@ in vec3 fPosition;
 #include "../common/constructTBN.glsl"
 #include "../specularfit/lightingParameters.glsl"
 #include "../subject/tonemap.glsl"
-#line 23 0
+#line 24 0
 
 uniform vec3 diffuseColor = vec3(0.5);
 uniform vec3 specularColor = vec3(0.04);
@@ -45,6 +45,6 @@ void main()
 
     // Reflectance is implicitly multiplied by n dot l.
     // Gamma correction intentionally omitted for error calculation.
-//    fragColor = vec4(tonemapFromLuminanceMap(max(vec3(0.0), (diffuseColor * l.nDotL / PI + specular) * incidentRadiance)), 1.0);
-    fragColor = vec4(pow(max(vec3(0.0), (diffuseColor * l.nDotL / PI + specular) * incidentRadiance), vec3(1.0 / gamma)), 1.0);
+    fragColor = vec4(tonemapFromLuminanceMap(max(vec3(0.0), (diffuseColor * l.nDotL / PI + specular) * incidentRadiance)), 1.0);
+//    fragColor = vec4(pow(max(vec3(0.0), (diffuseColor * l.nDotL / PI + specular) * incidentRadiance), vec3(1.0 / gamma)), 1.0);
 }

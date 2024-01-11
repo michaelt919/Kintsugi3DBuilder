@@ -67,16 +67,16 @@ vec3 tonemapFromLuminanceMap(vec3 color)
             // Step 2: determine the ratio between the tonemapped and linear luminance
             // Remove implicit gamma correction from the lookup table
             float tonemappedGammaCorrected = texture(inverseLuminanceMap, scaledLuminance).r;
-            float tonemappedNoGamma = sRGBToLinear(vec3(tonemappedGammaCorrected))[0];
-            float scale = tonemappedNoGamma / luminance;
+            float pseudoLuminance = sRGBToLinear(vec3(tonemappedGammaCorrected))[0];
+            float scale = pseudoLuminance / luminance;
             // Step 3: return the color, scaled to have the correct luminance,
             // but the original saturation and hue.
             // Step 4: apply gamma correction
-            vec3 colorScaled = color * scale;
+            vec3 pseudoLinear = color * scale;
 #if SRGB_TONEMAPPING_ENABLED
-            tonemappedColor = linearToSRGB(colorScaled);
+            tonemappedColor = linearToSRGB(pseudoLinear);
 #else
-            tonemappedColor = pow(colorScaled, vec3(1.0 / renderGamma));
+            tonemappedColor = pow(pseudoLinear, vec3(1.0 / renderGamma));
 #endif
         }
     }
