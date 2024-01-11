@@ -67,13 +67,39 @@ public final class Kintsugi3DBuilder
         System.setProperty("glass.disableThreadChecks", "true");
         //TODO see com.sun.glass.ui.Application.java line 434
 
-        if (GRAPHICS_WINDOW_ENABLED)
+        // MacOS is unhappy if rendering thread isn't the main thread, so JavaFX needs to be on a secondary thread.
+        if (System.getProperty("os.name").toLowerCase().contains("mac") || GRAPHICS_WINDOW_ENABLED)
         {
-            log.info("Starting JavaFX UI");
-            new Thread(() -> MainApplication.launchWrapper("")).start();
+            var startFlag = new Object()
+            {
+                boolean started;
+            };
+
+            MainApplication.addStartListener(stage ->
+            {
+                startFlag.started = true;
+            });
+
+//            log.info("Starting JavaFX UI");
+//            new Thread(() -> MainApplication.launchWrapper("")).start();
+
+            // Wait for JavaFX to start
+//            while (!startFlag.started)
+//            {
+//                Thread.onSpinWait();
+//            }
+//            try
+//            {
+//                Thread.sleep(5000L);
+//            }
+//            catch (InterruptedException e)
+//            {
+//                throw new RuntimeException(e);
+//            }
 
             log.info("Starting Render Window");
             Rendering.runProgram(args);
+
             // TODO System.exit() call for standalone graphics window?
         }
         else

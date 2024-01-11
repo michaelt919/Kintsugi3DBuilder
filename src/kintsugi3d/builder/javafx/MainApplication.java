@@ -58,6 +58,15 @@ public class MainApplication extends Application
     public MainApplication()
     {
         appInstance = this;
+
+//        try
+//        {
+//            Thread.sleep(5000L);
+//        }
+//        catch (InterruptedException e)
+//        {
+//            throw new RuntimeException(e);
+//        }
     }
 
     public static MainApplication getAppInstance()

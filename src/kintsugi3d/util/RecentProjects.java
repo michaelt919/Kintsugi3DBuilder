@@ -34,14 +34,21 @@ public class RecentProjects {
     public static List<String> getItemsFromRecentsFile() {
         List<String> projectItems = new ArrayList<>();
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(recentProjectsFile.getAbsolutePath()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String projectItem = line;
-                projectItems.add(projectItem);
+        if (recentProjectsFile.exists())
+        {
+            try (BufferedReader reader = new BufferedReader(new FileReader(recentProjectsFile.getAbsolutePath())))
+            {
+                String line;
+                while ((line = reader.readLine()) != null)
+                {
+                    String projectItem = line;
+                    projectItems.add(projectItem);
+                }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
         }
 
         //remove duplicates while maintaining the same order (regular HashSet does not maintain order)

@@ -43,12 +43,24 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         Function<ContextType, DoubleFramebuffer<ContextType>> createDefaultFramebuffer,
         WindowSpecification windowSpec)
     {
-        glfwSetErrorCallback(GLFWErrorCallback.createString((error, description) ->
-        {
-            throw new GLFWException(description);
-        }));
+//        glfwSetErrorCallback(GLFWErrorCallback.createString((error, description) ->
+//        {
+//            throw new GLFWException(description);
+//        }));
 
-        if ( glfwInit() != GL_TRUE )
+        log.info("Starting JavaFX UI");
+        new Thread(() -> kintsugi3d.builder.javafx.MainApplication.launchWrapper("")).start();
+
+        try
+        {
+            Thread.sleep(5000L);
+        }
+        catch (InterruptedException e)
+        {
+            throw new RuntimeException(e);
+        }
+
+        if ( glfwInit() != true )
         {
             throw new GLFWException("Unable to initialize GLFW.");
         }
@@ -158,8 +170,8 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
     @Override
     public void pollEvents()
     {
-        glfwMakeContextCurrent(handle);
-        glfwPollEvents();
+//        glfwMakeContextCurrent(handle);
+//        glfwPollEvents();
     }
 
     @Override
@@ -179,7 +191,7 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
     @Override
     public boolean isWindowClosing()
     {
-        return glfwWindowShouldClose(handle) == GL_TRUE;
+        return glfwWindowShouldClose(handle);
     }
 
     @Override
@@ -191,13 +203,13 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
     @Override
     public void requestWindowClose()
     {
-        glfwSetWindowShouldClose(handle, GL_TRUE);
+        glfwSetWindowShouldClose(handle, true);
     }
 
     @Override
     public void cancelWindowClose()
     {
-        glfwSetWindowShouldClose(handle, GL_FALSE);
+        glfwSetWindowShouldClose(handle, false);
     }
 
     @Override
@@ -205,7 +217,7 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
     {
         ByteBuffer widthBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
         ByteBuffer heightBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
-        glfwGetWindowSize(handle, widthBuffer, heightBuffer);
+//        glfwGetWindowSize(handle, widthBuffer, heightBuffer);
         int width = widthBuffer.asIntBuffer().get(0);
         int height = heightBuffer.asIntBuffer().get(0);
         return new CanvasSize(width, height);
@@ -216,7 +228,7 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
     {
         ByteBuffer xBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
         ByteBuffer yBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
-        glfwGetWindowPos(handle, xBuffer, yBuffer);
+//        glfwGetWindowPos(handle, xBuffer, yBuffer);
         int x = xBuffer.asIntBuffer().get(0);
         int y = yBuffer.asIntBuffer().get(0);
         return new CanvasPosition(x, y);
@@ -280,7 +292,7 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
     {
         ByteBuffer xBuffer = BufferUtils.createByteBuffer(Double.BYTES);
         ByteBuffer yBuffer = BufferUtils.createByteBuffer(Double.BYTES);
-        glfwGetCursorPos(handle, xBuffer, yBuffer);
+//        glfwGetCursorPos(handle, xBuffer, yBuffer);
         double x = xBuffer.asDoubleBuffer().get(0);
         double y = yBuffer.asDoubleBuffer().get(0);
         return new CursorPosition(x, y);

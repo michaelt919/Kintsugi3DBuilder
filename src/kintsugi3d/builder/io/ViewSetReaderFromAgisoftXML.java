@@ -198,6 +198,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     switch (reader.getLocalName())
                     {
                         case "document":
+                        {
                             version = reader.getAttributeValue(null, "version");
                             String[] verComponents = version.split("\\.");
                             for (String verComponent : verComponents)
@@ -207,14 +208,31 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             }
                             log.debug("PhotoScan XML version %s (%d)\n", version, intVersion);
                             break;
+                        }
                         case "chunk":
+                        {
                             chunkLabel = reader.getAttributeValue(null, "label");
                             if (chunkLabel == null)
                             {
                                 chunkLabel = "unnamed";
                             }
                             log.debug("Reading chunk '%s'\n", chunkLabel);
+
+                            // chunk XMLs put the version in the chunk tag
+                            String tryVersion = reader.getAttributeValue(null, "version");
+                            if (tryVersion != null)
+                            {
+                                version = tryVersion;
+                                String[] verComponents = version.split("\\.");
+                                for (String verComponent : verComponents)
+                                {
+                                    intVersion *= 10;
+                                    intVersion += Integer.parseInt(verComponent);
+                                }
+                            }
+
                             break;
+                        }
                         case "group":
                             groupLabel = reader.getAttributeValue(null, "label");
                             log.debug("Reading group '%s'\n", groupLabel);
