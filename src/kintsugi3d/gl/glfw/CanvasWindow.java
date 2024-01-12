@@ -13,6 +13,8 @@
 package kintsugi3d.gl.glfw;
 
 import java.nio.ByteBuffer;
+import java.nio.DoubleBuffer;
+import java.nio.IntBuffer;
 import java.util.function.Function;
 
 import org.lwjgl.*;
@@ -43,12 +45,12 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
         Function<ContextType, DoubleFramebuffer<ContextType>> createDefaultFramebuffer,
         WindowSpecification windowSpec)
     {
-//        glfwSetErrorCallback(GLFWErrorCallback.createString((error, description) ->
-//        {
-//            throw new GLFWException(description);
-//        }));
+        glfwSetErrorCallback(GLFWErrorCallback.create((error, description) ->
+        {
+            throw new GLFWException(GLFWErrorCallback.getDescription(description));
+        }));
 
-        if ( glfwInit() != true )
+        if (!glfwInit())
         {
             throw new GLFWException("Unable to initialize GLFW.");
         }
@@ -158,8 +160,8 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
     @Override
     public void pollEvents()
     {
-//        glfwMakeContextCurrent(handle);
-//        glfwPollEvents();
+        glfwMakeContextCurrent(handle);
+        glfwPollEvents();
     }
 
     @Override
@@ -203,22 +205,22 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
     @Override
     public CanvasSize getSize()
     {
-        ByteBuffer widthBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
-        ByteBuffer heightBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
-//        glfwGetWindowSize(handle, widthBuffer, heightBuffer);
-        int width = widthBuffer.asIntBuffer().get(0);
-        int height = heightBuffer.asIntBuffer().get(0);
+        IntBuffer widthBuffer = BufferUtils.createIntBuffer(1);
+        IntBuffer heightBuffer = BufferUtils.createIntBuffer(1);
+        glfwGetWindowSize(handle, widthBuffer, heightBuffer);
+        int width = widthBuffer.get(0);
+        int height = heightBuffer.get(0);
         return new CanvasSize(width, height);
     }
 
     @Override
     public CanvasPosition getPosition()
     {
-        ByteBuffer xBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
-        ByteBuffer yBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
-//        glfwGetWindowPos(handle, xBuffer, yBuffer);
-        int x = xBuffer.asIntBuffer().get(0);
-        int y = yBuffer.asIntBuffer().get(0);
+        IntBuffer xBuffer = BufferUtils.createIntBuffer(1);
+        IntBuffer yBuffer = BufferUtils.createIntBuffer(1);
+        glfwGetWindowPos(handle, xBuffer, yBuffer);
+        int x = xBuffer.get(0);
+        int y = yBuffer.get(0);
         return new CanvasPosition(x, y);
     }
 
@@ -278,11 +280,11 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
     @Override
     public CursorPosition getCursorPosition()
     {
-        ByteBuffer xBuffer = BufferUtils.createByteBuffer(Double.BYTES);
-        ByteBuffer yBuffer = BufferUtils.createByteBuffer(Double.BYTES);
-//        glfwGetCursorPos(handle, xBuffer, yBuffer);
-        double x = xBuffer.asDoubleBuffer().get(0);
-        double y = yBuffer.asDoubleBuffer().get(0);
+        DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
+        DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
+        glfwGetCursorPos(handle, xBuffer, yBuffer);
+        double x = xBuffer.get(0);
+        double y = yBuffer.get(0);
         return new CursorPosition(x, y);
     }
 

@@ -39,6 +39,9 @@
     <Text styleClass="text" strokeType="OUTSIDE" strokeWidth="0.0" text="Camera Positions&#10;(Agisoft Metashape XML file)"
           textAlignment="CENTER" wrappingWidth="236.0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS"
           GridPane.rowIndex="2" GridPane.valignment="CENTER">
+        <font>
+            <Font name="Monospaced Regular" size="14.0"/>
+        </font>
         <GridPane.margin>
       <Insets/>
         </GridPane.margin>
@@ -46,6 +49,9 @@
     <Text styleClass="text" layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Mesh&#10;(Wavefront OBJ file)"
           textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="1" GridPane.halignment="CENTER"
           GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+        <font>
+            <Font name="Monospaced Regular" size="14.0"/>
+        </font>
         <GridPane.margin>
       <Insets/>
         </GridPane.margin>
@@ -54,6 +60,9 @@
           text="Images&#10;(Directory containing images (.png, .jpg))" textAlignment="CENTER" wrappingWidth="236.0"
           GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2"
           GridPane.valignment="CENTER">
+        <font>
+            <Font name="Monospaced Regular" size="14.0"/>
+        </font>
         <GridPane.margin>
       <Insets/>
         </GridPane.margin>
@@ -84,6 +93,9 @@
     </Button>
     <Text fx:id="loadCheckCameras" fill="RED" layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0"
           text="Unloaded" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+        <font>
+            <Font name="Monospaced Bold" size="28.0"/>
+        </font>
         <GridPane.margin>
       <Insets/>
         </GridPane.margin>
@@ -91,6 +103,9 @@
     <Text fx:id="loadCheckObj" fill="RED" layoutX="10.0" layoutY="64.0" strokeType="OUTSIDE" strokeWidth="0.0"
           text="Unloaded" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER"
           GridPane.valignment="CENTER">
+        <font>
+            <Font name="Monospaced Bold" size="28.0"/>
+        </font>
         <GridPane.margin>
       <Insets/>
         </GridPane.margin>
@@ -98,6 +113,9 @@
     <Text fx:id="loadCheckImages" fill="RED" layoutX="10.0" layoutY="64.0" strokeType="OUTSIDE" strokeWidth="0.0"
           text="Unloaded" textAlignment="CENTER" GridPane.columnIndex="2" GridPane.halignment="CENTER"
           GridPane.valignment="CENTER">
+        <font>
+            <Font name="Monospaced Bold" size="28.0"/>
+        </font>
         <GridPane.margin>
       <Insets/>
         </GridPane.margin>
