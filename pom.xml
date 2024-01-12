@@ -16,8 +16,223 @@
     <artifactId>Kintsugi3DBuilder</artifactId>
     <version>0.3.11</version>
     <packaging>jar</packaging>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <lwjgl.version>3.3.3</lwjgl.version>
+    </properties>
     <build>
         <sourceDirectory>src</sourceDirectory>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>com.github.akman</groupId>
+                    <artifactId>jpackage-maven-plugin</artifactId>
+                    <version>0.1.5</version>
+                    <configuration>
+
+<!--                          Specifies the JDK home path which provides the tool needed.-->
+<!--                          If not specified the jpackage tool executable will be find in-->
+<!--                          the following order:-->
+
+<!--                            - user specified JDK home directory by toolchains-plugin-->
+<!--                            - JDK home directory specified by system variable JAVA_HOME-->
+<!--                            - system path specified by system variable PATH-->
+<!--                        &ndash;&gt;-->
+<!--                        <toolhome>${env.JPACKAGE_HOME}</toolhome>-->
+
+                        <!--
+                          Specifies the location in which generated output files are placed.
+                          Default value: $‍{project.build.directory}/jpackage
+                        -->
+                        <dest>${project.build.directory}/jpackage</dest>
+
+                        <!--
+                          Specifies the name of subdirectory relative to
+                          the destination directory in which files of generated
+                          application image are placed.
+                        -->
+                        <name>Kintsugi 3D Builder</name>
+
+                        <!--
+                          Specifies version of the application and/or package.
+                        -->
+                        <appversion>0.3.11</appversion>
+
+                        <!--
+                          Specifies copyright for the application.
+                        -->
+                        <copyright>Copyright</copyright>
+
+                        <!--
+                          Specifies description of the application.
+                        -->
+                        <description>Description</description>
+
+                        <!--
+                          Specifies vendor of the application.
+                        -->
+                        <vendor>Kintsugi 3D</vendor>
+
+                        <!--
+                          Specifies the location of the icon of the application package.
+                        -->
+                        <icon>${project.basedir}/Kintsugi3D.icns</icon>
+
+<!--                        &lt;!&ndash;-->
+<!--                          Specifies the module path. The path where the jlink tool-->
+<!--                          discovers observable modules: modular JAR files, JMOD files,-->
+<!--                          exploded modules. If this option is not specified, then-->
+<!--                          the default module path is $ JAVA_HOME/jmods. This directory-->
+<!--                          contains the java.base module and the other standard and-->
+<!--                          JDK modules. If this option is specified but the java.base-->
+<!--                          module cannot be resolved from it, then the jlink command-->
+<!--                          appends $ JAVA_HOME/jmods to the module path.-->
+<!--                          Pass on &dash;-modulepath option to jlink.-->
+
+<!--                          pathelements - passed to jlink as is-->
+<!--                          filesets - sets of files (without directories)-->
+<!--                          dirsets - sets of directories (without files)-->
+<!--                          dependencysets - sets of dependencies with specified includes-->
+<!--                                           and excludes patterns (glob: or regex:)-->
+<!--                                           for file names and regex patterns only-->
+<!--                                           for module names, and excludes-->
+<!--                                           for automatic modules-->
+<!--                        &ndash;&gt;-->
+<!--                        <modulepath>-->
+<!--                            <dependencysets>-->
+<!--                                <dependencyset>-->
+<!--                                    <includeoutput>true</includeoutput>-->
+<!--                                    <excludeautomatic>true</excludeautomatic>-->
+<!--                                </dependencyset>-->
+<!--                            </dependencysets>-->
+<!--                        </modulepath>-->
+
+<!--                        &lt;!&ndash;-->
+<!--                          Specifies the modules names (names of root modules) to add to-->
+<!--                          the runtime image. Their transitive dependencies will add too.-->
+<!--                          This module list, along with the main module (if specified)-->
+<!--                          will be passed to jlink as the &dash;-add-module argument.-->
+<!--                          If not specified, either just the main module (if module-->
+<!--                          is specified), or the default set of modules (if mainjar-->
+<!--                          is specified) are used.-->
+<!--                        &ndash;&gt;-->
+<!--                        <addmodules>-->
+<!--                            <addmodule>appModuleName</addmodule>-->
+<!--                        </addmodules>-->
+
+                        <!--
+                          Specifies the main module (and optionally main class) of
+                          the application. This module must be located on the module path.
+                          When this option is specified, the main module will be linked
+                          in the Java runtime image.
+                          Either module or main-jar option can be specified
+                          but not both.
+                        -->
+                        <mainjar>{project.build.directory}/Kintsugi3DBuilder-0.3.11.jar</mainjar>
+<!--                        <mainclass>kintsugi3d.builder.app.Kintsugi3DBuilder</mainclass>-->
+<!--                        <module>${appModule}/${appMainClass}</module>-->
+
+<!--                        <modulePaths>-->
+<!--                            <modulePath>target/mods</modulePath>-->
+<!--                        </modulePaths>-->
+
+
+<!--                        &lt;!&ndash;-->
+<!--                          Specifies the command line arguments to pass to the main class-->
+<!--                          if no command line arguments are given to the launcher.-->
+<!--                        &ndash;&gt;-->
+<!--                        <arguments>&#45;&#45;opt</arguments>-->
+
+                        <!--
+                          Specifies the options to pass to the Java runtime.
+                        -->
+                        <javaOptions>
+                            <option>--enable-preview</option>
+                            <option>-Dfile.encoding=UTF-8</option>
+                        </javaOptions>
+
+<!--                        &lt;!&ndash;-->
+<!--                          Specifies options are added to, or used to overwrite,-->
+<!--                          the original command line options to build additional-->
+<!--                          alternative launchers.-->
+<!--                        &ndash;&gt;-->
+<!--                        <addlaunchers>-->
+<!--                            <addlauncher>-->
+<!--                                <name>appname-cli</name>-->
+<!--                                <module>AppModuleName/appClassName</module>-->
+<!--                                <arguments>&#45;&#45;help</arguments>-->
+<!--                                <javaoptions>-Xms256m -Xmx512m</javaoptions>-->
+<!--                                <appversion>1.0</appversion>-->
+<!--                                <icon>${project.basedir}/config/jpackage/resources/appname-cli.ico</icon>-->
+<!--                                <winconsole>true</winconsole>-->
+<!--                            </addlauncher>-->
+<!--                        </addlaunchers>-->
+
+                        <!--
+                          Specifies the location of a properties file that contains
+                          list of key, value pairs. The keys "extension", "mime-type",
+                          "icon", and "description" can be used to describe the association.
+                        -->
+                        <fileassociations>$/config/jpackage/associations.properties</fileassociations>
+
+                        <!--
+                          Specifies the relative sub-path under the default installation
+                          location of the application for Windows, or absolute path of the
+                          installation directory of the application for Mac or Linux.
+                        -->
+                        <installdir>Kintsugi 3D/Builder</installdir>
+
+                        <!--
+                          Specifies the location of a license file.
+                        -->
+                        <licensefile>${project.basedir}/config/jpackage/LICENSE</licensefile>
+
+                        <!--
+                          Specifies the location of a resources directory that override
+                          jpackage resources. Icons, template files, and other resources
+                          of jpackage can be overridden by adding replacement resources
+                          to this directory.
+                        -->
+                        <resourcedir>${project.basedir}/config/jpackage/resources</resourcedir>
+
+                        <!--
+                          Enable adding a dialog to choose a directory in which
+                          the product is installed.
+                          Default value: false
+                        -->
+                        <windirchooser>true</windirchooser>
+
+                        <!--
+                          Enable adding the application to the system menu.
+                          Default value: false
+                        -->
+                        <winmenu>true</winmenu>
+
+                        <!--
+                          Start menu group this application is placed in.
+                        -->
+                        <winmenugroup>Kintsugi 3D/Builder</winmenugroup>
+
+                        <!--
+                          Enable requesting to perform an install on a per-user basis.
+                          Default value: false
+                        -->
+                        <winperuserinstall>true</winperuserinstall>
+
+                        <!--
+                          Enable creating a desktop shortcut for the application.
+                          Default value: false
+                        -->
+                        <winshortcut>true</winshortcut>
+
+                        <!--
+                          UUID associated with upgrades for this package.
+                        -->
+                        <winupgradeuuid>8CF81762-0B19-46A6-875E-1F839A1700D0</winupgradeuuid>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -78,31 +293,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>com.akathist.maven.plugins.launch4j</groupId>
-                <artifactId>launch4j-maven-plugin</artifactId>
-                <version>2.1.2</version>
-                <executions>
-                    <execution>
-                        <id>l4j-clui</id>
-                        <phase>package</phase>
-                        <goals><goal>launch4j</goal></goals>
-                        <configuration>
-                            <headerType>gui</headerType>
-                            <outfile>target/Kintsugi3DBuilder.exe</outfile>
-                            <jar>target/${project.artifactId}-${project.version}-shaded.jar</jar>
-                            <icon>Kintsugi3D.ico</icon>
-                            <downloadUrl>https://adoptium.net/temurin/releases/?version=11</downloadUrl>
-                            <chdir>.</chdir>
-                            <jre>
-                                <path>jre;%JAVA_HOME%;%PATH%</path>
-                                <minVersion>11.0.0</minVersion>
-                                <maxVersion>11.99.99</maxVersion>
-                            </jre>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.3.0</version>
@@ -122,32 +312,20 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.digitalmediaserver</groupId>
-                <artifactId>nsis-maven-plugin</artifactId>
-                <version>1.0.3</version>
-                <configuration>
-                    <injectHeaderFile>true</injectHeaderFile>
-                </configuration>
+                <groupId>com.github.akman</groupId>
+                <artifactId>jpackage-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>build-windows-installer</id>
+                        <id>jpackage-installer</id>
                         <phase>install</phase>
-                        <configuration>
-                            <scriptFile>installer.nsi</scriptFile>
-                            <outputFile>${project.artifactId}-${project.version}-setup.exe</outputFile>
-                        </configuration>
                         <goals>
-                            <goal>generate-headerfile</goal>
-                            <goal>make</goal>
+                            <goal>jpackage</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
-    <properties>
-        <lwjgl.version>3.3.3</lwjgl.version>
-    </properties>
     <profiles>
         <profile>
             <id>lwjgl-natives-macos-x86_64</id>
@@ -160,6 +338,23 @@
             <properties>
                 <lwjgl.natives>natives-macos</lwjgl.natives>
             </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.akman</groupId>
+                        <artifactId>jpackage-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>jpackage-installer</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jpackage</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
         <profile>
             <id>lwjgl-natives-windows-amd64</id>
@@ -172,6 +367,57 @@
             <properties>
                 <lwjgl.natives>natives-windows</lwjgl.natives>
             </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                        <artifactId>launch4j-maven-plugin</artifactId>
+                        <version>2.1.2</version>
+                        <executions>
+                            <execution>
+                                <id>l4j-clui</id>
+                                <phase>package</phase>
+                                <goals><goal>launch4j</goal></goals>
+                                <configuration>
+                                    <headerType>gui</headerType>
+                                    <outfile>target/Kintsugi3DBuilder.exe</outfile>
+                                    <jar>target/${project.artifactId}-${project.version}-shaded.jar</jar>
+                                    <icon>Kintsugi3D.ico</icon>
+                                    <downloadUrl>https://adoptium.net/temurin/releases/?version=11</downloadUrl>
+                                    <chdir>.</chdir>
+                                    <jre>
+                                        <path>jre;%JAVA_HOME%;%PATH%</path>
+                                        <minVersion>11.0.0</minVersion>
+                                        <maxVersion>11.99.99</maxVersion>
+                                    </jre>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.digitalmediaserver</groupId>
+                        <artifactId>nsis-maven-plugin</artifactId>
+                        <version>1.0.3</version>
+                        <configuration>
+                            <injectHeaderFile>true</injectHeaderFile>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>build-windows-installer</id>
+                                <phase>install</phase>
+                                <configuration>
+                                    <scriptFile>installer.nsi</scriptFile>
+                                    <outputFile>${project.artifactId}-${project.version}-setup.exe</outputFile>
+                                </configuration>
+                                <goals>
+                                    <goal>generate-headerfile</goal>
+                                    <goal>make</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
     <dependencyManagement>
