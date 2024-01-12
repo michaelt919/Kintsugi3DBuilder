@@ -432,10 +432,28 @@ public final class ProjectIO
             fileChooser.setInitialFileName("");
             fileChooser.setInitialDirectory(vsetFile.getParentFile());
         }
-        File selectedFile = fileChooser.showSaveDialog(parentWindow);
-        if (selectedFile != null)
+
+        var fileContainer = new Object()
         {
-            this.projectFile = selectedFile;
+            boolean complete = false;
+            File selectedFile = null;
+        };
+
+        // Needs to run on JavaFX thread on MacOS
+        Platform.runLater(() ->
+        {
+            fileContainer.selectedFile = fileChooser.showSaveDialog(parentWindow);
+            fileContainer.complete = true;
+        });
+
+        while (!fileContainer.complete)
+        {
+            Thread.onSpinWait();
+        }
+
+        if (fileContainer.selectedFile != null)
+        {
+            this.projectFile = fileContainer.selectedFile;
 
             if (callback != null)
             {
