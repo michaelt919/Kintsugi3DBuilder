@@ -25,6 +25,10 @@
 #error
 #endif
 
+#ifndef USE_HEAPSORT
+#define USE_HEAPSORT 0
+#endif
+
 float getSortingWeight(int virtualIndex, vec3 targetDirection)
 {
     mat4 cameraPose = getCameraPose(virtualIndex);
