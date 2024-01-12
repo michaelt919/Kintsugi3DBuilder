@@ -24,8 +24,9 @@ import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
 
-class OpenGLDrawable extends DrawableBase<OpenGLContext> implements Drawable<OpenGLContext>
+class OpenGLDrawable extends DrawableBase<OpenGLContext>
 {
+    @FunctionalInterface
     private interface VertexAttributeSetting
     {
         void set();
@@ -52,12 +53,6 @@ class OpenGLDrawable extends DrawableBase<OpenGLContext> implements Drawable<Ope
     }
 
     @Override
-    protected void finalize()
-    {
-        this.close();
-    }
-
-    @Override
     public void close()
     {
         vao.close();
@@ -69,7 +64,7 @@ class OpenGLDrawable extends DrawableBase<OpenGLContext> implements Drawable<Ope
         return this.program;
     }
 
-    private int getOpenGLPrimitiveModeConst(PrimitiveMode primitiveMode)
+    private static int getOpenGLPrimitiveModeConst(PrimitiveMode primitiveMode)
     {
         switch(primitiveMode)
         {
@@ -119,21 +114,9 @@ class OpenGLDrawable extends DrawableBase<OpenGLContext> implements Drawable<Ope
     }
 
     @Override
-    public void draw(PrimitiveMode primitiveMode, OpenGLContext context)
+    public void draw(PrimitiveMode primitiveMode)
     {
         this.draw(primitiveMode, context.getDefaultFramebuffer());
-    }
-
-    @Override
-    public void draw(PrimitiveMode primitiveMode, OpenGLContext context, int width, int height)
-    {
-        this.draw(primitiveMode, context.getDefaultFramebuffer(), width, height);
-    }
-
-    @Override
-    public void draw(PrimitiveMode primitiveMode, OpenGLContext context, int x, int y, int width, int height)
-    {
-        this.draw(primitiveMode, context.getDefaultFramebuffer(), x, y, width, height);
     }
 
     @Override
