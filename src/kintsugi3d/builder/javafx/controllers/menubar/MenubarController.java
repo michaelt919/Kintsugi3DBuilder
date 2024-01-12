@@ -118,19 +118,19 @@ public class MenubarController
 
     @FXML private CheckMenuItem autoCacheClearingCheckMenuItem;
     @FXML private CheckMenuItem autoSaveCheckMenuItem;
-    @FXML private CheckMenuItem preloadVisibilityEtcCheckMenuItem;
+//    @FXML private CheckMenuItem preloadVisibilityEtcCheckMenuItem;
     @FXML private CheckMenuItem mipmapCheckMenuItem;
     @FXML private CheckMenuItem reduceViewportResolutionCheckMenuItem;
     @FXML private CheckMenuItem darkModeCheckMenuItem;
     @FXML private CheckMenuItem standAlone3dViewerCheckMenuItem;
-    @FXML public ChoiceBox<String> autosaveOptionsChoiceBox;
+//    @FXML public ChoiceBox<String> autosaveOptionsChoiceBox;
 
     @FXML private CheckMenuItem imageCompressionCheckMenuItem;
 
-    @FXML private Label widthLabel;
-    @FXML private TextField widthTxtField;
-    @FXML private Label heightLabel;
-    @FXML private TextField heightTxtField;
+//    @FXML private Label widthLabel;
+//    @FXML private TextField widthTxtField;
+//    @FXML private Label heightLabel;
+//    @FXML private TextField heightTxtField;
 
     @FXML private Menu perLightIntensityMenu;
     @FXML private Menu ambientLightSettingsMenu;
@@ -154,8 +154,8 @@ public class MenubarController
     private Runnable userDocumentationHandler;
 
     final static Number DEFAULT_VALUE = 1024;
-    private IntegerProperty widthIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
-    private IntegerProperty heightIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
+//    private IntegerProperty widthIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
+//    private IntegerProperty heightIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
 
     public MenubarController()
     {
@@ -284,13 +284,13 @@ public class MenubarController
         bindCheckMenuItems();
         bindSlidersToTxtFields();
         updateRelightingVisibility();
-        updatePreloadVisibilityEtc();
+//        updatePreloadVisibilityEtc();
 
-        setupTxtFieldProperties(widthIntProperty, widthTxtField);
-        setupTxtFieldProperties(heightIntProperty, heightTxtField);
-
-        widthTxtField.disableProperty().bind(preloadVisibilityEtcCheckMenuItem.selectedProperty().not());
-        heightTxtField.disableProperty().bind(preloadVisibilityEtcCheckMenuItem.selectedProperty().not());
+//        setupTxtFieldProperties(widthIntProperty, widthTxtField);
+//        setupTxtFieldProperties(heightIntProperty, heightTxtField);
+//
+//        widthTxtField.disableProperty().bind(preloadVisibilityEtcCheckMenuItem.selectedProperty().not());
+//        heightTxtField.disableProperty().bind(preloadVisibilityEtcCheckMenuItem.selectedProperty().not());
 
 
         lightCalibrationCheckMenuItem.selectedProperty().addListener(observable ->
@@ -304,15 +304,15 @@ public class MenubarController
 
         updateRecentProjectsMenu();
 
-        //add "Default Path" and "Choose Location..." items to choiceBox
-        //initialize directory selection dropdown menu
-        autosaveOptionsChoiceBox.getItems().addAll(defaultAutosaveSelection, CHOOSE_LOCATION);
-
-        //initialize option to default path
-        autosaveOptionsChoiceBox.setValue(defaultAutosaveSelection);
-
-        //attach event handler (this cannot be done in scenebuilder)
-        autosaveOptionsChoiceBox.setOnAction(this::handleDirectoryDropdownSelection);
+//        //add "Default Path" and "Choose Location..." items to choiceBox
+//        //initialize directory selection dropdown menu
+//        autosaveOptionsChoiceBox.getItems().addAll(defaultAutosaveSelection, CHOOSE_LOCATION);
+//
+//        //initialize option to default path
+//        autosaveOptionsChoiceBox.setValue(defaultAutosaveSelection);
+//
+//        //attach event handler (this cannot be done in scenebuilder)
+//        autosaveOptionsChoiceBox.setOnAction(this::handleDirectoryDropdownSelection);
     }
 
 
@@ -372,11 +372,11 @@ public class MenubarController
             internalModels.getSettingsModel().getBooleanProperty("sceneWindowOpen"));
 
         mipmapCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getLoadOptionsModel().mipmaps);
-        preloadVisibilityEtcCheckMenuItem.selectedProperty().bindBidirectional(
-                internalModels.getLoadOptionsModel().depthImages);
+//        preloadVisibilityEtcCheckMenuItem.selectedProperty().bindBidirectional(
+//                internalModels.getLoadOptionsModel().depthImages);
 
-        widthIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthWidth);
-        heightIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthHeight);
+//        widthIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthWidth);
+//        heightIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthHeight);
 
         imageCompressionCheckMenuItem.selectedProperty().bindBidirectional(
                 internalModels.getLoadOptionsModel().compression);
@@ -649,37 +649,37 @@ public class MenubarController
         ProjectIO.getInstance().openProjectFromFile(new File(projectName));
     }
 
-    private void handleDirectoryDropdownSelection(ActionEvent actionEvent) {
-        //if user clicks "choose directory" option, open the directory chooser
-        //then add an item to the dropdown which contains the path they selected
+//    private void handleDirectoryDropdownSelection(ActionEvent actionEvent) {
+//        //if user clicks "choose directory" option, open the directory chooser
+//        //then add an item to the dropdown which contains the path they selected
+//
+//        if (autosaveOptionsChoiceBox.getValue().equals(CHOOSE_LOCATION)){
+//            this.directoryChooser.setTitle("Choose an output directory");
+//
+//            Stage stage = (Stage) window;
+//            File file = this.directoryChooser.showDialog(stage.getOwner());
+//
+//            if (file != null && file.exists()){
+//                directoryChooser.setInitialDirectory(file);
+//                autosaveOptionsChoiceBox.getItems().add(file.getAbsolutePath());
+//                autosaveOptionsChoiceBox.setValue(file.getAbsolutePath());
+//            }
+//            else{
+//                Toolkit.getDefaultToolkit().beep();
+//            }
+//        }
+//    }
 
-        if (autosaveOptionsChoiceBox.getValue().equals(CHOOSE_LOCATION)){
-            this.directoryChooser.setTitle("Choose an output directory");
-
-            Stage stage = (Stage) window;
-            File file = this.directoryChooser.showDialog(stage.getOwner());
-
-            if (file != null && file.exists()){
-                directoryChooser.setInitialDirectory(file);
-                autosaveOptionsChoiceBox.getItems().add(file.getAbsolutePath());
-                autosaveOptionsChoiceBox.setValue(file.getAbsolutePath());
-            }
-            else{
-                Toolkit.getDefaultToolkit().beep();
-            }
-        }
-    }
-
-    public void updatePreloadVisibilityEtc() {
-        //if check menu item is unchecked, disable "Preload Visibility & Shadow Testing" options
-        ArrayList<Object> controlItems = new ArrayList<>();
-        controlItems.add(heightLabel);
-        controlItems.add(widthLabel);
-        controlItems.add(heightTxtField);
-        controlItems.add(widthTxtField);
-
-        updateCheckMenuItemVisibilities(preloadVisibilityEtcCheckMenuItem, controlItems);
-    }
+//    public void updatePreloadVisibilityEtc() {
+//        //if check menu item is unchecked, disable "Preload Visibility & Shadow Testing" options
+//        ArrayList<Object> controlItems = new ArrayList<>();
+//        controlItems.add(heightLabel);
+//        controlItems.add(widthLabel);
+//        controlItems.add(heightTxtField);
+//        controlItems.add(widthTxtField);
+//
+//        updateCheckMenuItemVisibilities(preloadVisibilityEtcCheckMenuItem, controlItems);
+//    }
 
     public void updateRelightingVisibility() {
         ArrayList<Object> controlItems = new ArrayList<>();
