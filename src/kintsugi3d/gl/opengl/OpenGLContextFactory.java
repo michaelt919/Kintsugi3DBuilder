@@ -38,6 +38,7 @@ public class OpenGLContextFactory implements ContextFactory<OpenGLContext>
     public OpenGLContext createContext(long glfwHandle, Function<OpenGLContext, DoubleFramebuffer<OpenGLContext>> createDefaultFramebuffer)
     {
         OpenGLContext context = new OpenGLContext(glfwHandle);
+        context.makeContextCurrent();
         context.setDefaultFramebuffer(createDefaultFramebuffer.apply(context));
         return context;
     }

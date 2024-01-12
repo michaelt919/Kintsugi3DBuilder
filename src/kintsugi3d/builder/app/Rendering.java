@@ -92,6 +92,11 @@ public final class Rendering
 
     public static void runProgram(Stage stage, String... args) throws InitializationException
     {
+        runProgram(stage, -1, args);
+    }
+
+    public static void runProgram(Stage stage, long glfwHandle, String... args) throws InitializationException
+    {
         System.getenv();
         System.setProperty("org.lwjgl.util.DEBUG", "true");
 
@@ -99,12 +104,13 @@ public final class Rendering
         printSupportedImageFormats();
         try
         {
-            if (stage == null)
+            if (stage == null || glfwHandle == -1)
             {
-                CanvasWindow<OpenGLContext> window = OpenGLContextFactory.getInstance().buildWindow("Kintsugi 3D Builder", 800, 800)
-                    .setResizable(true)
-                    .setMultisamples(4)
-                    .create();
+                CanvasWindow<OpenGLContext> window =
+                    OpenGLContextFactory.getInstance().buildWindow("Kintsugi 3D Builder", 800, 800)
+                        .setResizable(true)
+                        .setMultisamples(4)
+                        .create();
                 setup3DWindow(window);
                 runProgram(stage, window.getCanvas(), args);
             }
@@ -115,10 +121,14 @@ public final class Rendering
                     DoubleFramebufferObject<OpenGLContext> fbo;
                 };
 
-                // Need to still specify a native window to create the context, even though we won't use it.
-                CanvasWindow<OpenGLContext> nativeWindow = OpenGLContextFactory.getInstance().buildWindow("<ignore>", 1, 1)
-                    .setDefaultFramebufferCreator(c -> framebufferCapture.fbo = DefaultFramebufferFactory.create(c, 800, 800))
-                    .create();
+//                // Need to still specify a native window to create the context, even though we won't use it.
+//                CanvasWindow<OpenGLContext> nativeWindow =
+//                    OpenGLContextFactory.getInstance().buildWindow("<ignore>", 1, 1)
+//                        .setDefaultFramebufferCreator(c -> framebufferCapture.fbo = DefaultFramebufferFactory.create(c, 800, 800))
+//                        .create();
+
+                OpenGLContextFactory.getInstance().createContext(glfwHandle,
+                    c -> framebufferCapture.fbo = DefaultFramebufferFactory.create(c, 800, 800));
 
                 FramebufferCanvas<OpenGLContext> canvas = FramebufferCanvas.createUsingExistingFramebuffer(framebufferCapture.fbo);
                 MultithreadModels.getInstance().getCanvasModel().setCanvas(canvas);

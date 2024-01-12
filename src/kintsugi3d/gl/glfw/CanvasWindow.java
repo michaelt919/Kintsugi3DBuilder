@@ -15,6 +15,7 @@ package kintsugi3d.gl.glfw;
 import java.nio.ByteBuffer;
 import java.util.function.Function;
 
+import kintsugi3d.builder.javafx.MainApplication;
 import org.lwjgl.*;
 import org.lwjgl.Version.*;
 import org.lwjgl.glfw.*;
@@ -47,23 +48,25 @@ public class CanvasWindow<ContextType extends WindowContextBase<ContextType>>
 //        {
 //            throw new GLFWException(description);
 //        }));
+//
+//        log.info("Starting JavaFX UI");
+//        new Thread(() ->
+//            MainApplication.launchWrapper("")
+//        ).start();
+//
+//        try
+//        {
+//            Thread.sleep(5000L);
+//        }
+//        catch (InterruptedException e)
+//        {
+//            throw new RuntimeException(e);
+//        }
 
-        log.info("Starting JavaFX UI");
-        new Thread(() -> kintsugi3d.builder.javafx.MainApplication.launchWrapper("")).start();
-
-        try
-        {
-            Thread.sleep(5000L);
-        }
-        catch (InterruptedException e)
-        {
-            throw new RuntimeException(e);
-        }
-
-        if ( glfwInit() != true )
-        {
-            throw new GLFWException("Unable to initialize GLFW.");
-        }
+//        if ( glfwInit() != true )
+//        {
+//            throw new GLFWException("Unable to initialize GLFW.");
+//        }
 
         glfwDefaultWindowHints();
 

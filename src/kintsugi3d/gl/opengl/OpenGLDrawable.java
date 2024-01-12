@@ -54,7 +54,8 @@ class OpenGLDrawable extends DrawableBase<OpenGLContext> implements Drawable<Ope
     @Override
     protected void finalize()
     {
-        this.close();
+        // TODO switch to AutoClosable (finalize causes problems on MacOS)
+//        this.close();
     }
 
     @Override
