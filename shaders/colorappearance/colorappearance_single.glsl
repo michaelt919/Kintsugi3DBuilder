@@ -73,7 +73,7 @@ LightInfo getLightInfo()
     float lightDistSquared = dot(result.normalizedDirection, result.normalizedDirection);
     result.normalizedDirection *= inversesqrt(lightDistSquared);
 
-#if !INFINITE_LIGHT_SOURCES
+#if !INFINITE_LIGHT_SOURCE
     result.attenuatedIntensity /= lightDistSquared;
 #endif
 

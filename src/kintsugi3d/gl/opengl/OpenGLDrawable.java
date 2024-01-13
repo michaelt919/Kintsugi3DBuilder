@@ -87,7 +87,7 @@ class OpenGLDrawable extends DrawableBase<OpenGLContext>
     public void draw(PrimitiveMode primitiveMode, Framebuffer<OpenGLContext> framebuffer)
     {
         framebuffer.getDrawContents().bindForDraw();
-        program.use();
+        program.use(vao);
         for (VertexAttributeSetting s : settings.values())
         {
             s.set();
@@ -99,7 +99,7 @@ class OpenGLDrawable extends DrawableBase<OpenGLContext>
     public void draw(PrimitiveMode primitiveMode, Framebuffer<OpenGLContext> framebuffer, int x, int y, int width, int height)
     {
         framebuffer.getDrawContents().bindViewportForDraw(x, y, width, height);
-        program.use();
+        program.use(vao);
         for (VertexAttributeSetting s : settings.values())
         {
             s.set();
