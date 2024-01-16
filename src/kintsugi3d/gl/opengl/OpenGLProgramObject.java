@@ -164,12 +164,14 @@ final class OpenGLProgramObject implements ProgramObject<OpenGLContext>
         }
     }
 
-    void use()
+    void use(OpenGLVertexArray vao)
     {
         if (this.isLinked())
         {
             this.context.updateTextureBindings(new TextureListWrapper(textureManager.asReadonlyList()));
             this.context.updateUniformBufferBindings(uniformBufferManager.asReadonlyList());
+
+            vao.bind(); // needs to be bound to validate program
 
             glValidateProgram(programId);
             OpenGLContext.errorCheck();
