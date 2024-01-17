@@ -106,7 +106,8 @@ public class ApplicationFolders
 
         if (OS == OperatingSystem.MACOS)
         {
-            return Paths.get(System.getProperty("user.home"), "Library/Caches", APP_FOLDER_NAME);
+            // Use Application support on MacOS rather than Caches since it clears Caches frequently, which can cause problems with specular fit.
+            return Paths.get(System.getProperty("user.home"), "Library/Application Support/", APP_FOLDER_NAME);
         }
 
         return getUserAppDirectory().resolve("cache");
@@ -125,7 +126,7 @@ public class ApplicationFolders
 
         if (OS == OperatingSystem.MACOS)
         {
-            return Paths.get("/Library" + APP_FOLDER_NAME);
+            return Paths.get("/Library/" + APP_FOLDER_NAME);
         }
 
         return getUserAppDirectory();
