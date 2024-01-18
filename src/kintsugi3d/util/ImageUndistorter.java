@@ -100,6 +100,7 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
     public void close()
     {
         program.close();
+        drawable.close();
         rect.close();
     }
 

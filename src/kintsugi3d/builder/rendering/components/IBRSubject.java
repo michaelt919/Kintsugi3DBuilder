@@ -195,6 +195,12 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
             standardShader = null;
         }
 
+        if (drawable != null)
+        {
+            drawable.close();
+            drawable = null;
+        }
+
         if (weightBuffer != null)
         {
             weightBuffer.close();

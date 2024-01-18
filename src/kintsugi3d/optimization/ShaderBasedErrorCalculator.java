@@ -22,7 +22,7 @@ public class ShaderBasedErrorCalculator<ContextType extends Context<ContextType>
 {
     // Compare fitted models against actual photographs
     private ProgramObject<ContextType> program;
-    private final Drawable<ContextType> drawable;
+    private Drawable<ContextType> drawable;
 
     // Framebuffer for calculating error and reconstructing 3D renderings of the object
     private FramebufferObject<ContextType> framebuffer;
@@ -121,6 +121,12 @@ public class ShaderBasedErrorCalculator<ContextType extends Context<ContextType>
         {
             program.close();
             program = null;
+        }
+
+        if (drawable != null)
+        {
+            drawable.close();
+            drawable = null;
         }
 
         if (framebuffer != null)

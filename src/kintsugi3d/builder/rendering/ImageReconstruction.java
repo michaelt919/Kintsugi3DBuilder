@@ -336,5 +336,6 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         reconstructionFramebuffer.close();
         incidentRadianceFramebuffer.close();
         incidentRadianceProgram.close();
+        incidentRadianceDrawable.close();
     }
 }

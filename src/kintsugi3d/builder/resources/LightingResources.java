@@ -288,6 +288,12 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
             shadowProgram = null;
         }
 
+        if (shadowDrawable != null)
+        {
+            shadowDrawable.close();
+            shadowDrawable = null;
+        }
+
         if (screenSpaceDepthFBO != null)
         {
             screenSpaceDepthFBO.close();

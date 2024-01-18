@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.javafx;
 
+import com.sun.glass.ui.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -439,16 +440,25 @@ public final class ProjectIO
             File selectedFile = null;
         };
 
-        // Needs to run on JavaFX thread on MacOS
-        Platform.runLater(() ->
+        if (Application.isEventThread())
         {
+            // If already on the JavaFX application thread, just open the dialog here to avoid deadlock
             fileContainer.selectedFile = fileChooser.showSaveDialog(parentWindow);
             fileContainer.complete = true;
-        });
-
-        while (!fileContainer.complete)
+        }
+        else
         {
-            Thread.onSpinWait();
+            // On MacOS, the save dialog needs to run on JavaFX thread, so use Platform.runLater if not already on that thread.
+            Platform.runLater(() ->
+            {
+                fileContainer.selectedFile = fileChooser.showSaveDialog(parentWindow);
+                fileContainer.complete = true;
+            });
+
+            while (!fileContainer.complete)
+            {
+                Thread.onSpinWait();
+            }
         }
 
         if (fileContainer.selectedFile != null)

@@ -292,14 +292,14 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
                                 .minus(lightCenter);
 
                         try
-                                (
-                                        VertexBuffer<ContextType> line =
-                                                context.createVertexBuffer()
-                                                        .setData(NativeVectorBufferFactory.getInstance()
-                                                                .createFromFloatArray(3, 2, lineEndpoint.x, lineEndpoint.y, lineEndpoint.z, lightCenter.x, lightCenter.y, lightCenter.z))
-                                )
-                        {
+                        (
+                            VertexBuffer<ContextType> line =
+                                context.createVertexBuffer()
+                                    .setData(NativeVectorBufferFactory.getInstance()
+                                    .createFromFloatArray(3, 2, lineEndpoint.x, lineEndpoint.y, lineEndpoint.z, lightCenter.x, lightCenter.y, lightCenter.z));
                             Drawable<ContextType> lineRenderable = context.createDrawable(this.solidProgram);
+                        )
+                        {
                             lineRenderable.addVertexBuffer("position", line);
                             this.solidProgram.setUniform("model_view", Matrix4.IDENTITY);
                             this.solidProgram.setUniform("color",
@@ -586,6 +586,12 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
             lightProgram = null;
         }
 
+        if (lightDrawable != null)
+        {
+            lightDrawable.close();
+            lightDrawable = null;
+        }
+
         if (lightTexture != null)
         {
             lightTexture.close();
@@ -604,10 +610,22 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
             widgetVertices = null;
         }
 
+        if (widgetDrawable != null)
+        {
+            widgetDrawable.close();
+            widgetDrawable = null;
+        }
+
         if (circleProgram != null)
         {
             circleProgram.close();
             circleProgram = null;
+        }
+
+        if (circleDrawable != null)
+        {
+            circleDrawable.close();
+            circleDrawable = null;
         }
     }
 }

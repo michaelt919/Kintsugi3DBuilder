@@ -120,6 +120,12 @@ public class Backplate<ContextType extends Context<ContextType>> implements Rend
             tintedTexProgram = null;
         }
 
+        if (tintedTexDrawable != null)
+        {
+            tintedTexDrawable.close();
+            tintedTexDrawable = null;
+        }
+
         if (rectangleVertices != null)
         {
             rectangleVertices.close();

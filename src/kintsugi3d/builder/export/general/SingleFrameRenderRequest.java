@@ -60,10 +60,10 @@ class SingleFrameRenderRequest extends RenderRequestBase
         try
         (
             ProgramObject<ContextType> program = createProgram(resources);
-            FramebufferObject<ContextType> framebuffer = createFramebuffer(resources.getContext())
+            FramebufferObject<ContextType> framebuffer = createFramebuffer(resources.getContext());
+            Drawable<ContextType> drawable = createDrawable(program, resources)
         )
         {
-            Drawable<ContextType> drawable = createDrawable(program, resources);
 
             program.setUniform("model_view", renderable.getActiveViewSet().getCameraPose(0));
             program.setUniform("projection",

@@ -114,6 +114,7 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
     public void close()
     {
         specularRoughnessFitProgram.close();
+        specularRoughnessFitDrawable.close();
         rect.close();
     }
 }

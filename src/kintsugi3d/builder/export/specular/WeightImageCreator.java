@@ -71,6 +71,7 @@ public class WeightImageCreator<ContextType extends Context<ContextType>> implem
     public void close()
     {
         program.close();
+        drawable.close();
         rect.close();
         framebuffer.close();
     }

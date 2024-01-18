@@ -59,9 +59,9 @@ public class GeometryFramebuffer<ContextType extends Context<ContextType>> imple
         try(ProgramObject<ContextType> program = geometry.context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/common/geomBuffers.frag"))
-            .createProgram())
+            .createProgram();
+            Drawable<ContextType> drawable = geometry.createDrawable(program))
         {
-            Drawable<ContextType> drawable = geometry.createDrawable(program);
             drawable.draw(fbo);
         }
         catch (FileNotFoundException e)

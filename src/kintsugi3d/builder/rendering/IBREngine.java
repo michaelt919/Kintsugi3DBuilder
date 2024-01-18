@@ -317,6 +317,12 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
                 simpleTexProgram = null;
             }
 
+            if (simpleTexDrawable != null)
+            {
+                simpleTexDrawable.close();
+                simpleTexDrawable = null;
+            }
+
             if (lightCalibration != null)
             {
                 lightCalibration.close();

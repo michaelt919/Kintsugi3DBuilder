@@ -133,6 +133,12 @@ public class Grid<ContextType extends Context<ContextType>> implements RenderedC
             solidProgram = null;
         }
 
+        if (gridDrawable != null)
+        {
+            gridDrawable.close();
+            gridDrawable = null;
+        }
+
         if (gridVertices != null)
         {
             gridVertices.close();

@@ -75,6 +75,7 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
     public void close()
     {
         program.close();
+        drawable.close();
         rect.close();
         framebuffer.close();
     }

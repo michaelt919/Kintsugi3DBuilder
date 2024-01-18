@@ -135,9 +135,9 @@ public class ImageCache<ContextType extends Context<ContextType>>
         try (ProgramObject<ContextType> maskProgram = context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_dynamic.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/common/solid.frag"))
-            .createProgram())
+            .createProgram();
+            Drawable<ContextType> maskDrawable = resources.createDrawable(maskProgram))
         {
-            Drawable<ContextType> maskDrawable = resources.createDrawable(maskProgram);
             fbo.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
             maskProgram.setUniform("color", new Vector4(1.0f));
             maskDrawable.draw(fbo);
@@ -284,9 +284,9 @@ public class ImageCache<ContextType extends Context<ContextType>>
         try(ProgramObject<ContextType> texSpaceProgram = SingleCalibratedImageResource.getShaderProgramBuilder(context, resources.getViewSet(), loadOptions)
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_dynamic.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/colorappearance/projtex_single.frag"))
-            .createProgram())
+            .createProgram();
+            Drawable<ContextType> texSpaceDrawable = resources.createDrawable(texSpaceProgram))
         {
-            Drawable<ContextType> texSpaceDrawable = resources.createDrawable(texSpaceProgram);
 
             log.info("Building cache...");
 

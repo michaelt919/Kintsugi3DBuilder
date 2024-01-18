@@ -131,6 +131,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
     public void close()
     {
         estimationProgram.close();
+        drawable.close();
         framebuffer.close();
     }
 

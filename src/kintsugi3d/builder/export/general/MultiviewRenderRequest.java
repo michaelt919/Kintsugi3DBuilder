@@ -54,10 +54,10 @@ class MultiviewRenderRequest extends RenderRequestBase
         try
         (
             ProgramObject<ContextType> program = createProgram(resources);
-            FramebufferObject<ContextType> framebuffer = createFramebuffer(resources.getContext())
+            FramebufferObject<ContextType> framebuffer = createFramebuffer(resources.getContext());
+            Drawable<ContextType> drawable = createDrawable(program, resources)
         )
         {
-            Drawable<ContextType> drawable = createDrawable(program, resources);
 
             for (int i = 0; i < resources.getViewSet().getCameraPoseCount(); i++)
             {

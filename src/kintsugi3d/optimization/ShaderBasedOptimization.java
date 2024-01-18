@@ -89,6 +89,7 @@ public class ShaderBasedOptimization<ContextType extends Context<ContextType>> i
         if (!finished) // program will be already closed if finished
         {
             estimationProgram.close();
+            estimationDrawable.close();
         }
 
         // Make sure that if the object is "finished", the framebuffer to close is not the back framebuffer.

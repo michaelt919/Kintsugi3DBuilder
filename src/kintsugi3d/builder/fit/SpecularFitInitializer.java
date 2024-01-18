@@ -56,9 +56,9 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
              FramebufferObject<ContextType> framebuffer =
                 resources.getContext().buildFramebufferObject(solution.getTextureResolution().width, solution.getTextureResolution().height)
                     .addColorAttachment(ColorFormat.RGBA32F)
-                    .createFramebufferObject())
+                    .createFramebufferObject();
+            Drawable<ContextType> drawable = resources.createDrawable(averageProgram))
         {
-            Drawable<ContextType> drawable = resources.createDrawable(averageProgram);
 
             log.info("Clustering to initialize weights...");
 

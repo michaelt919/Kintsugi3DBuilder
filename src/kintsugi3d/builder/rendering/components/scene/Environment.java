@@ -130,6 +130,12 @@ public class Environment<ContextType extends Context<ContextType>> implements Re
             this.environmentBackgroundProgram = null;
         }
 
+        if (environmentBackgroundDrawable != null)
+        {
+            environmentBackgroundDrawable.close();
+            environmentBackgroundDrawable = null;
+        }
+
         if (rectangleVertices != null)
         {
             rectangleVertices.close();

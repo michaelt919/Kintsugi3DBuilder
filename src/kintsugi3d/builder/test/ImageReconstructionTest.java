@@ -230,10 +230,10 @@ class ImageReconstructionTest
         SpecularFitProgramFactory<OpenGLContext> programFactory = new SpecularFitProgramFactory<>(ibrSettings, specularBasisSettings);
 
         try (IBRResourcesAnalytic<OpenGLContext> resources = new IBRResourcesAnalytic<>(context, viewSet, potatoGeometry);
-            ProgramObject<OpenGLContext> groundTruthProgram = groundTruthProgramCreator.apply(programFactory, resources))
+            ProgramObject<OpenGLContext> groundTruthProgram = groundTruthProgramCreator.apply(programFactory, resources);
+            Drawable<OpenGLContext> groundTruthDrawable = resources.createDrawable(groundTruthProgram))
         {
             groundTruthProgram.setUniform("noiseScale", 0.0f);
-            Drawable<OpenGLContext> groundTruthDrawable = resources.createDrawable(groundTruthProgram);
             resources.setupShaderProgram(groundTruthProgram);
 
             try (FramebufferObject<OpenGLContext> groundTruthFBO = context.buildFramebufferObject(256, 256)
@@ -275,10 +275,10 @@ class ImageReconstructionTest
                         float[] groundTruth = groundTruthFBO.getTextureReaderForColorAttachment(0).readFloatingPointRGBA();
                         return p -> new DoubleVector3(groundTruth[4 * p], groundTruth[4 * p + 1], groundTruth[4 * p + 2]);
                     });
-                ProgramObject<OpenGLContext> syntheticWithNoise = testProgramCreator.apply(programFactory, resources))
+                ProgramObject<OpenGLContext> syntheticWithNoise = testProgramCreator.apply(programFactory, resources);
+                Drawable<OpenGLContext> drawable = resources.createDrawable(syntheticWithNoise))
             {
                 resources.setupShaderProgram(syntheticWithNoise);
-                Drawable<OpenGLContext> drawable = resources.createDrawable(syntheticWithNoise);
 
                 TEST_OUTPUT_DIR.mkdirs();
 

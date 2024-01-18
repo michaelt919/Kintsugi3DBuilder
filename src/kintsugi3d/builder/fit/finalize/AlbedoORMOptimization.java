@@ -153,6 +153,11 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
             estimationProgram.close();
         }
 
+        if (drawable != null)
+        {
+            drawable.close();
+        }
+
         if (framebuffer != null)
         {
             framebuffer.close();

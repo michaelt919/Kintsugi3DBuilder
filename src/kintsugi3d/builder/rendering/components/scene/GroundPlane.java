@@ -150,5 +150,12 @@ public class GroundPlane<ContextType extends Context<ContextType>> implements Re
             groundPlaneStandardShader.close();
             groundPlaneStandardShader = null;
         }
+
+        if (groundPlaneDrawable != null)
+        {
+            groundPlaneDrawable.close();
+            groundPlaneDrawable = null;
+        }
+
     }
 }

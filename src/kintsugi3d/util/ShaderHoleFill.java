@@ -46,6 +46,7 @@ public class ShaderHoleFill<ContextType extends Context<ContextType>> implements
     public void close()
     {
         program.close();
+        drawable.close();
         rect.close();
     }
 

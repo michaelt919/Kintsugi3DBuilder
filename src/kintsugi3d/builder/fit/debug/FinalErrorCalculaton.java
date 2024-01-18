@@ -67,10 +67,9 @@ public final class FinalErrorCalculaton
                 .addShader(ShaderType.FRAGMENT, new File("shaders/common/texture.frag"))
                 .createProgram();
                  FramebufferObject<ContextType> textureRectFBO =
-                    resources.getContext().buildFramebufferObject(specularFit.getWidth(), specularFit.getHeight()).addColorAttachment().createFramebufferObject())
+                    resources.getContext().buildFramebufferObject(specularFit.getWidth(), specularFit.getHeight()).addColorAttachment().createFramebufferObject();
+                Drawable<ContextType> textureRect = resources.createDrawable(textureRectProgram))
             {
-                // Use the real geometry rather than a rectangle so that the normal map is masked properly for the part of the normal map used.
-                Drawable<ContextType> textureRect = resources.createDrawable(textureRectProgram);
                 textureRectProgram.setTexture("tex", resources.getSpecularMaterialResources().getNormalMap());
                 textureRectFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
                 textureRect.draw(PrimitiveMode.TRIANGLE_FAN, textureRectFBO);
@@ -113,7 +112,8 @@ public final class FinalErrorCalculaton
         SpecularMaterialResources<ContextType> specularFit, ShaderBasedErrorCalculator<ContextType> basisErrorCalculator,
         PrintStream rmseOut)
     {
-        try (ProgramObject<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(resources, programFactory))
+        try (ProgramObject<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(resources, programFactory);
+            Drawable<ContextType> finalErrorCalcDrawable = resources.createDrawable(finalErrorCalcProgram))
         {
             // Calculate RMSE using basis diffuse
             basisErrorCalculator.update();
@@ -125,7 +125,6 @@ public final class FinalErrorCalculaton
             rmseOut.println("RMSE using basis diffuse (gamma-corrected): " + basisErrorCalculator.getReport().getError());
 
             // Setup drawable that uses the final diffuse texture (not limited to basis colors)
-            Drawable<ContextType> finalErrorCalcDrawable = resources.createDrawable(finalErrorCalcProgram);
             specularFit.getBasisResources().useWithShaderProgram(finalErrorCalcProgram);
             specularFit.getBasisWeightResources().useWithShaderProgram(finalErrorCalcProgram);
             finalErrorCalcProgram.setTexture("normalMap", specularFit.getNormalMap());
@@ -174,9 +173,9 @@ public final class FinalErrorCalculaton
             SpecularMaterialResources<ContextType> specularFit, Framebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
         throws FileNotFoundException
     {
-        try (ProgramObject<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(resources, programFactory))
+        try (ProgramObject<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(resources, programFactory);
+            Drawable<ContextType> ggxErrorCalcDrawable = resources.createDrawable(ggxErrorCalcProgram))
         {
-            Drawable<ContextType> ggxErrorCalcDrawable = resources.createDrawable(ggxErrorCalcProgram);
             ggxErrorCalcProgram.setTexture("normalMap", specularFit.getNormalMap());
             ggxErrorCalcProgram.setTexture("specularEstimate", specularFit.getSpecularReflectivityMap());
             ggxErrorCalcProgram.setTexture("roughnessMap", specularFit.getSpecularRoughnessMap());
