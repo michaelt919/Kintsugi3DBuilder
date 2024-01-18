@@ -15,6 +15,7 @@ package kintsugi3d.builder.io;
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.metrics.ViewRMSE;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.IntStream;
 
 /**
  * Handles loading view sets from the VSET text file format
@@ -248,6 +250,10 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
             }
         }
 
+        // Add default-initialized error metrics for each view
+        IntStream.range(0, result.getCameraPoseCount()).mapToObj(i -> new ViewRMSE())
+            .forEach(result.getViewErrorMetrics()::add);
+
         double[] linearLuminanceValues = new double[linearLuminanceList.size()];
         Arrays.setAll(linearLuminanceValues, linearLuminanceList::get);
 
@@ -267,13 +273,16 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
             result.getLightIntensityList().add(Vector3.ZERO);
         }
 
-        if (result.getGeometryFile() == null)
+        if (result.getGeometryFile() == null && result.getRootDirectory() != null)
         {
             result.setGeometryFileName("manifold.obj"); // Used by some really old datasets
         }
 
-        // Make sure the supporting files directory exists
-        result.getSupportingFilesFilePath().mkdirs();
+        if (result.getSupportingFilesFilePath() != null)
+        {
+            // Make sure the supporting files directory exists
+            result.getSupportingFilesFilePath().mkdirs();
+        }
 
         log.info("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 

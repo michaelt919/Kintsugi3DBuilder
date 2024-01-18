@@ -1,3 +1,5 @@
+#version 330
+
 /*
  * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
@@ -10,21 +12,23 @@
  *
  */
 
-package kintsugi3d.gl.core;
+in vec3 fPosition;
 
-/**
- * A simple interface for a GL resource which needs to be memory-managed manually.
- * This is necessary because 
- * @author Michael Tetzlaff
- *
- */
-@SuppressWarnings("InterfaceMayBeAnnotatedFunctional")
-public interface Resource extends AutoCloseable
+#include "../common/usegeom.glsl"
+#line 19 0
+
+#define PI 3.1415926535897932384626433832795
+
+uniform vec3 reconstructionLightPos;
+uniform vec3 reconstructionLightIntensity;
+
+layout(location = 0) out vec4 fragColor;
+
+void main()
 {
-    /**
-     * Deletes all graphics resources associated with this object.
-     * Any usage of this object after calling this method will cause undefined results.
-     */
-    @Override
-    void close();
+    vec3 lightDisplacement = reconstructionLightPos - getPosition();
+
+    // View set's light intensity is technically radiance / pi, hence multiplication by pi
+    // Gamma correction intentionally omitted for error calculation.
+    fragColor = vec4(reconstructionLightIntensity * PI / dot(lightDisplacement, lightDisplacement), 1.0);
 }

@@ -180,6 +180,15 @@ public class Vector4 implements Iterable<Float>
         return new Vector4(this.x/s, this.y/s, this.z/s, this.w/s);
     }
 
+    public Vector4 times(Vector4 other)
+    {
+        return new Vector4(this.x * other.x, this.y * other.y, this.z * other.z, this.w * other.w);
+    }
+
+    public Vector4 dividedBy(Vector4 other)
+    {
+        return new Vector4(this.x / other.x, this.y / other.y, this.z / other.z, this.w * other.w);
+    }
     /**
      * Compute the dot product (scaler product) of this vector and another given vector.
      * @param other The vector to use when computing the dot product.

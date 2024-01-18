@@ -179,6 +179,16 @@ public class Vector2 implements Iterable<Float>
         return new Vector2(this.x/s, this.y/s);
     }
 
+    public Vector2 times(Vector2 other)
+    {
+        return new Vector2(this.x * other.x, this.y * other.y);
+    }
+
+    public Vector2 dividedBy(Vector2 other)
+    {
+        return new Vector2(this.x / other.x, this.y / other.y);
+    }
+
     /**
      * Compute the dot product (scaler product) of this vector and another given vector.
      * @param other The vector to use when computing the dot product.

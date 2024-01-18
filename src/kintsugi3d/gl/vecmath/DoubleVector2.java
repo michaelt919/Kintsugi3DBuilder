@@ -128,6 +128,16 @@ public class DoubleVector2 implements Iterable<Double>
         return new DoubleVector2(this.x/s, this.y/s);
     }
 
+    public DoubleVector2 times(DoubleVector2 other)
+    {
+        return new DoubleVector2(this.x * other.x, this.y * other.y);
+    }
+
+    public DoubleVector2 dividedBy(DoubleVector2 other)
+    {
+        return new DoubleVector2(this.x / other.x, this.y / other.y);
+    }
+
     public double dot(DoubleVector2 other)
     {
         return this.x * other.x + this.y * other.y;

@@ -12,6 +12,12 @@
 
 package kintsugi3d.builder.fit;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
@@ -20,12 +26,6 @@ import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Program;
 import kintsugi3d.gl.core.ProgramObject;
 import kintsugi3d.gl.core.ShaderType;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Map.Entry;
 
 public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
 {
@@ -90,6 +90,12 @@ public class SpecularFitProgramFactory<ContextType extends Context<ContextType>>
         setupShaderProgram(resources, program);
 
         return program;
+    }
+
+    public ProgramObject<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader, Map<String, Object> additionalDefines)
+        throws FileNotFoundException
+    {
+        return createProgram(resources, vertexShader, fragmentShader, true, additionalDefines);
     }
 
     public ProgramObject<ContextType> createProgram(ReadonlyIBRResources<ContextType> resources, File vertexShader, File fragmentShader, boolean visibilityAndShadowTests) throws FileNotFoundException

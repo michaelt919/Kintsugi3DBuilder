@@ -14,6 +14,7 @@ package kintsugi3d.builder.io;
 
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.metrics.ViewRMSE;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -674,6 +675,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             result.getCameraProjectionIndexList().add(cam.sensor.index);
             result.getLightIndexList().add(cam.lightIndex);
             result.getImageFileNames().add(cam.filename);
+            result.getViewErrorMetrics().add(new ViewRMSE());
         }
 
         for (int i = 0; i < nextLightIndex; i++)

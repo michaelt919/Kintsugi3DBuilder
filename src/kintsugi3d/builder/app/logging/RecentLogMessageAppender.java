@@ -12,6 +12,11 @@
 
 package kintsugi3d.builder.app.logging;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.apache.logging.log4j.core.Appender;
@@ -27,12 +32,6 @@ import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 @Plugin(
         name = "RecentLogMessageAppender",
@@ -82,11 +81,25 @@ public class RecentLogMessageAppender extends AbstractAppender
 
         synchronized(messages)
         {
+            // Appending seems to work OK on a non-JavaFX thread.
+            // (JavaFX may not know that the new message is there right away, but it doesn't invalidate any stale information JavaFX may be working with
+            // as all the previously valid messages / indices are still there and valid).
             messages.add(message);
+
+            if (messages.size() >= MAX_MESSAGES)
+            {
+                // Removing from the ObservableList needs to happen on the JavaFX thread.
+                Platform.runLater(() ->
+                {
+                    synchronized (messages)
+                    {
+                        messages.remove(0, MESSAGE_TRUNC_SIZE);
+                    }
+                });
+            }
         }
 
         dispatchEvents(message);
-        clearOldMessages();
     }
 
     public ObservableList<LogMessage> getMessages()
@@ -107,17 +120,6 @@ public class RecentLogMessageAppender extends AbstractAppender
     public boolean isLevelAvailable(Level level)
     {
         return logger.isEnabledForLevel(level);
-    }
-
-    private void clearOldMessages()
-    {
-        synchronized (messages)
-        {
-            if (messages.size() > MAX_MESSAGES)
-            {
-                messages.remove(0, MESSAGE_TRUNC_SIZE);
-            }
-        }
     }
 
     private void dispatchEvents(LogMessage message)

@@ -9,25 +9,39 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  *
  */
+#line 13 4000
 
 #if !GEOMETRY_TEXTURES_ENABLED // position not needed if geometry textures are being used
 in vec3 fPosition;
 #endif
 in vec2 fTexCoord;
-// normal and tagnent will be declared by constructTBN.glsl
+// normal and tangent will be declared by constructTBN.glsl
 
 uniform sampler2D diffuseMap;
-uniform sampler2D normalMap;
 uniform sampler2D roughnessMap;
 
-#include <colorappearance/colorappearance_dynamic.glsl>
-
-#if COLOR_APPEARANCE_MODE == COLOR_APPEARANCE_MODE_ANALYTIC
-// For debugging or generating comparisons and figures.
-#undef NORMAL_TEXTURE_ENABLED
-#define NORMAL_TEXTURE_ENABLED 1
+#ifndef USE_CONSTANT_MAP
+#define USE_CONSTANT_MAP 0
 #endif
 
+#if USE_CONSTANT_MAP
+uniform sampler2D constantMap;
+
+vec3 getConstantTerm()
+{
+    return texture(constantMap, fTexCoord).rgb;
+}
+
+#else
+
+vec3 getConstantTerm()
+{
+    return vec3(0);
+}
+
+#endif
+
+#include <colorappearance/colorappearance_dynamic.glsl>
 #include <colorappearance/reflectanceequations.glsl>
 
 #define COSINE_CUTOFF 0.0
@@ -37,4 +51,4 @@ uniform sampler2D roughnessMap;
 #endif
 
 #include "evaluateBRDF.glsl"
-#include "../common/constructTBN.glsl"
+#include "lightingParameters.glsl"

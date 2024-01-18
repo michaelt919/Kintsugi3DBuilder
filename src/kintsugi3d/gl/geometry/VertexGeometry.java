@@ -15,6 +15,7 @@ package kintsugi3d.gl.geometry;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -100,11 +101,32 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
     }
 
     /**
+     * Initializes the mesh from a stream containing the mesh in Wavefront OBJ format.
+     * @param stream The stream to load.
+     * @throws FileNotFoundException Thrown if any File I/O errors occur.
+     */
+    public static VertexGeometry createFromOBJStream(InputStream stream) throws FileNotFoundException
+    {
+        try(Scanner scanner = new Scanner(stream))
+        {
+            return createFromOBJ(null, scanner);
+        }
+    }
+
+    /**
      * Initializes the mesh from a file containing the mesh in Wavefront OBJ format.
      * @param file The file to load.
      * @throws FileNotFoundException Thrown if any File I/O errors occur.
      */
     public static VertexGeometry createFromOBJFile(File file) throws FileNotFoundException
+    {
+        try(Scanner scanner = new Scanner(file))
+        {
+            return createFromOBJ(file, scanner);
+        }
+    }
+
+    private static VertexGeometry createFromOBJ(File file, Scanner scanner) throws FileNotFoundException
     {
         Date timestamp = new Date();
 
@@ -125,127 +147,124 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
 
         String materialName = null;
 
-        try(Scanner scanner = new Scanner(file))
+        while(scanner.hasNext())
         {
-            while(scanner.hasNext())
+            String id = scanner.next();
+            switch (id)
             {
-                String id = scanner.next();
-                switch (id)
-                {
-                    case "mtllib":
-                        if (materialFileName == null)
-                        {
-                            // Use first material filename found
-                            materialFileName = scanner.next();
-                        }
-                        break;
-                    case "usemtl":
-                        if (materialName == null)
-                        {
-                            // Use first material found
-                            materialName = scanner.next();
-                        }
-                        break;
-                    case "v":
-                        // Vertex position
-                        float x = scanner.nextFloat();
-                        float y = scanner.nextFloat();
-                        float z = scanner.nextFloat();
+                case "mtllib":
+                    if (materialFileName == null)
+                    {
+                        // Use first material filename found
+                        materialFileName = scanner.next();
+                    }
+                    break;
+                case "usemtl":
+                    if (materialName == null)
+                    {
+                        // Use first material found
+                        materialName = scanner.next();
+                    }
+                    break;
+                case "v":
+                    // Vertex position
+                    float x = scanner.nextFloat();
+                    float y = scanner.nextFloat();
+                    float z = scanner.nextFloat();
 
-                        sum = sum.plus(new Vector3(x, y, z));
+                    sum = sum.plus(new Vector3(x, y, z));
 
-                        vertexList.add(new Vector3(x, y, z));
-                        break;
-                    case "vt":
-                        // Texture coordinate
-                        if (hasTexCoords)
+                    vertexList.add(new Vector3(x, y, z));
+                    break;
+                case "vt":
+                    // Texture coordinate
+                    if (hasTexCoords)
+                    {
+                        texCoordList.add(new Vector2(scanner.nextFloat(), scanner.nextFloat()));
+                    }
+                    break;
+                case "vn":
+                    if (hasNormals)
+                    {
+                        // Vertex normal
+                        float nx = scanner.nextFloat();
+                        float ny = scanner.nextFloat();
+                        float nz = scanner.nextFloat();
+
+                        // Normalize to unit length
+                        normalList.add(new Vector3(nx, ny, nz).normalized());
+                    }
+                    break;
+                case "f":
+                    for (int i = 0; i < 3; i++) // Only support triangles
+                    {
+                        String[] parts = scanner.next().split("\\/");
+
+                        // Process vertex position
+                        int vertexIndex = Integer.parseInt(parts[0]);
+                        if (vertexIndex < 0)
                         {
-                            texCoordList.add(new Vector2(scanner.nextFloat(), scanner.nextFloat()));
+                            // Relative index
+                            vertexIndexList.add(vertexList.size() + vertexIndex);
                         }
-                        break;
-                    case "vn":
-                        if (hasNormals)
+                        else
                         {
-                            // Vertex normal
-                            float nx = scanner.nextFloat();
-                            float ny = scanner.nextFloat();
-                            float nz = scanner.nextFloat();
-
-                            // Normalize to unit length
-                            normalList.add(new Vector3(nx, ny, nz).normalized());
+                            // Absolute index
+                            // 1-based -> 0-based indexing
+                            vertexIndexList.add(vertexIndex - 1);
                         }
-                        break;
-                    case "f":
-                        for (int i = 0; i < 3; i++) // Only support triangles
-                        {
-                            String[] parts = scanner.next().split("\\/");
 
-                            // Process vertex position
-                            int vertexIndex = Integer.parseInt(parts[0]);
-                            if (vertexIndex < 0)
+                        if (parts.length < 2 || parts[1].isEmpty())
+                        {
+                            // No texture coordinate
+                            hasTexCoords = false;
+                        }
+                        else if (hasTexCoords)
+                        {
+                            // Process texture coordinate
+                            int texCoordIndex = Integer.parseInt(parts[1]);
+                            if (texCoordIndex < 0)
                             {
                                 // Relative index
-                                vertexIndexList.add(vertexList.size() + vertexIndex);
+                                texCoordIndexList.add(texCoordIndexList.size() + texCoordIndex);
                             }
                             else
                             {
                                 // Absolute index
                                 // 1-based -> 0-based indexing
-                                vertexIndexList.add(vertexIndex - 1);
-                            }
-
-                            if (parts.length < 2 || parts[1].isEmpty())
-                            {
-                                // No texture coordinate
-                                hasTexCoords = false;
-                            }
-                            else if (hasTexCoords)
-                            {
-                                // Process texture coordinate
-                                int texCoordIndex = Integer.parseInt(parts[1]);
-                                if (texCoordIndex < 0)
-                                {
-                                    // Relative index
-                                    texCoordIndexList.add(texCoordIndexList.size() + texCoordIndex);
-                                }
-                                else
-                                {
-                                    // Absolute index
-                                    // 1-based -> 0-based indexing
-                                    texCoordIndexList.add(texCoordIndex - 1);
-                                }
-                            }
-
-                            if (parts.length < 3 || parts[2].isEmpty())
-                            {
-                                // No vertex normal
-                                hasNormals = false;
-                            }
-                            else if (hasNormals)
-                            {
-                                // Process vertex normal
-                                int normalIndex = Integer.parseInt(parts[2]);
-                                if (normalIndex < 0)
-                                {
-                                    // Relative index
-                                    normalIndexList.add(normalIndexList.size() + normalIndex);
-                                }
-                                else
-                                {
-                                    // Absolute index
-                                    // 1-based -> 0-based indexing
-                                    normalIndexList.add(normalIndex - 1);
-                                }
+                                texCoordIndexList.add(texCoordIndex - 1);
                             }
                         }
-                        break;
-                    default:
-                        break;
-                }
 
-                // Always advance to the next line.
-                scanner.nextLine();
+                        if (parts.length < 3 || parts[2].isEmpty())
+                        {
+                            // No vertex normal
+                            hasNormals = false;
+                        }
+                        else if (hasNormals)
+                        {
+                            // Process vertex normal
+                            int normalIndex = Integer.parseInt(parts[2]);
+                            if (normalIndex < 0)
+                            {
+                                // Relative index
+                                normalIndexList.add(normalIndexList.size() + normalIndex);
+                            }
+                            else
+                            {
+                                // Absolute index
+                                // 1-based -> 0-based indexing
+                                normalIndexList.add(normalIndex - 1);
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    break;
             }
+
+            // Always advance to the next line.
+            scanner.nextLine();
         }
 
         VertexGeometry inst = createFromArrays(file, hasNormals, hasTexCoords, vertexList, vertexIndexList, normalList,
@@ -253,7 +272,7 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
 
         // Handle OBJ materials
         inst.materialFileName = materialFileName;
-        if (inst.materialFileName != null)
+        if (file != null && inst.materialFileName != null)
         {
             try
             {
@@ -276,10 +295,28 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
         return inst;
     }
 
+    /**
+     * Initializes the mesh from a stream containing the mesh in Wavefront OBJ format.
+     * @param stream The stream to load.
+     * @throws FileNotFoundException Thrown if any File I/O errors occur.
+     */
+    public static VertexGeometry createFromPLYStream(InputStream stream) throws IOException
+    {
+        return createFromPLY(null, PLY.read(stream));
+    }
+
+    /**
+     * Initializes the mesh from a file containing the mesh in Wavefront OBJ format.
+     * @param file The file to load.
+     * @throws FileNotFoundException Thrown if any File I/O errors occur.
+     */
     public static VertexGeometry createFromPLYFile(File file) throws IOException
     {
-        PLY ply = PLY.load(file.toPath());
+        return createFromPLY(file, PLY.load(file.toPath()));
+    }
 
+    private static VertexGeometry createFromPLY(File file, PLY ply) throws IOException
+    {
         PLYElementList vertex = ply.elements("vertex");
         boolean hasNormals = false, hasTexCoords = false;
 

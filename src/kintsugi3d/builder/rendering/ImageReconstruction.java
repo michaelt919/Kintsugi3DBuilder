@@ -12,65 +12,99 @@
 
 package kintsugi3d.builder.rendering;
 
-import java.io.File;
+import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
+import java.nio.FloatBuffer;
+import java.util.ListIterator;
+import java.util.NoSuchElementException;
+import java.util.function.IntFunction;
 import java.util.stream.IntStream;
+import javax.imageio.ImageIO;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
+import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.vecmath.DoubleVector2;
 import kintsugi3d.gl.vecmath.DoubleVector3;
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
+import kintsugi3d.util.SRGB;
+import org.lwjgl.*;
 
-public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable
+public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable, Iterable<ReconstructionView<ContextType>>
 {
-    private static final Logger log = LoggerFactory.getLogger(ImageReconstruction.class);
-    private final ProgramObject<ContextType> program;
-    private final ProgramObject<ContextType> groundTruthProgram;
+    private final ReadonlyViewSet viewSet;
+    private final IntFunction<IntFunction<DoubleVector3>> groundTruthLoader;
 
-    private final Drawable<ContextType> drawable;
-    private final Drawable<ContextType> groundTruthDrawable;
+    private final FramebufferObject<ContextType> incidentRadianceFramebuffer;
+    private final ProgramObject<ContextType> incidentRadianceProgram;
+    private final Drawable<ContextType> incidentRadianceDrawable;
 
-    private final FramebufferObject<ContextType> framebuffer;
+    private final FloatBuffer incidentRadianceBuffer;
 
-    public ImageReconstruction(ReadonlyIBRResources<ContextType> resources, ProgramBuilder<ContextType> programBuilder,
-                               FramebufferObjectBuilder<ContextType> framebufferObjectBuilder, Consumer<Program<ContextType>> programSetup)
+    private final FramebufferObject<ContextType> reconstructionFramebuffer;
+    private final FloatBuffer reconstructionBuffer;
+
+    public ImageReconstruction(
+        ReadonlyViewSet viewSet,
+        FramebufferObjectBuilder<ContextType> framebufferObjectBuilder,
+        FramebufferObjectBuilder<ContextType> incidentRadianceFramebufferObjectBuilder,
+        ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
+        ReadonlyIBRResources<ContextType> resources)
         throws FileNotFoundException
     {
-        this.program = programBuilder.createProgram();
-        resources.setupShaderProgram(program);
-        programSetup.accept(program);
-        this.drawable = resources.createDrawable(program);
+        this(viewSet, framebufferObjectBuilder, incidentRadianceFramebufferObjectBuilder, incidentRadianceProgramBuilder, resources,
+            viewIndex ->
+            {
+                // load new ground truth
+                try
+                {
+                    BufferedImage groundTruthImage = ImageIO.read(viewSet.findFullResImageFile(viewIndex));
 
-        this.groundTruthProgram = resources.getShaderProgramBuilder()
-            .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-            .addShader(ShaderType.FRAGMENT, new File("shaders/colorappearance/tonemap.frag"))
-            .createProgram();
-        resources.setupShaderProgram(groundTruthProgram);
-        this.groundTruthDrawable = resources.createDrawable(groundTruthProgram);
+                    return p ->
+                    {
+                        int x = p % groundTruthImage.getWidth();
+                        int y = groundTruthImage.getHeight() - 1 - p / groundTruthImage.getWidth();
+                        int rgb = groundTruthImage.getRGB(x, y);
 
-        this.framebuffer = framebufferObjectBuilder.createFramebufferObject();
+                        return new DoubleVector3(((rgb >>> 16) & 0xFF) / 255.0, ((rgb >>> 8) & 0xFF) / 255.0, (rgb & 0xFF) / 255.0);
+                    };
+                }
+                catch (IOException e)
+                {
+                    //noinspection ThrowInsideCatchBlockWhichIgnoresCaughtException,ProhibitedExceptionThrown
+                    throw new RuntimeException(e.toString());
+                }
+            }
+        );
     }
 
-    /**
-     *
-     * @param viewSet
-     * @param viewIndex
-     * @param reconstructionAction
-     * @param groundTruthAction
-     * @return x-component stores rmse, y-component stores pixel count after masking
-     */
-    public DoubleVector2 executeOnce(ReadonlyViewSet viewSet, int viewIndex,
-        Consumer<Framebuffer<ContextType>> reconstructionAction,
-        Consumer<Framebuffer<ContextType>> groundTruthAction)
-        throws IOException
+    public ImageReconstruction(
+            ReadonlyViewSet viewSet,
+            FramebufferObjectBuilder<ContextType> framebufferObjectBuilder,
+            FramebufferObjectBuilder<ContextType> incidentRadianceFramebufferObjectBuilder,
+            ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
+            ReadonlyIBRResources<ContextType> resources,
+            IntFunction<IntFunction<DoubleVector3>> groundTruthLoader)
+        throws FileNotFoundException
+    {
+        this.viewSet = viewSet;
+        this.reconstructionFramebuffer = framebufferObjectBuilder.createFramebufferObject();
+        this.incidentRadianceFramebuffer = incidentRadianceFramebufferObjectBuilder.createFramebufferObject();
+        this.incidentRadianceProgram = incidentRadianceProgramBuilder.createProgram();
+        this.incidentRadianceDrawable = resources.createDrawable(incidentRadianceProgram);
+        this.groundTruthLoader = groundTruthLoader;
+
+        FramebufferSize reconstructionSize = reconstructionFramebuffer.getSize();
+        reconstructionBuffer = BufferUtils.createFloatBuffer(reconstructionSize.width * reconstructionSize.height * 4);
+
+        FramebufferSize incidentRadianceSize = incidentRadianceFramebuffer.getSize(); // should be the same as reconstruction size
+        incidentRadianceBuffer = BufferUtils.createFloatBuffer(incidentRadianceSize.width * incidentRadianceSize.height * 4);
+    }
+
+    private static <ContextType extends Context<ContextType>> void render(
+        ReadonlyViewSet viewSet, int viewIndex, Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer)
     {
         // Reconstruct the view
         drawable.program().setUniform("model_view", viewSet.getCameraPose(viewIndex));
@@ -83,7 +117,6 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
             viewSet.getCameraPoseInverse(viewIndex).times(viewSet.getLightPosition(viewSet.getLightIndex(viewIndex)).asPosition()).getXYZ());
         drawable.program().setUniform("reconstructionLightIntensity",
             viewSet.getLightIntensity(viewSet.getLightIndex(viewIndex)));
-        drawable.program().setUniform("gamma", viewSet.getGamma());
 
         for (int i = 0; i < framebuffer.getColorAttachmentCount(); i++)
         {
@@ -96,127 +129,212 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
 
         // Draw the view into the framebuffer.
         drawable.draw(framebuffer);
+    }
 
-        // Give the callback an opportunity to do something with the view.
-        if (reconstructionAction != null)
+    public final class ReconstructionIterator implements ListIterator<ReconstructionView<ContextType>>
+    {
+        private int viewIndex = 0;
+        private IntFunction<DoubleVector3> currentGroundTruth;
+
+        private void refresh()
         {
-            reconstructionAction.accept(framebuffer);
+            // load new ground truth
+            currentGroundTruth = groundTruthLoader.apply(viewIndex);
+
+            // render incident radiance for this view
+            render(viewSet, viewIndex, incidentRadianceDrawable, incidentRadianceFramebuffer);
+            incidentRadianceFramebuffer.getTextureReaderForColorAttachment(0).readFloatingPointRGBA(incidentRadianceBuffer);
         }
 
-        float[] reconstruction = framebuffer.getTextureReaderForColorAttachment(0).readFloatingPointRGBA();
-
-        log.info("View " + viewIndex + ':');
-
-        // Tonemap ground truth image
-        try (Texture2D<ContextType> groundTruthTex =
-            groundTruthProgram.getContext().getTextureFactory()
-                .build2DColorTextureFromFile(viewSet.findFullResImageFile(viewIndex), true)
-                .setLinearFilteringEnabled(true)
-                .setMipmapsEnabled(true)
-                .createTexture())
+        private ReconstructionView<ContextType> makeReconstructionView()
         {
-            // TODO move into a subroutine to eliminate duplicated code
-            groundTruthProgram.setUniform("model_view", viewSet.getCameraPose(viewIndex));
-            groundTruthProgram.setUniform("projection",
-                viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewIndex)).getProjectionMatrix(
-                    viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
-            groundTruthProgram.setUniform("reconstructionCameraPos",
-                viewSet.getCameraPoseInverse(viewIndex).getColumn(3).getXYZ());
-            groundTruthProgram.setUniform("reconstructionLightPos",
-                viewSet.getCameraPoseInverse(viewIndex).times(viewSet.getLightPosition(viewSet.getLightIndex(viewIndex)).asPosition()).getXYZ());
-            groundTruthProgram.setUniform("reconstructionLightIntensity",
-                viewSet.getLightIntensity(viewSet.getLightIndex(viewIndex)));
-            groundTruthProgram.setTexture("image", groundTruthTex);
-            groundTruthProgram.setUniform("gamma", viewSet.getGamma());
-
-            // Clear a single color buffer and depth buffer
-            // Use transparent so that we can tell which pixels should be masked
-            framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-            framebuffer.clearDepthBuffer();
-
-            // Draw the ground truth image into the framebuffer.
-            groundTruthDrawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
-
-            // Give the callback an opportunity to do something with the view.
-            if (groundTruthAction != null)
+            return new ReconstructionView<>()
             {
-                groundTruthAction.accept(framebuffer);
+                private final int index = ReconstructionIterator.this.viewIndex;
+
+                @Override
+                public int getIndex()
+                {
+                    return index;
+                }
+
+                @Override
+                public Framebuffer<ContextType> getReconstructionFramebuffer()
+                {
+                    return reconstructionFramebuffer;
+                }
+
+                /**
+                 * @param drawable
+                 * @return x-component stores rmse, y-component stores pixel count after masking
+                 */
+                @Override
+                public ColorAppearanceRMSE reconstruct(Drawable<ContextType> drawable)
+                {
+                    // Provide gamma to shader in case it's necessary for reconstruction
+                    // TODO: use proper sRGB when possible, not gamma correction
+                    float gamma = viewSet.getGamma();
+                    drawable.program().setUniform("gamma", gamma);
+
+                    render(viewSet, index, drawable, reconstructionFramebuffer);
+
+                    reconstructionFramebuffer.getTextureReaderForColorAttachment(0).readFloatingPointRGBA(reconstructionBuffer);
+
+                    long sampleCount = IntStream.range(0, reconstructionBuffer.limit() / 4)
+                        .parallel()
+                        .filter(p -> reconstructionBuffer.get(4 * p + 3) > 0.0) // only count pixels where we have geometry (mask out the rest)
+                        .count();
+
+                    DoubleVector3 totalRMSEPacked =
+                        IntStream.range(0, reconstructionBuffer.limit() / 4)
+                            .parallel()
+                            .filter(p -> reconstructionBuffer.get(4 * p + 3) > 0.0) // only count pixels where we have geometry (mask out the rest)
+                            .mapToObj(p ->
+                            {
+                                DoubleVector3 groundTruthEncoded = currentGroundTruth.apply(p);
+                                DoubleVector3 incidentRadiance =
+                                    new DoubleVector3(incidentRadianceBuffer.get(4 * p), incidentRadianceBuffer.get(4 * p + 1), incidentRadianceBuffer.get(4 * p + 2));
+                                DoubleVector3 reconstructedLinear =
+                                    new DoubleVector3(reconstructionBuffer.get(4 * p), reconstructionBuffer.get(4 * p + 1), reconstructionBuffer.get(4 * p + 2));
+
+                                // Handle NaN values -- replace with black
+                                reconstructedLinear = reconstructedLinear.applyOperator(z -> Double.isNaN(z) ? 0.0 : z);
+
+                                DoubleVector3 reconstructedSRGB = SRGB.fromLinear(reconstructedLinear);
+                                DoubleVector3 reconstructedEncoded = viewSet.getLuminanceEncoding().encode(reconstructedLinear.times(incidentRadiance)).dividedBy(255.0);
+                                DoubleVector3 groundTruthLinear = viewSet.getLuminanceEncoding().decode(groundTruthEncoded.times(255.0)).dividedBy(incidentRadiance);
+                                DoubleVector3 groundTruthSRGB = SRGB.fromLinear(groundTruthLinear);
+
+                                DoubleVector3 encodedError = groundTruthEncoded.minus(reconstructedEncoded);
+                                double encodedSqError = encodedError.dot(encodedError) / 3; // mean squared error for the three channels
+
+                                DoubleVector3 sRGBError = groundTruthSRGB.minus(reconstructedSRGB);
+                                double sRGBSqError = sRGBError.dot(sRGBError) / 3; // mean squared error for the three channels
+
+                                DoubleVector3 linearError = groundTruthLinear.minus(reconstructedLinear);
+                                double linearSqError = linearError.dot(linearError) / 3; // mean squared error for the three channels
+
+                                return new DoubleVector3(encodedSqError, sRGBSqError, linearSqError); // pack results into a Vector3
+                            })
+                            .reduce(DoubleVector3.ZERO, DoubleVector3::plus).dividedBy(sampleCount) // mean over pixels
+                            .applyOperator(Math::sqrt); // root
+
+                    ColorAppearanceRMSE totalRMSE = new ColorAppearanceRMSE();
+                    totalRMSE.setEncodedGroundTruth(totalRMSEPacked.x);
+                    totalRMSE.setNormalizedSRGB(totalRMSEPacked.y);
+                    totalRMSE.setNormalizedLinear(totalRMSEPacked.z);
+                    totalRMSE.setSampleCount(sampleCount);
+
+                    return totalRMSE;
+                }
+            };
+        }
+
+        @Override
+        public boolean hasNext()
+        {
+            return viewIndex < viewSet.getCameraPoseCount();
+        }
+
+        @Override
+        public ReconstructionView<ContextType> next()
+        {
+            if (hasNext())
+            {
+                refresh();
+                ReconstructionView<ContextType> view = makeReconstructionView();
+                viewIndex++;
+                return view;
             }
+            else
+            {
+                throw new NoSuchElementException("Reached the end of the view set");
+            }
+        }
 
-            float[] groundTruth = framebuffer.getTextureReaderForColorAttachment(0).readFloatingPointRGBA();
+        @Override
+        public boolean hasPrevious()
+        {
+            return viewIndex > 0;
+        }
 
-            long sampleCount = IntStream.range(0, groundTruth.length / 4)
-                .parallel()
-                .filter(p -> groundTruth[4 * p + 3] > 0.0) // only count pixels where we have geometry (mask out the rest)
-                .count();
+        @Override
+        public ReconstructionView<ContextType> previous()
+        {
+            if (hasPrevious())
+            {
+                viewIndex--;
+                refresh();
+                return makeReconstructionView();
+            }
+            else
+            {
+                throw new NoSuchElementException("Reached the beginning of the view set");
+            }
+        }
 
-            double rmse = Math.sqrt( // root
-                IntStream.range(0, groundTruth.length / 4)
-                    .parallel()
-                    .filter(p -> groundTruth[4 * p + 3] > 0.0) // only count pixels where we have geometry (mask out the rest)
-                    .mapToDouble(p ->
-                    {
-                        DoubleVector3 groundTruthRGB = new DoubleVector3(groundTruth[4 * p], groundTruth[4 * p + 1], groundTruth[4 * p + 2]);
-                        DoubleVector3 reconstructedRGB = new DoubleVector3(reconstruction[4 * p], reconstruction[4 * p + 1], reconstruction[4 * p + 2]);
+        public boolean canJump(int index)
+        {
+            return index >= 0 && index < viewSet.getCameraPoseCount();
+        }
 
-                        // Handle NaN values -- replace with black
-                        reconstructedRGB = reconstructedRGB.applyOperator(x -> Double.isNaN(x) ? 0.0 : x);
+        public ReconstructionView<ContextType> jump(int index)
+        {
+            if (index >= 0 && index < viewSet.getCameraPoseCount())
+            {
+                this.viewIndex = index;
+                refresh();
+                return makeReconstructionView();
+            }
+            else
+            {
+                throw new NoSuchElementException("Illegal index for view set: " + index);
+            }
+        }
 
-                        DoubleVector3 error = groundTruthRGB.minus(reconstructedRGB);
-                        return error.dot(error) / 3; // mean squared error for the three channels
-                    })
-                    .average().orElse(0.0)); // mean over pixels
+        @Override
+        public int nextIndex()
+        {
+            return viewIndex + 1;
+        }
 
-            log.info("Raw RMSE: " + rmse);
+        @Override
+        public int previousIndex()
+        {
+            return viewIndex - 1;
+        }
 
-            // Multiply by the true whitepoint luminance (for an encoded value of 1.0) divided by pi, gamma corrected.
-            // To match the original images dynamic range, the cosine-weighted reflectance values in the framebuffer
-            // will have been pre-divided by this value / PI, then gamma corrected.
-            // Multiplying will reconvert the RMSE back to being in terms of cosine-weighted, normalized reflectance.
-            double decodedWhitePoint = viewSet.getLuminanceEncoding().decodeFunction.applyAsDouble(255.0);
-            log.info("Decoded white point (as reflectance * pi): " + decodedWhitePoint);
-            double normalizedRMSE = rmse * Math.pow(decodedWhitePoint / Math.PI, 1.0 / viewSet.getGamma());
-            log.info("Normalized RMSE (* white point / pi): " + normalizedRMSE);
+        @Override
+        public void remove()
+        {
+            throw new UnsupportedOperationException("remove");
+        }
 
-            return new DoubleVector2(normalizedRMSE, sampleCount);
+        @Override
+        public void set(ReconstructionView<ContextType> contextTypeReconstructionView)
+        {
+            throw new UnsupportedOperationException("set");
+        }
+
+        @Override
+        public void add(ReconstructionView<ContextType> contextTypeReconstructionView)
+        {
+            throw new UnsupportedOperationException("add");
         }
     }
 
-    /**
-     *
-     * @param viewSet
-     * @param reconstructionAction
-     * @param groundTruthAction
-     * @param rmseAction First parameter: view index; second parameter: x-component stores rmse, y-component stores pixel count after masking
-     */
-    public void execute(ReadonlyViewSet viewSet,
-        BiConsumer<Integer, Framebuffer<ContextType>> reconstructionAction,
-        BiConsumer<Integer, Framebuffer<ContextType>> groundTruthAction,
-        BiConsumer<Integer, DoubleVector2> rmseAction)
+    @Override
+    public ReconstructionIterator iterator()
     {
-        for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
-        {
-            int viewIndex = k; // effectively final variable
-
-            try
-            {
-                DoubleVector2 rmseInfo = executeOnce(viewSet, viewIndex,
-                    fbo -> reconstructionAction.accept(viewIndex, fbo),
-                    fbo -> groundTruthAction.accept(viewIndex, fbo));
-                rmseAction.accept(viewIndex, rmseInfo);
-            }
-            catch (IOException e)
-            {
-                log.error("Error occurred executing image reconstruction:", e);
-            }
-        }
+        //noinspection ReturnOfInnerClass
+        return new ReconstructionIterator();
     }
 
     @Override
     public void close()
     {
-        program.close();
-        groundTruthProgram.close();
-        framebuffer.close();
+        reconstructionFramebuffer.close();
+        incidentRadianceFramebuffer.close();
+        incidentRadianceProgram.close();
     }
 }

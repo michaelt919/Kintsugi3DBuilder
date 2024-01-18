@@ -130,6 +130,16 @@ public class DoubleVector4 implements Iterable<Double>
         return new DoubleVector4(this.x/s, this.y/s, this.z/s, this.w/s);
     }
 
+    public DoubleVector4 times(DoubleVector4 other)
+    {
+        return new DoubleVector4(this.x * other.x, this.y * other.y, this.z * other.z, this.w * other.w);
+    }
+
+    public DoubleVector4 dividedBy(DoubleVector4 other)
+    {
+        return new DoubleVector4(this.x / other.x, this.y / other.y, this.z / other.z, this.w * other.w);
+    }
+
     public double dot(DoubleVector4 other)
     {
         return this.x * other.x + this.y * other.y + this.z * other.z + this.w * other.w;
