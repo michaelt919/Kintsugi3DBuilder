@@ -21,7 +21,9 @@ import kintsugi3d.builder.javafx.MainApplication;
 import kintsugi3d.gl.interactive.InitializationException;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.List;
 
 public final class Kintsugi3DBuilder
@@ -76,33 +78,48 @@ public final class Kintsugi3DBuilder
 
         if (GRAPHICS_WINDOW_ENABLED)
         {
-            log.info("Starting JavaFX UI");
-            new Thread(() -> MainApplication.launchWrapper("")).start();
+            try (FileOutputStream standardErr = new FileOutputStream(
+                new File(ApplicationFolders.getLogFileDirectory().toAbsolutePath().toFile(), "Kintsugi3DBuilder-standard-error.log"));
+                PrintStream err = new PrintStream(standardErr))
+            {
+                System.setErr(err);
 
-            log.info("Starting Render Window");
-            Rendering.runProgram(args);
-            // TODO System.exit() call for standalone graphics window?
+                log.info("Starting JavaFX UI");
+                new Thread(() -> MainApplication.launchWrapper("")).start();
+
+                log.info("Starting Render Window");
+                Rendering.runProgram(args);
+                // TODO System.exit() call for standalone graphics window?
+            }
         }
         else
         {
-            MainApplication.addStartListener(stage ->
+            try (FileOutputStream standardErr = new FileOutputStream(
+                    new File(ApplicationFolders.getLogFileDirectory().toAbsolutePath().toFile(), "Kintsugi3DBuilder-standard-error.log"));
+                 PrintStream err = new PrintStream(standardErr))
             {
-                log.info("Starting Render Window");
-                new Thread(() ->
-                {
-                    try
-                    {
-                        Rendering.runProgram(stage, args);
-                    }
-                    catch (InitializationException e)
-                    {
-                        log.error("Error initializing render window:", e);
-                    }
-                }, "OpenGL Rendering Thread").start();
-            });
+                System.setErr(err);
 
-            log.info("Starting JavaFX UI");
-            MainApplication.launchWrapper("");
+                MainApplication.addStartListener(stage ->
+                {
+                    log.info("Starting Render Window");
+                    new Thread(() ->
+                    {
+                        try
+                        {
+                            Rendering.runProgram(stage, args);
+                        }
+                        catch (InitializationException e)
+                        {
+                            log.error("Error initializing render window:", e);
+                        }
+                    }, "OpenGL Rendering Thread").start();
+                });
+
+                log.info("Starting JavaFX UI");
+                MainApplication.launchWrapper("");
+            }
+
             System.exit(0);
         }
     }
