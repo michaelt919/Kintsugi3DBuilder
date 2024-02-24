@@ -93,10 +93,10 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
                 = new ResourceMap<>(reconstructionProgramBuilders.size());
             ImageReconstruction<ContextType> reconstruction = new ImageReconstruction<>(
                 reconstructionViewSet,
-                resources.getContext().buildFramebufferObject(imageWidth, imageHeight)
+                builder -> builder
                     .addColorAttachment(ColorFormat.RGBA32F)
                     .addDepthAttachment(),
-                resources.getContext().buildFramebufferObject(imageWidth, imageHeight)
+                builder -> builder
                     .addColorAttachment(ColorFormat.RGBA32F)
                     .addDepthAttachment(),
                 incidentRadianceProgramBuilder, resources))

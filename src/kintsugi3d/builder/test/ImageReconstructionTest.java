@@ -34,6 +34,7 @@ import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.opengl.OpenGLContext;
 import kintsugi3d.gl.opengl.OpenGLContextFactory;
 import kintsugi3d.gl.vecmath.DoubleVector3;
+import kintsugi3d.util.ColorArrayImage;
 import kintsugi3d.util.Potato;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -242,10 +243,10 @@ class ImageReconstructionTest
                 .createFramebufferObject();
                 ImageReconstruction<OpenGLContext> reconstruction = new ImageReconstruction<>(
                     potatoViewSet,
-                    context.buildFramebufferObject(256, 256)
+                    builder -> builder
                         .addColorAttachment(ColorFormat.RGBA32F)
                         .addDepthAttachment(),
-                    context.buildFramebufferObject(256, 256)
+                    builder -> builder
                         .addColorAttachment(ColorFormat.RGBA32F)
                         .addDepthAttachment(),
                     ReconstructionShaders.getIncidentRadianceProgramBuilder(resources, programFactory),
@@ -273,7 +274,7 @@ class ImageReconstructionTest
                         groundTruthDrawable.draw(groundTruthFBO);
 
                         float[] groundTruth = groundTruthFBO.getTextureReaderForColorAttachment(0).readFloatingPointRGBA();
-                        return p -> new DoubleVector3(groundTruth[4 * p], groundTruth[4 * p + 1], groundTruth[4 * p + 2]);
+                        return new ColorArrayImage(groundTruth, 256, 256);
                     });
                 ProgramObject<OpenGLContext> syntheticWithNoise = testProgramCreator.apply(programFactory, resources);
                 Drawable<OpenGLContext> drawable = resources.createDrawable(syntheticWithNoise))
