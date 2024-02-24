@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
+import java.util.function.Consumer;
 import java.util.function.IntFunction;
 import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
@@ -29,47 +30,44 @@ import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.DoubleVector3;
+import kintsugi3d.util.BufferedImageColorList;
+import kintsugi3d.util.ColorImage;
+import kintsugi3d.util.ColorList;
 import kintsugi3d.util.SRGB;
 import org.lwjgl.*;
 
 public class ImageReconstruction<ContextType extends Context<ContextType>> implements AutoCloseable, Iterable<ReconstructionView<ContextType>>
 {
     private final ReadonlyViewSet viewSet;
-    private final IntFunction<IntFunction<DoubleVector3>> groundTruthLoader;
-
-    private final FramebufferObject<ContextType> incidentRadianceFramebuffer;
+    private final IntFunction<ColorImage> groundTruthLoader;
     private final ProgramObject<ContextType> incidentRadianceProgram;
     private final Drawable<ContextType> incidentRadianceDrawable;
 
-    private final FloatBuffer incidentRadianceBuffer;
+    private final Consumer<FramebufferObjectBuilder<ContextType>> buildFramebufferAttachments;
+    private final Consumer<FramebufferObjectBuilder<ContextType>> buildIncidentRadianceFramebufferAttachments;
 
-    private final FramebufferObject<ContextType> reconstructionFramebuffer;
-    private final FloatBuffer reconstructionBuffer;
+    private FramebufferObject<ContextType> reconstructionFramebuffer;
+    private FramebufferObject<ContextType> incidentRadianceFramebuffer;
+
+    private FloatBuffer incidentRadianceBuffer;
+    private FloatBuffer reconstructionBuffer;
 
     public ImageReconstruction(
         ReadonlyViewSet viewSet,
-        FramebufferObjectBuilder<ContextType> framebufferObjectBuilder,
-        FramebufferObjectBuilder<ContextType> incidentRadianceFramebufferObjectBuilder,
+        Consumer<FramebufferObjectBuilder<ContextType>> buildFramebufferAttachments,
+        Consumer<FramebufferObjectBuilder<ContextType>> buildIncidentRadianceFramebufferAttachments,
         ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
         ReadonlyIBRResources<ContextType> resources)
         throws FileNotFoundException
     {
-        this(viewSet, framebufferObjectBuilder, incidentRadianceFramebufferObjectBuilder, incidentRadianceProgramBuilder, resources,
+        this(viewSet, buildFramebufferAttachments, buildIncidentRadianceFramebufferAttachments, incidentRadianceProgramBuilder, resources,
             viewIndex ->
             {
                 // load new ground truth
                 try
                 {
                     BufferedImage groundTruthImage = ImageIO.read(viewSet.findFullResImageFile(viewIndex));
-
-                    return p ->
-                    {
-                        int x = p % groundTruthImage.getWidth();
-                        int y = groundTruthImage.getHeight() - 1 - p / groundTruthImage.getWidth();
-                        int rgb = groundTruthImage.getRGB(x, y);
-
-                        return new DoubleVector3(((rgb >>> 16) & 0xFF) / 255.0, ((rgb >>> 8) & 0xFF) / 255.0, (rgb & 0xFF) / 255.0);
-                    };
+                    return new BufferedImageColorList(groundTruthImage);
                 }
                 catch (IOException e)
                 {
@@ -82,25 +80,26 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
 
     public ImageReconstruction(
             ReadonlyViewSet viewSet,
-            FramebufferObjectBuilder<ContextType> framebufferObjectBuilder,
-            FramebufferObjectBuilder<ContextType> incidentRadianceFramebufferObjectBuilder,
+            Consumer<FramebufferObjectBuilder<ContextType>> buildFramebufferAttachments,
+            Consumer<FramebufferObjectBuilder<ContextType>> buildIncidentRadianceFramebufferAttachments,
             ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
             ReadonlyIBRResources<ContextType> resources,
-            IntFunction<IntFunction<DoubleVector3>> groundTruthLoader)
+            IntFunction<ColorImage> groundTruthLoader)
         throws FileNotFoundException
     {
         this.viewSet = viewSet;
-        this.reconstructionFramebuffer = framebufferObjectBuilder.createFramebufferObject();
-        this.incidentRadianceFramebuffer = incidentRadianceFramebufferObjectBuilder.createFramebufferObject();
         this.incidentRadianceProgram = incidentRadianceProgramBuilder.createProgram();
         this.incidentRadianceDrawable = resources.createDrawable(incidentRadianceProgram);
         this.groundTruthLoader = groundTruthLoader;
 
-        FramebufferSize reconstructionSize = reconstructionFramebuffer.getSize();
-        reconstructionBuffer = BufferUtils.createFloatBuffer(reconstructionSize.width * reconstructionSize.height * 4);
-
-        FramebufferSize incidentRadianceSize = incidentRadianceFramebuffer.getSize(); // should be the same as reconstruction size
-        incidentRadianceBuffer = BufferUtils.createFloatBuffer(incidentRadianceSize.width * incidentRadianceSize.height * 4);
+        this.buildFramebufferAttachments = buildFramebufferAttachments;
+        this.buildIncidentRadianceFramebufferAttachments = buildIncidentRadianceFramebufferAttachments;
+//
+//        FramebufferSize reconstructionSize = reconstructionFramebuffer.getSize();
+//        reconstructionBuffer = BufferUtils.createFloatBuffer(reconstructionSize.width * reconstructionSize.height * 4);
+//
+//        FramebufferSize incidentRadianceSize = incidentRadianceFramebuffer.getSize(); // should be the same as reconstruction size
+//        incidentRadianceBuffer = BufferUtils.createFloatBuffer(incidentRadianceSize.width * incidentRadianceSize.height * 4);
     }
 
     private static <ContextType extends Context<ContextType>> void render(
@@ -134,15 +133,39 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
     public final class ReconstructionIterator implements ListIterator<ReconstructionView<ContextType>>
     {
         private int viewIndex = 0;
-        private IntFunction<DoubleVector3> currentGroundTruth;
+        private ColorImage currentGroundTruth;
 
         private void refresh()
         {
             // load new ground truth
             currentGroundTruth = groundTruthLoader.apply(viewIndex);
 
+            // Create new framebuffer if necessary.
+            if (incidentRadianceFramebuffer == null
+                || incidentRadianceFramebuffer.getSize().width != currentGroundTruth.getWidth()
+                || incidentRadianceFramebuffer.getSize().height != currentGroundTruth.getHeight())
+            {
+                if (incidentRadianceFramebuffer != null)
+                {
+                    incidentRadianceFramebuffer.close();
+                }
+
+                var builder = incidentRadianceDrawable.getContext()
+                    .buildFramebufferObject(currentGroundTruth.getWidth(), currentGroundTruth.getHeight());
+                buildIncidentRadianceFramebufferAttachments.accept(builder);
+                incidentRadianceFramebuffer = builder.createFramebufferObject();
+            }
+
             // render incident radiance for this view
             render(viewSet, viewIndex, incidentRadianceDrawable, incidentRadianceFramebuffer);
+
+            // create new native buffer if necessary
+            FramebufferSize incidentRadianceSize = incidentRadianceFramebuffer.getSize(); // should be the same as reconstruction size
+            if (incidentRadianceBuffer == null || incidentRadianceBuffer.capacity() != incidentRadianceSize.width * incidentRadianceSize.height * 4)
+            {
+                incidentRadianceBuffer = BufferUtils.createFloatBuffer(incidentRadianceSize.width * incidentRadianceSize.height * 4);
+            }
+
             incidentRadianceFramebuffer.getTextureReaderForColorAttachment(0).readFloatingPointRGBA(incidentRadianceBuffer);
         }
 
@@ -176,7 +199,31 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                     float gamma = viewSet.getGamma();
                     drawable.program().setUniform("gamma", gamma);
 
+                    // Create new framebuffer if necessary.
+                    if (reconstructionFramebuffer == null
+                        || reconstructionFramebuffer.getSize().width != currentGroundTruth.getWidth()
+                        || reconstructionFramebuffer.getSize().height != currentGroundTruth.getHeight())
+                    {
+                        if (reconstructionFramebuffer != null)
+                        {
+                            reconstructionFramebuffer.close();
+                        }
+
+                        var builder = drawable.getContext()
+                            .buildFramebufferObject(currentGroundTruth.getWidth(), currentGroundTruth.getHeight());
+                        buildFramebufferAttachments.accept(builder);
+                        reconstructionFramebuffer = builder.createFramebufferObject();
+                    }
+
+                    // render view
                     render(viewSet, index, drawable, reconstructionFramebuffer);
+
+                    // create new native buffer if necessary
+                    FramebufferSize framebufferSize = reconstructionFramebuffer.getSize(); // should be the same as reconstruction size
+                    if (reconstructionBuffer == null || reconstructionBuffer.capacity() != framebufferSize.width * framebufferSize.height * 4)
+                    {
+                        reconstructionBuffer = BufferUtils.createFloatBuffer(framebufferSize.width * framebufferSize.height * 4);
+                    }
 
                     reconstructionFramebuffer.getTextureReaderForColorAttachment(0).readFloatingPointRGBA(reconstructionBuffer);
 
@@ -191,7 +238,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                             .filter(p -> reconstructionBuffer.get(4 * p + 3) > 0.0) // only count pixels where we have geometry (mask out the rest)
                             .mapToObj(p ->
                             {
-                                DoubleVector3 groundTruthEncoded = currentGroundTruth.apply(p);
+                                DoubleVector3 groundTruthEncoded = currentGroundTruth.get(p).getXYZ().asDoublePrecision();
                                 DoubleVector3 incidentRadiance =
                                     new DoubleVector3(incidentRadianceBuffer.get(4 * p), incidentRadianceBuffer.get(4 * p + 1), incidentRadianceBuffer.get(4 * p + 2));
                                 DoubleVector3 reconstructedLinear =
@@ -333,8 +380,6 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
     @Override
     public void close()
     {
-        reconstructionFramebuffer.close();
-        incidentRadianceFramebuffer.close();
         incidentRadianceProgram.close();
         incidentRadianceDrawable.close();
     }
