@@ -527,6 +527,8 @@ public class EyedropperController implements Initializable {
                                     (byte) Integer.parseInt(txtField5.getText()),
                                     (byte) Integer.parseInt(txtField6.getText())
                             });
+            //Note(ZC): Try Adding the code to save the file here, right after the color calibration
+            //NOte(ZC): Save the file into main project file (double check on where exactly in the files we want this saved)
         }
         else{
             Toolkit.getDefaultToolkit().beep();
