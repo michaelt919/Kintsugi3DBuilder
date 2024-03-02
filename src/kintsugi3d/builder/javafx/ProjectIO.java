@@ -11,6 +11,14 @@
 
 package kintsugi3d.builder.javafx;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URL;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.function.Predicate;
+
 import com.sun.glass.ui.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -25,7 +33,6 @@ import javafx.stage.WindowEvent;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.javafx.controllers.menubar.LoaderController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.scene.CreateProjectController;
@@ -33,14 +40,6 @@ import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.URL;
-import java.util.Objects;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 public final class ProjectIO
 {
@@ -105,6 +104,12 @@ public final class ProjectIO
             public void loadingFailed(Exception e)
             {
                 projectLoaded = false;
+                handleException("An error occurred while loading project", e);
+            }
+
+            @Override
+            public void loadingWarning(Exception e)
+            {
                 handleException("An error occurred while loading project", e);
             }
         });
@@ -502,5 +507,5 @@ public final class ProjectIO
         {
             closeProject();
         }
-        }
+    }
 }

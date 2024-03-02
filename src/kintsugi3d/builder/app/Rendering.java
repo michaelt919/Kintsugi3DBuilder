@@ -27,32 +27,32 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import javafx.application.Platform;
 import javafx.stage.Stage;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.interactive.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
+import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.rendering.IBRInstanceManager;
+import kintsugi3d.builder.state.*;
+import kintsugi3d.builder.tools.DragToolType;
+import kintsugi3d.builder.tools.KeyPressToolType;
+import kintsugi3d.builder.tools.ToolBindingModel;
+import kintsugi3d.builder.tools.ToolBindingModelImpl;
+import kintsugi3d.builder.tools.ToolBox.Builder;
 import kintsugi3d.gl.builders.framebuffer.DefaultFramebufferFactory;
+import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.DoubleFramebufferObject;
 import kintsugi3d.gl.glfw.CanvasWindow;
+import kintsugi3d.gl.interactive.*;
 import kintsugi3d.gl.opengl.OpenGLContext;
 import kintsugi3d.gl.opengl.OpenGLContextFactory;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.window.*;
-import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.builder.rendering.IBRInstanceManager;
-import kintsugi3d.builder.tools.DragToolType;
-import kintsugi3d.builder.tools.KeyPressToolType;
-import kintsugi3d.builder.tools.ToolBindingModel;
-import kintsugi3d.builder.tools.ToolBindingModelImpl;
-import kintsugi3d.builder.tools.ToolBox.Builder;
-import kintsugi3d.builder.state.*;
 import kintsugi3d.util.CanvasInputController;
 import kintsugi3d.util.KeyPress;
 import kintsugi3d.util.MouseMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
 
 public final class Rendering
 {
@@ -376,6 +376,12 @@ public final class Rendering
             public void loadingFailed(Exception e)
             {
                 ioModel.getLoadingMonitor().loadingFailed(e);
+            }
+
+            @Override
+            public void loadingWarning(Exception e)
+            {
+                ioModel.getLoadingMonitor().loadingWarning(e);
             }
         });
 

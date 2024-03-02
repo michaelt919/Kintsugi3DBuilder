@@ -12,6 +12,16 @@
 
 package kintsugi3d.builder.rendering;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.DoubleUnaryOperator;
+
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
@@ -32,16 +42,6 @@ import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.AbstractImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.DoubleUnaryOperator;
 
 public class IBRInstanceManager<ContextType extends Context<ContextType>> implements IOHandler, InteractiveRenderable<ContextType>
 {
@@ -136,15 +136,22 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         }
     }
 
-    private void loadInstance(String id, Builder<ContextType> builder) throws IOException
+    private void loadInstance(String id, Builder<ContextType> builder)
     {
         loadedViewSet = builder.getViewSet();
 
         // Invoke callbacks now that view set is loaded
         invokeViewSetLoadCallbacks(loadedViewSet);
 
-        // Kick off request to generate preview resolution images
-        builder.generateUndistortedPreviewImages();
+        try
+        {
+            // Generate preview resolution images
+            builder.generateUndistortedPreviewImages();
+        }
+        catch (IOException e)
+        {
+            log.error("One or more images failed to load", e);
+        }
 
         // Create the instance (will be initialized on the graphics thread)
         IBRInstance<ContextType> newItem = new IBREngine<>(id, context, builder);
@@ -204,6 +211,15 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                 if (loadingMonitor != null)
                 {
                     loadingMonitor.loadingFailed(e);
+                }
+            }
+
+            @Override
+            public void loadingWarning(Exception e)
+            {
+                if (loadingMonitor != null)
+                {
+                    loadingMonitor.loadingWarning(e);
                 }
             }
         });
