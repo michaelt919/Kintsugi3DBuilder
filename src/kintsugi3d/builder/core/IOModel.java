@@ -12,9 +12,6 @@
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.util.AbstractImage;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -23,6 +20,9 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
+
+import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.util.AbstractImage;
 
 public class IOModel
 {
@@ -77,6 +77,15 @@ public class IOModel
             for (LoadingMonitor monitor : subMonitors)
             {
                 monitor.loadingFailed(e);
+            }
+        }
+
+        @Override
+        public void loadingWarning(Exception e)
+        {
+            for (LoadingMonitor monitor : subMonitors)
+            {
+                monitor.loadingWarning(e);
             }
         }
     }
