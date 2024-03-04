@@ -278,6 +278,7 @@ public final class ProjectIO
                     createProjectController.setLoadStartCallback(this::onLoadStart);
                     createProjectController.setViewSetCallback(viewSet -> onViewSetCreated(viewSet, parentWindow));
                     createProjectController.init();
+
                 }
                 catch (Exception e)
                 {
@@ -458,6 +459,7 @@ public final class ProjectIO
             {
                 fileContainer.selectedFile = fileChooser.showSaveDialog(parentWindow);
                 fileContainer.complete = true;
+                RecentProjects.updateRecentFiles(fileContainer.selectedFile.toString());
             });
 
             while (!fileContainer.complete)
