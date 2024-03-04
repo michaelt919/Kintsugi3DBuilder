@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar;
 
+import com.sun.javafx.embed.swing.SwingFXUtilsImpl;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -527,8 +528,10 @@ public class EyedropperController implements Initializable {
                                     (byte) Integer.parseInt(txtField5.getText()),
                                     (byte) Integer.parseInt(txtField6.getText())
                             });
+
             //Note(ZC): Try Adding the code to save the file here, right after the color calibration
             //NOte(ZC): Save the file into main project file (double check on where exactly in the files we want this saved)
+            //Note(ZC): This function is unable to get the current image sense its a local var to the select image function.
         }
         else{
             Toolkit.getDefaultToolkit().beep();
@@ -619,16 +622,34 @@ public class EyedropperController implements Initializable {
                 } catch (IOException e) {
                     log.error("Could not convert tif image: ", e);
                 }
+
             }
             else {
                 selectedFile = new Image(file.toURI().toString());
                 colorPickerImgView.setImage(selectedFile);
+
             }
 
             //update buttons
             chooseImageButton.setVisible(false);
             chooseNewImageButton.setVisible(true);
             cropButton.setVisible(true);
+
+            //testing the code for saving the file
+            //Note: Code bellow saves the file however it's not audiomatic. The user has to select where to save it and name the file as well.
+            //Stage secondStage = new Stage();
+            //File savefile = fileChooser.showSaveDialog(secondStage);
+            //fileChooser.setInitialFileName("colorPickerImage");
+
+            //This saves the file to the location path listed
+            File savefile = new File("C:\\Users\\laugh\\Documents\\GitHub\\Kintsugi3DBuilder\\colorPickerImage.png");
+            try{
+                log.error("Within the try (save file) ");
+                ImageIO.write(SwingFXUtils.fromFXImage(selectedFile ,null),"png", savefile);
+                log.error("Within the try (save file) ");
+            }catch(IOException e){
+                log.error("Could not save file");
+            }
 
             //reset viewport and crop button text
             resetCrop();
