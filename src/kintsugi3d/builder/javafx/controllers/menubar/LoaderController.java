@@ -13,6 +13,7 @@
 package kintsugi3d.builder.javafx.controllers.menubar;
 
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
@@ -48,6 +49,7 @@ public class LoaderController implements Initializable
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
     @FXML private Text loadCheckImages;
+    @FXML private Text loadCheckPLY;
     @FXML private GridPane root;
 
     private Stage thisStage;
@@ -55,10 +57,13 @@ public class LoaderController implements Initializable
     private final FileChooser camFileChooser = new FileChooser();
     private final FileChooser objFileChooser = new FileChooser();
     private final DirectoryChooser photoDirectoryChooser = new DirectoryChooser();
+    private final FileChooser plyFileChooser = new FileChooser();
+
 
     private File cameraFile;
     private File objFile;
     private File photoDir;
+    private File plyFile;
 
     private Runnable loadStartCallback;
     private Consumer<ViewSet> viewSetCallback;
@@ -70,10 +75,16 @@ public class LoaderController implements Initializable
         setHomeDir(new File(System.getProperty("user.home")));
         camFileChooser.getExtensionFilters().add(new ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
         objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ file", "*.obj"));
+        plyFileChooser.getExtensionFilters().add(new ExtensionFilter("PLY file", "*.ply"));
+
 
         camFileChooser.setTitle("Select camera positions file");
         objFileChooser.setTitle("Select object file");
+        plyFileChooser.setTitle("Select ply file");
+
         photoDirectoryChooser.setTitle("Select photo directory");
+
+
     }
 
     public void init()
@@ -186,7 +197,7 @@ public class LoaderController implements Initializable
     @FXML
     private void okButtonPress()
     {
-        if ((cameraFile != null) && (objFile != null) && (photoDir != null))
+        if ((cameraFile != null) && ((objFile != null) || (plyFile != null)) && (photoDir != null))
         {
             if (loadStartCallback != null)
             {
@@ -197,10 +208,15 @@ public class LoaderController implements Initializable
             {
                 MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(viewSetCallback);
             }
-
+            File choosenFile;
+            if(objFile != null){
+                choosenFile = objFile;
+            }else{
+                choosenFile = plyFile;
+            }
             new Thread(() ->
                 MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(
-                        cameraFile.getPath(), cameraFile, objFile, photoDir,
+                        cameraFile.getPath(), cameraFile, choosenFile, photoDir,
                         primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
                 .start();
 
@@ -242,4 +258,19 @@ public class LoaderController implements Initializable
     }
 
     private static final String QUICK_FILENAME = "quickSaveLoadConfig.txt";
+
+
+
+    @FXML
+    public void plySelect(ActionEvent actionEvent) {
+        File temp = plyFileChooser.showOpenDialog(getStage());
+
+        if (temp != null)
+        {
+            plyFile = temp;
+            setHomeDir(temp);
+            loadCheckPLY.setText("Loaded");
+            loadCheckPLY.setFill(Paint.valueOf("Green"));
+        }
+    }
 }

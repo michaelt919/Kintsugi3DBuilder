@@ -44,6 +44,7 @@ import static org.jengineering.sjmply.PLYType.*;
 public final class VertexGeometry implements ReadonlyVertexGeometry
 {
     private static final Logger log = LoggerFactory.getLogger(VertexGeometry.class);
+    private static File geometryFile;
     private File filename;
 
     private boolean hasNormals;
@@ -97,6 +98,25 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
             int result = normalIndex;
             result = 31 * result + texCoordIndex;
             return result;
+        }
+    }
+
+    /**
+     * Initializes the mesh from a file containing the mesh in Wavefront OBJ format OR in PLY format
+     * @param geometryFile
+     * @throws IOException
+     */
+    public static VertexGeometry createFromGeometryFile(File geometryFile) throws IOException
+    {
+        VertexGeometry.geometryFile = geometryFile;
+        String fileName = geometryFile.getName();
+        String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
+        if("obj".equalsIgnoreCase(fileExtension)) {
+             return VertexGeometry.createFromOBJFile(geometryFile);
+        }else if("ply".equalsIgnoreCase(fileExtension)){
+            return VertexGeometry.createFromPLYFile(geometryFile);
+        }else{
+            return null;
         }
     }
 

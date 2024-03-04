@@ -147,7 +147,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         public Builder<ContextType> loadVSETFile(File vsetFile, File supportingFilesDirectory) throws Exception
         {
             this.viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile, supportingFilesDirectory);
-            this.geometry = VertexGeometry.createFromOBJFile(this.viewSet.getGeometryFile());
+
+            this.geometry = VertexGeometry.createFromGeometryFile(this.viewSet.getGeometryFile());
 
             if (this.loadOptions != null)
             {
@@ -168,7 +169,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             this.viewSet = ViewSetReaderFromAgisoftXML.getInstance().readFromFile(cameraFile);
             if (geometryFile != null)
             {
-                this.geometry = VertexGeometry.createFromOBJFile(geometryFile);
+                this.geometry = VertexGeometry.createFromGeometryFile(geometryFile);
             }
             if (undistortedImageDirectory != null)
             {
@@ -256,9 +257,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             if (geometry == null && viewSet.getGeometryFile() != null)
             {
                 // Load geometry if it wasn't specified but a view set was.
-                geometry = VertexGeometry.createFromOBJFile(viewSet.getGeometryFile());
+                geometry = VertexGeometry.createFromGeometryFile(viewSet.getGeometryFile());
             }
-
             return new IBRResourcesImageSpace<>(context, viewSet, geometry, loadOptions, loadingMonitor);
         }
     }
@@ -271,6 +271,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     private IBRResourcesImageSpace(ContextType context, ViewSet viewSet, VertexGeometry geometry,
         ReadonlyLoadOptionsModel loadOptions, LoadingMonitor loadingMonitor) throws IOException
     {
+        // IAN: This super call should be creating the geometry
         super(new IBRSharedResources<>(context, viewSet, geometry,
                     loadOptions != null ? loadOptions.getTextureLoadOptions() : new TextureLoadOptions()),
                 true);
