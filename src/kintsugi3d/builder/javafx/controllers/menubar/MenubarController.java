@@ -31,6 +31,7 @@ import javafx.scene.image.Image;
 import javafx.stage.Window;
 import javafx.stage.*;
 import javafx.util.StringConverter;
+import kintsugi3d.builder.export.projectExporter.exportRequestUI;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
@@ -423,7 +424,7 @@ public class MenubarController
     }
 
     @FXML
-    private void exportSpecularFit(){
+    private void exportSpecularFit() {
         try {
             IBRRequestUI requestUI = SpecularFitRequestUI.create(this.window, MultithreadModels.getInstance());
             requestUI.bind(internalModels.getSettingsModel());
@@ -451,6 +452,17 @@ public class MenubarController
         catch(Exception e)
         {
             handleException("An error occurred opening load options", e);
+        }
+    }
+
+    @FXML
+    private void exportRequestUI(){
+        try{
+            IBRRequestUI requestUI = exportRequestUI.create(this.window, MultithreadModels.getInstance());
+            requestUI.bind(internalModels.getSettingsModel());
+            requestUI.prompt(Rendering.getRequestQueue());
+        } catch (Exception e) {
+            handleException("An error occurred with ExportRequest handler", e);
         }
     }
 
