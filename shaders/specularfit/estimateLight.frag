@@ -24,11 +24,11 @@ void main()
     mat3 tangentToObject = constructTBNExact();
     vec3 triangleNormal = tangentToObject[2];
 
-    // Normal optimization will likely not have taken place yet,
-    // but we can import a normal map from Metashape.
-    vec2 detailNormalXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
-    vec3 detailNormalTS = vec3(detailNormalXY, sqrt(1 - dot(detailNormalXY, detailNormalXY)));
-    vec3 detailNormal = tangentToObject * detailNormalTS;
+//    // Normal optimization will likely not have taken place yet,
+//    // but we can import a normal map from Metashape.
+//    vec2 detailNormalXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
+//    vec3 detailNormalTS = vec3(detailNormalXY, sqrt(1 - dot(detailNormalXY, detailNormalXY)));
+    vec3 detailNormal = triangleNormal; //tangentToObject * detailNormalTS;
 
     mat4 mATA = mat4(0);
     vec4 vATb = vec4(0);
@@ -38,7 +38,7 @@ void main()
         vec4 imgColor = getLinearColor(k);
         vec3 viewUnnorm = getViewVector(k, position);
         float viewLength = length(viewUnnorm);
-        vec3 view = viewLength / viewUnnorm;
+        vec3 view = viewUnnorm / viewLength;
         float triangleNDotV = max(0.0, dot(triangleNormal, view));
 
         if (imgColor.a > 0.0 && triangleNDotV > 0.0)
@@ -48,20 +48,24 @@ void main()
             if (nDotV > 0.0)
             {
                 // "Light intensity" is defined in such a way that we need to multiply by pi to be properly normalized.
-                vec3 incidentRadiance = PI * getLightIntensity(k) / dot(lightDisplacement, lightDisplacement);
-
-                vec3 reflectanceTimesNDotL = imgColor.rgb / incidentRadiance;
-
-                // Avoid overfitting to specular dominated samples
-                float weight = sqrt(max(0, 1 - nDotV * nDotV));
+                vec3 incidentRadiance = PI * getLightIntensity(k) / dot(viewLength, viewLength);
 
                 mat4 camPose = getCameraPose(k);
-                vec3 normalCamSpace = (camPose * vec4(detailNormal, 0)).xyz;
+                vec3 normalCamSpace = normalize((camPose * vec4(detailNormal, 0)).xyz);
+                vec3 viewCamSpace = normalize(-(camPose * vec4(position, 1)).xyz);
+
+                vec3 reflectanceTimesNDotL =
+                    //vec3(1.0) * dot(normalCamSpace.xyz, normalize(vec3(0, 1.0, 0) - (camPose * vec4(position, 1)).xyz));
+                    imgColor.rgb / incidentRadiance;
+
+                // Avoid overfitting to specular dominated samples or shadows
+                float luminance = getLuminance(reflectanceTimesNDotL);
+                float weight = //1.0;
+                    viewCamSpace.z * clamp(luminance, 0, 1) * clamp(1.0 - luminance, 0, 1);
 
                 // Lo/Li = fD * (nx * (Lx+Vx-Px) + ny * (Ly+Vy-Py) + nz * (Lz+Vz-Pz)) / length(V-P)
                 // Lo/Li = nx/length(v) * (fD*Lx) + ny/length(v) * (fD*Ly) + fD * (n dot v) // In camera space
-                // Add constant term for translucency, ambient, etc.
-                vec4 w = vec4(normalCamSpace.xy / viewLength, nDotV, 1);
+                vec4 w = vec4(normalCamSpace.xy / viewLength, nDotV, 1.0);
 
                 mATA += weight * triangleNDotV * outerProduct(w, w) * 3; // * 3 for R/G/B channels
                 vATb += weight * triangleNDotV * w * dot(reflectanceTimesNDotL, vec3(1)); // sum R/G/B channels
@@ -69,7 +73,7 @@ void main()
         }
     }
 
-    if (determinant(mATA) == 0)
+    if (determinant(mATA) < 0.000000001)
     {
         lightOut = vec4(0);
     }
@@ -77,7 +81,9 @@ void main()
     {
         vec4 solution = inverse(mATA) * vATb;
 
-        // * 0.5 + 0.5 is temp code while debugging
-        lightOut = vec4(solution.xy / solution.z * 0.5 + 0.5, 0, 1);
+        lightOut = vec4(solution.xy / solution.z, 0, clamp(solution.z / max(0, solution.w), 0, 1));
+
+        lightOut.z = sqrt(1 - 0.0625 * dot(lightOut.xy, lightOut.xy)); // make results look like a normal map for debugging
+        lightOut.xy = lightOut.xy * 0.125 + 0.5; // * 0.5 + 0.5 is temp code while debugging
     }
 }

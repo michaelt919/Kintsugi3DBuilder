@@ -14,14 +14,12 @@ package kintsugi3d.builder.fit;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Objects;
 
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.core.*;
-import kintsugi3d.util.ShaderHoleFill;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,12 +63,11 @@ public class LightOptimization<ContextType extends Context<ContextType>> impleme
 
     public void execute(SpecularMaterialResources<ContextType> specularFit)
     {
-        // Set up light estimation shader program
-        estimationProgram.setTexture("normalMap", specularFit.getNormalMap());
-
-        // Second framebuffer for filling holes (used to double-buffer the first framebuffer)
-        // Placed outside of try-with-resources since it might end up being the primary framebuffer after filling holes.
-        FramebufferObject<ContextType> framebuffer2 = createFramebuffer(context, textureResolution);
+        if (specularFit.getNormalMap() != null)
+        {
+            // Set up light estimation shader program
+            estimationProgram.setTexture("normalMap", specularFit.getNormalMap());
+        }
 
         // Will reference the framebuffer that is in front after hole filling if everything is successful.
         FramebufferObject<ContextType> finalDiffuse = null;
@@ -79,32 +76,6 @@ public class LightOptimization<ContextType extends Context<ContextType>> impleme
 
         // Perform diffuse fit
         drawable.draw(framebuffer);
-
-        try (ShaderHoleFill<ContextType> holeFill = new ShaderHoleFill<>(context))
-        {
-            // Fill holes
-            finalDiffuse = holeFill.execute(framebuffer, framebuffer2);
-        }
-        catch (FileNotFoundException e)
-        {
-            log.error("An error occurred while filling holes:", e);
-        }
-        finally
-        {
-            if (Objects.equals(finalDiffuse, framebuffer2))
-            {
-                // New framebuffer is the front framebuffer after filling holes;
-                // close the old one and make the new one the primary framebuffer
-                framebuffer.close();
-                framebuffer = framebuffer2;
-            }
-            else
-            {
-                // New framebuffer is the back framebuffer after filling holes (or an exception occurred);
-                // either way; just close it and leave the primary framebuffer the same.
-                framebuffer2.close();
-            }
-        }
     }
 
     public Texture2D<ContextType> getLightFit()
