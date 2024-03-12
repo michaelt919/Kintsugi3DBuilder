@@ -1,7 +1,7 @@
 #version 330
 
 /*
- *  Copyright (c) Michael Tetzlaff 2022
+ *  Copyright (c) Michael Tetzlaff 2024
  *  Copyright (c) The Regents of the University of Minnesota 2019
  *
  *  Licensed under GPLv3
@@ -30,8 +30,8 @@ void main()
     vec3 detailNormalTS = vec3(detailNormalXY, sqrt(1 - dot(detailNormalXY, detailNormalXY)));
     vec3 detailNormal = tangentToObject * detailNormalTS;
 
-    mat3 mATA = mat3(0);
-    mat3 vATb = mat3(0);
+    mat4 mATA = mat4(0);
+    vec4 vATb = vec4(0);
 
     for (int k = 0; k < CAMERA_POSE_COUNT; k++)
     {
@@ -60,10 +60,11 @@ void main()
 
                 // Lo/Li = fD * (nx * (Lx+Vx-Px) + ny * (Ly+Vy-Py) + nz * (Lz+Vz-Pz)) / length(V-P)
                 // Lo/Li = nx/length(v) * (fD*Lx) + ny/length(v) * (fD*Ly) + fD * (n dot v) // In camera space
-                vec3 w = vec3(normalCamSpace.xy / viewLength, nDotV);
+                // Add constant term for translucency, ambient, etc.
+                vec4 w = vec4(normalCamSpace.xy / viewLength, nDotV, 1);
 
-                mATA += weight * triangleNDotV * outerProduct(w, w);
-                vATb += weight * triangleNDotV * outerProduct(w, reflectanceTimesNDotL);
+                mATA += weight * triangleNDotV * outerProduct(w, w) * 3; // * 3 for R/G/B channels
+                vATb += weight * triangleNDotV * w * dot(reflectanceTimesNDotL, vec3(1)); // sum R/G/B channels
             }
         }
     }
@@ -74,7 +75,9 @@ void main()
     }
     else
     {
-        vec3 solution = inverse(mATA) * vATb;
-        lightOut = vec4(solution.xy / solution.z, 0, 1);
+        vec4 solution = inverse(mATA) * vATb;
+
+        // * 0.5 + 0.5 is temp code while debugging
+        lightOut = vec4(solution.xy / solution.z * 0.5 + 0.5, 0, 1);
     }
 }

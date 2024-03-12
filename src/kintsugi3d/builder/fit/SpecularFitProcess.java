@@ -12,6 +12,14 @@
 
 package kintsugi3d.builder.fit;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.function.BiConsumer;
+
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.export.specular.SpecularFitTextureRescaler;
 import kintsugi3d.builder.fit.debug.BasisImageCreator;
@@ -30,14 +38,6 @@ import kintsugi3d.optimization.ShaderBasedErrorCalculator;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.function.BiConsumer;
 
 /**
  * Implement specular fit using algorithm described by Nam et al., 2018
@@ -65,6 +65,14 @@ public class SpecularFitProcess
         throws IOException
     {
         Instant start = Instant.now();
+
+        // Light optimization (TODO make this a separate menu item and de-hardcode resolution)
+        try (LightOptimization<ContextType> lightOptimization =
+            new LightOptimization<>(resources, getProgramFactory(), new TextureResolution(256, 256)))
+        {
+            lightOptimization.execute(resources.getSpecularMaterialResources());
+            lightOptimization.getLightFit().getColorTextureReader().saveToFile("PNG", new File(settings.getOutputDirectory(), "lightDebug.png"));
+        }
 
         // Generate cache
         ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings());
@@ -132,6 +140,7 @@ public class SpecularFitProcess
             context.getState().disableBackFaceCulling();
 
             TextureResolution sampledSettings = sampled.getTextureResolution();
+
             SpecularDecompositionFromScratch sampledDecomposition = new SpecularDecompositionFromScratch(sampledSettings, settings.getSpecularBasisSettings());
 
             // Initialize weights using K-means.
