@@ -27,6 +27,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
@@ -64,10 +65,7 @@ public final class ProjectIO
         if (projectFileChooser == null)
         {
             projectFileChooser = new FileChooser();
-
             projectFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
-            projectFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Full projects", "*.ibr"));
-            projectFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Standalone view sets", "*.vset"));
         }
 
         return projectFileChooser;
@@ -101,14 +99,14 @@ public final class ProjectIO
             }
 
             @Override
-            public void loadingFailed(Exception e)
+            public void loadingFailed(Throwable e)
             {
                 projectLoaded = false;
                 handleException("An error occurred while loading project", e);
             }
 
             @Override
-            public void loadingWarning(Exception e)
+            public void loadingWarning(Throwable e)
             {
                 handleException("An error occurred while loading project", e);
             }
@@ -130,7 +128,7 @@ public final class ProjectIO
         return projectLoaded;
     }
 
-    private static void handleException(String message, Exception e)
+    private static void handleException(String message, Throwable e)
     {
         log.error("{}:", message, e);
         Platform.runLater(() ->
@@ -297,16 +295,48 @@ public final class ProjectIO
         {
             // VSET file is the project file or they're in the same directory.
             // Use a supporting files directory underneath by default
-            new Thread(() -> MultithreadModels.getInstance().getLoadingModel()
-                .loadFromVSETFile(vsetFile.getPath(), vsetFile, ViewSet.getDefaultSupportingFilesDirectory(projectFile)))
-                .start();
+            new Thread(() ->
+            {
+                try
+                {
+                    MultithreadModels.getInstance().getLoadingModel()
+                        .loadFromVSETFile(vsetFile.getPath(), vsetFile, ViewSet.getDefaultSupportingFilesDirectory(projectFile));
+                }
+                catch (RuntimeException e)
+                {
+                    log.error("Error loading view set file", e);
+                }
+                catch (Error e)
+                {
+                    log.error("Error loading view set file", e);
+                    //noinspection ProhibitedExceptionThrown
+                    throw e;
+                }
+            })
+            .start();
         }
         else
         {
             // VSET file is presumably already in a supporting files directory, so just use that directory by default
-            new Thread(() -> MultithreadModels.getInstance().getLoadingModel()
-                .loadFromVSETFile(vsetFile.getPath(), vsetFile))
-                .start();
+            new Thread(() ->
+            {
+                try
+                {
+                    MultithreadModels.getInstance().getLoadingModel()
+                        .loadFromVSETFile(vsetFile.getPath(), vsetFile);
+                }
+                catch (RuntimeException e)
+                {
+                    log.error("Error loading view set file", e);
+                }
+                catch (Error e)
+                {
+                    log.error("Error loading view set file", e);
+                    //noinspection ProhibitedExceptionThrown
+                    throw e;
+                }
+            })
+            .start();
         }
 
         //TODO: update color checker here, if the window for it is open
@@ -351,6 +381,9 @@ public final class ProjectIO
         {
             FileChooser fileChooser = getProjectFileChooserSafe();
             fileChooser.setTitle("Open project");
+            projectFileChooser.getExtensionFilters().clear();
+            projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Full projects", "*.k3d", "*.ibr"));
+            projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Standalone view sets", "*.vset"));
             File selectedFile = fileChooser.showOpenDialog(parentWindow);
             if (selectedFile != null)
             {
@@ -427,6 +460,9 @@ public final class ProjectIO
     {
         FileChooser fileChooser = getProjectFileChooserSafe();
         fileChooser.setTitle("Save project");
+        projectFileChooser.getExtensionFilters().clear();
+        projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Full projects", "*.k3d"));
+        projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Standalone view sets", "*.vset"));
         fileChooser.setSelectedExtensionFilter(fileChooser.getExtensionFilters().get(0));
         if (projectFile != null)
         {

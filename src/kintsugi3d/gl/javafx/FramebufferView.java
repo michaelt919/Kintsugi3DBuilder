@@ -125,6 +125,12 @@ public final class FramebufferView extends Region
                 {
                     log.error("An error has occurred:", e);
                 }
+                catch(Error e)
+                {
+                    log.error("An error has occurred:", e);
+                    //noinspection ProhibitedExceptionThrown
+                    throw e;
+                }
             }));
         refresh.play();
 

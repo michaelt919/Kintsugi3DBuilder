@@ -1,0 +1,71 @@
+<!--
+  ~ Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  ~
+  -->
+
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.2.0 http://maven.apache.org/xsd/assembly-2.2.0.xsd">
+    <id>distribution-macos</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <files>
+        <file>
+            <source>Kintsugi3D.icns</source>
+            <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources</outputDirectory>
+            <fileMode>0755</fileMode>
+        </file>
+        <file>
+            <source>target/classes/kintsugi3d-builder-about.txt</source>
+            <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources</outputDirectory>
+            <fileMode>0755</fileMode>
+        </file>
+        <file>
+            <source>target/${project.artifactId}-${project.version}-shaded.jar</source>
+            <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources</outputDirectory>
+            <destName>Kintsugi3DBuilder-shaded.jar</destName>
+            <fileMode>0755</fileMode>
+        </file>
+        <file>
+            <source>target/classes/Info.plist</source>
+            <outputDirectory>Kintsugi 3D Builder.app/Contents</outputDirectory>
+            <fileMode>0755</fileMode>
+        </file>
+        <file>
+            <source>target/classes/Info.plist</source>
+            <outputDirectory>Kintsugi 3D Builder.app/Contents</outputDirectory>
+            <fileMode>0755</fileMode>
+        </file>
+        <file>
+            <source>${project.basedir}/macos/Applications</source>
+            <outputDirectory></outputDirectory>
+            <fileMode>0644</fileMode>
+        </file>
+    </files>
+    <fileSets>
+        <fileSet>
+            <directory>${project.basedir}/macos</directory>
+            <outputDirectory></outputDirectory>
+            <useDefaultExcludes>false</useDefaultExcludes>
+            <fileMode>0755</fileMode>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/shaders</directory>
+            <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources/shaders</outputDirectory>
+            <fileMode>0755</fileMode>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/jre-macos-x64</directory>
+            <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources/jre</outputDirectory>
+            <fileMode>0755</fileMode>
+        </fileSet>
+    </fileSets>
+</assembly>

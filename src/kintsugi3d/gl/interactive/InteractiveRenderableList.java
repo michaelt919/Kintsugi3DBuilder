@@ -75,8 +75,16 @@ public class InteractiveRenderableList<ContextType extends Context<ContextType>,
             }
             catch (RuntimeException|InitializationException e)
             {
-                log.error("Error while initializing renderable:", e);
+                log.error("Error while initializing renderable", e);
                 renderables.remove(r);
+            }
+            catch (Error e)
+            {
+                log.error("Error while initializing renderable", e);
+                renderables.remove(r);
+
+                //noinspection ProhibitedExceptionThrown
+                throw e;
             }
         }
 

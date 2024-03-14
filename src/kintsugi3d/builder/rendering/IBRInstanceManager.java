@@ -206,7 +206,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             }
 
             @Override
-            public void loadingFailed(Exception e)
+            public void loadingFailed(Throwable e)
             {
                 if (loadingMonitor != null)
                 {
@@ -215,7 +215,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             }
 
             @Override
-            public void loadingWarning(Exception e)
+            public void loadingWarning(Throwable e)
             {
                 if (loadingMonitor != null)
                 {
