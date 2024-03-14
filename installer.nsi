@@ -20,13 +20,13 @@ InstallDir $PROGRAMFILES64\Kintsugi3DBuilder
 !define MUI_FINISHPAGE_RUN_TEXT "Start Kintsugi 3D Builder"
 !define MUI_FINISHPAGE_RUN_FUNCTION "LaunchLink"
 !define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
-!define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\kintsugi3d-builder-about.txt"
+!define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\target\classes\kintsugi3d-builder-about.txt"
 
 ; ---------------------------
 
 ; Installer Pages
 !insertmacro MUI_PAGE_WELCOME
-!insertmacro MUI_PAGE_LICENSE "kintsugi3d-builder-about.txt"
+!insertmacro MUI_PAGE_LICENSE "target\classes\kintsugi3d-builder-about.txt"
 !insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
