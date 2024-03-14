@@ -147,7 +147,13 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
             }
             catch (RuntimeException e)
             {
-                log.error("An error has occurred:", e);
+                log.error("An error has occurred", e);
+            }
+            catch (Error e)
+            {
+                log.error("An error has occurred", e);
+                //noinspection ProhibitedExceptionThrown
+                throw e;
             }
             finally
             {
@@ -184,7 +190,13 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
             }
             catch (RuntimeException e)
             {
-                log.error("An error has occurred:", e);
+                log.error("An error has occurred", e);
+            }
+            catch (Error e)
+            {
+                log.error("An error has occurred", e);
+                //noinspection ProhibitedExceptionThrown
+                throw e;
             }
             finally
             {

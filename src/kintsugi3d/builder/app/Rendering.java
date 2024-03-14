@@ -337,6 +337,12 @@ public final class Rendering
                 {
                     log.error("Error occurred while reloading application:", e);
                 }
+                catch(Error e)
+                {
+                    log.error("Error occurred while reloading application:", e);
+                    //noinspection ProhibitedExceptionThrown
+                    throw e;
+                }
             }
         });
 
@@ -373,13 +379,13 @@ public final class Rendering
             }
 
             @Override
-            public void loadingFailed(Exception e)
+            public void loadingFailed(Throwable e)
             {
                 ioModel.getLoadingMonitor().loadingFailed(e);
             }
 
             @Override
-            public void loadingWarning(Exception e)
+            public void loadingWarning(Throwable e)
             {
                 ioModel.getLoadingMonitor().loadingWarning(e);
             }
@@ -447,7 +453,7 @@ public final class Rendering
         {
             app.run();
         }
-        catch(RuntimeException|InitializationException e)
+        catch(RuntimeException|InitializationException|Error e)
         {
             Optional.ofNullable(ioModel.getLoadingMonitor()).ifPresent(loadingMonitor -> loadingMonitor.loadingFailed(e));
             throw e;

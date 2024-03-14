@@ -58,7 +58,7 @@ public interface ObservableGraphicsRequest extends GraphicsRequest
             }
 
             @Override
-            public void loadingFailed(Exception e)
+            public void loadingFailed(Throwable e)
             {
             }
         });

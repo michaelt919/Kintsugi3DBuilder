@@ -72,7 +72,7 @@ public class IOModel
         }
 
         @Override
-        public void loadingFailed(Exception e)
+        public void loadingFailed(Throwable e)
         {
             for (LoadingMonitor monitor : subMonitors)
             {
@@ -81,7 +81,7 @@ public class IOModel
         }
 
         @Override
-        public void loadingWarning(Exception e)
+        public void loadingWarning(Throwable e)
         {
             for (LoadingMonitor monitor : subMonitors)
             {

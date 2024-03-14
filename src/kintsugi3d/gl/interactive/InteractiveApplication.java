@@ -78,6 +78,12 @@ public class InteractiveApplication
                 {
                     log.error("Runtime error occurred", e);
                 }
+                catch (Error e)
+                {
+                    log.error("Runtime error occurred", e);
+                    //noinspection ProhibitedExceptionThrown
+                    throw e;
+                }
             }
             Date timestampB = new Date();
             refreshTime += timestampB.getTime() - timestampA.getTime();
@@ -92,6 +98,12 @@ public class InteractiveApplication
                 catch(RuntimeException e)
                 {
                     log.error("An error occurred while polling events", e);
+                }
+                catch (Error e)
+                {
+                    log.error("An error occurred while polling events", e);
+                    //noinspection ProhibitedExceptionThrown
+                    throw e;
                 }
             }
             timestampA = new Date();
@@ -140,7 +152,13 @@ public class InteractiveApplication
             }
             catch(RuntimeException e)
             {
-                log.error("Error terminating refreshable:", e);
+                log.error("Error terminating refreshable", e);
+            }
+            catch (Error e)
+            {
+                log.error("Error terminating refreshable", e);
+                //noinspection ProhibitedExceptionThrown
+                throw e;
             }
         }
     }
@@ -171,7 +189,13 @@ public class InteractiveApplication
                     }
                     catch(RuntimeException e)
                     {
-                        log.error("An error occurred:", e);
+                        log.error("An error occurred", e);
+                    }
+                    catch (Error e)
+                    {
+                        log.error("An error occurred", e);
+                        //noinspection ProhibitedExceptionThrown
+                        throw e;
                     }
                 }
 
@@ -190,7 +214,13 @@ public class InteractiveApplication
                     }
                     catch(RuntimeException e)
                     {
-                        log.error("An error has occurred:", e);
+                        log.error("An error has occurred", e);
+                    }
+                    catch (Error e)
+                    {
+                        log.error("An error has occurred", e);
+                        //noinspection ProhibitedExceptionThrown
+                        throw e;
                     }
                 }
             }
@@ -206,7 +236,13 @@ public class InteractiveApplication
                     }
                     catch(RuntimeException e)
                     {
-                        log.error("An error has occurred:", e);
+                        log.error("An error has occurred", e);
+                    }
+                    catch (Error e)
+                    {
+                        log.error("An error has occurred", e);
+                        //noinspection ProhibitedExceptionThrown
+                        throw e;
                     }
                 }
             }
@@ -221,7 +257,13 @@ public class InteractiveApplication
                     }
                     catch(RuntimeException e)
                     {
-                        log.error("An error has occurred:", e);
+                        log.error("An error has occurred", e);
+                    }
+                    catch (Error e)
+                    {
+                        log.error("An error has occurred", e);
+                        //noinspection ProhibitedExceptionThrown
+                        throw e;
                     }
                 }
             }
