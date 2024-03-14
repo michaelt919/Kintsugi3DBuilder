@@ -51,7 +51,7 @@ Section "Kintsugi 3D Builder (required)" SectionApp
     File "target\Kintsugi3DBuilder.exe"
     File "Kintsugi3D.ico"
     File "Kintsugi3D-icon.png"
-    File "kintsugi3d-builder-about.txt"
+    File "target\classes\kintsugi3d-builder-about.txt"
 
     ; Include shaders
     SetOutPath "$INSTDIR\shaders"
@@ -88,8 +88,11 @@ Var ViewerInstalled
 Section "File Type Associations" SectionAssociation
 
     SetRegView 64
-        ; Associate .ibr files as Kintsugi 3D Builder Projects
+        ; Associate .ibr files as Kintsugi 3D Builder Projects [for early dev legacy test projects]
         WriteRegStr HKCR ".ibr" "" "Kintsugi3DBuilder.Project"
+
+        ; Associate .k3d files as Kintsugi 3D Builder Projects
+        WriteRegStr HKCR ".k3d" "" "Kintsugi3DBuilder.Project"
 
         WriteRegStr HKCR "Kintsugi3DBuilder.Project" "" "Kintsugi 3D Builder Project"
         WriteRegStr HKCR "Kintsugi3DBuilder.Project\DefaultIcon" "" "$INSTDIR\Kintsugi3DBuilder.exe,0"
@@ -170,6 +173,7 @@ Section "Uninstall"
 
     ; Remove file type associations
     DeleteRegKey HKCR ".ibr"
+    DeleteRegKey HKCR ".k3d"
     DeleteRegKey HKCR ".vset"
     DeleteRegKey HKCR "Kintsugi3DBuilder.Project"
     DeleteRegKey HKCR "Kintsugi3DBuilder.Viewset"
@@ -204,7 +208,7 @@ FunctionEnd
 
 LangString DESC_SectionApp ${LANG_ENGLISH} "The main Kintsugi 3D Builder Application. This will also install a local instance of the Java 11 Runtime that is necessary to run the application."
 LangString DESC_SectionViewer ${LANG_ENGLISH} "Kintsugi 3D Viewer Application.  This allows the Viewer to be launched from the Builder application for previewing the results as they will appear in the Viewer app."
-LangString DESC_SectionAssociation ${LANG_ENGLISH} "Set up Kintsugi 3D Builder Project file associations (.ibr and .vset)"
+LangString DESC_SectionAssociation ${LANG_ENGLISH} "Set up Kintsugi 3D Builder Project file associations (.k3d and .vset)"
 LangString DESC_SectionShortcut ${LANG_ENGLISH} "Install shortcuts so the application can be launched from the start menu"
 LangString DESC_SectionDesktop ${LANG_ENGLISH} "Add a shortcut to Kintsugi 3D Builder to the desktop"
 

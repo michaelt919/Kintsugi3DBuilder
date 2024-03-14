@@ -13,32 +13,42 @@
 <assembly xmlns="http://maven.apache.org/ASSEMBLY/2.2.0"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.2.0 http://maven.apache.org/xsd/assembly-2.2.0.xsd">
-    <id>distribution</id>
+    <id>distribution-macos</id>
     <formats>
         <format>zip</format>
     </formats>
     <files>
         <file>
-            <source>Kintsugi3D-icon.png</source>
-            <outputDirectory></outputDirectory>
+            <source>Kintsugi3D.icns</source>
+            <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources</outputDirectory>
         </file>
         <file>
             <source>target/classes/kintsugi3d-builder-about.txt</source>
-            <outputDirectory></outputDirectory>
+            <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources</outputDirectory>
         </file>
         <file>
-            <source>target/Kintsugi3DBuilder.exe</source>
-            <outputDirectory></outputDirectory>
+            <source>target/${project.artifactId}-${project.version}-shaded.jar</source>
+            <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources</outputDirectory>
+            <destName>Kintsugi3DBuilder-shaded.jar</destName>
+        </file>
+        <file>
+            <source>target/classes/Info.plist</source>
+            <outputDirectory>Kintsugi 3D Builder.app/Contents</outputDirectory>
         </file>
     </files>
     <fileSets>
         <fileSet>
-            <directory>${project.basedir}/shaders</directory>
-            <outputDirectory>shaders</outputDirectory>
+            <directory>${project.basedir}/macos</directory>
+            <outputDirectory></outputDirectory>
+            <useDefaultExcludes>false</useDefaultExcludes>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/jre</directory>
-            <outputDirectory>jre</outputDirectory>
+            <directory>${project.basedir}/shaders</directory>
+            <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources/shaders</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/jre-macos-x64</directory>
+            <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources/jre</outputDirectory>
         </fileSet>
     </fileSets>
 </assembly>
