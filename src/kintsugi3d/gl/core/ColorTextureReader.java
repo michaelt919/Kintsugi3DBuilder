@@ -18,6 +18,9 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
+import kintsugi3d.util.ColorList;
+import kintsugi3d.util.ColorNativeBufferList;
+
 public interface ColorTextureReader
 {
     /**
@@ -138,6 +141,30 @@ public interface ColorTextureReader
     default float[] readFloatingPointRGBA()
     {
         return this.readFloatingPointRGBA(0, 0, getWidth(), getHeight());
+    }
+
+    /**
+     * Reads the pixels from the texture as floating point numbers.
+     * The entire framebuffer will be read.
+     * @return An array containing the pixels as floating point numbers.
+     */
+    default ColorList readColorListRGBA(int x, int y, int width, int height)
+    {
+        ColorNativeBufferList list = new ColorNativeBufferList(width * height);
+        readFloatingPointRGBA(list.buffer, x, y, width, height);
+        return list;
+    }
+
+    /**
+     * Reads the pixels from the texture as floating point numbers.
+     * The entire framebuffer will be read.
+     * @return An array containing the pixels as floating point numbers.
+     */
+    default ColorList readColorListRGBA()
+    {
+        ColorNativeBufferList list = new ColorNativeBufferList(getWidth() * getHeight());
+        readFloatingPointRGBA(list.buffer);
+        return list;
     }
 
     /**

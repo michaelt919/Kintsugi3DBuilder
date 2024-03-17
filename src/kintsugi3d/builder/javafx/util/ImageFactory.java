@@ -15,8 +15,8 @@ package kintsugi3d.builder.javafx.util;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
-import kintsugi3d.gl.vecmath.DoubleVector4;
-import kintsugi3d.util.AbstractImage;
+import kintsugi3d.gl.vecmath.Vector4;
+import kintsugi3d.util.EncodableColorImage;
 
 public final class ImageFactory
 {
@@ -32,9 +32,9 @@ public final class ImageFactory
 
     private static class PixelReaderImpl extends PixelReaderBase
     {
-        private final AbstractImage image;
+        private final EncodableColorImage image;
 
-        PixelReaderImpl(AbstractImage image)
+        PixelReaderImpl(EncodableColorImage image)
         {
             this.image = image;
         }
@@ -42,12 +42,12 @@ public final class ImageFactory
         @Override
         public Color getColor(int x, int y)
         {
-            DoubleVector4 colorVector = image.getRGBA(x, y);
+            Vector4 colorVector = image.getGammaEncodedRGBA(x, y);
             return new Color(clamp(colorVector.x), clamp(colorVector.y), clamp(colorVector.z), clamp(colorVector.w));
         }
     }
 
-    public static Image createFromAbstractImage(AbstractImage image)
+    public static Image createFromAbstractImage(EncodableColorImage image)
     {
         return new WritableImage(new PixelReaderImpl(image), image.getWidth(), image.getHeight());
     }

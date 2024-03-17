@@ -22,15 +22,15 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.paint.Color;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.scene.environment.EnvironmentSetting;
 import kintsugi3d.builder.state.BackgroundMode;
 import kintsugi3d.builder.state.EnvironmentModel;
-import kintsugi3d.util.AbstractImage;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.util.EncodableColorImage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EnvironmentModelImpl implements EnvironmentModel
 {
@@ -43,7 +43,7 @@ public class EnvironmentModelImpl implements EnvironmentModel
     private long lastEnvironmentMapTime;
     private long lastBackplateTime;
 
-    private final Property<AbstractImage> loadedEnvironmentMapImage = new SimpleObjectProperty<>();
+    private final Property<EncodableColorImage> loadedEnvironmentMapImage = new SimpleObjectProperty<>();
 
     public void setSelected(ObservableValue<EnvironmentSetting> selected)
     {
@@ -56,7 +56,7 @@ public class EnvironmentModelImpl implements EnvironmentModel
         return selected != null && selected.getValue() != null;
     }
 
-    public ObservableValue<AbstractImage> loadedEnvironmentMapImageProperty()
+    public ObservableValue<EncodableColorImage> loadedEnvironmentMapImageProperty()
     {
         return loadedEnvironmentMapImage;
     }
@@ -149,7 +149,7 @@ public class EnvironmentModelImpl implements EnvironmentModel
             try
             {
                 log.info("Loading environment map file " + newFile.getName());
-                Optional<AbstractImage> environmentMapImage = MultithreadModels.getInstance().getLoadingModel().loadEnvironmentMap(newFile);
+                Optional<EncodableColorImage> environmentMapImage = MultithreadModels.getInstance().getLoadingModel().loadEnvironmentMap(newFile);
                 loadedEnvironmentMapImage.setValue(environmentMapImage.orElse(null));
             }
             catch (FileNotFoundException e)

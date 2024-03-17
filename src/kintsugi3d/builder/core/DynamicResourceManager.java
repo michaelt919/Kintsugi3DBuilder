@@ -12,12 +12,12 @@
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.util.AbstractImage;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Optional;
+
+import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.util.EncodableColorImage;
 
 public interface DynamicResourceManager
 {
@@ -35,7 +35,7 @@ public interface DynamicResourceManager
      * @param environmentFile The environment map image file.
      * @throws FileNotFoundException If the environment map image is not found.
      */
-    Optional<AbstractImage> loadEnvironmentMap(File environmentFile) throws FileNotFoundException;
+    Optional<EncodableColorImage> loadEnvironmentMap(File environmentFile) throws FileNotFoundException;
 
     /**
      * Sets the tonemapping curve used to interpret the photographic data.
