@@ -17,6 +17,12 @@
 
 layout(location = 0) out vec4 lightOut;
 
+struct IndexedLuminance
+{
+    int index;
+    float luminance;
+};
+
 void main()
 {
     vec3 position = getPosition();
@@ -30,8 +36,11 @@ void main()
 //    vec3 detailNormalTS = vec3(detailNormalXY, sqrt(1 - dot(detailNormalXY, detailNormalXY)));
     vec3 detailNormal = triangleNormal; //tangentToObject * detailNormalTS;
 
-    mat4 mATA = mat4(0);
-    vec4 vATb = vec4(0);
+//    mat4 mATA = mat4(0);
+//    vec4 vATb = vec4(0);
+
+    IndexedLuminance brightestView = IndexedLuminance(-1, 0.0);
+    IndexedLuminance secondBrightestView = IndexedLuminance(-1, 0.0);
 
     for (int k = 0; k < CAMERA_POSE_COUNT; k++)
     {
@@ -52,38 +61,76 @@ void main()
 
                 mat4 camPose = getCameraPose(k);
                 vec3 normalCamSpace = normalize((camPose * vec4(detailNormal, 0)).xyz);
-                vec3 viewCamSpace = normalize(-(camPose * vec4(position, 1)).xyz);
+                vec3 positionCamSpace = (camPose * vec4(position, 1)).xyz;
+                vec3 viewCamSpace = normalize(-positionCamSpace);
 
                 vec3 reflectanceTimesNDotL =
                     //vec3(1.0) * dot(normalCamSpace.xyz, normalize(vec3(0, 1.0, 0) - (camPose * vec4(position, 1)).xyz));
                     imgColor.rgb / incidentRadiance;
-
-                // Avoid overfitting to specular dominated samples or shadows
                 float luminance = getLuminance(reflectanceTimesNDotL);
-                float weight = //1.0;
-                    viewCamSpace.z * clamp(luminance, 0, 1) * clamp(1.0 - luminance, 0, 1);
 
-                // Lo/Li = fD * (nx * (Lx+Vx-Px) + ny * (Ly+Vy-Py) + nz * (Lz+Vz-Pz)) / length(V-P)
-                // Lo/Li = nx/length(v) * (fD*Lx) + ny/length(v) * (fD*Ly) + fD * (n dot v) // In camera space
-                vec4 w = vec4(normalCamSpace.xy / viewLength, nDotV, 1.0);
+//                vec3 debugLight = normalize(vec3(0, 1, 0) - positionCamSpace);
+//                float luminance = max(0.0, dot(normalize(debugLight + viewCamSpace), normalCamSpace));
+//
+//                vec3 debugReflect = normalize(reflect(-viewCamSpace, normalCamSpace));
+//                float luminance = max(0.0, dot(debugLight, debugReflect));
 
-                mATA += weight * triangleNDotV * outerProduct(w, w) * 3; // * 3 for R/G/B channels
-                vATb += weight * triangleNDotV * w * dot(reflectanceTimesNDotL, vec3(1)); // sum R/G/B channels
+//                // Avoid overfitting to specular dominated samples or shadows
+//                float weight = //1.0;
+//                    viewCamSpace.z * clamp(luminance, 0, 1) * clamp(1.0 - luminance, 0, 1);
+//
+//                // Lo/Li = fD * (nx * (Lx+Vx-Px) + ny * (Ly+Vy-Py) + nz * (Lz+Vz-Pz)) / length(V-P)
+//                // Lo/Li = nx/length(v) * (fD*Lx) + ny/length(v) * (fD*Ly) + fD * (n dot v) // In camera space
+//                vec4 w = vec4(normalCamSpace.xy / viewLength, nDotV, 1.0);
+//
+//                mATA += weight * triangleNDotV * outerProduct(w, w) * 3; // * 3 for R/G/B channels
+//                vATb += weight * triangleNDotV * w * dot(reflectanceTimesNDotL, vec3(1)); // sum R/G/B channels
+
+                if (luminance > brightestView.luminance)
+                {
+                    secondBrightestView = brightestView;
+                    brightestView = IndexedLuminance(k, luminance);
+                }
+                else if (luminance > secondBrightestView.luminance)
+                {
+                    secondBrightestView = IndexedLuminance(k, luminance);
+                }
             }
         }
     }
 
-    if (determinant(mATA) < 0.000000001)
+    if (brightestView.index >= 0)
     {
-        lightOut = vec4(0);
-    }
-    else
-    {
-        vec4 solution = inverse(mATA) * vATb;
+        mat4 camPose = getCameraPose(brightestView.index);
+        vec3 normalCamSpace = normalize((camPose * vec4(detailNormal, 0)).xyz);
+        vec3 positionCamSpace = (camPose * vec4(position, 1)).xyz;
+        vec3 fromViewCamSpace = normalize(positionCamSpace);
+        vec3 lightDirCamSpace = reflect(fromViewCamSpace, normalCamSpace);
 
-        lightOut = vec4(solution.xy / solution.z, 0, clamp(solution.z / max(0, solution.w), 0, 1));
+        // Scale to match the z-coordinate of fromView (toLightCamSpace.z = -positionCamSpace.z)
+        vec3 toLightCamSpace = lightDirCamSpace * -positionCamSpace.z / lightDirCamSpace.z;
 
-        lightOut.z = sqrt(1 - 0.0625 * dot(lightOut.xy, lightOut.xy)); // make results look like a normal map for debugging
-        lightOut.xy = lightOut.xy * 0.125 + 0.5; // * 0.5 + 0.5 is temp code while debugging
+        // z-coordinate should be 0
+        vec3 lightOffset = positionCamSpace + toLightCamSpace;
+        float alpha = brightestView.luminance - secondBrightestView.luminance;
+        lightOut = vec4(lightOffset, alpha);
+
+//        lightOut.z = sqrt(1 - 0.0625 * dot(lightOut.xy, lightOut.xy)); // make results look like a normal map for debugging
+//        lightOut.xy = lightOut.xy * 0.5 + 0.5; // * 0.5 + 0.5 is temp code while debugging
+//        lightOut.w = clamp(lightOut.w, 0, 1);
     }
+
+//    if (determinant(mATA) < 0.000000001)
+//    {
+//        lightOut = vec4(0);
+//    }
+//    else
+//    {
+//        vec4 solution = inverse(mATA) * vATb;
+//
+//        lightOut = vec4(solution.xy / solution.z, 0, clamp(solution.z / max(0, solution.w), 0, 1));
+//
+//        lightOut.z = sqrt(1 - 0.0625 * dot(lightOut.xy, lightOut.xy)); // make results look like a normal map for debugging
+//        lightOut.xy = lightOut.xy * 0.125 + 0.5; // * 0.5 + 0.5 is temp code while debugging
+//    }
 }

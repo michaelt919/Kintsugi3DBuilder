@@ -20,6 +20,8 @@ import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.builders.framebuffer.FramebufferObjectBuilder;
 import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.vecmath.Vector4;
+import kintsugi3d.util.ColorList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,6 +78,12 @@ public class LightOptimization<ContextType extends Context<ContextType>> impleme
 
         // Perform diffuse fit
         drawable.draw(framebuffer);
+
+        ColorList estimates = framebuffer.getTextureReaderForColorAttachment(0).readColorListRGBA(60, 170, 10, 10);
+        Vector4 weightedSum = estimates.stream()
+            .map(color -> new Vector4(color.x * color.w, color.y * color.w, color.z * color.w, color.w)) // premultiply weight
+            .reduce(Vector4::plus).orElse(Vector4.ZERO);
+        log.info("Estimated light offset: " + weightedSum.dividedBy(weightedSum.w));
     }
 
     public Texture2D<ContextType> getLightFit()
