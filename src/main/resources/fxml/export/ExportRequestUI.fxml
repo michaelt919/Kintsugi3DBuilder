@@ -3,15 +3,17 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="250.0" prefWidth="270.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.export.projectExporter.exportRequestUI">
+<AnchorPane prefHeight="200.0" prefWidth="270.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.export.projectExporter.exportRequestUI">
     <CheckBox fx:id="combineWeightsCheckBox" layoutX="15.0" layoutY="10.0" mnemonicParsing="false" text="Combine Weights" />
-    <CheckBox fx:id="generateLowResolutionCheckBox" layoutX="15.0" layoutY="30.0" mnemonicParsing="false" text="Generate Low Resolution" />
-    <CheckBox fx:id="glTFEnabledCheckBox" layoutX="15.0" layoutY="70.0" mnemonicParsing="false" text="glTF Enabled" />
-    <CheckBox fx:id="glTFPackTexturesCheckBox" layoutX="15.0" layoutY="90.0" mnemonicParsing="false" text="Combine Weights" />
+    <CheckBox fx:id="generateLowResolutionCheckBox" layoutX="15.0" layoutY="35.0" mnemonicParsing="false" text="Generate Low Resolution" />
+    <CheckBox fx:id="glTFEnabledCheckBox" layoutX="15.0" layoutY="60.0" mnemonicParsing="false" text="glTF Enabled" />
+    <CheckBox fx:id="glTFPackTexturesCheckBox" layoutX="15.0" layoutY="85.0" mnemonicParsing="false" text="Combine Weights" />
     <CheckBox fx:id="openViewerOnceCheckBox" layoutX="15.0" layoutY="110.0" mnemonicParsing="false" text="Open Viewer Once" />
-    <Label layoutX="15.0" layoutY="50.0" text="Minimum Texture Resolution:" />
-    <TextField fx:id="minimumTextureResolutionTextField" layoutX="170.0" layoutY="47.0" prefWidth="56.0" text="128" />
-    <Button fx:id="runButton" layoutX="15.0" layoutY="190.0" mnemonicParsing="false" text="Run" />
-    <Button layoutX="60.0" layoutY="190.0" mnemonicParsing="false" onAction="#cancelButtonAction" text="Cancel" />
+
+    <Label layoutX="15.0" layoutY="135.0" text="Minimum Texture Resolution:" />
+    <ComboBox fx:id="minimumTextureResolutionComboBox" layoutX="176.0" layoutY="131.0" prefWidth="70.0" />
+
+    <Button fx:id="runButton" layoutX="15.0" layoutY="160.0" mnemonicParsing="false" text="Run" />
+    <Button layoutX="66.0" layoutY="160.0" mnemonicParsing="false" onAction="#cancelButtonAction" text="Cancel" />
 
 </AnchorPane>
