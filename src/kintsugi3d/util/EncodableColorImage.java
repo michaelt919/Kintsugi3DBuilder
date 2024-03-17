@@ -12,11 +12,12 @@
 
 package kintsugi3d.util;
 
-import kintsugi3d.gl.vecmath.DoubleVector4;
+import kintsugi3d.gl.vecmath.Vector4;
 
-public interface AbstractImage
+public interface EncodableColorImage
 {
     int getWidth();
     int getHeight();
-    DoubleVector4 getRGBA(int x, int y);
+    Vector4 getRawRGBA(int x, int y);
+    Vector4 getGammaEncodedRGBA(int x, int y);
 }

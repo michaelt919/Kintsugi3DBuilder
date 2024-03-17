@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
 import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.util.AbstractImage;
+import kintsugi3d.util.EncodableColorImage;
 
 public class IOModel
 {
@@ -155,7 +155,7 @@ public class IOModel
         this.handler.requestFragmentShader(shaderFile);
     }
 
-    public Optional<AbstractImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
+    public Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
     {
         return this.handler.loadEnvironmentMap(environmentMapFile);
     }

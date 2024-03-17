@@ -20,18 +20,18 @@ import java.util.Objects;
 import java.util.Optional;
 import javax.imageio.ImageIO;
 
+import kintsugi3d.builder.core.DynamicResourceManager;
+import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.rendering.components.IBRSubject;
 import kintsugi3d.builder.resources.ibr.IBRResources;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.core.DynamicResourceManager;
-import kintsugi3d.builder.core.LoadingMonitor;
-import kintsugi3d.util.AbstractImage;
-import kintsugi3d.util.ArrayBackedImage;
+import kintsugi3d.util.ArrayBackedColorImage;
+import kintsugi3d.util.EncodableColorImage;
 import kintsugi3d.util.EnvironmentMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DynamicResourceLoader<ContextType extends Context<ContextType>> implements DynamicResourceManager
 {
@@ -69,7 +69,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
 
     private volatile File desiredBackplateFile;
 
-    private AbstractImage currentEnvironmentMap;
+    private EncodableColorImage currentEnvironmentMap;
 
     public DynamicResourceLoader(LoadingMonitor loadingMonitor, IBRResources<ContextType> resources,
         IBRSubject<ContextType> subject, LightingResources<ContextType> lightingResources)
@@ -224,7 +224,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
     }
 
     @Override
-    public Optional<AbstractImage> loadEnvironmentMap(File environmentFile) throws FileNotFoundException
+    public Optional<EncodableColorImage> loadEnvironmentMap(File environmentFile) throws FileNotFoundException
     {
         if (environmentFile == null)
         {
@@ -282,7 +282,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
             if (readCompleted)
             {
                 environmentLastModified = lastModified;
-                currentEnvironmentMap = new ArrayBackedImage(width, height, pixels);
+                currentEnvironmentMap = new ArrayBackedColorImage(width, height, pixels);
             }
 
             return Optional.ofNullable(currentEnvironmentMap);
