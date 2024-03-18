@@ -15,7 +15,9 @@ package kintsugi3d.builder.javafx.controllers.menubar;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ChoiceBox;
@@ -29,17 +31,22 @@ import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.io.File;
+import java.io.*;
 import java.net.URL;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class LoaderController implements Initializable
 {
@@ -50,6 +57,7 @@ public class LoaderController implements Initializable
     @FXML private Text loadCheckObj;
     @FXML private Text loadCheckImages;
     @FXML private Text loadCheckPLY;
+    @FXML private Text loadCheckMeta;
     @FXML private GridPane root;
 
     private Stage thisStage;
@@ -58,12 +66,14 @@ public class LoaderController implements Initializable
     private final FileChooser objFileChooser = new FileChooser();
     private final DirectoryChooser photoDirectoryChooser = new DirectoryChooser();
     private final FileChooser plyFileChooser = new FileChooser();
+    private final FileChooser metaFileChooser = new FileChooser();
 
 
     private File cameraFile;
     private File objFile;
     private File photoDir;
     private File plyFile;
+    private File metaFile;
 
     private Runnable loadStartCallback;
     private Consumer<ViewSet> viewSetCallback;
@@ -76,11 +86,13 @@ public class LoaderController implements Initializable
         camFileChooser.getExtensionFilters().add(new ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
         objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ file", "*.obj"));
         plyFileChooser.getExtensionFilters().add(new ExtensionFilter("PLY file", "*.ply"));
+        metaFileChooser.getExtensionFilters().add(new ExtensionFilter("MetaShape project file", "*.psx"));
 
 
         camFileChooser.setTitle("Select camera positions file");
         objFileChooser.setTitle("Select object file");
         plyFileChooser.setTitle("Select ply file");
+        metaFileChooser.setTitle("Select MetaShape project file");
 
         photoDirectoryChooser.setTitle("Select photo directory");
 
@@ -197,6 +209,20 @@ public class LoaderController implements Initializable
     @FXML
     private void okButtonPress()
     {
+        if(metaFile != null){
+            if(!extractFromMetaShapeProject()) {
+                log.warn("Failed to load from MetaShape Project");
+                loadCheckMeta.setText("Unloaded");
+                loadCheckMeta.setFill(Paint.valueOf("Red"));
+                loadCheckImages.setText("Unloaded");
+                loadCheckImages.setFill(Paint.valueOf("Red"));
+                loadCheckCameras.setText("Unloaded");
+                loadCheckCameras.setFill(Paint.valueOf("Red"));
+                loadCheckPLY.setText("Unloaded");
+                loadCheckPLY.setFill(Paint.valueOf("Red"));
+            }
+        }
+
         if ((cameraFile != null) && ((objFile != null) || (plyFile != null)) && (photoDir != null))
         {
             if (loadStartCallback != null)
@@ -272,5 +298,105 @@ public class LoaderController implements Initializable
             loadCheckPLY.setText("Loaded");
             loadCheckPLY.setFill(Paint.valueOf("Green"));
         }
+    }
+
+    @FXML
+    public void metaSelect(ActionEvent actionEvent) throws IOException{
+//        File temp = metaFileChooser.showOpenDialog(getStage());
+//        // Get reference to the MetaShape file
+//        if (temp != null) {
+//            metaFile = temp;
+//            setHomeDir(temp);
+//            loadCheckMeta.setText("Meta Loaded");
+//            loadCheckMeta.setFill(Paint.valueOf("Green"));
+//        }
+
+
+        //get FXML URLs
+        String menuBarFXMLFileName = "fxml/menubar/MenuBar.fxml";
+        URL menuBarURL = getClass().getClassLoader().getResource(menuBarFXMLFileName);
+        assert menuBarURL != null : "cant find " + menuBarFXMLFileName;
+        // Make a new Menu Bar Controller to handle the unzipping menu
+        FXMLLoader menuBarFXMLLoader = new FXMLLoader(menuBarURL);
+        Parent menuBarRoot = menuBarFXMLLoader.load();
+        MenubarController menuBarController = menuBarFXMLLoader.getController();
+        menuBarController.unzip();
+
+    }
+
+    /**
+     * This function digs through the MetaShape project set in metaFile to look for the required files.
+     * @return Returns whether it was successfully able to locate all files or not
+     */
+    public boolean extractFromMetaShapeProject(){
+        // Null check MetaShape project file
+        if(metaFile == null){
+            log.error("No MetaShape project file found");
+            return false;
+        }
+        File parentDirectory = metaFile.getParentFile();
+        if(parentDirectory == null){
+            log.error("Parent directory not set");
+            return false;
+        }
+        // Getting the project name
+        String fileName = metaFile.getName();
+        String projectName;
+        int lastDotIndex = fileName.lastIndexOf('.');
+        if (lastDotIndex > 0) {
+             projectName = fileName.substring(0, lastDotIndex);
+        }else{
+            log.error("Unable to get project name");
+            return false;
+        }
+
+
+
+        String pathToPhotoDir = projectName + ".files/0/0/thumbnails/thumbnails.zip";
+        // Load Photo Directory
+        //photoDir =
+
+        // Load PLY file
+        String pathToPly = projectName + ".files/0/0/model/model.zip";
+        plyFile = extractFromZipFile(new File(parentDirectory,pathToPly), "mesh.ply");
+
+        // Load camera positions
+        String pathToCamerasFile = projectName + ".files/0/chunk.zip";
+        cameraFile = extractFromZipFile(new File(parentDirectory,pathToCamerasFile), "doc.xml");
+
+        // Return true if all files were successfully unzipped
+        return (photoDir != null && plyFile != null && cameraFile != null);
+    }
+
+    /**
+     * This function will extract a desired file from inside a zip folder
+     * and create a temp file that gets deleted upon closing
+     * @param zipFile the path of the zip file
+     * @param embeddedFileName the name/path inside the zip file to the desired file
+     * @return
+     */
+    public static File extractFromZipFile(File zipFile, String embeddedFileName) {
+        File extractedFile = null;
+
+        try (ZipFile zf = new ZipFile(zipFile)) {
+            ZipEntry entry = zf.getEntry(embeddedFileName);
+            if (entry != null && !entry.isDirectory()) {
+                InputStream is = zf.getInputStream(entry);
+                extractedFile = File.createTempFile("temp", ".ply");
+                extractedFile.deleteOnExit(); // Delete the file when JVM exits
+                FileOutputStream fos = new FileOutputStream(extractedFile);
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = is.read(buffer)) != -1) {
+                    fos.write(buffer, 0, bytesRead);
+                }
+                fos.close();
+                is.close();
+            }
+        } catch (IOException e) {
+            log.error("An error occurred while attempting extract from zip file:", e);
+        }
+
+        return extractedFile;
     }
 }
