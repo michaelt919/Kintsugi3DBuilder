@@ -12,16 +12,16 @@ import javafx.stage.Window;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
-import kintsugi3d.builder.core.IBRRequestUI;
-import kintsugi3d.builder.core.IBRRequestQueue;
-import kintsugi3d.builder.core.Kintsugi3DBuilderState;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import kintsugi3d.gl.core.Context;
 
+import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
+import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
+import kintsugi3d.gl.core.Context;
 
 public class exportRequestUI implements IBRRequestUI {
     //Initialize all the variables in the FXML file
@@ -35,7 +35,11 @@ public class exportRequestUI implements IBRRequestUI {
     @FXML private CheckBox openViewerOnceCheckBox;
     @FXML private ComboBox<Integer> minimumTextureResolutionComboBox;
 
-    
+
+
+
+
+
     public static exportRequestUI create(Window window, Kintsugi3DBuilderState modelAccess) throws IOException {
         String fxmlFileName = "fxml/export/ExportRequestUI.fxml";
         URL url = exportRequestUI.class.getClassLoader().getResource(fxmlFileName);
@@ -45,6 +49,8 @@ public class exportRequestUI implements IBRRequestUI {
         Parent parent = fxmlLoader.load();
         exportRequestUI exportRequest = fxmlLoader.getController();
         exportRequest.modelAccess = modelAccess;
+
+        modelAccess.
 
         exportRequest.stage = new Stage();
         exportRequest.stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
@@ -61,14 +67,16 @@ public class exportRequestUI implements IBRRequestUI {
         stage.show();
 
         //Sets all the values to the default
+
         combineWeightsCheckBox.setSelected(settings.isCombineWeights());
         generateLowResolutionCheckBox.setSelected(settings.isGenerateLowResTextures());
         glTFEnabledCheckBox.setSelected(settings.isGlTFEnabled());
         glTFPackTexturesCheckBox.setSelected(settings.isGlTFPackTextures());
         openViewerOnceCheckBox.setSelected(settings.isOpenViewerOnceComplete());
         int getMinimumTexRes = settings.getMinimumTextureResolution();
-        minimumTextureResolutionComboBox.setItems(FXCollections.observableArrayList(32,64,128,256));
+        minimumTextureResolutionComboBox.setItems(FXCollections.observableArrayList(256));
         minimumTextureResolutionComboBox.setValue(getMinimumTexRes);
+
 
         //Just sets the values in settings doesn't do anything else yet
         runButton.setOnAction(event ->
@@ -81,6 +89,17 @@ public class exportRequestUI implements IBRRequestUI {
             settings.setOpenViewerOnceComplete(openViewerOnceCheckBox.isSelected());
             settings.setMinimumTextureResolution(minimumTextureResolutionComboBox.getValue());
             System.out.println(minimumTextureResolutionComboBox.getValue());
+
+            requestQueue.addGraphicsRequest((IBRInstance<ContextType> renderable, LoadingMonitor callback) ->
+            {
+                if (settings.isGlTFEnabled()) {
+                    renderable.saveGlTF(/* .. */, settings);
+                }
+
+                if (settings.isOpenViewerOnceComplete()) {
+                    Kintsugi3DViewerLauncher.launchViewer(new File(/* .. */, "model.glb"));
+                }
+            });
         });
     }
 
@@ -88,4 +107,5 @@ public class exportRequestUI implements IBRRequestUI {
     public void cancelButtonAction() {
         stage.close();
     }
+
 }
