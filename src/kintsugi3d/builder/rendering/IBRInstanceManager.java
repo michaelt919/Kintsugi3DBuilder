@@ -26,6 +26,7 @@ import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
+import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
@@ -65,6 +66,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
     private final List<Consumer<IBRInstance<ContextType>>> instanceLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>());
+
+    private File loadedProjectFile;
 
     /**
      * Adds callbacks that will be invoked when the view set has finished loading (but before the GPU resources are loaded).
@@ -119,6 +122,18 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     public ViewSet getLoadedViewSet()
     {
         return loadedViewSet;
+    }
+
+    @Override
+    public File getLoadedProjectFile()
+    {
+        return loadedProjectFile;
+    }
+
+    @Override
+    public void setLoadedProjectFile(File loadedProjectFile)
+    {
+        this.loadedProjectFile = loadedProjectFile;
     }
 
     private void invokeViewSetLoadCallbacks(ViewSet viewSet)
@@ -404,6 +419,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     public void unload()
     {
         unloadRequested = true;
+        loadedProjectFile = null;
     }
 
     @Override

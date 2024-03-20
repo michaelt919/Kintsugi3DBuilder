@@ -297,16 +297,50 @@ public final class ProjectIO
         {
             // VSET file is the project file or they're in the same directory.
             // Use a supporting files directory underneath by default
-            new Thread(() -> MultithreadModels.getInstance().getLoadingModel()
-                .loadFromVSETFile(vsetFile.getPath(), vsetFile, ViewSet.getDefaultSupportingFilesDirectory(projectFile)))
-                .start();
+            new Thread(() ->
+            {
+                try
+                {
+                    MultithreadModels.getInstance().getLoadingModel()
+                        .loadFromVSETFile(vsetFile.getPath(), vsetFile, ViewSet.getDefaultSupportingFilesDirectory(projectFile));
+                    MultithreadModels.getInstance().getLoadingModel().setLoadedProjectFile(projectFile);
+                }
+                catch (RuntimeException e)
+                {
+                    log.error("Error loading view set file", e);
+                }
+                catch (Error e)
+                {
+                    log.error("Error loading view set file", e);
+                    //noinspection ProhibitedExceptionThrown
+                    throw e;
+                }
+            })
+            .start();
         }
         else
         {
             // VSET file is presumably already in a supporting files directory, so just use that directory by default
-            new Thread(() -> MultithreadModels.getInstance().getLoadingModel()
-                .loadFromVSETFile(vsetFile.getPath(), vsetFile))
-                .start();
+            new Thread(() ->
+            {
+                try
+                {
+                    MultithreadModels.getInstance().getLoadingModel()
+                        .loadFromVSETFile(vsetFile.getPath(), vsetFile);
+                    MultithreadModels.getInstance().getLoadingModel().setLoadedProjectFile(projectFile);
+                }
+                catch (RuntimeException e)
+                {
+                    log.error("Error loading view set file", e);
+                }
+                catch (Error e)
+                {
+                    log.error("Error loading view set file", e);
+                    //noinspection ProhibitedExceptionThrown
+                    throw e;
+                }
+            })
+            .start();
         }
 
         //TODO: update color checker here, if the window for it is open
@@ -388,6 +422,7 @@ public final class ProjectIO
                     ioModel.saveToVSETFile(projectFile);
                     this.vsetFile = projectFile;
                     this.projectFile = null;
+                    MultithreadModels.getInstance().getLoadingModel().setLoadedProjectFile(vsetFile);
                 }
                 else
                 {
@@ -397,6 +432,7 @@ public final class ProjectIO
                     this.vsetFile = new File(filesDirectory, projectFile.getName() + ".vset");
                     ioModel.saveToVSETFile(vsetFile);
                     InternalModels.getInstance().getProjectModel().saveProjectFile(projectFile, vsetFile);
+                    MultithreadModels.getInstance().getLoadingModel().setLoadedProjectFile(projectFile);
                 }
 
                 ioModel.saveGlTF(filesDirectory);
