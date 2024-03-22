@@ -34,11 +34,7 @@ public class exportRequestUI implements IBRRequestUI {
     @FXML private CheckBox glTFPackTexturesCheckBox;
     @FXML private CheckBox openViewerOnceCheckBox;
     @FXML private ComboBox<Integer> minimumTextureResolutionComboBox;
-
-
-
-
-
+    public static File CurrentFile;
 
     public static exportRequestUI create(Window window, Kintsugi3DBuilderState modelAccess) throws IOException {
         String fxmlFileName = "fxml/export/ExportRequestUI.fxml";
@@ -50,7 +46,10 @@ public class exportRequestUI implements IBRRequestUI {
         exportRequestUI exportRequest = fxmlLoader.getController();
         exportRequest.modelAccess = modelAccess;
 
-        modelAccess.
+        File tempFile =  modelAccess.getLoadingModel().getLoadedProjectFile().getParentFile();
+        if (tempFile != null) {
+            CurrentFile = tempFile;
+        }
 
         exportRequest.stage = new Stage();
         exportRequest.stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
@@ -93,7 +92,7 @@ public class exportRequestUI implements IBRRequestUI {
             requestQueue.addGraphicsRequest((IBRInstance<ContextType> renderable, LoadingMonitor callback) ->
             {
                 if (settings.isGlTFEnabled()) {
-                    renderable.saveGlTF(/* .. */, settings);
+                    renderable.saveGlTF(CurrentFile, settings);
                 }
 
                 if (settings.isOpenViewerOnceComplete()) {
@@ -109,3 +108,5 @@ public class exportRequestUI implements IBRRequestUI {
     }
 
 }
+
+
