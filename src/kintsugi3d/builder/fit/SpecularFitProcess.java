@@ -66,14 +66,6 @@ public class SpecularFitProcess
     {
         Instant start = Instant.now();
 
-        // Light optimization (TODO make this a separate menu item and de-hardcode resolution)
-        try (LightOptimization<ContextType> lightOptimization =
-            new LightOptimization<>(resources, getProgramFactory(), new TextureResolution(256, 256)))
-        {
-            lightOptimization.execute(resources.getSpecularMaterialResources());
-            lightOptimization.getLightFit().getColorTextureReader().saveToFile("PNG", new File(settings.getOutputDirectory(), "lightDebug.png"));
-        }
-
         // Generate cache
         ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings());
 
@@ -170,6 +162,16 @@ public class SpecularFitProcess
 //                    // Save the final basis functions
 //                    sampledDecomposition.saveBasisFunctions(settings.getOutputDirectory());
 //                }
+
+
+                // Light optimization (TODO make this a separate menu item and de-hardcode resolution)
+                try (LightOptimization<ContextType> lightOptimization =
+                    new LightOptimization<>(sampled, getProgramFactory(), new TextureResolution(256, 256)))
+                {
+                    lightOptimization.execute(sampledFit);
+                    lightOptimization.getLightFit().getColorTextureReader().saveToFile("PNG", new File(settings.getOutputDirectory(), "lightDebug.png"));
+                }
+
 
                 if (DEBUG_IMAGES && settings.getOutputDirectory() != null)
                 {
