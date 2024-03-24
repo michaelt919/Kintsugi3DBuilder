@@ -12,11 +12,14 @@
 
 package kintsugi3d.builder.rendering.components.snap;
 
+import kintsugi3d.builder.core.CameraViewport;
+import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.core.RenderedComponent;
+import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector4;
-import kintsugi3d.builder.core.*;
 
 /**
  * Snaps to viewpoints from the view set
@@ -59,7 +62,6 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
 
     private Matrix4 snapToView(Matrix4 targetView)
     {
-
         Matrix4 viewInverse = targetView.quickInverse(0.01f);
         float maxSimilarity = Float.NEGATIVE_INFINITY;
         int snapViewIndex = -1;

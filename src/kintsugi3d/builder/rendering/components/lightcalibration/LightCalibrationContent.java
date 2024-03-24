@@ -12,6 +12,12 @@
 
 package kintsugi3d.builder.rendering.components.lightcalibration;
 
+import kintsugi3d.builder.core.CameraViewport;
+import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.rendering.SceneViewportModel;
+import kintsugi3d.builder.rendering.components.IBRSubject;
+import kintsugi3d.builder.rendering.components.snap.ViewSnapContent;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.core.UniformBuffer;
@@ -19,14 +25,6 @@ import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.SceneModel;
-import kintsugi3d.builder.rendering.SceneViewportModel;
-import kintsugi3d.builder.rendering.components.IBRSubject;
-import kintsugi3d.builder.rendering.components.snap.ViewSnapContent;
-import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
-
-import java.io.FileNotFoundException;
 
 public class LightCalibrationContent <ContextType extends Context<ContextType>> extends ViewSnapContent<ContextType>
 {
@@ -87,6 +85,17 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
         // Hole fill color depends on whether in light calibration mode or not.
         ibrSubject.getProgram().setUniform("holeFillColor", new Vector3(0.5f));
 
+        Matrix4 lightView = lightTransform.times(cameraViewport.getView());
+        Vector3 lightPosWorldSpace = lightView.getUpperLeft3x3().transpose().times(lightView.getColumn(3).getXYZ().negated());
+        Vector3 worldSpaceCamAxis = cameraViewport.getView().getRow(2).getXYZ().normalized().negated(); // camera-space -z axis in world space
+        Vector3 worldSpaceUpAxis = cameraViewport.getView().getRow(1).getXYZ();
+
+        Vector3 targetPosCamSpace = new Vector3(0, 0, cameraViewport.getView().get(2, 3)); // get z-coordinate of world-space origin in cam-space
+        Vector3 targetPosWorldSpace = cameraViewport.getView().getUpperLeft3x3().transpose()
+            .times(targetPosCamSpace.minus(cameraViewport.getView().getColumn(3).getXYZ()));
+
+        Matrix4 lookAt = Matrix4.lookAt(lightPosWorldSpace, targetPosWorldSpace, worldSpaceUpAxis);
+
         try(UniformBuffer<ContextType> viewIndexBuffer = context.createUniformBuffer())
         {
             viewIndexBuffer.setData(NativeVectorBufferFactory.getInstance()
@@ -95,7 +104,7 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
 
             // Draw the actual object, without model transformation for light calibration
             ibrSubject.drawInSubdivisions(framebuffer, subdivWidth, subdivHeight,
-                lightTransform.times(cameraViewport.getView()), cameraViewport.getViewportProjection());
+                lookAt, cameraViewport.getViewportProjection());
         }
 
         context.flush();
