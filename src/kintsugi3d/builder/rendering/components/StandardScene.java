@@ -114,12 +114,6 @@ public class StandardScene<ContextType extends Context<ContextType>> extends Lit
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
-        drawInSubdivisions(framebuffer, cameraViewport.getWidth(), cameraViewport.getHeight(), cameraViewport);
-    }
-
-    @Override
-    public void drawInSubdivisions(FramebufferObject<ContextType> framebuffer, int subdivWidth, int subdivHeight, CameraViewport cameraViewport)
-    {
         if (ibrSubject.getProgram() != null)
         {
             // Draw "other components" first, which includes things that ignore the depth test first
@@ -130,7 +124,7 @@ public class StandardScene<ContextType extends Context<ContextType>> extends Lit
             ibrSubject.getProgram().setUniform("holeFillColor", new Vector3(0.0f));
 
             // Draw the actual object with the model transformation
-            ibrSubject.drawInSubdivisions(framebuffer, subdivWidth, subdivHeight, cameraViewport);
+            ibrSubject.draw(framebuffer, cameraViewport);
 
             if (!sceneModel.getLightingModel().areLightWidgetsEthereal()
                 && IntStream.range(0, sceneModel.getLightingModel().getLightCount()).anyMatch(sceneModel.getLightingModel()::isLightWidgetEnabled))

@@ -79,6 +79,16 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
         }
     }
 
+    public boolean isLightCalibrationMode()
+    {
+        return standardShader.isLightCalibrationMode();
+    }
+
+    public void setLightCalibrationMode(boolean lightCalibrationMode)
+    {
+        standardShader.setLightCalibrationMode(lightCalibrationMode);
+    }
+
     @Override
     public void update()
     {
@@ -127,7 +137,8 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
         p.setUniform("model_view", modelView);
         p.setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());
 
-        if (!this.sceneModel.getSettingsModel().getBoolean("relightingEnabled") && !sceneModel.getSettingsModel().getBoolean("lightCalibrationMode")
+        if (!this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
+                && !standardShader.isLightCalibrationMode()
                 && this.sceneModel.getSettingsModel().get("weightMode", ShadingParameterMode.class) == ShadingParameterMode.UNIFORM)
         {
             if (weightBuffer == null)

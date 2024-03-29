@@ -51,6 +51,7 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
         // No lighting resources since light calibration is effectively unlit shading
         ibrSubject = new IBRSubject<>(resources, null, sceneModel, sceneViewportModel);
         ibrSubject.initialize();
+        ibrSubject.setLightCalibrationMode(true);
     }
 
     @Override
@@ -67,12 +68,6 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
 
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
-    {
-        drawInSubdivisions(framebuffer, cameraViewport.getWidth(), cameraViewport.getHeight(), cameraViewport);
-    }
-
-    @Override
-    public void drawInSubdivisions(FramebufferObject<ContextType> framebuffer, int subdivWidth, int subdivHeight, CameraViewport cameraViewport)
     {
         int primaryLightIndex = this.resources.getViewSet().getLightIndex(this.resources.getViewSet().getPrimaryViewIndex());
 
@@ -103,8 +98,7 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
             ibrSubject.getProgram().setUniformBuffer("ViewIndices", viewIndexBuffer);
 
             // Draw the actual object, without model transformation for light calibration
-            ibrSubject.drawInSubdivisions(framebuffer, subdivWidth, subdivHeight,
-                lookAt, cameraViewport.getViewportProjection());
+            ibrSubject.draw(framebuffer, cameraViewport.copyForView(lookAt));
         }
 
         context.flush();

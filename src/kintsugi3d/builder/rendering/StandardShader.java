@@ -35,6 +35,8 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
     private final LightingResources<ContextType> lightingResources;
     private final SceneModel sceneModel;
 
+    private boolean lightCalibrationMode = false;
+
     private ProgramObject<ContextType> program;
 
     // Set default shader to be the untextured IBR shader
@@ -147,7 +149,7 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
 
             boolean occlusionEnabled = this.sceneModel.getSettingsModel().getBoolean("occlusionEnabled")
                 && (this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
-                || sceneModel.getSettingsModel().getBoolean("lightCalibrationMode")
+                || lightCalibrationMode
                 || this.sceneModel.getSettingsModel().get("weightMode", ShadingParameterMode.class) != ShadingParameterMode.UNIFORM);
 
             defineMap.put("VISIBILITY_TEST_ENABLED", Optional.of(occlusionEnabled && this.resources.depthTextures != null));
@@ -156,10 +158,10 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
 
             defineMap.put("PRECOMPUTED_VIEW_WEIGHTS_ENABLED",
                 Optional.of(!this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
-                        && !sceneModel.getSettingsModel().getBoolean("lightCalibrationMode")
+                        && !lightCalibrationMode
                     && this.sceneModel.getSettingsModel().get("weightMode", ShadingParameterMode.class) == ShadingParameterMode.UNIFORM));
 
-            if (sceneModel.getSettingsModel().getBoolean("lightCalibrationMode"))
+            if (lightCalibrationMode)
             {
                 defineMap.put("USE_VIEW_INDICES", Optional.of(true));
                 defineMap.put("VIEW_COUNT", Optional.of(1));
@@ -278,5 +280,15 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
             program.close();
             program = null;
         }
+    }
+
+    public boolean isLightCalibrationMode()
+    {
+        return lightCalibrationMode;
+    }
+
+    public void setLightCalibrationMode(boolean lightCalibrationMode)
+    {
+        this.lightCalibrationMode = lightCalibrationMode;
     }
 }

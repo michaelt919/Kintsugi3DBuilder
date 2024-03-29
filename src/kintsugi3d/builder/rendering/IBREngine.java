@@ -24,6 +24,7 @@ import kintsugi3d.builder.rendering.components.IBRSubject;
 import kintsugi3d.builder.rendering.components.StandardScene;
 import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibrationRoot;
 import kintsugi3d.builder.rendering.components.lit.LitRoot;
+import kintsugi3d.builder.rendering.components.split.SplitScreenComponent;
 import kintsugi3d.builder.resources.DynamicResourceLoader;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
@@ -60,6 +61,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     private ProgramObject<ContextType> simpleTexProgram;
     private Drawable<ContextType> simpleTexDrawable;
 
+    private SplitScreenComponent<ContextType> lightCalibrationSplitScreen;
     private LightCalibrationRoot<ContextType> lightCalibration;
     private LitRoot<ContextType> litRoot;
 
@@ -127,6 +129,8 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             litRoot.takeLitContentRoot(scene);
             litRoot.initialize();
             litRoot.setShadowCaster(resources.getGeometryResources().positionBuffer);
+
+            lightCalibrationSplitScreen = new SplitScreenComponent<>(lightCalibration, litRoot);
 
             IBRSubject<ContextType> subject = scene.getSubject();
             this.dynamicResourceLoader = new DynamicResourceLoader<>(loadingMonitor,
@@ -216,7 +220,8 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     }
 
     @Override
-    public void draw(Framebuffer<ContextType> framebuffer, Matrix4 modelViewOverride, Matrix4 projectionOverride, int subdivWidth, int subdivHeight)
+    public void draw(Framebuffer<ContextType> framebuffer, Matrix4 modelViewOverride, Matrix4 projectionOverride,
+                     int subdivWidth, int subdivHeight)
     {
         try
         {
@@ -268,7 +273,9 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
                 if (sceneModel.getSettingsModel().getBoolean("lightCalibrationMode"))
                 {
-                    lightCalibration.drawInSubdivisions(offscreenFBO, subdivWidth, subdivHeight, view, projection);
+                    // Split needs to be updated every time as FBO width may have changed.
+                    lightCalibrationSplitScreen.setSplit(0.5f, fboWidth);
+                    lightCalibrationSplitScreen.drawInSubdivisions(offscreenFBO, subdivWidth, subdivHeight, view, projection);
                 }
                 else
                 {

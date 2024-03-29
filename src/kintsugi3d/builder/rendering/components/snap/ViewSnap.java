@@ -100,18 +100,14 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
         Matrix4 viewSnap = snapToView(cameraViewport.getView());
-        contentRoot.draw(framebuffer,
-            new CameraViewport(viewSnap, cameraViewport.getFullProjection(), cameraViewport.getViewportProjection(),
-                cameraViewport.getX(), cameraViewport.getY(), cameraViewport.getWidth(),cameraViewport.getHeight()));
+        contentRoot.draw(framebuffer, cameraViewport.copyForView(viewSnap));
     }
 
     @Override
     public void drawInSubdivisions(FramebufferObject<ContextType> framebuffer, int subdivWidth, int subdivHeight, CameraViewport cameraViewport)
     {
         Matrix4 viewSnap = snapToView(cameraViewport.getView());
-        contentRoot.drawInSubdivisions(framebuffer, subdivWidth, subdivHeight,
-            new CameraViewport(viewSnap, cameraViewport.getFullProjection(), cameraViewport.getViewportProjection(),
-                cameraViewport.getX(), cameraViewport.getY(), cameraViewport.getWidth(),cameraViewport.getHeight()));
+        contentRoot.drawInSubdivisions(framebuffer, subdivWidth, subdivHeight, cameraViewport.copyForView(viewSnap));
     }
 
     @Override

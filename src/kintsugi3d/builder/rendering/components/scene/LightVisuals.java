@@ -206,8 +206,7 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
         FramebufferSize size = framebuffer.getSize();
 
         if (this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
-            && this.sceneModel.getSettingsModel().getBoolean("visibleLightsEnabled")
-            && !sceneModel.getSettingsModel().getBoolean("lightCalibrationMode"))
+            && this.sceneModel.getSettingsModel().getBoolean("visibleLightsEnabled"))
         {
             this.context.getState().disableDepthWrite();
 

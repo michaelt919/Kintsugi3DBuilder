@@ -21,23 +21,34 @@ public class CameraViewport
 {
     private final Matrix4 view;
     private final Matrix4 fullProjection;
+    private final Matrix4 viewportCrop;
     private final Matrix4 viewportProjection;
     private final int x;
     private final int y;
     private final int width;
     private final int height;
 
-    public CameraViewport(Matrix4 view, Matrix4 fullProjection, Matrix4 viewportProjection, int x, int y, int width, int height)
+    public CameraViewport(Matrix4 view, Matrix4 fullProjection, Matrix4 viewportCrop, int x, int y, int width, int height)
     {
         this.view = view;
         this.fullProjection = fullProjection;
-        this.viewportProjection = viewportProjection;
+        this.viewportCrop = viewportCrop;
+        this.viewportProjection = viewportCrop.times(fullProjection);
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
     }
 
+    /**
+     * Copies the projection and viewport information but uses a different view matrix to construct a new CameraViewport.
+     * @param newView
+     * @return
+     */
+    public CameraViewport copyForView(Matrix4 newView)
+    {
+        return new CameraViewport(newView, fullProjection, viewportCrop, x, y, width, height);
+    }
 
     public Matrix4 getView()
     {
@@ -54,7 +65,17 @@ public class CameraViewport
     }
 
     /**
+     * The matrix which crops the full clip space into the viewport being rendered.
+     * @return
+     */
+    public Matrix4 getViewportCrop()
+    {
+        return viewportCrop;
+    }
+
+    /**
      * The projection matrix for just the viewport being rendered which will only contain a portion of what the camera sees.
+     * Will be equal to viewportCrop * fullProjection.
      * @return
      */
     public Matrix4 getViewportProjection()
