@@ -7,6 +7,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.Parent;
 import javafx.scene.image.Image;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.scene.control.Button;
@@ -18,8 +19,8 @@ import kintsugi3d.builder.fit.settings.ExportSettings;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ResourceBundle;
 
-import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 
@@ -34,7 +35,9 @@ public class exportRequestUI implements IBRRequestUI {
     @FXML private CheckBox glTFPackTexturesCheckBox;
     @FXML private CheckBox openViewerOnceCheckBox;
     @FXML private ComboBox<Integer> minimumTextureResolutionComboBox;
-    public static File CurrentFile;
+    public File CurrentDirectoryFile;
+    public File ExportLocationFile;
+    private final FileChooser objFileChooser = new FileChooser();
 
     public static exportRequestUI create(Window window, Kintsugi3DBuilderState modelAccess) throws IOException {
         String fxmlFileName = "fxml/export/ExportRequestUI.fxml";
@@ -46,10 +49,7 @@ public class exportRequestUI implements IBRRequestUI {
         exportRequestUI exportRequest = fxmlLoader.getController();
         exportRequest.modelAccess = modelAccess;
 
-        File tempFile =  modelAccess.getLoadingModel().getLoadedProjectFile().getParentFile();
-        if (tempFile != null) {
-            CurrentFile = tempFile;
-        }
+        exportRequest.CurrentDirectoryFile =  modelAccess.getLoadingModel().getLoadedProjectFile().getParentFile();
 
         exportRequest.stage = new Stage();
         exportRequest.stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
@@ -62,6 +62,7 @@ public class exportRequestUI implements IBRRequestUI {
     @Override
     public <ContextType extends Context<ContextType>> void prompt(IBRRequestQueue<ContextType> requestQueue) {
         ExportSettings settings = new ExportSettings();
+
 
         stage.show();
 
@@ -76,10 +77,11 @@ public class exportRequestUI implements IBRRequestUI {
         minimumTextureResolutionComboBox.setItems(FXCollections.observableArrayList(256));
         minimumTextureResolutionComboBox.setValue(getMinimumTexRes);
 
-
         //Just sets the values in settings doesn't do anything else yet
         runButton.setOnAction(event ->
         {
+            objFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Wavefront OBJ file", "*.obj"));
+            ExportLocationFile = objFileChooser.showSaveDialog(stage);
             //Once the function is run they set the settings to the new selected values
             settings.setCombineWeights(combineWeightsCheckBox.isSelected());
             settings.setGenerateLowResTextures(generateLowResolutionCheckBox.isSelected());
@@ -89,14 +91,18 @@ public class exportRequestUI implements IBRRequestUI {
             settings.setMinimumTextureResolution(minimumTextureResolutionComboBox.getValue());
             System.out.println(minimumTextureResolutionComboBox.getValue());
 
-            requestQueue.addGraphicsRequest((IBRInstance<ContextType> renderable, LoadingMonitor callback) ->
-            {
-                if (settings.isGlTFEnabled()) {
-                    renderable.saveGlTF(CurrentFile, settings);
-                }
+            requestQueue.addIBRRequest(new ObservableIBRRequest() {
+                @Override
+                public <ContextType extends Context<ContextType>> void executeRequest(
+                        IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException {
 
-                if (settings.isOpenViewerOnceComplete()) {
-                    Kintsugi3DViewerLauncher.launchViewer(new File(/* .. */, "model.glb"));
+                    if (settings.isGlTFEnabled()) {
+                        renderable.saveGlTF(ExportLocationFile, settings);
+                    }
+
+                    if (settings.isOpenViewerOnceComplete()) {
+                        Kintsugi3DViewerLauncher.launchViewer(ExportLocationFile);
+                    }
                 }
             });
         });
