@@ -129,7 +129,7 @@ public class GroundPlane<ContextType extends Context<ContextType>> implements Re
             context.getState().disableBackFaceCulling();
 
             // Do first pass at half resolution to off-screen buffer
-            groundPlaneDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer, cameraViewport.getX(), cameraViewport.getY(), cameraViewport.getWidth(), cameraViewport.getHeight());
+            groundPlaneDrawable.draw(PrimitiveMode.TRIANGLE_FAN, cameraViewport.ofFramebuffer(framebuffer));
 
             // Re-enable back face culling
             context.getState().enableBackFaceCulling();

@@ -13,6 +13,7 @@
 package kintsugi3d.builder.rendering.components.lightcalibration;
 
 import kintsugi3d.builder.core.CameraViewport;
+import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.IBRSubject;
@@ -38,6 +39,7 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
     public LightCalibrationContent(IBRResourcesImageSpace<ContextType> resources, SceneModel sceneModel,
                                    SceneViewportModel<ContextType> sceneViewportModel)
     {
+        super(resources.getViewSet());
         this.context = resources.getContext();
         this.resources = resources;
         this.sceneModel = sceneModel;

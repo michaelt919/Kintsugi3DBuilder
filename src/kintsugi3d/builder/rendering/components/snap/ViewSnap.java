@@ -32,10 +32,17 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
 
     private ViewSnapContent<ContextType> contentRoot;
 
+    private Matrix4 viewSnap = Matrix4.IDENTITY;
+
     public ViewSnap(SceneModel sceneModel, ReadonlyViewSet viewSet)
     {
         this.sceneModel = sceneModel;
         this.viewSet = viewSet;
+    }
+
+    public ViewSnapContent<ContextType> getContentRoot()
+    {
+        return contentRoot;
     }
 
     /**
@@ -67,7 +74,7 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
         int snapViewIndex = -1;
 
         // View will be overridden for light calibration so that it snaps to specific views
-        Matrix4 viewSnap = null;
+        Matrix4 currentViewSnap = null;
 
         for(int i = 0; i < this.viewSet.getCameraPoseCount(); i++)
         {
@@ -79,34 +86,33 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
             if (similarity > maxSimilarity)
             {
                 maxSimilarity = similarity;
-                viewSnap = candidateView;
+                currentViewSnap = candidateView;
                 snapViewIndex = i;
             }
         }
 
-        assert viewSnap != null; // Should be non-null if there are any camera poses since initially maxSimilarity is -infinity
+        assert currentViewSnap != null; // Should be non-null if there are any camera poses since initially maxSimilarity is -infinity
 
-        contentRoot.setSnapViewIndex(snapViewIndex);
-        return viewSnap;
+        contentRoot.setSnapView(snapViewIndex, currentViewSnap);
+        return currentViewSnap;
     }
 
     @Override
     public void update()
     {
+        viewSnap = snapToView(sceneModel.getCurrentViewMatrix());
         contentRoot.update();
     }
 
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
-        Matrix4 viewSnap = snapToView(cameraViewport.getView());
         contentRoot.draw(framebuffer, cameraViewport.copyForView(viewSnap));
     }
 
     @Override
     public void drawInSubdivisions(FramebufferObject<ContextType> framebuffer, int subdivWidth, int subdivHeight, CameraViewport cameraViewport)
     {
-        Matrix4 viewSnap = snapToView(cameraViewport.getView());
         contentRoot.drawInSubdivisions(framebuffer, subdivWidth, subdivHeight, cameraViewport.copyForView(viewSnap));
     }
 

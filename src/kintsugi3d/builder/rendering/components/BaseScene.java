@@ -1,0 +1,144 @@
+package kintsugi3d.builder.rendering.components;
+
+import kintsugi3d.builder.core.CameraViewport;
+import kintsugi3d.builder.core.RenderedComponent;
+import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.rendering.SceneViewportModel;
+import kintsugi3d.builder.rendering.components.lit.LitContent;
+import kintsugi3d.builder.rendering.components.scene.Backplate;
+import kintsugi3d.builder.rendering.components.scene.Environment;
+import kintsugi3d.builder.rendering.components.scene.Grid;
+import kintsugi3d.builder.rendering.components.scene.GroundPlane;
+import kintsugi3d.builder.resources.LightingResources;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.FramebufferObject;
+import kintsugi3d.gl.vecmath.Vector3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.IntStream;
+
+public abstract class BaseScene<ContextType extends Context<ContextType>> extends LitContent<ContextType>
+{
+    private static final Logger log = LoggerFactory.getLogger(BaseScene.class);
+
+    protected final ContextType context;
+    protected final SceneModel sceneModel;
+    protected final SceneViewportModel<ContextType> sceneViewportModel;
+    protected final List<RenderedComponent<ContextType>> components = new ArrayList<>();
+    private final IBRResourcesImageSpace<ContextType> resources;
+    private IBRSubject<ContextType> ibrSubject;
+
+    public BaseScene(IBRResourcesImageSpace<ContextType> resources, SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
+    {
+        this.context = resources.getContext();
+        this.sceneModel = sceneModel;
+        this.sceneViewportModel = sceneViewportModel;
+        this.resources = resources;
+    }
+
+    @Override
+    protected void addLitComponents()
+    {
+        LightingResources<ContextType> lightingResources = getLightingResources();
+
+        // Backplate and environment must be first since they aren't depth tested.
+        components.add(new Backplate<>(context, lightingResources, sceneModel));
+        components.add(new Environment<>(context, lightingResources, sceneModel, sceneViewportModel));
+
+        // Foreground components that will be depth tested
+        components.add(new Grid<>(context, sceneModel));
+        components.add(new GroundPlane<>(resources, lightingResources, sceneModel, sceneViewportModel));
+
+        // the actual subject for image-based rendering
+        // Draw after "other components", which includes things that ignore the depth test first (environment or backplate)
+        ibrSubject = new IBRSubject<>(resources, lightingResources, sceneModel, sceneViewportModel);
+        components.add(ibrSubject);
+
+        addPostLitComponents();
+    }
+
+    @Override
+    public void initialize()
+    {
+        // Run initialization for each additional component
+        for (RenderedComponent<ContextType> component : components)
+        {
+            component.initialize();
+        }
+    }
+
+    public IBRSubject<ContextType> getSubject()
+    {
+        return ibrSubject;
+    }
+
+    @Override
+    public void reloadShaders()
+    {
+        for (RenderedComponent<ContextType> component : components)
+        {
+            component.reloadShaders();
+        }
+    }
+
+    @Override
+    public void update()
+    {
+        for (RenderedComponent<ContextType> component : components)
+        {
+            component.update();
+        }
+    }
+
+    @Override
+    public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
+    {
+        if (ibrSubject.getProgram() != null)
+        {
+            // Hole fill color depends on whether in light calibration mode or not.
+            ibrSubject.getProgram().setUniform("holeFillColor", new Vector3(0.0f));
+
+            // Draw each component
+            components.forEach(component -> component.draw(framebuffer, cameraViewport));
+
+            // Finish drawing
+            context.flush();
+
+            if (!sceneModel.getLightingModel().areLightWidgetsEthereal()
+                && IntStream.range(0, sceneModel.getLightingModel().getLightCount()).anyMatch(sceneModel.getLightingModel()::isLightWidgetEnabled))
+            {
+                // Read buffers here if light widgets are not ethereal (i.e. they can be clicked and should be in the ID buffer)
+                sceneViewportModel.refreshBuffers(cameraViewport.getFullProjection(), framebuffer);
+            }
+        }
+    }
+
+    @Override
+    public void close()
+    {
+        if (ibrSubject != null)
+        {
+            ibrSubject.close();
+        }
+
+        for (RenderedComponent<ContextType> otherComponent : components)
+        {
+            try
+            {
+                otherComponent.close();
+            }
+            catch (Exception e)
+            {
+                log.error("Error occurred while closing scene:", e);
+            }
+        }
+
+        components.clear();
+    }
+
+    protected abstract void addPostLitComponents();
+}

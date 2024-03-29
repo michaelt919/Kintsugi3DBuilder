@@ -21,6 +21,7 @@ import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.export.specular.gltf.SpecularFitGltfExporter;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.rendering.components.IBRSubject;
+import kintsugi3d.builder.rendering.components.LightCalibration3DScene;
 import kintsugi3d.builder.rendering.components.StandardScene;
 import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibrationRoot;
 import kintsugi3d.builder.rendering.components.lit.LitRoot;
@@ -64,6 +65,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     private SplitScreenComponent<ContextType> lightCalibrationSplitScreen;
     private LightCalibrationRoot<ContextType> lightCalibration;
     private LitRoot<ContextType> litRoot;
+    private LitRoot<ContextType> lightCalibration3DRoot;
 
     private DynamicResourceLoader<ContextType> dynamicResourceLoader;
     private final SceneViewportModel<ContextType> sceneViewportModel;
@@ -126,11 +128,19 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
             litRoot = new LitRoot<>(context, sceneModel);
             StandardScene<ContextType> scene = new StandardScene<>(resources, sceneModel, sceneViewportModel);
+//            scene.setLightVisualsEnabled(true); // Enable light visuals when not in light calibration mode
             litRoot.takeLitContentRoot(scene);
             litRoot.initialize();
             litRoot.setShadowCaster(resources.getGeometryResources().positionBuffer);
 
-            lightCalibrationSplitScreen = new SplitScreenComponent<>(lightCalibration, litRoot);
+            lightCalibration3DRoot = new LitRoot<>(context, sceneModel);
+            LightCalibration3DScene<ContextType> lightCalibScene =
+                new LightCalibration3DScene<>(resources, sceneModel, sceneViewportModel, lightCalibration.getViewSnappable());
+            lightCalibration3DRoot.takeLitContentRoot(lightCalibScene);
+            lightCalibration3DRoot.initialize();
+            lightCalibration3DRoot.setShadowCaster(resources.getGeometryResources().positionBuffer);
+
+            lightCalibrationSplitScreen = new SplitScreenComponent<>(lightCalibration, lightCalibration3DRoot);
 
             IBRSubject<ContextType> subject = scene.getSubject();
             this.dynamicResourceLoader = new DynamicResourceLoader<>(loadingMonitor,

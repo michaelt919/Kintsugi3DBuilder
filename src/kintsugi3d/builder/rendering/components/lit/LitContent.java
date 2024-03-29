@@ -28,8 +28,8 @@ public abstract class LitContent<ContextType extends Context<ContextType>> imple
     void setLightingResources(LightingResources<ContextType> lightingResources)
     {
         this.lightingResources = lightingResources;
-        onSetLightingResources();
+        addLitComponents();
     }
 
-    protected abstract void onSetLightingResources();
+    protected abstract void addLitComponents();
 }

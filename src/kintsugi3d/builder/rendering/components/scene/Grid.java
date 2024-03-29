@@ -120,7 +120,7 @@ public class Grid<ContextType extends Context<ContextType>> implements RenderedC
             this.solidProgram.setUniform("model_view", cameraViewport.getView().times(Matrix4.scale(sceneModel.getScale())));
             this.solidProgram.setUniform("color", new Vector4(0.5f, 0.5f, 0.5f, 1.0f));
             this.solidProgram.setUniform("objectID", 0);
-            this.gridDrawable.draw(PrimitiveMode.LINES, framebuffer, cameraViewport.getX(), cameraViewport.getY(), cameraViewport.getWidth(), cameraViewport.getHeight());
+            this.gridDrawable.draw(PrimitiveMode.LINES, cameraViewport.ofFramebuffer(framebuffer));
         }
     }
 

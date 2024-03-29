@@ -14,22 +14,37 @@ package kintsugi3d.builder.rendering.components;
 
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
-import kintsugi3d.builder.rendering.components.scene.*;
+import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibrationVisual;
+import kintsugi3d.builder.rendering.components.scene.LightVisuals;
+import kintsugi3d.builder.rendering.components.snap.ViewSnappable;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.gl.core.Context;
 
-public class StandardScene<ContextType extends Context<ContextType>> extends BaseScene<ContextType>
+public class LightCalibration3DScene<ContextType extends Context<ContextType>> extends BaseScene<ContextType>
 {
-    public StandardScene(IBRResourcesImageSpace<ContextType> resources, SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
+    private final ViewSnappable viewSnappable;
+
+    /**
+     *
+     * @param resources
+     * @param sceneModel
+     * @param sceneViewportModel
+     * @param viewSnappable Will be used to determine where the light visual is shown (corresponding to the current snapped view)
+     */
+    public LightCalibration3DScene(IBRResourcesImageSpace<ContextType> resources, SceneModel sceneModel,
+                                   SceneViewportModel<ContextType> sceneViewportModel, ViewSnappable viewSnappable)
     {
         super(resources, sceneModel, sceneViewportModel);
+        this.viewSnappable = viewSnappable;
     }
 
     @Override
     protected void addPostLitComponents()
     {
         // the on-screen representation of lights
-        components.add(new LightVisuals<>(context, sceneModel, sceneViewportModel));
+        LightCalibrationVisual<ContextType> lightVisual = new LightCalibrationVisual<>(context, sceneModel, sceneViewportModel);
+        lightVisual.setViewSnappable(viewSnappable);
+        components.add(lightVisual);
     }
 
 }

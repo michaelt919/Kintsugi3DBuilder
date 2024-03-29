@@ -12,20 +12,44 @@
 
 package kintsugi3d.builder.rendering.components.snap;
 
+import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.core.RenderedComponent;
+import kintsugi3d.gl.vecmath.Matrix4;
 
-public abstract class ViewSnapContent<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
+public abstract class ViewSnapContent<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>, ViewSnappable
 {
+    private final ViewSet viewSet;
     private int snapViewIndex;
+    private Matrix4 snapView;
 
-    protected int getSnapViewIndex()
+    protected ViewSnapContent(ViewSet viewSet)
+    {
+        this.viewSet = viewSet;
+    }
+    @Override
+    public Matrix4 getSnapView()
+    {
+        return snapView;
+    }
+
+    @Override
+    public int getSnapViewIndex()
     {
         return snapViewIndex;
     }
 
-    void setSnapViewIndex(int snapViewIndex)
+    @Override
+    public void setSnapView(int snapViewIndex, Matrix4 snapView)
     {
         this.snapViewIndex = snapViewIndex;
+        this.snapView = snapView;
+    }
+
+    @Override
+    public ReadonlyViewSet getViewSet()
+    {
+        return viewSet;
     }
 }
