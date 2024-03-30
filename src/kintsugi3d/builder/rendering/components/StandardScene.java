@@ -14,19 +14,20 @@ package kintsugi3d.builder.rendering.components;
 
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
-import kintsugi3d.builder.rendering.components.scene.*;
+import kintsugi3d.builder.rendering.components.scene.LightVisuals;
+import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.gl.core.Context;
 
 public class StandardScene<ContextType extends Context<ContextType>> extends BaseScene<ContextType>
 {
-    public StandardScene(IBRResourcesImageSpace<ContextType> resources, SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
+    public StandardScene(IBRResourcesImageSpace<ContextType> resources, SceneModel sceneModel, SceneViewportModel sceneViewportModel)
     {
         super(resources, sceneModel, sceneViewportModel);
     }
 
     @Override
-    protected void addPostLitComponents()
+    protected void addPostLitComponents(LightingResources<ContextType> lightingResources)
     {
         // the on-screen representation of lights
         components.add(new LightVisuals<>(context, sceneModel, sceneViewportModel));

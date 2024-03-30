@@ -18,18 +18,19 @@ import kintsugi3d.gl.core.Context;
 
 public abstract class LitContent<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
-    private LightingResources<ContextType> lightingResources;
-
-    protected final LightingResources<ContextType> getLightingResources()
+    void initWithLightingResources(LightingResources<ContextType> lightingResources)
     {
-        return lightingResources;
+        addLitComponents(lightingResources);
+        addPostLitComponents(lightingResources);
     }
 
-    void setLightingResources(LightingResources<ContextType> lightingResources)
+    @SuppressWarnings("NoopMethodInAbstractClass")
+    protected void addLitComponents(LightingResources<ContextType> lightingResources)
     {
-        this.lightingResources = lightingResources;
-        addLitComponents();
     }
 
-    protected abstract void addLitComponents();
+    @SuppressWarnings("NoopMethodInAbstractClass")
+    protected void addPostLitComponents(LightingResources<ContextType> lightingResources)
+    {
+    }
 }

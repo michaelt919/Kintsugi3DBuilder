@@ -12,98 +12,63 @@
 
 package kintsugi3d.builder.rendering.components.lightcalibration;
 
-import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.RenderedComponent;
-import kintsugi3d.builder.core.SceneModel;
-import kintsugi3d.builder.rendering.SceneViewportModel;
-import kintsugi3d.builder.rendering.components.snap.ViewSnappable;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.nativebuffer.NativeDataType;
-import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
-import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
-import kintsugi3d.gl.vecmath.*;
-import kintsugi3d.util.RadialTextureGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Map;
+
+import kintsugi3d.builder.core.CameraViewport;
+import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.rendering.SceneViewportModel;
+import kintsugi3d.builder.rendering.components.ShaderComponent;
+import kintsugi3d.builder.rendering.components.snap.ViewSnappable;
+import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector2;
+import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.util.RadialTextureGenerator;
 
 /**
  * Class for drawing the 3D light representations and manipulation widgets.
  * @param <ContextType>
  */
-public class LightCalibrationVisual<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
+public class LightCalibrationVisual<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
-    private static final Logger log = LoggerFactory.getLogger(LightCalibrationVisual.class);
-    private final ContextType context;
     private final SceneModel sceneModel;
-    private final SceneViewportModel<ContextType> sceneViewportModel;
 
     private ViewSnappable viewSnappable;
-
-    private ProgramObject<ContextType> lightProgram;
-    private VertexBuffer<ContextType> rectangleVertices;
     private Texture2D<ContextType> lightTexture;
-    private Drawable<ContextType> lightDrawable;
 
-    public LightCalibrationVisual(ContextType context, SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
+    public LightCalibrationVisual(ContextType context, SceneViewportModel sceneViewportModel, SceneModel sceneModel)
     {
-        this.context = context;
+        super(context, sceneViewportModel, "LightCalibVisual");
         this.sceneModel = sceneModel;
-        this.sceneViewportModel = sceneViewportModel;
-        sceneViewportModel.addSceneObjectType("LightCalibVisual");
     }
 
     @Override
     public void initialize()
     {
-        this.rectangleVertices = context.createRectangle();
+        super.initialize();
 
-        this.lightTexture = new RadialTextureGenerator<>(context).buildBloomTexture(64)
-                .setInternalFormat(ColorFormat.R8)
-                .setLinearFilteringEnabled(true)
-                .setMipmapsEnabled(true)
-                .createTexture();
-
-        try
-        {
-            this.lightProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "scene"), "light.frag"))
-                .createProgram();
-            this.lightDrawable = context.createDrawable(this.lightProgram);
-            this.lightDrawable.addVertexBuffer("position", rectangleVertices);
-        }
-        catch (FileNotFoundException|RuntimeException e)
-        {
-            log.error("Failed to load shader.", e);
-        }
+        this.lightTexture = resource(new RadialTextureGenerator<>(getContext()).buildBloomTexture(64)
+            .setInternalFormat(ColorFormat.R8)
+            .setLinearFilteringEnabled(true)
+            .setMipmapsEnabled(true)
+            .createTexture());
     }
 
     @Override
-    public void reloadShaders()
+    protected ProgramObject<ContextType> createProgram(ContextType context) throws FileNotFoundException
     {
-        try
-        {
-            ProgramObject<ContextType> newLightProgram = context.getShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "scene"), "light.frag"))
-                    .createProgram();
+        return context.getShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+            .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "scene"), "light.frag"))
+            .createProgram();
+    }
 
-            if (this.lightProgram != null)
-            {
-                this.lightProgram.close();
-            }
-
-            this.lightProgram = newLightProgram;
-            this.lightDrawable = context.createDrawable(this.lightProgram);
-            this.lightDrawable.addVertexBuffer("position", rectangleVertices);
-        }
-        catch (FileNotFoundException|RuntimeException e)
-        {
-            log.error("Failed to load shader.", e);
-        }
+    @Override
+    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context)
+    {
+        return Map.of("position", context.createRectangle());
     }
 
     @Override
@@ -111,14 +76,13 @@ public class LightCalibrationVisual<ContextType extends Context<ContextType>> im
     {
         FramebufferSize size = framebuffer.getSize();
 
-        this.context.getState().disableDepthWrite();
+        this.getContext().getState().disableDepthWrite();
 
-        this.context.getState().setBlendFunction(new BlendFunction(BlendFunction.Weight.ONE, BlendFunction.Weight.ONE));
-        this.context.getState().enableDepthTest();
+        this.getContext().getState().setBlendFunction(new BlendFunction(BlendFunction.Weight.ONE, BlendFunction.Weight.ONE));
+        this.getContext().getState().enableDepthTest();
 
-        this.context.getState().setBlendFunction(new BlendFunction(BlendFunction.Weight.ONE, BlendFunction.Weight.ONE));
-        this.lightProgram.setUniform("objectID", sceneViewportModel.lookupSceneObjectID("LightCalibVisual"));
-        this.lightProgram.setUniform("color", new Vector3((float)Math.PI));
+        this.getContext().getState().setBlendFunction(new BlendFunction(BlendFunction.Weight.ONE, BlendFunction.Weight.ONE));
+        this.getDrawable().program().setUniform("color", new Vector3((float)Math.PI));
 
         // Calculate world space light position.
         Matrix4 snapView = viewSnappable.getSnapView();
@@ -130,43 +94,15 @@ public class LightCalibrationVisual<ContextType extends Context<ContextType>> im
         Vector3 lightPosWorldSpace = lightView.getUpperLeft3x3().transpose().times(lightView.getColumn(3).getXYZ().negated());
         Vector3 lightPosCamSpace = cameraViewport.getView().times(lightPosWorldSpace.asPosition()).getXYZ();
 
-        this.lightProgram.setUniform("model_view", Matrix4.translate(lightPosCamSpace)
+        this.getDrawable().program().setUniform("model_view", Matrix4.translate(lightPosCamSpace)
                 .times(Matrix4.scale(-lightPosCamSpace.z / 32.0f, -lightPosCamSpace.z / 32.0f, 1.0f)));
-        this.lightProgram.setUniform("projection", cameraViewport.getViewportProjection());
-        this.lightProgram.setTexture("lightTexture", this.lightTexture);
-        this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, cameraViewport.ofFramebuffer(framebuffer));
+        this.getDrawable().program().setUniform("projection", cameraViewport.getViewportProjection());
+        this.getDrawable().program().setTexture("lightTexture", this.lightTexture);
+        this.getDrawable().draw(PrimitiveMode.TRIANGLE_FAN, cameraViewport.ofFramebuffer(framebuffer));
 
-        context.getState().disableBlending();
-        context.getState().enableDepthWrite();
-        this.context.getState().enableDepthTest();
-    }
-
-    @Override
-    public void close()
-    {
-        if (rectangleVertices != null)
-        {
-            rectangleVertices.close();
-            rectangleVertices = null;
-        }
-
-        if (lightProgram != null)
-        {
-            lightProgram.close();
-            lightProgram = null;
-        }
-
-        if (lightDrawable != null)
-        {
-            lightDrawable.close();
-            lightDrawable = null;
-        }
-
-        if (lightTexture != null)
-        {
-            lightTexture.close();
-            lightTexture = null;
-        }
+        this.getContext().getState().disableBlending();
+        this.getContext().getState().enableDepthWrite();
+        this.getContext().getState().enableDepthTest();
     }
 
     public ViewSnappable getViewSnappable()

@@ -12,18 +12,14 @@
 
 package kintsugi3d.builder.rendering.components;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.AbstractList;
+import java.util.Collections;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 
 import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
-import kintsugi3d.builder.rendering.StandardShader;
+import kintsugi3d.builder.rendering.StandardShaderComponent;
 import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.util.KNNViewWeightGenerator;
@@ -33,121 +29,33 @@ import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.ShadingParameterMode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-public class IBRSubject<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
+public class IBRSubject<ContextType extends Context<ContextType>> extends StandardShaderComponent<ContextType>
 {
-    private static final Logger log = LoggerFactory.getLogger(IBRSubject.class);
-    private final ContextType context;
-    private final SceneModel sceneModel;
-    private final SceneViewportModel<ContextType> sceneViewportModel;
-    private final IBRResourcesImageSpace<ContextType> resources;
-
-    private StandardShader<ContextType> standardShader;
-    private Drawable<ContextType> drawable;
-
     private UniformBuffer<ContextType> weightBuffer;
 
-    public IBRSubject(IBRResourcesImageSpace<ContextType> resources, LightingResources<ContextType> lightingResources,
-                      SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
+    public IBRSubject(IBRResourcesImageSpace<ContextType> resources, SceneViewportModel sceneViewportModel,
+        SceneModel sceneModel, LightingResources<ContextType> lightingResources)
     {
-        this.resources = resources;
-        this.context = resources.getContext();
-        this.sceneModel = sceneModel;
-        this.sceneViewportModel = sceneViewportModel;
-        this.sceneViewportModel.addSceneObjectType("IBRObject");
-        this.standardShader = new StandardShader<>(resources, lightingResources, sceneModel);
+        super (resources, sceneViewportModel, "IBRObject", sceneModel, lightingResources);
+    }
+
+    @Override
+    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context)
+    {
+        // Vertex buffers come from the IBRResources and don't need to be created.
+        return Collections.emptyMap();
+    }
+
+    @Override
+    protected Drawable<ContextType> createDrawable(Program<ContextType> program)
+    {
+        // Use IBRResources to create a drawable with all the available vertex buffers.
+        return resources.createDrawable(program);
     }
 
     public Program<ContextType> getProgram()
     {
-        return standardShader.getProgram();
-    }
-
-    @Override
-    public void initialize()
-    {
-        try
-        {
-            standardShader.initialize();
-            refreshDrawable();
-        }
-        catch(IOException|RuntimeException e)
-        {
-            log.error("Failed to load shader.", e);
-        }
-    }
-
-    public boolean isLightCalibrationMode()
-    {
-        return standardShader.isLightCalibrationMode();
-    }
-
-    public void setLightCalibrationMode(boolean lightCalibrationMode)
-    {
-        standardShader.setLightCalibrationMode(lightCalibrationMode);
-    }
-
-    @Override
-    public void update()
-    {
-        if (drawable != null && drawable.program() != null)
-        {
-            Map<String, Optional<Object>> defineMap = standardShader.getPreprocessorDefines();
-
-            // Reloads shaders only if compiled settings have changed.
-            if (defineMap.entrySet().stream().anyMatch(
-                    defineEntry -> !Objects.equals(drawable.program().getDefine(defineEntry.getKey()), defineEntry.getValue())))
-            {
-                log.info("Updating compiled render settings.");
-                reloadShaders();
-            }
-        }
-    }
-
-    public void useFragmentShader(File fragmentShaderFile)
-    {
-        standardShader.setFragmentShaderFile(fragmentShaderFile);
-        reloadShaders();
-    }
-
-    @Override
-    public void reloadShaders()
-    {
-        try
-        {
-            // Force reload shaders
-            standardShader.reload();
-            refreshDrawable();
-        }
-        catch(IOException|RuntimeException e)
-        {
-            log.error("Failed to load shader.", e);
-        }
-    }
-
-    private void refreshDrawable()
-    {
-        this.drawable = resources.createDrawable(standardShader.getProgram());
-    }
-
-    private void setupModelView(Program<ContextType> p, Matrix4 modelView)
-    {
-        p.setUniform("model_view", modelView);
-        p.setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());
-
-        if (!this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
-                && !standardShader.isLightCalibrationMode()
-                && this.sceneModel.getSettingsModel().get("weightMode", ShadingParameterMode.class) == ShadingParameterMode.UNIFORM)
-        {
-            if (weightBuffer == null)
-            {
-                weightBuffer = context.createUniformBuffer();
-            }
-            weightBuffer.setData(this.generateViewWeights(modelView)); // TODO modelView might not be the right matrix?
-            p.setUniformBuffer("ViewWeights", weightBuffer);
-        }
+        return getDrawable().program();
     }
 
     private ReadonlyNativeVectorBuffer generateViewWeights(Matrix4 targetView)
@@ -175,47 +83,35 @@ public class IBRSubject<ContextType extends Context<ContextType>> implements Ren
     }
 
     @Override
-    public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
+    protected void setupModelView(Program<ContextType> p, Matrix4 modelView)
     {
-        context.getState().disableBackFaceCulling();
+        super.setupModelView(p, modelView);
 
-        // After the ground plane, use a gray color for anything without a texture map.
-        drawable.program().setUniform("defaultDiffuseColor", new Vector3(0.125f));
+        if (!this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
+            && !isLightCalibrationMode()
+            && this.sceneModel.getSettingsModel().get("weightMode", ShadingParameterMode.class) == ShadingParameterMode.UNIFORM)
+        {
+            if (weightBuffer == null)
+            {
+                weightBuffer = resource(getContext().createUniformBuffer());
+            }
 
-        standardShader.setup();
-        drawable.program().setUniform("objectID", sceneViewportModel.lookupSceneObjectID("IBRObject"));
-
-        Matrix4 modelView = sceneModel.getModelViewMatrix(cameraViewport.getView());
-
-        setupModelView(drawable.program(), modelView);
-
-        drawable.program().setUniform("projection", cameraViewport.getViewportProjection());
-        drawable.program().setUniform("fullProjection", cameraViewport.getFullProjection());
-
-        drawable.draw(framebuffer, cameraViewport.getX(), cameraViewport.getY(), cameraViewport.getWidth(), cameraViewport.getHeight());
-
-        context.getState().enableBackFaceCulling();
+            weightBuffer.setData(this.generateViewWeights(modelView)); // TODO modelView might not be the right matrix?
+            p.setUniformBuffer("ViewWeights", weightBuffer);
+        }
     }
 
     @Override
-    public void close()
+    public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
-        if (standardShader != null)
-        {
-            standardShader.close();
-            standardShader = null;
-        }
+        getContext().getState().disableBackFaceCulling();
 
-        if (drawable != null)
-        {
-            drawable.close();
-            drawable = null;
-        }
+        // After the ground plane, use a gray color for anything without a texture map.
+        getDrawable().program().setUniform("defaultDiffuseColor", new Vector3(0.125f));
 
-        if (weightBuffer != null)
-        {
-            weightBuffer.close();
-            weightBuffer = null;
-        }
+        setupShader(cameraViewport);
+        getDrawable().draw(cameraViewport.ofFramebuffer(framebuffer));
+
+        getContext().getState().enableBackFaceCulling();
     }
 }

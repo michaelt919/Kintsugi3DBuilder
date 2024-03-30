@@ -21,8 +21,8 @@ import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.export.specular.gltf.SpecularFitGltfExporter;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.rendering.components.IBRSubject;
-import kintsugi3d.builder.rendering.components.LightCalibration3DScene;
 import kintsugi3d.builder.rendering.components.StandardScene;
+import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibration3DScene;
 import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibrationRoot;
 import kintsugi3d.builder.rendering.components.lit.LitRoot;
 import kintsugi3d.builder.rendering.components.split.SplitScreenComponent;
@@ -68,7 +68,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     private LitRoot<ContextType> lightCalibration3DRoot;
 
     private DynamicResourceLoader<ContextType> dynamicResourceLoader;
-    private final SceneViewportModel<ContextType> sceneViewportModel;
+    private final SceneViewportModel sceneViewportModel;
 
     private static final int SHADING_FRAMEBUFFER_COUNT = 2;
     private final Collection<FramebufferObject<ContextType>> shadingFramebuffers = new ArrayList<>(SHADING_FRAMEBUFFER_COUNT);
@@ -81,7 +81,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
         this.sceneModel = new SceneModel();
 
-        this.sceneViewportModel = new SceneViewportModel<>(sceneModel);
+        this.sceneViewportModel = new SceneViewportModel(sceneModel);
         this.sceneViewportModel.addSceneObjectType("SceneObject");
     }
 

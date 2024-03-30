@@ -13,7 +13,6 @@
 package kintsugi3d.builder.rendering.components.lightcalibration;
 
 import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.IBRSubject;
@@ -32,12 +31,12 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
     private final ContextType context;
     private final IBRResourcesImageSpace<ContextType> resources;
     private final SceneModel sceneModel;
-    private final SceneViewportModel<ContextType> sceneViewportModel;
+    private final SceneViewportModel sceneViewportModel;
 
     private IBRSubject<ContextType> ibrSubject;
 
     public LightCalibrationContent(IBRResourcesImageSpace<ContextType> resources, SceneModel sceneModel,
-                                   SceneViewportModel<ContextType> sceneViewportModel)
+                                   SceneViewportModel sceneViewportModel)
     {
         super(resources.getViewSet());
         this.context = resources.getContext();
@@ -51,7 +50,7 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
     {
         // the actual subject for image-based rendering
         // No lighting resources since light calibration is effectively unlit shading
-        ibrSubject = new IBRSubject<>(resources, null, sceneModel, sceneViewportModel);
+        ibrSubject = new IBRSubject<>(resources, sceneViewportModel, sceneModel, null);
         ibrSubject.initialize();
         ibrSubject.setLightCalibrationMode(true);
     }

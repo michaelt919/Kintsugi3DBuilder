@@ -12,24 +12,22 @@
 
 package kintsugi3d.builder.rendering.components.scene;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+
+import kintsugi3d.builder.core.CameraViewport;
+import kintsugi3d.builder.core.RenderedComponent;
+import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.nativebuffer.NativeDataType;
-import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
-import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.RenderedComponent;
-import kintsugi3d.builder.core.SceneModel;
-import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.util.RadialTextureGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileNotFoundException;
 
 /**
  * Class for drawing the 3D light representations and manipulation widgets.
@@ -40,7 +38,7 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
     private static final Logger log = LoggerFactory.getLogger(LightVisuals.class);
     private final ContextType context;
     private final SceneModel sceneModel;
-    private final SceneViewportModel<ContextType> sceneViewportModel;
+    private final SceneViewportModel sceneViewportModel;
 
     private ProgramObject<ContextType> lightProgram;
     private VertexBuffer<ContextType> rectangleVertices;
@@ -55,7 +53,7 @@ public class LightVisuals<ContextType extends Context<ContextType>> implements R
     private ProgramObject<ContextType> circleProgram;
     private Drawable<ContextType> circleDrawable;
 
-    public LightVisuals(ContextType context, SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
+    public LightVisuals(ContextType context, SceneModel sceneModel, SceneViewportModel sceneViewportModel)
     {
         this.context = context;
         this.sceneModel = sceneModel;

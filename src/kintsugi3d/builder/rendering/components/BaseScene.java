@@ -1,5 +1,9 @@
 package kintsugi3d.builder.rendering.components;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.IntStream;
+
 import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.core.SceneModel;
@@ -17,22 +21,18 @@ import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.IntStream;
-
-public abstract class BaseScene<ContextType extends Context<ContextType>> extends LitContent<ContextType>
+public class BaseScene<ContextType extends Context<ContextType>> extends LitContent<ContextType>
 {
     private static final Logger log = LoggerFactory.getLogger(BaseScene.class);
 
     protected final ContextType context;
     protected final SceneModel sceneModel;
-    protected final SceneViewportModel<ContextType> sceneViewportModel;
+    protected final SceneViewportModel sceneViewportModel;
     protected final List<RenderedComponent<ContextType>> components = new ArrayList<>();
     private final IBRResourcesImageSpace<ContextType> resources;
     private IBRSubject<ContextType> ibrSubject;
 
-    public BaseScene(IBRResourcesImageSpace<ContextType> resources, SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
+    public BaseScene(IBRResourcesImageSpace<ContextType> resources, SceneModel sceneModel, SceneViewportModel sceneViewportModel)
     {
         this.context = resources.getContext();
         this.sceneModel = sceneModel;
@@ -41,13 +41,11 @@ public abstract class BaseScene<ContextType extends Context<ContextType>> extend
     }
 
     @Override
-    protected void addLitComponents()
+    protected void addLitComponents(LightingResources<ContextType> lightingResources)
     {
-        LightingResources<ContextType> lightingResources = getLightingResources();
-
         // Backplate and environment must be first since they aren't depth tested.
         components.add(new Backplate<>(context, lightingResources, sceneModel));
-        components.add(new Environment<>(context, lightingResources, sceneModel, sceneViewportModel));
+        components.add(new Environment<>(context, sceneViewportModel, lightingResources, sceneModel));
 
         // Foreground components that will be depth tested
         components.add(new Grid<>(context, sceneModel));
@@ -55,10 +53,8 @@ public abstract class BaseScene<ContextType extends Context<ContextType>> extend
 
         // the actual subject for image-based rendering
         // Draw after "other components", which includes things that ignore the depth test first (environment or backplate)
-        ibrSubject = new IBRSubject<>(resources, lightingResources, sceneModel, sceneViewportModel);
+        ibrSubject = new IBRSubject<>(resources, sceneViewportModel, sceneModel, lightingResources);
         components.add(ibrSubject);
-
-        addPostLitComponents();
     }
 
     @Override
@@ -139,6 +135,4 @@ public abstract class BaseScene<ContextType extends Context<ContextType>> extend
 
         components.clear();
     }
-
-    protected abstract void addPostLitComponents();
 }
