@@ -109,7 +109,7 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
     }
 
     @Override
-    public void close() throws Exception
+    public void close()
     {
         if (ibrSubject != null)
         {

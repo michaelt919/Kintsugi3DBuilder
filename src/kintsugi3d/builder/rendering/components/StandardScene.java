@@ -14,7 +14,7 @@ package kintsugi3d.builder.rendering.components;
 
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
-import kintsugi3d.builder.rendering.components.scene.LightVisuals;
+import kintsugi3d.builder.rendering.components.scene.light.LightVisualsGroup;
 import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.gl.core.Context;
@@ -30,7 +30,7 @@ public class StandardScene<ContextType extends Context<ContextType>> extends Bas
     protected void addPostLitComponents(LightingResources<ContextType> lightingResources)
     {
         // the on-screen representation of lights
-        components.add(new LightVisuals<>(context, sceneModel, sceneViewportModel));
+        components.add(new LightVisualsGroup<>(context, sceneModel, sceneViewportModel));
     }
 
 }

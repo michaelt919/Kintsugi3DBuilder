@@ -12,13 +12,13 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.builder.state.*;
+import kintsugi3d.builder.state.impl.DefaultSettingsModel;
+import kintsugi3d.builder.state.impl.SafeSettingsModelWrapperFactory;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.state.*;
-import kintsugi3d.builder.state.impl.DefaultSettingsModel;
-import kintsugi3d.builder.state.impl.SafeSettingsModelWrapperFactory;
 
 public class SceneModel
 {
@@ -116,6 +116,11 @@ public class SceneModel
     public Matrix4 getLightViewMatrix(int lightIndex)
     {
         return getUnscaledMatrix(lightingModel.getLightMatrix(lightIndex));
+    }
+
+    public Matrix4 getInverseLightViewMatrix(int lightIndex)
+    {
+        return getUnscaledMatrix(lightingModel.getLightMatrix(lightIndex).quickInverse(0.01f));
     }
 
     public Matrix4 getLightModelViewMatrix(int lightIndex)

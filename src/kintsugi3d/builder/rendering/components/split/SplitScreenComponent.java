@@ -117,7 +117,7 @@ public class SplitScreenComponent<ContextType extends Context<ContextType>> impl
      * Does nothing as each half of the split screen is expected to be managed by another object.
      */
     @Override
-    public void close() throws Exception
+    public void close()
     {
     }
 

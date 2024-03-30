@@ -66,7 +66,7 @@ public class LightCalibrationRoot<ContextType extends Context<ContextType>> impl
     }
 
     @Override
-    public void close() throws Exception
+    public void close()
     {
         if (viewSnapRoot != null)
         {

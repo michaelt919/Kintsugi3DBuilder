@@ -84,7 +84,7 @@ public class LitRoot<ContextType extends Context<ContextType>> implements Render
     }
 
     @Override
-    public void close() throws Exception
+    public void close()
     {
         if (lightingResources != null)
         {

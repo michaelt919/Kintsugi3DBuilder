@@ -117,7 +117,7 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
     }
 
     @Override
-    public void close() throws Exception
+    public void close()
     {
         contentRoot.close();
     }

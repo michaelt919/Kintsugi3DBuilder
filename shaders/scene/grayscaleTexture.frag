@@ -13,7 +13,7 @@
  */
 
 uniform int objectID;
-uniform sampler2D lightTexture;
+uniform sampler2D grayscaleTex;
 uniform vec3 color;
 
 in vec3 fPosition;
@@ -23,7 +23,7 @@ layout(location = 1) out int fragObjectID;
 
 void main()
 {
-    float intensity = texture(lightTexture, fPosition.xy / 2 + vec2(0.5))[0];
+    float intensity = texture(grayscaleTex, fPosition.xy / 2 + vec2(0.5))[0];
 
     if (intensity == 0.0)
     {

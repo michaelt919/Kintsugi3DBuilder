@@ -15,11 +15,10 @@ package kintsugi3d.builder.core;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.core.FramebufferSize;
+import kintsugi3d.gl.core.Resource;
 import kintsugi3d.gl.vecmath.Matrix4;
 
-import java.io.IOException;
-
-public interface RenderedComponent<ContextType extends Context<ContextType>> extends AutoCloseable
+public interface RenderedComponent<ContextType extends Context<ContextType>> extends Resource
 {
     void initialize();
 

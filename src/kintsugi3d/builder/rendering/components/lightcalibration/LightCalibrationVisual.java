@@ -61,7 +61,7 @@ public class LightCalibrationVisual<ContextType extends Context<ContextType>> ex
     {
         return context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-            .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "scene"), "light.frag"))
+            .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "scene"), "grayscaleTexture.frag"))
             .createProgram();
     }
 
@@ -97,7 +97,7 @@ public class LightCalibrationVisual<ContextType extends Context<ContextType>> ex
         this.getDrawable().program().setUniform("model_view", Matrix4.translate(lightPosCamSpace)
                 .times(Matrix4.scale(-lightPosCamSpace.z / 32.0f, -lightPosCamSpace.z / 32.0f, 1.0f)));
         this.getDrawable().program().setUniform("projection", cameraViewport.getViewportProjection());
-        this.getDrawable().program().setTexture("lightTexture", this.lightTexture);
+        this.getDrawable().program().setTexture("texture", this.lightTexture);
         this.getDrawable().draw(PrimitiveMode.TRIANGLE_FAN, cameraViewport.ofFramebuffer(framebuffer));
 
         this.getContext().getState().disableBlending();
