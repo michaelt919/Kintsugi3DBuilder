@@ -53,11 +53,6 @@ public class IBRSubject<ContextType extends Context<ContextType>> extends Standa
         return resources.createDrawable(program);
     }
 
-    public Program<ContextType> getProgram()
-    {
-        return getDrawable().program();
-    }
-
     private ReadonlyNativeVectorBuffer generateViewWeights(Matrix4 targetView)
     {
         float[] viewWeights = //new PowerViewWeightGenerator(settings.getWeightExponent())

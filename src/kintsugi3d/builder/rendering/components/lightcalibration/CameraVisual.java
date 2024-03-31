@@ -21,7 +21,9 @@ import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.rendering.components.snap.ViewSnappable;
 import kintsugi3d.builder.resources.ibr.IBRResources;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.vecmath.Matrix4;
 
 public class CameraVisual<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
@@ -41,8 +43,8 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
     protected ProgramObject<ContextType> createProgram(ContextType context) throws FileNotFoundException
     {
         return context.getShaderProgramBuilder()
-            .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-            .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "scene"), "texture_multi_as_single.frag"))
+            .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture_imgspace.vert"))
+            .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "colorappearance"), "texture_multi_as_single.frag"))
             .createProgram();
     }
 
@@ -55,6 +57,38 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
+        if (resources instanceof IBRResourcesImageSpace)
+        {
+            IBRResourcesImageSpace<ContextType> resourcesImgSpace = (IBRResourcesImageSpace<ContextType>)resources;
 
+            FramebufferSize size = framebuffer.getSize();
+
+            this.getContext().getState().disableDepthWrite();
+            this.getContext().getState().enableDepthTest();
+
+            Matrix4 snapViewInverse = viewSnappable.getSnapView().quickInverse(0.01f);
+            float aspect = viewSnappable.getSnapCameraProjection().getAspectRatio();
+
+            this.getProgram().setTexture("viewImages", resourcesImgSpace.colorTextures);
+            this.getProgram().setUniform("viewIndex", viewSnappable.getSnapViewIndex());
+            this.getProgram().setUniform("model_view",
+                cameraViewport.getView().times(snapViewInverse)
+                    .times(Matrix4.scale(0.2f * Math.min(1.0f, aspect), 0.2f * Math.min(1.0f, 1.0f / aspect), 1.0f)));
+            this.getProgram().setUniform("projection", cameraViewport.getViewportProjection());
+            this.getDrawable().draw(PrimitiveMode.TRIANGLE_FAN, cameraViewport.ofFramebuffer(framebuffer));
+
+            this.getContext().getState().enableDepthWrite();
+            this.getContext().getState().enableDepthTest();
+        }
+    }
+
+    public ViewSnappable getViewSnappable()
+    {
+        return viewSnappable;
+    }
+
+    public void setViewSnappable(ViewSnappable viewSnappable)
+    {
+        this.viewSnappable = viewSnappable;
     }
 }

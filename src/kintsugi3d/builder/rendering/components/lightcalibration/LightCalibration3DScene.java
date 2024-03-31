@@ -40,6 +40,11 @@ public class LightCalibration3DScene<ContextType extends Context<ContextType>> e
     @Override
     protected void addPostLitComponents(LightingResources<ContextType> lightingResources)
     {
+        // the representation of the camera
+        CameraVisual<ContextType> cameraVisual = new CameraVisual<>(resources, sceneViewportModel, sceneModel);
+        cameraVisual.setViewSnappable(viewSnappable);
+        components.add(cameraVisual);
+
         // the on-screen representation of lights
         LightCalibrationVisual<ContextType> lightVisual = new LightCalibrationVisual<>(context, sceneViewportModel, sceneModel);
         lightVisual.setViewSnappable(viewSnappable);

@@ -191,6 +191,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             dynamicResourceLoader.update();
             litRoot.update();
             lightCalibration.update();
+            lightCalibration3DRoot.update();
         }
         catch (Exception e)
         {
@@ -358,6 +359,12 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
                 litRoot = null;
             }
 
+            if (lightCalibration3DRoot != null)
+            {
+                lightCalibration3DRoot.close();
+                lightCalibration3DRoot = null;
+            }
+
             for (FramebufferObject<ContextType> fbo : shadingFramebuffers)
             {
                 fbo.close();
@@ -404,6 +411,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         {
             litRoot.reloadShaders();
             lightCalibration.reloadShaders();
+            lightCalibration3DRoot.reloadShaders();
 
             suppressErrors = false;
         }

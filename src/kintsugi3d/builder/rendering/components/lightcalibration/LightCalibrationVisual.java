@@ -22,6 +22,7 @@ import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.rendering.components.snap.ViewSnappable;
 import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.core.BlendFunction.Weight;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -78,10 +79,10 @@ public class LightCalibrationVisual<ContextType extends Context<ContextType>> ex
 
         this.getContext().getState().disableDepthWrite();
 
-        this.getContext().getState().setBlendFunction(new BlendFunction(BlendFunction.Weight.ONE, BlendFunction.Weight.ONE));
+        this.getContext().getState().setBlendFunction(new BlendFunction(Weight.ONE, Weight.ONE));
         this.getContext().getState().enableDepthTest();
 
-        this.getContext().getState().setBlendFunction(new BlendFunction(BlendFunction.Weight.ONE, BlendFunction.Weight.ONE));
+        this.getContext().getState().setBlendFunction(new BlendFunction(Weight.ONE, Weight.ONE));
         this.getDrawable().program().setUniform("color", new Vector3((float)Math.PI));
 
         // Calculate world space light position.
@@ -97,7 +98,7 @@ public class LightCalibrationVisual<ContextType extends Context<ContextType>> ex
         this.getDrawable().program().setUniform("model_view", Matrix4.translate(lightPosCamSpace)
                 .times(Matrix4.scale(-lightPosCamSpace.z / 32.0f, -lightPosCamSpace.z / 32.0f, 1.0f)));
         this.getDrawable().program().setUniform("projection", cameraViewport.getViewportProjection());
-        this.getDrawable().program().setTexture("texture", this.lightTexture);
+        this.getDrawable().program().setTexture("grayscaleTex", this.lightTexture);
         this.getDrawable().draw(PrimitiveMode.TRIANGLE_FAN, cameraViewport.ofFramebuffer(framebuffer));
 
         this.getContext().getState().disableBlending();

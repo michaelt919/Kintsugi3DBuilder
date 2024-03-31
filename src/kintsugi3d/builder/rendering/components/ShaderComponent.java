@@ -146,6 +146,11 @@ public abstract class ShaderComponent<ContextType extends Context<ContextType>> 
         return drawable;
     }
 
+    public Program<ContextType> getProgram()
+    {
+        return drawable.program();
+    }
+
     /**
      * Override to provide shader program.
      * Shader program is automatically managed and does not need to manually be added as a resource.

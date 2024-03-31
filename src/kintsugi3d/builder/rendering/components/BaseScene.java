@@ -29,7 +29,7 @@ public class BaseScene<ContextType extends Context<ContextType>> extends LitCont
     protected final SceneModel sceneModel;
     protected final SceneViewportModel sceneViewportModel;
     protected final List<RenderedComponent<ContextType>> components = new ArrayList<>();
-    private final IBRResourcesImageSpace<ContextType> resources;
+    protected final IBRResourcesImageSpace<ContextType> resources;
     private IBRSubject<ContextType> ibrSubject;
 
     public BaseScene(IBRResourcesImageSpace<ContextType> resources, SceneModel sceneModel, SceneViewportModel sceneViewportModel)

@@ -1,7 +1,7 @@
 #version 330
 
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,13 +12,14 @@
  *
  */
 
-uniform sampler2DArray viewImages;
-uniform int viewIndex;
+uniform mat4 model_view;
+uniform mat4 projection;
 
-in vec2 fTexCoord;
-out vec4 fragColor;
+in vec2 position;
+out vec2 fTexCoord;
 
 void main()
 {
-    fragColor = texture(viewImages, vec3(fTexCoord, viewIndex));
+    gl_Position = projection * model_view * vec4(position, 0.0, 1.0);
+    fTexCoord = (position + vec2(1)) * 0.5;
 }
