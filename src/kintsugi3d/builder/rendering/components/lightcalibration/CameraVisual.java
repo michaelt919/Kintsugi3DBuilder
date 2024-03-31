@@ -19,7 +19,7 @@ import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
-import kintsugi3d.builder.rendering.components.snap.ViewSnappable;
+import kintsugi3d.builder.rendering.components.snap.ViewSelection;
 import kintsugi3d.builder.resources.ibr.IBRResources;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.gl.core.*;
@@ -30,7 +30,7 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
     private final IBRResources<ContextType> resources;
     private final SceneModel sceneModel;
 
-    private ViewSnappable viewSnappable;
+    private ViewSelection viewSnappable;
 
     public CameraVisual(IBRResources<ContextType> resources, SceneViewportModel sceneViewportModel, SceneModel sceneModel)
     {
@@ -63,6 +63,8 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
 
             FramebufferSize size = framebuffer.getSize();
 
+            this.getContext().getState().disableBackFaceCulling();
+
             this.getContext().getState().disableDepthWrite();
             this.getContext().getState().enableDepthTest();
 
@@ -82,12 +84,12 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
         }
     }
 
-    public ViewSnappable getViewSnappable()
+    public ViewSelection getViewSnappable()
     {
         return viewSnappable;
     }
 
-    public void setViewSnappable(ViewSnappable viewSnappable)
+    public void setViewSnappable(ViewSelection viewSnappable)
     {
         this.viewSnappable = viewSnappable;
     }

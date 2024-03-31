@@ -25,6 +25,8 @@ import kintsugi3d.builder.rendering.components.StandardScene;
 import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibration3DScene;
 import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibrationRoot;
 import kintsugi3d.builder.rendering.components.lit.LitRoot;
+import kintsugi3d.builder.rendering.components.snap.ViewSelection;
+import kintsugi3d.builder.rendering.components.snap.ViewSelectionImpl;
 import kintsugi3d.builder.rendering.components.split.SplitScreenComponent;
 import kintsugi3d.builder.resources.DynamicResourceLoader;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
@@ -123,7 +125,9 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             this.simpleTexDrawable = context.createDrawable(simpleTexProgram);
             this.simpleTexDrawable.addVertexBuffer("position", this.rectangleVertices);
 
-            lightCalibration = new LightCalibrationRoot<>(resources, sceneModel, sceneViewportModel);
+            ViewSelection viewSelection = new ViewSelectionImpl(getActiveViewSet(), sceneModel);
+
+            lightCalibration = new LightCalibrationRoot<>(resources, sceneModel, viewSelection, sceneViewportModel);
             lightCalibration.initialize();
 
             litRoot = new LitRoot<>(context, sceneModel);
@@ -135,7 +139,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
             lightCalibration3DRoot = new LitRoot<>(context, sceneModel);
             LightCalibration3DScene<ContextType> lightCalibScene =
-                new LightCalibration3DScene<>(resources, sceneModel, sceneViewportModel, lightCalibration.getViewSnappable());
+                new LightCalibration3DScene<>(resources, sceneModel, sceneViewportModel, viewSelection);
             lightCalibration3DRoot.takeLitContentRoot(lightCalibScene);
             lightCalibration3DRoot.initialize();
             lightCalibration3DRoot.setShadowCaster(resources.getGeometryResources().positionBuffer);

@@ -20,7 +20,7 @@ import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
-import kintsugi3d.builder.rendering.components.snap.ViewSnappable;
+import kintsugi3d.builder.rendering.components.snap.ViewSelection;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.core.BlendFunction.Weight;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -36,7 +36,7 @@ public class LightCalibrationVisual<ContextType extends Context<ContextType>> ex
 {
     private final SceneModel sceneModel;
 
-    private ViewSnappable viewSnappable;
+    private ViewSelection viewSnappable;
     private Texture2D<ContextType> lightTexture;
 
     public LightCalibrationVisual(ContextType context, SceneViewportModel sceneViewportModel, SceneModel sceneModel)
@@ -106,12 +106,12 @@ public class LightCalibrationVisual<ContextType extends Context<ContextType>> ex
         this.getContext().getState().enableDepthTest();
     }
 
-    public ViewSnappable getViewSnappable()
+    public ViewSelection getViewSnappable()
     {
         return viewSnappable;
     }
 
-    public void setViewSnappable(ViewSnappable viewSnappable)
+    public void setViewSnappable(ViewSelection viewSnappable)
     {
         this.viewSnappable = viewSnappable;
     }

@@ -14,27 +14,27 @@ package kintsugi3d.builder.rendering.components.lightcalibration;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
 import kintsugi3d.builder.rendering.components.BaseScene;
-import kintsugi3d.builder.rendering.components.snap.ViewSnappable;
+import kintsugi3d.builder.rendering.components.snap.ViewSelection;
 import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.gl.core.Context;
 
 public class LightCalibration3DScene<ContextType extends Context<ContextType>> extends BaseScene<ContextType>
 {
-    private final ViewSnappable viewSnappable;
+    private final ViewSelection viewSelection;
 
     /**
      *
      * @param resources
      * @param sceneModel
      * @param sceneViewportModel
-     * @param viewSnappable Will be used to determine where the light visual is shown (corresponding to the current snapped view)
+     * @param viewSelection Will be used to determine where the light visual is shown (corresponding to the current snapped view)
      */
     public LightCalibration3DScene(IBRResourcesImageSpace<ContextType> resources, SceneModel sceneModel,
-                                   SceneViewportModel sceneViewportModel, ViewSnappable viewSnappable)
+                                   SceneViewportModel sceneViewportModel, ViewSelection viewSelection)
     {
         super(resources, sceneModel, sceneViewportModel);
-        this.viewSnappable = viewSnappable;
+        this.viewSelection = viewSelection;
     }
 
     @Override
@@ -42,12 +42,12 @@ public class LightCalibration3DScene<ContextType extends Context<ContextType>> e
     {
         // the representation of the camera
         CameraVisual<ContextType> cameraVisual = new CameraVisual<>(resources, sceneViewportModel, sceneModel);
-        cameraVisual.setViewSnappable(viewSnappable);
+        cameraVisual.setViewSnappable(viewSelection);
         components.add(cameraVisual);
 
         // the on-screen representation of lights
         LightCalibrationVisual<ContextType> lightVisual = new LightCalibrationVisual<>(context, sceneViewportModel, sceneModel);
-        lightVisual.setViewSnappable(viewSnappable);
+        lightVisual.setViewSnappable(viewSelection);
         components.add(lightVisual);
     }
 

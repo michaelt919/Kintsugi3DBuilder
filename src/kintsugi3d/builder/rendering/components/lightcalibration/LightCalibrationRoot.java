@@ -16,8 +16,8 @@ import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
+import kintsugi3d.builder.rendering.components.snap.ViewSelection;
 import kintsugi3d.builder.rendering.components.snap.ViewSnap;
-import kintsugi3d.builder.rendering.components.snap.ViewSnappable;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
@@ -31,13 +31,13 @@ public class LightCalibrationRoot<ContextType extends Context<ContextType>> impl
     private ViewSnap<ContextType> viewSnapRoot;
 
     public LightCalibrationRoot(IBRResourcesImageSpace<ContextType> resources, SceneModel sceneModel,
-                                SceneViewportModel sceneViewportModel)
+                                ViewSelection viewSelection, SceneViewportModel sceneViewportModel)
     {
         this.resources = resources;
         this.sceneModel = sceneModel;
         this.sceneViewportModel = sceneViewportModel;
 
-        this.viewSnapRoot = new ViewSnap<>(sceneModel, resources.getViewSet());
+        this.viewSnapRoot = new ViewSnap<>(sceneModel, viewSelection);
     }
 
     @Override
@@ -73,10 +73,5 @@ public class LightCalibrationRoot<ContextType extends Context<ContextType>> impl
             viewSnapRoot.close();
             viewSnapRoot = null;
         }
-    }
-
-    public ViewSnappable getViewSnappable()
-    {
-        return viewSnapRoot.getContentRoot();
     }
 }

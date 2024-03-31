@@ -13,7 +13,6 @@
 package kintsugi3d.builder.rendering.components.snap;
 
 import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.gl.core.Context;
@@ -28,16 +27,17 @@ import kintsugi3d.gl.vecmath.Vector4;
 public class ViewSnap<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
     private final SceneModel sceneModel;
-    private final ReadonlyViewSet viewSet;
+    private final ViewSelection viewSelection;
 
     private ViewSnapContent<ContextType> contentRoot;
 
     private Matrix4 viewSnap = Matrix4.IDENTITY;
+    private int lastSnapViewIndex = -1;
 
-    public ViewSnap(SceneModel sceneModel, ReadonlyViewSet viewSet)
+    public ViewSnap(SceneModel sceneModel, ViewSelection viewSelection)
     {
         this.sceneModel = sceneModel;
-        this.viewSet = viewSet;
+        this.viewSelection = viewSelection;
     }
 
     public ViewSnapContent<ContextType> getContentRoot()
@@ -76,10 +76,9 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
         // View will be overridden for light calibration so that it snaps to specific views
         Matrix4 currentViewSnap = null;
 
-        for(int i = 0; i < this.viewSet.getCameraPoseCount(); i++)
+        for(int i = 0; i < this.viewSelection.getViewSet().getCameraPoseCount(); i++)
         {
-            Matrix4 candidatePose = this.viewSet.getCameraPose(i);
-            Matrix4 candidateView = candidatePose.times(sceneModel.getFullModelMatrix().quickInverse(0.01f));
+            Matrix4 candidateView = this.viewSelection.getViewForIndex(i);
             float similarity = viewInverse.times(Vector4.ORIGIN).getXYZ()
                     .dot(candidateView.quickInverse(0.01f).times(Vector4.ORIGIN).getXYZ());
 
@@ -93,8 +92,18 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
 
         assert currentViewSnap != null; // Should be non-null if there are any camera poses since initially maxSimilarity is -infinity
 
-        contentRoot.setSnapView(snapViewIndex, currentViewSnap);
-        return currentViewSnap;
+        if (lastSnapViewIndex != snapViewIndex)
+        {
+            // Snapped view has changed; set it on the global selection model and use it.
+            lastSnapViewIndex = snapViewIndex;
+            sceneModel.getCameraViewListModel().setSelectedCameraViewIndex(snapViewIndex);
+            return currentViewSnap;
+        }
+        else
+        {
+            // Snapped view has not change; refer to the global selection model in case the user changed the selected camera on the list view.
+            return viewSelection.getSnapView();
+        }
     }
 
     @Override

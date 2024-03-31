@@ -320,7 +320,7 @@ public final class Rendering
         instanceManager.setObjectModel(() -> Matrix4.IDENTITY);
         instanceManager.setCameraModel(cameraModel);
         instanceManager.setLightingModel(lightingModel);
-        instanceManager.setObjectModel(objectModel);
+        instanceManager.setCameraViewListModel(cameraViewListModel);
         instanceManager.setSettingsModel(settingsModel);
 
         canvas.addKeyPressListener((win, key, modifierKeys) ->

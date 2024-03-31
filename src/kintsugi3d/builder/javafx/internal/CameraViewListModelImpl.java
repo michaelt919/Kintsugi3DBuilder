@@ -40,8 +40,7 @@ public class CameraViewListModelImpl implements CameraViewListModel
     @Override
     public void setSelectedCameraViewIndex(int cameraViewIndex)
     {
-        selectedCameraViewModel.getSelectedIndices().clear();
-        selectedCameraViewModel.getSelectedIndices().add(cameraViewIndex);
+        selectedCameraViewModel.select(cameraViewIndex);
     }
 
     @Override

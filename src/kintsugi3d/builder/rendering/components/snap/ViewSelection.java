@@ -4,15 +4,18 @@ import kintsugi3d.builder.core.Projection;
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.gl.vecmath.Matrix4;
 
-public interface ViewSnappable
+public interface ViewSelection
 {
     ReadonlyViewSet getViewSet();
 
     int getSnapViewIndex();
 
-    Matrix4 getSnapView();
+    Matrix4 getViewForIndex(int index);
 
-    void setSnapView(int snapViewIndex, Matrix4 snapView);
+    default Matrix4 getSnapView()
+    {
+        return getViewForIndex(getSnapViewIndex());
+    }
 
     default Matrix4 getSnapCameraPose()
     {

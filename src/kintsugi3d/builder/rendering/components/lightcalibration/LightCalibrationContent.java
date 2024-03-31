@@ -38,7 +38,6 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
     public LightCalibrationContent(IBRResourcesImageSpace<ContextType> resources, SceneModel sceneModel,
                                    SceneViewportModel sceneViewportModel)
     {
-        super(resources.getViewSet());
         this.context = resources.getContext();
         this.resources = resources;
         this.sceneModel = sceneModel;
@@ -95,7 +94,7 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
         try(UniformBuffer<ContextType> viewIndexBuffer = context.createUniformBuffer())
         {
             viewIndexBuffer.setData(NativeVectorBufferFactory.getInstance()
-                .createFromIntArray(false, 1, 1, getSnapViewIndex()));
+                .createFromIntArray(false, 1, 1, sceneModel.getCameraViewListModel().getSelectedCameraViewIndex()));
             ibrSubject.getProgram().setUniformBuffer("ViewIndices", viewIndexBuffer);
 
             // Draw the actual object, without model transformation for light calibration
