@@ -26,6 +26,7 @@ public class SceneModel
     private ReadonlyCameraModel cameraModel;
     private ReadonlyLightingModel lightingModel;
     private SafeReadonlySettingsModel settingsModel = new DefaultSettingsModel();
+    private CameraViewListModel cameraViewListModel;
 
     private Vector3 centroid = Vector3.ZERO;
     private Matrix3 orientation = Matrix3.IDENTITY;
@@ -53,6 +54,12 @@ public class SceneModel
         return this.settingsModel;
     }
 
+    public CameraViewListModel getCameraViewListModel()
+    {
+        return cameraViewListModel;
+    }
+
+
     public Vector3 getCentroid()
     {
         return centroid;
@@ -72,7 +79,6 @@ public class SceneModel
     {
         return clearColor;
     }
-
     public void setObjectModel(ReadonlyObjectModel objectModel)
     {
         this.objectModel = objectModel;
@@ -91,6 +97,11 @@ public class SceneModel
     public void setSettingsModel(ReadonlySettingsModel settingsModel)
     {
         this.settingsModel = SafeSettingsModelWrapperFactory.getInstance().wrapUnsafeModel(settingsModel);
+    }
+
+    public void setCameraViewListModel(CameraViewListModel cameraViewListModel)
+    {
+        this.cameraViewListModel = cameraViewListModel;
     }
 
     public void setCentroid(Vector3 centroid)

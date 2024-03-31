@@ -185,6 +185,7 @@ public final class Rendering
         ExtendedCameraModel cameraModel = MultithreadModels.getInstance().getCameraModel();
         ExtendedObjectModel objectModel = MultithreadModels.getInstance().getObjectModel();
         SettingsModel settingsModel = MultithreadModels.getInstance().getSettingsModel();
+        CameraViewListModel cameraViewListModel = MultithreadModels.getInstance().getCameraViewListModel();
         IOModel ioModel = MultithreadModels.getInstance().getLoadingModel();
 
         // Bind tools

@@ -26,13 +26,11 @@ import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
+import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
-import kintsugi3d.builder.state.ReadonlyCameraModel;
-import kintsugi3d.builder.state.ReadonlyLightingModel;
-import kintsugi3d.builder.state.ReadonlyObjectModel;
-import kintsugi3d.builder.state.ReadonlySettingsModel;
+import kintsugi3d.builder.state.*;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Framebuffer;
 import kintsugi3d.gl.interactive.InitializationException;
@@ -59,6 +57,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     private ReadonlyCameraModel cameraModel;
     private ReadonlyLightingModel lightingModel;
     private ReadonlySettingsModel settingsModel;
+    private CameraViewListModel cameraViewListModel;
 
     private final List<Consumer<ViewSet>> viewSetLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>());
@@ -140,6 +139,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     {
         loadedViewSet = builder.getViewSet();
 
+        MultithreadModels.getInstance().getCameraViewListModel().setCameraViewList(loadedViewSet.getImageFileNames());
+
         // Invoke callbacks now that view set is loaded
         invokeViewSetLoadCallbacks(loadedViewSet);
 
@@ -160,6 +161,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         newItem.getSceneModel().setCameraModel(this.cameraModel);
         newItem.getSceneModel().setLightingModel(this.lightingModel);
         newItem.getSceneModel().setSettingsModel(this.settingsModel);
+        newItem.getSceneModel().setCameraViewListModel(this.cameraViewListModel);
 
         newItem.setLoadingMonitor(new LoadingMonitor()
         {
@@ -307,6 +309,15 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             viewSet.getLightPosition(viewSet.getLightIndex(viewSet.getPrimaryViewIndex()))
                 .plus(ibrInstance.getSceneModel().getSettingsModel().get("currentLightCalibration", Vector2.class)
                         .asVector3()));
+    }
+
+    public void setCameraViewListModel(CameraViewListModel cameraViewListModel)
+    {
+        this.cameraViewListModel = cameraViewListModel;
+        if (ibrInstance != null)
+        {
+            ibrInstance.getSceneModel().setCameraViewListModel(cameraViewListModel);
+        }
     }
 
     public void setObjectModel(ReadonlyObjectModel objectModel)

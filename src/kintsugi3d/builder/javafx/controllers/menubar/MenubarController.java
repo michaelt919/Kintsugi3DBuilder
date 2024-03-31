@@ -12,46 +12,6 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar;
 
-import javafx.application.Platform;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.image.Image;
-import javafx.stage.Window;
-import javafx.stage.*;
-import javafx.util.StringConverter;
-import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
-import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
-import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
-import kintsugi3d.util.RecentProjects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.javafx.FramebufferView;
-import kintsugi3d.gl.vecmath.Vector2;
-import kintsugi3d.builder.app.Rendering;
-import kintsugi3d.builder.app.WindowSynchronization;
-import kintsugi3d.builder.core.IBRRequestUI;
-import kintsugi3d.builder.core.Kintsugi3DBuilderState;
-import kintsugi3d.builder.core.LoadingMonitor;
-import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
-import kintsugi3d.builder.javafx.InternalModels;
-import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.builder.javafx.ProjectIO;
-import kintsugi3d.util.Flag;
-
-import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -62,6 +22,38 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Scanner;
+
+import javafx.application.Platform;
+import javafx.beans.property.IntegerProperty;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.image.Image;
+import javafx.scene.layout.AnchorPane;
+import javafx.stage.*;
+import javafx.util.StringConverter;
+import kintsugi3d.builder.app.Rendering;
+import kintsugi3d.builder.app.WindowSynchronization;
+import kintsugi3d.builder.core.IBRRequestUI;
+import kintsugi3d.builder.core.Kintsugi3DBuilderState;
+import kintsugi3d.builder.core.LoadingMonitor;
+import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
+import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.ProjectIO;
+import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
+import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
+import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.javafx.FramebufferView;
+import kintsugi3d.gl.vecmath.Vector2;
+import kintsugi3d.util.Flag;
+import kintsugi3d.util.RecentProjects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MenubarController
 {
@@ -147,6 +139,8 @@ public class MenubarController
     @FXML private Menu recentProjectsMenu;
 
 
+    @FXML private AnchorPane cameraViewList;
+    @FXML private CameraViewListController cameraViewListController;
     @FXML private FramebufferView framebufferView;
 
     private Window window;
@@ -172,6 +166,15 @@ public class MenubarController
     {
         this.window = injectedStage;
         this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
+
+        // remove camera view list from layout when invisible
+        this.cameraViewList.managedProperty().bind(this.cameraViewList.visibleProperty());
+
+        // only show camera view list when light calibration mode is active
+        // TODO make this a separate property to allow it to be shown in other contexts
+        this.cameraViewList.visibleProperty().bind(injectedInternalModels.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
+
+        this.cameraViewListController.init(injectedInternalModels.getCameraViewListModel());
 
         this.internalModels = injectedInternalModels;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
