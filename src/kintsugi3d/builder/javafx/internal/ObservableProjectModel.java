@@ -53,5 +53,4 @@ public class ObservableProjectModel extends SynchronizedProjectModel
     {
         return this.objectPoseList;
     }
-
 }

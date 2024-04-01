@@ -30,6 +30,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.builder.core.IOModel;
@@ -91,6 +92,8 @@ public class EyedropperController implements Initializable {
     {
         instance = this;
     }
+
+    private ObservableProjectModel projectModel;
 
     public static EyedropperController getInstance()
     {
@@ -642,12 +645,14 @@ public class EyedropperController implements Initializable {
             //fileChooser.setInitialFileName("colorPickerImage");
 
             //This saves the file to the location path listed
-            File savefile = new File("javafx/internal/ProjectModelbase\\colorPickerImage.png");
+            String Path = file.getPath();
+            //File savefile = new File("javafx/internal/ProjectModelbase\\colorPickerImage.png");
             try{
                 log.error("Within the try (save file) ");
-                ImageIO.write(SwingFXUtils.fromFXImage(selectedFile ,null),"png", savefile);
+                //ImageIO.write(SwingFXUtils.fromFXImage(selectedFile ,null),"png", savefile);
+                projectModel.colorPickerImage = Path;
                 log.error("Within the try (save file) ");
-            }catch(IOException e){
+            }catch(Exception e){
                 log.error("Could not save file");
             }
 
