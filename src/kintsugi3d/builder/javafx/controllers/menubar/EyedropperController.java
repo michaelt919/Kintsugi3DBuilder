@@ -645,11 +645,10 @@ public class EyedropperController implements Initializable {
             //fileChooser.setInitialFileName("colorPickerImage");
 
             //This saves the file to the location path listed
-            String Path = file.getPath();
-            //File savefile = new File("javafx/internal/ProjectModelbase\\colorPickerImage.png");
+            String Path = file.getPath().toString();
+            log.error(Path);
             try{
                 log.error("Within the try (save file) ");
-                //ImageIO.write(SwingFXUtils.fromFXImage(selectedFile ,null),"png", savefile);
                 projectModel.colorPickerImage = Path;
                 log.error("Within the try (save file) ");
             }catch(Exception e){
