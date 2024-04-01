@@ -37,6 +37,7 @@ import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.controllers.menubar.LoaderController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.scene.CreateProjectController;
+import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
@@ -254,6 +255,7 @@ public final class ProjectIO
                     createProjectController.setLoadStartCallback(this::onLoadStart);
                     createProjectController.setViewSetCallback(viewSet -> onViewSetCreated(viewSet, parentWindow));
                     createProjectController.init();
+                    WelcomeWindowController.getInstance().hideWelcomeWindow();
                 }
                 catch (Exception e)
                 {
@@ -276,6 +278,7 @@ public final class ProjectIO
                     createProjectController.setLoadStartCallback(this::onLoadStart);
                     createProjectController.setViewSetCallback(viewSet -> onViewSetCreated(viewSet, parentWindow));
                     createProjectController.init();
+                    WelcomeWindowController.getInstance().hideWelcomeWindow();
                 }
                 catch (Exception e)
                 {
@@ -372,6 +375,7 @@ public final class ProjectIO
             this.projectLoaded = true;
 
             startLoad(projectFile, vsetFile);
+            WelcomeWindowController.getInstance().hideWelcomeWindow();
         }
     }
 
