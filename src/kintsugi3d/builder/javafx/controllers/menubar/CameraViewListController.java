@@ -12,16 +12,19 @@
 package kintsugi3d.builder.javafx.controllers.menubar;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
 import kintsugi3d.builder.javafx.internal.CameraViewListModelImpl;
 
 public class CameraViewListController
 {
     @FXML private ListView<String> cameraViewList;
+    @FXML private CheckBox snapToView;
 
     public void init(CameraViewListModelImpl cameraViewListModel)
     {
         cameraViewListModel.setSelectedCameraViewModel(cameraViewList.getSelectionModel());
         cameraViewListModel.setCameraViewListProperty(cameraViewList.itemsProperty());
+        cameraViewListModel.setCameraViewSnapEnabledProperty(snapToView.selectedProperty());
     }
 }

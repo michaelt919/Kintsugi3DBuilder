@@ -11,10 +11,17 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<?import javafx.scene.control.ListView?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane prefHeight="600.0" prefWidth="300.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.CameraViewListController">
+
+<VBox prefHeight="600.0" prefWidth="300.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.CameraViewListController">
    <children>
-      <ListView fx:id="cameraViewList" prefHeight="600.0" prefWidth="300.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+      <CheckBox fx:id="snapToView" mnemonicParsing="false" text="Snap to view">
+         <VBox.margin>
+            <Insets bottom="4.0" left="8.0" right="4.0" top="4.0" />
+         </VBox.margin>
+      </CheckBox>
+      <ListView fx:id="cameraViewList" VBox.vgrow="ALWAYS" />
    </children>
-</AnchorPane>
+</VBox>

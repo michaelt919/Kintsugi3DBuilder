@@ -16,9 +16,10 @@ import java.util.List;
 public interface CameraViewListModel
 {
     String getSelectedCameraView();
-
     int getSelectedCameraViewIndex();
     void setSelectedCameraViewIndex(int cameraViewIndex);
     List<String> getCameraViewList();
     void setCameraViewList(List<String> cameraViewList);
+    boolean isCameraViewSnapEnabled();
+    void setCameraViewSnapEnabled(boolean cameraViewSnapEnabled);
 }

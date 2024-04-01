@@ -20,12 +20,14 @@ public class CameraViewListModelWrapper implements CameraViewListModel
 {
     private final MultithreadValue<Integer> selectedCameraViewIndex;
     private final MultithreadValue<List<String>> cameraViewList;
+    private final MultithreadValue<Boolean> cameraViewSnapEnabled;
     private final CameraViewListModel baseModel;
 
     public CameraViewListModelWrapper(CameraViewListModel baseModel)
     {
         this.selectedCameraViewIndex = MultithreadValue.createFromFunctions(baseModel::getSelectedCameraViewIndex, baseModel::setSelectedCameraViewIndex);
         this.cameraViewList = MultithreadValue.createFromFunctions(baseModel::getCameraViewList, baseModel::setCameraViewList);
+        this.cameraViewSnapEnabled = MultithreadValue.createFromFunctions(baseModel::isCameraViewSnapEnabled, baseModel::setCameraViewSnapEnabled);
         this.baseModel = baseModel;
     }
 
@@ -63,5 +65,17 @@ public class CameraViewListModelWrapper implements CameraViewListModel
     {
         // Need to run on JavaFX thread as this will completely change the backend model for the list view.
         this.cameraViewList.setValue(cameraViewList);
+    }
+
+    @Override
+    public boolean isCameraViewSnapEnabled()
+    {
+        return cameraViewSnapEnabled.getValue();
+    }
+
+    @Override
+    public void setCameraViewSnapEnabled(boolean cameraViewSnapEnabled)
+    {
+        this.cameraViewSnapEnabled.setValue(cameraViewSnapEnabled);
     }
 }

@@ -8,28 +8,35 @@ public interface ViewSelection
 {
     ReadonlyViewSet getViewSet();
 
-    int getSnapViewIndex();
+    int getSelectedViewIndex();
 
+    /**
+     * Gets the view matrix for a particular view index, relative to the world space used by rendered components.
+     * This is not generally the same as the camera pose matrix in the view set as it is in reference to a
+     * recentered, reoriented, and rescaled model.
+     * @param index
+     * @return
+     */
     Matrix4 getViewForIndex(int index);
 
-    default Matrix4 getSnapView()
+    default Matrix4 getSelectedView()
     {
-        return getViewForIndex(getSnapViewIndex());
+        return getViewForIndex(getSelectedViewIndex());
     }
 
-    default Matrix4 getSnapCameraPose()
+    default Matrix4 getSelectedCameraPose()
     {
-        return getViewSet().getCameraPose(getSnapViewIndex());
+        return getViewSet().getCameraPose(getSelectedViewIndex());
     }
 
-    default Matrix4 getSnapCameraPoseInverse()
+    default Matrix4 getSelectedCameraPoseInverse()
     {
-        return getViewSet().getCameraPoseInverse(getSnapViewIndex());
+        return getViewSet().getCameraPoseInverse(getSelectedViewIndex());
     }
 
-    default Projection getSnapCameraProjection()
+    default Projection getSelectedCameraProjection()
     {
         ReadonlyViewSet viewSet = getViewSet();
-        return viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(getSnapViewIndex()));
+        return viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(getSelectedViewIndex()));
     }
 }

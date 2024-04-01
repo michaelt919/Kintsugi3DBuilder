@@ -69,40 +69,54 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
 
     private Matrix4 snapToView(Matrix4 targetView)
     {
-        Matrix4 viewInverse = targetView.quickInverse(0.01f);
-        float maxSimilarity = Float.NEGATIVE_INFINITY;
-        int snapViewIndex = -1;
-
-        // View will be overridden for light calibration so that it snaps to specific views
-        Matrix4 currentViewSnap = null;
-
-        for(int i = 0; i < this.viewSelection.getViewSet().getCameraPoseCount(); i++)
+        if (sceneModel.getCameraViewListModel().isCameraViewSnapEnabled())
         {
-            Matrix4 candidateView = this.viewSelection.getViewForIndex(i);
-            float similarity = viewInverse.times(Vector4.ORIGIN).getXYZ()
+            Matrix4 viewInverse = targetView.quickInverse(0.01f);
+            float maxSimilarity = Float.NEGATIVE_INFINITY;
+            int snapViewIndex = -1;
+
+            // View will be overridden for light calibration so that it snaps to specific views
+            Matrix4 currentViewSnap = null;
+
+            for (int i = 0; i < this.viewSelection.getViewSet().getCameraPoseCount(); i++)
+            {
+                Matrix4 candidateView = this.viewSelection.getViewForIndex(i);
+                float similarity = viewInverse.times(Vector4.ORIGIN).getXYZ()
                     .dot(candidateView.quickInverse(0.01f).times(Vector4.ORIGIN).getXYZ());
 
-            if (similarity > maxSimilarity)
-            {
-                maxSimilarity = similarity;
-                currentViewSnap = candidateView;
-                snapViewIndex = i;
+                if (similarity > maxSimilarity)
+                {
+                    maxSimilarity = similarity;
+                    currentViewSnap = candidateView;
+                    snapViewIndex = i;
+                }
             }
-        }
 
-        assert currentViewSnap != null; // Should be non-null if there are any camera poses since initially maxSimilarity is -infinity
+            assert currentViewSnap != null; // Should be non-null if there are any camera poses since initially maxSimilarity is -infinity
 
-        if (lastSnapViewIndex != snapViewIndex)
-        {
-            // Snapped view has changed; set it on the global selection model and use it.
-            lastSnapViewIndex = snapViewIndex;
-            sceneModel.getCameraViewListModel().setSelectedCameraViewIndex(snapViewIndex);
-            return currentViewSnap;
+            if (lastSnapViewIndex == snapViewIndex)
+            {
+                // Snapped view has not changed; refer to the global selection model in case the user changed the selected camera on the list view.
+                return viewSelection.getSelectedView();
+            }
+            else
+            {
+                // Snapped view has changed; set it on the global selection model and use it.
+                lastSnapViewIndex = snapViewIndex;
+                sceneModel.getCameraViewListModel().setSelectedCameraViewIndex(snapViewIndex);
+                return currentViewSnap;
+            }
         }
         else
         {
-            // Snapped view has not change; refer to the global selection model in case the user changed the selected camera on the list view.
-            return viewSelection.getSnapView();
+            if (sceneModel.getCameraViewListModel().getSelectedCameraViewIndex() < 0)
+            {
+                // Select a view if none is selected.
+                sceneModel.getCameraViewListModel().setSelectedCameraViewIndex(0);
+            }
+
+            // View snap is disabled; do not change the current view.
+            return viewSelection.getSelectedView();
         }
     }
 

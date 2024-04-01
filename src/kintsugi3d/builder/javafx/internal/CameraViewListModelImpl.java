@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.sun.javafx.collections.ObservableListWrapper;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.Property;
 import javafx.collections.ObservableList;
 import javafx.scene.control.MultipleSelectionModel;
@@ -24,6 +25,7 @@ public class CameraViewListModelImpl implements CameraViewListModel
 {
     private MultipleSelectionModel<String> selectedCameraViewModel;
     private Property<ObservableList<String>> cameraViewListProperty;
+    private BooleanProperty cameraViewSnapEnabledProperty;
 
     @Override
     public String getSelectedCameraView()
@@ -55,6 +57,23 @@ public class CameraViewListModelImpl implements CameraViewListModel
         cameraViewListProperty.setValue(new ObservableListWrapper<>(cameraViewList));
     }
 
+    @Override
+    public boolean isCameraViewSnapEnabled()
+    {
+        return cameraViewSnapEnabledProperty.get();
+    }
+
+    @Override
+    public void setCameraViewSnapEnabled(boolean cameraViewSnapEnabled)
+    {
+        this.cameraViewSnapEnabledProperty.set(cameraViewSnapEnabled);
+    }
+
+    public BooleanProperty getCameraViewSnapEnabledProperty()
+    {
+        return cameraViewSnapEnabledProperty;
+    }
+
     public MultipleSelectionModel<String> getSelectedCameraViewModel()
     {
         return selectedCameraViewModel;
@@ -73,5 +92,10 @@ public class CameraViewListModelImpl implements CameraViewListModel
     public void setCameraViewListProperty(Property<ObservableList<String>> cameraViewListProperty)
     {
         this.cameraViewListProperty = cameraViewListProperty;
+    }
+
+    public void setCameraViewSnapEnabledProperty(BooleanProperty cameraViewSnapEnabledProperty)
+    {
+        this.cameraViewSnapEnabledProperty = cameraViewSnapEnabledProperty;
     }
 }

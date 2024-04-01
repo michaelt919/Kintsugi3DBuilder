@@ -33,6 +33,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.*;
 import javafx.util.StringConverter;
 import kintsugi3d.builder.app.Rendering;
@@ -138,8 +139,7 @@ public class MenubarController
     @FXML private Menu exportMenu;
     @FXML private Menu recentProjectsMenu;
 
-
-    @FXML private AnchorPane cameraViewList;
+    @FXML private VBox cameraViewList;
     @FXML private CameraViewListController cameraViewListController;
     @FXML private FramebufferView framebufferView;
 
@@ -173,6 +173,9 @@ public class MenubarController
         // only show camera view list when light calibration mode is active
         // TODO make this a separate property to allow it to be shown in other contexts
         this.cameraViewList.visibleProperty().bind(injectedInternalModels.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
+
+        // remove progress bar from layout when invisible
+        this.progressBar.managedProperty().bind(this.progressBar.visibleProperty());
 
         this.cameraViewListController.init(injectedInternalModels.getCameraViewListModel());
 

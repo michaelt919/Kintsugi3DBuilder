@@ -86,7 +86,7 @@ public class LightCalibrationVisual<ContextType extends Context<ContextType>> ex
         this.getDrawable().program().setUniform("color", new Vector3((float)Math.PI));
 
         // Calculate world space light position.
-        Matrix4 snapView = viewSnappable.getSnapView();
+        Matrix4 snapView = viewSnappable.getSelectedView();
         int primaryLightIndex = viewSnappable.getViewSet().getLightIndex(viewSnappable.getViewSet().getPrimaryViewIndex());
         Vector3 lightPosition = sceneModel.getSettingsModel().get("currentLightCalibration", Vector2.class).asVector3()
             .plus(viewSnappable.getViewSet().getLightPosition(primaryLightIndex));

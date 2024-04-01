@@ -34,7 +34,7 @@ public class ViewSelectionImpl implements ViewSelection
     }
 
     @Override
-    public int getSnapViewIndex()
+    public int getSelectedViewIndex()
     {
         return sceneModel.getCameraViewListModel().getSelectedCameraViewIndex();
     }

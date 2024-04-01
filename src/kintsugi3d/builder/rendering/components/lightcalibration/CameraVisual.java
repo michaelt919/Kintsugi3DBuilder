@@ -68,11 +68,11 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
             this.getContext().getState().disableDepthWrite();
             this.getContext().getState().enableDepthTest();
 
-            Matrix4 snapViewInverse = viewSnappable.getSnapView().quickInverse(0.01f);
-            float aspect = viewSnappable.getSnapCameraProjection().getAspectRatio();
+            Matrix4 snapViewInverse = viewSnappable.getSelectedView().quickInverse(0.01f);
+            float aspect = viewSnappable.getSelectedCameraProjection().getAspectRatio();
 
             this.getProgram().setTexture("viewImages", resourcesImgSpace.colorTextures);
-            this.getProgram().setUniform("viewIndex", viewSnappable.getSnapViewIndex());
+            this.getProgram().setUniform("viewIndex", viewSnappable.getSelectedViewIndex());
             this.getProgram().setUniform("model_view",
                 cameraViewport.getView().times(snapViewInverse)
                     .times(Matrix4.scale(0.2f * Math.min(1.0f, aspect), 0.2f * Math.min(1.0f, 1.0f / aspect), 1.0f)));
