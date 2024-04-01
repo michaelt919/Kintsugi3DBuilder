@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane fx:id="root" prefHeight="400.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.LightCalibrationController">
+   <children>
+      <Slider layoutX="128.0" layoutY="331.0" majorTickUnit="1.0" max="5.0" min="-5.0" minorTickCount="1" showTickLabels="true" showTickMarks="true" AnchorPane.leftAnchor="48.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="8.0" />
+      <Slider layoutX="54.0" layoutY="48.0" majorTickUnit="1.0" max="5.0" min="-5.0" minorTickCount="1" orientation="VERTICAL" showTickLabels="true" showTickMarks="true" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="8.0" AnchorPane.topAnchor="48.0" />
+      <VBox prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="150.0" AnchorPane.leftAnchor="100.0" AnchorPane.rightAnchor="100.0" AnchorPane.topAnchor="150.0">
+         <children>
+            <AnchorPane>
+               <children>
+                  <Label text="X: " AnchorPane.leftAnchor="0.0">
+                     <padding>
+                        <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                     </padding>
+                  </Label>
+                  <TextField AnchorPane.leftAnchor="24.0" AnchorPane.rightAnchor="0.0" />
+               </children>
+               <padding>
+                  <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+               </padding>
+            </AnchorPane>
+            <AnchorPane>
+               <children>
+                  <Label text="Y:" AnchorPane.leftAnchor="0.0">
+                     <padding>
+                        <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+                     </padding>
+                  </Label>
+                  <TextField AnchorPane.leftAnchor="24.0" AnchorPane.rightAnchor="0.0" />
+               </children>
+               <padding>
+                  <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+               </padding>
+            </AnchorPane>
+         </children>
+      </VBox>
+      <Button layoutX="156.0" layoutY="145.0" mnemonicParsing="false" onAction="#apply" text="Apply" AnchorPane.bottomAnchor="8.0" AnchorPane.rightAnchor="8.0" />
+   </children>
+</AnchorPane>

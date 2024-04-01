@@ -25,6 +25,7 @@ import java.util.Scanner;
 
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -74,6 +75,7 @@ public class MenubarController
     private final Flag advPhotoViewWindowOpen = new Flag(false);
     private final Flag systemMemoryWindowOpen = new Flag(false);
     private final Flag loadOptionsWindowOpen = new Flag(false);
+    private final Flag lightCalibrationWindowOpen = new Flag(false);
     private final Flag colorCheckerWindowOpen = new Flag(false);
     private final Flag unzipperOpen = new Flag(false);
     private final Flag consoleWindowOpen = new Flag(false);
@@ -92,7 +94,6 @@ public class MenubarController
 
     //menu items
     //TODO: ORGANIZE CHECK MENU ITEMS
-    @FXML private CheckMenuItem lightCalibrationCheckMenuItem;
     @FXML private CheckMenuItem is3DGridCheckMenuItem;
     @FXML private CheckMenuItem compassCheckMenuItem;
     @FXML private CheckMenuItem halfResolutionCheckMenuItem;
@@ -299,15 +300,6 @@ public class MenubarController
 //        heightTxtField.disableProperty().bind(preloadVisibilityEtcCheckMenuItem.selectedProperty().not());
 
 
-        lightCalibrationCheckMenuItem.selectedProperty().addListener(observable ->
-        {
-            if (!lightCalibrationCheckMenuItem.isSelected())
-            {
-                MultithreadModels.getInstance().getLoadingModel().applyLightCalibration();
-                MultithreadModels.getInstance().getSettingsModel().set("currentLightCalibration", Vector2.ZERO);
-            }
-        });
-
         updateRecentProjectsMenu();
 
 //        //add "Default Path" and "Choose Location..." items to choiceBox
@@ -347,8 +339,6 @@ public class MenubarController
     private void bindCheckMenuItems()
     {
         //value binding
-        lightCalibrationCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
         is3DGridCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("is3DGridEnabled"));
         compassCheckMenuItem.selectedProperty().bindBidirectional(
@@ -588,7 +578,37 @@ public class MenubarController
             handleException("An error occurred opening file unzipper", e);
         }
     }
-          
+
+    public void lightCalibration()
+    {
+        if (!lightCalibrationWindowOpen.get())
+        {
+            try
+            {
+                Stage lightCalibrationStage =
+                    makeStage("Light Calibration", lightCalibrationWindowOpen, "fxml/menubar/LightCalibration.fxml");
+
+                // Enables light calibration mode when the window is opened.
+                internalModels.getSettingsModel().set("lightCalibrationMode", true);
+
+                // Apply result when the window closes.
+                lightCalibrationStage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, e ->
+                {
+                    MultithreadModels.getInstance().getLoadingModel().applyLightCalibration();
+                    MultithreadModels.getInstance().getSettingsModel().set("currentLightCalibration", Vector2.ZERO);
+                    MultithreadModels.getInstance().getSettingsModel().set("lightCalibrationMode", false);
+                });
+
+                // Show the window.
+                lightCalibrationStage.show();
+            }
+            catch (Exception e)
+            {
+                handleException("An error occurred opening light calibration window", e);
+            }
+        }
+    }
+
     public void eyedropperColorChecker()
     {
         if (colorCheckerWindowOpen.get())

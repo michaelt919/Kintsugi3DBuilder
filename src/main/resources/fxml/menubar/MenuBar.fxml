@@ -68,6 +68,7 @@
                     </Menu>
                     <Menu mnemonicParsing="false" text="Workflow">
                         <items>
+                        <MenuItem mnemonicParsing="false" onAction="#lightCalibration" text="Light Calibration..." />
                             <CheckMenuItem fx:id="lightCalibrationCheckMenuItem" mnemonicParsing="false" text="Light Calibration Mode" />
                             <MenuItem mnemonicParsing="false" onAction="#eyedropperColorChecker" text="Color Calibration...">
                                 <accelerator>

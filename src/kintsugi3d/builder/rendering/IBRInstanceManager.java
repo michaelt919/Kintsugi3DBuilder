@@ -274,7 +274,10 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     @Override
     public void requestFragmentShader(File shaderFile)
     {
-        ibrInstance.getDynamicResourceManager().requestFragmentShader(shaderFile);
+        if (ibrInstance != null)
+        {
+            ibrInstance.getDynamicResourceManager().requestFragmentShader(shaderFile);
+        }
     }
 
     public IBRInstance<ContextType> getLoadedInstance()
@@ -291,24 +294,38 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     @Override
     public DoubleUnaryOperator getLuminanceEncodingFunction()
     {
-        return ibrInstance.getActiveViewSet().getLuminanceEncoding().encodeFunction;
+        if (ibrInstance != null)
+        {
+            return ibrInstance.getActiveViewSet().getLuminanceEncoding().encodeFunction;
+        }
+        else
+        {
+            // Default if no instance is loaded.
+            return new SampledLuminanceEncoding(2.2f).encodeFunction;
+        }
     }
 
     @Override
     public void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
     {
-        ibrInstance.getDynamicResourceManager().setTonemapping(linearLuminanceValues, encodedLuminanceValues);
+        if (ibrInstance != null)
+        {
+            ibrInstance.getDynamicResourceManager().setTonemapping(linearLuminanceValues, encodedLuminanceValues);
+        }
     }
 
     @Override
     public void applyLightCalibration()
     {
+        if (ibrInstance != null)
+        {
         ReadonlyViewSet viewSet = ibrInstance.getIBRResources().getViewSet();
 
         ibrInstance.getDynamicResourceManager().setLightCalibration(
             viewSet.getLightPosition(viewSet.getLightIndex(viewSet.getPrimaryViewIndex()))
                 .plus(ibrInstance.getSceneModel().getSettingsModel().get("currentLightCalibration", Vector2.class)
                         .asVector3()));
+        }
     }
 
     public void setCameraViewListModel(CameraViewListModel cameraViewListModel)
