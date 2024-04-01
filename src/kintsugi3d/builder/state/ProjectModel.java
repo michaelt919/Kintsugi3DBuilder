@@ -23,4 +23,5 @@ public interface ProjectModel
 {
     File openProjectFile(File projectFile) throws IOException, ParserConfigurationException, SAXException;
     void saveProjectFile(File projectFile, File vsetFile) throws IOException, ParserConfigurationException, TransformerException;
+    String getColorCheckerFile();
 }

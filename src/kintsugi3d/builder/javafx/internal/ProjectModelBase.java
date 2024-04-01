@@ -50,6 +50,8 @@ public abstract class ProjectModelBase implements ProjectModel
     public abstract List<ObjectPoseSetting> getObjectPoseList();
 
     public String colorPickerImage;
+
+
     /**
      * Opens a Kintsugi 3D Builder project file (.ibr) and sets up the lights, camera, etc.
      * Returns the file containing the viewset with the actual image data.
@@ -60,6 +62,7 @@ public abstract class ProjectModelBase implements ProjectModel
      * @throws ParserConfigurationException
      * @throws SAXException
      */
+
     @Override
     public final File openProjectFile(File projectFile) throws IOException, ParserConfigurationException, SAXException
     {
@@ -148,6 +151,25 @@ public abstract class ProjectModelBase implements ProjectModel
                 }
             }
 
+            Node colorPickerImageNode = document.getElementsByTagName("ColorCheckerFile").item(0);
+            if (colorPickerImageNode != null)
+            {
+                NodeList colorPickerImageNodes = colorPickerImageNode.getChildNodes();
+
+                synchronized (this.colorPickerImage)
+                {
+                    this.colorPickerImage.equals(" ");
+                    for (int i = 0; i < colorPickerImageNodes.getLength(); i++)
+                    {
+                        Node colorPickerNode = colorPickerImageNodes.item(i);
+                        if (colorPickerNode instanceof Element)
+                        {
+                            this.getColorCheckerFile().equals(colorPickerImage);
+                        }
+                    }
+                }
+            }
+
             return newVsetFile;
         }
         else
@@ -214,6 +236,18 @@ public abstract class ProjectModelBase implements ProjectModel
             }
         }
 
+        synchronized (this.getColorCheckerFile())
+        {
+            Element colorPickerImageElement = document.createElement("ColorCheckerFile");
+            rootElement.appendChild(colorPickerImageElement);
+
+            for (ObjectPoseSetting objectPose : this.getObjectPoseList())
+            {
+                colorPickerImageElement.appendChild(objectPose.toDOMElement(document));
+            }
+
+        }
+
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -223,4 +257,7 @@ public abstract class ProjectModelBase implements ProjectModel
             transformer.transform(new DOMSource(document), new StreamResult(out));
         }
     }
+
+    @Override
+    public String getColorCheckerFile() {return this.colorPickerImage;}
 }
