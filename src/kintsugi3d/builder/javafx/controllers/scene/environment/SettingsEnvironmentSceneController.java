@@ -34,7 +34,7 @@ import kintsugi3d.builder.javafx.internal.EnvironmentModelImpl;
 import kintsugi3d.builder.javafx.util.ImageFactory;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
-import kintsugi3d.util.AbstractImage;
+import kintsugi3d.util.EncodableColorImage;
 
 public class SettingsEnvironmentSceneController implements Initializable
 {
@@ -245,7 +245,7 @@ public class SettingsEnvironmentSceneController implements Initializable
         setDisabled(true);
     }
 
-    void updateEnvironmentMapImage(AbstractImage environmentMapImage)
+    void updateEnvironmentMapImage(EncodableColorImage environmentMapImage)
     {
         if (environmentMapImage == null)
         {

@@ -288,9 +288,15 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         {
             if (!suppressErrors)
             {
-                log.error("Error during draw call:", e);
+                log.error("Error during draw call", e);
                 suppressErrors = true; // Prevent excessive errors
             }
+        }
+        catch (Error e)
+        {
+            log.error("Error during draw call", e);
+            //noinspection ProhibitedExceptionThrown
+            throw e;
         }
     }
 

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleExecutable</key>
+	<string>Kintsugi3DBuilder.sh</string>
+	<key>CFBundleIdentifier</key>
+	<string>edu.stout.Kintsugi3D.Builder</string>
+	<key>CFBundleDisplayName</key>
+	<string>Kintsugi 3D Builder</string>
+	<key>CFBundleVersion</key>
+	<string>${project.version}</string>
+	<key>CFBundleIconFiles</key>
+	<array>
+		<string>Kintsugi3D.icns</string>
+	</array>
+	<key>LSRequiresIPhoneOS</key>
+	<false/>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array/>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeDescription</key>
+			<string>Kintsugi 3D Project</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.xml</string>
+			</array>
+			<key>UTTypeIdentifier</key>
+			<string>edu.stout.Kintsugi3D.Project</string>
+			<key>UTTypeIconFiles</key>
+			<array>
+				<string>Kintsugi3D.icns</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>vset</string>
+					<string>ibr</string>
+					<string>k3d</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
+</dict>
+</plist>

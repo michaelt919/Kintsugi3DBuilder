@@ -40,7 +40,7 @@ import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.gl.interactive.InteractiveRenderable;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.util.AbstractImage;
+import kintsugi3d.util.EncodableColorImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -221,7 +221,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             }
 
             @Override
-            public void loadingFailed(Exception e)
+            public void loadingFailed(Throwable e)
             {
                 if (loadingMonitor != null)
                 {
@@ -230,7 +230,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             }
 
             @Override
-            public void loadingWarning(Exception e)
+            public void loadingWarning(Throwable e)
             {
                 if (loadingMonitor != null)
                 {
@@ -361,7 +361,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public Optional<AbstractImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
+    public Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
     {
         return ibrInstance.getDynamicResourceManager().loadEnvironmentMap(environmentMapFile);
     }

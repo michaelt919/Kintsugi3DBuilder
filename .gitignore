@@ -5,7 +5,7 @@ ImageBasedColorAppearance.iml
 *.log
 /out/*
 src/main/resources/recentFiles.txt
-/jre
+/jre*
 /viewer
 /dependency-reduced-pom.xml
 /test-output/

@@ -50,13 +50,13 @@ public interface LoadingMonitor
      * A callback fired when an exception occurs while loading.
      * @param e The exception that occurred.
      */
-    void loadingFailed(Exception e);
+    void loadingFailed(Throwable e);
 
     /**
      * A callback fired when an exception occurs while loading, but the process tries to recover and finish loading.
      * @param e The exception that occurred.
      */
-    default void loadingWarning(Exception e)
+    default void loadingWarning(Throwable e)
     {
     }
 }

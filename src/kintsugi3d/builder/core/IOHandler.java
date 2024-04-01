@@ -12,15 +12,15 @@
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.util.AbstractImage;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
+
+import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.util.EncodableColorImage;
 
 public interface IOHandler
 {
@@ -35,7 +35,7 @@ public interface IOHandler
 
     void requestFragmentShader(File shaderFile);
 
-    Optional<AbstractImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException;
+    Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException;
     void loadBackplate(File backplateFile) throws FileNotFoundException;
 
     void saveToVSETFile(File vsetFile) throws IOException;

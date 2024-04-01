@@ -214,7 +214,7 @@ public class MenubarController
             }
 
             @Override
-            public void loadingFailed(Exception e)
+            public void loadingFailed(Throwable e)
             {
                 loadingComplete();
             }
