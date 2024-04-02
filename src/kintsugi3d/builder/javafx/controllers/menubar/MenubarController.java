@@ -22,10 +22,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Scanner;
+import java.util.function.Consumer;
 
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -33,7 +33,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.*;
 import javafx.util.StringConverter;
@@ -42,6 +41,7 @@ import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.IBRRequestUI;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.core.LoadingMonitor;
+import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
@@ -51,7 +51,6 @@ import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettin
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.javafx.FramebufferView;
-import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
@@ -498,25 +497,57 @@ public class MenubarController
     }
 
     //window helpers
-    private <ControllerType> ControllerType makeWindow(String title, Flag flag, String urlString) throws IOException
+    private FXMLLoader getFXMLLoader(String urlString) throws FileNotFoundException
     {
         URL url = MenubarController.class.getClassLoader().getResource(urlString);
         if (url == null)
         {
             throw new FileNotFoundException(urlString);
         }
-        FXMLLoader fxmlLoader = new FXMLLoader(url);
+        return new FXMLLoader(url);
+    }
+
+    private Stage makeStage(String title, Flag flag, int width, int height, FXMLLoader fxmlLoader) throws IOException
+    {
         Parent root = fxmlLoader.load();
         Stage stage = new Stage();
         stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
         stage.setTitle(title);
-        stage.setScene(new Scene(root));
-        stage.initOwner(this.window);
 
-        stage.setResizable(false);
+        if (width >= 0 && height >= 0)
+        {
+            stage.setScene(new Scene(root, width, height));
+        }
+        else
+        {
+            stage.setScene(new Scene(root));
+        }
+
+        stage.initOwner(this.window);
 
         flag.set(true);
         stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
+
+        return stage;
+    }
+
+    private Stage makeStage(String title, Flag flag, String urlString) throws IOException
+    {
+        FXMLLoader fxmlLoader = getFXMLLoader(urlString);
+        return makeStage(title, flag, -1, -1, fxmlLoader);
+    }
+
+    private <ControllerType> ControllerType makeWindow(String title, Flag flag, int width, int height, String urlString, Consumer<Stage> stageCallback) throws IOException
+    {
+        FXMLLoader fxmlLoader = getFXMLLoader(urlString);
+        Stage stage = makeStage(title, flag, width, height, fxmlLoader);
+
+        stage.setResizable(false);
+
+        if (stageCallback != null)
+        {
+            stageCallback.accept(stage);
+        }
 
         stage.show();
 
@@ -525,46 +556,17 @@ public class MenubarController
 
     private <ControllerType> ControllerType makeWindow(String title, Flag flag, int width, int height, String urlString) throws IOException
     {
-        URL url = MenubarController.class.getClassLoader().getResource(urlString);
-        if (url == null)
-        {
-            throw new FileNotFoundException(urlString);
-        }
-
-        FXMLLoader fxmlLoader = new FXMLLoader(url);
-        Parent root = fxmlLoader.load();
-        Stage stage = new Stage();
-        stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-        stage.setTitle(title);
-        stage.setScene(new Scene(root, width, height));
-        stage.initOwner(this.window);
-        stage.setResizable(false);
-        flag.set(true);
-        stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
-        stage.show();
-
-        return fxmlLoader.getController();
+        return makeWindow(title, flag, width, height, urlString, null);
     }
 
-    private Stage makeStage(String title, Flag flag, String urlString) throws IOException
+    private <ControllerType> ControllerType makeWindow(String title, Flag flag, String urlString, Consumer<Stage> stageCallback) throws IOException
     {
-        URL url = MenubarController.class.getClassLoader().getResource(urlString);
-        if (url == null)
-        {
-            throw new FileNotFoundException(urlString);
-        }
-        FXMLLoader fxmlLoader = new FXMLLoader(url);
-        Parent root = fxmlLoader.load();
-        Stage stage = new Stage();
-        stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-        stage.setTitle(title);
-        stage.setScene(new Scene(root));
-        stage.initOwner(this.window);
+        return makeWindow(title, flag, -1, -1, urlString, stageCallback);
+    }
 
-        flag.set(true);
-        stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
-
-        return stage;
+    private <ControllerType> ControllerType makeWindow(String title, Flag flag, String urlString) throws IOException
+    {
+        return makeWindow(title, flag, urlString, null);
     }
 
     public void unzip() {
@@ -585,22 +587,41 @@ public class MenubarController
         {
             try
             {
-                Stage lightCalibrationStage =
-                    makeStage("Light Calibration", lightCalibrationWindowOpen, "fxml/menubar/LightCalibration.fxml");
+                var stageCapture = new Object()
+                {
+                    Stage stage;
+                };
+
+                LightCalibrationController lightCalibrationController =
+                    makeWindow("Light Calibration", lightCalibrationWindowOpen, "fxml/menubar/LightCalibration.fxml",
+                        stage ->
+                        {
+                            stageCapture.stage = stage;
+                            stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, e ->
+                            {
+                                MultithreadModels.getInstance().getLoadingModel().applyLightCalibration();
+                                MultithreadModels.getInstance().getSettingsModel().set("lightCalibrationMode", false);
+                            });
+                        });
+
+                // Must wait until the controllers is created to add this additional window close event handler.
+                stageCapture.stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST,
+                    e -> lightCalibrationController.unbind(internalModels.getSettingsModel()));
+
+                // Bind controller to settings model to synchronize with "currentLightCalibration".
+                lightCalibrationController.bind(internalModels.getSettingsModel());
+
+                // Set the "currentLightCalibration" to the existing calibration values in the view set.
+                ViewSet loadedViewSet = MultithreadModels.getInstance().getLoadingModel().getLoadedViewSet();
+
+                if (loadedViewSet != null)
+                {
+                    internalModels.getSettingsModel().set("currentLightCalibration",
+                        loadedViewSet.getLightPosition(loadedViewSet.getLightIndex(loadedViewSet.getPrimaryViewIndex())).getXY());
+                }
 
                 // Enables light calibration mode when the window is opened.
                 internalModels.getSettingsModel().set("lightCalibrationMode", true);
-
-                // Apply result when the window closes.
-                lightCalibrationStage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, e ->
-                {
-                    MultithreadModels.getInstance().getLoadingModel().applyLightCalibration();
-                    MultithreadModels.getInstance().getSettingsModel().set("currentLightCalibration", Vector2.ZERO);
-                    MultithreadModels.getInstance().getSettingsModel().set("lightCalibrationMode", false);
-                });
-
-                // Show the window.
-                lightCalibrationStage.show();
             }
             catch (Exception e)
             {

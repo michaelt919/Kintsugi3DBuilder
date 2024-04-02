@@ -319,12 +319,10 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     {
         if (ibrInstance != null)
         {
-        ReadonlyViewSet viewSet = ibrInstance.getIBRResources().getViewSet();
+            ReadonlyViewSet viewSet = ibrInstance.getIBRResources().getViewSet();
 
-        ibrInstance.getDynamicResourceManager().setLightCalibration(
-            viewSet.getLightPosition(viewSet.getLightIndex(viewSet.getPrimaryViewIndex()))
-                .plus(ibrInstance.getSceneModel().getSettingsModel().get("currentLightCalibration", Vector2.class)
-                        .asVector3()));
+            ibrInstance.getDynamicResourceManager().setLightCalibration(
+                ibrInstance.getSceneModel().getSettingsModel().get("currentLightCalibration", Vector2.class).asVector3());
         }
     }
 
