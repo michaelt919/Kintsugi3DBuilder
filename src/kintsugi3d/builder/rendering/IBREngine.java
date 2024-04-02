@@ -412,6 +412,12 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     @Override
     public void saveGlTF(File outputDirectory, ExportSettings settings)
     {
+        saveGlTF(outputDirectory, "model.glb", settings);
+    }
+
+    @Override
+    public void saveGlTF(File outputDirectory, String filename, ExportSettings settings)
+    {
         if (outputDirectory != null)
         {
             if (getActiveGeometry() == null)
@@ -467,7 +473,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
                     }
                 }
 
-                exporter.write(new File(outputDirectory, "model.glb"));
+                exporter.write(new File(outputDirectory, filename));
                 log.info("DONE!");
             }
             catch (IOException e)

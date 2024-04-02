@@ -121,4 +121,6 @@ public interface IBRInstance<ContextType extends Context<ContextType>> extends I
     DynamicResourceManager getDynamicResourceManager();
 
     void saveGlTF(File outputDirectory, ExportSettings settings);
+
+    void saveGlTF(File outputDirectory, String filename, ExportSettings settings);
 }
