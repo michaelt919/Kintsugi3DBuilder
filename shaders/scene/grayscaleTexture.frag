@@ -1,3 +1,5 @@
+#version 330
+
 /*
  * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
@@ -10,11 +12,26 @@
  *
  */
 
-package kintsugi3d.builder.rendering.components.snap;
+uniform int objectID;
+uniform sampler2D grayscaleTex;
+uniform vec3 color;
 
-import kintsugi3d.builder.core.RenderedComponent;
-import kintsugi3d.gl.core.Context;
+in vec3 fPosition;
 
-public abstract class ViewSnapContent<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
+layout(location = 0) out vec4 fragColor;
+layout(location = 1) out int fragObjectID;
+
+void main()
 {
+    float intensity = texture(grayscaleTex, fPosition.xy / 2 + vec2(0.5))[0];
+
+    if (intensity == 0.0)
+    {
+        discard;
+    }
+    else
+    {
+        fragColor = vec4(color * intensity, 1.0);
+        fragObjectID = objectID;
+    }
 }

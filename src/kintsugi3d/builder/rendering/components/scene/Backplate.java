@@ -12,86 +12,42 @@
 
 package kintsugi3d.builder.rendering.components.scene;
 
-import kintsugi3d.builder.rendering.IBREngine;
-import kintsugi3d.gl.core.*;
-import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.RenderedComponent;
-import kintsugi3d.builder.core.SceneModel;
-import kintsugi3d.builder.resources.LightingResources;
-import kintsugi3d.builder.state.BackgroundMode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Map;
 
-public class Backplate<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
+import kintsugi3d.builder.core.CameraViewport;
+import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.rendering.components.ShaderComponent;
+import kintsugi3d.builder.resources.LightingResources;
+import kintsugi3d.builder.state.BackgroundMode;
+import kintsugi3d.gl.core.*;
+
+public class Backplate<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
-    private static final Logger log = LoggerFactory.getLogger(Backplate.class);
-    private final ContextType context;
     private final LightingResources<ContextType> lightingResources;
     private final SceneModel sceneModel;
 
-    private ProgramObject<ContextType> tintedTexProgram;
-    private Drawable<ContextType> tintedTexDrawable;
-    private VertexBuffer<ContextType> rectangleVertices;
-
     public Backplate(ContextType context, LightingResources<ContextType> lightingResources, SceneModel sceneModel)
     {
-        this.context = context;
+        super(context);
         this.lightingResources = lightingResources;
         this.sceneModel = sceneModel;
     }
 
     @Override
-    public void initialize()
+    protected ProgramObject<ContextType> createProgram(ContextType context) throws FileNotFoundException
     {
-        this.rectangleVertices = context.createRectangle();
-
-        try
-        {
-            this.tintedTexProgram = context.getShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "texture_tint.frag"))
-                    .createProgram();
-        }
-        catch (FileNotFoundException|RuntimeException e)
-        {
-            log.error("Failed to load shader.", e);
-        }
-
-        this.tintedTexDrawable = context.createDrawable(tintedTexProgram);
-        this.tintedTexDrawable.addVertexBuffer("position", this.rectangleVertices);
+        return context.getShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
+            .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "texture_tint.frag"))
+            .createProgram();
     }
 
     @Override
-    public void reloadShaders()
+    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context)
     {
-        if (this.tintedTexProgram != null)
-        {
-
-            try
-            {
-                ProgramObject<ContextType> newProgram = context.getShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "texture_tint.frag"))
-                    .createProgram();
-
-                if (this.tintedTexProgram != null)
-                {
-                    this.tintedTexProgram.close();
-                }
-
-                this.tintedTexProgram = newProgram;
-
-                this.tintedTexDrawable = context.createDrawable(tintedTexProgram);
-                this.tintedTexDrawable.addVertexBuffer("position", this.rectangleVertices);
-            }
-            catch (FileNotFoundException|RuntimeException e)
-            {
-                log.error("Failed to load shader.", e);
-            }
-        }
+        return Map.of("position", context.createRectangle());
     }
 
     @Override
@@ -99,37 +55,15 @@ public class Backplate<ContextType extends Context<ContextType>> implements Rend
     {
         if (lightingResources.getBackplateTexture() != null && sceneModel.getLightingModel().getBackgroundMode() == BackgroundMode.IMAGE)
         {
-            tintedTexDrawable.program().setTexture("tex", lightingResources.getBackplateTexture());
-            tintedTexDrawable.program().setUniform("color", sceneModel.getClearColor());
+            getDrawable().program().setTexture("tex", lightingResources.getBackplateTexture());
+            getDrawable().program().setUniform("color", sceneModel.getClearColor());
 
-            context.getState().disableDepthTest();
-            tintedTexDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
-            context.getState().enableDepthTest();
+            getContext().getState().disableDepthTest();
+            getDrawable().draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+            getContext().getState().enableDepthTest();
 
             // Clear ID buffer again.
             framebuffer.clearIntegerColorBuffer(1, 0, 0, 0, 0);
-        }
-    }
-
-    @Override
-    public void close() throws Exception
-    {
-        if (tintedTexProgram != null)
-        {
-            tintedTexProgram.close();
-            tintedTexProgram = null;
-        }
-
-        if (tintedTexDrawable != null)
-        {
-            tintedTexDrawable.close();
-            tintedTexDrawable = null;
-        }
-
-        if (rectangleVertices != null)
-        {
-            rectangleVertices.close();
-            rectangleVertices = null;
         }
     }
 }

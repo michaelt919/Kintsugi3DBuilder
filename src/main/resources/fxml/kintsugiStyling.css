@@ -69,6 +69,10 @@ dialog-pane{
     -fx-text-fill: #FFFFFF;
 }
 
+.slider .axis {
+    -fx-tick-label-fill: #FFFFFF;
+}
+
 .list-view{
     -fx-background-color: #000000;
     -fx-text-fill: #FFFFFF;

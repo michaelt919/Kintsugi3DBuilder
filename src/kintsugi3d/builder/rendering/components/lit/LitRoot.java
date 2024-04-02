@@ -12,13 +12,13 @@
 
 package kintsugi3d.builder.rendering.components.lit;
 
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.FramebufferObject;
-import kintsugi3d.gl.core.VertexBuffer;
 import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.resources.LightingResources;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.FramebufferObject;
+import kintsugi3d.gl.core.VertexBuffer;
 
 public class LitRoot<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
@@ -84,7 +84,7 @@ public class LitRoot<ContextType extends Context<ContextType>> implements Render
     }
 
     @Override
-    public void close() throws Exception
+    public void close()
     {
         if (lightingResources != null)
         {
@@ -112,7 +112,7 @@ public class LitRoot<ContextType extends Context<ContextType>> implements Render
     public void takeLitContentRoot(LitContent<ContextType> litContentRoot)
     {
         this.litContentRoot = litContentRoot;
-        litContentRoot.setLightingResources(this.lightingResources);
+        litContentRoot.initWithLightingResources(this.lightingResources);
     }
 
     /**

@@ -1,5 +1,7 @@
+#version 330
+
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -10,11 +12,13 @@
  *
  */
 
-package kintsugi3d.builder.rendering.components.snap;
+uniform sampler2DArray viewImages;
+uniform int viewIndex;
 
-import kintsugi3d.builder.core.RenderedComponent;
-import kintsugi3d.gl.core.Context;
+in vec2 fTexCoord;
+out vec4 fragColor;
 
-public abstract class ViewSnapContent<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
+void main()
 {
+    fragColor = texture(viewImages, vec3(fTexCoord, viewIndex));
 }

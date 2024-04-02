@@ -1,3 +1,5 @@
+#version 330
+
 /*
  * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
@@ -10,11 +12,14 @@
  *
  */
 
-package kintsugi3d.builder.rendering.components.snap;
+uniform mat4 model_view;
+uniform mat4 projection;
 
-import kintsugi3d.builder.core.RenderedComponent;
-import kintsugi3d.gl.core.Context;
+in vec2 position;
+out vec2 fTexCoord;
 
-public abstract class ViewSnapContent<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
+void main()
 {
+    gl_Position = projection * model_view * vec4(position, 0.0, 1.0);
+    fTexCoord = (position + vec2(1)) * 0.5;
 }

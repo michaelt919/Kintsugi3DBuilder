@@ -53,7 +53,7 @@ public interface IBRInstance<ContextType extends Context<ContextType>> extends I
     default void draw(Framebuffer<ContextType> framebuffer, Matrix4 viewOverride, Matrix4 projectionOverride)
     {
         FramebufferSize framebufferSize = framebuffer.getSize();
-        this.draw(framebuffer, viewOverride, projectionOverride, framebufferSize.width, framebufferSize.height);
+        this.draw(framebuffer, viewOverride, projectionOverride, framebufferSize.width , framebufferSize.height);
     }
 
     /**

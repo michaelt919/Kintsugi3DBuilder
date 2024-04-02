@@ -12,9 +12,9 @@
 
 package kintsugi3d.builder.javafx;//Created by alexk on 7/19/2017.
 
-import kintsugi3d.builder.core.LoadOptionsModel;
-import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.core.IOModel;
+import kintsugi3d.builder.core.Kintsugi3DBuilderState;
+import kintsugi3d.builder.core.LoadOptionsModel;
 import kintsugi3d.builder.javafx.multithread.*;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.builder.state.impl.CanvasModelImpl;
@@ -26,6 +26,7 @@ public final class MultithreadModels implements Kintsugi3DBuilderState
     private final EnvironmentModel environmentModel;
     private final ExtendedLightingModel lightingModel;
     private final ExtendedObjectModel objectModel;
+    private final CameraViewListModel cameraViewListModel;
     private final ProjectModel projectModel;
 
     private final SettingsModel settingsModel;
@@ -47,6 +48,7 @@ public final class MultithreadModels implements Kintsugi3DBuilderState
         objectModel = new ObjectModelWrapper(InternalModels.getInstance().getObjectModel());
         lightingModel = new LightingModelWrapper(InternalModels.getInstance().getLightingModel());
         environmentModel = new EnvironmentModelWrapper(InternalModels.getInstance().getEnvironmentModel());
+        cameraViewListModel = new CameraViewListModelWrapper(InternalModels.getInstance().getCameraViewListModel());
         projectModel = InternalModels.getInstance().getProjectModel();
         settingsModel = new SettingsModelWrapper(InternalModels.getInstance().getSettingsModel());
         sceneViewportModel = new SceneViewportModelImpl();
@@ -72,6 +74,12 @@ public final class MultithreadModels implements Kintsugi3DBuilderState
     public ExtendedObjectModel getObjectModel()
     {
         return objectModel;
+    }
+
+    @Override
+    public CameraViewListModel getCameraViewListModel()
+    {
+        return cameraViewListModel;
     }
 
     @Override

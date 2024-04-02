@@ -38,6 +38,12 @@ public class LightingModelWrapper extends ExtendedLightingModelBase<LightInstanc
     }
 
     @Override
+    public int getMaxLightCount()
+    {
+        return baseModel.getMaxLightCount();
+    }
+
+    @Override
     public boolean isLightWidgetEnabled(int index)
     {
         return baseModel.isLightWidgetEnabled(index);
