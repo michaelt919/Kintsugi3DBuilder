@@ -33,7 +33,6 @@ public class LightCalibrationController implements Initializable
     {
         StaticUtilities.makeNumeric(xTextField);
         StaticUtilities.makeNumeric(yTextField);
-
     }
 
     public void bind(SettingsModelImpl injectedSettingsModel)
@@ -57,14 +56,99 @@ public class LightCalibrationController implements Initializable
 
         injectedSettingsModel.getObjectProperty("currentLightCalibration", Vector2.class).addListener(settingsListener);
 
-        // Bind text fields to sliders
-        xTextField.textProperty().bindBidirectional(xSlider.valueProperty(), new SafeDecimalNumberStringConverter(0.0f));
-        yTextField.textProperty().bindBidirectional(ySlider.valueProperty(), new SafeDecimalNumberStringConverter(0.0f));
+        SafeDecimalNumberStringConverter converter = new SafeDecimalNumberStringConverter(0.0f);
+
+        // Bind text fields to sliders and ensure that the range adapts to values entered in text fields.
+        xTextField.textProperty().addListener((observable, oldValue, newValue) ->
+        {
+            double x = converter.fromString(newValue);
+            if (x > 5)
+            {
+                // Adjust bounds first
+                xSlider.setMin(-x);
+                xSlider.setMax(x);
+                xSlider.setValue(x);
+            }
+            else if (x < -5)
+            {
+                // Adjust bounds first
+                xSlider.setMin(x);
+                xSlider.setMax(-x);
+                xSlider.setValue(x);
+            }
+            else
+            {
+                // Adjust value first in case it was previously out of standard bounds
+                xSlider.setValue(x);
+                xSlider.setMin(-5);
+                xSlider.setMax(5);
+            }
+        });
+
+        yTextField.textProperty().addListener( (observable, oldValue, newValue) ->
+        {
+            double y = converter.fromString(newValue);
+
+            if (y > 5)
+            {
+                // Adjust bounds first
+                ySlider.setMin(-y);
+                ySlider.setMax(y);
+                ySlider.setValue(y);
+            }
+            else if (y < -5)
+            {
+                // Adjust bounds first
+                ySlider.setMin(y);
+                ySlider.setMax(-y);
+                ySlider.setValue(y);
+            }
+            else
+            {
+                // Adjust value first in case it was previously out of standard bounds
+                ySlider.setValue(y);
+                ySlider.setMin(-5);
+                ySlider.setMax(5);
+            }
+
+        });
+
+        xSlider.valueProperty().addListener((observable, oldValue, newValue) ->
+        {
+            // Compare slider and textbox after both have been reconverted to a standardized string.
+            // If they are equivalent, don't change the textbox.
+            if (!converter.toString(newValue).equals(converter.toString(converter.fromString(xTextField.getText()))))
+            {
+                xTextField.setText(converter.toString(newValue));
+            }
+        });
+        ySlider.valueProperty().addListener((observable, oldValue, newValue) ->
+        {
+            // Compare slider and textbox after both have been reconverted to a standardized string.
+            // If they are equivalent, don't change the textbox.
+            if (!converter.toString(newValue).equals(converter.toString(converter.fromString(yTextField.getText()))))
+            {
+                yTextField.setText(converter.toString(newValue));
+            }
+        });
 
         // Set initial value to start out synchronized.
         Vector2 originalLightCalibration = injectedSettingsModel.get("currentLightCalibration", Vector2.class);
+
+        // Set initial bounds based on original calibration.
+        float xMax = Math.max(5, Math.max(originalLightCalibration.x, -originalLightCalibration.x));
+        float yMax = Math.max(5, Math.max(originalLightCalibration.y, -originalLightCalibration.y));
+
+        xSlider.setMax(xMax);
+        xSlider.setMin(-xMax);
         xSlider.setValue(originalLightCalibration.x);
+
+        ySlider.setMax(yMax);
+        ySlider.setMin(-yMax);
         ySlider.setValue(originalLightCalibration.y);
+
+        xTextField.setText(converter.toString(xSlider.getValue()));
+        yTextField.setText(converter.toString(ySlider.getValue()));
     }
 
     public void unbind(SettingsModelImpl injectedSettingsModel)

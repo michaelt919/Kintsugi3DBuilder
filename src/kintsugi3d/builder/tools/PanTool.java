@@ -12,13 +12,13 @@
 
 package kintsugi3d.builder.tools;//Created by alexk on 7/24/2017.
 
+import kintsugi3d.builder.state.ExtendedCameraModel;
+import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.window.CanvasSize;
 import kintsugi3d.gl.window.CursorPosition;
-import kintsugi3d.builder.state.ExtendedCameraModel;
-import kintsugi3d.builder.state.SettingsModel;
 
 /*
 not this work as intended at a zoom of 0.5
@@ -28,7 +28,6 @@ final class PanTool implements DragTool
     private static final float PAN_SENSITIVITY = 1.0f;
     private float panSensitivityAdjusted = 1.0f;
 
-    private Vector2 oldLightCenter = Vector2.ZERO;
     private Vector3 oldCenter = Vector3.ZERO;
     private Matrix4 orbit;
 
@@ -64,7 +63,6 @@ final class PanTool implements DragTool
 
         oldCenter = cameraModel.getTarget();
         orbit = cameraModel.getOrbit();
-        oldLightCenter = settingsModel.get("currentLightCalibration", Vector2.class);
 
         panSensitivityAdjusted = PAN_SENSITIVITY / Math.min(canvasSize.width, canvasSize.height);
     }
@@ -76,14 +74,7 @@ final class PanTool implements DragTool
             (float) (cursorPosition.x - mouseStart.x) * panSensitivityAdjusted,
             (float) (mouseStart.y - cursorPosition.y) * panSensitivityAdjusted);
 
-        if (settingsModel.getBoolean("lightCalibrationMode"))
-        {
-            settingsModel.set("currentLightCalibration", oldLightCenter.minus(moveVector));
-        }
-        else
-        {
-            Vector3 worldMoveVector = orbit.transpose().times(moveVector.asVector4(0.0f,0.0f)).getXYZ();
-            cameraModel.setTarget(oldCenter.minus(worldMoveVector));
-        }
+        Vector3 worldMoveVector = orbit.transpose().times(moveVector.asVector4(0.0f,0.0f)).getXYZ();
+        cameraModel.setTarget(oldCenter.minus(worldMoveVector));
     }
 }

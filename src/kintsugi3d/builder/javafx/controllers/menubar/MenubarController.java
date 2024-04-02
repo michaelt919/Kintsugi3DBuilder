@@ -611,11 +611,11 @@ public class MenubarController
                 // Bind controller to settings model to synchronize with "currentLightCalibration".
                 lightCalibrationController.bind(internalModels.getSettingsModel());
 
-                // Set the "currentLightCalibration" to the existing calibration values in the view set.
-                ViewSet loadedViewSet = MultithreadModels.getInstance().getLoadingModel().getLoadedViewSet();
-
-                if (loadedViewSet != null)
+                if (MultithreadModels.getInstance().getLoadingModel().isInstanceLoaded())
                 {
+                    // Set the "currentLightCalibration" to the existing calibration values in the view set.
+                    ViewSet loadedViewSet = MultithreadModels.getInstance().getLoadingModel().getLoadedViewSet();
+
                     internalModels.getSettingsModel().set("currentLightCalibration",
                         loadedViewSet.getLightPosition(loadedViewSet.getLightIndex(loadedViewSet.getPrimaryViewIndex())).getXY());
                 }
