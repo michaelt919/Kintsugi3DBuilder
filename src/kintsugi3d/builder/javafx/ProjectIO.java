@@ -375,6 +375,10 @@ public final class ProjectIO
             this.projectLoaded = true;
 
             startLoad(projectFile, vsetFile);
+
+            // Have to set loaded project file after startLoad since startLoad resets everything in order to unload a previously loaded project.
+            MultithreadModels.getInstance().getLoadingModel().setLoadedProjectFile(projectFile);
+
             WelcomeWindowController.getInstance().hideWelcomeWindow();
         }
     }

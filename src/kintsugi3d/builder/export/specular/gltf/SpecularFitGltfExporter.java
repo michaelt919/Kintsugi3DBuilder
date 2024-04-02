@@ -282,10 +282,14 @@ public class SpecularFitGltfExporter
 
     public void write(File file) throws IOException
     {
-        asset.getGltf().getMaterials().forEach((material -> material.setExtras(extraData)));
+        asset.getGltf().getMaterials().forEach(material -> material.setExtras(extraData));
 
         GltfAssetWriterV2 writer = new GltfAssetWriterV2();
-        writer.writeBinary(asset, new FileOutputStream(file));
+
+        try (FileOutputStream out = new FileOutputStream(file))
+        {
+            writer.writeBinary(asset, out);
+        }
     }
 
     public void tryWrite(File file)
