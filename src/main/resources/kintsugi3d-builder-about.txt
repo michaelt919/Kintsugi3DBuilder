@@ -8,9 +8,11 @@ Michael Ludwig (University of Minnesota) - contributor
 Sam Steinkamp (University of Minnesota) - contributor
 Jacob Buelow (University of Wisconsin - Stout) - contributor
 Luke Denney (University of Wisconsin - Stout) - contributor
+Isaac Tesch (University of Wisconsin - Stout) - contributor
+Nathaniel Willius (University of Wisconsin - Stout) - contributor
 Gary Meyer (University of Minnesota) - designer and advisor
 
-Copyright (c) Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney 2024
+Copyright (c) Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Isaac Tesch, Nathaniel Willius 2024
 Copyright (c) The Regents of the University of Minnesota 2019
 
 Licensed under GPLv3 

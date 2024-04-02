@@ -48,8 +48,9 @@
                             </accelerator>
                         </MenuItem>
                         <SeparatorMenuItem mnemonicParsing="false" />
-                        <Menu fx:id="exportMenu" mnemonicParsing="false" text="Export" />
-                        <MenuItem mnemonicParsing="false" text="Re-import Data (UNFINISHED)" />
+                        <MenuItem mnemonicParsing="false" onAction="#file_exportGLTF" text="Export glTF..." />
+                        <Menu fx:id="exportMenu" mnemonicParsing="false" text="Additional Export" />
+                        <MenuItem mnemonicParsing="false" text="Re-import Data (UNFINISHED)" visible="false" />
                         <SeparatorMenuItem />
                         <Menu fx:id="recentProjectsMenu" mnemonicParsing="false" text="Recent Projects">
                             <items>
@@ -78,14 +79,15 @@
                                     <KeyCodeCombination alt="UP" code="P" control="ANY" meta="UP" shift="UP" shortcut="UP" />
                                 </accelerator>
                             </MenuItem>
+                            <MenuItem mnemonicParsing="false" onAction="#file_exportGLTF" text="Export glTF..." />
                             <MenuItem mnemonicParsing="false" onAction="#launchViewerApp" text="Launch Kintsugi 3D Viewer" />
                         </items>
                     </Menu>
                     <Menu mnemonicParsing="false" text="Environment">
-                        <MenuItem mnemonicParsing="false" onAction="#shading_IBRSettings" text="Advanced Photo View..." />
-                        <CheckMenuItem mnemonicParsing="false" selected="true" text="Snap-based Object Rotation (UNFINISHED)" />
-                        <SeparatorMenuItem mnemonicParsing="false" />
-                        <SeparatorMenuItem mnemonicParsing="false">
+                        <MenuItem mnemonicParsing="false" onAction="#shading_IBRSettings" text="Advanced Photo View..." visible="false" />
+                        <CheckMenuItem mnemonicParsing="false" selected="true" text="Snap-based Object Rotation (UNFINISHED)" visible="false" />
+                        <SeparatorMenuItem mnemonicParsing="false" visible="false" />
+                        <SeparatorMenuItem mnemonicParsing="false" visible="false">
 <!--                    <content>-->
 <!--                        <Label fx:id="lightingSettingsLabel" text="Lighting Settings" textFill="black">-->
 <!--                            <padding>-->
@@ -331,9 +333,9 @@
                         </Menu>
                     </Menu>
                     <Menu text="Help">
-                        <MenuItem mnemonicParsing="false" onAction="#help_userManual" text="Processing Tool Documentation" />
+                        <MenuItem disable="true" mnemonicParsing="false" onAction="#help_userManual" text="Documentation" />
                         <MenuItem mnemonicParsing="false" onAction="#help_console" text="View Log" />
-                        <MenuItem mnemonicParsing="false" text="Process Guides (UNFINISHED)" />
+                        <MenuItem mnemonicParsing="false" text="Process Guides (UNFINISHED)" visible="false" />
                     </Menu>
                     <Menu fx:id="aboutMenu" mnemonicParsing="false" onShown="#hideAndShowAboutModal" text="About" visible="false">
                         <items>
@@ -375,9 +377,9 @@
             <!--        </opaqueInsets>-->
                 </MenuBar>
                 <HBox alignment="CENTER_LEFT" spacing="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
+                    <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" visible="false" />
                     <Button fx:id="settingsButton" contentDisplay="CENTER" mnemonicParsing="false" onAction="#openSystemSettingsModal" prefHeight="25.0" prefWidth="80.0" text="Settings" />
                     <Button mnemonicParsing="false" onAction="#help_about" text="About" />
-                    <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" visible="false" />
                 </HBox>
             </children>
          </AnchorPane>
@@ -392,5 +394,6 @@
                 <fx:include fx:id="framebufferView" source="FramebufferView.fxml" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" />
             </children>
          </HBox>
-      </children></VBox>
+      </children>
+   </VBox>
 </AnchorPane>
