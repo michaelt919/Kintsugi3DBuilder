@@ -36,7 +36,7 @@ public class LightCalibrationVisual<ContextType extends Context<ContextType>> ex
 {
     private final SceneModel sceneModel;
 
-    private ViewSelection viewSnappable;
+    private ViewSelection viewSelection;
     private Texture2D<ContextType> lightTexture;
 
     public LightCalibrationVisual(ContextType context, SceneViewportModel sceneViewportModel, SceneModel sceneModel)
@@ -86,10 +86,10 @@ public class LightCalibrationVisual<ContextType extends Context<ContextType>> ex
         this.getDrawable().program().setUniform("color", new Vector3((float)Math.PI));
 
         // Calculate world space light position.
-        Matrix4 snapView = viewSnappable.getSelectedView();
-        int primaryLightIndex = viewSnappable.getViewSet().getLightIndex(viewSnappable.getViewSet().getPrimaryViewIndex());
+        Matrix4 snapView = viewSelection.getSelectedView();
+        int primaryLightIndex = viewSelection.getViewSet().getLightIndex(viewSelection.getViewSet().getPrimaryViewIndex());
         Vector3 lightPosition = sceneModel.getSettingsModel().get("currentLightCalibration", Vector2.class).asVector3()
-            .plus(viewSnappable.getViewSet().getLightPosition(primaryLightIndex));
+            .plus(viewSelection.getViewSet().getLightPosition(primaryLightIndex));
         Matrix4 lightTransform = Matrix4.translate(lightPosition.negated());
         Matrix4 lightView = lightTransform.times(snapView);
         Vector3 lightPosWorldSpace = lightView.getUpperLeft3x3().transpose().times(lightView.getColumn(3).getXYZ().negated());
@@ -106,13 +106,13 @@ public class LightCalibrationVisual<ContextType extends Context<ContextType>> ex
         this.getContext().getState().enableDepthTest();
     }
 
-    public ViewSelection getViewSnappable()
+    public ViewSelection getViewSelection()
     {
-        return viewSnappable;
+        return viewSelection;
     }
 
-    public void setViewSnappable(ViewSelection viewSnappable)
+    public void setViewSelection(ViewSelection viewSelection)
     {
-        this.viewSnappable = viewSnappable;
+        this.viewSelection = viewSelection;
     }
 }

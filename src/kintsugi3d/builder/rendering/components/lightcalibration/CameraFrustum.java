@@ -22,18 +22,19 @@ import kintsugi3d.builder.rendering.components.snap.ViewSelection;
 import kintsugi3d.builder.resources.ibr.IBRResources;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.gl.vecmath.Vector4;
 
-public class CameraVisual<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
+public class CameraFrustum<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
     private final IBRResources<ContextType> resources;
 
     private ViewSelection viewSelection;
 
-    public CameraVisual(IBRResources<ContextType> resources, SceneViewportModel sceneViewportModel)
+    public CameraFrustum(IBRResources<ContextType> resources, SceneViewportModel sceneViewportModel)
     {
-        super(resources.getContext(), sceneViewportModel, "CameraVisual");
+        super(resources.getContext());
         this.resources = resources;
     }
 
@@ -41,15 +42,30 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
     protected ProgramObject<ContextType> createProgram(ContextType context) throws FileNotFoundException
     {
         return context.getShaderProgramBuilder()
-            .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture_imgspace.vert"))
-            .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "colorappearance"), "texture_multi_as_single.frag"))
+            .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+            .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
             .createProgram();
     }
 
     @Override
     protected Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context)
     {
-        return Map.of("position", context.createRectangle());
+        float[] frustum =
+        {
+            0, 0, 0, 1, 1, -1,
+            0, 0, 0, -1, -1, -1,
+            0, 0, 0, 1, -1, -1,
+            0, 0, 0, -1, 1, -1,
+            1, 1, -1, 1, -1, -1,
+            1, 1, -1, -1, 1, -1,
+            -1, -1, -1, 1, -1, -1,
+            -1, -1, -1, -1, 1, -1
+        };
+
+        return Map.of("position",
+            context.createVertexBuffer()
+                .setData(NativeVectorBufferFactory.getInstance()
+                    .createFromFloatArray(3, 16, frustum)));
     }
 
     @Override
@@ -61,34 +77,18 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
 
             FramebufferSize size = framebuffer.getSize();
 
-            this.getContext().getState().disableBackFaceCulling();
-
-            this.getContext().getState().disableDepthWrite();
-            this.getContext().getState().enableDepthTest();
-
+            // Scale to match actual camera frustum.
             Matrix4 snapViewInverse = viewSelection.getSelectedView().quickInverse(0.01f);
-            float aspect = viewSelection.getSelectedCameraProjection().getAspectRatio();
-            float fPlane = getCameraPlane(viewSelection);
+            float fy = 1.0f / (float)Math.tan(viewSelection.getSelectedCameraProjection().getVerticalFieldOfView() / 2);
+            float fx = fy / viewSelection.getSelectedCameraProjection().getAspectRatio();
 
-            this.getProgram().setTexture("viewImages", resourcesImgSpace.colorTextures);
-            this.getProgram().setUniform("viewIndex", viewSelection.getSelectedViewIndex());
+            this.getDrawable().program().setUniform("color", new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
             this.getProgram().setUniform("model_view",
                 cameraViewport.getView().times(snapViewInverse)
-                    .times(Matrix4.translate(new Vector3(0, 0, -fPlane)))
-                    .times(Matrix4.scale(Math.min(1.0f, aspect), Math.min(1.0f, 1.0f / aspect), 1.0f)));
+                    .times(Matrix4.scale(20 / fx, 20 / fy, 20.0f)));
             this.getProgram().setUniform("projection", cameraViewport.getViewportProjection());
-            this.getDrawable().draw(PrimitiveMode.TRIANGLE_FAN, cameraViewport.ofFramebuffer(framebuffer));
-
-            this.getContext().getState().enableDepthWrite();
-            this.getContext().getState().enableDepthTest();
+            this.getDrawable().draw(PrimitiveMode.LINES, cameraViewport.ofFramebuffer(framebuffer));
         }
-    }
-
-    public static float getCameraPlane(ViewSelection viewSelection)
-    {
-        float fy = 1.0f / (float)Math.tan(viewSelection.getSelectedCameraProjection().getVerticalFieldOfView() / 2);
-        float fx = fy / viewSelection.getSelectedCameraProjection().getAspectRatio();
-        return Math.min(fx, fy);
     }
 
     public ViewSelection getViewSelection()
