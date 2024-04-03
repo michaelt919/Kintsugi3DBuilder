@@ -14,18 +14,19 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+
 <AnchorPane prefWidth="555.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.export.specular.SpecularFitRequestUI">
-   <Button fx:id="runButton" layoutX="14.0" layoutY="274.0" mnemonicParsing="false" text="Run" />
+   <Button fx:id="runButton" layoutX="14.0" layoutY="274.0" mnemonicParsing="false" text="Run" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="8.0" />
    <Label layoutX="14.0" layoutY="18.0" text="Width:" />
    <TextField fx:id="widthTextField" layoutX="54.0" layoutY="14.0" prefWidth="56.0" text="2048" />
    <Label layoutX="116.0" layoutY="18.0" text="Height:" />
    <TextField fx:id="heightTextField" layoutX="161.0" layoutY="14.0" prefHeight="25.0" prefWidth="56.0" text="2048" />
-   <Button layoutX="61.0" layoutY="274.0" mnemonicParsing="false" onAction="#cancelButtonAction" text="Cancel" />
+   <Button layoutX="61.0" layoutY="274.0" mnemonicParsing="false" onAction="#cancelButtonAction" text="Cancel" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="56.0" />
    <Label layoutX="223.0" layoutY="18.0" text="Specular count:" />
    <TextField fx:id="basisCountTextField" layoutX="310.0" layoutY="14.0" prefHeight="25.0" prefWidth="56.0" text="8" />
    <CheckBox fx:id="openViewerOnComplete" layoutX="14.0" layoutY="48.0" mnemonicParsing="false" text="Open Viewer once complete" />
    <CheckBox fx:id="translucencyCheckBox" layoutX="386.0" layoutY="18.0" mnemonicParsing="false" text="Fit translucency" AnchorPane.topAnchor="18.0" />
-   <Accordion layoutY="389.0" AnchorPane.bottomAnchor="48.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="80.0">
+   <Accordion fx:id="advancedAccordion" layoutY="389.0" AnchorPane.bottomAnchor="48.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="80.0">
      <panes>
        <TitledPane animated="false" expanded="false" text="Advanced">
           <AnchorPane>

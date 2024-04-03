@@ -52,8 +52,10 @@ public class ExportRequestUI implements IBRRequestUI {
         ExportRequestUI exportRequest = fxmlLoader.getController();
         exportRequest.modelAccess = modelAccess;
 
-        exportRequest.CurrentDirectoryFile =  modelAccess.getLoadingModel().getLoadedProjectFile().getParentFile();
-
+        if (modelAccess.getLoadingModel().getLoadedProjectFile() != null)
+        {
+            exportRequest.CurrentDirectoryFile = modelAccess.getLoadingModel().getLoadedProjectFile().getParentFile();
+        }
 
         exportRequest.stage = new Stage();
         exportRequest.stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
