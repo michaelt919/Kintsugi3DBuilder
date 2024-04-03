@@ -26,6 +26,7 @@ import java.util.function.Consumer;
 
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -49,6 +50,8 @@ import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
+import kintsugi3d.builder.javafx.controllers.scene.object.ObjectPoseSetting;
+import kintsugi3d.builder.javafx.controllers.scene.object.SettingsObjectSceneController;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.javafx.FramebufferView;
@@ -75,6 +78,7 @@ public class MenubarController
     private final Flag advPhotoViewWindowOpen = new Flag(false);
     private final Flag systemMemoryWindowOpen = new Flag(false);
     private final Flag loadOptionsWindowOpen = new Flag(false);
+    private final Flag objectOrientationWindowOpen = new Flag(false);
     private final Flag lightCalibrationWindowOpen = new Flag(false);
     private final Flag colorCheckerWindowOpen = new Flag(false);
     private final Flag unzipperOpen = new Flag(false);
@@ -603,6 +607,35 @@ public class MenubarController
         catch(Exception e)
         {
             handleException("An error occurred opening file unzipper", e);
+        }
+    }
+
+    public void objectOrientation()
+    {
+        if (!objectOrientationWindowOpen.get())
+        {
+            try
+            {
+                var stageCapture = new Object()
+                {
+                    Stage stage;
+                };
+
+                SettingsObjectSceneController objectOrientationController =
+                    makeWindow("Object Orientation", objectOrientationWindowOpen, "fxml/scene/object/SettingsObjectScene.fxml",
+                        stage -> stageCapture.stage = stage);
+
+                ObjectPoseSetting boundObjectPose = internalModels.getObjectModel().getSelectedObjectPoseProperty().getValue();
+
+                objectOrientationController.bind(boundObjectPose);
+
+                stageCapture.stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST,
+                    e -> objectOrientationController.unbind(boundObjectPose));
+            }
+            catch(Exception e)
+            {
+                handleException("An error occurred opening color checker window", e);
+            }
         }
     }
 

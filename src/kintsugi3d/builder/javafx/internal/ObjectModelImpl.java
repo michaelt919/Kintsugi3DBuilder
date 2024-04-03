@@ -33,6 +33,11 @@ public class ObjectModelImpl extends ExtendedObjectModelBase
         "sentinel"
     );
 
+    public ObservableValue<ObjectPoseSetting> getSelectedObjectPoseProperty()
+    {
+        return this.selectedObjectPoseProperty;
+    }
+
     public void setSelectedObjectPoseProperty(ObservableValue<ObjectPoseSetting> selectedObjectPoseProperty)
     {
         this.selectedObjectPoseProperty = selectedObjectPoseProperty;

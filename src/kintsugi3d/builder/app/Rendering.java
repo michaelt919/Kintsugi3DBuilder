@@ -317,7 +317,7 @@ public final class Rendering
 
         ioModel.setLoadingHandler(instanceManager);
 
-        instanceManager.setObjectModel(() -> Matrix4.IDENTITY);
+        instanceManager.setObjectModel(objectModel);
         instanceManager.setCameraModel(cameraModel);
         instanceManager.setLightingModel(lightingModel);
         instanceManager.setCameraViewListModel(cameraViewListModel);

@@ -15,6 +15,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
+
 <AnchorPane prefHeight="720.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.MenubarController">
    <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
       <children>
@@ -68,6 +69,7 @@
                     </Menu>
                     <Menu mnemonicParsing="false" text="Workflow">
                         <items>
+                        <MenuItem mnemonicParsing="false" onAction="#objectOrientation" text="Object Orientation..." />
                         <MenuItem mnemonicParsing="false" onAction="#lightCalibration" text="Light Calibration..." />
                             <MenuItem mnemonicParsing="false" onAction="#eyedropperColorChecker" text="Color Calibration...">
                                 <accelerator>
