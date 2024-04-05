@@ -144,7 +144,6 @@ public class WelcomeWindowController
         {
             ProjectIO.getInstance().createProject(parentWindow);
             updateRecentProjectsButton();
-            hideWelcomeWindow();
         }
     }
 
@@ -154,7 +153,6 @@ public class WelcomeWindowController
         {
             ProjectIO.getInstance().createProjectNew(parentWindow);
             updateRecentProjectsButton();
-            hideWelcomeWindow();
 
         }
     }
