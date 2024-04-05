@@ -28,6 +28,7 @@ import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -203,7 +204,7 @@ public class LoaderController implements Initializable
                         cameraFile.getPath(), cameraFile, objFile, photoDir,
                         primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
                 .start();
-
+            WelcomeWindowController.getInstance().hideWelcomeWindow();
             close();
         }
         else{
