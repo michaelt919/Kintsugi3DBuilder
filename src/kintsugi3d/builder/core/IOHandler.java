@@ -13,6 +13,7 @@
 package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.util.AbstractImage;
 
 import java.io.File;
@@ -30,6 +31,7 @@ public interface IOHandler
     void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions);
     void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory,
         String primaryViewName, ReadonlyLoadOptionsModel loadOptions);
+    void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptionsModel);
 
     void requestFragmentShader(File shaderFile);
 
@@ -48,4 +50,5 @@ public interface IOHandler
     DoubleUnaryOperator getLuminanceEncodingFunction();
     void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues);
     void applyLightCalibration();
+
 }

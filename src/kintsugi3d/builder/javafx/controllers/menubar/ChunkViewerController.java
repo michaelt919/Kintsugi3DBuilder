@@ -19,10 +19,8 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
+import javafx.scene.control.*;
 import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
@@ -40,6 +38,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 
 
 public class ChunkViewerController implements Initializable {
@@ -66,7 +65,9 @@ public class ChunkViewerController implements Initializable {
     public TextFlow textFlow;
     MetashapeObjectChunk metashapeObjectChunk;
 
+    public Consumer<MetashapeObjectChunk> loaderControllerCallback;
     private ImgSelectionThread loadImgThread;
+
 
 
     @Override
@@ -279,5 +280,29 @@ public class ChunkViewerController implements Initializable {
     }
     public void updateSelectChunkButton() {
         updateSelectChunkButton(new ActionEvent());
+    }
+
+    /**
+     * Submit the chunk object and Metashape to be used in creating a Kintsugi project
+     */
+    public void submitChunk(){
+        // If no chunk is chosen somehow, prompt user to select a chunk.
+        if (metashapeObjectChunk == null) {
+            // Create a popup telling user to choose a chunk.
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("No chunk selected");
+            alert.setContentText("Please choose a chunk to continue.");
+            alert.showAndWait();
+            return;
+        }
+
+        // Close window.
+        Stage stage = (Stage) selectChunkButton.getScene().getWindow();
+        stage.close();
+
+        // Submit the chunk to the loader controller.
+        loaderControllerCallback.accept(metashapeObjectChunk);
+        System.out.println("Submitted chunk successfully");
     }
 }

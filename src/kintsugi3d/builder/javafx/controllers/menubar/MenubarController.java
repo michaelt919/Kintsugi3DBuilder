@@ -34,6 +34,7 @@ import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
+import kintsugi3d.gl.util.UnzipHelper;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +63,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Scanner;
+import java.util.function.Consumer;
 
 public class MenubarController
 {
@@ -571,16 +573,27 @@ public class MenubarController
         return stage;
     }
 
-    public void unzip() {
+    /**
+     * This function is to allow the LoaderController to pass a call back to the ChunkViewerController.
+     * @param loaderControllerCallback Reference to loaderController in order to call a callback function later.
+     * @return Returns a reference to the UnzipFileSelectionController
+     */
+    public void unzip(Consumer<MetashapeObjectChunk> loaderControllerCallback){
+        UnzipFileSelectionController unzipFileSelectionController = unzip();
+        unzipFileSelectionController.loaderControllerCallback = loaderControllerCallback;
+    }
+
+    public UnzipFileSelectionController unzip() {
+        UnzipFileSelectionController unzipFileSelectionController = null;
         try {
-            UnzipFileSelectionController unzipFileSelectionController =
-                makeWindow(".psx Unzipper", unzipperOpen, "fxml/menubar/UnzipFileSelection.fxml");
+            unzipFileSelectionController = makeWindow(".psx Unzipper", unzipperOpen, "fxml/menubar/UnzipFileSelection.fxml");
             unzipFileSelectionController.init();
         }
         catch(Exception e)
         {
             handleException("An error occurred opening file unzipper", e);
         }
+        return unzipFileSelectionController;
     }
           
     public void eyedropperColorChecker()

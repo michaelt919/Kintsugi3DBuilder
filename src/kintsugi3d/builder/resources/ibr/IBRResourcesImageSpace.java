@@ -14,9 +14,7 @@ package kintsugi3d.builder.resources.ibr;
 
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
@@ -27,6 +25,7 @@ import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
@@ -37,6 +36,7 @@ import kintsugi3d.gl.material.TextureLoadOptions;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+import kintsugi3d.gl.util.UnzipHelper;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.ImageFinder;
@@ -44,6 +44,9 @@ import kintsugi3d.util.ImageHelper;
 import kintsugi3d.util.ImageUndistorter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 /**
  * A class that encapsulates all of the GPU resources like vertex buffers, uniform buffers, and textures for a given
@@ -144,6 +147,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
+
         public Builder<ContextType> loadVSETFile(File vsetFile, File supportingFilesDirectory) throws Exception
         {
             this.viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile, supportingFilesDirectory);
@@ -184,6 +188,82 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
             if (this.loadOptions != null)
             {
+                updateViewSetFromLoadOptions();
+            }
+
+            return this;
+        }
+
+        /**
+         * Alternate version of loadAgisoftFromZIP that uses a metashapeObjectChunck as its parameter.
+         * @param metashapeObjectChunk
+         * @param supportingFilesDirectory
+         * @return
+         * @throws Exception
+         */
+        public Builder<ContextType> loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, File supportingFilesDirectory) throws Exception {
+            // Get reference to the chunk directory
+            File chunkDirectory = new File(metashapeObjectChunk.getChunkDirectoryPath());
+            if (!chunkDirectory.exists()){
+                System.out.println("Chunk directory does not exist: " + chunkDirectory);
+            }
+
+        // 1) Construct camera ID to filename map from frame's ZIP
+            Map<Integer, String> cameraPathsMap = new HashMap<Integer, String>();
+            // Open the xml files that contains all the cameras' ids and file paths
+            Document frame = metashapeObjectChunk.getFrameZip(); //TODO: THIS WAS NULL
+
+            // Get the camera list from the xml document
+            Element camerasElement = (Element) frame.getDocumentElement().getElementsByTagName("cameras").item(0);
+            NodeList cameraList = camerasElement.getElementsByTagName("camera");
+            // Loop through the cameras and store each pair of id and path in the map
+            for (int i = 0; i < cameraList.getLength(); i++) {
+                // Get the path attribute
+                Element cameraElement = (Element) cameraList.item(i);
+                int cameraId = Integer.parseInt(camerasElement.getAttribute("id"));
+                Element photoElement = (Element) cameraElement.getElementsByTagName("photo").item(0);
+                String path = photoElement.getAttribute("path");
+
+                // Remove "../../../" from the front of the path variable if present to make it relative to the project directory
+                if (path.startsWith("../../../")) {
+                    path = path.substring(9);
+                }
+
+                // Add pair to the map
+                cameraPathsMap.put(cameraId, path);
+            }
+            // TODO: Transfer cameraPath's map into a ViewSet somehow
+
+        // 2) Load ViewSet from ZipInputStream from chunk's ZIP (eventually will accept the filename map as a parameter) TODO: Test
+            // Create an InputStream for the zipped file
+            File zipFile = new File(chunkDirectory, "chunk.zip/doc.xml");
+            FileInputStream fis = new FileInputStream(zipFile);
+            InputStream stream = new BufferedInputStream(fis);
+            // Create and store ViewSet
+            this.viewSet = ViewSetReaderFromAgisoftXML.getInstance().readFromStream(stream, chunkDirectory, chunkDirectory); //The way the other version does this
+
+
+        // 3) load geometry from ZipInputStream from model's ZIP
+            this.geometry = VertexGeometry.createFromPLYFile(new File(chunkDirectory, "model/model.zip/mesh.ply"));
+            if (this.geometry != null) { //TODO: Why does it say it can never equal null? Shouldn't createFromPLYFile be capable of failing?
+                viewSet.setGeometryFile(geometry.getFilename());
+            }
+
+        // 4) Set image directory to be parent directory of MetaShape project (and add to the photos' paths)
+            this.imageDirectoryOverride = chunkDirectory.getParentFile().getParentFile();
+            //this.viewSet.setRelativeFullResImagePathName(metashapeObjectChunk.getFramePath().getParentFile().toPath().relativize(undistortedImageDirectory.toPath()).toString());
+            File frameZip = new File(metashapeObjectChunk.getFramePath()).getParentFile();
+
+            File psxFile = new File(metashapeObjectChunk.getMetashapeObject().getPsxFilePath());
+            File undistortedImageDirectory = new File(psxFile.getParent(), "Processed"); // The directory of undistorted photos //TODO
+            // Print error to log if unable to find undistortedImageDirectory
+            if (!undistortedImageDirectory.exists()) {
+                System.out.println("Unable to find undistortedImageDirectory: " + undistortedImageDirectory);
+            }
+            this.viewSet.setRelativeFullResImagePathName(frameZip.toPath().relativize(undistortedImageDirectory.toPath()).toString());
+
+
+            if (this.loadOptions != null) {
                 updateViewSetFromLoadOptions();
             }
 

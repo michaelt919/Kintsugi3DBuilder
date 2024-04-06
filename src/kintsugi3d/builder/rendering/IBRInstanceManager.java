@@ -26,6 +26,7 @@ import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
@@ -242,6 +243,26 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         }
         catch (Exception e)
         {
+            handleMissingFiles(e);
+        }
+    }
+
+    @Override
+    public void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions) {
+        //TODO This is the last function in the chain
+        //  it should launch the Kintsugi project with all proper files and such.
+        //  It will use the IBRResourcesImageSpace loadAgisoftFromZip() function
+
+        // TODO get the supporting files directory. From where?
+        File supportingFilesDirectory = null;
+        try {
+            Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
+                    .setLoadingMonitor(this.loadingMonitor)
+                    .setLoadOptions(loadOptions)
+                    .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory);
+                    //.setPrimaryView(primaryViewName);
+
+        } catch (Exception e){
             handleMissingFiles(e);
         }
     }
