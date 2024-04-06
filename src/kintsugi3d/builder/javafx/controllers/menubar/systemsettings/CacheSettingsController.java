@@ -11,17 +11,82 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.systemsettings;
 
+import java.io.File;
+
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.javafx.InternalModels;
 
-public class CacheSettingsController implements SystemSettingsControllerBase{
+public class CacheSettingsController implements SystemSettingsControllerBase
+{
+    @FXML private Label previewImageCacheLabel;
+    @FXML private Label specularFitCacheLabel;
 
     @Override
-    public void init() {
-        //nothing here yet
+    public void init()
+    {
+        previewImageCacheLabel.setText(ApplicationFolders.getPreviewImagesRootDirectory().toString());
+        specularFitCacheLabel.setText(ApplicationFolders.getFitCacheRootDirectory().toString());
     }
 
     @Override
-    public void bindInfo(InternalModels internalModels) {
+    public void bindInfo(InternalModels internalModels)
+    {
         //TODO: imp.
+    }
+
+    public void clearCache()
+    {
+        File previewCacheDir = ApplicationFolders.getPreviewImagesRootDirectory().toFile();
+        File fitCacheDir = ApplicationFolders.getFitCacheRootDirectory().toFile();
+
+        Alert confirm = new Alert(AlertType.CONFIRMATION);
+        confirm.setTitle("Clear Cache");
+        confirm.setHeaderText("Confirm cache clear?");
+        confirm.setContentText("This will permanently remove all files in " + previewCacheDir + " and " + fitCacheDir
+            + " and cannot be undone.  Are you sure?");
+
+        confirm.showAndWait().ifPresent(response ->
+        {
+            if (response == ButtonType.OK)
+            {
+                deleteRecursively(previewCacheDir);
+                deleteRecursively(fitCacheDir);
+            }
+        });
+    }
+
+    private void deleteRecursively(File file)
+    {
+        deleteRecursively(file, file);
+    }
+
+    private void deleteRecursively(File original, File current)
+    {
+        if (current.isDirectory())
+        {
+            File[] contents = current.listFiles();
+            if (contents != null)
+            {
+                for (File f : contents)
+                {
+                    deleteRecursively(original, f);
+                }
+            }
+
+            // Extra check due to danger of this operation
+            assert current.toString().startsWith(original.toString());
+            current.delete();
+        }
+        else
+        {
+            // Extra check due to danger of this operation
+            assert current.toString().startsWith(original.toString());
+            current.delete();
+        }
     }
 }
