@@ -15,7 +15,6 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
-
 <AnchorPane prefHeight="720.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.MenubarController">
    <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
       <children>
@@ -249,10 +248,10 @@
                         </RadioMenuItem>
                         <RadioMenuItem mnemonicParsing="false" text="Material (basis)" toggleGroup="$renderGroup" userData="renderModes/basisMaterial.frag">
             </RadioMenuItem>
-                        <RadioMenuItem mnemonicParsing="false" selected="true" text="Image-based rendering (IBR)" toggleGroup="$renderGroup">
+                        <RadioMenuItem mnemonicParsing="false" selected="true" text="Image-based" toggleGroup="$renderGroup">
                             <userData>renderModes/ibrUntextured.frag</userData>
                         </RadioMenuItem>
-                        <RadioMenuItem mnemonicParsing="false" text="IBR with textures" toggleGroup="$renderGroup">
+                        <RadioMenuItem mnemonicParsing="false" text="Image-based with textures" toggleGroup="$renderGroup">
                             <userData>renderModes/ibrTextured.frag</userData>
                         </RadioMenuItem>
                     </Menu>

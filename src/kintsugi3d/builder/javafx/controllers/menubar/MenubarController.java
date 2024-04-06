@@ -26,7 +26,6 @@ import java.util.function.Consumer;
 
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -516,7 +515,7 @@ public class MenubarController
 
         try
         {
-            AdvPhotoViewController advPhotoViewController = makeWindow("Advanced Photo View", advPhotoViewWindowOpen, "fxml/menubar/systemsettings/AdvancedPhotoView.fxml");
+            AdvPhotoViewController advPhotoViewController = makeWindow("Advanced Photo View", advPhotoViewWindowOpen, "fxml/menubar/systemsettings/PhotoProjectionSettings.fxml");
             advPhotoViewController.bind(internalModels.getSettingsModel());
         }
         catch(Exception e)
@@ -717,7 +716,7 @@ public class MenubarController
 
         try
         {
-            makeWindow("System Memory", systemMemoryWindowOpen, "fxml/menubar/systemsettings/SystemMemory.fxml");
+            makeWindow("System Memory", systemMemoryWindowOpen, "fxml/menubar/systemsettings/SystemMemorySettings.fxml");
         }
         catch(Exception e)
         {
