@@ -515,6 +515,7 @@ public final class ProjectIO
             {
                 fileContainer.selectedFile = fileChooser.showSaveDialog(parentWindow);
                 fileContainer.complete = true;
+                RecentProjects.updateRecentFiles(fileContainer.selectedFile.toString());
             });
 
             while (!fileContainer.complete)
