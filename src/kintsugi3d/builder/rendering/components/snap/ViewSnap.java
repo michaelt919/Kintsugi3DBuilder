@@ -13,6 +13,7 @@
 package kintsugi3d.builder.rendering.components.snap;
 
 import kintsugi3d.builder.core.CameraViewport;
+import kintsugi3d.builder.core.Projection;
 import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.gl.core.Context;
@@ -130,7 +131,35 @@ public class ViewSnap<ContextType extends Context<ContextType>> implements Rende
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
-        contentRoot.draw(framebuffer, cameraViewport.copyForView(viewSnap));
+        Projection projection = viewSelection.getSelectedCameraProjection();
+        Matrix4 projectionMatrix = projection.getProjectionMatrix(
+            viewSelection.getViewSet().getRecommendedNearPlane(), viewSelection.getViewSet().getRecommendedFarPlane());
+
+        CameraViewport newViewport;
+
+        if (projection.getAspectRatio() < (float)cameraViewport.getWidth() / (float)cameraViewport.getHeight())
+        {
+            // letterbox on sides
+            float letterboxAmount = (cameraViewport.getWidth() - cameraViewport.getHeight() * projection.getAspectRatio()) / cameraViewport.getWidth();
+            projectionMatrix = Matrix4.translate(letterboxAmount, 0, 0)
+                .times(Matrix4.scale(1 - letterboxAmount, 1, 1))
+                .times(projectionMatrix);
+
+            newViewport = new CameraViewport(viewSnap, projectionMatrix, cameraViewport.getViewportCrop(),
+                cameraViewport.getX(), cameraViewport.getY(), cameraViewport.getWidth(), cameraViewport.getHeight());
+        }
+        else
+        {
+            // letterbox on top and bottom
+            float letterboxAmount = (cameraViewport.getHeight() - cameraViewport.getWidth() / projection.getAspectRatio()) / cameraViewport.getHeight();
+            projectionMatrix = Matrix4.scale(1, 1 - letterboxAmount, 1)
+                .times(projectionMatrix);
+
+            newViewport = new CameraViewport(viewSnap, projectionMatrix, cameraViewport.getViewportCrop(),
+                cameraViewport.getX(), cameraViewport.getY(), cameraViewport.getWidth(), cameraViewport.getHeight());
+        }
+
+        contentRoot.draw(framebuffer, newViewport);
     }
 
     @Override
