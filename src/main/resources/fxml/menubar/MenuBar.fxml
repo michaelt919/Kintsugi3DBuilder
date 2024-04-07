@@ -12,6 +12,7 @@
   ~
   -->
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
@@ -69,13 +70,13 @@
                     <Menu mnemonicParsing="false" text="Workflow">
                         <items>
                         <MenuItem mnemonicParsing="false" onAction="#objectOrientation" text="Object Orientation..." />
-                        <MenuItem mnemonicParsing="false" onAction="#lightCalibration" text="Light Calibration..." />
-                            <MenuItem mnemonicParsing="false" onAction="#eyedropperColorChecker" text="Color Calibration...">
+                            <MenuItem mnemonicParsing="false" onAction="#eyedropperColorChecker" text="Grayscale Calibration...">
                                 <accelerator>
                                     <KeyCodeCombination alt="UP" code="B" control="ANY" meta="UP" shift="UP" shortcut="UP" />
                                 </accelerator>
                         </MenuItem>
-                            <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Specular Fit...">
+                        <MenuItem mnemonicParsing="false" onAction="#lightCalibration" text="Light Calibration..." />
+                            <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Process Textures...">
                                 <accelerator>
                                     <KeyCodeCombination alt="UP" code="P" control="ANY" meta="UP" shift="UP" shortcut="UP" />
                                 </accelerator>
@@ -379,9 +380,12 @@
             <!--            <Insets />-->
             <!--        </opaqueInsets>-->
                 </MenuBar>
-                <HBox alignment="CENTER_LEFT" spacing="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
+                <HBox alignment="CENTER_LEFT" spacing="10.0" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
                     <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" visible="false" />
-                    <Button fx:id="settingsButton" contentDisplay="CENTER" mnemonicParsing="false" onAction="#openSystemSettingsModal" prefHeight="25.0" prefWidth="80.0" text="Settings" />
+                    <Button fx:id="settingsButton" contentDisplay="CENTER" mnemonicParsing="false" onAction="#openSystemSettingsModal" prefHeight="25.0" prefWidth="80.0" text="Settings">
+                     <HBox.margin>
+                        <Insets />
+                     </HBox.margin></Button>
                     <Button mnemonicParsing="false" onAction="#help_about" text="About" />
                 </HBox>
             </children>
