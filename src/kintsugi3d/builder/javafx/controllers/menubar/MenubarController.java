@@ -103,6 +103,7 @@ public class MenubarController
     @FXML private CheckMenuItem multiSamplingCheckMenuItem;
     @FXML private CheckMenuItem sceneWindowMenuItem;
     @FXML private CheckMenuItem relightingCheckMenuItem;
+    @FXML private CheckMenuItem sceneWindowCheckMenuItem;
     @FXML private CheckMenuItem environmentMappingCheckMenuItem; //TODO imp. this
     @FXML private CheckMenuItem shadowsCheckMenuItem;
     @FXML private CheckMenuItem visibleLightsCheckMenuItem;
@@ -368,6 +369,8 @@ public class MenubarController
             internalModels.getSettingsModel().getBooleanProperty("visibleLightsEnabled"));
         visibleLightWidgetsCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("lightWidgetsEnabled"));
+        sceneWindowCheckMenuItem.selectedProperty().bindBidirectional(
+            internalModels.getSettingsModel().getBooleanProperty("sceneWindowOpen"));
         visibleCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("visibleCameraPosesEnabled"));
         visibleSavedCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(

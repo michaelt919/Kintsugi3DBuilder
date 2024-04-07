@@ -99,6 +99,8 @@
             </SeparatorMenuItem>
                         <CheckMenuItem fx:id="relightingCheckMenuItem" mnemonicParsing="false" onAction="#updateRelightingVisibility" selected="true" text="Relighting" />
                         <CheckMenuItem fx:id="visibleLightWidgetsCheckMenuItem" mnemonicParsing="false" selected="true" text="Show light widgets" />
+                     <SeparatorMenuItem mnemonicParsing="false" />
+                     <CheckMenuItem fx:id="sceneWindowCheckMenuItem" mnemonicParsing="false" text="Scene Window" />
             <!--                <Menu fx:id="perLightIntensityMenu" mnemonicParsing="false" text="Per-light Intensity (UNFINISHED)">-->
             <!--                    <items>-->
             <!--                        <CheckMenuItem fx:id="enableLight1CheckMenuItem" mnemonicParsing="false" selected="true" text="Enable Light 1" />-->

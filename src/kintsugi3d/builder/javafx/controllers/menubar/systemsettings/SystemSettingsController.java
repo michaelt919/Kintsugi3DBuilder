@@ -39,8 +39,8 @@ public class SystemSettingsController {
         "Lighting Settings",
         "Photo Projection Settings",
         "System Memory Settings",
-        "Visual Settings",
-        "Miscellaneous"
+        "Visual Settings"//,
+//        "Miscellaneous"
     };
     private InternalModels internalModels;
     private Window window;
