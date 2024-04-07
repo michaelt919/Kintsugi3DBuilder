@@ -12,6 +12,10 @@
 
 package kintsugi3d.builder.export.specular;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -35,10 +39,6 @@ import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
 
 public class SpecularFitRequestUI implements IBRRequestUI
 {
@@ -86,7 +86,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
 
         svdRequestUI.stage = new Stage();
         svdRequestUI.stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-        svdRequestUI.stage.setTitle("Specular fit request");
+        svdRequestUI.stage.setTitle("Process Textures");
         svdRequestUI.stage.setScene(new Scene(parent));
         svdRequestUI.stage.initOwner(window);
 

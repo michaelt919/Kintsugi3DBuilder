@@ -59,7 +59,7 @@ public class ExportRequestUI implements IBRRequestUI {
 
         exportRequest.stage = new Stage();
         exportRequest.stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-        exportRequest.stage.setTitle("Export Request");
+        exportRequest.stage.setTitle("Export glTF");
         exportRequest.stage.setScene(new Scene(parent));
         exportRequest.stage.initOwner(window);
         return exportRequest;
