@@ -12,13 +12,13 @@
 
 package kintsugi3d.builder.preferences;
 
-import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerializer;
-import kintsugi3d.builder.preferences.serialization.UserPreferencesSerializer;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
+
+import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.preferences.serialization.JacksonUserPreferencesSerializer;
+import kintsugi3d.builder.preferences.serialization.UserPreferencesSerializer;
 
 public class GlobalUserPreferencesManager
 {
@@ -67,8 +67,8 @@ public class GlobalUserPreferencesManager
 
     private void inject()
     {
-//        MultithreadModels.getInstance().getLoadOptionsModel().copyFrom(preferencesModel.getLoadOptions());
-//        MultithreadModels.getInstance().getSettingsModel().copyFrom(preferencesModel.getSettings());
+        MultithreadModels.getInstance().getLoadOptionsModel().copyFrom(preferencesModel.getLoadOptions());
+        MultithreadModels.getInstance().getSettingsModel().copyFrom(preferencesModel.getSettings());
     }
 
     private void collect()
