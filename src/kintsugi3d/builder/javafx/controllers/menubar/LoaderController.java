@@ -18,7 +18,7 @@ import java.net.URL;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.ResourceBundle;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.stream.IntStream;
 
 import javafx.application.Platform;
@@ -62,7 +62,7 @@ public class LoaderController implements Initializable
     private File photoDir;
 
     private Runnable loadStartCallback;
-    private Consumer<ViewSet> viewSetCallback;
+    private BiConsumer<ViewSet, File> viewSetCallback;
 
     @Override
     public void initialize(URL location, ResourceBundle resources)
@@ -86,7 +86,7 @@ public class LoaderController implements Initializable
         this.loadStartCallback = callback;
     }
 
-    public void setViewSetCallback(Consumer<ViewSet> callback)
+    public void setViewSetCallback(BiConsumer<ViewSet, File> callback)
     {
         this.viewSetCallback = callback;
     }
@@ -196,7 +196,8 @@ public class LoaderController implements Initializable
 
             if (viewSetCallback != null)
             {
-                MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(viewSetCallback);
+                MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(
+                    viewSet -> viewSetCallback.accept(viewSet, cameraFile.getParentFile()));
             }
 
             new Thread(() ->
