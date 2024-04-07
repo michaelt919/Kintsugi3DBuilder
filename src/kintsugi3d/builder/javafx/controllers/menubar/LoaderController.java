@@ -12,13 +12,22 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar;
 
+import java.awt.*;
+import java.io.File;
+import java.net.URL;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.ResourceBundle;
+import java.util.function.Consumer;
+import java.util.stream.IntStream;
+
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ChoiceBox;
-import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.*;
@@ -32,15 +41,6 @@ import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
-import java.io.File;
-import java.net.URL;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.ResourceBundle;
-import java.util.function.Consumer;
-import java.util.stream.IntStream;
-
 public class LoaderController implements Initializable
 {
     private static final Logger log = LoggerFactory.getLogger(LoaderController.class);
@@ -49,7 +49,7 @@ public class LoaderController implements Initializable
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
     @FXML private Text loadCheckImages;
-    @FXML private GridPane root;
+    @FXML private VBox root;
 
     private Stage thisStage;
 
