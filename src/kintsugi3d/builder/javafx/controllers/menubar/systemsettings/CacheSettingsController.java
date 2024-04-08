@@ -54,39 +54,129 @@ public class CacheSettingsController implements SystemSettingsControllerBase
         {
             if (response == ButtonType.OK)
             {
-                deleteRecursively(previewCacheDir);
-                deleteRecursively(fitCacheDir);
+                clearPreviewCache(previewCacheDir);
+                clearFitCache(fitCacheDir);
             }
         });
     }
 
-    private void deleteRecursively(File file)
+    private void clearPreviewCache(File directory)
     {
-        deleteRecursively(file, file);
-    }
+        assert directory.isDirectory();
+        File[] projects = directory.listFiles();
+        assert projects != null;
 
-    private void deleteRecursively(File original, File current)
-    {
-        if (current.isDirectory())
+        for (File project : projects)
         {
-            File[] contents = current.listFiles();
-            if (contents != null)
+            assert project.isDirectory();
+            File[] resolutions = project.listFiles();
+            assert resolutions != null;
+
+            for (File resolution : resolutions)
             {
-                for (File f : contents)
+                assert resolution.isDirectory();
+                File[] images = resolution.listFiles();
+                assert images != null;
+
+                for (File image : images)
                 {
-                    deleteRecursively(original, f);
+                    // Extra check due to danger of this operation
+                    String imgName = image.toString();
+                    assert imgName.startsWith(directory.toString());
+                    assert imgName.endsWith(".png");
+                    image.delete();
                 }
+
+                resolution.delete(); // Will only work if directory is empty.
             }
 
-            // Extra check due to danger of this operation
-            assert current.toString().startsWith(original.toString());
-            current.delete();
-        }
-        else
-        {
-            // Extra check due to danger of this operation
-            assert current.toString().startsWith(original.toString());
-            current.delete();
+            project.delete(); // Will only work if directory is empty.
         }
     }
+
+    private void clearFitCache(File directory)
+    {
+        assert directory.isDirectory();
+        File[] projects = directory.listFiles();
+        assert projects != null;
+
+        for (File project : projects)
+        {
+            assert project.isDirectory();
+            File[] resolutions = project.listFiles();
+            assert resolutions != null;
+
+            for (File resolution : resolutions)
+            {
+                assert resolution.isDirectory();
+
+                // debug.png
+                File debugImg = new File(resolution, "debug.png");
+                assert debugImg.toString().startsWith(directory.toString());
+                debugImg.delete();
+
+                // sampleLocations.txt
+                File sampleLocations = new File(resolution, "sampleLocations.txt");
+                assert sampleLocations.toString().startsWith(directory.toString());
+                sampleLocations.delete();
+
+                // Everything left should be chunks folders (including the sampled folder)
+                File[] chunks = resolution.listFiles();
+                assert chunks != null;
+
+                for (File chunk : chunks)
+                {
+                    assert chunk.isDirectory();
+                    File[] images = chunk.listFiles();
+                    assert images != null;
+
+                    for (File image : images)
+                    {
+                        // Extra check due to danger of this operation
+                        String imgName = image.toString();
+                        assert imgName.startsWith(directory.toString());
+                        assert imgName.endsWith(".png");
+                        image.delete();
+                    }
+
+                    chunk.delete();
+                }
+
+                resolution.delete(); // Will only work if directory is empty.
+            }
+
+            project.delete(); // Will only work if directory is empty.
+        }
+    }
+
+//    // Not using this since it scares me.
+//    private void deleteRecursively(File file)
+//    {
+//        deleteRecursively(file, file);
+//    }
+//
+//    private void deleteRecursively(File original, File current)
+//    {
+//        if (current.isDirectory())
+//        {
+//            File[] contents = current.listFiles();
+//            if (contents != null)
+//            {
+//                for (File f : contents)
+//                {
+//                    deleteRecursively(original, f);
+//                }
+//            }
+//
+//            // Extra check due to danger of this operation
+//            assert current.toString().startsWith(original.toString());
+//            current.delete();
+//        }
+//        else
+//        {
+//            // Extra check due to danger of this operation
+//            assert current.toString().startsWith(original.toString());
+//            current.delete();
+//        }
+//    }
 }
