@@ -49,6 +49,12 @@ public class Kintsugi3DViewerLauncher
             executable = getExecFromDirectory(new File("."));
         }
 
+        if (executable.isEmpty())
+        {
+            // Try to get up to Applications directory on MacOS.
+            executable = getExecFromDirectory(new File("../../.."));
+        }
+
         return executable;
     }
 
