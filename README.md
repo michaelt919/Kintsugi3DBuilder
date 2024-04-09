@@ -8,6 +8,9 @@ Kintsugi 3D still relies on Agisoft Metashape (or potentially other photogrammet
 
 In contrast, Kintsugi 3D, like its predecessor IBRelight, uses a photographic technique that leverages a flash mounted on the camera, There are two primary modes of capture: against a black background in a studio environment, or in-gallery. These two options reduce unintentional bounce light and offer accessibility and flexibility in terms of how the photos are taken, while providing essential reflectivity data for Kintsugi 3D to reconstruct specular maps, which most other photogrammetry workflows cannot replicate. 
 
+## Download
+Download from the Releases page: https://github.com/michaelt919/Kintsugi3DBuilder/releases
+
 ## References
 Lou Brown, Charles Walbridge, and Michael Tetzlaff, “Kintsugi 3D: An Empirically-Based Photogrammetry Production Pipeline,” *IS&T Archiving Conference*, 2024, pp. 76-80.
 
