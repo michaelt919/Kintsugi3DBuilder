@@ -227,9 +227,12 @@ public class LoaderController implements Initializable
                 MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(viewSetCallback);
             }
 
+            String id = null; //This is the path to the camera file? Ours is zipped
+
             new Thread(() ->
                     MultithreadModels.getInstance().getLoadingModel()
-                            .loadAgisoftFromZIP(metashapeObjectChunk)).start();
+                            .loadAgisoftFromZIP(id, metashapeObjectChunk, primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
+                    .start();
 
             close();
         }
@@ -252,10 +255,13 @@ public class LoaderController implements Initializable
                 choosenFile = plyFile;
             }
             new Thread(() ->
-                MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(
-                        cameraFile.getPath(), cameraFile, choosenFile, photoDir,
-                        primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
-                .start();
+                MultithreadModels.getInstance()
+                        .getLoadingModel()
+                            .loadFromAgisoftFiles(
+                                cameraFile.getPath(), cameraFile, choosenFile, photoDir,
+                                primaryViewChoiceBox.getSelectionModel().getSelectedItem()
+                            )
+            ).start();
 
             close();
         }

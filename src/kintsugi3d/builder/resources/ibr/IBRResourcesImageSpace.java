@@ -18,6 +18,8 @@ import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import javax.imageio.ImageIO;
 
 import kintsugi3d.builder.app.ApplicationFolders;
@@ -211,20 +213,26 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         // 1) Construct camera ID to filename map from frame's ZIP
             Map<Integer, String> cameraPathsMap = new HashMap<Integer, String>();
             // Open the xml files that contains all the cameras' ids and file paths
-            Document frame = metashapeObjectChunk.getFrameZip(); //TODO: THIS WAS NULL
+            Document frame = metashapeObjectChunk.getFrameZip();
+            if (frame == null || frame.getDocumentElement() == null){
+                System.out.println("Frame document is null");
+                return null;
+            }
 
-            // Get the camera list from the xml document
-            Element camerasElement = (Element) frame.getDocumentElement().getElementsByTagName("cameras").item(0);
-            NodeList cameraList = camerasElement.getElementsByTagName("camera");
+            // Get the first camera element in the frame XML document. The tree is frame>cameras
+            Element frameElement = (Element) frame.getElementsByTagName("frame").item(0);
+
+            NodeList cameraList = frameElement.getElementsByTagName("camera");
             // Loop through the cameras and store each pair of id and path in the map
             for (int i = 0; i < cameraList.getLength(); i++) {
                 // Get the path attribute
                 Element cameraElement = (Element) cameraList.item(i);
-                int cameraId = Integer.parseInt(camerasElement.getAttribute("id"));
+                int cameraId = Integer.parseInt(cameraElement.getAttribute("camera_id"));
                 Element photoElement = (Element) cameraElement.getElementsByTagName("photo").item(0);
                 String path = photoElement.getAttribute("path");
 
                 // Remove "../../../" from the front of the path variable if present to make it relative to the project directory
+                // TODO: This actually makes it relative only to the "Processed" directory
                 if (path.startsWith("../../../")) {
                     path = path.substring(9);
                 }
@@ -233,18 +241,39 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 cameraPathsMap.put(cameraId, path);
             }
             // TODO: Transfer cameraPath's map into a ViewSet somehow
+            //  Modify view set to be able to accept these altered paths, but also fix any
+            //   getters that want to old formatting.
 
-        // 2) Load ViewSet from ZipInputStream from chunk's ZIP (eventually will accept the filename map as a parameter) TODO: Test
-            // Create an InputStream for the zipped file
-            File zipFile = new File(chunkDirectory, "chunk.zip/doc.xml");
-            FileInputStream fis = new FileInputStream(zipFile);
-            InputStream stream = new BufferedInputStream(fis);
-            // Create and store ViewSet
-            this.viewSet = ViewSetReaderFromAgisoftXML.getInstance().readFromStream(stream, chunkDirectory, chunkDirectory); //The way the other version does this
+
+
+        // 2) Load ViewSet from ZipInputStream from chunk's ZIP (eventually will accept the filename map as a parameter)
+            InputStream fileStream = null;
+            String targetFileName = "doc.xml"; // Specify the desired file name
+            try {
+                File zipFile = new File(chunkDirectory, "chunk.zip");
+                FileInputStream fis = new FileInputStream(zipFile);
+                ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis));
+                ZipEntry entry;
+                while ((entry = zis.getNextEntry()) != null) {
+                    if (entry.getName().equals(targetFileName)) {
+                        // Found the desired file inside the zip
+                        fileStream = new BufferedInputStream(zis);
+                        // Create and store ViewSet
+                        this.viewSet = ViewSetReaderFromAgisoftXML.getInstance().readFromStream(fileStream, chunkDirectory, chunkDirectory); //The way the other version does this
+                        break; // No need to continue searching
+                    }
+                }
+
+                zis.close(); // Close the zip stream
+            } catch (IOException e) {
+                // Print error to log
+                System.out.println("Error reading zip file: " + e.getMessage());
+            }
 
 
         // 3) load geometry from ZipInputStream from model's ZIP
-            this.geometry = VertexGeometry.createFromPLYFile(new File(chunkDirectory, "model/model.zip/mesh.ply"));
+            this.geometry = VertexGeometry.createFromZippedPLYFile(new File(chunkDirectory, "0/model/model.zip"), "mesh.ply");
+
             if (this.geometry != null) { //TODO: Why does it say it can never equal null? Shouldn't createFromPLYFile be capable of failing?
                 viewSet.setGeometryFile(geometry.getFilename());
             }

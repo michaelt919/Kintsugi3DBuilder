@@ -36,11 +36,7 @@ import static org.jengineering.sjmply.PLYType.UINT16;
 import static org.jengineering.sjmply.PLYType.UINT32;
 import static org.jengineering.sjmply.PLYType.UINT8;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -53,7 +49,10 @@ import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
+import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import org.jengineering.sjmply.PLYType.PLYList;
 import org.jengineering.sjmply.PLYType.PLYSequence;
 import org.jengineering.sjmply.PLYType.PLYUInt;
@@ -210,6 +209,54 @@ public class PLY
       return result;
     }
   }
+
+  /**
+   * Loads a PLY file from inside a zip file.
+   * @param zipFile The File object of the zip file
+   * @param fileName The name of the PLY file that is zipped inside zip file
+   * @return PLY object
+   * @throws IOException
+   */
+  public static PLY loadFromZip(File zipFile, String fileName) throws IOException {
+
+    // Make an input stream from zipFile
+    try(ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFile))) {
+
+      // Target zipIn to be on the fileName entry
+      ZipEntry entry = zipIn.getNextEntry();
+      while (entry != null) {
+        if (entry.getName().equals(fileName)) {
+          break;
+        }
+        entry = zipIn.getNextEntry();
+      }
+      // Throw error if unable to find PLY file in zip
+      if (entry == null) {
+        throw new IOException("File not found in zip");
+      }
+
+      // Read the file
+      try (InputStream in = new BufferedInputStream(zipIn)) {
+        PLY result = read(in);
+        int chr = in.read();
+        switch (result.getFormat()) {
+          default:
+            throw new AssertionError();
+          case ASCII:
+            while (Character.isWhitespace(chr))
+              chr = in.read();
+          case BINARY_BIG_ENDIAN:
+          case BINARY_LITTLE_ENDIAN:
+            if (0 <= chr)
+              throw new IOException("File is longer than expected.");
+        }
+
+        return result;
+      }
+    }
+  }
+
+
 
 // FIELDS
   private PLYFormat format;

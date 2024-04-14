@@ -248,21 +248,23 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions) {
+    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions, String primaryViewName) {
         //TODO This is the last function in the chain
         //  it should launch the Kintsugi project with all proper files and such.
         //  It will use the IBRResourcesImageSpace loadAgisoftFromZip() function
 
         // TODO get the supporting files directory. From where?
         File supportingFilesDirectory = null;
+
         try {
-            Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
+            Builder<ContextType>builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                     .setLoadingMonitor(this.loadingMonitor)
                     .setLoadOptions(loadOptions)
-                    .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory);
-                    //.setPrimaryView(primaryViewName);
+                    .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory)
+                    .setPrimaryView(primaryViewName);
 
-        } catch (Exception e){
+            loadInstance(id, builder);
+        } catch (Exception e) {
             handleMissingFiles(e);
         }
     }
@@ -272,7 +274,6 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         ReadonlyLoadOptionsModel loadOptions)
     {
         this.loadingMonitor.startLoading();
-
         try
         {
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)

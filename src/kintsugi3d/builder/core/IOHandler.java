@@ -31,7 +31,7 @@ public interface IOHandler
     void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions);
     void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory,
         String primaryViewName, ReadonlyLoadOptionsModel loadOptions);
-    void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptionsModel);
+    void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptionsModel, String primaryViewName);
 
     void requestFragmentShader(File shaderFile);
 

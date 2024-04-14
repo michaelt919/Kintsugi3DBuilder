@@ -151,9 +151,9 @@ public class IOModel
         this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, primaryViewName, loadOptionsModel);
     }
 
-    public void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk)
+    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, String primaryViewName)
     {
-        this.handler.loadAgisoftFromZIP(metashapeObjectChunk, loadOptionsModel);
+        this.handler.loadAgisoftFromZIP(id, metashapeObjectChunk, loadOptionsModel, primaryViewName);
     }
     public void requestFragmentShader(File shaderFile)
     {
