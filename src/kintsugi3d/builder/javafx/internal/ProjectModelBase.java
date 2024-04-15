@@ -154,14 +154,15 @@ public abstract class ProjectModelBase implements ProjectModel
             Node colorPickerImageNode = document.getElementsByTagName("ColorCheckerFile").item(0);
             if (colorPickerImageNode != null)
             {
+                colorPickerImageNode.getTextContent();
                 NodeList colorPickerImageNodes = colorPickerImageNode.getChildNodes();
 
-                synchronized (this.colorPickerImage)
+//                synchronized (this.colorPickerImage)
                 {
                     this.colorPickerImage.equals(" ");
-                    for (int i = 0; i < colorPickerImageNodes.getLength(); i++)
+//                    for (int i = 0; i < colorPickerImageNodes.getLength(); i++)
                     {
-                        Node colorPickerNode = colorPickerImageNodes.item(i);
+                        Node colorPickerNode = colorPickerImageNodes.item();
                         if (colorPickerNode instanceof Element)
                         {
                             this.getColorCheckerFile().equals(colorPickerImage);
@@ -236,15 +237,16 @@ public abstract class ProjectModelBase implements ProjectModel
             }
         }
 
-        synchronized (this.getColorCheckerFile())
+//        synchronized (this.getColorCheckerFile())
         {
             Element colorPickerImageElement = document.createElement("ColorCheckerFile");
+            colorPickerImageElement.setTextContent(this.getColorCheckerFile());
             rootElement.appendChild(colorPickerImageElement);
 
-            for (ObjectPoseSetting objectPose : this.getObjectPoseList())
-            {
-                colorPickerImageElement.appendChild(objectPose.toDOMElement(document));
-            }
+//            for (ObjectPoseSetting objectPose : this.getObjectPoseList())
+//            {
+//                colorPickerImageElement.appendChild(objectPose.toDOMElement(document));
+//            }
 
         }
 
