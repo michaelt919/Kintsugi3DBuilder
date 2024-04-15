@@ -470,6 +470,7 @@ public final class ProjectIO
     {
         FileChooser fileChooser = getProjectFileChooserSafe();
         fileChooser.setTitle("Save project");
+        fileChooser.setInitialDirectory(projectFile.getParentFile());
         projectFileChooser.getExtensionFilters().clear();
         projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Full projects", "*.k3d"));
         projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Standalone view sets", "*.vset"));
