@@ -49,7 +49,6 @@ public class WelcomeWindowController
         return INSTANCE;
     }
 
-
     @FXML private ProgressBar progressBar;
 
     //toggle groups
@@ -110,7 +109,6 @@ public class WelcomeWindowController
 //                loadingComplete();
 //            }
 //        });
-
         INSTANCE = this;
     }
 
@@ -125,12 +123,10 @@ public class WelcomeWindowController
 
     public void splitMenuButtonActions(ActionEvent actionEvent) {
         Object source = actionEvent.getSource();
-
         //user clicks on a menu item
         if (source.getClass() == MenuItem.class) {
             handleMenuItemSelection((MenuItem) actionEvent.getSource());
         }
-
         //user clicks on the button, so unroll the menu
         else{
             unrollMenu();
@@ -153,17 +149,14 @@ public class WelcomeWindowController
         {
             ProjectIO.getInstance().createProjectNew(parentWindow);
             updateRecentProjectsButton();
-
         }
     }
 
     @FXML
     private void file_openProject()//TODO: CHANGE NAMING CONVENTION? (file_...)
     {
-
         ProjectIO.getInstance().openProjectWithPrompt(parentWindow);
         hideWelcomeWindow();
-
     }
 
     @FXML
@@ -173,7 +166,7 @@ public class WelcomeWindowController
         ProjectIO.getInstance().closeProjectAfterConfirmation();
     }
 
-    //TODO: HIDE WELCOME WINDOW WHEN A PROJECT IS MADE/OPENED
+    //TODO: FIND WAY TO NOT CLOSE FILE, BUT HIDE SO IT CAN BE RESHOWN
     public void hideWelcomeWindow(){
         window.close();
     }
