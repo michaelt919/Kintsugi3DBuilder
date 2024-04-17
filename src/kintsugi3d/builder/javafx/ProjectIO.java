@@ -216,7 +216,7 @@ public final class ProjectIO
         projectLoaded = true;
     }
 
-    private void onViewSetCreated(ViewSet viewSet, Window parentWindow)
+    private void onViewSetCreated(ViewSet viewSet, Window parentWindow, File defaultDirectory)
     {
         // Force user to save the project before proceeding, so that they have a place to save the results
         saveProjectAs(parentWindow, () ->
@@ -239,8 +239,9 @@ public final class ProjectIO
                 viewSet.setRootDirectory(filesDirectory);
                 viewSet.setSupportingFilesDirectory(filesDirectory);
             }
-        });
+        }, defaultDirectory);
     }
+
 
     public void createProject(Window parentWindow)
     {
@@ -253,7 +254,8 @@ public final class ProjectIO
                     LoaderController createProjectController =
                         makeWindow(parentWindow, "Load Files", loaderWindowOpen, 750, 330, "fxml/menubar/Loader.fxml");
                     createProjectController.setLoadStartCallback(this::onLoadStart);
-                    createProjectController.setViewSetCallback(viewSet -> onViewSetCreated(viewSet, parentWindow));
+                    createProjectController.setViewSetCallback(
+                        (viewSet, defaultDirectory) -> onViewSetCreated(viewSet, parentWindow, defaultDirectory));
                     createProjectController.init();
                 }
                 catch (Exception e)
@@ -275,7 +277,7 @@ public final class ProjectIO
                     CreateProjectController createProjectController =
                             makeWindow(parentWindow, "Load Files", loaderWindowOpen, "fxml/menubar/CreateProject.fxml");
                     createProjectController.setLoadStartCallback(this::onLoadStart);
-                    createProjectController.setViewSetCallback(viewSet -> onViewSetCreated(viewSet, parentWindow));
+                    createProjectController.setViewSetCallback(viewSet -> onViewSetCreated(viewSet, parentWindow, null));
                     createProjectController.init();
                     WelcomeWindowController.getInstance().hideWelcomeWindow();
                 }
@@ -374,6 +376,10 @@ public final class ProjectIO
             this.projectLoaded = true;
 
             startLoad(projectFile, vsetFile);
+
+            // Have to set loaded project file after startLoad since startLoad resets everything in order to unload a previously loaded project.
+            MultithreadModels.getInstance().getLoadingModel().setLoadedProjectFile(projectFile);
+
             WelcomeWindowController.getInstance().hideWelcomeWindow();
         }
     }
@@ -424,6 +430,7 @@ public final class ProjectIO
                     ioModel.saveToVSETFile(projectFile);
                     this.vsetFile = projectFile;
                     this.projectFile = null;
+                    MultithreadModels.getInstance().getLoadingModel().setLoadedProjectFile(vsetFile);
                 }
                 else
                 {
@@ -433,6 +440,7 @@ public final class ProjectIO
                     this.vsetFile = new File(filesDirectory, projectFile.getName() + ".vset");
                     ioModel.saveToVSETFile(vsetFile);
                     InternalModels.getInstance().getProjectModel().saveProjectFile(projectFile, vsetFile);
+                    MultithreadModels.getInstance().getLoadingModel().setLoadedProjectFile(projectFile);
                 }
 
                 ioModel.saveGlTF(filesDirectory);
@@ -461,13 +469,23 @@ public final class ProjectIO
 
     public void saveProjectAs(Window parentWindow, Runnable callback)
     {
+        saveProjectAs(parentWindow, callback, null);
+    }
+
+    public void saveProjectAs(Window parentWindow, Runnable callback, File defaultDirectory)
+    {
         FileChooser fileChooser = getProjectFileChooserSafe();
         fileChooser.setTitle("Save project");
         projectFileChooser.getExtensionFilters().clear();
         projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Full projects", "*.k3d"));
         projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Standalone view sets", "*.vset"));
         fileChooser.setSelectedExtensionFilter(fileChooser.getExtensionFilters().get(0));
-        if (projectFile != null)
+        if (defaultDirectory != null)
+        {
+            fileChooser.setInitialFileName("");
+            fileChooser.setInitialDirectory(defaultDirectory);
+        }
+        else if (projectFile != null)
         {
             fileChooser.setInitialFileName(projectFile.getName());
             fileChooser.setInitialDirectory(projectFile.getParentFile());
@@ -497,6 +515,7 @@ public final class ProjectIO
             {
                 fileContainer.selectedFile = fileChooser.showSaveDialog(parentWindow);
                 fileContainer.complete = true;
+                RecentProjects.updateRecentFiles(fileContainer.selectedFile.toString());
             });
 
             while (!fileContainer.complete)

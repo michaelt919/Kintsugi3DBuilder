@@ -130,6 +130,16 @@ public class IOModel
         return this.handler.getLoadedViewSet();
     }
 
+    public File getLoadedProjectFile()
+    {
+        return this.handler.getLoadedProjectFile();
+    }
+
+    public void setLoadedProjectFile(File loadedProjectFile)
+    {
+        this.handler.setLoadedProjectFile(loadedProjectFile);
+    }
+
     /**
      * Uses parent of VSET file as supporting files directory, by default
      * @param id

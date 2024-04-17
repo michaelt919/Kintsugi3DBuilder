@@ -27,6 +27,8 @@ public interface IOHandler
     boolean isInstanceLoaded();
     void addViewSetLoadCallback(Consumer<ViewSet> callback);
     ViewSet getLoadedViewSet();
+    File getLoadedProjectFile();
+    void setLoadedProjectFile(File loadedProjectFile);
     void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions);
     void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory,
         String primaryViewName, ReadonlyLoadOptionsModel loadOptions);

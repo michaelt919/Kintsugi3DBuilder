@@ -12,6 +12,17 @@
 
 package kintsugi3d.builder.io;
 
+import java.io.File;
+import java.io.InputStream;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TreeSet;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.metrics.ViewRMSE;
@@ -21,17 +32,6 @@ import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import java.io.File;
-import java.io.InputStream;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Objects;
 
 /**
  * Handles loading view sets from a camera definition file exported in XML format from Agisoft PhotoScan.
@@ -165,7 +165,41 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory) throws XMLStreamException
     {
         Map<String, Sensor> sensorSet = new Hashtable<>();
-        HashSet<Camera> cameraSet = new HashSet<>();
+        TreeSet<Camera> cameraSet = new TreeSet<>((c1, c2) ->
+        {
+            // Attempt to sort the camera IDs which are probably integers but not guaranteed to be.
+            try
+            {
+                int id1 = Integer.parseInt(c1.id);
+
+                try
+                {
+                    // Both are integers; compare as numbers.
+                    int id2 = Integer.parseInt(c2.id);
+                    return Integer.compare(id1, id2);
+                }
+                catch (NumberFormatException e)
+                {
+                    // id1 is a number but id2 isn't
+                    return -1;
+                }
+            }
+            catch (NumberFormatException e)
+            {
+                try
+                {
+                    int id2 = Integer.parseInt(c2.id);
+
+                    // id2 is a number but id1 isn't
+                    return 1;
+                }
+                catch (NumberFormatException e2)
+                {
+                    // Neither are numbers; compare as strings.
+                    return c1.id.compareTo(c2.id);
+                }
+            }
+        });
 
         Sensor sensor = null;
         Camera camera = null;

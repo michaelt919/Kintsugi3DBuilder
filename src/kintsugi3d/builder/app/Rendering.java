@@ -185,6 +185,7 @@ public final class Rendering
         ExtendedCameraModel cameraModel = MultithreadModels.getInstance().getCameraModel();
         ExtendedObjectModel objectModel = MultithreadModels.getInstance().getObjectModel();
         SettingsModel settingsModel = MultithreadModels.getInstance().getSettingsModel();
+        CameraViewListModel cameraViewListModel = MultithreadModels.getInstance().getCameraViewListModel();
         IOModel ioModel = MultithreadModels.getInstance().getLoadingModel();
 
         // Bind tools
@@ -316,10 +317,10 @@ public final class Rendering
 
         ioModel.setLoadingHandler(instanceManager);
 
-        instanceManager.setObjectModel(() -> Matrix4.IDENTITY);
+        instanceManager.setObjectModel(objectModel);
         instanceManager.setCameraModel(cameraModel);
         instanceManager.setLightingModel(lightingModel);
-        instanceManager.setObjectModel(objectModel);
+        instanceManager.setCameraViewListModel(cameraViewListModel);
         instanceManager.setSettingsModel(settingsModel);
 
         canvas.addKeyPressListener((win, key, modifierKeys) ->
