@@ -374,7 +374,7 @@
             <!--            <Insets />-->
             <!--        </opaqueInsets>-->
                 </MenuBar>
-                <HBox alignment="CENTER_LEFT" spacing="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
+                <HBox alignment="CENTER_LEFT" spacing="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="-1.0">
                     <Button fx:id="settingsButton" contentDisplay="CENTER" mnemonicParsing="false" onAction="#openSystemSettingsModal" prefHeight="25.0" prefWidth="80.0" text="Settings" />
                     <Button mnemonicParsing="false" onAction="#help_about" text="About" />
                     <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" visible="false" />

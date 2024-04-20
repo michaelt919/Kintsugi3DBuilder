@@ -104,8 +104,6 @@ public class ExportRequestUI implements IBRRequestUI {
                                 Kintsugi3DViewerLauncher.launchViewer(ExportLocationFile);
                             }
                         }
-                       // else{log.error("Cancelled export");}
-
                 });}
             }
             catch(Exception ex)
@@ -124,26 +122,23 @@ public class ExportRequestUI implements IBRRequestUI {
     public void setAllVariables(ExportSettings settings){
         combineWeightsCheckBox.setSelected(settings.isCombineWeights());
         generateLowResolutionCheckBox.setSelected(settings.isGenerateLowResTextures());
-        /*
         glTFEnabledCheckBox.setSelected(settings.isGlTFEnabled());
         glTFPackTexturesCheckBox.setSelected(settings.isGlTFPackTextures());
         openViewerOnceCheckBox.setSelected(settings.isOpenViewerOnceComplete());
         int getMinimumTexRes = settings.getMinimumTextureResolution();
         minimumTextureResolutionComboBox.setItems(FXCollections.observableArrayList(256));
         minimumTextureResolutionComboBox.setValue(getMinimumTexRes);
-        */
     }
 
     //sets the settings to what the values are set on the widget
     public void saveAllVariables(ExportSettings settings){
         settings.setCombineWeights(combineWeightsCheckBox.isSelected());
         settings.setGenerateLowResTextures(generateLowResolutionCheckBox.isSelected());
-        /*
         settings.setGlTFEnabled(glTFEnabledCheckBox.isSelected());
         settings.setGlTFPackTextures(glTFPackTexturesCheckBox.isSelected());
         settings.setOpenViewerOnceComplete(openViewerOnceCheckBox.isSelected());
         settings.setMinimumTextureResolution(minimumTextureResolutionComboBox.getValue());
         System.out.println(minimumTextureResolutionComboBox.getValue());
-        */
+
     }
 }
