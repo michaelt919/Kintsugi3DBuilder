@@ -3,7 +3,6 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.SplitMenuButton?>
-<?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
 
@@ -18,16 +17,43 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   ~
   -->
+<!--
+   TODO: Finish Code to check for recent project files and take an image from them.
+   <fx:define>
+   <Image fx:id="btnImage" url="images/image.png" />
+   </fx:define>
+   Here is what to put in actual buttons. Also need to import them at top. Tried using scenebuilder, but formating broke.
+   <graphic>
+        <ImageView image="$btnImage" />
+     </graphic>
+-->
 
 <AnchorPane prefHeight="678.0" prefWidth="924.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController">
-    <ToolBar orientation="VERTICAL" prefHeight="678.0" prefWidth="924.0">
-        <Button mnemonicParsing="false" onAction="#file_createProject" prefHeight="77.2" prefWidth="498.0" text="Create Project" translateX="45.0" translateY="50.0" />
-        <SplitMenuButton fx:id="recentProjectsSplitMenuButton" alignment="CENTER_RIGHT" mnemonicParsing="false" onAction="#splitMenuButtonActions" onMouseExited="#hideMenu" popupSide="RIGHT" prefHeight="175.0" prefWidth="150.0" text="Recent Projects" textAlignment="CENTER" translateX="45.0" translateY="140.0">
-        </SplitMenuButton>
-        <Button mnemonicParsing="false" onAction="#help_userManual" prefHeight="76.87" prefWidth="252.0" text="Specularity Guide" translateX="650.0" translateY="-210.0" />
-        <Button layoutX="10.0" layoutY="71.0" mnemonicParsing="false" onAction="#file_openProject" prefHeight="76.87" prefWidth="252.0" text="Open Project" translateX="650.0" translateY="-170.0" />
-        <Button mnemonicParsing="false" onAction="#createProject" prefHeight="76.87" prefWidth="252.0" text="Create Project (NEW)" translateX="650.0" translateY="-130.0" />
-        <Button layoutX="10.0" layoutY="194.0" mnemonicParsing="false" onAction="#file_closeProject" prefHeight="76.87" prefWidth="252.0" text="Guides" translateX="650.0" translateY="-90.0" />
-    </ToolBar>
+     <Button mnemonicParsing="false" onAction="#file_createProject" prefHeight="77.2" prefWidth="498.0"
+         style="-fx-background-radius: 3;" text="Create Project" AnchorPane.leftAnchor="45.0" AnchorPane.topAnchor="46.0" />
+     <SplitMenuButton fx:id="recentProjectsSplitMenuButton" alignment="CENTER_RIGHT" mnemonicParsing="false"
+          onAction="#splitMenuButtonActions" onMouseExited="#hideMenu" popupSide="RIGHT" prefHeight="175.0"
+          prefWidth="150.0" style="-fx-background-radius: 4;" text="Recent Projects" textAlignment="CENTER"
+          AnchorPane.leftAnchor="45.0" AnchorPane.topAnchor="200.0">
+     </SplitMenuButton>
+     <Button mnemonicParsing="false" onAction="#help_userManual" prefHeight="76.87" prefWidth="252.0"
+         style="-fx-background-radius: 3;" text="Specularity Guide" AnchorPane.leftAnchor="663.0" AnchorPane.topAnchor="46.0" />
+     <Button mnemonicParsing="false" onAction="#file_openProject" prefHeight="76.87" prefWidth="252.0"
+         style="-fx-background-radius: 3;" text="Open Project" AnchorPane.leftAnchor="663.0" AnchorPane.topAnchor="170.0" />
+     <Button mnemonicParsing="false" onAction="#createProject" prefHeight="76.87" prefWidth="252.0"
+         style="-fx-background-radius: 3;" text="Create Project (NEW)" AnchorPane.leftAnchor="663.0" AnchorPane.topAnchor="294.0" />
+     <Button mnemonicParsing="false" onAction="#file_closeProject" prefHeight="76.87" prefWidth="252.0"
+         style="-fx-background-radius: 3;" text="Guides" AnchorPane.leftAnchor="663.0" AnchorPane.topAnchor="418.0" />
     <ProgressBar fx:id="progressBar" prefWidth="924.0" progress="0.0" visible="false" VBox.vgrow="ALWAYS" />
+   <Button alignment="BOTTOM_CENTER" layoutX="274.0" layoutY="196.0" mnemonicParsing="false" prefHeight="175.0"
+       prefWidth="150.0" style="-fx-background-radius: 4;" text="Recent2" textAlignment="CENTER"
+       AnchorPane.leftAnchor="219.0" AnchorPane.topAnchor="200.0" />
+   <Button alignment="BOTTOM_CENTER" layoutX="326.0" layoutY="200.0" mnemonicParsing="false" prefHeight="175.0" prefWidth="150.0"
+       style="-fx-background-radius: 4;" text="Recent3" AnchorPane.leftAnchor="393.0" AnchorPane.topAnchor="200.0" />
+   <Button alignment="BOTTOM_CENTER" layoutX="393.0" layoutY="388.0" mnemonicParsing="false" prefHeight="175.0" prefWidth="150.0"
+       style="-fx-background-radius: 4;" text="Recent6" AnchorPane.leftAnchor="393.0" AnchorPane.topAnchor="399.0" />
+   <Button alignment="BOTTOM_CENTER" layoutX="284.0" layoutY="206.0" mnemonicParsing="false" prefHeight="175.0" prefWidth="150.0"
+       style="-fx-background-radius: 4;" text="Recent5" AnchorPane.leftAnchor="219.0" AnchorPane.topAnchor="399.0" />
+   <Button alignment="BOTTOM_CENTER" layoutX="45.0" layoutY="399.0" mnemonicParsing="false" prefHeight="175.0" prefWidth="150.0"
+       style="-fx-background-radius: 4;" text="Recent4" AnchorPane.leftAnchor="45.0" AnchorPane.topAnchor="399.0" />
 </AnchorPane>
