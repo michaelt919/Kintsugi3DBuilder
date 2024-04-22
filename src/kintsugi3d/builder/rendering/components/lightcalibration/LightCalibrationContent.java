@@ -93,8 +93,11 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
 
         try(UniformBuffer<ContextType> viewIndexBuffer = context.createUniformBuffer())
         {
+            // TODO byte ordering seems to be OS-dependent when setting up this uniform buffer, or perhaps less tolerant of incomplete GLSL types
+            int selectedCameraViewIndex = sceneModel.getCameraViewListModel().getSelectedCameraViewIndex();
             viewIndexBuffer.setData(NativeVectorBufferFactory.getInstance()
-                .createFromIntArray(false, 1, 1, sceneModel.getCameraViewListModel().getSelectedCameraViewIndex()));
+                .createFromIntArray(false, 4, 1,
+                    selectedCameraViewIndex, selectedCameraViewIndex, selectedCameraViewIndex, selectedCameraViewIndex));
             ibrSubject.getProgram().setUniformBuffer("ViewIndices", viewIndexBuffer);
 
             // Draw the actual object, without model transformation for light calibration

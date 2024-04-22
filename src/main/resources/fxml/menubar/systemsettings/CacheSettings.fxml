@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-
 <!--
   ~ Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
   ~ Copyright (c) 2019 The Regents of the University of Minnesota
@@ -15,21 +11,34 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <AnchorPane prefHeight="196.0" prefWidth="260.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.systemsettings.CacheSettingsController">
     <VBox spacing="10.0">
         <children>
-            <CheckBox mnemonicParsing="false" selected="true" styleClass="checkbox" text="Auto Cache Clearing (UNFINISHED)" />
+                    <Button mnemonicParsing="false" onAction="#clearCache" styleClass="button" text="Clear Cache" />
+<!--            <CheckBox mnemonicParsing="false" selected="true" styleClass="checkbox" text="Auto Cache Clearing (UNFINISHED)" />-->
             <Accordion styleClass="accordion">
                 <panes>
-                    <TitledPane animated="true" prefHeight="121.0" prefWidth="500.0" styleClass="titled-pane" text="Cache Path">
+                    <TitledPane animated="true" prefWidth="500.0" styleClass="titled-pane" text="Cache Path">
                         <content>
-                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="94.0" prefWidth="200.0" styleClass="anchor-pane">
+                            <AnchorPane minHeight="0.0" minWidth="0.0" prefWidth="200.0" styleClass="anchor-pane">
                                 <children>
                                     <VBox spacing="7.0">
                                         <children>
-                                            <Label text="  Current Cache Path: ........................" />
-                                            <Button mnemonicParsing="false" styleClass="button" text="Clear Cache (UNFINISHED)" />
-                                            <Button layoutX="10.0" layoutY="10.0" mnemonicParsing="false" styleClass="button" text="Set Cache Path (UNFINISHED)" />
+                                            <Label text="  Current Cache Paths: " />
+                                 <Label fx:id="previewImageCacheLabel" text="........................">
+                                    <VBox.margin>
+                                       <Insets left="16.0" />
+                                    </VBox.margin>
+                                 </Label>
+                                 <Label fx:id="specularFitCacheLabel" text="........................">
+                                    <VBox.margin>
+                                       <Insets left="16.0" />
+                                    </VBox.margin>
+                                 </Label>
+                                            <Button disable="true" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" styleClass="button" text="Set Cache Path" />
                                         </children>
                               <padding>
                                  <Insets bottom="7.0" left="7.0" right="7.0" top="7.0" />

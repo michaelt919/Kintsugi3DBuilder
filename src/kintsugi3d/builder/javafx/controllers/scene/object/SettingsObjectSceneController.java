@@ -111,7 +111,7 @@ public class SettingsObjectSceneController implements Initializable
         root.setDisable(disabled);
     }
 
-    private void bind(ObjectPoseSetting objectPose)
+    public void bind(ObjectPoseSetting objectPose)
     {
 
         xCenterTextField.textProperty().bindBidirectional(objectPose.centerXProperty(), converter);
@@ -134,7 +134,7 @@ public class SettingsObjectSceneController implements Initializable
         scaleSlider.valueProperty().bindBidirectional(objectPose.scaleProperty());
     }
 
-    private void unbind(ObjectPoseSetting objectPose)
+    public void unbind(ObjectPoseSetting objectPose)
     {
 
         xCenterTextField.textProperty().unbindBidirectional(objectPose.centerXProperty());

@@ -11,6 +11,8 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.systemsettings;
 
+import java.io.IOException;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -18,8 +20,6 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Window;
 import kintsugi3d.builder.javafx.InternalModels;
-
-import java.io.IOException;
 
 public class SystemSettingsController {
 
@@ -31,15 +31,17 @@ public class SystemSettingsController {
     //Note: settings string MUST MATCH their .fxml counterparts
     //ex. Autosave Settings --> AutosaveSettings.fxml
     //    System Memory --> SysMem.fxml will not work
-    static final String[] settingsNames = {"Accessibility",
-                                            "Advanced Photo View",
-                                            "Autosave Settings",
-                                            "Cache Settings",
-                                            "Object Visuals",
-                                            "Photo Lighting Settings",
-                                            "System Memory",
-                                            "Miscellaneous"
-                                            };
+    static final String[] settingsNames =
+    {
+        //"Accessibility",
+        //"Autosave Settings",
+        "Cache Settings",
+        "Lighting Settings",
+        "Photo Projection Settings",
+        "System Memory Settings",
+        "Visual Settings"//,
+//        "Miscellaneous"
+    };
     private InternalModels internalModels;
     private Window window;
 

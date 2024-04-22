@@ -16,12 +16,12 @@ import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.OptionalInt;
 
-import com.sun.glass.ui.Application;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
@@ -29,17 +29,18 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
+import javafx.scene.transform.NonInvertibleTransformException;
 import javafx.scene.transform.Scale;
 import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.converter.CharacterStringConverter;
+import kintsugi3d.builder.app.WindowSynchronization;
+import kintsugi3d.gl.core.FramebufferSize;
+import kintsugi3d.gl.window.*;
 import org.lwjgl.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.FramebufferSize;
-import kintsugi3d.gl.window.*;
-import kintsugi3d.builder.app.WindowSynchronization;
 
 public final class FramebufferView extends Region
 {
@@ -453,6 +454,15 @@ public final class FramebufferView extends Region
 
     private CursorPosition getCursorPosition(MouseEvent event)
     {
-        return new CursorPosition((int)Math.round(event.getSceneX() - this.getLayoutX()), (int)Math.round(event.getSceneY() - this.getLayoutY()));
+        try
+        {
+            Point2D localEventPosition = this.getLocalToSceneTransform().inverseTransform(new Point2D(event.getSceneX(), event.getSceneY()));
+            return new CursorPosition((int)Math.round(localEventPosition.getX()), (int)Math.round(localEventPosition.getY()));
+        }
+        catch (NonInvertibleTransformException e)
+        {
+            log.error("Noninvertible transform", e);
+            return new CursorPosition(event.getX(), event.getY());
+        }
     }
 }

@@ -6,6 +6,10 @@
     -fx-background-color: #000000;
 }
 
+.accordion .content {
+    -fx-background-color: #000000;
+}
+
 .button {
     -fx-background-color: #272727;
     -fx-text-fill: #FFFFFF;
@@ -132,8 +136,8 @@ dialog-pane{
     -fx-background-color: #000000;
 }
 
-.tab-pane{
-    -fx-background-color: #ff0000; /* TODO: not changing the background color for some reason*/
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-background-color: #272727;
 }
 
 .table-row-cell: even{

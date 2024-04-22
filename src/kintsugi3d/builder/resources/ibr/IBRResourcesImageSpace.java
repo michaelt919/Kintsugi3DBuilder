@@ -662,7 +662,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         return new SingleCalibratedImageResource<>(getContext(), getViewSet(), viewIndex, imageFile, getGeometry(), loadOptions);
     }
 
-    public ImageCache<ContextType> cache(ImageCacheSettings settings) throws IOException
+    public ImageCache<ContextType> cache(ImageCacheSettings settings, LoadingMonitor callback) throws IOException
     {
         settings.setCacheFolderName(getViewSet().getUuid().toString());
 
@@ -670,7 +670,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         if (!cache.isInitialized())
         {
-            cache.initialize();
+            cache.initialize(callback);
         }
 
         return cache;
