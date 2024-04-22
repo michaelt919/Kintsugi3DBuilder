@@ -15,13 +15,13 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox prefHeight="600.0" prefWidth="300.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.CameraViewListController">
+<VBox prefHeight="600.0" prefWidth="300.0" styleClass="cameraviewlist" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.CameraViewListController">
    <children>
-      <CheckBox fx:id="snapToView" mnemonicParsing="false" text="Snap to view">
+      <CheckBox fx:id="snapToView" mnemonicParsing="false" styleClass="cameraviewlist" text="Snap to view">
          <VBox.margin>
             <Insets bottom="4.0" left="8.0" right="4.0" top="4.0" />
          </VBox.margin>
       </CheckBox>
-      <ListView fx:id="cameraViewList" VBox.vgrow="ALWAYS" />
+      <ListView fx:id="cameraViewList" styleClass="cameraviewlist" VBox.vgrow="ALWAYS" />
    </children>
 </VBox>
