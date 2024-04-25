@@ -14,10 +14,7 @@ package kintsugi3d.builder.javafx.controllers.scene;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.SplitMenuButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -44,6 +41,12 @@ public class WelcomeWindowController
     private final Flag unzipperOpen = new Flag(false);
 
     private static WelcomeWindowController INSTANCE;
+    public Button recent1;
+    public Button recent2;
+    public Button recent3;
+    public Button recent4;
+    public Button recent5;
+
     public static WelcomeWindowController getInstance()
     {
         return INSTANCE;
