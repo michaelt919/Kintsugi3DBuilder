@@ -42,10 +42,15 @@ public class WelcomeWindowController
 
     private static WelcomeWindowController INSTANCE;
     public Button recent1;
+    public String button1File;
     public Button recent2;
+    public String button2File;
     public Button recent3;
+    public String button3File;
     public Button recent4;
+    public String button4File;
     public Button recent5;
+    public String button5File;
 
     public static WelcomeWindowController getInstance()
     {
@@ -191,5 +196,27 @@ public class WelcomeWindowController
     public void hideMenu(MouseEvent mouseEvent){
         //recentProjectsSplitMenuButton.hide();
         //TODO: ONLY HIDE THE MENU WHEN THE USER'S MOUSE LEAVES THE CONTEXT MENU
+    }
+
+    public void recentButton(ActionEvent actionEvent) {
+        Object source = actionEvent.getSource();
+        //user clicks on a menu item
+        if (source.getClass() == Button.class) {
+            handleButtonSelection((Button) actionEvent.getSource());
+        }
+    }
+
+    public void handleButtonSelection(Button item) {
+        if (item == recent1){
+            ProjectIO.getInstance().openProjectFromFile(new File(button1File));
+        } else if (item == recent2){
+            ProjectIO.getInstance().openProjectFromFile(new File(button2File));
+        } else if (item == recent3){
+            ProjectIO.getInstance().openProjectFromFile(new File(button3File));
+        } else if (item == recent4){
+            ProjectIO.getInstance().openProjectFromFile(new File(button4File));
+        } else if (item == recent5){
+            ProjectIO.getInstance().openProjectFromFile(new File(button5File));
+        }
     }
 }
