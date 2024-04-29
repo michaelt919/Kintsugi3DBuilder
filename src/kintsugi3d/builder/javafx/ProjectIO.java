@@ -297,7 +297,7 @@ public final class ProjectIO
                     createProjectController.setLoadStartCallback(this::onLoadStart);
                     createProjectController.setViewSetCallback(viewSet -> onViewSetCreated(viewSet, parentWindow, null));
                     createProjectController.init();
-                    WelcomeWindowController.getInstance().hideWelcomeWindow();
+
                 }
                 catch (Exception e)
                 {

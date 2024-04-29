@@ -14,10 +14,7 @@ package kintsugi3d.builder.javafx.controllers.scene;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.SplitMenuButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -44,11 +41,21 @@ public class WelcomeWindowController
     private final Flag unzipperOpen = new Flag(false);
 
     private static WelcomeWindowController INSTANCE;
+    public Button recent1;
+    public String button1File;
+    public Button recent2;
+    public String button2File;
+    public Button recent3;
+    public String button3File;
+    public Button recent4;
+    public String button4File;
+    public Button recent5;
+    public String button5File;
+
     public static WelcomeWindowController getInstance()
     {
         return INSTANCE;
     }
-
 
     @FXML private ProgressBar progressBar;
 
@@ -110,7 +117,6 @@ public class WelcomeWindowController
 //                loadingComplete();
 //            }
 //        });
-
         INSTANCE = this;
     }
 
@@ -125,12 +131,10 @@ public class WelcomeWindowController
 
     public void splitMenuButtonActions(ActionEvent actionEvent) {
         Object source = actionEvent.getSource();
-
         //user clicks on a menu item
         if (source.getClass() == MenuItem.class) {
             handleMenuItemSelection((MenuItem) actionEvent.getSource());
         }
-
         //user clicks on the button, so unroll the menu
         else{
             unrollMenu();
@@ -153,17 +157,14 @@ public class WelcomeWindowController
         {
             ProjectIO.getInstance().createProjectNew(parentWindow);
             updateRecentProjectsButton();
-
         }
     }
 
     @FXML
     private void file_openProject()//TODO: CHANGE NAMING CONVENTION? (file_...)
     {
-
         ProjectIO.getInstance().openProjectWithPrompt(parentWindow);
         hideWelcomeWindow();
-
     }
 
     @FXML
@@ -173,7 +174,7 @@ public class WelcomeWindowController
         ProjectIO.getInstance().closeProjectAfterConfirmation();
     }
 
-    //TODO: HIDE WELCOME WINDOW WHEN A PROJECT IS MADE/OPENED
+    //TODO: FIND WAY TO NOT CLOSE FILE, BUT HIDE SO IT CAN BE RESHOWN
     public void hideWelcomeWindow(){
         window.close();
     }
@@ -195,5 +196,27 @@ public class WelcomeWindowController
     public void hideMenu(MouseEvent mouseEvent){
         //recentProjectsSplitMenuButton.hide();
         //TODO: ONLY HIDE THE MENU WHEN THE USER'S MOUSE LEAVES THE CONTEXT MENU
+    }
+
+    public void recentButton(ActionEvent actionEvent) {
+        Object source = actionEvent.getSource();
+        //user clicks on a menu item
+        if (source.getClass() == Button.class) {
+            handleButtonSelection((Button) actionEvent.getSource());
+        }
+    }
+
+    public void handleButtonSelection(Button item) {
+        if (item == recent1){
+            ProjectIO.getInstance().openProjectFromFile(new File(button1File));
+        } else if (item == recent2){
+            ProjectIO.getInstance().openProjectFromFile(new File(button2File));
+        } else if (item == recent3){
+            ProjectIO.getInstance().openProjectFromFile(new File(button3File));
+        } else if (item == recent4){
+            ProjectIO.getInstance().openProjectFromFile(new File(button4File));
+        } else if (item == recent5){
+            ProjectIO.getInstance().openProjectFromFile(new File(button5File));
+        }
     }
 }

@@ -141,16 +141,38 @@ public class RecentProjects {
 
         ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
 
-        menu.getItems().addAll(recentItems);
+
+
+        //attach event handlers to all menu items
+        int i = 1;
+        for (MenuItem item : recentItems) {
+
+            //Change the name of each recent file button
+            if (i==1) {
+                welcomeWindowController.recent1.setText(new File(item.getText()).getName());
+                welcomeWindowController.button1File = item.getText();
+            }else if (i==2) {
+                welcomeWindowController.recent2.setText(new File(item.getText()).getName());
+                welcomeWindowController.button2File = item.getText();
+            }else if (i==3) {
+                welcomeWindowController.recent3.setText(new File(item.getText()).getName());
+                welcomeWindowController.button3File = item.getText();
+            }else if (i==4) {
+                welcomeWindowController.recent4.setText(new File(item.getText()).getName());
+                welcomeWindowController.button4File = item.getText();
+            }else if (i==5) {
+                welcomeWindowController.recent5.setText(new File(item.getText()).getName());
+                welcomeWindowController.button5File = item.getText();
+            }else{
+                menu.getItems().addAll(item);
+                item.setOnAction(event -> handleMenuItemSelection(item));
+            }
+            i++;
+        }
 
         //disable button if there are no recent projects
         if (menu.getItems().isEmpty()) {
             menu.setDisable(true);
-        }
-
-        //attach event handlers to all menu items
-        for (MenuItem item : recentItems) {
-            item.setOnAction(event -> handleMenuItemSelection(item));
         }
     }
     
