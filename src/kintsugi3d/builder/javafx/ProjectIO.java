@@ -79,7 +79,14 @@ public final class ProjectIO
                 for (int i = items.get(0).length()-1; i > 0; i--) {
                     if (items.get(0).charAt(i) == '\\')
                     {
-                        projectFileChooser.setInitialDirectory(new File(items.get(0).substring(0,i)));
+                        File initialDirectory = new File(items.get(0).substring(0,i));
+
+                        if (!initialDirectory.exists())
+                        {
+                            initialDirectory = new File(System.getProperty("user.home"));
+                        }
+
+                        projectFileChooser.setInitialDirectory(initialDirectory);
                         break;
                     }
                 }
@@ -494,11 +501,12 @@ public final class ProjectIO
     {
         FileChooser fileChooser = getProjectFileChooserSafe();
         fileChooser.setTitle("Save project");
-        fileChooser.setInitialDirectory(projectFile.getParentFile());
+
         projectFileChooser.getExtensionFilters().clear();
         projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Full projects", "*.k3d"));
         projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Standalone view sets", "*.vset"));
         fileChooser.setSelectedExtensionFilter(fileChooser.getExtensionFilters().get(0));
+
         if (defaultDirectory != null)
         {
             fileChooser.setInitialFileName("");

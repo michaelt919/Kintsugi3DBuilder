@@ -230,7 +230,8 @@ public class LoaderController implements Initializable
 
             // Add a viewSetCallback
             if (viewSetCallback != null) {
-                MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(viewSetCallback);
+                MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(
+                    viewSet -> viewSetCallback.accept(viewSet, new File(metashapeObjectChunk.getPsxFilePath()).getParentFile()));
             }
 
             new Thread(() ->
@@ -291,12 +292,13 @@ public class LoaderController implements Initializable
 
     private void setHomeDir(File home)
     {
+        File parentDir;
+        parentDir = home.getParentFile();
+
         List<String> items = RecentProjects.getItemsFromRecentsFile();
 
         if(items.isEmpty())
         {
-            File parentDir;
-            parentDir = home.getParentFile();
             camFileChooser.setInitialDirectory(parentDir);
             objFileChooser.setInitialDirectory(parentDir);
             photoDirectoryChooser.setInitialDirectory(parentDir);
@@ -307,9 +309,16 @@ public class LoaderController implements Initializable
                 if (items.get(0).charAt(i) == '\\')
                 {
 //                    projectFileChooser.setInitialDirectory(new File(items.get(0).substring(0,i)));
-                    camFileChooser.setInitialDirectory(new File(items.get(0).substring(0,i)));
-                    objFileChooser.setInitialDirectory(new File(items.get(0).substring(0,i)));
-                    photoDirectoryChooser.setInitialDirectory(new File(items.get(0).substring(0,i)));
+                    File initialDirectory = new File(items.get(0).substring(0,i));
+
+                    if (!initialDirectory.exists())
+                    {
+                        initialDirectory = parentDir;
+                    }
+
+                    camFileChooser.setInitialDirectory(initialDirectory);
+                    objFileChooser.setInitialDirectory(initialDirectory);
+                    photoDirectoryChooser.setInitialDirectory(initialDirectory);
                     break;
                 }
             }

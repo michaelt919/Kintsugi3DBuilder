@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
+import java.util.stream.Collectors;
 
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
@@ -154,7 +155,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     {
         loadedViewSet = builder.getViewSet();
 
-        MultithreadModels.getInstance().getCameraViewListModel().setCameraViewList(loadedViewSet.getImageFileNames());
+        MultithreadModels.getInstance().getCameraViewListModel().setCameraViewList(
+            loadedViewSet.getImageFiles().stream().map(File::getName).collect(Collectors.toUnmodifiableList()));
 
         // Invoke callbacks now that view set is loaded
         invokeViewSetLoadCallbacks(loadedViewSet);
