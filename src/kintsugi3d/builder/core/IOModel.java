@@ -23,6 +23,7 @@ import java.util.function.DoubleUnaryOperator;
 
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.util.EncodableColorImage;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 
 public class IOModel
 {
@@ -160,6 +161,10 @@ public class IOModel
         this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, primaryViewName, loadOptionsModel);
     }
 
+    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, String primaryViewName)
+    {
+        this.handler.loadAgisoftFromZIP(id, metashapeObjectChunk, loadOptionsModel, primaryViewName);
+    }
     public void requestFragmentShader(File shaderFile)
     {
         this.handler.requestFragmentShader(shaderFile);

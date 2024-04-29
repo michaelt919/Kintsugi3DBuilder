@@ -37,6 +37,18 @@ public class MetashapeObjectChunk {
 
     private Document chunkXML;
     private Document frameZip;
+    public String getChunkZipPath() { return chunkZipPath; }
+    public Document getChunkXML() { return chunkXML; }
+    public Document getFrameZip() { return frameZip; }
+
+    public String getChunkDirectoryPath() {
+        String psxFilePath = this.metashapeObject.getPsxFilePath();
+        String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4); //remove ".psx" from path
+        return psxPathBase + ".files\\" + chunkID;
+    }
+    public String getFrameDirectoryPath() { return getChunkDirectoryPath() + "\\0" ;}
+    public String getFramePath() { return getFrameDirectoryPath() + "\\frame.zip"; }
+
 
     private MetashapeObjectChunk(){
         metashapeObject = new MetashapeObject();
@@ -65,7 +77,7 @@ public class MetashapeObjectChunk {
 
         //unzip frame.zip
         String psxFilePath = metashapeObject.getPsxFilePath();
-        String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4);//remove ".psx" from path
+        String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4); //remove ".psx" from path
 
         //the 0 means that the program searches for info regarding frame 0
         String frameZipPath = psxPathBase + ".files\\" + chunkID + "\\0\\frame.zip";

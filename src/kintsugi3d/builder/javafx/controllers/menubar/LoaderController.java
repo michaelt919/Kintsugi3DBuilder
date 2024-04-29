@@ -22,8 +22,11 @@ import java.util.function.BiConsumer;
 import java.util.stream.IntStream;
 
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ChoiceBox;
@@ -39,11 +42,13 @@ import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.util.RecentProjects;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
+import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.io.File;
+import java.io.*;
 import java.net.URL;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -51,6 +56,10 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class LoaderController implements Initializable
 {
@@ -61,16 +70,23 @@ public class LoaderController implements Initializable
     @FXML private Text loadCheckObj;
     @FXML private Text loadCheckImages;
     @FXML private VBox root;
+    @FXML private Text loadCheckPLY;
+    @FXML private Text loadCheckMeta;
 
     private Stage thisStage;
 
     private final FileChooser camFileChooser = new FileChooser();
     private final FileChooser objFileChooser = new FileChooser();
     private final DirectoryChooser photoDirectoryChooser = new DirectoryChooser();
+    private final FileChooser plyFileChooser = new FileChooser();
+    private final FileChooser metaFileChooser = new FileChooser();
+
 
     private File cameraFile;
     private File objFile;
     private File photoDir;
+    private File plyFile;
+    private MetashapeObjectChunk metashapeObjectChunk;
 
     private Runnable loadStartCallback;
     private BiConsumer<ViewSet, File> viewSetCallback;
@@ -82,10 +98,18 @@ public class LoaderController implements Initializable
         setHomeDir(new File(System.getProperty("user.home")));
         camFileChooser.getExtensionFilters().add(new ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
         objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ file", "*.obj"));
+        plyFileChooser.getExtensionFilters().add(new ExtensionFilter("PLY file", "*.ply"));
+        metaFileChooser.getExtensionFilters().add(new ExtensionFilter("MetaShape project file", "*.psx"));
+
 
         camFileChooser.setTitle("Select camera positions file");
         objFileChooser.setTitle("Select object file");
+        plyFileChooser.setTitle("Select ply file");
+        metaFileChooser.setTitle("Select MetaShape project file");
+
         photoDirectoryChooser.setTitle("Select photo directory");
+
+
     }
 
     public void init()
@@ -183,7 +207,6 @@ public class LoaderController implements Initializable
     @FXML
     private void photoDirectorySelect()
     {
-
         File temp = photoDirectoryChooser.showDialog(getStage());
 
         if (temp != null)
@@ -198,7 +221,29 @@ public class LoaderController implements Initializable
     @FXML
     private void okButtonPress()
     {
-        if ((cameraFile != null) && (objFile != null) && (photoDir != null))
+        if (metashapeObjectChunk != null){
+            if(metashapeObjectChunk.getFrameZip() == null) {
+                // Make an alert pop up
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                return;
+            }
+
+            // Add a viewSetCallback
+            if (viewSetCallback != null) {
+                MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(viewSetCallback);
+            }
+
+            new Thread(() ->
+                    MultithreadModels.getInstance().getLoadingModel()
+                            .loadAgisoftFromZIP(
+                                    metashapeObjectChunk.getFramePath(),
+                                    metashapeObjectChunk,
+                                    primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
+                    .start();
+            close();
+        }
+
+        else if ((cameraFile != null) && ((objFile != null) || (plyFile != null)) && (photoDir != null))
         {
             if (loadStartCallback != null)
             {
@@ -210,12 +255,20 @@ public class LoaderController implements Initializable
                 MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(
                     viewSet -> viewSetCallback.accept(viewSet, cameraFile.getParentFile()));
             }
-
+            File choosenFile;
+            if(objFile != null){
+                choosenFile = objFile;
+            }else{
+                choosenFile = plyFile;
+            }
             new Thread(() ->
-                MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(
-                        cameraFile.getPath(), cameraFile, objFile, photoDir,
-                        primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
-                .start();
+                MultithreadModels.getInstance()
+                        .getLoadingModel()
+                            .loadFromAgisoftFiles(
+                                cameraFile.getPath(), cameraFile, choosenFile, photoDir,
+                                primaryViewChoiceBox.getSelectionModel().getSelectedItem()
+                            )
+            ).start();
             WelcomeWindowController.getInstance().hideWelcomeWindow();
             close();
         }
@@ -273,4 +326,48 @@ public class LoaderController implements Initializable
     }
 
     private static final String QUICK_FILENAME = "quickSaveLoadConfig.txt";
+
+    @FXML
+    public void plySelect(ActionEvent actionEvent) {
+        File temp = plyFileChooser.showOpenDialog(getStage());
+
+        if (temp != null)
+        {
+            plyFile = temp;
+            setHomeDir(temp);
+            loadCheckPLY.setText("Loaded");
+            loadCheckPLY.setFill(Paint.valueOf("Green"));
+        }
+    }
+
+    @FXML
+    public void metaSelect(ActionEvent actionEvent) throws IOException{
+        //get FXML URLs
+        String menuBarFXMLFileName = "fxml/menubar/MenuBar.fxml";
+        URL menuBarURL = getClass().getClassLoader().getResource(menuBarFXMLFileName);
+        assert menuBarURL != null : "cant find " + menuBarFXMLFileName;
+        // Make a new Menu Bar Controller to handle the unzipping menu
+        FXMLLoader menuBarFXMLLoader = new FXMLLoader(menuBarURL);
+        Parent menuBarRoot = menuBarFXMLLoader.load();
+        MenubarController menuBarController = menuBarFXMLLoader.getController();
+        // Open unzip window and pass reference to this controller so a callback function (chunkChosen) can be called later.
+        menuBarController.unzip(this::chunkChosen);
+    }
+
+    /**
+     * Callback function that is called once the user has selected a chunk and submitted it.
+     * This function will extract all the proper parts from the Metashape project and store them to be picked up once the
+     *  OK button is clicked.
+     * @param metashapeChunk The Metashape chunk in memory chosen.
+     */
+    public void chunkChosen(MetashapeObjectChunk metashapeChunk)
+    {
+        //IBRResourcesImageSpace.Builder<ContextType> loadAgisoftFromZIP(File chunkDirectory, File supportingFilesDirectory)
+        //TODO: Do we need the chunk object or the chunkDirectory?
+        //TODO: If this is such a simple function, perhaps change it to just be a setter.
+        this.metashapeObjectChunk = metashapeChunk;
+        //this.chunkDirectory = ;
+    }
+
+
 }

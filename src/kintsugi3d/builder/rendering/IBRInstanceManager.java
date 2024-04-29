@@ -27,6 +27,7 @@ import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
@@ -263,11 +264,30 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
+    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions, String primaryViewName) {
+
+        // TODO There currently isn't functionality for a supportingFilesDirectory at this early in the process
+        //  Restructuring required from Tetzlaff.
+        File supportingFilesDirectory = null;
+
+        try {
+            Builder<ContextType>builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
+                    .setLoadingMonitor(this.loadingMonitor)
+                    .setLoadOptions(loadOptions)
+                    .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory)
+                    .setPrimaryView(primaryViewName);
+
+            loadInstance(id, builder);
+        } catch (Exception e) {
+            handleMissingFiles(e);
+        }
+    }
+
+    @Override
     public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory, String primaryViewName,
         ReadonlyLoadOptionsModel loadOptions)
     {
         this.loadingMonitor.startLoading();
-
         try
         {
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)

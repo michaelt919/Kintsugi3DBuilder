@@ -14,12 +14,12 @@ package kintsugi3d.builder.resources.ibr;
 
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import javax.imageio.ImageIO;
 
 import kintsugi3d.builder.app.ApplicationFolders;
@@ -27,6 +27,7 @@ import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
@@ -37,6 +38,7 @@ import kintsugi3d.gl.material.TextureLoadOptions;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+import kintsugi3d.gl.util.UnzipHelper;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.ImageFinder;
@@ -44,6 +46,9 @@ import kintsugi3d.util.ImageHelper;
 import kintsugi3d.util.ImageUndistorter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 /**
  * A class that encapsulates all of the GPU resources like vertex buffers, uniform buffers, and textures for a given
@@ -144,10 +149,12 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
+
         public Builder<ContextType> loadVSETFile(File vsetFile, File supportingFilesDirectory) throws Exception
         {
             this.viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile, supportingFilesDirectory);
-            this.geometry = VertexGeometry.createFromOBJFile(this.viewSet.getGeometryFile());
+
+            this.geometry = VertexGeometry.createFromGeometryFile(this.viewSet.getGeometryFile());
 
             if (this.loadOptions != null)
             {
@@ -168,7 +175,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             this.viewSet = ViewSetReaderFromAgisoftXML.getInstance().readFromFile(cameraFile);
             if (geometryFile != null)
             {
-                this.geometry = VertexGeometry.createFromOBJFile(geometryFile);
+                this.geometry = VertexGeometry.createFromGeometryFile(geometryFile);
             }
             if (undistortedImageDirectory != null)
             {
@@ -183,6 +190,100 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
             if (this.loadOptions != null)
             {
+                updateViewSetFromLoadOptions();
+            }
+
+            return this;
+        }
+
+        /**
+         * Alternate version of loadAgisoftFromZIP that uses a metashapeObjectChunk as its parameter.
+         * @param metashapeObjectChunk
+         * @param supportingFilesDirectory
+         * @return
+         * @throws Exception
+         */
+        public Builder<ContextType> loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, File supportingFilesDirectory) throws Exception {
+            // Get reference to the chunk directory
+            File chunkDirectory = new File(metashapeObjectChunk.getChunkDirectoryPath());
+            if (!chunkDirectory.exists()){
+                System.out.println("Chunk directory does not exist: " + chunkDirectory);
+            }
+            File rootDirectory = new File(metashapeObjectChunk.getPsxFilePath()).getParentFile();
+            if (!rootDirectory.exists()){
+                System.out.println("Root directory does not exist: " + rootDirectory);
+            }
+
+        // 1) Construct camera ID to filename map from frame's ZIP
+            Map<Integer, String> cameraPathsMap = new HashMap<Integer, String>();
+            // Open the xml files that contains all the cameras' ids and file paths
+            Document frame = metashapeObjectChunk.getFrameZip();
+            if (frame == null || frame.getDocumentElement() == null){
+                System.out.println("Frame document is null");
+                return null;
+            }
+
+            // Loop through the cameras and store each pair of id and path in the map
+            NodeList cameraList = ((Element) frame.getElementsByTagName("frame").item(0))
+                    .getElementsByTagName("camera");
+            for (int i = 0; i < cameraList.getLength(); i++) {
+                Element cameraElement = (Element) cameraList.item(i);
+                int cameraId = Integer.parseInt(cameraElement.getAttribute("camera_id"));
+                String path = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
+                File imageFile = new File(new File(metashapeObjectChunk.getFramePath()).getParentFile(), path);
+
+                if (imageFile.exists()) {
+                    // Add pair to the map
+                    cameraPathsMap.put(cameraId, rootDirectory.toPath().relativize(imageFile.toPath()).toString());
+                }
+            }
+
+        // 2) Load ViewSet from ZipInputStream from chunk's ZIP (eventually will accept the filename map as a parameter)
+            InputStream fileStream = null;
+            String targetFileName = "doc.xml"; // Specify the desired file name
+            try {
+                File zipFile = new File(chunkDirectory, "chunk.zip");
+                FileInputStream fis = new FileInputStream(zipFile);
+                ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis));
+                ZipEntry entry;
+                while ((entry = zis.getNextEntry()) != null) {
+                    if (entry.getName().equals(targetFileName)) {
+                        // Found the desired file inside the zip
+                        fileStream = new BufferedInputStream(zis);
+                        // Create and store ViewSet TODO: USING A HARD CODED VERSION VALUE (200)
+                        this.viewSet = ((ViewSetReaderFromAgisoftXML) ViewSetReaderFromAgisoftXML.getInstance())
+                                .readFromStream(fileStream, rootDirectory, supportingFilesDirectory, cameraPathsMap, 200);
+                        break;
+                    }
+                }
+
+                zis.close(); // Close the zip stream
+            } catch (IOException e) {
+                // Print error to log
+                System.out.println("Error reading zip file: " + e.getMessage());
+            }
+
+        // 3) load geometry from ZipInputStream from model's ZIP
+            this.geometry = VertexGeometry.createFromZippedPLYFile(new File(chunkDirectory, "0/model/model.zip"), "mesh.ply");
+
+            if (this.geometry != null) { //TODO: Why does it say it can never equal null? Shouldn't createFromPLYFile be capable of failing?
+                viewSet.setGeometryFile(geometry.getFilename());
+            }
+
+        // 4) Set image directory to be parent directory of MetaShape project (and add to the photos' paths)
+            this.imageDirectoryOverride = chunkDirectory.getParentFile().getParentFile();
+
+            File psxFile = new File(metashapeObjectChunk.getMetashapeObject().getPsxFilePath());
+            File undistortedImageDirectory = new File(psxFile.getParent()); // The directory of undistorted photos //TODO: verify this
+            // Print error to log if unable to find undistortedImageDirectory
+            if (!undistortedImageDirectory.exists()) {
+                System.out.println("Unable to find undistortedImageDirectory: " + undistortedImageDirectory);
+            }
+
+            // Set the fullResImage Directory to be the root directory
+            this.viewSet.setRelativeFullResImagePathName("");
+
+            if (this.loadOptions != null) {
                 updateViewSetFromLoadOptions();
             }
 
@@ -256,9 +357,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             if (geometry == null && viewSet.getGeometryFile() != null)
             {
                 // Load geometry if it wasn't specified but a view set was.
-                geometry = VertexGeometry.createFromOBJFile(viewSet.getGeometryFile());
+                geometry = VertexGeometry.createFromGeometryFile(viewSet.getGeometryFile());
             }
-
             return new IBRResourcesImageSpace<>(context, viewSet, geometry, loadOptions, loadingMonitor);
         }
     }
@@ -271,6 +371,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     private IBRResourcesImageSpace(ContextType context, ViewSet viewSet, VertexGeometry geometry,
         ReadonlyLoadOptionsModel loadOptions, LoadingMonitor loadingMonitor) throws IOException
     {
+        // IAN: This super call should be creating the geometry
         super(new IBRSharedResources<>(context, viewSet, geometry,
                     loadOptions != null ? loadOptions.getTextureLoadOptions() : new TextureLoadOptions()),
                 true);

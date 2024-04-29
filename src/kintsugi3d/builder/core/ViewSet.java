@@ -25,9 +25,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -86,9 +86,10 @@ public final class ViewSet implements ReadonlyViewSet
     private final List<Integer> lightIndexList;
 
     /**
-     * A list containing the relative name of the image file corresponding to each view.
+     * A list containing the relative path of the image file corresponding to each view.
+     * The file paths are relative to the fullResImageDirectory
      */
-    private final List<String> imageFileNames;
+    private final List<File> imageFiles;
 
     private final List<ViewRMSE> viewErrorMetrics;
 
@@ -108,7 +109,7 @@ public final class ViewSet implements ReadonlyViewSet
     private File rootDirectory;
 
     /**
-     * The directory to be used for loading images.
+     * The directory to be used for loading images. It is an absolute file path.
      */
     private File fullResImageDirectory;
 
@@ -164,7 +165,7 @@ public final class ViewSet implements ReadonlyViewSet
         this.cameraPoseInvList = new ArrayList<>(initialCapacity);
         this.cameraProjectionIndexList = new ArrayList<>(initialCapacity);
         this.lightIndexList = new ArrayList<>(initialCapacity);
-        this.imageFileNames = new ArrayList<>(initialCapacity);
+        this.imageFiles = new ArrayList<>(initialCapacity);
         this.viewErrorMetrics = new ArrayList<>(initialCapacity);
 
         // Often these lists will have just one element
@@ -208,9 +209,13 @@ public final class ViewSet implements ReadonlyViewSet
         return lightIndexList;
     }
 
-    public List<String> getImageFileNames()
+    /**
+     * Relative paths from full res image directory
+     * @return List of relative paths from full res image directory
+     */
+    public List<File> getImageFiles()
     {
-        return imageFileNames;
+        return imageFiles;
     }
 
     public List<ViewRMSE> getViewErrorMetrics()
@@ -366,7 +371,7 @@ public final class ViewSet implements ReadonlyViewSet
             result.cameraPoseInvList.add(this.cameraPoseInvList.get(i));
             result.cameraProjectionIndexList.add(this.cameraProjectionIndexList.get(i));
             result.lightIndexList.add(this.lightIndexList.get(i));
-            result.imageFileNames.add(this.imageFileNames.get(i));
+            result.imageFiles.add(this.imageFiles.get(i));
             result.viewErrorMetrics.add(this.viewErrorMetrics.get(i));
         }
 
@@ -407,7 +412,7 @@ public final class ViewSet implements ReadonlyViewSet
         result.lightPositionList.addAll(this.lightPositionList);
         result.lightIntensityList.addAll(this.lightIntensityList);
         result.lightIndexList.addAll(this.lightIndexList);
-        result.imageFileNames.addAll(this.imageFileNames);
+        result.imageFiles.addAll(this.imageFiles);
         result.viewErrorMetrics.addAll(this.viewErrorMetrics);
 
         if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
@@ -447,7 +452,7 @@ public final class ViewSet implements ReadonlyViewSet
         {
             result.cameraProjectionIndexList.add(0);
             result.lightIndexList.add(0);
-            result.imageFileNames.add(String.format("%04d.png", i + 1));
+            result.imageFiles.add(new File(String.format("%04d.png", i + 1)));
 
             Matrix4 cameraPose = Matrix4.lookAt(viewDir.get(i).times(-distance).plus(center), center, up);
 
@@ -560,7 +565,7 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     /**
-     * Sets the relative ile path of the supporting files (i.e. texture fit results) associated with this view set.
+     * Sets the relative file path of the supporting files (i.e. texture fit results) associated with this view set.
      * @param relativeSupportingFilesPathName The file path of the supporting files directory.
      */
     public void setRelativeSupportingFilesPathName(String relativeSupportingFilesPathName)
@@ -608,7 +613,7 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     /**
-     * Sets the image file path associated with this view set.
+     * Sets the image file path associated with this view set from a path relative to the root directory.
      * @param relativeImagePath The image file path.
      */
     public void setRelativeFullResImagePathName(String relativeImagePath)
@@ -663,7 +668,7 @@ public final class ViewSet implements ReadonlyViewSet
     @Override
     public String getImageFileName(int poseIndex)
     {
-        return this.imageFileNames.get(poseIndex);
+        return this.imageFiles.get(poseIndex).getName();
     }
 
     @Override
@@ -677,7 +682,7 @@ public final class ViewSet implements ReadonlyViewSet
     @Override
     public File getFullResImageFile(int poseIndex)
     {
-        return new File(this.getFullResImageFilePath(), this.imageFileNames.get(poseIndex));
+        return new File(this.getFullResImageFilePath(), this.imageFiles.get(poseIndex).getPath());
     }
 
     @Override
@@ -716,7 +721,7 @@ public final class ViewSet implements ReadonlyViewSet
 
     public void setPrimaryView(String viewName)
     {
-        int poseIndex = this.imageFileNames.indexOf(viewName);
+        int poseIndex = this.imageFiles.indexOf(new File(viewName));
         if (poseIndex >= 0)
         {
             this.primaryViewIndex = poseIndex;
