@@ -161,8 +161,37 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 //        return Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
     }
 
+
+    /**
+     * Loads a view set from an input file.
+     * The root directory and the supporting files directory will be set as specified.
+     * The supporting files directory may be overridden by a directory specified in the file.
+     * * @param stream The file to load
+     * @param root
+     * @param supportingFilesDirectory
+     * @param imagePathMap A map of image IDs to paths, if passed this will override the paths being assigned to the images.
+     * @return
+     * @throws XMLStreamException
+     */
     @Override
-    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory) throws XMLStreamException
+    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, Map<Integer, String> imagePathMap) throws XMLStreamException
+    {
+        return readFromStream(stream, root, supportingFilesDirectory, imagePathMap, -1);
+    }
+
+    /**
+     * Loads a view set from an input file.
+     * The root directory and the supporting files directory will be set as specified.
+     * The supporting files directory may be overridden by a directory specified in the file.
+     * * @param stream
+     * @param root
+     * @param supportingFilesDirectory
+     * @param imagePathMap A map of image IDs to paths, if passed this will override the paths being assigned to the images.
+     * @param metashapeVersionOverride A parameter that can be passed to override the version of the XML document being read to circumvent formatting differences.
+     * @return
+     * @throws XMLStreamException
+     */
+    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, Map<Integer, String> imagePathMap, int metashapeVersionOverride) throws XMLStreamException
     {
         Map<String, Sensor> sensorSet = new Hashtable<>();
         HashSet<Camera> cameraSet = new HashSet<>();
@@ -185,7 +214,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         String sensorID = "";
         String cameraID = "";
         String imageFile = "";
-        int intVersion = 0;
+        int intVersion = Math.max(metashapeVersionOverride, 0);
 
         XMLInputFactory factory = XMLInputFactory.newInstance();
 
@@ -674,7 +703,16 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
             result.getCameraProjectionIndexList().add(cam.sensor.index);
             result.getLightIndexList().add(cam.lightIndex);
-            result.getImageFileNames().add(cam.filename);
+
+            if (imagePathMap != null && imagePathMap.containsKey(Integer.parseInt(cam.id))) {
+                result.getImageFiles().add(new File(imagePathMap.get(Integer.parseInt(cam.id))));
+            }else{
+                result.getImageFiles().add(new File(cam.filename));
+                if (imagePathMap != null) {
+                    log.error("Camera path override not found for camera: " + cam.id);
+                }
+            }
+
             result.getViewErrorMetrics().add(new ViewRMSE());
         }
 

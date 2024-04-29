@@ -74,7 +74,6 @@ public class LoaderController implements Initializable
     private File objFile;
     private File photoDir;
     private File plyFile;
-    private File chunkDirectory;
     private MetashapeObjectChunk metashapeObjectChunk;
 
     private Runnable loadStartCallback;
@@ -210,10 +209,6 @@ public class LoaderController implements Initializable
     @FXML
     private void okButtonPress()
     {
-        // TODO: Add ability to load from the data taken from a Metashape project
-        // The function to use is loadFromAgisoftZip() in IBRResourcesImageSpace
-
-
         if (metashapeObjectChunk != null){
             if(metashapeObjectChunk.getFrameZip() == null) {
                 // Make an alert pop up
@@ -221,19 +216,18 @@ public class LoaderController implements Initializable
                 return;
             }
 
-
-            // Add a viewSetCallback, TODO: unsure of what below function does, but it is probably important
+            // Add a viewSetCallback
             if (viewSetCallback != null) {
                 MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(viewSetCallback);
             }
 
-            String id = null; //This is the path to the camera file? Ours is zipped
-
             new Thread(() ->
                     MultithreadModels.getInstance().getLoadingModel()
-                            .loadAgisoftFromZIP(id, metashapeObjectChunk, primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
+                            .loadAgisoftFromZIP(
+                                    metashapeObjectChunk.getFramePath(),
+                                    metashapeObjectChunk,
+                                    primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
                     .start();
-
             close();
         }
 

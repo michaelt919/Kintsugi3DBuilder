@@ -83,7 +83,7 @@ public class MetashapeObjectChunk {
         String frameZipPath = psxPathBase + ".files\\" + chunkID + "\\0\\frame.zip";
 
         try {
-            this.frameZip = UnzipHelper.unzipToDocument(frameZipPath); // TODO: THIS IS RETURNING NULL
+            this.frameZip = UnzipHelper.unzipToDocument(frameZipPath);
         } catch (IOException e) {
             log.error("An error occurred loading Metashape chunk:", e);
         }

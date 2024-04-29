@@ -249,11 +249,9 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
     @Override
     public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions, String primaryViewName) {
-        //TODO This is the last function in the chain
-        //  it should launch the Kintsugi project with all proper files and such.
-        //  It will use the IBRResourcesImageSpace loadAgisoftFromZip() function
 
-        // TODO get the supporting files directory. From where?
+        // TODO There currently isn't functionality for a supportingFilesDirectory at this early in the process
+        //  Restructuring required from Tetzlaff.
         File supportingFilesDirectory = null;
 
         try {

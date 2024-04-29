@@ -197,7 +197,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         }
 
         /**
-         * Alternate version of loadAgisoftFromZIP that uses a metashapeObjectChunck as its parameter.
+         * Alternate version of loadAgisoftFromZIP that uses a metashapeObjectChunk as its parameter.
          * @param metashapeObjectChunk
          * @param supportingFilesDirectory
          * @return
@@ -209,6 +209,10 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             if (!chunkDirectory.exists()){
                 System.out.println("Chunk directory does not exist: " + chunkDirectory);
             }
+            File rootDirectory = new File(metashapeObjectChunk.getPsxFilePath()).getParentFile();
+            if (!rootDirectory.exists()){
+                System.out.println("Root directory does not exist: " + rootDirectory);
+            }
 
         // 1) Construct camera ID to filename map from frame's ZIP
             Map<Integer, String> cameraPathsMap = new HashMap<Integer, String>();
@@ -219,32 +223,20 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 return null;
             }
 
-            // Get the first camera element in the frame XML document. The tree is frame>cameras
-            Element frameElement = (Element) frame.getElementsByTagName("frame").item(0);
-
-            NodeList cameraList = frameElement.getElementsByTagName("camera");
             // Loop through the cameras and store each pair of id and path in the map
+            NodeList cameraList = ((Element) frame.getElementsByTagName("frame").item(0))
+                    .getElementsByTagName("camera");
             for (int i = 0; i < cameraList.getLength(); i++) {
-                // Get the path attribute
                 Element cameraElement = (Element) cameraList.item(i);
                 int cameraId = Integer.parseInt(cameraElement.getAttribute("camera_id"));
-                Element photoElement = (Element) cameraElement.getElementsByTagName("photo").item(0);
-                String path = photoElement.getAttribute("path");
+                String path = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
+                File imageFile = new File(new File(metashapeObjectChunk.getFramePath()).getParentFile(), path);
 
-                // Remove "../../../" from the front of the path variable if present to make it relative to the project directory
-                // TODO: This actually makes it relative only to the "Processed" directory
-                if (path.startsWith("../../../")) {
-                    path = path.substring(9);
+                if (imageFile.exists()) {
+                    // Add pair to the map
+                    cameraPathsMap.put(cameraId, rootDirectory.toPath().relativize(imageFile.toPath()).toString());
                 }
-
-                // Add pair to the map
-                cameraPathsMap.put(cameraId, path);
             }
-            // TODO: Transfer cameraPath's map into a ViewSet somehow
-            //  Modify view set to be able to accept these altered paths, but also fix any
-            //   getters that want to old formatting.
-
-
 
         // 2) Load ViewSet from ZipInputStream from chunk's ZIP (eventually will accept the filename map as a parameter)
             InputStream fileStream = null;
@@ -258,9 +250,10 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                     if (entry.getName().equals(targetFileName)) {
                         // Found the desired file inside the zip
                         fileStream = new BufferedInputStream(zis);
-                        // Create and store ViewSet
-                        this.viewSet = ViewSetReaderFromAgisoftXML.getInstance().readFromStream(fileStream, chunkDirectory, chunkDirectory); //The way the other version does this
-                        break; // No need to continue searching
+                        // Create and store ViewSet TODO: USING A HARD CODED VERSION VALUE (200)
+                        this.viewSet = ((ViewSetReaderFromAgisoftXML) ViewSetReaderFromAgisoftXML.getInstance())
+                                .readFromStream(fileStream, rootDirectory, supportingFilesDirectory, cameraPathsMap, 200);
+                        break;
                     }
                 }
 
@@ -269,7 +262,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 // Print error to log
                 System.out.println("Error reading zip file: " + e.getMessage());
             }
-
 
         // 3) load geometry from ZipInputStream from model's ZIP
             this.geometry = VertexGeometry.createFromZippedPLYFile(new File(chunkDirectory, "0/model/model.zip"), "mesh.ply");
@@ -280,17 +272,16 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         // 4) Set image directory to be parent directory of MetaShape project (and add to the photos' paths)
             this.imageDirectoryOverride = chunkDirectory.getParentFile().getParentFile();
-            //this.viewSet.setRelativeFullResImagePathName(metashapeObjectChunk.getFramePath().getParentFile().toPath().relativize(undistortedImageDirectory.toPath()).toString());
-            File frameZip = new File(metashapeObjectChunk.getFramePath()).getParentFile();
 
             File psxFile = new File(metashapeObjectChunk.getMetashapeObject().getPsxFilePath());
-            File undistortedImageDirectory = new File(psxFile.getParent(), "Processed"); // The directory of undistorted photos //TODO
+            File undistortedImageDirectory = new File(psxFile.getParent()); // The directory of undistorted photos //TODO: verify this
             // Print error to log if unable to find undistortedImageDirectory
             if (!undistortedImageDirectory.exists()) {
                 System.out.println("Unable to find undistortedImageDirectory: " + undistortedImageDirectory);
             }
-            this.viewSet.setRelativeFullResImagePathName(frameZip.toPath().relativize(undistortedImageDirectory.toPath()).toString());
 
+            // Set the fullResImage Directory to be the root directory
+            this.viewSet.setRelativeFullResImagePathName("");
 
             if (this.loadOptions != null) {
                 updateViewSetFromLoadOptions();
