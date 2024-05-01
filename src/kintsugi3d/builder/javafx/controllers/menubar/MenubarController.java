@@ -19,8 +19,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Scanner;
 import java.util.function.Consumer;
 
@@ -234,8 +236,10 @@ public class MenubarController
         File exportClassDefinitionFile = new File("export-classes.txt");
         if (exportClassDefinitionFile.exists())
         {
-            try (Scanner scanner = new Scanner(exportClassDefinitionFile))
+            try (Scanner scanner = new Scanner(exportClassDefinitionFile, StandardCharsets.UTF_8))
             {
+                scanner.useLocale(Locale.US);
+
                 while (scanner.hasNext())
                 {
                     String className = scanner.next();
@@ -280,7 +284,7 @@ public class MenubarController
                     }
                 }
             }
-            catch (FileNotFoundException e)
+            catch (IOException e)
             {
                 log.error("Failed to find export classes file:", e);
             }

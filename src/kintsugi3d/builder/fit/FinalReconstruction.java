@@ -153,7 +153,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
             return rmseOut;
         }
         // NoSuchElementException thrown if there's an error reading a ground truth image from the view set
-        catch (FileNotFoundException | NoSuchElementException e)
+        catch (IOException | NoSuchElementException e)
         {
             LOG.error("An error occurred during reconstruction:", e);
             return null;

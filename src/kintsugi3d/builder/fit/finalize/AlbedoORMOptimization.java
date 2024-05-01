@@ -39,20 +39,20 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
 
     public static <ContextType extends Context<ContextType>> AlbedoORMOptimization<ContextType> createWithOcclusion(
         Texture2D<ContextType> occlusionMap, TextureResolution settings)
-        throws FileNotFoundException
+        throws IOException
     {
         return new AlbedoORMOptimization<>(occlusionMap.getContext(), occlusionMap, settings);
     }
 
     public static <ContextType extends Context<ContextType>> AlbedoORMOptimization<ContextType> createWithoutOcclusion(
         ContextType context, TextureResolution resolution)
-        throws FileNotFoundException
+        throws IOException
     {
         return new AlbedoORMOptimization<>(context, null, resolution);
     }
 
     private AlbedoORMOptimization(ContextType context, Texture2D<ContextType> occlusionMap, TextureResolution settings)
-        throws FileNotFoundException
+        throws IOException
     {
         this.occlusionMap = occlusionMap;
         estimationProgram = createProgram(context, occlusionMap != null);
@@ -198,7 +198,7 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
     }
 
     private static <ContextType extends Context<ContextType>>
-    ProgramObject<ContextType> createProgram(ContextType context, boolean occlusionTextureEnabled) throws FileNotFoundException
+    ProgramObject<ContextType> createProgram(ContextType context, boolean occlusionTextureEnabled) throws IOException
     {
         return context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))

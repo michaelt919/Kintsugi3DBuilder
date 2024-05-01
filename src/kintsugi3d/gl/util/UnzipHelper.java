@@ -31,6 +31,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -55,7 +56,7 @@ public class UnzipHelper {
             int read = 0;
             while ((zis.getNextEntry())!= null) {
                 while ((read = zis.read(buffer, 0, 1024)) >= 0) {
-                    s.append(new String(buffer, 0, read));
+                    s.append(new String(buffer, 0, read, StandardCharsets.UTF_8));
                 }
             }
             return s.toString();

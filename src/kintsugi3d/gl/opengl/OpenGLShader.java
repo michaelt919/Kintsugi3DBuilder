@@ -14,7 +14,10 @@ package kintsugi3d.gl.opengl;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Scanner;
@@ -41,7 +44,7 @@ class OpenGLShader implements Shader<OpenGLContext>
     private int shaderId;
     private boolean closed = false;
 
-    OpenGLShader(OpenGLContext context, int shaderType, File file, Map<String, Object> defines) throws FileNotFoundException
+    OpenGLShader(OpenGLContext context, int shaderType, File file, Map<String, Object> defines) throws IOException
     {
         this.context = context;
 
@@ -99,7 +102,7 @@ class OpenGLShader implements Shader<OpenGLContext>
         }
     }
 
-    private static void loadSource(File file, StringBuilder sb, Map<String, Object> defines) throws FileNotFoundException
+    private static void loadSource(File file, StringBuilder sb, Map<String, Object> defines) throws IOException
     {
         int lineCounter = 1;
         boolean definesAdded = defines.isEmpty();
@@ -110,8 +113,10 @@ class OpenGLShader implements Shader<OpenGLContext>
             log.warn("Thread interrupted", new Throwable("Thread interrupted"));
         }
 
-        try(Scanner scanner = new Scanner(file))
+        try(Scanner scanner = new Scanner(file, StandardCharsets.UTF_8))
         {
+            scanner.useLocale(Locale.US);
+
             while (scanner.hasNextLine())
             {
                 String nextLine = scanner.nextLine();

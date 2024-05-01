@@ -36,6 +36,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.function.BiConsumer;
@@ -210,7 +211,7 @@ public class SpecularFitProcess
 
             if (DEBUG_IMAGES && settings.getOutputDirectory() != null)
             {
-                try (PrintStream time = new PrintStream(new File(settings.getOutputDirectory(), "time.txt")))
+                try (PrintStream time = new PrintStream(new File(settings.getOutputDirectory(), "time.txt"), StandardCharsets.UTF_8))
                 {
                     time.println(duration);
                 }
@@ -414,7 +415,7 @@ public class SpecularFitProcess
                 new File("shaders/common/texspace_dynamic.vert"),
                 new File("shaders/specularfit/errorCalc.frag"));
         }
-        catch (FileNotFoundException e)
+        catch (IOException e)
         {
             log.error("An error occurred creating error calculation shader:", e);
             return null;

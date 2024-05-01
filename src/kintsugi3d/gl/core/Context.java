@@ -14,6 +14,7 @@ package kintsugi3d.gl.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 
@@ -90,7 +91,7 @@ public interface Context<ContextType extends Context<ContextType>> extends AutoC
      * @return The newly created shader.
      * @throws FileNotFoundException Upon a File I/O problem when reading the shader file.
      */
-    Shader<ContextType> createShader(ShaderType type, File file, Map<String, Object> defines) throws FileNotFoundException;
+    Shader<ContextType> createShader(ShaderType type, File file, Map<String, Object> defines) throws IOException;
 
     /**
      * Creates a new shader from a file containing the source code.
@@ -99,7 +100,7 @@ public interface Context<ContextType extends Context<ContextType>> extends AutoC
      * @return The newly created shader.
      * @throws FileNotFoundException Upon a File I/O problem when reading the shader file.
      */
-    default Shader<ContextType> createShader(ShaderType type, File file) throws FileNotFoundException
+    default Shader<ContextType> createShader(ShaderType type, File file) throws IOException
     {
         return createShader(type, file, Collections.emptyMap());
     }

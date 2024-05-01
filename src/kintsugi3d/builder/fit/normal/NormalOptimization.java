@@ -43,7 +43,7 @@ public class NormalOptimization<ContextType extends Context<ContextType>> implem
         SpecularFitProgramFactory<ContextType> programFactory,
         Function<Program<ContextType>, Drawable<ContextType>> drawableFactory,
         TextureResolution textureResolution, NormalOptimizationSettings normalOptimizationSettings)
-        throws FileNotFoundException
+        throws IOException
     {
         this.normalOptimizationSettings = normalOptimizationSettings;
 

@@ -14,6 +14,7 @@ package kintsugi3d.gl.opengl;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
@@ -93,7 +94,7 @@ public class OpenGLContext extends WindowContextBase<OpenGLContext>
     }
 
     @Override
-    public Shader<OpenGLContext> createShader(ShaderType type, File file, Map<String, Object> defines) throws FileNotFoundException
+    public Shader<OpenGLContext> createShader(ShaderType type, File file, Map<String, Object> defines) throws IOException
     {
         return new OpenGLShader(this, getOpenGLShaderType(type), file, defines);
     }

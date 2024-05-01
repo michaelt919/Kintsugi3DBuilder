@@ -14,6 +14,7 @@ package kintsugi3d.builder.rendering.components.scene;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Map;
 
 import kintsugi3d.builder.core.CameraViewport;
@@ -35,7 +36,7 @@ public class Grid<ContextType extends Context<ContextType>> extends ShaderCompon
     }
 
     @Override
-    protected ProgramObject<ContextType> createProgram(ContextType context) throws FileNotFoundException
+    protected ProgramObject<ContextType> createProgram(ContextType context) throws IOException
     {
         return context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))

@@ -14,6 +14,7 @@ package kintsugi3d.gl.builders.base;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -26,7 +27,7 @@ public abstract class ProgramBuilderBase<ContextType extends Context<ContextType
     @FunctionalInterface
     private interface ShaderSupplier<ContextType extends Context<ContextType>>
     {
-        Shader<ContextType> get() throws FileNotFoundException;
+        Shader<ContextType> get() throws IOException;
     }
 
     protected final ContextType context;
@@ -41,7 +42,7 @@ public abstract class ProgramBuilderBase<ContextType extends Context<ContextType
         this.defines = new HashMap<>(16);
     }
 
-    protected Iterable<Shader<ContextType>> compileShaders() throws FileNotFoundException
+    protected Iterable<Shader<ContextType>> compileShaders() throws IOException
     {
         Collection<Shader<ContextType>> shaders = new ArrayList<>(shaderBuilders.size());
         for (ShaderSupplier<ContextType> shaderBuilder : shaderBuilders)

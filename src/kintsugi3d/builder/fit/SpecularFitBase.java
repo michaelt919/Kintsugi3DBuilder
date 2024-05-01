@@ -47,7 +47,7 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
      * @throws FileNotFoundException
      */
     protected SpecularFitBase(BasisResources<ContextType> basisResources, boolean basisResourcesOwned,
-        TextureResolution textureResolution) throws FileNotFoundException
+        TextureResolution textureResolution) throws IOException
     {
         this.context = basisResources.getContext();
 
@@ -72,7 +72,7 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
      * @throws FileNotFoundException
      */
     protected SpecularFitBase(ContextType context, TextureResolution textureResolution,
-        SpecularBasisSettings specularBasisSettings) throws FileNotFoundException
+        SpecularBasisSettings specularBasisSettings) throws IOException
     {
         this(new BasisResources<>(context, specularBasisSettings.getBasisCount(), specularBasisSettings.getBasisResolution()),
             true, textureResolution);

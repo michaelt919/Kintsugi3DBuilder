@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class LightingResources<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -70,7 +71,7 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
                     .createProgram();
             shadowDrawable = context.createDrawable(shadowProgram);
         }
-        catch (FileNotFoundException e)
+        catch (IOException e)
         {
             log.error("Failed to load shader.", e);
         }
@@ -98,7 +99,7 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
                 shadowDrawable.addVertexBuffer("position", shadowCastingPositionBuffer);
             }
         }
-        catch (FileNotFoundException|RuntimeException e)
+        catch (IOException|RuntimeException e)
         {
             log.error("Failed to load shader.", e);
         }

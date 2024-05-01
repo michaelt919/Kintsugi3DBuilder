@@ -14,6 +14,7 @@ package kintsugi3d.gl.geometry;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import kintsugi3d.gl.core.*;
 
@@ -51,7 +52,7 @@ public class GeometryFramebuffer<ContextType extends Context<ContextType>> imple
      * @param height
      * @throws FileNotFoundException Thrown if there's trouble loading the geomBuffers shader for rendering to the framebuffer
      */
-    GeometryFramebuffer(GeometryResources<ContextType> geometry, int width, int height) throws FileNotFoundException
+    GeometryFramebuffer(GeometryResources<ContextType> geometry, int width, int height) throws IOException
     {
         this(geometry.context, width, height);
 
@@ -64,7 +65,7 @@ public class GeometryFramebuffer<ContextType extends Context<ContextType>> imple
         {
             drawable.draw(fbo);
         }
-        catch (FileNotFoundException e)
+        catch (IOException e)
         {
             // Make sure there isn't a memory leak if it can't find the shaders.
             this.fbo.close();

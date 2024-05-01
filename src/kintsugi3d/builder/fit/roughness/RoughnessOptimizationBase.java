@@ -32,7 +32,7 @@ public abstract class RoughnessOptimizationBase<ContextType extends Context<Cont
     protected final Drawable<ContextType> specularRoughnessFitDrawable;
 
     protected RoughnessOptimizationBase(BasisResources<ContextType> basisResources)
-        throws FileNotFoundException
+        throws IOException
     {
         // Fit specular parameters from weighted basis functions
         specularRoughnessFitProgram = basisResources.getContext().getShaderProgramBuilder()

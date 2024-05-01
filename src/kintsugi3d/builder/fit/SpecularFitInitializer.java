@@ -43,7 +43,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
         this.specularBasisSettings = specularBasisSettings;
     }
 
-    private ProgramObject<ContextType> createAverageProgram(SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
+    private ProgramObject<ContextType> createAverageProgram(SpecularFitProgramFactory<ContextType> programFactory) throws IOException
     {
         return programFactory.createProgram(resources,
             new File("shaders/common/texspace_dynamic.vert"),
@@ -96,7 +96,7 @@ public class SpecularFitInitializer<ContextType extends Context<ContextType>>
                 log.info(centers.get(b).toString());
             }
         }
-        catch (FileNotFoundException e)
+        catch (IOException e)
         {
             log.error("Error occurred while initializing specular fit:", e);
         }

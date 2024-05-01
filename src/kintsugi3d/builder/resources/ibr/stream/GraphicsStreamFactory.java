@@ -21,6 +21,7 @@ import kintsugi3d.gl.core.Framebuffer;
 import kintsugi3d.util.ColorList;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
 {
@@ -78,7 +79,7 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
      */
     public GraphicsStreamResource<ContextType> streamAsResource(
             ProgramBuilder<ContextType> programBuilder,
-            FramebufferObjectBuilder<ContextType> framebufferBuilder) throws FileNotFoundException
+            FramebufferObjectBuilder<ContextType> framebufferBuilder) throws IOException
     {
         return new GraphicsStreamResource<>(programBuilder, framebufferBuilder,
             (program, framebuffer) -> new SequentialViewRenderStream<>(
@@ -156,7 +157,7 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
     public GraphicsStreamResource<ContextType> parallelStreamAsResource(
             ProgramBuilder<ContextType> programBuilder,
             FramebufferObjectBuilder<ContextType> framebufferBuilder,
-            int maxRunningThreads) throws FileNotFoundException
+            int maxRunningThreads) throws IOException
     {
         return new GraphicsStreamResource<>(programBuilder, framebufferBuilder,
             (program, framebuffer) -> new ParallelViewRenderStream<>(
@@ -180,7 +181,7 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
      */
     public GraphicsStreamResource<ContextType> parallelStreamAsResource(
             ProgramBuilder<ContextType> programBuilder,
-            FramebufferObjectBuilder<ContextType> framebufferBuilder) throws FileNotFoundException
+            FramebufferObjectBuilder<ContextType> framebufferBuilder) throws IOException
     {
         return new GraphicsStreamResource<>(programBuilder, framebufferBuilder,
             (program, framebuffer) -> new ParallelViewRenderStream<>(

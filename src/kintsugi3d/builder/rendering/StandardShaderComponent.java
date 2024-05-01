@@ -14,6 +14,7 @@ package kintsugi3d.builder.rendering;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -68,7 +69,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
 
 
     @Override
-    protected ProgramObject<ContextType> createProgram(ContextType context) throws FileNotFoundException
+    protected ProgramObject<ContextType> createProgram(ContextType context) throws IOException
     {
         return loadMainProgram(getPreprocessorDefines());
     }
@@ -116,7 +117,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
         return programBuilder;
     }
 
-    private ProgramObject<ContextType> loadMainProgram(Map<String, Optional<Object>> defineMap) throws FileNotFoundException
+    private ProgramObject<ContextType> loadMainProgram(Map<String, Optional<Object>> defineMap) throws IOException
     {
         return this.getProgramBuilder(defineMap)
             .define("SPOTLIGHTS_ENABLED", true)
