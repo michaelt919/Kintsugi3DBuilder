@@ -33,6 +33,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.*;
 import javafx.util.StringConverter;
@@ -151,6 +152,7 @@ public class MenubarController
     @FXML private Menu recentProjectsMenu;
 
     @FXML private VBox cameraViewList;
+    @FXML private HBox Eyedropper;
     @FXML private CameraViewListController cameraViewListController;
     @FXML private FramebufferView framebufferView;
 
@@ -175,15 +177,24 @@ public class MenubarController
     public <ContextType extends Context<ContextType>> void init(
         Stage injectedStage, InternalModels injectedInternalModels, Runnable injectedUserDocumentationHandler)
     {
+
         this.window = injectedStage;
         this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
 
         // remove camera view list from layout when invisible
         this.cameraViewList.managedProperty().bind(this.cameraViewList.visibleProperty());
+        this.Eyedropper.managedProperty().bind(this.Eyedropper.visibleProperty());
+        Eyedropper.setVisible(false);
+        Eyedropper.setExitCallback(() ->
+        {
+            {    Eyedropper.setVisible(false); }
+        });
 
         // only show camera view list when light calibration mode is active
         // TODO make this a separate property to allow it to be shown in other contexts
         this.cameraViewList.visibleProperty().bind(injectedInternalModels.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
+
+
 
         // remove progress bar from layout when invisible
         this.progressBar.managedProperty().bind(this.progressBar.visibleProperty());
@@ -700,18 +711,23 @@ public class MenubarController
     {
         if (colorCheckerWindowOpen.get())
         {
+            Eyedropper.setVisible(false);
+
             return;
         }
 
         try
         {
-            EyedropperController eyedropperController =
-                    makeWindow("Grayscale Calibration", colorCheckerWindowOpen, "fxml/menubar/EyedropperColorChecker.fxml");
-            eyedropperController.setLoadingModel(MultithreadModels.getInstance().getLoadingModel());
+            Eyedropper.setVisible(true);
+//            EyedropperController eyedropperController =
+//                    makeWindow("Grayscale Calibration", colorCheckerWindowOpen, "fxml/menubar/EyedropperColorChecker.fxml");
+//
+//            eyedropperController.setLoadingModel(MultithreadModels.getInstance().getLoadingModel());
 
         }
         catch(Exception e)
         {
+            Eyedropper.setVisible(false);
             handleException("An error occurred opening color checker window", e);
         }
     }
