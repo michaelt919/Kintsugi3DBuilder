@@ -12,10 +12,9 @@
 
 package kintsugi3d.util;
 
-import javafx.scene.control.Button;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SplitMenuButton;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
@@ -158,6 +157,10 @@ public class RecentProjects {
                 recentStrings.add(fileName);
 
                 //TODO: ADD IMAGE TO PROJECT BUTTON
+                //set graphic to ? image if proper thumbnail cannot be found
+                recentButtons.get(i).setGraphic(new ImageView(new Image(new File("question-mark.png").toURI().toString())));
+                recentButtons.get(i).setContentDisplay(ContentDisplay.TOP);
+
             }
 
             //add remaining items under the split menu button
