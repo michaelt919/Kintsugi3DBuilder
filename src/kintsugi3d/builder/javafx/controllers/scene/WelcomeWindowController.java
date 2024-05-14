@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.ArrayList;
 
 public class WelcomeWindowController
 {
@@ -41,16 +42,13 @@ public class WelcomeWindowController
     private final Flag unzipperOpen = new Flag(false);
 
     private static WelcomeWindowController INSTANCE;
-    public Button recent1;
-    public String button1File;
-    public Button recent2;
-    public String button2File;
-    public Button recent3;
-    public String button3File;
-    public Button recent4;
-    public String button4File;
-    public Button recent5;
-    public String button5File;
+    @FXML private Button recent1;
+    @FXML private Button recent2;
+    @FXML private Button recent3;
+    @FXML private Button recent4;
+    @FXML private Button recent5;
+    public ArrayList<Button> recentButtons = new ArrayList<>();
+    public ArrayList<String> recentButtonFiles = new ArrayList<>();
 
     public static WelcomeWindowController getInstance()
     {
@@ -76,7 +74,15 @@ public class WelcomeWindowController
         this.window = injectedStage;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
 
+        recentButtons.add(recent1);
+        recentButtons.add(recent2);
+        recentButtons.add(recent3);
+        recentButtons.add(recent4);
+        recentButtons.add(recent5);
+
+        //initializeWelcomeWindowController initializes recentButtonFiles ArrayList
         RecentProjects.initializeWelcomeWindowController(this);
+
         updateRecentProjectsButton();
 
 //        MultithreadModels.getInstance().getLoadingModel().addLoadingMonitor(new LoadingMonitor()
@@ -146,7 +152,7 @@ public class WelcomeWindowController
     {
         if (!ProjectIO.getInstance().isCreateProjectWindowOpen())
         {
-            //if able to put scene for Loader 
+            //if able to put scene for Loader
             //window.setScene(parentWindow.getScene());
             ProjectIO.getInstance().createProject(parentWindow);
             updateRecentProjectsButton();
@@ -209,16 +215,12 @@ public class WelcomeWindowController
     }
 
     public void handleButtonSelection(Button item) {
-        if (item == recent1){
-            ProjectIO.getInstance().openProjectFromFile(new File(button1File));
-        } else if (item == recent2){
-            ProjectIO.getInstance().openProjectFromFile(new File(button2File));
-        } else if (item == recent3){
-            ProjectIO.getInstance().openProjectFromFile(new File(button3File));
-        } else if (item == recent4){
-            ProjectIO.getInstance().openProjectFromFile(new File(button4File));
-        } else if (item == recent5){
-            ProjectIO.getInstance().openProjectFromFile(new File(button5File));
+        int i = 0;
+        for (Button button : recentButtons){
+            if (button == item){
+                ProjectIO.getInstance().openProjectFromFile(new File(recentButtonFiles.get(i)));
+            }
+            i++;
         }
     }
 }

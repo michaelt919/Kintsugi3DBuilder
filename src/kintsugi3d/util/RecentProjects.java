@@ -12,6 +12,7 @@
 
 package kintsugi3d.util;
 
+import javafx.scene.control.Button;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SplitMenuButton;
@@ -31,7 +32,7 @@ public class RecentProjects {
     private static WelcomeWindowController welcomeWindowController;
     private static File recentProjectsFile = new File(ApplicationFolders.getUserAppDirectory().toFile(), "recentFiles.txt");
 
-    private RecentProjects(){throw new IllegalStateException("Utility class");};
+    private RecentProjects(){throw new IllegalStateException("Utility class");}
     public static List<String> getItemsFromRecentsFile() {
         List<String> projectItems = new ArrayList<>();
 
@@ -142,29 +143,25 @@ public class RecentProjects {
 
         ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
 
-
-
         //attach event handlers to all menu items
-        int i = 1;
+        int i = 0;
+        ArrayList<Button> recentButtons = welcomeWindowController.recentButtons;
+        ArrayList<String> recentStrings = welcomeWindowController.recentButtonFiles;
         for (MenuItem item : recentItems) {
 
-            //Change the name of each recent file button
-            if (i==1) {
-                welcomeWindowController.recent1.setText(new File(item.getText()).getName());
-                welcomeWindowController.button1File = item.getText();
-            }else if (i==2) {
-                welcomeWindowController.recent2.setText(new File(item.getText()).getName());
-                welcomeWindowController.button2File = item.getText();
-            }else if (i==3) {
-                welcomeWindowController.recent3.setText(new File(item.getText()).getName());
-                welcomeWindowController.button3File = item.getText();
-            }else if (i==4) {
-                welcomeWindowController.recent4.setText(new File(item.getText()).getName());
-                welcomeWindowController.button4File = item.getText();
-            }else if (i==5) {
-                welcomeWindowController.recent5.setText(new File(item.getText()).getName());
-                welcomeWindowController.button5File = item.getText();
-            }else{
+            //add first few items to quick access
+            if (i < recentItems.size()){
+
+                //set project file name
+                String fileName = item.getText();
+                recentButtons.get(i).setText(new File(fileName).getName());
+                recentStrings.add(fileName);
+
+                //TODO: ADD IMAGE TO PROJECT BUTTON
+            }
+
+            //add remaining items under the split menu button
+            else{
                 menu.getItems().addAll(item);
                 item.setOnAction(event -> handleMenuItemSelection(item));
             }
