@@ -19,12 +19,21 @@ import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
+import kintsugi3d.gl.util.UnzipHelper;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Scanner;
 
 public class RecentProjects {
 
@@ -137,29 +146,109 @@ public class RecentProjects {
         }
     }
 
-    private static void updateRecentProjectsSplitMenuButton(SplitMenuButton menu){
+    private static void updateRecentProjectsSplitMenuButton(SplitMenuButton menu) {
         menu.getItems().clear();
 
         ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
 
         //attach event handlers to all menu items
-        int i = 0;
+        int i = -1;
         ArrayList<Button> recentButtons = welcomeWindowController.recentButtons;
         ArrayList<String> recentStrings = welcomeWindowController.recentButtonFiles;
         for (MenuItem item : recentItems) {
+            i++; //increment i at the beginning of the loop instead of the end because "continue" and "break" are used
 
-            //add first few items to quick access
-            if (i < recentItems.size()){
+            //add first few items to quick access buttons
+            if (i < recentButtons.size()){
 
                 //set project file name
                 String fileName = item.getText();
-                recentButtons.get(i).setText(new File(fileName).getName());
+                File file = new File(fileName);
+                recentButtons.get(i).setText(file.getName());
                 recentStrings.add(fileName);
 
                 //TODO: ADD IMAGE TO PROJECT BUTTON
                 //set graphic to ? image if proper thumbnail cannot be found
                 recentButtons.get(i).setGraphic(new ImageView(new Image(new File("question-mark.png").toURI().toString())));
                 recentButtons.get(i).setContentDisplay(ContentDisplay.TOP);
+
+                //get preview image from .k3d file
+                if (file.getAbsolutePath().matches(".*" + "\\.k3d")){
+                    //open file and convert to xml document
+                    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                    try {
+                        DocumentBuilder builder = factory.newDocumentBuilder();
+                        Document document = builder.parse(file);
+
+                        //get view set path
+                        Element projectDomElement = (Element) document.getElementsByTagName("Project").item(0);
+                        Element viewSetDomElement = (Element) projectDomElement.getElementsByTagName("ViewSet").item(0);
+                        String viewSetPath = file.getParent() + "\\" + viewSetDomElement.getAttribute("src");
+
+                        //open images in view set path
+                        File viewSetFile = new File(viewSetPath);
+
+                        Scanner sc = new Scanner(viewSetFile);
+
+
+                        String imgsPath = null;
+                        String read;
+                        while (sc.hasNextLine()) {
+                            read = sc.nextLine();
+
+                            //note: could be "# Full resolution image file path" instead if desired
+                            if (read.equals("# Preview resolution image file path")) {
+                                imgsPath = sc.nextLine();
+                                //remove the first two chars of the path because it starts with "i "
+                                imgsPath = imgsPath.substring(2);
+
+                                //remove references to parent directories
+                                String parentPrefix = "..\\";
+                                while (imgsPath.startsWith(parentPrefix)) {
+                                    imgsPath = imgsPath.substring(parentPrefix.length());
+                                }
+                                break;
+                            }
+                        }
+
+                        if (imgsPath == null) {
+                            continue;
+                        }
+
+                        String basePath = System.getProperty("user.home");
+                        File baseDir = new File(basePath);
+
+                        //build path off of home directory, otherwise correct path would not be found
+                        File imgFolder = new File(baseDir, imgsPath);
+
+                        String canonicalPath = imgFolder.getCanonicalPath();
+                        File resolvedFile = new File(canonicalPath);
+
+                        // Check if the path is a directory
+                        if (!resolvedFile.isDirectory()) {
+                            continue;
+                        }
+
+                        // List child files
+                        String[] childFilePaths = resolvedFile.list();
+
+                        if (childFilePaths == null || childFilePaths.length == 0) {
+                            continue;
+                        }
+
+                        String previewImgPath = canonicalPath + "\\" + childFilePaths[0];
+                        ImageView previewImgView = new ImageView(new Image(new File(previewImgPath).toURI().toString()));
+                        previewImgView.setFitHeight(80);
+                        previewImgView.setPreserveRatio(true);
+                        recentButtons.get(i).setGraphic(previewImgView);
+
+
+
+                    } catch (ParserConfigurationException | IOException | SAXException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                }
 
             }
 
@@ -168,7 +257,6 @@ public class RecentProjects {
                 menu.getItems().addAll(item);
                 item.setOnAction(event -> handleMenuItemSelection(item));
             }
-            i++;
         }
 
         //disable button if there are no recent projects
