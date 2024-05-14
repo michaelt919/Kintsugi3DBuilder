@@ -482,7 +482,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     }
 
 
-    private void updateShadowTextures() throws FileNotFoundException
+    private void updateShadowTextures() throws IOException
     {
         if (this.shadowTextures != null)
         {
@@ -541,7 +541,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         {
             updateShadowTextures();
         }
-        catch (FileNotFoundException e)
+        catch (IOException e)
         {
             log.error("Error updating light calibration:", e);
         }

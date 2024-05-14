@@ -14,6 +14,7 @@ package kintsugi3d.builder.export.general;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.function.Consumer;
 
@@ -144,7 +145,7 @@ abstract class RenderRequestBase implements ObservableIBRRequest
     }
 
     protected <ContextType extends Context<ContextType>> ProgramObject<ContextType> createProgram(
-        IBRResourcesImageSpace<ContextType> resources) throws FileNotFoundException
+        IBRResourcesImageSpace<ContextType> resources) throws IOException
     {
         ProgramObject<ContextType> program =
             resources.getShaderProgramBuilder()

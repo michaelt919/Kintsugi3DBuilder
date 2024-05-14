@@ -14,6 +14,7 @@ package kintsugi3d.gl.builders;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.ProgramObject;
@@ -27,5 +28,5 @@ public interface ProgramBuilder<ContextType extends Context<ContextType>>
     ProgramBuilder<ContextType> addShader(ShaderType type, File shaderFile);
     ProgramBuilder<ContextType> addShader(ShaderType type, String shaderSource);
 
-    ProgramObject<ContextType> createProgram() throws FileNotFoundException;
+    ProgramObject<ContextType> createProgram() throws IOException;
 }

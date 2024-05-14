@@ -32,7 +32,7 @@ public class RoughnessOptimizationSimple<ContextType extends Context<ContextType
 
     public RoughnessOptimizationSimple(BasisResources<ContextType> basisResources,
         BasisWeightResources<ContextType> weightResources, TextureResolution settings)
-        throws FileNotFoundException
+        throws IOException
     {
         super(basisResources);
         setInputWeights(weightResources);

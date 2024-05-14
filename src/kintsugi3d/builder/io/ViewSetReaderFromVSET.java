@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.IntStream;
 
@@ -60,8 +61,10 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         List<Double> linearLuminanceList = new ArrayList<>(8);
         List<Byte> encodedLuminanceList = new ArrayList<>(8);
 
-        try(Scanner scanner = new Scanner(stream))
+        try(Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
         {
+            scanner.useLocale(Locale.US);
+            
             List<Matrix4> unorderedCameraPoseList = new ArrayList<>(128);
             List<Matrix4> unorderedCameraPoseInvList = new ArrayList<>(128);
 

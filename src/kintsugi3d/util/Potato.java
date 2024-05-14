@@ -13,7 +13,9 @@
 package kintsugi3d.util;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -205,12 +207,12 @@ public class Potato
 
     public static void main(String[] args)
     {
-        try(PrintStream out = new PrintStream(args[4]))
+        try(PrintStream out = new PrintStream(args[4], StandardCharsets.UTF_8))
         {
             new Potato(Integer.parseInt(args[0]), Float.parseFloat(args[1]), Float.parseFloat(args[2]), Integer.parseInt(args[3]))
                 .writeToStream(out);
         }
-        catch (FileNotFoundException e)
+        catch (IOException e)
         {
             e.printStackTrace();
         }

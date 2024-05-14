@@ -58,7 +58,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
         Consumer<FramebufferObjectBuilder<ContextType>> buildIncidentRadianceFramebufferAttachments,
         ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
         ReadonlyIBRResources<ContextType> resources)
-        throws FileNotFoundException
+        throws IOException
     {
         this(viewSet, buildFramebufferAttachments, buildIncidentRadianceFramebufferAttachments, incidentRadianceProgramBuilder, resources,
             viewIndex ->
@@ -85,7 +85,7 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
             ProgramBuilder<ContextType> incidentRadianceProgramBuilder,
             ReadonlyIBRResources<ContextType> resources,
             IntFunction<ColorImage> groundTruthLoader)
-        throws FileNotFoundException
+        throws IOException
     {
         this.viewSet = viewSet;
         this.incidentRadianceProgram = incidentRadianceProgramBuilder.createProgram();

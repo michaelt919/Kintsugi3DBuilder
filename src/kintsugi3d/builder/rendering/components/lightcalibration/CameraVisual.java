@@ -13,6 +13,7 @@ package kintsugi3d.builder.rendering.components.lightcalibration;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Map;
 
 import kintsugi3d.builder.core.CameraViewport;
@@ -38,7 +39,7 @@ public class CameraVisual<ContextType extends Context<ContextType>> extends Shad
     }
 
     @Override
-    protected ProgramObject<ContextType> createProgram(ContextType context) throws FileNotFoundException
+    protected ProgramObject<ContextType> createProgram(ContextType context) throws IOException
     {
         return context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture_imgspace.vert"))

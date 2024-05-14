@@ -13,6 +13,7 @@
 package kintsugi3d.optimization;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Objects;
@@ -51,7 +52,7 @@ public class ShaderBasedOptimization<ContextType extends Context<ContextType>> i
         ProgramBuilder<ContextType> estimationProgramBuilder,
         FramebufferObjectBuilder<ContextType> framebufferObjectBuilder,
         Function<Program<ContextType>, Drawable<ContextType>> drawableFactory)
-        throws FileNotFoundException
+        throws IOException
     {
         // Normal estimation program
         estimationProgram = estimationProgramBuilder.createProgram();

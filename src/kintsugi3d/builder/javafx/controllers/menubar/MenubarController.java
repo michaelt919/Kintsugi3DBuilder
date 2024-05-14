@@ -19,8 +19,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Scanner;
 import java.util.function.Consumer;
 
@@ -81,7 +83,7 @@ public class MenubarController
     private final Flag lightCalibrationWindowOpen = new Flag(false);
     private final Flag colorCheckerWindowOpen = new Flag(false);
     private final Flag unzipperOpen = new Flag(false);
-    private final Flag consoleWindowOpen = new Flag(false);
+    private final Flag loggerWindowOpen = new Flag(false);
     private Flag systemSettingsModalOpen = new Flag(false);
 
     private Flag aboutWindowOpen = new Flag(false);
@@ -234,8 +236,10 @@ public class MenubarController
         File exportClassDefinitionFile = new File("export-classes.txt");
         if (exportClassDefinitionFile.exists())
         {
-            try (Scanner scanner = new Scanner(exportClassDefinitionFile))
+            try (Scanner scanner = new Scanner(exportClassDefinitionFile, StandardCharsets.UTF_8))
             {
+                scanner.useLocale(Locale.US);
+
                 while (scanner.hasNext())
                 {
                     String className = scanner.next();
@@ -280,7 +284,7 @@ public class MenubarController
                     }
                 }
             }
-            catch (FileNotFoundException e)
+            catch (IOException e)
             {
                 log.error("Failed to find export classes file:", e);
             }
@@ -729,14 +733,14 @@ public class MenubarController
 
     public void help_console()
     {
-        if (consoleWindowOpen.get())
+        if (loggerWindowOpen.get())
         {
             return;
         }
 
         try
         {
-            Stage stage = makeStage("Log", consoleWindowOpen, "fxml/menubar/Console.fxml");
+            Stage stage = makeStage("Log", loggerWindowOpen, "fxml/menubar/Logger.fxml");
             stage.setResizable(true);
             stage.initStyle(StageStyle.DECORATED);
             stage.show();

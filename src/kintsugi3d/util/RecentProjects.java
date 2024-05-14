@@ -21,6 +21,7 @@ import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -36,7 +37,7 @@ public class RecentProjects {
 
         if (recentProjectsFile.exists())
         {
-            try (BufferedReader reader = new BufferedReader(new FileReader(recentProjectsFile.getAbsolutePath())))
+            try (BufferedReader reader = new BufferedReader(new FileReader(recentProjectsFile.getAbsolutePath(), StandardCharsets.UTF_8)))
             {
                 String line;
                 while ((line = reader.readLine()) != null)
@@ -69,7 +70,7 @@ public class RecentProjects {
     public static void updateRecentFiles(String fileName) {
         // Read existing file content into a List
         List<String> existingFileNames = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(recentProjectsFile))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(recentProjectsFile, StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 existingFileNames.add(line);
@@ -85,7 +86,7 @@ public class RecentProjects {
         existingFileNames.add(0, fileName);
 
         // Write the updated content back to the file
-        try (PrintWriter writer = new PrintWriter(new FileWriter(recentProjectsFile))) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(recentProjectsFile, StandardCharsets.UTF_8))) {
             for (String name : existingFileNames) {
                 writer.println(name);
             }

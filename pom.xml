@@ -14,7 +14,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>Kintsugi3D</groupId>
     <artifactId>Kintsugi3DBuilder</artifactId>
-    <version>0.3.18</version>
+    <version>0.3.19</version>
     <packaging>jar</packaging>
     <build>
         <sourceDirectory>src</sourceDirectory>

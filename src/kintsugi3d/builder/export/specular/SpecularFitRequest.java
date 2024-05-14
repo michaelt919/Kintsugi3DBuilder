@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -102,7 +103,7 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
 
     private <ContextType extends Context<ContextType>> void performReconstruction(
         ReadonlyIBRResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit)
-        throws FileNotFoundException
+        throws IOException
     {
         if (settings.getOutputDirectory() != null)
         {
@@ -141,7 +142,7 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
 
                 if (!settings.getReconstructionSettings().shouldReconstructAll()) // Write to just one RMSE file if only doing a single image per reconstruction method
                 {
-                    try (PrintStream rmseOut = new PrintStream(new File(settings.getOutputDirectory(), "rmse.txt")))
+                    try (PrintStream rmseOut = new PrintStream(new File(settings.getOutputDirectory(), "rmse.txt"), StandardCharsets.UTF_8))
                     // Text file containing error information
                     {
                         rmseOut.println("basis, " + reconstructionRMSE);

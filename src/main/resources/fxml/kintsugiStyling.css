@@ -115,6 +115,14 @@ dialog-pane{
     -fx-text-fill: #FFFFFF;
 }
 
+.progress-bar{
+    -fx-accent: #D4AA00; /*color of completed portion (Kintsugi yellow)*/
+}
+
+.progress-bar .track{
+    -fx-background-color: #444444; /*color of incomplete portion*/
+}
+
 .split-menu-button {
     -fx-base: #272727;
     -fx-text-fill: #FFFFFF;

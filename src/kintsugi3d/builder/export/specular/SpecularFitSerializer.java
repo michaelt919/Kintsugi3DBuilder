@@ -26,8 +26,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Scanner;
 
 public class SpecularFitSerializer
@@ -104,7 +106,7 @@ public class SpecularFitSerializer
     public static void serializeBasisFunctions(int basisCount, int microfacetDistributionResolution, SpecularBasis basis, File outputDirectory)
     {
         // Text file format
-        try (PrintStream out = new PrintStream(new File(outputDirectory, getBasisFunctionsFilename())))
+        try (PrintStream out = new PrintStream(new File(outputDirectory, getBasisFunctionsFilename()), StandardCharsets.UTF_8))
         {
             for (int b = 0; b < basisCount; b++)
             {
@@ -135,7 +137,7 @@ public class SpecularFitSerializer
 
             out.println();
         }
-        catch (FileNotFoundException e)
+        catch (IOException e)
         {
             log.error("An error occurred saving basis functions:", e);
         }
@@ -153,7 +155,7 @@ public class SpecularFitSerializer
      * @return An object containing the red, green, and blue basis functions.
      */
     public static SpecularBasis deserializeBasisFunctions(File priorSolutionDirectory)
-        throws FileNotFoundException
+        throws IOException
     {
         File basisFile = new File(priorSolutionDirectory, getBasisFunctionsFilename());
 
@@ -161,8 +163,9 @@ public class SpecularFitSerializer
         {
             // Test to figure out the resolution
             int numElements; // Technically this is "microfacetDistributionResolution + 1" the way it's defined elsewhere
-            try (Scanner in = new Scanner(basisFile))
+            try (Scanner in = new Scanner(basisFile, StandardCharsets.UTF_8))
             {
+                in.useLocale(Locale.US);
                 String testLine = in.nextLine();
                 String[] elements = testLine.split("\\s*,+\\s*");
                 if (elements[elements.length - 1].isBlank()) // detect trailing comma
@@ -178,8 +181,10 @@ public class SpecularFitSerializer
             }
 
             // Now actually parse the file
-            try (Scanner in = new Scanner(basisFile))
+            try (Scanner in = new Scanner(basisFile, StandardCharsets.UTF_8))
             {
+                in.useLocale(Locale.US);
+
                 List<double[]> redBasis = new ArrayList<>(8);
                 List<double[]> greenBasis = new ArrayList<>(8);
                 List<double[]> blueBasis = new ArrayList<>(8);

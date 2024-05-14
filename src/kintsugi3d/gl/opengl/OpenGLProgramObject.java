@@ -13,6 +13,7 @@
 package kintsugi3d.gl.opengl;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 
 import kintsugi3d.gl.builders.base.ProgramBuilderBase;
@@ -49,7 +50,7 @@ final class OpenGLProgramObject implements ProgramObject<OpenGLContext>
         }
 
         @Override
-        public OpenGLProgramObject createProgram() throws FileNotFoundException
+        public OpenGLProgramObject createProgram() throws IOException
         {
             OpenGLProgramObject program = new OpenGLProgramObject(this.context, this.getDefines());
             Iterable<Shader<OpenGLContext>> compiledShaders = this.compileShaders();

@@ -27,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 
 /** Parser for decimal floating point numbers.
  *  
@@ -141,7 +142,7 @@ class Decimal
 
   static double read( String str ) throws IOException
   {
-    return read( new ByteArrayInputStream( str.getBytes() ) );
+    return read( new ByteArrayInputStream( str.getBytes(StandardCharsets.UTF_8) ) );
   }
 
   static double read( InputStream in ) throws IOException

@@ -12,6 +12,7 @@
 package kintsugi3d.builder.test;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -67,7 +68,7 @@ class ImageReconstructionTest
 
         Potato potato = new Potato(50, 0.75f, 0.1f, 250000);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        potato.writeToStream(new PrintStream(out));
+        potato.writeToStream(new PrintStream(out, false, StandardCharsets.UTF_8));
 
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
         potatoGeometry = VertexGeometry.createFromOBJStream(in);
@@ -93,7 +94,7 @@ class ImageReconstructionTest
                             new File("shaders/test/syntheticWithLinearNoise.frag"))
                         .createProgram();
                 }
-                catch (FileNotFoundException e)
+                catch (IOException e)
                 {
                     throw new RuntimeException(e);
                 }
@@ -120,7 +121,7 @@ class ImageReconstructionTest
                             new File("shaders/test/syntheticWithSRGBNoise.frag"))
                         .createProgram();
                 }
-                catch (FileNotFoundException e)
+                catch (IOException e)
                 {
                     throw new RuntimeException(e);
                 }
@@ -147,7 +148,7 @@ class ImageReconstructionTest
                             new File("shaders/test/syntheticWithTonemappedLitNoise.frag"))
                         .createProgram();
                 }
-                catch (FileNotFoundException e)
+                catch (IOException e)
                 {
                     throw new RuntimeException(e);
                 }
@@ -170,7 +171,7 @@ class ImageReconstructionTest
                 .define("SRGB_TONEMAPPING_ENABLED", 0)
                 .createProgram();
         }
-        catch (FileNotFoundException e)
+        catch (IOException e)
         {
             throw new RuntimeException(e);
         }
@@ -186,7 +187,7 @@ class ImageReconstructionTest
                 .define("SRGB_TONEMAPPING_ENABLED", 1)
                 .createProgram();
         }
-        catch (FileNotFoundException e)
+        catch (IOException e)
         {
             throw new RuntimeException(e);
         }

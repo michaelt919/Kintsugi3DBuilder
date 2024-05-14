@@ -12,6 +12,7 @@
 package kintsugi3d.builder.rendering.components;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -104,7 +105,7 @@ public abstract class ShaderComponent<ContextType extends Context<ContextType>> 
                 this.drawable.addVertexBuffer(entry.getKey(), entry.getValue());
             }
         }
-        catch (FileNotFoundException | RuntimeException e)
+        catch (IOException | RuntimeException e)
         {
             LOG.error("Failed to load shader.", e);
         }
@@ -156,7 +157,7 @@ public abstract class ShaderComponent<ContextType extends Context<ContextType>> 
      * Shader program is automatically managed and does not need to manually be added as a resource.
      * @return
      */
-    protected abstract ProgramObject<ContextType> createProgram(ContextType context) throws FileNotFoundException;
+    protected abstract ProgramObject<ContextType> createProgram(ContextType context) throws IOException;
 
     /**
      * Override to provide vertex buffers.

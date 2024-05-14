@@ -13,6 +13,7 @@
 package kintsugi3d.builder.resources.ibr;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryResources;
@@ -37,12 +38,12 @@ public class DepthMapGenerator<ContextType extends Context<ContextType>> impleme
      * @throws FileNotFoundException Thrown if the depth map shader cannot be loaded
      */
     public static <ContextType extends Context<ContextType>>DepthMapGenerator<ContextType> createFromGeometryResources(
-        GeometryResources<ContextType> geometryResources) throws FileNotFoundException
+        GeometryResources<ContextType> geometryResources) throws IOException
     {
         return new DepthMapGenerator<>(geometryResources);
     }
 
-    private DepthMapGenerator(GeometryResources<ContextType> geometryResources) throws FileNotFoundException
+    private DepthMapGenerator(GeometryResources<ContextType> geometryResources) throws IOException
     {
         this.geometryResources = geometryResources;
         depthRenderingProgram = IBRResourcesImageSpace.getDepthMapProgramBuilder(geometryResources.positionBuffer.getContext()).createProgram();

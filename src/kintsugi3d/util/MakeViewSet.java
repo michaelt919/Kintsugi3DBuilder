@@ -12,7 +12,9 @@
 
 package kintsugi3d.util;
 
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,11 +58,11 @@ public final class MakeViewSet
     {
         ReadonlyViewSet viewSet = makeViewSet(Integer.parseInt(args[0]), Float.parseFloat(args[1]),
             Float.parseFloat(args[2]), Float.parseFloat(args[3]), Float.parseFloat(args[4]), Float.parseFloat(args[5]));
-        try (PrintStream out = new PrintStream(String.format(args[6], viewSet.getCameraPoseCount())))
+        try (PrintStream out = new PrintStream(String.format(args[6], viewSet.getCameraPoseCount()), StandardCharsets.UTF_8))
         {
             ViewSetWriterToVSET.getInstance().writeToStream(viewSet, out);
         }
-        catch (Exception e)
+        catch (IOException|RuntimeException e)
         {
             e.printStackTrace();
         }
