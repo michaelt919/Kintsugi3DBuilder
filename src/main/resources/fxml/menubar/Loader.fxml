@@ -12,11 +12,19 @@
   ~
   -->
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-<VBox fx:id="root" alignment="CENTER" prefHeight="310.0" prefWidth="730.0" style="-fx-background-color: #000000;" styleClass="vbox" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.LoaderController">
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<VBox fx:id="root" alignment="CENTER" prefHeight="310.0" prefWidth="730.0" style="-fx-background-color: #000000;" styleClass="vbox" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.LoaderController">
     <GridPane alignment="CENTER" hgap="10.0" styleClass="grid-pane" vgap="10.0" VBox.vgrow="ALWAYS">
         <columnConstraints>
             <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -111,7 +119,7 @@
             </HBox>
             <HBox alignment="CENTER_RIGHT" spacing="30.0" HBox.hgrow="ALWAYS">
                 <children>
-                    <Button mnemonicParsing="false" onAction="#cancelButtonPress" text="Cancel">
+                    <Button mnemonicParsing="false" onAction="#cancelButtonPress" text="Back">
                         <font>
                             <Font name="System Bold" size="18.0" />
                         </font>
@@ -119,7 +127,7 @@
                             <Insets />
                         </HBox.margin>
                     </Button>
-                    <Button mnemonicParsing="false" onAction="#okButtonPress" text="OK" textFill="#8291f3">
+                    <Button mnemonicParsing="false" onAction="#okButtonPress" text="Next" textFill="#8291f3">
                         <font>
                             <Font name="System Bold" size="18.0" />
                         </font>

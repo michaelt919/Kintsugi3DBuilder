@@ -146,6 +146,8 @@ public class WelcomeWindowController
     {
         if (!ProjectIO.getInstance().isCreateProjectWindowOpen())
         {
+            //if able to put scene for Loader 
+            //window.setScene(parentWindow.getScene());
             ProjectIO.getInstance().createProject(parentWindow);
             updateRecentProjectsButton();
         }
