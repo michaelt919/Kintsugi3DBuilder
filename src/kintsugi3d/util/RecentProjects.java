@@ -172,8 +172,10 @@ public class RecentProjects {
                 recentButtons.get(i).setGraphic(new ImageView(new Image(new File("question-mark.png").toURI().toString())));
                 recentButtons.get(i).setContentDisplay(ContentDisplay.TOP);
 
-                //get preview image from .k3d file
-                if (file.getAbsolutePath().matches(".*" + "\\.k3d")){
+                //get preview image from .k3d file or .ibr file
+                if (file.getAbsolutePath().matches(".*" + "\\.k3d") ||
+                        file.getAbsolutePath().matches(".*" + "\\.ibr")
+                ){
                     //open file and convert to xml document
                     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
                     try {
@@ -190,13 +192,12 @@ public class RecentProjects {
 
                         Scanner sc = new Scanner(viewSetFile);
 
-
                         String imgsPath = null;
                         String read;
                         while (sc.hasNextLine()) {
                             read = sc.nextLine();
 
-                            //note: could be "# Full resolution image file path" instead if desired
+                            //if (read.equals("# Full resolution image file path")){
                             if (read.equals("# Preview resolution image file path")) {
                                 imgsPath = sc.nextLine();
                                 //remove the first two chars of the path because it starts with "i "
