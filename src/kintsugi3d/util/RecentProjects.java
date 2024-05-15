@@ -18,14 +18,11 @@ import javafx.scene.image.ImageView;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
-import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObject;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
-import kintsugi3d.gl.util.UnzipHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -109,6 +106,10 @@ public class RecentProjects {
         }
 
         //update list of recent projects in program
+        updateAllControlStructures();
+    }
+
+    public static void updateAllControlStructures() {
         welcomeWindowController.updateRecentProjectsButton();
         MenubarController.getInstance().updateRecentProjectsMenu();
     }
@@ -130,9 +131,6 @@ public class RecentProjects {
         }
     }
 
-    //looks like updateRecentProjectsMenu() and updateRecentProjectsSplitMenuButton should
-    //be merged into one function because they have identical code, but no class encompasses them
-    //both while maintaining menu functionality (getItems(), setDisable(), etc.)
     private static void updateRecentProjectsMenu(Menu menu){
         menu.getItems().clear();
 
@@ -247,9 +245,6 @@ public class RecentProjects {
                         previewImgView.setFitHeight(80);
                         previewImgView.setPreserveRatio(true);
                         recentButtons.get(i).setGraphic(previewImgView);
-
-
-
                     } catch (ParserConfigurationException | IOException | SAXException e) {
                         log.error("Could not find preview image for " + file.getName(), e);
                     }
@@ -274,5 +269,32 @@ public class RecentProjects {
     private static void handleMenuItemSelection(MenuItem item) {
         String projectName = item.getText();
         ProjectIO.getInstance().openProjectFromFile(new File(projectName));
+    }
+
+    public static void cleanRecentProjects() {
+        ArrayList<String> recentItems = (ArrayList<String>) RecentProjects.getItemsFromRecentsFile();
+
+        ArrayList<String> newRecentItems = new ArrayList<>();
+        //iterate through list and remove items which do not exist in file system
+        for (String item : recentItems){
+            File file = new File(item);
+
+            if (file.exists()){
+                newRecentItems.add(item);
+            }
+        }
+
+        //write items to recent projects file and update control structures
+
+        // Write the updated content back to the file
+        try (PrintWriter writer = new PrintWriter(new FileWriter(recentProjectsFile, StandardCharsets.UTF_8))) {
+            for (String name : newRecentItems) {
+                writer.println(name);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        updateAllControlStructures();
     }
 }

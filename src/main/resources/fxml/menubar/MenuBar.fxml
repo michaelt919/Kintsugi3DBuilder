@@ -59,6 +59,8 @@
                                     <MenuItem mnemonicParsing="false" text="Action 1" />
                                 </items>
                             </Menu>
+                            <MenuItem mnemonicParsing="false" onAction="#file_cleanRecentProjects" text="Clean Recent Projects" />
+
                             <SeparatorMenuItem mnemonicParsing="false" />
                             <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
                             <SeparatorMenuItem />
