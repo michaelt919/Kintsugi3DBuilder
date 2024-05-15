@@ -18,8 +18,11 @@ import javafx.scene.image.ImageView;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObject;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.gl.util.UnzipHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -39,6 +42,8 @@ public class RecentProjects {
 
     private static WelcomeWindowController welcomeWindowController;
     private static File recentProjectsFile = new File(ApplicationFolders.getUserAppDirectory().toFile(), "recentFiles.txt");
+
+    private static final Logger log = LoggerFactory.getLogger(RecentProjects.class);
 
     private RecentProjects(){throw new IllegalStateException("Utility class");}
     public static List<String> getItemsFromRecentsFile() {
@@ -246,7 +251,7 @@ public class RecentProjects {
 
 
                     } catch (ParserConfigurationException | IOException | SAXException e) {
-                        throw new RuntimeException(e);
+                        log.error("Could not find preview image for " + file.getName(), e);
                     }
 
                 }
