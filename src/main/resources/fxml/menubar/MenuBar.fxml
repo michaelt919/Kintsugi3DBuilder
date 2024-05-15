@@ -60,6 +60,7 @@
                                 </items>
                             </Menu>
                             <MenuItem mnemonicParsing="false" onAction="#file_cleanRecentProjects" text="Clean Recent Projects" />
+                            <MenuItem mnemonicParsing="false" onAction="#file_purgeRecentProjectsList" text="Purge Recent Projects List" />
 
                             <SeparatorMenuItem mnemonicParsing="false" />
                             <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />

@@ -925,4 +925,8 @@ public class MenubarController
 
         RecentProjects.updateAllControlStructures();
     }
+
+    public void file_purgeRecentProjectsList(ActionEvent actionEvent) {
+        RecentProjects.purgeRecentProjectsList();
+    }
 }

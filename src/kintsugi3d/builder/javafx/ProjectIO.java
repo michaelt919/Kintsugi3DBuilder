@@ -381,6 +381,7 @@ public final class ProjectIO
             MultithreadModels.getInstance().getLoadingModel().setLoadedProjectFile(projectFile);
 
             WelcomeWindowController.getInstance().hideWelcomeWindow();
+            RecentProjects.updateAllControlStructures();
         }
     }
 

@@ -154,103 +154,25 @@ public class RecentProjects {
 
         ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
 
-        //attach event handlers to all menu items
-        int i = -1;
         ArrayList<Button> recentButtons = welcomeWindowController.recentButtons;
-        ArrayList<String> recentStrings = welcomeWindowController.recentButtonFiles;
-        for (MenuItem item : recentItems) {
-            i++; //increment i at the beginning of the loop instead of the end because "continue" and "break" are used
 
+        //disable all quick action buttons then enable them if they hold a project
+        for (Button button : recentButtons){
+            button.setDisable(true);
+            button.setGraphic(null);
+            button.setText("");
+        }
+
+        //attach event handlers to all menu items
+        int i = 0;
+        for (MenuItem item : recentItems) {
             //add first few items to quick access buttons
             if (i < recentButtons.size()){
+                Button recentButton = recentButtons.get(i);
+                addItemToQuickAccess(item, recentButton);
 
-                //set project file name
-                String fileName = item.getText();
-                File file = new File(fileName);
-                recentButtons.get(i).setText(file.getName());
-                recentStrings.add(fileName);
-
-                //TODO: ADD IMAGE TO PROJECT BUTTON
-                //set graphic to ? image if proper thumbnail cannot be found
-                recentButtons.get(i).setGraphic(new ImageView(new Image(new File("question-mark.png").toURI().toString())));
-                recentButtons.get(i).setContentDisplay(ContentDisplay.TOP);
-
-                //get preview image from .k3d file or .ibr file
-                if (file.getAbsolutePath().matches(".*" + "\\.k3d") ||
-                        file.getAbsolutePath().matches(".*" + "\\.ibr")
-                ){
-                    //open file and convert to xml document
-                    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                    try {
-                        DocumentBuilder builder = factory.newDocumentBuilder();
-                        Document document = builder.parse(file);
-
-                        //get view set path
-                        Element projectDomElement = (Element) document.getElementsByTagName("Project").item(0);
-                        Element viewSetDomElement = (Element) projectDomElement.getElementsByTagName("ViewSet").item(0);
-                        String viewSetPath = file.getParent() + "\\" + viewSetDomElement.getAttribute("src");
-
-                        //open images in view set path
-                        File viewSetFile = new File(viewSetPath);
-
-                        Scanner sc = new Scanner(viewSetFile);
-
-                        String imgsPath = null;
-                        String read;
-                        while (sc.hasNextLine()) {
-                            read = sc.nextLine();
-
-                            //if (read.equals("# Full resolution image file path")){
-                            if (read.equals("# Preview resolution image file path")) {
-                                imgsPath = sc.nextLine();
-                                //remove the first two chars of the path because it starts with "i "
-                                imgsPath = imgsPath.substring(2);
-
-                                //remove references to parent directories
-                                String parentPrefix = "..\\";
-                                while (imgsPath.startsWith(parentPrefix)) {
-                                    imgsPath = imgsPath.substring(parentPrefix.length());
-                                }
-                                break;
-                            }
-                        }
-
-                        if (imgsPath == null) {
-                            continue;
-                        }
-
-                        String basePath = System.getProperty("user.home");
-                        File baseDir = new File(basePath);
-
-                        //build path off of home directory, otherwise correct path would not be found
-                        File imgFolder = new File(baseDir, imgsPath);
-
-                        String canonicalPath = imgFolder.getCanonicalPath();
-                        File resolvedFile = new File(canonicalPath);
-
-                        // Check if the path is a directory
-                        if (!resolvedFile.isDirectory()) {
-                            continue;
-                        }
-
-                        // List child files
-                        String[] childFilePaths = resolvedFile.list();
-
-                        if (childFilePaths == null || childFilePaths.length == 0) {
-                            continue;
-                        }
-
-                        String previewImgPath = canonicalPath + "\\" + childFilePaths[0];
-                        ImageView previewImgView = new ImageView(new Image(new File(previewImgPath).toURI().toString()));
-                        previewImgView.setFitHeight(80);
-                        previewImgView.setPreserveRatio(true);
-                        recentButtons.get(i).setGraphic(previewImgView);
-                    } catch (ParserConfigurationException | IOException | SAXException e) {
-                        log.error("Could not find preview image for " + file.getName(), e);
-                    }
-
-                }
-
+                //note: this will still enable the button even if the project does not load properly
+                recentButton.setDisable(false);
             }
 
             //add remaining items under the split menu button
@@ -258,11 +180,102 @@ public class RecentProjects {
                 menu.getItems().addAll(item);
                 item.setOnAction(event -> handleMenuItemSelection(item));
             }
+
+            i++;
         }
 
         //disable button if there are no recent projects
         if (menu.getItems().isEmpty()) {
             menu.setDisable(true);
+        }
+    }
+
+    private static void addItemToQuickAccess(MenuItem item, Button recentButton) {
+        ArrayList<String> recentStrings = welcomeWindowController.recentButtonFiles;
+
+        //set project file name
+        String fileName = item.getText();
+        File file = new File(fileName);
+        recentButton.setText(file.getName());
+        recentStrings.add(fileName);
+
+        //set graphic to ? image if proper thumbnail cannot be found
+        recentButton.setGraphic(new ImageView(new Image(new File("question-mark.png").toURI().toString())));
+        recentButton.setContentDisplay(ContentDisplay.TOP);
+
+        //get preview image from .k3d file or .ibr file
+
+        //open file and convert to xml document
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        try {
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document document = builder.parse(file);
+
+            //get view set path
+            Element projectDomElement = (Element) document.getElementsByTagName("Project").item(0);
+            Element viewSetDomElement = (Element) projectDomElement.getElementsByTagName("ViewSet").item(0);
+            String viewSetPath = file.getParent() + "\\" + viewSetDomElement.getAttribute("src");
+
+            //open images in view set path
+            File viewSetFile = new File(viewSetPath);
+
+            Scanner sc = new Scanner(viewSetFile);
+            String imgsPath = null;
+            String read;
+            while (sc.hasNextLine()) {
+                read = sc.nextLine();
+
+                //if (read.equals("# Full resolution image file path")){
+                if (read.equals("# Preview resolution image file path")) {
+                    imgsPath = sc.nextLine();
+                    //remove the first two chars of the path because it starts with "i "
+                    imgsPath = imgsPath.substring(2);
+
+                    //remove references to parent directories
+                    String parentPrefix = "..\\";
+                    while (imgsPath.startsWith(parentPrefix)) {
+                        imgsPath = imgsPath.substring(parentPrefix.length());
+                    }
+                    break;
+                }
+            }
+
+            if (imgsPath == null) {
+                log.warn("Could not find preview image for " + file.getName());
+                return;
+            }
+
+            String basePath = System.getProperty("user.home");
+            File baseDir = new File(basePath);
+
+            //build path off of home directory, otherwise correct path would not be found
+            File imgFolder = new File(baseDir, imgsPath);
+
+            String canonicalPath = imgFolder.getCanonicalPath();
+            File resolvedFile = new File(canonicalPath);
+
+            // Check if the path is a directory
+            if (!resolvedFile.isDirectory()) {
+                log.warn("Could not find preview image for " + file.getName());
+                return;
+            }
+
+            // List child files
+            String[] childFilePaths = resolvedFile.list();
+
+            if (childFilePaths == null || childFilePaths.length == 0) {
+                log.warn("Could not find preview image for " + file.getName());
+                return;
+            }
+
+            String previewImgPath = canonicalPath + "\\" + childFilePaths[0];
+            ImageView previewImgView = new ImageView(new Image(new File(previewImgPath).toURI().toString()));
+            previewImgView.setFitHeight(80);
+            previewImgView.setPreserveRatio(true);
+            recentButton.setGraphic(previewImgView);
+        }
+        catch (ParserConfigurationException | IOException | SAXException e) {
+            log.warn("Could not find preview image for " + file.getName(), e);
         }
     }
 
@@ -291,6 +304,17 @@ public class RecentProjects {
             for (String name : newRecentItems) {
                 writer.println(name);
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        updateAllControlStructures();
+    }
+
+    public static void purgeRecentProjectsList() {
+        //wipe recent projects list
+        try (FileWriter fileWriter = new FileWriter(recentProjectsFile.getAbsolutePath(), false)) {
+            fileWriter.write("");
         } catch (IOException e) {
             e.printStackTrace();
         }
