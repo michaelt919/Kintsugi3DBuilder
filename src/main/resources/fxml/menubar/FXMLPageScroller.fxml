@@ -18,8 +18,8 @@
             <AnchorPane fx:id="hostAnchorPane" prefHeight="334.0" prefWidth="600.0" GridPane.columnSpan="2" />
             <HBox prefHeight="100.0" prefWidth="200.0" spacing="20.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.valignment="CENTER" GridPane.vgrow="ALWAYS">
                <children>
-                  <Button mnemonicParsing="false" onAction="#prevPage" text="Back" />
-                  <Button layoutX="10.0" layoutY="10.0" mnemonicParsing="false" onAction="#nextPage" text="Next" />
+                  <Button fx:id="prevButton" mnemonicParsing="false" onAction="#prevPage" text="Back" />
+                  <Button fx:id="nextButton" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" onAction="#nextPage" text="Next" />
                </children></HBox>
          </children>
       </GridPane>

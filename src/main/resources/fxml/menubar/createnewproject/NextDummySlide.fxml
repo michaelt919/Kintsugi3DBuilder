@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.createnewproject.NextDummySlideController">
+   <children>
+      <Button layoutX="56.0" layoutY="174.0" mnemonicParsing="false" text="Truly Incredible" />
+      <Button layoutX="139.0" layoutY="279.0" mnemonicParsing="false" text="I would buy that" />
+      <Button layoutX="193.0" layoutY="70.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="1261.0" text="The University of Wisconsin–Stout is a public university in Menomonie, Wisconsin. A member of the Universities of Wisconsin, it enrolls more than 9,600 students. The school was founded in 1891 and named in honor of its founder, lumber magnate James Huff Stout. Stout is &quot;Wisconsin's Polytechnic University&quot;." />
+   </children>
+</AnchorPane>

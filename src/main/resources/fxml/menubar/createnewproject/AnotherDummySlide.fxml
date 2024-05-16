@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.createnewproject.AnotherDummySlideController">
+   <children>
+      <Button layoutX="313.0" layoutY="102.0" mnemonicParsing="false" text="A third page?" />
+      <Button layoutX="139.0" layoutY="279.0" mnemonicParsing="false" text="Didn't know that was possible" />
+      <Button layoutX="66.0" layoutY="64.0" mnemonicParsing="false" text="ᘛ⁐̤ᕐᐷ" />
+   </children>
+</AnchorPane>

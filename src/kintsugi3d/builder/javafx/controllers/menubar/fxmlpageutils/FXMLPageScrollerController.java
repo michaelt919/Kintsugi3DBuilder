@@ -4,6 +4,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.control.Button;
 import javafx.scene.layout.AnchorPane;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AutosaveSettingsController;
@@ -20,36 +21,44 @@ import java.util.ListIterator;
 
 public class FXMLPageScrollerController {
     private static final Logger log = LoggerFactory.getLogger(FXMLPageScrollerController.class);
+    @FXML private Button prevButton;
+    @FXML private Button nextButton;
 
     @FXML private AnchorPane hostAnchorPane;
     ArrayList<FXMLPage> pages;
-    ListIterator<FXMLPage> currentPage;
+
+    int currentPageIndex;
 
     public void prevPage(ActionEvent actionEvent) {
-        if (currentPage.hasPrevious()){
+        if (hasPrevIndex(currentPageIndex)){
 
             //previous() moves the iterator backward
-            currentPage.previous().controller.initParent();
+            currentPageIndex--;
+            initControllerAndUpdatePanel(pages.get(currentPageIndex).fxmlFilePath);
         }
     }
 
     public void nextPage(ActionEvent actionEvent) {
-        if (currentPage.hasNext()){
+        if (hasNextIndex(currentPageIndex)){
 
-            //next() moves the iterator forward
-            currentPage.next().controller.initChild();
+            currentPageIndex++;
+            initControllerAndUpdatePanel(pages.get(currentPageIndex).fxmlFilePath);
         }
     }
 
     public void setPages(ArrayList<FXMLPage> pages){
         this.pages = pages;
-        this.currentPage = pages.listIterator();
+        this.currentPageIndex = 0;
     }
 
     public void init() {
-        Parent newContent = null;
-        String fileName = currentPage.next().fxmlFilePath;
+        String fileName = pages.get(currentPageIndex).fxmlFilePath;
 
+        initControllerAndUpdatePanel(fileName);
+    }
+
+    private void initControllerAndUpdatePanel(String fileName) {
+        Parent newContent = null;
         try {
             URL url = MenubarController.class.getClassLoader().getResource(fileName);
             if (url == null)
@@ -70,5 +79,16 @@ public class FXMLPageScrollerController {
         if (newContent != null) {
             hostAnchorPane.getChildren().setAll(newContent);
         }
+
+        updatePrevAndNextButtons();
     }
+
+    private void updatePrevAndNextButtons() {
+        nextButton.setDisable(!hasNextIndex(currentPageIndex));
+        prevButton.setDisable(!hasPrevIndex(currentPageIndex));
+    }
+
+    private boolean hasNextIndex(int i){return i+1 < pages.size() && i+1 >=0;}
+    private boolean hasPrevIndex(int i){return i-1 < pages.size() && i-1 >= 0;}
+
 }
