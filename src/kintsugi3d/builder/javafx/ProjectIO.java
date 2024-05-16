@@ -304,18 +304,26 @@ public final class ProjectIO
                 return;
         }
 
-        ArrayList<FXMLPage> pages = new ArrayList<>();
-        for (String fileName : fxmlFiles)
-        {
-            String pathPrefix = "fxml/menubar/createnewproject";
-            //get controller from controllerFiles
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(pathPrefix + fileName));
-            FXMLPageController controller = loader.getController();
-
-            pages.add(new FXMLPage(fileName, controller));
-        }
-
         try{
+            ArrayList<FXMLPage> pages = new ArrayList<>();
+            for (String fileName : fxmlFiles)
+            {
+                String pathPrefix = "fxml/menubar/createnewproject/";
+                String fullFileName = pathPrefix + fileName;
+
+                URL url = MenubarController.class.getClassLoader().getResource(fullFileName);
+                if (url == null)
+                {
+                    throw new FileNotFoundException(fullFileName);
+                }
+                FXMLLoader loader = new FXMLLoader(url);
+                loader.load();
+                FXMLPageController controller = loader.getController();
+
+                pages.add(new FXMLPage(fullFileName, controller));
+            }
+
+
             String fullFxmlPath = "fxml/menubar/FXMLPageScroller.fxml";
 
             FXMLPageScrollerController scrollerController =
