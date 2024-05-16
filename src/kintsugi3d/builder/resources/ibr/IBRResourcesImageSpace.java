@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class IBRResourcesImageSpace<ContextType extends Context<ContextType>> extends IBRResourcesBase<ContextType>
 {
-    private static final boolean PARALLEL_PREVIEW_IMAGE_GENERATION = false;
+    private static final boolean MULTITHREAD_PREVIEW_IMAGE_GENERATION = false;
 
     private static final Logger log = LoggerFactory.getLogger(IBRResourcesImageSpace.class);
     /**
@@ -765,7 +765,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             AtomicInteger finishedCount = new AtomicInteger(0);
             AtomicInteger failedCount = new AtomicInteger(0);
 
-            if (PARALLEL_PREVIEW_IMAGE_GENERATION)
+            if (MULTITHREAD_PREVIEW_IMAGE_GENERATION)
             {
                 // Need to use custom ForkJoinPool so that number of threads doesn't go out of control and use up the Java heap space
                 ForkJoinPool customThreadPool = new ForkJoinPool(maxLoadingThreads);
