@@ -83,7 +83,7 @@ public class MenubarController
     private final Flag lightCalibrationWindowOpen = new Flag(false);
     private final Flag colorCheckerWindowOpen = new Flag(false);
     private final Flag unzipperOpen = new Flag(false);
-    private final Flag consoleWindowOpen = new Flag(false);
+    private final Flag loggerWindowOpen = new Flag(false);
     private Flag systemSettingsModalOpen = new Flag(false);
 
     private Flag aboutWindowOpen = new Flag(false);
@@ -733,14 +733,14 @@ public class MenubarController
 
     public void help_console()
     {
-        if (consoleWindowOpen.get())
+        if (loggerWindowOpen.get())
         {
             return;
         }
 
         try
         {
-            Stage stage = makeStage("Log", consoleWindowOpen, "fxml/menubar/Console.fxml");
+            Stage stage = makeStage("Log", loggerWindowOpen, "fxml/menubar/Logger.fxml");
             stage.setResizable(true);
             stage.initStyle(StageStyle.DECORATED);
             stage.show();
