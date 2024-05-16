@@ -681,7 +681,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     {
         // Read the image (and do ICC processing, if applicable) on a worker thread
         File fullResImageFile = viewSet.findFullResImageFile(i);
-        log.info("Undistorting {}", fullResImageFile);
+        log.info("Decoding {}", fullResImageFile);
         return ImageIO.read(fullResImageFile);
         // TODO ICC transformation?
     }
@@ -864,9 +864,9 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 // Do the undistortion on the rendering thread
                 Rendering.runLater(new GraphicsRequest()
                 {
-                   @Override
-                   public <ContextType extends Context<ContextType>> void executeRequest(ContextType context)
-                   {
+                    @Override
+                    public <ContextType extends Context<ContextType>> void executeRequest(ContextType context)
+                    {
                        for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
                        {
                            loadingMonitor.setProgress(i);
@@ -887,7 +887,9 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                                    if (viewSet.getCameraProjection(projectionIndex) instanceof DistortionProjection)
                                    {
                                        BufferedImage decodedImage = getDecodedImage(viewSet, i);
+                                       log.info("Undistorting image {}", i);
                                        BufferedImage imageOut = undistortImage(decodedImage, viewSet, projectionIndex, context);
+                                       log.info("Saving image {}", i);
                                        ImageIO.write(imageOut, "PNG", viewSet.getPreviewImageFile(i));
                                        logFinished(viewSet.getPreviewImageFile(i));
                                    }
@@ -907,7 +909,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                                }
                            }
                        }
-                   }
+                    }
                 });
 
                 log.info("Waiting for undistortion to finish on rendering thread");
