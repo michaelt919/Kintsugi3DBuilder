@@ -29,7 +29,6 @@ public interface ReadonlyLoadOptionsModel
     boolean areMipmapsRequested();
     boolean isCompressionRequested();
     boolean isAlphaRequested();
-    boolean isICCTransformationRequested();
     int getMaxLoadingThreads();
     boolean areDepthImagesRequested();
     int getDepthImageWidth();
@@ -67,7 +66,6 @@ public interface ReadonlyLoadOptionsModel
         colorTextureBuilder
             .setMipmapsEnabled(this.areMipmapsRequested())
             .setLinearFilteringEnabled(true)
-            .setMaxAnisotropy(16.0f)
-            .setICCTransformationRequested(this.isICCTransformationRequested());
+            .setMaxAnisotropy(16.0f);
     }
 }
