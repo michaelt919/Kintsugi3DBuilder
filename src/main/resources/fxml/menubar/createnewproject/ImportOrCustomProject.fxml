@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.createnewproject.ImportOrCustomProjectController">
+   <children>
+      <Button layoutX="117.0" layoutY="72.0" mnemonicParsing="false" text="Amazing buttons" />
+      <Button layoutX="445.0" layoutY="289.0" mnemonicParsing="false" text="Looks great" />
+      <Button layoutX="171.0" layoutY="210.0" mnemonicParsing="false" text="*Polytechnic Education*" />
+   </children>
+</AnchorPane>

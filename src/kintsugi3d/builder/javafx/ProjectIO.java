@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -36,6 +37,10 @@ import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.controllers.menubar.LoaderController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
+import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsControllerBase;
 import kintsugi3d.builder.javafx.controllers.scene.CreateProjectController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.util.Flag;
@@ -268,25 +273,60 @@ public final class ProjectIO
 
     public void createProjectNew(Window parentWindow)
     {
-        if (!loaderWindowOpen.get())
-        {
-            if (confirmClose("Are you sure you want to create a new project?"))
-            {
-                try//recent files are updated in CreateProjectController after project is made
-                {
-                    CreateProjectController createProjectController =
-                            makeWindow(parentWindow, "Load Files", loaderWindowOpen, "fxml/menubar/CreateProject.fxml");
-                    createProjectController.setLoadStartCallback(this::onLoadStart);
-                    createProjectController.setViewSetCallback(viewSet -> onViewSetCreated(viewSet, parentWindow, null));
-                    createProjectController.init();
+        if (loaderWindowOpen.get()) {return;}
 
-                }
-                catch (Exception e)
-                {
-                    handleException("An error occurred creating a new project", e);
-                }
-            }
+        if (!confirmClose("Are you sure you want to create a new project?")) {return;}
+
+//        try//recent files are updated in CreateProjectController after project is made
+//        {
+//            CreateProjectController createProjectController =
+//                    makeWindow(parentWindow, "Load Files", loaderWindowOpen, "fxml/menubar/CreateProject.fxml");
+//            createProjectController.setLoadStartCallback(this::onLoadStart);
+//            createProjectController.setViewSetCallback(viewSet -> onViewSetCreated(viewSet, parentWindow, null));
+//            createProjectController.init();
+//
+//        }
+//        catch (Exception e)
+//        {
+//            handleException("An error occurred creating a new project", e);
+//        }
+
+        //Create an arraylist which contains all needed files (fxml and controllers) for fxml page scroller
+        File fxmlFilesDirectory = new File("src/main/resources/fxml/menubar/createnewproject");
+        File controllersDirectory = new File("src/kintsugi3d/builder/javafx/controllers/menubar/createnewproject");
+
+        String[] fxmlFiles = fxmlFilesDirectory.list();
+        String[] controllerFiles = controllersDirectory.list();
+
+        if (fxmlFiles == null || controllerFiles == null ||
+                fxmlFiles.length != controllerFiles.length) {
+            log.error("Could not file fxml files for create new project process");
+                return;
         }
+
+        ArrayList<FXMLPage> pages = new ArrayList<>();
+        for (String fileName : fxmlFiles)
+        {
+            String pathPrefix = "fxml/menubar/createnewproject";
+            //get controller from controllerFiles
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(pathPrefix + fileName));
+            FXMLPageController controller = loader.getController();
+
+            pages.add(new FXMLPage(fileName, controller));
+        }
+
+        try{
+            String fullFxmlPath = "fxml/menubar/FXMLPageScroller.fxml";
+
+            FXMLPageScrollerController scrollerController =
+                    makeWindow(parentWindow, "Load Files", loaderWindowOpen, fullFxmlPath);
+            scrollerController.setPages(pages);
+            scrollerController.init();
+
+        } catch (IOException e) {
+            handleException("An error occurred creating a new project", e);
+        }
+
     }
 
     private static void startLoad(File projectFile, File vsetFile)
