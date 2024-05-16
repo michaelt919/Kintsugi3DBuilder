@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class IBRResourcesImageSpace<ContextType extends Context<ContextType>> extends IBRResourcesBase<ContextType>
 {
-    private static final boolean PARALLEL_PREVIEW_IMAGE_GENERATION = true;
+    private static final boolean PARALLEL_PREVIEW_IMAGE_GENERATION = false;
 
     private static final Logger log = LoggerFactory.getLogger(IBRResourcesImageSpace.class);
     /**
