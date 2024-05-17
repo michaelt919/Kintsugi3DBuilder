@@ -7,13 +7,12 @@ public class ImportOrCustomProjectController extends FXMLPageController {
 
     @Override
     public void init() {
-        hostScroller = getHostScrollerController();
     }
 
     @Override
     public void openChildPage(String childFXMLPath) {
-        setNext(hostScroller.getPage(childFXMLPath));
-        hostScroller.openNextPage();
+        hostPage.setNextPage(hostScrollerController.getPage(childFXMLPath));
+        hostScrollerController.openNextPage();
     }
 
     public void metashapeImportSelect(ActionEvent actionEvent) {

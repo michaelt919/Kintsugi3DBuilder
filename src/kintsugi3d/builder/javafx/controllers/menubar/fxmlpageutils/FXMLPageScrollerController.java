@@ -60,6 +60,7 @@ public class FXMLPageScrollerController {
 
         for (FXMLPage page : pages){
             page.getController().setHostScrollerController(this);
+            page.getController().setHostPage(page);
         }
     }
 

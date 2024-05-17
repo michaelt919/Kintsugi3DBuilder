@@ -9,6 +9,9 @@ public class FXMLPage {
 
     private FXMLLoader loader;
 
+    private FXMLPage prev;
+    private FXMLPage next;
+
     public FXMLPage(String fxmlFile, FXMLLoader loader) {
         this.fxmlFilePath = fxmlFile;
         this.loader = loader;
@@ -22,11 +25,13 @@ public class FXMLPage {
         return fxmlFilePath;
     }
 
-    public FXMLPage getPrevPage(){return controller.getPrev();}
-    public FXMLPage getNextPage(){return controller.getNext();}
+    public FXMLPage getPrevPage(){return prev;}
+    public FXMLPage getNextPage(){return next;}
 
-    public boolean hasNextPage(){return controller.hasNext();}
-    public boolean hasPrevPage(){return controller.hasPrev();}
+    public boolean hasNextPage(){return next != null;}
+    public boolean hasPrevPage(){return prev != null;}
 
-    public void setPrevPage(FXMLPage page) {controller.setPrev(page);}
+    public void setPrevPage(FXMLPage page) {prev = page;}
+
+    public void setNextPage(FXMLPage page) {next = page;}
 }
