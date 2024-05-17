@@ -1,9 +1,8 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 
-public class NextDummySlideController extends FXMLPageController {
+public class CustomImportController extends FXMLPageController {
 
     @Override
     public void init() {
@@ -11,7 +10,7 @@ public class NextDummySlideController extends FXMLPageController {
     }
 
     @Override
-    public void initNext() {
+    public void openChildPage(String childFXMLPath) {
 
     }
 }

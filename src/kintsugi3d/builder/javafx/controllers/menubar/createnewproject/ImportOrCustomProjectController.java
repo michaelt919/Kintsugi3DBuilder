@@ -1,9 +1,7 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
 import javafx.event.ActionEvent;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
 
 public class ImportOrCustomProjectController extends FXMLPageController {
 
@@ -13,16 +11,18 @@ public class ImportOrCustomProjectController extends FXMLPageController {
     }
 
     @Override
-    public void initNext() {
-
+    public void openChildPage(String childFXMLPath) {
+        setNext(hostScroller.getPage(childFXMLPath));
+        hostScroller.openNextPage();
     }
 
     public void metashapeImportSelect(ActionEvent actionEvent) {
         String importMetashapeFXMLPath = "fxml/menubar/createnewproject/MetashapeImport.fxml";
-        setNext(hostScroller.getPage(importMetashapeFXMLPath));
-        hostScroller.openNextPage();
+        openChildPage(importMetashapeFXMLPath);
     }
 
     public void customImportSelect(ActionEvent actionEvent) {
+        String customImportFXMLPath = "fxml/menubar/createnewproject/CustomImport.fxml";
+        openChildPage(customImportFXMLPath);
     }
 }

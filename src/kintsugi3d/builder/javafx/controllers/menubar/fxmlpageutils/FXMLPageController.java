@@ -21,6 +21,6 @@ public abstract class FXMLPageController {
 
     public abstract void init();
 
-    public abstract void initNext();
+    public abstract void openChildPage(String childFXMLPath);
     //void sendInfoToParent();?
 }
