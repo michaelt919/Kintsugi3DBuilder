@@ -2,7 +2,7 @@ package kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils;
 
 public abstract class FXMLPageController {
 
-    FXMLPageScrollerController hostScroller;
+    protected FXMLPageScrollerController hostScroller;
 
     FXMLPage prev;
     FXMLPage next;

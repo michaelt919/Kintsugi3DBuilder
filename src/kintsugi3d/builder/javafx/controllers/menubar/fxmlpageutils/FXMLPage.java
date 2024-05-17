@@ -27,4 +27,6 @@ public class FXMLPage {
 
     public boolean hasNextPage(){return controller.hasNext();}
     public boolean hasPrevPage(){return controller.hasPrev();}
+
+    public void setPrevPage(FXMLPage page) {controller.setPrev(page);}
 }

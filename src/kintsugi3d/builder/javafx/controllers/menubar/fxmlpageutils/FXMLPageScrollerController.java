@@ -64,32 +64,8 @@ public class FXMLPageScrollerController {
     }
 
     private void initControllerAndUpdatePanel(String fileName) {
-//        Parent newContent = null;
-//        try {
-//            URL url = MenubarController.class.getClassLoader().getResource(fileName);
-//            if (url == null)
-//            {
-//                throw new FileNotFoundException(fileName);
-//            }
-//            FXMLLoader loader = new FXMLLoader(url);
-//            newContent = loader.load();
-//
-//            //initialize controller
-//            FXMLPageController controller = loader.getController();
-//            controller.init();
-//            controller.setHostScrollerController(this);
-//
-//            if (!currentPage.getFxmlFilePath().equals(fileName)){
-//                controller.setPrev(currentPage);
-//            }
-//
-//        } catch (Exception e) {
-//            log.error("Failed to load " + fileName, e);
-//        }
-
-        Parent newContent = null;
         FXMLPage newPage = getPage(fileName);
-        newContent = newPage.getLoader().getRoot();
+        Parent newContent = newPage.getLoader().getRoot();
 
         if (newContent != null) {
             hostAnchorPane.getChildren().setAll(newContent);
@@ -99,7 +75,6 @@ public class FXMLPageScrollerController {
     }
 
     public void openNextPage(){
-
         String nextPath = null;
         try{
             nextPath = currentPage.getNextPage().getFxmlFilePath();
@@ -109,7 +84,10 @@ public class FXMLPageScrollerController {
             return;
         }
         initControllerAndUpdatePanel(nextPath);
-        System.out.println("we did it");
+        currentPage.getNextPage().setPrevPage(currentPage);
+        currentPage = currentPage.getNextPage();
+
+        updatePrevAndNextButtons();
     }
 
     public AnchorPane getHostAnchorPane() {
