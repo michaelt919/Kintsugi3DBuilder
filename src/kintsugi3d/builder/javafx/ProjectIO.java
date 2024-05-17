@@ -277,20 +277,6 @@ public final class ProjectIO
 
         if (!confirmClose("Are you sure you want to create a new project?")) {return;}
 
-//        try//recent files are updated in CreateProjectController after project is made
-//        {
-//            CreateProjectController createProjectController =
-//                    makeWindow(parentWindow, "Load Files", loaderWindowOpen, "fxml/menubar/CreateProject.fxml");
-//            createProjectController.setLoadStartCallback(this::onLoadStart);
-//            createProjectController.setViewSetCallback(viewSet -> onViewSetCreated(viewSet, parentWindow, null));
-//            createProjectController.init();
-//
-//        }
-//        catch (Exception e)
-//        {
-//            handleException("An error occurred creating a new project", e);
-//        }
-
         //Create an arraylist which contains all needed files (fxml and controllers) for fxml page scroller
         File fxmlFilesDirectory = new File("src/main/resources/fxml/menubar/createnewproject");
         File controllersDirectory = new File("src/kintsugi3d/builder/javafx/controllers/menubar/createnewproject");
@@ -318,17 +304,17 @@ public final class ProjectIO
                 }
                 FXMLLoader loader = new FXMLLoader(url);
                 loader.load();
-                FXMLPageController controller = loader.getController();
 
-                pages.add(new FXMLPage(fullFileName, controller));
+                pages.add(new FXMLPage(fullFileName, loader));
             }
 
 
-            String fullFxmlPath = "fxml/menubar/FXMLPageScroller.fxml";
-
+            String hostFXMLPath = "fxml/menubar/FXMLPageScroller.fxml";
             FXMLPageScrollerController scrollerController =
-                    makeWindow(parentWindow, "Load Files", loaderWindowOpen, fullFxmlPath);
-            scrollerController.setPages(pages);
+                    makeWindow(parentWindow, "Load Files", loaderWindowOpen, hostFXMLPath);
+
+            String firstPageFXMLPath = "fxml/menubar/createnewproject/ImportOrCustomProject.fxml";
+            scrollerController.setPages(pages, firstPageFXMLPath);
             scrollerController.init();
 
         } catch (IOException e) {
