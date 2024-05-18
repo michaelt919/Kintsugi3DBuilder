@@ -1,8 +1,27 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.scene.Node;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.paint.Paint;
+import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObject;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 
+import java.io.File;
+import java.util.ArrayList;
+
 public class MetashapeImportController extends FXMLPageController {
+    @FXML private AnchorPane anchorPane;
+    @FXML private Text loadMetashapeObject;
+    @FXML private ChoiceBox chunkSelectionChoiceBox;
+    private Stage thisStage;
+    private File metashapePsxFile;
+
     @Override
     public void init() {
 
@@ -13,6 +32,61 @@ public class MetashapeImportController extends FXMLPageController {
 
     }
 
-    public void psxFileSelect(ActionEvent actionEvent) {
+    @FXML
+    private void psxFileSelect(ActionEvent actionEvent) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Choose .psx file");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Metashape files", "*.psx"));
+
+        Stage stage = (Stage) ((Node)actionEvent.getSource()).getScene().getWindow();
+        metashapePsxFile = fileChooser.showOpenDialog(stage);
+
+        if(isMetashapeObjectLoaded()){
+            MetashapeObject metashapeObject = new MetashapeObject(metashapePsxFile.getAbsolutePath());
+            initMetashapeObject(metashapeObject);
+        }
     }
+
+    public void initMetashapeObjectChunk(MetashapeObjectChunk metashapeObjectChunk){
+        initMetashapeObject(metashapeObjectChunk.getMetashapeObject());
+        chunkSelectionChoiceBox.setValue(metashapeObjectChunk.getChunkName());
+
+    }
+
+    public void initMetashapeObject(MetashapeObject metashapeObject){
+
+        this.metashapePsxFile = new File(metashapeObject.getPsxFilePath());
+
+        //load chunks into chunk selection module
+        ArrayList<String> chunkNames = (ArrayList<String>) metashapeObject.
+                getChunkNamesDynamic(metashapeObject.getPsxFilePath());
+
+        chunkSelectionChoiceBox.getItems().clear();
+        chunkSelectionChoiceBox.getItems().addAll(chunkNames);
+
+        chunkSelectionChoiceBox.setDisable(false);
+
+        //initialize choice box to first option instead of null option
+        if (chunkSelectionChoiceBox.getItems() != null &&
+                chunkSelectionChoiceBox.getItems().get(0) != null){
+            chunkSelectionChoiceBox.setValue(chunkSelectionChoiceBox.getItems().get(0));
+        }
+
+        loadMetashapeObject.setText("Loaded");
+        loadMetashapeObject.setFill(Paint.valueOf("Green"));
+    }
+
+    private boolean isMetashapeObjectLoaded() {
+        return metashapePsxFile != null;
+    }
+    private Stage getStage()
+    {
+        if (thisStage == null)
+        {
+            thisStage = (Stage) anchorPane.getScene().getWindow();
+        }
+        return thisStage;
+    }
+
+
 }

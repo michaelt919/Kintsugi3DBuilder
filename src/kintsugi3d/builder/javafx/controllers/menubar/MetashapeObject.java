@@ -88,7 +88,7 @@ public class MetashapeObject {
 
                 String chunkZipPath;
                 chunkNames = new ArrayList<>();
-                chunkZipPathPairs.clear();
+                chunkZipPathPairs = new HashMap<>();
                 for (int i = 0; i < chunkList.getLength(); ++i) {//add all chunks to chunkNames list
                     Node chunk = chunkList.item(i);
 
@@ -123,6 +123,14 @@ public class MetashapeObject {
 
     public List<String> getChunkNames(){
         return chunkNames;
+    }
+
+    public List<String> getChunkNamesDynamic(String psxFilePath){
+        if (chunkNames != null){
+            return chunkNames;
+        }
+
+        return loadChunkNamesFromPSX(psxFilePath);
     }
 
     public Map<String, String> getChunkZipPathPairs(){
