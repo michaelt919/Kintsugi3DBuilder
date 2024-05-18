@@ -1,18 +1,12 @@
 package kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.layout.AnchorPane;
-import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 
 public class FXMLPageScrollerController {
@@ -25,18 +19,37 @@ public class FXMLPageScrollerController {
     ArrayList<FXMLPage> pages;
     FXMLPage currentPage;
 
+    public void init() {
+        String fileName = currentPage.getFxmlFilePath();
+        initControllerAndUpdatePanel(fileName);
 
-    public void prevPage(ActionEvent actionEvent) {
+        for (FXMLPage page : pages){
+            page.getController().setHostScrollerController(this);
+            page.getController().setHostPage(page);
+        }
+    }
+    public void prevPage() {
         if (currentPage.hasPrevPage()){
             currentPage = currentPage.getPrevPage();
             initControllerAndUpdatePanel(currentPage.getFxmlFilePath());
         }
     }
 
-    public void nextPage(ActionEvent actionEvent) {
+    public void nextPage() {
         if (currentPage.hasNextPage()){
+            String nextPath;
+            try{
+                nextPath = currentPage.getNextPage().getFxmlFilePath();
+            }
+            catch(NullPointerException e){
+                log.error("Failed to load next page", e);
+                return;
+            }
+            initControllerAndUpdatePanel(nextPath);
+            currentPage.getNextPage().setPrevPage(currentPage);
             currentPage = currentPage.getNextPage();
-            initControllerAndUpdatePanel(currentPage.getFxmlFilePath());
+
+            updatePrevAndNextButtons();
         }
     }
 
@@ -54,16 +67,6 @@ public class FXMLPageScrollerController {
         return null;
     }
 
-    public void init() {
-        String fileName = currentPage.getFxmlFilePath();
-        initControllerAndUpdatePanel(fileName);
-
-        for (FXMLPage page : pages){
-            page.getController().setHostScrollerController(this);
-            page.getController().setHostPage(page);
-        }
-    }
-
     private void initControllerAndUpdatePanel(String fileName) {
         FXMLPage newPage = getPage(fileName);
         Parent newContent = newPage.getLoader().getRoot();
@@ -75,32 +78,8 @@ public class FXMLPageScrollerController {
         updatePrevAndNextButtons();
     }
 
-    public void openNextPage(){
-        String nextPath = null;
-        try{
-            nextPath = currentPage.getNextPage().getFxmlFilePath();
-        }
-        catch(NullPointerException e){
-            log.error("Failed to load next page", e);
-            return;
-        }
-        initControllerAndUpdatePanel(nextPath);
-        currentPage.getNextPage().setPrevPage(currentPage);
-        currentPage = currentPage.getNextPage();
-
-        updatePrevAndNextButtons();
-    }
-
-    public AnchorPane getHostAnchorPane() {
-        return hostAnchorPane;
-    }
-
     private void updatePrevAndNextButtons() {
         nextButton.setDisable(!currentPage.hasNextPage());
         prevButton.setDisable(!currentPage.hasPrevPage());
-    }
-
-    public FXMLPage getCurrentPage() {
-        return currentPage;
     }
 }
