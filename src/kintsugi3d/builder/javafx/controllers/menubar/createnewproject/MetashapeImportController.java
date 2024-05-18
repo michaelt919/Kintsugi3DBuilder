@@ -1,4 +1,5 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
+import javafx.event.ActionEvent;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 
 public class MetashapeImportController extends FXMLPageController {
@@ -10,5 +11,8 @@ public class MetashapeImportController extends FXMLPageController {
     @Override
     public void openChildPage(String childFXMLPath) {
 
+    }
+
+    public void psxFileSelect(ActionEvent actionEvent) {
     }
 }
