@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class FXMLPageScrollerController {
     private static final Logger log = LoggerFactory.getLogger(FXMLPageScrollerController.class);
@@ -18,6 +19,8 @@ public class FXMLPageScrollerController {
     @FXML private AnchorPane hostAnchorPane;
     ArrayList<FXMLPage> pages;
     FXMLPage currentPage;
+
+    HashMap<String, Object> sharedInfo;
 
     public void init() {
         String fileName = currentPage.getFxmlFilePath();
@@ -45,11 +48,10 @@ public class FXMLPageScrollerController {
                 log.error("Failed to load next page", e);
                 return;
             }
-            initControllerAndUpdatePanel(nextPath);
             currentPage.getNextPage().setPrevPage(currentPage);
             currentPage = currentPage.getNextPage();
 
-            updatePrevAndNextButtons();
+            initControllerAndUpdatePanel(nextPath);
         }
     }
 
@@ -76,10 +78,24 @@ public class FXMLPageScrollerController {
         }
 
         updatePrevAndNextButtons();
+        currentPage.getController().refresh();
     }
 
     private void updatePrevAndNextButtons() {
         nextButton.setDisable(!currentPage.hasNextPage());
         prevButton.setDisable(!currentPage.hasPrevPage());
     }
+
+    public void setNextButtonDisable(boolean b) {
+        nextButton.setDisable(b);
+    }
+
+    public <T> void addInfo(String key, T info){
+        sharedInfo.put(key, info);
+    }
+
+    public <T> T getInfo(String key){
+        return (T) sharedInfo.get(key);
+    }
 }
+

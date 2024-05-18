@@ -2,8 +2,7 @@ package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 
-public class CustomImportController extends FXMLPageController {
-
+public class ConfirmNewProjectController extends FXMLPageController {
     @Override
     public void init() {
 
@@ -11,11 +10,6 @@ public class CustomImportController extends FXMLPageController {
 
     @Override
     public void refresh() {
-
-    }
-
-    @Override
-    public void openChildPage(String childFXMLPath) {
 
     }
 }

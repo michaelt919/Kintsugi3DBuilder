@@ -10,10 +10,10 @@ public class ImportOrCustomProjectController extends FXMLPageController {
     }
 
     @Override
-    public void openChildPage(String childFXMLPath) {
-        hostPage.setNextPage(hostScrollerController.getPage(childFXMLPath));
-        hostScrollerController.nextPage();
+    public void refresh() {
+
     }
+
 
     public void metashapeImportSelect(ActionEvent actionEvent) {
         String importMetashapeFXMLPath = "fxml/menubar/createnewproject/MetashapeImport.fxml";

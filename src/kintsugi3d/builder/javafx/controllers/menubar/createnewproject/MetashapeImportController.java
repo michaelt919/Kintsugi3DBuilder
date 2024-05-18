@@ -24,12 +24,11 @@ public class MetashapeImportController extends FXMLPageController {
 
     @Override
     public void init() {
-
     }
 
     @Override
-    public void openChildPage(String childFXMLPath) {
-
+    public void refresh() {
+        updateLoadedIndicators();
     }
 
     @FXML
@@ -44,13 +43,15 @@ public class MetashapeImportController extends FXMLPageController {
         if(isMetashapeObjectLoaded()){
             MetashapeObject metashapeObject = new MetashapeObject(metashapePsxFile.getAbsolutePath());
             initMetashapeObject(metashapeObject);
+
+            //give metashape object info to fxml scroller controller
+            hostScrollerController.addInfo("metashapeFile", metashapeObject);
         }
     }
 
     public void initMetashapeObjectChunk(MetashapeObjectChunk metashapeObjectChunk){
         initMetashapeObject(metashapeObjectChunk.getMetashapeObject());
         chunkSelectionChoiceBox.setValue(metashapeObjectChunk.getChunkName());
-
     }
 
     public void initMetashapeObject(MetashapeObject metashapeObject){
@@ -72,8 +73,22 @@ public class MetashapeImportController extends FXMLPageController {
             chunkSelectionChoiceBox.setValue(chunkSelectionChoiceBox.getItems().get(0));
         }
 
-        loadMetashapeObject.setText("Loaded");
-        loadMetashapeObject.setFill(Paint.valueOf("Green"));
+        updateLoadedIndicators();
+    }
+
+    private void updateLoadedIndicators() {
+        if (isMetashapeObjectLoaded()) {
+            loadMetashapeObject.setText("Loaded");
+            loadMetashapeObject.setFill(Paint.valueOf("Green"));
+            hostScrollerController.setNextButtonDisable(false);
+            hostPage.setNextPage(hostScrollerController.getPage("fxml/menubar/createnewproject/ConfirmNewProject.fxml"));
+        }
+        else{
+            loadMetashapeObject.setText("Unloaded");
+            loadMetashapeObject.setFill(Paint.valueOf("Red"));
+            hostScrollerController.setNextButtonDisable(true);
+            hostPage.setNextPage(null);
+        }
     }
 
     private boolean isMetashapeObjectLoaded() {
@@ -87,6 +102,4 @@ public class MetashapeImportController extends FXMLPageController {
         }
         return thisStage;
     }
-
-
 }

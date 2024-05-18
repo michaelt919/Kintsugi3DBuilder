@@ -13,6 +13,11 @@ public abstract class FXMLPageController {
 
     public abstract void init();
 
-    public abstract void openChildPage(String childFXMLPath);
-    //void sendInfoToParent();?
+    public abstract void refresh();
+
+    public void openChildPage(String childFXMLPath) {
+        hostPage.setNextPage(hostScrollerController.getPage(childFXMLPath));
+        hostScrollerController.nextPage();
+    }
+
 }
