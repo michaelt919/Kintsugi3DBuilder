@@ -24,9 +24,12 @@ import java.util.stream.IntStream;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
@@ -37,13 +40,16 @@ import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class LoaderController implements Initializable
+public class LoaderController extends FXMLPageController implements Initializable
 {
     private static final Logger log = LoggerFactory.getLogger(LoaderController.class);
+    @FXML private Button backButton;
+    @FXML private Button nextButton;
 
     @FXML private ChoiceBox<String> primaryViewChoiceBox;
     @FXML private Text loadCheckCameras;
@@ -67,7 +73,16 @@ public class LoaderController implements Initializable
     @Override
     public void initialize(URL location, ResourceBundle resources)
     {
+        init();
+    }
 
+    @Override
+    public Region getHostRegion() {
+        return root;
+    }
+
+    public void init()
+    {
         setHomeDir(new File(System.getProperty("user.home")));
         camFileChooser.getExtensionFilters().add(new ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
         objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ file", "*.obj"));
@@ -77,8 +92,18 @@ public class LoaderController implements Initializable
         photoDirectoryChooser.setTitle("Select photo directory");
     }
 
-    public void init()
-    {
+    @Override
+    public void refresh() {
+        //TODO: check to see if host fxml scroller is not null
+        //if so, then refresh the next button based on if all items are loaded
+
+        init();
+        //hide back and next buttons if loader is in an fxml page scroller
+        //doesn't work yet because buttons register as null
+        if (hostScrollerController != null){
+            backButton.setVisible(false);
+            nextButton.setVisible(false);
+        }
     }
 
     public void setLoadStartCallback(Runnable callback)

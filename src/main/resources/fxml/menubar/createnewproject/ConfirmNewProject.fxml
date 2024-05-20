@@ -7,6 +7,7 @@
 <?import javafx.scene.layout.*?>
 
 <AnchorPane xmlns="http://javafx.com/javafx"
+            fx:id = "anchorPane"
             xmlns:fx="http://javafx.com/fxml"
             styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css"
             fx:controller="kintsugi3d.builder.javafx.controllers.menubar.createnewproject.ConfirmNewProjectController"

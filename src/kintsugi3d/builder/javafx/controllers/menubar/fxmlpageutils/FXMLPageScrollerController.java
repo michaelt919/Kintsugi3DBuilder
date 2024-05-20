@@ -1,9 +1,13 @@
 package kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils;
 
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
+import javafx.stage.Stage;
+import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +16,7 @@ import java.util.HashMap;
 
 public class FXMLPageScrollerController {
     private static final Logger log = LoggerFactory.getLogger(FXMLPageScrollerController.class);
+    @FXML private GridPane outerGridPane;
     @FXML private Button prevButton;
     @FXML private Button nextButton;
 
@@ -73,13 +78,31 @@ public class FXMLPageScrollerController {
         FXMLPage newPage = getPage(fileName);
         Parent newContent = newPage.getLoader().getRoot();
 
+        updateSizePreferences();
+        updatePrevAndNextButtons();
+
         if (newContent != null) {
             hostAnchorPane.getChildren().setAll(newContent);
         }
-
-        updatePrevAndNextButtons();
         currentPage.getController().refresh();
     }
+
+    private void updateSizePreferences() {
+        Pair<Double, Double> prefs = currentPage.getController().getSizePreferences();
+
+        hostAnchorPane.setMinSize(prefs.getKey(), prefs.getValue());
+        hostAnchorPane.setPrefSize(prefs.getKey(), prefs.getValue());
+
+        final double EXTRA_HEIGHT = 1.2; // allow some extra breathing room for the prev and next buttons
+        outerGridPane.setMinSize(prefs.getKey(), prefs.getValue() * EXTRA_HEIGHT);
+        outerGridPane.setPrefSize(prefs.getKey(), prefs.getValue() * EXTRA_HEIGHT);
+
+        Stage stage = (Stage) outerGridPane.getScene().getWindow();
+
+        stage.setWidth(prefs.getKey() + stage.getScene().getWidth() - outerGridPane.getWidth());
+        stage.setHeight((prefs.getValue() * EXTRA_HEIGHT) + stage.getScene().getHeight() - outerGridPane.getHeight());
+    }
+
 
     private void updatePrevAndNextButtons() {
         nextButton.setDisable(!currentPage.hasNextPage());

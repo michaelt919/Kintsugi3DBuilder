@@ -4,6 +4,7 @@ import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
@@ -21,6 +22,11 @@ public class MetashapeImportController extends FXMLPageController {
     @FXML private ChoiceBox chunkSelectionChoiceBox;
     private Stage thisStage;
     private File metashapePsxFile;
+
+    @Override
+    public Region getHostRegion() {
+        return anchorPane;
+    }
 
     @Override
     public void init() {

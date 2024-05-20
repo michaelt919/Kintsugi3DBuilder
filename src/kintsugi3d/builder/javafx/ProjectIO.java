@@ -14,6 +14,7 @@ package kintsugi3d.builder.javafx;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -317,7 +318,7 @@ public final class ProjectIO
             scrollerController.setPages(pages, firstPageFXMLPath);
             scrollerController.init();
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             handleException("An error occurred creating a new project", e);
         }
 

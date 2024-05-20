@@ -1,5 +1,8 @@
 package kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils;
 
+import javafx.scene.layout.Region;
+import javafx.util.Pair;
+
 public abstract class FXMLPageController {
 
     protected FXMLPageScrollerController hostScrollerController;
@@ -11,6 +14,8 @@ public abstract class FXMLPageController {
     public void setHostPage(FXMLPage page){this.hostPage = page;}
     public FXMLPage getHostPage(){return this.hostPage;}
 
+    public abstract Region getHostRegion(); //returns the outer anchorpane, vbox, gridpane, etc. for the controller's fxml
+
     public abstract void init();
 
     public abstract void refresh();
@@ -20,4 +25,9 @@ public abstract class FXMLPageController {
         hostScrollerController.nextPage();
     }
 
+    public Pair<Double, Double> getSizePreferences(){
+        Region hostNode = getHostRegion();
+
+        return new Pair<>(hostNode.getPrefWidth(), hostNode.getPrefHeight());
+    }
 }

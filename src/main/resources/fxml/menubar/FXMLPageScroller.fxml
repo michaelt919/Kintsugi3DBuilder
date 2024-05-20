@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<GridPane alignment="CENTER" styleClass="grid-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController">
+<GridPane fx:id = "outerGridPane" alignment="CENTER" styleClass="grid-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController">
    <columnConstraints>
        <ColumnConstraints prefWidth="200.0" />
        <ColumnConstraints prefWidth="200.0" />
