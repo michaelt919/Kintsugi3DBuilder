@@ -93,15 +93,16 @@ public class LoaderController extends FXMLPageController implements Initializabl
 
     @Override
     public void refresh() {
-        if (hostScrollerController != null){
+        if (isEmbedded()){
             backButton.setVisible(false);
             nextButton.setVisible(false);
+            updateNextPage();
         }
     }
 
     @Override
     public boolean isNextButtonValid() {
-        return areAllFilesLoaded();
+        return super.isNextButtonValid() && areAllFilesLoaded();
     }
 
     public void setLoadStartCallback(Runnable callback)
@@ -176,9 +177,25 @@ public class LoaderController extends FXMLPageController implements Initializabl
             }
         }
 
-        if (hostScrollerController != null){
+        if (isEmbedded()){
+            hostScrollerController.addInfo("camFile", cameraFile);
+            updateNextPage();
             hostScrollerController.updatePrevAndNextButtons();
         }
+    }
+
+    private void updateNextPage() {
+        if (areAllFilesLoaded()){
+            hostPage.setNextPage(hostScrollerController.getPage("fxml/menubar/createnewproject/ConfirmNewProject.fxml"));
+        }
+        else{
+            hostPage.setNextPage(null);
+        }
+    }
+
+    //return true if loader is embedded into an fxml page scroller
+    private boolean isEmbedded() {
+        return hostScrollerController != null;
     }
 
     @FXML
@@ -195,7 +212,9 @@ public class LoaderController extends FXMLPageController implements Initializabl
             loadCheckObj.setFill(Paint.valueOf("Green"));
         }
 
-        if (hostScrollerController != null){
+        if (isEmbedded()){
+            hostScrollerController.addInfo("objFile", objFile);
+            updateNextPage();
             hostScrollerController.updatePrevAndNextButtons();
         }
     }
@@ -214,7 +233,9 @@ public class LoaderController extends FXMLPageController implements Initializabl
             loadCheckImages.setFill(Paint.valueOf("Green"));
         }
 
-        if (hostScrollerController != null){
+        if (isEmbedded()){
+            hostScrollerController.addInfo("photoDir", photoDir);
+            updateNextPage();
             hostScrollerController.updatePrevAndNextButtons();
         }
     }

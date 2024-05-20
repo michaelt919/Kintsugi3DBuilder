@@ -20,6 +20,6 @@ public class ConfirmNewProjectController extends FXMLPageController {
 
     @Override
     public void refresh() {
-
+        hostScrollerController.dumpInfo();
     }
 }

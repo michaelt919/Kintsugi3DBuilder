@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public class FXMLPageScrollerController {
     private static final Logger log = LoggerFactory.getLogger(FXMLPageScrollerController.class);
@@ -36,6 +37,7 @@ public class FXMLPageScrollerController {
         String fileName = currentPage.getFxmlFilePath();
         initControllerAndUpdatePanel(fileName);
 
+        sharedInfo = new HashMap<>();
     }
     public void prevPage() {
         if (currentPage.hasPrevPage()){
@@ -66,9 +68,9 @@ public class FXMLPageScrollerController {
         currentPage = getPage(firstPageFXMLPath);
     }
 
-    public FXMLPage getPage(String firstPageFXMLPath) {
+    public FXMLPage getPage(String fxmlPath) {
         for (FXMLPage page: pages){
-            if (page.getFxmlFilePath().equals(firstPageFXMLPath)){
+            if (page.getFxmlFilePath().equals(fxmlPath)){
                 return page;
             }
         }
@@ -107,7 +109,7 @@ public class FXMLPageScrollerController {
 
     public void updatePrevAndNextButtons() {
         prevButton.setDisable(!currentPage.hasPrevPage());
-        nextButton.setDisable(!currentPage.hasNextPage() && !currentPage.getController().isNextButtonValid());
+        nextButton.setDisable(!currentPage.getController().isNextButtonValid());
     }
 
     public void setNextButtonDisable(boolean b) {
@@ -120,6 +122,12 @@ public class FXMLPageScrollerController {
 
     public <T> T getInfo(String key){
         return (T) sharedInfo.get(key);
+    }
+
+    public void dumpInfo() {
+        for (Map.Entry<String, ?> entry : sharedInfo.entrySet()) {
+            System.out.println("Key: " + entry.getKey() + ", Value: " + entry.getValue());
+        }
     }
 }
 

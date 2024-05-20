@@ -39,7 +39,7 @@ public class MetashapeImportController extends FXMLPageController {
 
     @Override
     public boolean isNextButtonValid() {
-        return isMetashapeObjectLoaded();
+        return super.isNextButtonValid() && isMetashapeObjectLoaded();
     }
 
     @FXML
@@ -104,13 +104,5 @@ public class MetashapeImportController extends FXMLPageController {
 
     private boolean isMetashapeObjectLoaded() {
         return metashapePsxFile != null;
-    }
-    private Stage getStage()
-    {
-        if (thisStage == null)
-        {
-            thisStage = (Stage) anchorPane.getScene().getWindow();
-        }
-        return thisStage;
     }
 }

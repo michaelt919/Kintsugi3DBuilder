@@ -25,7 +25,6 @@ public class ImportOrCustomProjectController extends FXMLPageController {
 
     @Override
     public void refresh() {
-        System.out.println(metashapeImportButton == null);
     }
 
     public void metashapeImportSelect(ActionEvent actionEvent) {
