@@ -28,13 +28,14 @@ public class FXMLPageScrollerController {
     HashMap<String, Object> sharedInfo;
 
     public void init() {
-        String fileName = currentPage.getFxmlFilePath();
-        initControllerAndUpdatePanel(fileName);
-
         for (FXMLPage page : pages){
             page.getController().setHostScrollerController(this);
             page.getController().setHostPage(page);
         }
+
+        String fileName = currentPage.getFxmlFilePath();
+        initControllerAndUpdatePanel(fileName);
+
     }
     public void prevPage() {
         if (currentPage.hasPrevPage()){
@@ -79,12 +80,12 @@ public class FXMLPageScrollerController {
         Parent newContent = newPage.getLoader().getRoot();
 
         updateSizePreferences();
-        updatePrevAndNextButtons();
 
         if (newContent != null) {
             hostAnchorPane.getChildren().setAll(newContent);
         }
         currentPage.getController().refresh();
+        updatePrevAndNextButtons();
     }
 
     private void updateSizePreferences() {
@@ -104,9 +105,9 @@ public class FXMLPageScrollerController {
     }
 
 
-    private void updatePrevAndNextButtons() {
-        nextButton.setDisable(!currentPage.hasNextPage());
+    public void updatePrevAndNextButtons() {
         prevButton.setDisable(!currentPage.hasPrevPage());
+        nextButton.setDisable(!currentPage.hasNextPage() && !currentPage.getController().isNextButtonValid());
     }
 
     public void setNextButtonDisable(boolean b) {

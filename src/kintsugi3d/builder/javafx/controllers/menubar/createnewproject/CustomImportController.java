@@ -26,4 +26,9 @@ public class CustomImportController extends FXMLPageController {
     public void openChildPage(String childFXMLPath) {
 
     }
+
+    @Override
+    public boolean isNextButtonValid() {
+        return false;
+    }
 }

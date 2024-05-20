@@ -37,6 +37,11 @@ public class MetashapeImportController extends FXMLPageController {
         updateLoadedIndicators();
     }
 
+    @Override
+    public boolean isNextButtonValid() {
+        return isMetashapeObjectLoaded();
+    }
+
     @FXML
     private void psxFileSelect(ActionEvent actionEvent) {
         FileChooser fileChooser = new FileChooser();

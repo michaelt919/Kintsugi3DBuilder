@@ -8,7 +8,7 @@
    <children>
       <VBox alignment="CENTER" layoutX="117.0" layoutY="72.0" prefHeight="400.0" prefWidth="600.0" spacing="60.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
-            <Button mnemonicParsing="false" onAction="#metashapeImportSelect" prefHeight="80.0" prefWidth="200.0" text="Metashape Import">
+            <Button fx:id = "metashapeImportButton" mnemonicParsing="false" onAction="#metashapeImportSelect" prefHeight="80.0" prefWidth="200.0" text="Metashape Import">
                <font>
                   <Font size="18.0" />
                </font></Button>

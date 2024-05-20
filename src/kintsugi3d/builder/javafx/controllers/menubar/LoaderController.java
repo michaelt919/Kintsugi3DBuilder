@@ -73,16 +73,6 @@ public class LoaderController extends FXMLPageController implements Initializabl
     @Override
     public void initialize(URL location, ResourceBundle resources)
     {
-        init();
-    }
-
-    @Override
-    public Region getHostRegion() {
-        return root;
-    }
-
-    public void init()
-    {
         setHomeDir(new File(System.getProperty("user.home")));
         camFileChooser.getExtensionFilters().add(new ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
         objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ file", "*.obj"));
@@ -93,17 +83,25 @@ public class LoaderController extends FXMLPageController implements Initializabl
     }
 
     @Override
-    public void refresh() {
-        //TODO: check to see if host fxml scroller is not null
-        //if so, then refresh the next button based on if all items are loaded
+    public Region getHostRegion() {
+        return root;
+    }
 
-        init();
-        //hide back and next buttons if loader is in an fxml page scroller
-        //doesn't work yet because buttons register as null
+    public void init()
+    {
+    }
+
+    @Override
+    public void refresh() {
         if (hostScrollerController != null){
             backButton.setVisible(false);
             nextButton.setVisible(false);
         }
+    }
+
+    @Override
+    public boolean isNextButtonValid() {
+        return areAllFilesLoaded();
     }
 
     public void setLoadStartCallback(Runnable callback)
@@ -177,6 +175,10 @@ public class LoaderController extends FXMLPageController implements Initializabl
                 new Alert(AlertType.ERROR, e.toString()).show();
             }
         }
+
+        if (hostScrollerController != null){
+            hostScrollerController.updatePrevAndNextButtons();
+        }
     }
 
     @FXML
@@ -191,6 +193,10 @@ public class LoaderController extends FXMLPageController implements Initializabl
             setHomeDir(temp);
             loadCheckObj.setText("Loaded");
             loadCheckObj.setFill(Paint.valueOf("Green"));
+        }
+
+        if (hostScrollerController != null){
+            hostScrollerController.updatePrevAndNextButtons();
         }
     }
 
@@ -207,12 +213,16 @@ public class LoaderController extends FXMLPageController implements Initializabl
             loadCheckImages.setText("Loaded");
             loadCheckImages.setFill(Paint.valueOf("Green"));
         }
+
+        if (hostScrollerController != null){
+            hostScrollerController.updatePrevAndNextButtons();
+        }
     }
 
     @FXML
     private void okButtonPress()
     {
-        if ((cameraFile != null) && (objFile != null) && (photoDir != null))
+        if (areAllFilesLoaded())
         {
             if (loadStartCallback != null)
             {
@@ -236,6 +246,10 @@ public class LoaderController extends FXMLPageController implements Initializabl
         else{
             Toolkit.getDefaultToolkit().beep();
         }
+    }
+
+    private boolean areAllFilesLoaded() {
+        return (cameraFile != null) && (objFile != null) && (photoDir != null);
     }
 
     @FXML

@@ -30,4 +30,6 @@ public abstract class FXMLPageController {
 
         return new Pair<>(hostNode.getPrefWidth(), hostNode.getPrefHeight());
     }
+
+    public boolean isNextButtonValid(){return hostPage.hasNextPage();}
 }
