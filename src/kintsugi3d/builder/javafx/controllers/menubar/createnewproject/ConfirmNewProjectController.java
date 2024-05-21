@@ -14,6 +14,7 @@ import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.LoaderController;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 
 import java.awt.*;
@@ -47,7 +48,7 @@ public class ConfirmNewProjectController extends FXMLPageController {
     @Override
     public void refresh() {
         if (super.hostPage.getPrevPage().getController() instanceof MetashapeImportController) {
-            MetashapeObjectChunk metaChunk = hostScrollerController.getInfo("metashapeObjChunk");
+            MetashapeObjectChunk metaChunk = hostScrollerController.getInfo(ShareInfo.Info.METASHAPE_OBJ_CHUNK);
 
             if (metaChunk != null) {
                 File psxFile = new File(metaChunk.getPsxFilePath());
@@ -58,7 +59,7 @@ public class ConfirmNewProjectController extends FXMLPageController {
             }
         }
         else{
-            File objFile = hostScrollerController.getInfo("objFile");
+            File objFile = hostScrollerController.getInfo(ShareInfo.Info.OBJ_FILE);
 
             if(objFile != null){
                 String fileName = objFile.getName();
@@ -132,10 +133,10 @@ public class ConfirmNewProjectController extends FXMLPageController {
     }
 
     private void refreshMetashapeInfo() {
-        cameraFile = hostScrollerController.getInfo("camFile");
-        photoDir = hostScrollerController.getInfo("photoDir");
-        objFile = hostScrollerController.getInfo("objFile");
-        primaryView = hostScrollerController.getInfo("primaryView");
+        cameraFile = hostScrollerController.getInfo(ShareInfo.Info.CAM_FILE);
+        photoDir = hostScrollerController.getInfo(ShareInfo.Info.PHOTO_DIR);
+        objFile = hostScrollerController.getInfo(ShareInfo.Info.OBJ_FILE);
+        primaryView = hostScrollerController.getInfo(ShareInfo.Info.PRIMARY_VIEW);
     }
 
     private boolean areAllFieldsValid() {

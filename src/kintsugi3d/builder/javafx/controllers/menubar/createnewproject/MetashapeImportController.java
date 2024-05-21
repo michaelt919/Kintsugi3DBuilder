@@ -45,7 +45,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
     @Override
     public void shareInfo() {
-        hostScrollerController.addInfo("metashapeObjChunk", metashapeObjectChunk);
+        hostScrollerController.addInfo(Info.METASHAPE_OBJ_CHUNK, metashapeObjectChunk);
     }
 
     @FXML

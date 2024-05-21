@@ -310,9 +310,9 @@ public class LoaderController extends FXMLPageController implements Initializabl
             return;
         }
 
-        hostScrollerController.addInfo("camFile", cameraFile);
-        hostScrollerController.addInfo("photoDir", photoDir);
-        hostScrollerController.addInfo("objFile", objFile);
-        hostScrollerController.addInfo("primaryView", primaryViewChoiceBox.getSelectionModel().getSelectedItem());
+        hostScrollerController.addInfo(Info.CAM_FILE, cameraFile);
+        hostScrollerController.addInfo(Info.PHOTO_DIR, photoDir);
+        hostScrollerController.addInfo(Info.OBJ_FILE, objFile);
+        hostScrollerController.addInfo(Info.PRIMARY_VIEW, primaryViewChoiceBox.getSelectionModel().getSelectedItem());
     }
 }

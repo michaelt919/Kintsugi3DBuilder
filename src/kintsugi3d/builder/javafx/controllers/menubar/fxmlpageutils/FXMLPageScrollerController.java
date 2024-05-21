@@ -28,7 +28,7 @@ public class FXMLPageScrollerController {
     ArrayList<FXMLPage> pages;
     FXMLPage currentPage;
 
-    HashMap<String, Object> sharedInfo;
+    HashMap<ShareInfo.Info, Object> sharedInfo;
 
     public void init() {
         for (FXMLPage page : pages){
@@ -144,16 +144,16 @@ public class FXMLPageScrollerController {
         nextButton.setDisable(b);
     }
 
-    public <T> void addInfo(String key, T info){
+    public <T> void addInfo(ShareInfo.Info key, T info){
         sharedInfo.put(key, info);
     }
 
-    public <T> T getInfo(String key){
+    public <T> T getInfo(ShareInfo.Info key){
         return (T) sharedInfo.get(key);
     }
 
     public void dumpInfo() {
-        for (Map.Entry<String, ?> entry : sharedInfo.entrySet()) {
+        for (Map.Entry<ShareInfo.Info, ?> entry : sharedInfo.entrySet()) {
             System.out.println("Key: " + entry.getKey() + ", Value: " + entry.getValue());
         }
     }
