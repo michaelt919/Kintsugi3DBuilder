@@ -1,7 +1,6 @@
 package kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils;
 
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.layout.AnchorPane;
@@ -56,6 +55,13 @@ public class FXMLPageScrollerController {
                 log.error("Failed to load next page", e);
                 return;
             }
+
+            //send relevant info to shareInfo collection variable
+            if (currentPage.getController() instanceof ShareInfo) {
+                ShareInfo shareableController = (ShareInfo) currentPage.getController();
+                shareableController.shareInfo();
+            }
+
             currentPage.getNextPage().setPrevPage(currentPage);
             currentPage = currentPage.getNextPage();
 

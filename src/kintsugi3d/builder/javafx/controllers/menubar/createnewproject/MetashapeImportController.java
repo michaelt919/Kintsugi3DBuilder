@@ -12,16 +12,17 @@ import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObject;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 
 import java.io.File;
 import java.util.ArrayList;
 
-public class MetashapeImportController extends FXMLPageController {
+public class MetashapeImportController extends FXMLPageController implements ShareInfo {
     @FXML private AnchorPane anchorPane;
     @FXML private Text loadMetashapeObject;
     @FXML private ChoiceBox chunkSelectionChoiceBox;
-    private Stage thisStage;
     private File metashapePsxFile;
+    private MetashapeObjectChunk metashapeObjectChunk;
 
     @Override
     public Region getHostRegion() {
@@ -42,6 +43,11 @@ public class MetashapeImportController extends FXMLPageController {
         return super.isNextButtonValid() && isMetashapeObjectLoaded();
     }
 
+    @Override
+    public void shareInfo() {
+        hostScrollerController.addInfo("metashapeObjChunk", metashapeObjectChunk);
+    }
+
     @FXML
     private void psxFileSelect(ActionEvent actionEvent) {
         FileChooser fileChooser = new FileChooser();
@@ -55,8 +61,9 @@ public class MetashapeImportController extends FXMLPageController {
             MetashapeObject metashapeObject = new MetashapeObject(metashapePsxFile.getAbsolutePath());
             initMetashapeObject(metashapeObject);
 
-            //give metashape object info to fxml scroller controller
-            hostScrollerController.addInfo("metashapeFile", metashapeObject);
+            String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
+            metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, chunkName);
+            initMetashapeObjectChunk(metashapeObjectChunk);
         }
     }
 
@@ -69,6 +76,12 @@ public class MetashapeImportController extends FXMLPageController {
 
         this.metashapePsxFile = new File(metashapeObject.getPsxFilePath());
 
+        updateChoiceBox(metashapeObject);
+
+        updateLoadedIndicators();
+    }
+
+    private void updateChoiceBox(MetashapeObject metashapeObject) {
         //load chunks into chunk selection module
         ArrayList<String> chunkNames = (ArrayList<String>) metashapeObject.
                 getChunkNamesDynamic(metashapeObject.getPsxFilePath());
@@ -83,20 +96,20 @@ public class MetashapeImportController extends FXMLPageController {
                 chunkSelectionChoiceBox.getItems().get(0) != null){
             chunkSelectionChoiceBox.setValue(chunkSelectionChoiceBox.getItems().get(0));
         }
-
-        updateLoadedIndicators();
     }
 
     private void updateLoadedIndicators() {
         if (isMetashapeObjectLoaded()) {
             loadMetashapeObject.setText("Loaded");
             loadMetashapeObject.setFill(Paint.valueOf("Green"));
+
             hostScrollerController.setNextButtonDisable(false);
             hostPage.setNextPage(hostScrollerController.getPage("fxml/menubar/createnewproject/ConfirmNewProject.fxml"));
         }
         else{
             loadMetashapeObject.setText("Unloaded");
             loadMetashapeObject.setFill(Paint.valueOf("Red"));
+
             hostScrollerController.setNextButtonDisable(true);
             hostPage.setNextPage(null);
         }

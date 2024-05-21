@@ -24,7 +24,6 @@ import java.util.stream.IntStream;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
@@ -41,11 +40,12 @@ import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class LoaderController extends FXMLPageController implements Initializable
+public class LoaderController extends FXMLPageController implements Initializable, ShareInfo
 {
     private static final Logger log = LoggerFactory.getLogger(LoaderController.class);
     @FXML private Button backButton;
@@ -178,7 +178,6 @@ public class LoaderController extends FXMLPageController implements Initializabl
         }
 
         if (isEmbedded()){
-            hostScrollerController.addInfo("camFile", cameraFile);
             updateNextPage();
             hostScrollerController.updatePrevAndNextButtons();
         }
@@ -213,7 +212,6 @@ public class LoaderController extends FXMLPageController implements Initializabl
         }
 
         if (isEmbedded()){
-            hostScrollerController.addInfo("objFile", objFile);
             updateNextPage();
             hostScrollerController.updatePrevAndNextButtons();
         }
@@ -234,7 +232,6 @@ public class LoaderController extends FXMLPageController implements Initializabl
         }
 
         if (isEmbedded()){
-            hostScrollerController.addInfo("photoDir", photoDir);
             updateNextPage();
             hostScrollerController.updatePrevAndNextButtons();
         }
@@ -304,4 +301,18 @@ public class LoaderController extends FXMLPageController implements Initializabl
     }
 
     private static final String QUICK_FILENAME = "quickSaveLoadConfig.txt";
+
+    @Override
+    public void shareInfo() {
+        if (hostScrollerController == null){
+            log.error("Loader controller cannot info to null hostScrollerController. " +
+                    "This function can only be used in an embedded loader");
+            return;
+        }
+
+        hostScrollerController.addInfo("camFile", cameraFile);
+        hostScrollerController.addInfo("photoDir", photoDir);
+        hostScrollerController.addInfo("objFile", objFile);
+        hostScrollerController.addInfo("primaryView", primaryViewChoiceBox.getSelectionModel().getSelectedItem());
+    }
 }
