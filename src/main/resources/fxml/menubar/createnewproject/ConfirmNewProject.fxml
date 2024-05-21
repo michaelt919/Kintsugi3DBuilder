@@ -25,12 +25,12 @@
                         <Font size="14.0" />
                      </font>
                   </Label>
-                  <TextField promptText="Project Name">
+                  <TextField fx:id="projectNameTxtField" onKeyTyped="#updateConfirmButton" promptText="Project Name">
                      <padding>
                         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                      </padding>
                   </TextField>
-                  <TextField promptText="Project Path">
+                  <TextField fx:id="projectPathTxtField" onKeyTyped="#updateConfirmButton" promptText="Project Path">
                      <padding>
                         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                      </padding>

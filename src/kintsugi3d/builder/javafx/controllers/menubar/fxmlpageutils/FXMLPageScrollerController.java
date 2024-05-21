@@ -5,8 +5,11 @@ import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import javafx.util.Pair;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.ConfirmNewProjectController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,6 +119,18 @@ public class FXMLPageScrollerController {
     public void updatePrevAndNextButtons() {
         prevButton.setDisable(!currentPage.hasPrevPage());
         nextButton.setDisable(!currentPage.getController().isNextButtonValid());
+
+        //change next button to confirm button if applicable
+        FXMLPageController controller = currentPage.getController();
+
+        if (controller instanceof ConfirmNewProjectController){
+            nextButton.setText("Confirm");
+            nextButton.setFont(Font.font(nextButton.getFont().getFamily(), FontWeight.BOLD, nextButton.getFont().getSize()));
+        }
+        else{
+            nextButton.setText("Next");
+            nextButton.setFont(Font.font(nextButton.getFont().getFamily(), FontWeight.NORMAL, nextButton.getFont().getSize()));
+        }
     }
 
     public void setNextButtonDisable(boolean b) {
