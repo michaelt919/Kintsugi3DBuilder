@@ -6,6 +6,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
+import javafx.stage.DirectoryChooser;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 
@@ -15,6 +16,7 @@ public class ConfirmNewProjectController extends FXMLPageController {
     @FXML private AnchorPane anchorPane;
     @FXML private TextField projectNameTxtField;
     @FXML private TextField projectPathTxtField;
+    private DirectoryChooser directoryChooser;
 
     @Override
     public Region getHostRegion() {
@@ -23,6 +25,8 @@ public class ConfirmNewProjectController extends FXMLPageController {
 
     @Override
     public void init() {
+        directoryChooser = new DirectoryChooser();
+        directoryChooser.setTitle("Choose Project Save Path");
     }
 
     @Override
@@ -54,7 +58,13 @@ public class ConfirmNewProjectController extends FXMLPageController {
         return !projectNameTxtField.getText().isEmpty() && !projectPathTxtField.getText().isEmpty();
     }
 
-    public void chooseProjLocation(ActionEvent actionEvent) {
+    @FXML private void chooseProjLocation(ActionEvent actionEvent) {
+        File directory = directoryChooser.showDialog(anchorPane.getScene().getWindow());
+
+        if (directory != null){
+            projectPathTxtField.setText(directory.getAbsolutePath());
+        }
+        updateConfirmButton(null);
     }
 
     @FXML private void updateConfirmButton(KeyEvent actionEvent) {

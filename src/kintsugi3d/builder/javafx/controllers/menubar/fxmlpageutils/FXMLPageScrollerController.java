@@ -32,8 +32,11 @@ public class FXMLPageScrollerController {
 
     public void init() {
         for (FXMLPage page : pages){
-            page.getController().setHostScrollerController(this);
-            page.getController().setHostPage(page);
+            FXMLPageController controller = page.getController();
+
+            controller.setHostScrollerController(this);
+            controller.setHostPage(page);
+            controller.init();
         }
 
         String fileName = currentPage.getFxmlFilePath();
