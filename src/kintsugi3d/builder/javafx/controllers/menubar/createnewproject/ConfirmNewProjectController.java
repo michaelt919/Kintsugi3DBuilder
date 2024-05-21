@@ -7,16 +7,31 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.Window;
+import javafx.stage.WindowEvent;
+import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.controllers.menubar.LoaderController;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
+import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 
+import java.awt.*;
 import java.io.File;
+import java.util.function.BiConsumer;
 
 public class ConfirmNewProjectController extends FXMLPageController {
     @FXML private AnchorPane anchorPane;
     @FXML private TextField projectNameTxtField;
     @FXML private TextField projectPathTxtField;
     private DirectoryChooser directoryChooser;
+    private File cameraFile;
+    private File objFile;
+    private File photoDir;
+
+    private Runnable loadStartCallback;
+    private BiConsumer<ViewSet, File> viewSetCallback;
+    private String primaryView;
 
     @Override
     public Region getHostRegion() {
@@ -43,19 +58,20 @@ public class ConfirmNewProjectController extends FXMLPageController {
             }
         }
         else{
-            //TODO: imp text field initialization from this path (loader controller)
-            projectNameTxtField.setText("");
+            File objFile = hostScrollerController.getInfo("objFile");
+
+            if(objFile != null){
+                String fileName = objFile.getName();
+
+                //remove the .obj file extension
+                projectNameTxtField.setText(fileName.substring(0, fileName.length() - 4));
+            }
         }
     }
 
     @Override
     public boolean isNextButtonValid() {
         return areAllFieldsValid();
-    }
-
-    private boolean areAllFieldsValid() {
-        //TODO: need more robust checking for file paths
-        return !projectNameTxtField.getText().isEmpty() && !projectPathTxtField.getText().isEmpty();
     }
 
     @FXML private void chooseProjLocation(ActionEvent actionEvent) {
@@ -69,5 +85,61 @@ public class ConfirmNewProjectController extends FXMLPageController {
 
     @FXML private void updateConfirmButton(KeyEvent actionEvent) {
         hostScrollerController.updatePrevAndNextButtons();
+    }
+
+    public void setLoadStartCallback(Runnable callback)
+    {
+        this.loadStartCallback = callback;
+    }
+
+    public void setViewSetCallback(BiConsumer<ViewSet, File> callback)
+    {
+        this.viewSetCallback = callback;
+    }
+
+    public void confirmButtonPress(){
+        refreshMetashapeInfo();
+        if (!areAllFieldsValid()) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
+
+        if(super.hostPage.getPrevPage().getController() instanceof LoaderController){
+            if (loadStartCallback != null) {
+                loadStartCallback.run();
+            }
+
+            if (viewSetCallback != null) {
+                MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(
+                        viewSet -> viewSetCallback.accept(viewSet, cameraFile.getParentFile()));
+            }
+
+            new Thread(() ->
+                    MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(
+                            cameraFile.getPath(), cameraFile, objFile, photoDir,
+                            primaryView))
+                    .start();
+            WelcomeWindowController.getInstance().hideWelcomeWindow();
+            close();
+        }
+
+    }
+
+    private void close() {
+        Window window = anchorPane.getScene().getWindow();
+        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
+    }
+
+    private void refreshMetashapeInfo() {
+        cameraFile = hostScrollerController.getInfo("camFile");
+        photoDir = hostScrollerController.getInfo("photoDir");
+        objFile = hostScrollerController.getInfo("objFile");
+        primaryView = hostScrollerController.getInfo("primaryView");
+    }
+
+    private boolean areAllFieldsValid() {
+        //TODO: need more robust checking for file paths
+        return !projectNameTxtField.getText().isEmpty() && !projectPathTxtField.getText().isEmpty();
     }
 }

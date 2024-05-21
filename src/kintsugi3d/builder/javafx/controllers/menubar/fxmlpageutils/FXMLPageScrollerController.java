@@ -129,10 +129,14 @@ public class FXMLPageScrollerController {
         if (controller instanceof ConfirmNewProjectController){
             nextButton.setText("Confirm");
             nextButton.setFont(Font.font(nextButton.getFont().getFamily(), FontWeight.BOLD, nextButton.getFont().getSize()));
+
+            ConfirmNewProjectController cnpController = (ConfirmNewProjectController) controller;
+            nextButton.setOnAction(event->cnpController.confirmButtonPress());
         }
         else{
             nextButton.setText("Next");
             nextButton.setFont(Font.font(nextButton.getFont().getFamily(), FontWeight.NORMAL, nextButton.getFont().getSize()));
+            nextButton.setOnAction(event->nextPage());
         }
     }
 

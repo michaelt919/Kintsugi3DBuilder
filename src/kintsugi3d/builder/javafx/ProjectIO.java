@@ -38,6 +38,7 @@ import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.controllers.menubar.LoaderController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.ConfirmNewProjectController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
@@ -307,6 +308,15 @@ public final class ProjectIO
                 loader.load();
 
                 pages.add(new FXMLPage(fullFileName, loader));
+
+                FXMLPageController controller = loader.getController();
+
+                if (controller instanceof ConfirmNewProjectController){
+                    ConfirmNewProjectController cnpController = (ConfirmNewProjectController) controller;
+                    cnpController.setLoadStartCallback(this::onLoadStart);
+                    cnpController.setViewSetCallback(
+                            (viewSet, defaultDirectory) -> onViewSetCreated(viewSet, parentWindow, defaultDirectory));
+                }
             }
 
 
