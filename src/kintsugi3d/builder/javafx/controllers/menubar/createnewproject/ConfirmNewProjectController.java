@@ -1,6 +1,6 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
-import javafx.scene.Node;
+import javafx.event.ActionEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
@@ -20,6 +20,8 @@ public class ConfirmNewProjectController extends FXMLPageController {
 
     @Override
     public void refresh() {
-        hostScrollerController.dumpInfo();
+    }
+
+    public void chooseProjLocation(ActionEvent actionEvent) {
     }
 }
