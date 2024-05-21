@@ -6,7 +6,10 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
+
+import java.io.File;
 
 public class ConfirmNewProjectController extends FXMLPageController {
     @FXML private AnchorPane anchorPane;
@@ -20,11 +23,25 @@ public class ConfirmNewProjectController extends FXMLPageController {
 
     @Override
     public void init() {
-
     }
 
     @Override
     public void refresh() {
+        if (super.hostPage.getPrevPage().getController() instanceof MetashapeImportController) {
+            MetashapeObjectChunk metaChunk = hostScrollerController.getInfo("metashapeObjChunk");
+
+            if (metaChunk != null) {
+                File psxFile = new File(metaChunk.getPsxFilePath());
+                String fileName = psxFile.getName();
+
+                //remove the .psx file extension
+                projectNameTxtField.setText(fileName.substring(0, fileName.length() - 4));
+            }
+        }
+        else{
+            //TODO: imp text field initialization from this path (loader controller)
+            projectNameTxtField.setText("");
+        }
     }
 
     @Override
