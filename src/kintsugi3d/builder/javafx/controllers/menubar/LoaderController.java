@@ -305,7 +305,7 @@ public class LoaderController extends FXMLPageController implements Initializabl
     @Override
     public void shareInfo() {
         if (hostScrollerController == null){
-            log.error("Loader controller cannot info to null hostScrollerController. " +
+            log.error("Loader controller cannot send info to null hostScrollerController. " +
                     "This function can only be used in an embedded loader");
             return;
         }
