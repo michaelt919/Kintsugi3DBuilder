@@ -16,12 +16,12 @@
 <?import javafx.scene.layout.AnchorPane?>
 <AnchorPane minWidth="250.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController">
     <ToolBar orientation="VERTICAL">
-        <Button mnemonicParsing="false" onAction="#file_createProject" prefHeight="57.0" prefWidth="140.0" text="Create Project" />
+        <Button mnemonicParsing="false" onAction="#file_createProject" prefHeight="57.0" prefWidth="140.0" text="Create New Project" />
         <SplitMenuButton fx:id="recentProjectsSplitMenuButton" alignment="CENTER_RIGHT" mnemonicParsing="false" onAction="#splitMenuButtonActions" onMouseExited="#hideMenu" popupSide="RIGHT" prefHeight="57.0" prefWidth="140.0" text="Recent Projects" textAlignment="CENTER">
         </SplitMenuButton>
         <Button layoutX="10.0" layoutY="71.0" mnemonicParsing="false" onAction="#file_openProject" prefHeight="57.0" prefWidth="140.0" text="Open Project" />
 <!--        <Button layoutX="10.0" layoutY="194.0" mnemonicParsing="false" onAction="#file_closeProject" prefHeight="57.0" prefWidth="140.0" text="Close Project" />-->
         <Button disable="true" layoutX="10.0" layoutY="133.0" mnemonicParsing="false" onAction="#help_userManual" prefHeight="57.0" prefWidth="140.0" text="Guides" />
-<!--        <Button layoutX="10.0" layoutY="255.0" mnemonicParsing="false" onAction="#createProject" prefHeight="57.0" prefWidth="140.0" text="Create Project (NEW)" visible="false" />-->
+<!--        <Button layoutX="10.0" layoutY="255.0" mnemonicParsing="false" onAction="#createProject" prefHeight="57.0" prefWidth="140.0" text="Create New Project (NEW)" visible="false" />-->
     </ToolBar>
 </AnchorPane>
