@@ -38,6 +38,7 @@ import kintsugi3d.builder.javafx.controllers.menubar.LoaderController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.scene.CreateProjectController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
+import kintsugi3d.builder.resources.ibr.MeshImportException;
 import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
@@ -103,7 +104,11 @@ public final class ProjectIO
             public void loadingFailed(Throwable e)
             {
                 projectLoaded = false;
-                handleException("An error occurred while loading project", e);
+                if(e instanceof MeshImportException){
+                    handleException("Imported object is missing texture coordinates", e);
+                } else {
+                    handleException("An error occurred while loading project", e);
+                }
             }
 
             @Override

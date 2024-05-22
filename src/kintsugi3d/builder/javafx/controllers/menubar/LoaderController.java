@@ -70,7 +70,7 @@ public class LoaderController implements Initializable
 
         setHomeDir(new File(System.getProperty("user.home")));
         camFileChooser.getExtensionFilters().add(new ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
-        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ file", "*.obj"));
+        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ or PLY file", "*.obj", "*.ply"));
 
         camFileChooser.setTitle("Select camera positions file");
         objFileChooser.setTitle("Select object file");

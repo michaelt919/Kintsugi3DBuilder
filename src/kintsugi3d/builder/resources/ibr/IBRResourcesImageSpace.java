@@ -170,7 +170,19 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             this.viewSet = ViewSetReaderFromAgisoftXML.getInstance().readFromFile(cameraFile);
             if (geometryFile != null)
             {
-                this.geometry = VertexGeometry.createFromOBJFile(geometryFile);
+                if (geometryFile.getName().contains(".obj"))
+                {
+                    this.geometry = VertexGeometry.createFromOBJFile(geometryFile);
+                }
+                else if (geometryFile.getName().contains(".ply")) {
+                    this.geometry = VertexGeometry.createFromPLYFile(geometryFile);
+                }
+            }
+            if (!this.geometry.hasNormals()) {
+                throw new MeshImportException("Imported Object has no Normals");
+            }
+            if (!this.geometry.hasTexCoords()) {
+                throw new MeshImportException("Imported Object has no Texture Coordinates");
             }
             if (undistortedImageDirectory != null)
             {
