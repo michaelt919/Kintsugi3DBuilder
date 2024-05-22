@@ -55,7 +55,7 @@
                 <TextField fx:id="depthHeightTxtField" prefWidth="50.0" />
             </HBox>
         </HBox>
-        <CheckBox fx:id="mipmapCheckBox" layoutX="17.0" layoutY="45.0" mnemonicParsing="false" styleClass="checkbox" text="Mipmap" />
+        <CheckBox fx:id="mipmapCheckBox" layoutX="17.0" layoutY="45.0" mnemonicParsing="false" styleClass="checkbox" text="Mipmaps" />
         <CheckBox fx:id="reduceViewportResCheckBox" layoutX="17.0" layoutY="107.0" mnemonicParsing="false" styleClass="checkbox" text="Reduce Viewport Resolution" />
     </VBox>
 </AnchorPane>
