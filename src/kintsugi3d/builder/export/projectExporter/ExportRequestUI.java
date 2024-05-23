@@ -77,9 +77,9 @@ public class ExportRequestUI implements IBRRequestUI {
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void prompt(IBRRequestQueue<ContextType> requestQueue) {
+    public <ContextType extends Context<ContextType>> void prompt(IBRRequestQueue<ContextType> requestQueue)
+    {
         ExportSettings settings = new ExportSettings();
-
 
         stage.show();
 
@@ -87,11 +87,14 @@ public class ExportRequestUI implements IBRRequestUI {
         setAllVariables(settings);
 
         //Sets FileChooser defaults
-        objFileChooser.setInitialDirectory(CurrentDirectoryFile);
-        objFileChooser.setTitle("Save project");
-        objFileChooser.setInitialFileName(CurrentDirectoryFile.getName());
-        objFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("GLTF file", "*.glb"));
+        if (CurrentDirectoryFile != null)
+        {
+            objFileChooser.setInitialDirectory(CurrentDirectoryFile);
+            objFileChooser.setInitialFileName(CurrentDirectoryFile.getName());
+        }
 
+        objFileChooser.setTitle("Save project");
+        objFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("GLTF file", "*.glb"));
 
         //Just sets the values in settings doesn't do anything else yet
         runButton.setOnAction(event ->
@@ -99,25 +102,30 @@ public class ExportRequestUI implements IBRRequestUI {
             //Updates settings to equal what widget is displaying
             saveAllVariables(settings);
 
-            try {
+            try
+            {
                 ExportLocationFile = objFileChooser.showSaveDialog(stage);
-                requestQueue.addIBRRequest(new ObservableIBRRequest() {
+                requestQueue.addIBRRequest(new ObservableIBRRequest()
+                {
                     @Override
                     public <ContextType extends Context<ContextType>> void executeRequest(
-                            IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException {
+                        IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
+                    {
 
-                        if (settings.isGlTFEnabled()) {
+                        if (settings.isGlTFEnabled())
+                        {
                             renderable.saveGlTF(ExportLocationFile.getParentFile(), ExportLocationFile.getName(), settings);
                             modelAccess.getLoadingModel().saveMaterialFiles(ExportLocationFile.getParentFile(), null);
                         }
 
-                        if (settings.isOpenViewerOnceComplete()) {
+                        if (settings.isOpenViewerOnceComplete())
+                        {
                             Kintsugi3DViewerLauncher.launchViewer(ExportLocationFile);
                         }
                     }
                 });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 log.error("Project didn't save correctly", ex);
             }

@@ -263,7 +263,7 @@ public class MenubarController
                                         requestUI.bind(internalModels.getSettingsModel());
                                         requestUI.prompt(Rendering.getRequestQueue());
                                     }
-                                    catch (IllegalAccessException | InvocationTargetException e)
+                                    catch (IllegalAccessException | InvocationTargetException | RuntimeException e)
                                     {
                                         log.error("An error has occurred:", e);
                                     }
@@ -328,7 +328,7 @@ public class MenubarController
             requestUI.bind(internalModels.getSettingsModel());
             requestUI.prompt(Rendering.getRequestQueue());
         }
-        catch (IOException e)
+        catch (IOException|RuntimeException e)
         {
             log.error("Error opening glTF export window", e);
         }
