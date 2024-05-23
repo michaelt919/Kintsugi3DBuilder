@@ -242,6 +242,32 @@ public final class ProjectIO
         }, defaultDirectory);
     }
 
+    private void onViewSetCreated(ViewSet viewSet, Window parentWindow)
+    {
+        // Force user to save the project before proceeding, so that they have a place to save the results
+        saveProjectAs(parentWindow, () ->
+        {
+            File filesDirectory = ViewSet.getDefaultSupportingFilesDirectory(projectFile);
+            filesDirectory.mkdirs();
+
+            // need to use a lambda callback so that this is called after the file location is chosen
+            // but before its actually saved
+            if (Objects.equals(vsetFile, projectFile)) // Saved as a VSET
+            {
+                // Set the root directory first, then the supporting files directory
+                MultithreadModels.getInstance().getLoadingModel()
+                        .getLoadedViewSet().setRootDirectory(projectFile.getParentFile());
+
+                viewSet.setSupportingFilesDirectory(filesDirectory);
+            }
+            else // Saved as a Kintsugi 3D project
+            {
+                viewSet.setRootDirectory(filesDirectory);
+                viewSet.setSupportingFilesDirectory(filesDirectory);
+            }
+        });
+    }
+
 
     public void createProject(Window parentWindow)
     {
@@ -255,7 +281,7 @@ public final class ProjectIO
                         makeWindow(parentWindow, "Load Files", loaderWindowOpen, 750, 330, "fxml/menubar/Loader.fxml");
                     createProjectController.setLoadStartCallback(this::onLoadStart);
                     createProjectController.setViewSetCallback(
-                        (viewSet, defaultDirectory) -> onViewSetCreated(viewSet, parentWindow, defaultDirectory));
+                        viewSet -> onViewSetCreated(viewSet, parentWindow));
                     createProjectController.init();
                 }
                 catch (Exception e)

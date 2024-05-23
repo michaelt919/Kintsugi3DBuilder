@@ -382,8 +382,8 @@ public final class ViewSet implements ReadonlyViewSet
         if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
         {
             result.setTonemapping(this.gamma,
-                Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
-                Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
+                    Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
+                    Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
         }
 
         result.rootDirectory = this.rootDirectory;
@@ -418,8 +418,8 @@ public final class ViewSet implements ReadonlyViewSet
         if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
         {
             result.setTonemapping(this.gamma,
-                Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
-                Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
+                    Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
+                    Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
         }
 
         result.rootDirectory = this.rootDirectory;
@@ -436,7 +436,7 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     public static ReadonlyViewSet createFromLookAt(List<Vector3> viewDir, Vector3 center, Vector3 up, float distance,
-        float nearPlane, float aspect, float sensorWidth, float focalLength)
+                                                   float nearPlane, float aspect, float sensorWidth, float focalLength)
     {
         ViewSet result = new ViewSet(viewDir.size());
 
@@ -824,7 +824,7 @@ public final class ViewSet implements ReadonlyViewSet
     public boolean hasCustomLuminanceEncoding()
     {
         return linearLuminanceValues != null && encodedLuminanceValues != null
-            && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0;
+                && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0;
     }
 
     @Override

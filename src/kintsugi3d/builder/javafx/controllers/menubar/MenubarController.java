@@ -26,6 +26,7 @@ import java.util.Locale;
 import java.util.Scanner;
 import java.util.function.Consumer;
 
+import com.sun.javafx.menu.CheckMenuItemBase;
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.fxml.FXML;
@@ -148,6 +149,8 @@ public class MenubarController
 //    @FXML public ChoiceBox<String> autosaveOptionsChoiceBox;
 
     @FXML private CheckMenuItem imageCompressionCheckMenuItem;
+    //@FXML private CheckMenuItem lightCalibrationCheckMenuItem;
+
 
 //    @FXML private Label widthLabel;
 //    @FXML private TextField widthTxtField;
@@ -330,14 +333,14 @@ public class MenubarController
 //        heightTxtField.disableProperty().bind(preloadVisibilityEtcCheckMenuItem.selectedProperty().not());
 
 
-        lightCalibrationCheckMenuItem.selectedProperty().addListener(observable ->
-        {
-            if (!lightCalibrationCheckMenuItem.isSelected())
-            {
-                MultithreadModels.getInstance().getLoadingModel().applyLightCalibration();
-                MultithreadModels.getInstance().getSettingsModel().set("currentLightCalibration", Vector2.ZERO);
-            }
-        });
+//        lightCalibrationCheckMenuItem.selectedProperty().addListener(observable ->
+//        {
+//            if (!lightCalibrationCheckMenuItem.isSelected())
+//            {
+//                MultithreadModels.getInstance().getLoadingModel().applyLightCalibration();
+//                MultithreadModels.getInstance().getSettingsModel().set("currentLightCalibration", Vector2.ZERO);
+//            }
+//        });
 
         updateRecentProjectsMenu();
 
@@ -391,8 +394,8 @@ public class MenubarController
     private void bindCheckMenuItems()
     {
         //value binding
-        lightCalibrationCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
+//        lightCalibrationCheckMenuItem.selectedProperty().bindBidirectional(
+//            internalModels.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
         is3DGridCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("is3DGridEnabled"));
         compassCheckMenuItem.selectedProperty().bindBidirectional(
@@ -545,6 +548,31 @@ public class MenubarController
         }
     }
 
+    private <ControllerType> ControllerType makeWindow(String title, Flag flag, String urlString) throws IOException
+    {
+        URL url = MenubarController.class.getClassLoader().getResource(urlString);
+        if (url == null)
+        {
+            throw new FileNotFoundException(urlString);
+        }
+        FXMLLoader fxmlLoader = new FXMLLoader(url);
+        Parent root = fxmlLoader.load();
+        Stage stage = new Stage();
+        stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
+        stage.setTitle(title);
+        stage.setScene(new Scene(root));
+        stage.initOwner(this.window);
+
+        stage.setResizable(false);
+
+        flag.set(true);
+        stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
+
+        stage.show();
+
+        return fxmlLoader.getController();
+    }
+
     @FXML
     private void shading_IBRSettings()
     {
@@ -565,39 +593,6 @@ public class MenubarController
     }
 
     //window helpers
-    private FXMLLoader getFXMLLoader(String urlString) throws FileNotFoundException
-    {
-        URL url = MenubarController.class.getClassLoader().getResource(urlString);
-        if (url == null)
-        {
-            throw new FileNotFoundException(urlString);
-        }
-        return new FXMLLoader(url);
-    }
-
-    private Stage makeStage(String title, Flag flag, int width, int height, FXMLLoader fxmlLoader) throws IOException
-    {
-        Parent root = fxmlLoader.load();
-        Stage stage = new Stage();
-        stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-        stage.setTitle(title);
-
-        if (width >= 0 && height >= 0)
-        {
-            stage.setScene(new Scene(root, width, height));
-        }
-        else
-        {
-            stage.setScene(new Scene(root));
-        }
-
-        stage.initOwner(this.window);
-
-        flag.set(true);
-        stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
-
-        return stage;
-    }
 
     private Stage makeStage(String title, Flag flag, int width, int height, FXMLLoader fxmlLoader) throws IOException
     {
@@ -639,12 +634,6 @@ public class MenubarController
         return makeStage(title, flag, -1, -1, fxmlLoader);
     }
 
-    private Stage makeStage(String title, Flag flag, String urlString) throws IOException
-    {
-        FXMLLoader fxmlLoader = getFXMLLoader(urlString);
-        return makeStage(title, flag, -1, -1, fxmlLoader);
-    }
-
     private <ControllerType> ControllerType makeWindow(String title, Flag flag, int width, int height, String urlString, Consumer<Stage> stageCallback) throws IOException
     {
         FXMLLoader fxmlLoader = getFXMLLoader(urlString);
@@ -662,43 +651,6 @@ public class MenubarController
         return fxmlLoader.getController();
     }
 
-    private <ControllerType> ControllerType makeWindow(String title, Flag flag, int width, int height, String urlString, Consumer<Stage> stageCallback) throws IOException
-    {
-        FXMLLoader fxmlLoader = getFXMLLoader(urlString);
-        Stage stage = makeStage(title, flag, width, height, fxmlLoader);
-
-        stage.setResizable(false);
-
-        if (stageCallback != null)
-        {
-            stageCallback.accept(stage);
-        }
-
-        stage.show();
-
-        return fxmlLoader.getController();
-    }
-
-    private Stage makeStage(String title, Flag flag, String urlString) throws IOException
-    {
-        URL url = MenubarController.class.getClassLoader().getResource(urlString);
-        if (url == null)
-        {
-            throw new FileNotFoundException(urlString);
-        }
-        FXMLLoader fxmlLoader = new FXMLLoader(url);
-        Parent root = fxmlLoader.load();
-        Stage stage = new Stage();
-        stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-        stage.setTitle(title);
-        stage.setScene(new Scene(root));
-        stage.initOwner(this.window);
-
-        flag.set(true);
-        stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
-
-        return stage;
-    }
 
     /**
      * This function is to allow the LoaderController to pass a call back to the ChunkViewerController.
@@ -750,6 +702,11 @@ public class MenubarController
                 handleException("An error occurred opening color checker window", e);
             }
         }
+    }
+
+    private <ControllerType> ControllerType makeWindow(String title, Flag flag, String urlString, Consumer<Stage> stageCallback) throws IOException
+    {
+        return makeWindow(title, flag, -1, -1, urlString, stageCallback);
     }
 
     public void lightCalibration()
