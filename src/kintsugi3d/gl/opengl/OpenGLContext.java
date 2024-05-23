@@ -251,10 +251,18 @@ public class OpenGLContext extends WindowContextBase<OpenGLContext>
 
     void bindUniformBufferToIndex(int bufferBindingIndex, OpenGLUniformBuffer buffer)
     {
-        glBindBufferBase(GL_UNIFORM_BUFFER, bufferBindingIndex, buffer.getBufferId());
-        errorCheck();
+        if (buffer.hasData())
+        {
+            glBindBufferBase(GL_UNIFORM_BUFFER, bufferBindingIndex, buffer.getBufferId());
+            errorCheck();
 
-        uniformBufferBindings.put(bufferBindingIndex, buffer);
+            uniformBufferBindings.put(bufferBindingIndex, buffer);
+        }
+        else
+        {
+            glBindBufferBase(GL_UNIFORM_BUFFER, bufferBindingIndex, 0);
+            errorCheck();
+        }
     }
 
     private static <T> void updateBindingsGeneric(Map<Integer, T> oldBindings, List<Optional<T>> newBindings,

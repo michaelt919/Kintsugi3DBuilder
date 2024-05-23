@@ -26,6 +26,7 @@ abstract class OpenGLBuffer implements ContextBound<OpenGLContext>, Resource
 
     private final int bufferId;
     private final int usage;
+    private boolean hasData = false;
     private boolean closed = false;
 
     OpenGLBuffer(OpenGLContext context, int usage)
@@ -49,25 +50,53 @@ abstract class OpenGLBuffer implements ContextBound<OpenGLContext>, Resource
 
     abstract int getBufferTarget();
 
+    boolean hasData()
+    {
+        return hasData;
+    }
+
     OpenGLBuffer setData(ByteBuffer data)
     {
-        glBindBuffer(this.getBufferTarget(), this.bufferId);
-        OpenGLContext.errorCheck();
-        glBufferData(this.getBufferTarget(), data, this.usage);
-        OpenGLContext.errorCheck();
+        if (data.remaining() > 0) // make sure there is actually data to set (lwjgl's glBufferData uses data.remaining() as the "size" parameter)
+        {
+            glBindBuffer(this.getBufferTarget(), this.bufferId);
+            OpenGLContext.errorCheck();
+            glBufferData(this.getBufferTarget(), data, this.usage);
+            OpenGLContext.errorCheck();
+
+            // fix for MacOS which segfaults if using a buffer with no data
+            hasData = true;
+        }
+
         return this;
     }
 
     void bind()
     {
-        glBindBuffer(this.getBufferTarget(), this.bufferId);
-        OpenGLContext.errorCheck();
+        if (hasData) // fix for MacOS which segfaults if using a buffer with no data
+        {
+            glBindBuffer(this.getBufferTarget(), this.bufferId);
+            OpenGLContext.errorCheck();
+        }
+        else
+        {
+            glBindBuffer(this.getBufferTarget(), 0);
+            OpenGLContext.errorCheck();
+        }
     }
 
     void bindToIndex(int index)
     {
-        glBindBufferBase(this.getBufferTarget(), index, this.bufferId);
-        OpenGLContext.errorCheck();
+        if (hasData) // fix for MacOS which segfaults if using a buffer with no data
+        {
+            glBindBufferBase(this.getBufferTarget(), index, this.bufferId);
+            OpenGLContext.errorCheck();
+        }
+        else
+        {
+            glBindBufferBase(this.getBufferTarget(), index, 0);
+            OpenGLContext.errorCheck();
+        }
     }
 
     @Override
@@ -78,6 +107,7 @@ abstract class OpenGLBuffer implements ContextBound<OpenGLContext>, Resource
             glDeleteBuffers(this.bufferId);
             OpenGLContext.errorCheck();
             closed = true;
+            hasData = false;
         }
     }
 }
