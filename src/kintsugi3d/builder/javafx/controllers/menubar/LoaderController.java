@@ -232,6 +232,7 @@ public class LoaderController implements Initializable
                 MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(viewSetCallback);
             }
 
+            //TODO: investigate why progress bar is not updated here
             new Thread(() ->
                     MultithreadModels.getInstance().getLoadingModel()
                             .loadAgisoftFromZIP(
