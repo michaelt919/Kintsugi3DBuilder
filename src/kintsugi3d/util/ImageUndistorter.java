@@ -30,7 +30,7 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
     private final VertexBuffer<ContextType> rect;
     private final Drawable<ContextType> drawable;
 
-    public ImageUndistorter(Context<ContextType> context) throws FileNotFoundException
+    public ImageUndistorter(Context<ContextType> context) throws IOException
     {
         this.context = context;
 

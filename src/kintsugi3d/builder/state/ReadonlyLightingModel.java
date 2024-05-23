@@ -20,6 +20,7 @@ public interface ReadonlyLightingModel
     ReadonlyLightWidgetModel getLightWidgetModel(int index);
 
     int getLightCount();
+    int getMaxLightCount();
     boolean isLightVisualizationEnabled(int index);
     boolean isLightWidgetEnabled(int index);
     boolean areLightWidgetsEthereal();

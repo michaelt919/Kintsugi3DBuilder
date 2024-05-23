@@ -24,7 +24,6 @@ public class LoadOptionsModelImpl implements LoadOptionsModel
     public final BooleanProperty mipmaps = new SimpleBooleanProperty(true);
     public final BooleanProperty compression = new SimpleBooleanProperty(true);
     public final BooleanProperty alpha = new SimpleBooleanProperty(true);
-    public final BooleanProperty icc = new SimpleBooleanProperty(true);
     public final BooleanProperty depthImages = new SimpleBooleanProperty(true);
     public final IntegerProperty depthWidth = new SimpleIntegerProperty(512);
     public final IntegerProperty depthHeight = new SimpleIntegerProperty(512);
@@ -54,12 +53,6 @@ public class LoadOptionsModelImpl implements LoadOptionsModel
     public boolean isAlphaRequested()
     {
         return alpha.get();
-    }
-
-    @Override
-    public boolean isICCTransformationRequested()
-    {
-        return icc.get();
     }
 
     @Override
@@ -114,12 +107,6 @@ public class LoadOptionsModelImpl implements LoadOptionsModel
     public void setCompressionRequested(boolean compressionRequested)
     {
         compression.setValue(compressionRequested);
-    }
-
-    @Override
-    public void setICCTransformationRequested(boolean iccTransformationRequested)
-    {
-        icc.setValue(iccTransformationRequested);
     }
 
     @Override

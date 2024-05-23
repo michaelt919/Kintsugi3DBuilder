@@ -62,7 +62,7 @@ public class TextureBlockResourceFactory<ContextType extends Context<ContextType
             log.warn("Incomplete cache; will try to rebuild.");
 
             // Try to reinitialize in case the cache was only partially complete.
-            imageCache.initialize();
+            imageCache.initialize(null); // no loading monitor for this edge case
 
             // If initialize() completed without exceptions, then createSampledResources() should work now.
             return createBlockResources(i, j);

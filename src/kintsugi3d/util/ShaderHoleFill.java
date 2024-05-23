@@ -14,6 +14,7 @@ package kintsugi3d.util;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import kintsugi3d.gl.core.*;
 
@@ -28,7 +29,7 @@ public class ShaderHoleFill<ContextType extends Context<ContextType>> implements
     // Drawable
     private final Drawable<ContextType> drawable;
 
-    public ShaderHoleFill(ContextType context) throws FileNotFoundException
+    public ShaderHoleFill(ContextType context) throws IOException
     {
         program = context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))

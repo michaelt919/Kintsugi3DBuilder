@@ -57,7 +57,7 @@ public interface ObservableIBRRequest extends IBRRequest
             }
 
             @Override
-            public void loadingFailed(Exception e)
+            public void loadingFailed(Throwable e)
             {
             }
         });

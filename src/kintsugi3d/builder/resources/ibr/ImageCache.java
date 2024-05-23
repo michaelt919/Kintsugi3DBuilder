@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.resources.ibr;
 
+import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.core.SimpleLoadOptionsModel;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryFramebuffer;
@@ -33,7 +34,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.stream.Collectors;
@@ -104,7 +107,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
      * As a side effect of this method, the context's state will have back face culling enabled,
      * @throws IOException
      */
-    public void initialize() throws IOException
+    public void initialize(LoadingMonitor callback) throws IOException
     {
         // Create directories to organize the cache
         sampledDir.mkdirs();
@@ -125,7 +128,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
                 .createFramebufferObject())
         {
             selectSampleLocations(fbo);
-            buildCache(fbo);
+            buildCache(fbo, callback);
         }
     }
 
@@ -195,9 +198,9 @@ public class ImageCache<ContextType extends Context<ContextType>>
         return new File(settings.getCacheDirectory(), "sampleLocations.txt");
     }
 
-    private void writeSampleLocationsToFile() throws FileNotFoundException
+    private void writeSampleLocationsToFile() throws IOException
     {
-        try(PrintStream out = new PrintStream(getSampleLocationsFile()))
+        try(PrintStream out = new PrintStream(getSampleLocationsFile(), StandardCharsets.UTF_8))
         {
             Arrays.stream(sampledPixelCoords)
                 .map(column -> Arrays.stream(column)
@@ -215,8 +218,10 @@ public class ImageCache<ContextType extends Context<ContextType>>
             log.warn("Thread interrupted", new Throwable("Thread interrupted"));
         }
 
-        try(Scanner scanner = new Scanner(getSampleLocationsFile()))
+        try(Scanner scanner = new Scanner(getSampleLocationsFile(), StandardCharsets.UTF_8))
         {
+            scanner.useLocale(Locale.US);
+
             // Loop over columns
             for (int i = 0; i < settings.getSampledSize(); i++)
             {
@@ -271,7 +276,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         }
     }
 
-    private void buildCache(Framebuffer<ContextType> fbo)
+    private void buildCache(Framebuffer<ContextType> fbo, LoadingMonitor callback)
         throws IOException
     {
         SimpleLoadOptionsModel loadOptions = new SimpleLoadOptionsModel();
@@ -290,9 +295,20 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
             log.info("Building cache...");
 
+            if (callback != null)
+            {
+                callback.setProgress(0.0);
+                callback.setMaximum(resources.getViewSet().getCameraPoseCount());
+            }
+
             // Loop over the images, processing each one at a time
             for (int k = 0; k < resources.getViewSet().getCameraPoseCount(); k++)
             {
+                if (callback != null)
+                {
+                    callback.setProgress(k);
+                }
+
                 try (SingleCalibratedImageResource<ContextType> image =
                     resources.createSingleImageResource(k,
                         resources.getViewSet().findFullResImageFile(k), // new File(originalImageDirectory, resources.viewSet.getImageFileName(k)),
@@ -409,7 +425,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
             log.warn("Incomplete cache; will try to rebuild.");
 
             // Try to reinitialize in case the cache was only partially complete.
-            this.initialize();
+            this.initialize(null); // no loading monitor for this edge case
 
             // If initialize() completed without exceptions, then createSampledResources() should work now.
             return createSampledResources();

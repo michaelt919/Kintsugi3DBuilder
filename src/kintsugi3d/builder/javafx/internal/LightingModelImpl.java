@@ -73,6 +73,12 @@ public final class LightingModelImpl extends ExtendedLightingModelBase<LightInst
     }
 
     @Override
+    public int getMaxLightCount()
+    {
+        return 4;
+    }
+
+    @Override
     public boolean isLightWidgetEnabled(int index)
     {
         LightGroupSetting activeLightGroup = getActiveLightGroupSetting();

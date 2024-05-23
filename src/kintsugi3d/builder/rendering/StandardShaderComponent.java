@@ -14,12 +14,15 @@ package kintsugi3d.builder.rendering;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import kintsugi3d.builder.core.CameraViewport;
 import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.rendering.components.ShaderComponent;
 import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -28,59 +31,75 @@ import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
 import kintsugi3d.util.ShadingParameterMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class StandardShader<ContextType extends Context<ContextType>> implements AutoCloseable
+public abstract class StandardShaderComponent<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
-    private final IBRResourcesImageSpace<ContextType> resources;
+    private static final Logger LOG = LoggerFactory.getLogger(StandardShaderComponent.class);
     private final LightingResources<ContextType> lightingResources;
-    private final SceneModel sceneModel;
 
-    private ProgramObject<ContextType> program;
+
+    protected final IBRResourcesImageSpace<ContextType> resources;
+
+    protected final SceneModel sceneModel;
+
+    private boolean lightCalibrationMode = false;
 
     // Set default shader to be the untextured IBR shader
-    private File fragmentShaderFile = new File(new File("shaders", "rendermodes"), "ibrUntextured.frag");
+    private File fragmentShaderFile;
 
-    public StandardShader(IBRResourcesImageSpace<ContextType> resources, LightingResources<ContextType> lightingResources,
-                          SceneModel sceneModel)
+
+    protected StandardShaderComponent(IBRResourcesImageSpace<ContextType> resources, SceneViewportModel sceneViewportModel, String sceneObjectTag,
+        SceneModel sceneModel, LightingResources<ContextType> lightingResources, File fragmentShaderFile)
     {
+        super(resources.getContext(), sceneViewportModel, sceneObjectTag);
         this.resources = resources;
         this.lightingResources = lightingResources;
         this.sceneModel = sceneModel;
+        this.fragmentShaderFile = fragmentShaderFile;
     }
 
-    public Program<ContextType> getProgram()
+    protected StandardShaderComponent(IBRResourcesImageSpace<ContextType> resources, SceneViewportModel sceneViewportModel, String sceneObjectTag,
+        SceneModel sceneModel, LightingResources<ContextType> lightingResources)
     {
-        return program;
+        this(resources, sceneViewportModel, sceneObjectTag, sceneModel, lightingResources,
+            new File(new File("shaders", "rendermodes"), "ibrUntextured.frag"));
     }
 
-    public void initialize() throws FileNotFoundException
+
+    @Override
+    protected ProgramObject<ContextType> createProgram(ContextType context) throws IOException
     {
-        if (this.program == null)
+        return loadMainProgram(getPreprocessorDefines());
+    }
+
+    @Override
+    public void update()
+    {
+        if (getDrawable() != null && getDrawable().program() != null)
         {
-            this.program = loadMainProgram(getPreprocessorDefines());
+            Map<String, Optional<Object>> defineMap = getPreprocessorDefines();
+
+            // Reloads shaders only if compiled settings have changed.
+            if (defineMap.entrySet().stream().anyMatch(
+                defineEntry -> !Objects.equals(getDrawable().program().getDefine(defineEntry.getKey()), defineEntry.getValue())))
+            {
+                LOG.info("Updating compiled render settings.");
+                reloadShaders();
+            }
         }
     }
 
-    public File getFragmentShaderFile()
+    public void useFragmentShader(File fragmentShaderFile)
     {
-        return fragmentShaderFile;
+        this.fragmentShaderFile = fragmentShaderFile;
+        reloadShaders();
     }
 
-    public void setFragmentShaderFile(File shaderFile)
+    public final File getFragmentShaderFile()
     {
-        this.fragmentShaderFile = shaderFile;
-    }
-
-    public void reload() throws FileNotFoundException
-    {
-        ProgramObject<ContextType> newProgram = loadMainProgram(getPreprocessorDefines());
-
-        if (this.program != null)
-        {
-            this.program.close();
-        }
-
-        this.program = newProgram;
+        return this.fragmentShaderFile;
     }
 
     private ProgramBuilder<ContextType> getProgramBuilder(Map<String, Optional<Object>> defineMap)
@@ -98,16 +117,16 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
         return programBuilder;
     }
 
-    private ProgramObject<ContextType> loadMainProgram(Map<String, Optional<Object>> defineMap) throws FileNotFoundException
+    private ProgramObject<ContextType> loadMainProgram(Map<String, Optional<Object>> defineMap) throws IOException
     {
         return this.getProgramBuilder(defineMap)
             .define("SPOTLIGHTS_ENABLED", true)
             .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-            .addShader(ShaderType.FRAGMENT, this.fragmentShaderFile)
+            .addShader(ShaderType.FRAGMENT, fragmentShaderFile)
             .createProgram();
     }
 
-    public Map<String, Optional<Object>> getPreprocessorDefines()
+    private Map<String, Optional<Object>> getPreprocessorDefines()
     {
         Map<String, Optional<Object>> defineMap = new HashMap<>(256);
 
@@ -147,7 +166,7 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
 
             boolean occlusionEnabled = this.sceneModel.getSettingsModel().getBoolean("occlusionEnabled")
                 && (this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
-                || sceneModel.getSettingsModel().getBoolean("lightCalibrationMode")
+                || lightCalibrationMode
                 || this.sceneModel.getSettingsModel().get("weightMode", ShadingParameterMode.class) != ShadingParameterMode.UNIFORM);
 
             defineMap.put("VISIBILITY_TEST_ENABLED", Optional.of(occlusionEnabled && this.resources.depthTextures != null));
@@ -156,10 +175,10 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
 
             defineMap.put("PRECOMPUTED_VIEW_WEIGHTS_ENABLED",
                 Optional.of(!this.sceneModel.getSettingsModel().getBoolean("relightingEnabled")
-                        && !sceneModel.getSettingsModel().getBoolean("lightCalibrationMode")
+                        && !lightCalibrationMode
                     && this.sceneModel.getSettingsModel().get("weightMode", ShadingParameterMode.class) == ShadingParameterMode.UNIFORM));
 
-            if (sceneModel.getSettingsModel().getBoolean("lightCalibrationMode"))
+            if (lightCalibrationMode)
             {
                 defineMap.put("USE_VIEW_INDICES", Optional.of(true));
                 defineMap.put("VIEW_COUNT", Optional.of(1));
@@ -177,12 +196,12 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
         return defineMap;
     }
 
-    public void setup()
+    protected void setupShader(CameraViewport cameraViewport)
     {
-        setup(sceneModel.getUnscaledMatrix(sceneModel.getObjectModel().getTransformationMatrix()).times(sceneModel.getBaseModelMatrix()));
+        setupShader(cameraViewport, sceneModel.getFullModelMatrix());
     }
 
-    public void setup(Matrix4 model)
+    protected void setupShader(CameraViewport cameraViewport, Matrix4 model)
     {
         setupUnlit(model);
 
@@ -199,12 +218,24 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
                 resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex())
                     .times(Objects.requireNonNull(resources.getGeometry()).getCentroid().asPosition())
                     .getXYZ().length();
-            program.setUniform("lightIntensityVirtual[" + lightIndex + ']',
+            getDrawable().program().setUniform("lightIntensityVirtual[" + lightIndex + ']',
                 controllerLightIntensity.times(lightDistance * lightDistance * resources.getViewSet().getLightIntensity(0).y / (lightScale * lightScale)));
 
 
-            setupLight(program, lightIndex, lightViewMatrix.times(model));
+            setupLight(getDrawable().program(), lightIndex, lightViewMatrix.times(model));
         }
+
+        Matrix4 modelView = cameraViewport.getView().times(model);
+        setupModelView(getDrawable().program(), modelView);
+
+        getDrawable().program().setUniform("projection", cameraViewport.getViewportProjection());
+        getDrawable().program().setUniform("fullProjection", cameraViewport.getFullProjection());
+    }
+
+    protected void setupModelView(Program<ContextType> p, Matrix4 modelView)
+    {
+        p.setUniform("model_view", modelView);
+        p.setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());
     }
 
     private void setupLight(Program<ContextType> program, int lightIndex, Matrix4 lightMatrix)
@@ -226,8 +257,10 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
         program.setUniform("lightSpotTaperVirtual[" + lightIndex + ']', sceneModel.getLightingModel().getLightPrototype(lightIndex).getSpotTaper());
     }
 
-    public void setupUnlit(Matrix4 model)
+    private void setupUnlit(Matrix4 model)
     {
+        Program<ContextType> program = getDrawable().program();
+
         this.resources.setupShaderProgram(program);
 
         program.setUniform("weightExponent", this.sceneModel.getSettingsModel().getFloat("weightExponent"));
@@ -270,13 +303,13 @@ public class StandardShader<ContextType extends Context<ContextType>> implements
             sceneModel.getLightingModel().getAmbientLightColor().applyOperator(x -> Math.pow(x, gamma)));
     }
 
-    @Override
-    public void close()
+    public boolean isLightCalibrationMode()
     {
-        if (program != null)
-        {
-            program.close();
-            program = null;
-        }
+        return lightCalibrationMode;
+    }
+
+    public void setLightCalibrationMode(boolean lightCalibrationMode)
+    {
+        this.lightCalibrationMode = lightCalibrationMode;
     }
 }

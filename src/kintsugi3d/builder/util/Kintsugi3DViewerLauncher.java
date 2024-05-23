@@ -19,6 +19,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -49,6 +50,12 @@ public class Kintsugi3DViewerLauncher
             executable = getExecFromDirectory(new File("."));
         }
 
+        if (executable.isEmpty())
+        {
+            // Try to get up to Applications directory on MacOS.
+            executable = getExecFromDirectory(new File("../../.."));
+        }
+
         return executable;
     }
 
@@ -77,7 +84,7 @@ public class Kintsugi3DViewerLauncher
         Process reg = builder.start();
         Optional<String> key;
         try (BufferedReader output = new BufferedReader(
-                new InputStreamReader(reg.getInputStream()))) {
+                new InputStreamReader(reg.getInputStream(), StandardCharsets.UTF_8))) {
 
             Stream<String> keys = output.lines().filter(l -> !l.isEmpty());
             Stream<String> matches = keys.filter(l -> l.contains("Install_Dir"));

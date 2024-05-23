@@ -30,6 +30,7 @@ import java.awt.Desktop;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
@@ -72,7 +73,7 @@ public class PLY_Plotly
 
   public static void Scatter3d_write( String title, PLY ply, OutputStream out ) throws IOException
   {
-    OutputStreamWriter writer = new OutputStreamWriter(out);
+    OutputStreamWriter writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
     writer.write( Scatter3d_html(title,ply).toString() );
     writer.flush();
   }
@@ -263,7 +264,7 @@ public class PLY_Plotly
 
   public static void Mesh3d_write( String title, PLY ply, OutputStream out ) throws IOException
   {
-    OutputStreamWriter writer = new OutputStreamWriter(out);
+    OutputStreamWriter writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
     writer.write( Mesh3d_html(title,ply).toString() );
     writer.flush();
   }

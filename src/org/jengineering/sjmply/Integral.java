@@ -23,6 +23,7 @@ import static java.lang.Math.subtractExact;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 /** Parser for decimal integer numbers.
  *  
@@ -45,7 +46,7 @@ class Integral
 
   static long read( String str ) throws IOException
   {
-    return read( new ByteArrayInputStream( str.getBytes() ) );
+    return read( new ByteArrayInputStream( str.getBytes(StandardCharsets.UTF_8) ) );
   }
 
   static long read( InputStream in ) throws IOException

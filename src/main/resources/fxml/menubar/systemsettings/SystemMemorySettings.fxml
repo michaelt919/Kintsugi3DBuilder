@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-
 <!--
   ~ Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
   ~ Copyright (c) 2019 The Regents of the University of Minnesota
@@ -16,6 +12,9 @@
   ~
   -->
 
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <AnchorPane styleClass="anchor-pane" fx:id="root" prefHeight="151.0" prefWidth="200.0" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemMemoryController">
    <FlowPane hgap="10.0" prefWidth="200.0" vgap="10.0">
       <padding>

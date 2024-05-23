@@ -30,7 +30,7 @@ public class WeightImageCreator<ContextType extends Context<ContextType>> implem
     private final Drawable<ContextType> drawable;
     private final FramebufferObject<ContextType> framebuffer;
 
-    public WeightImageCreator(ContextType context, TextureResolution resolution, int weightsPerImage) throws FileNotFoundException
+    public WeightImageCreator(ContextType context, TextureResolution resolution, int weightsPerImage) throws IOException
     {
         this.weightsPerImage = weightsPerImage;
 

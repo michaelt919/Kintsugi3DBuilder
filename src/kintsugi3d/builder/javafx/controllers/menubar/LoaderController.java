@@ -12,6 +12,16 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar;
 
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.ResourceBundle;
+import java.util.function.BiConsumer;
+import java.util.stream.IntStream;
+
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -22,6 +32,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.*;
@@ -33,21 +44,19 @@ import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
+import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
+import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.io.*;
+import java.io.File;
 import java.net.URL;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class LoaderController implements Initializable
 {
@@ -57,6 +66,7 @@ public class LoaderController implements Initializable
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
     @FXML private Text loadCheckImages;
+    //@FXML private VBox root;
     @FXML private Text loadCheckPLY;
     @FXML private Text loadCheckMeta;
     @FXML private GridPane root;
@@ -195,6 +205,7 @@ public class LoaderController implements Initializable
     @FXML
     private void photoDirectorySelect()
     {
+
         File temp = photoDirectoryChooser.showDialog(getStage());
 
         if (temp != null)
@@ -256,7 +267,7 @@ public class LoaderController implements Initializable
                                 primaryViewChoiceBox.getSelectionModel().getSelectedItem()
                             )
             ).start();
-
+            WelcomeWindowController.getInstance().hideWelcomeWindow();
             close();
         }
         else{
@@ -310,7 +321,7 @@ public class LoaderController implements Initializable
     }
 
     @FXML
-    public void metaSelect(ActionEvent actionEvent) throws IOException{
+    public void metaSelect(ActionEvent actionEvent) throws IOException {
         //get FXML URLs
         String menuBarFXMLFileName = "fxml/menubar/MenuBar.fxml";
         URL menuBarURL = getClass().getClassLoader().getResource(menuBarFXMLFileName);

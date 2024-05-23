@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Objects;
 
 public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
@@ -46,7 +47,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
 
     public FinalDiffuseOptimization(ReadonlyIBRResources<ContextType> resources,
         SpecularFitProgramFactory<ContextType> programFactory, TextureResolution settings, boolean includeConstant)
-        throws FileNotFoundException
+        throws IOException
     {
         this.context = resources.getContext();
         this.estimationProgram = includeConstant ? createDiffuseTranslucentEstimationProgram(resources, programFactory)
@@ -105,7 +106,7 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
             // Fill holes
             finalDiffuse = holeFill.execute(framebuffer, framebuffer2);
         }
-        catch (FileNotFoundException e)
+        catch (IOException e)
         {
             log.error("An error occurred while filling holes:", e);
         }
@@ -157,14 +158,14 @@ public class FinalDiffuseOptimization<ContextType extends Context<ContextType>> 
 
     private static <ContextType extends Context<ContextType>>
     ProgramObject<ContextType> createDiffuseEstimationProgram(
-            ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
+            ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
     {
         return programFactory.createProgram(resources,
             new File("shaders/common/texspace_dynamic.vert"), new File("shaders/specularfit/estimateDiffuse.frag"));
     }
     private static <ContextType extends Context<ContextType>>
     ProgramObject<ContextType> createDiffuseTranslucentEstimationProgram(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
+        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
     {
         return programFactory.createProgram(resources,
             new File("shaders/common/texspace_dynamic.vert"), new File("shaders/specularfit/estimateDiffuseTranslucent.frag"));

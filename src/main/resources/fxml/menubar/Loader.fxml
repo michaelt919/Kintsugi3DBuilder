@@ -139,37 +139,7 @@
         </HBox>
         </children>
         <padding>
-        <Insets bottom="6.0" left="6.0" right="6.0" top="6.0" />
+        <Insets bottom="6.0" left="6.0" right="6.0" top="6.0"/>
         </padding>
     </HBox>
-
-
-    <!--    Testing PLY    -->
-    <Button mnemonicParsing="false" onAction="#plySelect" text="PLY" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER">
-      <font>
-         <Font size="18.0" />
-      </font>
-   </Button>
-   <Text fx:id="loadCheckPLY" fill="RED" strokeType="OUTSIDE" strokeWidth="0.0" text="Test" textAlignment="CENTER" GridPane.columnIndex="2" GridPane.rowIndex="1">
-      <font>
-         <Font name="Monospaced Bold" size="28.0" />
-      </font>
-   </Text>
-   <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text" text="PLY Test&#10;" textAlignment="CENTER" wrappingWidth="115.20001220703125" GridPane.columnIndex="2" GridPane.rowIndex="3">
-      <font>
-         <Font name="Monospaced Regular" size="14.0" />
-      </font>
-   </Text>
-   <Button mnemonicParsing="false" onAction="#metaSelect" text="Meta" GridPane.columnIndex="2">
-      <font>
-         <Font size="18.0" />
-      </font>
-   </Button>
-   <Text fx:id="loadCheckMeta" fill="RED" strokeType="OUTSIDE" strokeWidth="0.0" text="Metashape" textAlignment="CENTER" GridPane.columnIndex="1">
-      <font>
-         <Font name="Monospaced Bold" size="28.0" />
-      </font>
-   </Text>
-
-
 </GridPane>

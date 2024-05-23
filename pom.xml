@@ -14,11 +14,29 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>Kintsugi3D</groupId>
     <artifactId>Kintsugi3DBuilder</artifactId>
-    <version>0.3.14</version>
+    <version>0.3.20</version>
     <packaging>jar</packaging>
     <build>
         <sourceDirectory>src</sourceDirectory>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.12</version>
+                <executions>
+                    <execution>
+                        <id>timestamp-property</id>
+                        <goals>
+                            <goal>timestamp-property</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <name>current.year</name>
+                            <pattern>yyyy</pattern>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -119,6 +137,18 @@
                             </descriptors>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>build-dist-macos</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/distribution-macos.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -144,6 +174,24 @@
                 </executions>
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/kintsugi3d-builder-about.txt</include>
+                    <include>**/Info.plist</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>**/kintsugi3d-builder-about.txt</exclude>
+                    <exclude>**/Info.plist</exclude>
+                </excludes>
+            </resource>
+        </resources>
     </build>
     <properties>
         <lwjgl.version>3.3.3</lwjgl.version>

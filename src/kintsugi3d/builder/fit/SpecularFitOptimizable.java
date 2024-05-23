@@ -65,7 +65,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
         SpecularBasisSettings specularBasisSettings, SpecularFitProgramFactory<ContextType> programFactory,
         TextureResolution textureResolution, float gamma,
         NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
-        throws FileNotFoundException
+        throws IOException
     {
         super(basisResources, basisResourcesOwned, textureResolution);
         this.context = resources.getContext();
@@ -99,7 +99,7 @@ public final class SpecularFitOptimizable<ContextType extends Context<ContextTyp
     public static <ContextType extends Context<ContextType>> SpecularFitOptimizable<ContextType> createNew(
         ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory, TextureResolution textureResolution,
         float gamma, SpecularBasisSettings specularBasisSettings, NormalOptimizationSettings normalOptimizationSettings, boolean includeConstantTerm)
-        throws FileNotFoundException
+        throws IOException
     {
         return new SpecularFitOptimizable<>(resources,
             new BasisResources<>(resources.getContext(), specularBasisSettings.getBasisCount(), specularBasisSettings.getBasisResolution()),

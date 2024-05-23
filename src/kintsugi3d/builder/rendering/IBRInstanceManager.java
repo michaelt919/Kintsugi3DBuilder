@@ -26,21 +26,19 @@ import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
+import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
-import kintsugi3d.builder.state.ReadonlyCameraModel;
-import kintsugi3d.builder.state.ReadonlyLightingModel;
-import kintsugi3d.builder.state.ReadonlyObjectModel;
-import kintsugi3d.builder.state.ReadonlySettingsModel;
+import kintsugi3d.builder.state.*;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Framebuffer;
 import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.gl.interactive.InteractiveRenderable;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.util.AbstractImage;
+import kintsugi3d.util.EncodableColorImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,12 +58,15 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     private ReadonlyCameraModel cameraModel;
     private ReadonlyLightingModel lightingModel;
     private ReadonlySettingsModel settingsModel;
+    private CameraViewListModel cameraViewListModel;
 
     private final List<Consumer<ViewSet>> viewSetLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>());
 
     private final List<Consumer<IBRInstance<ContextType>>> instanceLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>());
+
+    private File loadedProjectFile;
 
     /**
      * Adds callbacks that will be invoked when the view set has finished loading (but before the GPU resources are loaded).
@@ -122,6 +123,18 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         return loadedViewSet;
     }
 
+    @Override
+    public File getLoadedProjectFile()
+    {
+        return loadedProjectFile;
+    }
+
+    @Override
+    public void setLoadedProjectFile(File loadedProjectFile)
+    {
+        this.loadedProjectFile = loadedProjectFile;
+    }
+
     private void invokeViewSetLoadCallbacks(ViewSet viewSet)
     {
         synchronized (viewSetLoadCallbacks)
@@ -140,6 +153,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     private void loadInstance(String id, Builder<ContextType> builder)
     {
         loadedViewSet = builder.getViewSet();
+
+        MultithreadModels.getInstance().getCameraViewListModel().setCameraViewList(loadedViewSet.getImageFileNames());
 
         // Invoke callbacks now that view set is loaded
         invokeViewSetLoadCallbacks(loadedViewSet);
@@ -161,6 +176,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         newItem.getSceneModel().setCameraModel(this.cameraModel);
         newItem.getSceneModel().setLightingModel(this.lightingModel);
         newItem.getSceneModel().setSettingsModel(this.settingsModel);
+        newItem.getSceneModel().setCameraViewListModel(this.cameraViewListModel);
 
         newItem.setLoadingMonitor(new LoadingMonitor()
         {
@@ -207,7 +223,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             }
 
             @Override
-            public void loadingFailed(Exception e)
+            public void loadingFailed(Throwable e)
             {
                 if (loadingMonitor != null)
                 {
@@ -216,7 +232,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             }
 
             @Override
-            public void loadingWarning(Exception e)
+            public void loadingWarning(Throwable e)
             {
                 if (loadingMonitor != null)
                 {
@@ -272,6 +288,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         ReadonlyLoadOptionsModel loadOptions)
     {
         this.loadingMonitor.startLoading();
+
         try
         {
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
@@ -292,7 +309,10 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     @Override
     public void requestFragmentShader(File shaderFile)
     {
-        ibrInstance.getDynamicResourceManager().requestFragmentShader(shaderFile);
+        if (ibrInstance != null)
+        {
+            ibrInstance.getDynamicResourceManager().requestFragmentShader(shaderFile);
+        }
     }
 
     public IBRInstance<ContextType> getLoadedInstance()
@@ -309,24 +329,45 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     @Override
     public DoubleUnaryOperator getLuminanceEncodingFunction()
     {
-        return ibrInstance.getActiveViewSet().getLuminanceEncoding().encodeFunction;
+        if (ibrInstance != null)
+        {
+            return ibrInstance.getActiveViewSet().getLuminanceEncoding().encodeFunction;
+        }
+        else
+        {
+            // Default if no instance is loaded.
+            return new SampledLuminanceEncoding(2.2f).encodeFunction;
+        }
     }
 
     @Override
     public void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
     {
-        ibrInstance.getDynamicResourceManager().setTonemapping(linearLuminanceValues, encodedLuminanceValues);
+        if (ibrInstance != null)
+        {
+            ibrInstance.getDynamicResourceManager().setTonemapping(linearLuminanceValues, encodedLuminanceValues);
+        }
     }
 
     @Override
     public void applyLightCalibration()
     {
-        ReadonlyViewSet viewSet = ibrInstance.getIBRResources().getViewSet();
+        if (ibrInstance != null)
+        {
+            ReadonlyViewSet viewSet = ibrInstance.getIBRResources().getViewSet();
 
-        ibrInstance.getDynamicResourceManager().setLightCalibration(
-            viewSet.getLightPosition(viewSet.getLightIndex(viewSet.getPrimaryViewIndex()))
-                .plus(ibrInstance.getSceneModel().getSettingsModel().get("currentLightCalibration", Vector2.class)
-                        .asVector3()));
+            ibrInstance.getDynamicResourceManager().setLightCalibration(
+                ibrInstance.getSceneModel().getSettingsModel().get("currentLightCalibration", Vector2.class).asVector3());
+        }
+    }
+
+    public void setCameraViewListModel(CameraViewListModel cameraViewListModel)
+    {
+        this.cameraViewListModel = cameraViewListModel;
+        if (ibrInstance != null)
+        {
+            ibrInstance.getSceneModel().setCameraViewListModel(cameraViewListModel);
+        }
     }
 
     public void setObjectModel(ReadonlyObjectModel objectModel)
@@ -366,7 +407,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public Optional<AbstractImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
+    public Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
     {
         return ibrInstance.getDynamicResourceManager().loadEnvironmentMap(environmentMapFile);
     }
@@ -424,6 +465,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     public void unload()
     {
         unloadRequested = true;
+        loadedProjectFile = null;
     }
 
     @Override

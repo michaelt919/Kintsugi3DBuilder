@@ -517,16 +517,16 @@ public class EyedropperController implements Initializable {
         //check to see if all text fields contain valid input, and model is loaded
         if(areAllFieldsValid() && hasGoodLoadingModel()) {
             ioModel.setTonemapping(
-                    new double[]{0.031, 0.090, 0.198, 0.362, 0.591, 0.900},
-                    new byte[]
-                            {
-                                    (byte) Integer.parseInt(txtField1.getText()),
-                                    (byte) Integer.parseInt(txtField2.getText()),
-                                    (byte) Integer.parseInt(txtField3.getText()),
-                                    (byte) Integer.parseInt(txtField4.getText()),
-                                    (byte) Integer.parseInt(txtField5.getText()),
-                                    (byte) Integer.parseInt(txtField6.getText())
-                            });
+                new double[]{0.031, 0.090, 0.198, 0.362, 0.591, 0.900},
+                new byte[]
+                {
+                    (byte) Integer.parseInt(txtField1.getText()),
+                    (byte) Integer.parseInt(txtField2.getText()),
+                    (byte) Integer.parseInt(txtField3.getText()),
+                    (byte) Integer.parseInt(txtField4.getText()),
+                    (byte) Integer.parseInt(txtField5.getText()),
+                    (byte) Integer.parseInt(txtField6.getText())
+                });
             //Note(ZC): Try Adding the code to save the file here, right after the color calibration
             //NOte(ZC): Save the file into main project file (double check on where exactly in the files we want this saved)
         }

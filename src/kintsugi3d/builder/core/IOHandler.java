@@ -23,11 +23,16 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
+import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.util.EncodableColorImage;
+
 public interface IOHandler
 {
     boolean isInstanceLoaded();
     void addViewSetLoadCallback(Consumer<ViewSet> callback);
     ViewSet getLoadedViewSet();
+    File getLoadedProjectFile();
+    void setLoadedProjectFile(File loadedProjectFile);
     void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions);
     void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory,
         String primaryViewName, ReadonlyLoadOptionsModel loadOptions);
@@ -35,7 +40,7 @@ public interface IOHandler
 
     void requestFragmentShader(File shaderFile);
 
-    Optional<AbstractImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException;
+    Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException;
     void loadBackplate(File backplateFile) throws FileNotFoundException;
 
     void saveToVSETFile(File vsetFile) throws IOException;
@@ -50,5 +55,4 @@ public interface IOHandler
     DoubleUnaryOperator getLuminanceEncodingFunction();
     void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues);
     void applyLightCalibration();
-
 }

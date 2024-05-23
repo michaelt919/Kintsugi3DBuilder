@@ -43,6 +43,12 @@ public class WelcomeWindowController
     private final Flag colorCheckerWindowOpen = new Flag(false);
     private final Flag unzipperOpen = new Flag(false);
 
+    private static WelcomeWindowController INSTANCE;
+    public static WelcomeWindowController getInstance()
+    {
+        return INSTANCE;
+    }
+
 
     @FXML private ProgressBar progressBar;
 
@@ -54,11 +60,13 @@ public class WelcomeWindowController
     private Window parentWindow;
 
     private Runnable userDocumentationHandler;
+    private Stage window;
 
     public <ContextType extends Context<ContextType>> void init(
             Stage injectedStage, IBRRequestManager<ContextType> requestQueue, InternalModels injectedInternalModels,
             Runnable injectedUserDocumentationHandler) {
         this.parentWindow = injectedStage.getOwner();
+        this.window = injectedStage;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
 
         RecentProjects.initializeWelcomeWindowController(this);
@@ -102,6 +110,8 @@ public class WelcomeWindowController
 //                loadingComplete();
 //            }
 //        });
+
+        INSTANCE = this;
     }
 
     public void updateRecentProjectsButton() {
@@ -143,13 +153,17 @@ public class WelcomeWindowController
         {
             ProjectIO.getInstance().createProjectNew(parentWindow);
             updateRecentProjectsButton();
+
         }
     }
 
     @FXML
     private void file_openProject()//TODO: CHANGE NAMING CONVENTION? (file_...)
     {
+
         ProjectIO.getInstance().openProjectWithPrompt(parentWindow);
+        hideWelcomeWindow();
+
     }
 
     @FXML
@@ -160,11 +174,11 @@ public class WelcomeWindowController
     }
 
     //TODO: HIDE WELCOME WINDOW WHEN A PROJECT IS MADE/OPENED
-//    public void hideWelcomeWindow(){
-//        stage.hide();
-//    }
+    public void hideWelcomeWindow(){
+        window.close();
+    }
 //    public void showWelcomeWindow(){
-//        stage.show();
+//        window.show();
 //    }
 //
 

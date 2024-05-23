@@ -18,6 +18,7 @@ import kintsugi3d.gl.vecmath.Vector3;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 
 public final class ViewSetWriterToVSET implements ViewSetWriter
 {
@@ -36,7 +37,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
     public void writeToStream(ReadonlyViewSet viewSet, OutputStream outputStream)
     {
 
-        PrintStream out = new PrintStream(outputStream);
+        PrintStream out = new PrintStream(outputStream, false, StandardCharsets.UTF_8);
         out.println("# Created by Kintsugi 3D Builder");
 
         out.println();

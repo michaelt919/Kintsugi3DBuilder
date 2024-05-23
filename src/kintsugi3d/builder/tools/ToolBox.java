@@ -80,7 +80,13 @@ public final class ToolBox
         }
         catch(RuntimeException e)
         {
-            log.error("An error occurred handling scroll event:", e);
+            log.error("An error occurred handling scroll event", e);
+        }
+        catch (Error e)
+        {
+            log.error("An error occurred handling scroll event", e);
+            //noinspection ProhibitedExceptionThrown
+            throw e;
         }
     }
 
@@ -100,7 +106,13 @@ public final class ToolBox
         }
         catch(RuntimeException e)
         {
-            log.error("Error handling event:", e);
+            log.error("Error handling event", e);
+        }
+        catch (Error e)
+        {
+            log.error("Error handling event", e);
+            //noinspection ProhibitedExceptionThrown
+            throw e;
         }
     }
 
@@ -117,7 +129,13 @@ public final class ToolBox
         }
         catch(RuntimeException e)
         {
-            log.error("Error handling event:", e);
+            log.error("Error handling event", e);
+        }
+        catch (Error e)
+        {
+            log.error("Error handling event", e);
+            //noinspection ProhibitedExceptionThrown
+            throw e;
         }
     }
 
@@ -140,7 +158,13 @@ public final class ToolBox
             }
             catch (RuntimeException e)
             {
-                log.error("Error handling event:", e);
+                log.error("Error handling event", e);
+            }
+            catch (Error e)
+            {
+                log.error("Error handling event", e);
+                //noinspection ProhibitedExceptionThrown
+                throw e;
             }
         }
     }
@@ -167,7 +191,13 @@ public final class ToolBox
         }
         catch (RuntimeException e)
         {
-            log.error("Error handling event:", e);
+            log.error("Error handling event", e);
+        }
+        catch (Error e)
+        {
+            log.error("Error handling event", e);
+            //noinspection ProhibitedExceptionThrown
+            throw e;
         }
     }
 

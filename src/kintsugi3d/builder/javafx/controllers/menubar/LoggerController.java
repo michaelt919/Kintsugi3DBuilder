@@ -21,8 +21,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,9 +37,9 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 
-public class ConsoleController implements Initializable
+public class LoggerController implements Initializable
 {
-    private static final Logger log = LoggerFactory.getLogger(ConsoleController.class);
+    private static final Logger log = LoggerFactory.getLogger(LoggerController.class);
 
     @FXML private ToggleButton toggleButtonPause;
     @FXML private ToggleButton toggleButtonError;

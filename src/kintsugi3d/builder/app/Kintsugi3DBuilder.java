@@ -24,7 +24,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 
 public final class Kintsugi3DBuilder
 {
@@ -36,6 +38,9 @@ public final class Kintsugi3DBuilder
 
     public static void main(String... args) throws IOException, InitializationException
     {
+        // TODO: temp fix to make file I/O work as expected in an internationalized context
+        Locale.setDefault(Locale.US);
+
         // Dynamically set the log directory based on the OS before instantiating a logger
         if (System.getProperty("Kintsugi3D.logDir") == null)
         {
@@ -80,7 +85,7 @@ public final class Kintsugi3DBuilder
         {
             try (FileOutputStream standardErr = new FileOutputStream(
                 new File(ApplicationFolders.getLogFileDirectory().toAbsolutePath().toFile(), "Kintsugi3DBuilder-standard-error.log"));
-                PrintStream err = new PrintStream(standardErr))
+                PrintStream err = new PrintStream(standardErr, false, StandardCharsets.UTF_8))
             {
                 System.setErr(err);
 
@@ -96,7 +101,7 @@ public final class Kintsugi3DBuilder
         {
             try (FileOutputStream standardErr = new FileOutputStream(
                     new File(ApplicationFolders.getLogFileDirectory().toAbsolutePath().toFile(), "Kintsugi3DBuilder-standard-error.log"));
-                 PrintStream err = new PrintStream(standardErr))
+                 PrintStream err = new PrintStream(standardErr, false, StandardCharsets.UTF_8))
             {
                 System.setErr(err);
 

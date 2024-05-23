@@ -15,11 +15,10 @@ package kintsugi3d.builder.core;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.core.FramebufferSize;
+import kintsugi3d.gl.core.Resource;
 import kintsugi3d.gl.vecmath.Matrix4;
 
-import java.io.IOException;
-
-public interface RenderedComponent<ContextType extends Context<ContextType>> extends AutoCloseable
+public interface RenderedComponent<ContextType extends Context<ContextType>> extends Resource
 {
     void initialize();
 
@@ -40,7 +39,19 @@ public interface RenderedComponent<ContextType extends Context<ContextType>> ext
     default void draw(FramebufferObject<ContextType> framebuffer, Matrix4 view, Matrix4 projection)
     {
         FramebufferSize size = framebuffer.getSize();
-        draw(framebuffer, new CameraViewport(view, projection, projection, 0, 0, size.width, size.height));
+        draw(framebuffer, new CameraViewport(view, projection, Matrix4.IDENTITY, 0, 0, size.width, size.height));
+    }
+
+    static Matrix4 getViewportCrop(
+        float x, float y, float effectiveWidth, float effectiveHeight, float fullWidth, float fullHeight)
+    {
+        float scaleX = fullWidth / effectiveWidth;
+        float scaleY = fullHeight / effectiveHeight;
+        float centerX = (2 * x + effectiveWidth - fullWidth) / fullWidth;
+        float centerY = (2 * y + effectiveHeight - fullHeight) / fullHeight;
+
+        return Matrix4.scale(scaleX, scaleY, 1.0f)
+            .times(Matrix4.translate(-centerX, -centerY, 0));
     }
 
     /**
@@ -60,19 +71,14 @@ public interface RenderedComponent<ContextType extends Context<ContextType>> ext
                 int effectiveWidth = Math.min(subdivWidth, cameraViewport.getWidth() - x);
                 int effectiveHeight = Math.min(subdivHeight, cameraViewport.getHeight() - y);
 
-                float scaleX = (float)cameraViewport.getWidth() / (float)effectiveWidth;
-                float scaleY = (float)cameraViewport.getHeight() / (float)effectiveHeight;
-                float centerX = (2 * x + effectiveWidth - cameraViewport.getWidth()) / (float)cameraViewport.getWidth();
-                float centerY = (2 * y + effectiveHeight - cameraViewport.getHeight()) / (float)cameraViewport.getHeight();
-
-                Matrix4 viewportProjection = Matrix4.scale(scaleX, scaleY, 1.0f)
-                        .times(Matrix4.translate(-centerX, -centerY, 0))
-                        .times(cameraViewport.getViewportProjection());
+                Matrix4 viewportCrop =
+                    getViewportCrop(x, y, effectiveWidth, effectiveHeight, cameraViewport.getWidth(), cameraViewport.getHeight())
+                        .times(cameraViewport.getViewportCrop());
 
                 // Render to off-screen buffer
                 this.draw(framebuffer,
                     new CameraViewport(cameraViewport.getView(), cameraViewport.getFullProjection(),
-                        viewportProjection, x, y, effectiveWidth, effectiveHeight));
+                        viewportCrop, x, y, effectiveWidth, effectiveHeight));
 
                 // Flush to prevent timeout
                 framebuffer.getContext().flush();
@@ -93,6 +99,6 @@ public interface RenderedComponent<ContextType extends Context<ContextType>> ext
     {
         FramebufferSize size = framebuffer.getSize();
         drawInSubdivisions(framebuffer, subdivWidth, subdivHeight,
-            new CameraViewport(view, projection, projection, 0, 0, size.width, size.height));
+            new CameraViewport(view, projection, Matrix4.IDENTITY, 0, 0, size.width, size.height));
     }
 }

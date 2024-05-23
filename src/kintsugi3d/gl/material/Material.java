@@ -14,6 +14,7 @@ package kintsugi3d.gl.material;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import org.slf4j.Logger;
@@ -82,8 +83,10 @@ public class Material implements ReadonlyMaterial
 
         if (mtlFile.exists())
         {
-            try(Scanner scanner = new Scanner(mtlFile))
+            try(Scanner scanner = new Scanner(mtlFile, StandardCharsets.UTF_8))
             {
+                scanner.useLocale(Locale.US);
+
                 while(scanner.hasNext())
                 {
                     String id = scanner.next();

@@ -1,3 +1,5 @@
+#version 330
+
 /*
  * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
@@ -10,13 +12,26 @@
  *
  */
 
-package kintsugi3d.util;
+uniform int objectID;
+uniform sampler2D grayscaleTex;
+uniform vec3 color;
 
-import kintsugi3d.gl.vecmath.DoubleVector4;
+in vec3 fPosition;
 
-public interface AbstractImage
+layout(location = 0) out vec4 fragColor;
+layout(location = 1) out int fragObjectID;
+
+void main()
 {
-    int getWidth();
-    int getHeight();
-    DoubleVector4 getRGBA(int x, int y);
+    float intensity = texture(grayscaleTex, fPosition.xy / 2 + vec2(0.5))[0];
+
+    if (intensity == 0.0)
+    {
+        discard;
+    }
+    else
+    {
+        fragColor = vec4(color * intensity, 1.0);
+        fragObjectID = objectID;
+    }
 }

@@ -12,6 +12,7 @@
 
 package kintsugi3d.builder.fit;
 
+import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.export.specular.SpecularFitTextureRescaler;
 import kintsugi3d.builder.fit.debug.BasisImageCreator;
@@ -35,6 +36,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.function.BiConsumer;
@@ -61,19 +63,26 @@ public class SpecularFitProcess
             settings.getIbrSettings(), settings.getSpecularBasisSettings());
     }
 
-    public <ContextType extends Context<ContextType>> void optimizeFit(IBRResourcesImageSpace<ContextType> resources)
+    public <ContextType extends Context<ContextType>> void optimizeFit(
+        IBRResourcesImageSpace<ContextType> resources, LoadingMonitor callback)
         throws IOException
     {
         Instant start = Instant.now();
 
         // Generate cache
-        ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings());
+        ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings(), callback);
+
+        if (callback != null)
+        {
+            // Make indeterminate as building cache is really just the first step.
+            callback.setMaximum(0.0);
+        }
 
         Duration duration = Duration.between(start, Instant.now());
         log.info("Cache found / generated in: " + duration);
 
         // Runs the fit (long process) and then replaces the old material resources / textures
-        resources.replaceSpecularMaterialResources(optimizeFit(cache, resources.getSpecularMaterialResources()));
+        resources.replaceSpecularMaterialResources(optimizeFit(cache, resources.getSpecularMaterialResources(), callback));
 
 //        // Save basis image visualization for reference and debugging
 //        try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(cache.getContext(), settings.getSpecularBasisSettings()))
@@ -112,7 +121,7 @@ public class SpecularFitProcess
     }
 
     private <ContextType extends Context<ContextType>> SpecularMaterialResources<ContextType> optimizeFit(
-        ImageCache<ContextType> cache, SpecularMaterialResources<ContextType> original)
+        ImageCache<ContextType> cache, SpecularMaterialResources<ContextType> original, LoadingMonitor callback)
         throws IOException
     {
         Instant start = Instant.now();
@@ -185,7 +194,13 @@ public class SpecularFitProcess
                     ImageFinder.getInstance().tryFindImageFile(new File(geometryFile.getParentFile(), normalMap.getMapName()));
 
                 // Optimize weight maps and normal maps by blocks to fill the full resolution textures
-                optimizeBlocks(fullResolution, cache, sampledDecomposition, inputNormalMap);
+                optimizeBlocks(fullResolution, cache, sampledDecomposition, inputNormalMap, callback);
+            }
+
+            if (callback != null)
+            {
+                // Go back to indeterminate for wrap-up stuff
+                callback.setMaximum(0.0);
             }
 
             // Generate albedo / ORM maps at full resolution (does not require loaded source images)
@@ -196,7 +211,7 @@ public class SpecularFitProcess
 
             if (DEBUG_IMAGES && settings.getOutputDirectory() != null)
             {
-                try (PrintStream time = new PrintStream(new File(settings.getOutputDirectory(), "time.txt")))
+                try (PrintStream time = new PrintStream(new File(settings.getOutputDirectory(), "time.txt"), StandardCharsets.UTF_8))
                 {
                     time.println(duration);
                 }
@@ -217,6 +232,7 @@ public class SpecularFitProcess
         {
             // Prevent memory leak when an exception occurs
             fullResolution.close();
+
             throw e;
         }
     }
@@ -225,7 +241,8 @@ public class SpecularFitProcess
         Blittable<SpecularMaterialResources<ContextType>> fullResolutionDestination,
         ImageCache<ContextType> cache,
         SpecularDecompositionFromScratch sampledDecomposition,
-        File inputNormalMapFile)
+        File inputNormalMapFile,
+        LoadingMonitor callback)
         throws IOException
     {
         SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
@@ -253,11 +270,22 @@ public class SpecularFitProcess
                 }
             }
 
+            if (callback != null)
+            {
+                callback.setMaximum(cache.getSettings().getTextureSubdiv() * cache.getSettings().getTextureSubdiv());
+                callback.setProgress(0.0);
+            }
+
             // Optimize each block of the texture map at full resolution.
             for (int i = 0; i < cache.getSettings().getTextureSubdiv(); i++)
             {
                 for (int j = 0; j < cache.getSettings().getTextureSubdiv(); j++)
                 {
+                    if (callback != null)
+                    {
+                        callback.setProgress(i * cache.getSettings().getTextureSubdiv() + j);
+                    }
+
                     log.info("Starting block (" + i + ", " + j + ")...");
 
                     try (IBRResourcesTextureSpace<ContextType> blockResources = blockResourceFactory.createBlockResources(i, j))
@@ -387,7 +415,7 @@ public class SpecularFitProcess
                 new File("shaders/common/texspace_dynamic.vert"),
                 new File("shaders/specularfit/errorCalc.frag"));
         }
-        catch (FileNotFoundException e)
+        catch (IOException e)
         {
             log.error("An error occurred creating error calculation shader:", e);
             return null;

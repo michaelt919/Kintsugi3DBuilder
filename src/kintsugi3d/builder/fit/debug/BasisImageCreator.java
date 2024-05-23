@@ -36,7 +36,7 @@ public class BasisImageCreator<ContextType extends Context<ContextType>> impleme
 
     private final SpecularBasisSettings settings;
 
-    public BasisImageCreator(ContextType context, SpecularBasisSettings settings) throws FileNotFoundException
+    public BasisImageCreator(ContextType context, SpecularBasisSettings settings) throws IOException
     {
         program = context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))

@@ -19,7 +19,6 @@ import java.nio.ShortBuffer;
 /**
  * Base class for texture readers that contains commonly used implementations for transferring native buffer data to a
  * "normal" Java array, and saving color images to file.
- * @param <ContextType>
  */
 public abstract class DepthTextureReaderBase implements DepthTextureReader
 {

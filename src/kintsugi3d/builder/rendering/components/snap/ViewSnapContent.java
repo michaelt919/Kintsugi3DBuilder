@@ -12,20 +12,9 @@
 
 package kintsugi3d.builder.rendering.components.snap;
 
-import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.core.RenderedComponent;
+import kintsugi3d.gl.core.Context;
 
 public abstract class ViewSnapContent<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
-    private int snapViewIndex;
-
-    protected int getSnapViewIndex()
-    {
-        return snapViewIndex;
-    }
-
-    void setSnapViewIndex(int snapViewIndex)
-    {
-        this.snapViewIndex = snapViewIndex;
-    }
 }

@@ -114,6 +114,7 @@ public class ImageHelper
 
     public BufferedImage forceSRGB ()
     {
+        // TODO is there a cleaner way to ignore input color space?  Maybe work with the Raster object directly?
         return inputImage == null || !(inputImage.getColorModel() instanceof ComponentColorModel) ? inputImage
             : new BufferedImage(
             new ComponentColorModel(

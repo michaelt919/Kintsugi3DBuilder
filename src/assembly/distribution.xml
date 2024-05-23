@@ -23,7 +23,7 @@
             <outputDirectory></outputDirectory>
         </file>
         <file>
-            <source>kintsugi3d-builder-about.txt</source>
+            <source>target/classes/kintsugi3d-builder-about.txt</source>
             <outputDirectory></outputDirectory>
         </file>
         <file>

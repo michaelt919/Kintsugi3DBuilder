@@ -18,7 +18,6 @@ public class SimpleLoadOptionsModel implements LoadOptionsModel
     private boolean mipmapsRequested = true;
     private boolean compressionRequested = true;
     private boolean alphaRequested = true;
-    private boolean iccTransformationRequested = true;
     private boolean depthImagesRequested = true;
     private int depthImageWidth = 512;
     private int depthImageHeight = 512;
@@ -132,18 +131,6 @@ public class SimpleLoadOptionsModel implements LoadOptionsModel
     {
         this.compressionRequested = compressionRequested;
         return this;
-    }
-
-    @Override
-    public boolean isICCTransformationRequested()
-    {
-        return iccTransformationRequested;
-    }
-
-    @Override
-    public void setICCTransformationRequested(boolean iccTransformationRequested)
-    {
-        this.iccTransformationRequested = iccTransformationRequested;
     }
 
     @Override

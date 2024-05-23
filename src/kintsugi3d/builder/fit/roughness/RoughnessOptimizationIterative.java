@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
@@ -52,7 +53,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
     public RoughnessOptimizationIterative(BasisResources<ContextType> basisResources,
         BasisWeightResources<ContextType> basisWeightResources, TextureResolution settings,
         Supplier<Texture2D<ContextType>> getDiffuseTexture, double convergenceTolerance, int unsuccessfulLMIterationsAllowed)
-            throws FileNotFoundException
+            throws IOException
     {
         // Inherit from base class to facilitate initial fit.
         super(basisResources);
@@ -151,7 +152,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
     }
 
     private static <ContextType extends Context<ContextType>>
-    Program<ContextType> createErrorCalcProgram(ContextType context) throws FileNotFoundException
+    Program<ContextType> createErrorCalcProgram(ContextType context) throws IOException
     {
         return context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))

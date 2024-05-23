@@ -13,6 +13,7 @@
 package kintsugi3d.builder.resources.ibr.stream;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.function.*;
 
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -33,7 +34,7 @@ public class GraphicsStreamResource<ContextType extends Context<ContextType>> im
 
     GraphicsStreamResource(ProgramBuilder<ContextType> programBuilder,
         FramebufferObjectBuilder<ContextType> framebufferBuilder,
-        BiFunction<Program<ContextType>, FramebufferObject<ContextType>, GraphicsStream<ColorList[]>> streamFactory) throws FileNotFoundException
+        BiFunction<Program<ContextType>, FramebufferObject<ContextType>, GraphicsStream<ColorList[]>> streamFactory) throws IOException
     {
         program = programBuilder.createProgram();
         framebuffer = framebufferBuilder.createFramebufferObject();

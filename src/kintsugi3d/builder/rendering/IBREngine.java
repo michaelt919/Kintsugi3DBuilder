@@ -22,8 +22,12 @@ import kintsugi3d.builder.export.specular.gltf.SpecularFitGltfExporter;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.rendering.components.IBRSubject;
 import kintsugi3d.builder.rendering.components.StandardScene;
+import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibration3DScene;
 import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibrationRoot;
 import kintsugi3d.builder.rendering.components.lit.LitRoot;
+import kintsugi3d.builder.rendering.components.snap.ViewSelection;
+import kintsugi3d.builder.rendering.components.snap.ViewSelectionImpl;
+import kintsugi3d.builder.rendering.components.split.SplitScreenComponent;
 import kintsugi3d.builder.resources.DynamicResourceLoader;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
@@ -60,11 +64,13 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     private ProgramObject<ContextType> simpleTexProgram;
     private Drawable<ContextType> simpleTexDrawable;
 
+    private SplitScreenComponent<ContextType> lightCalibrationSplitScreen;
     private LightCalibrationRoot<ContextType> lightCalibration;
     private LitRoot<ContextType> litRoot;
+    private LitRoot<ContextType> lightCalibration3DRoot;
 
     private DynamicResourceLoader<ContextType> dynamicResourceLoader;
-    private final SceneViewportModel<ContextType> sceneViewportModel;
+    private final SceneViewportModel sceneViewportModel;
 
     private static final int SHADING_FRAMEBUFFER_COUNT = 2;
     private final Collection<FramebufferObject<ContextType>> shadingFramebuffers = new ArrayList<>(SHADING_FRAMEBUFFER_COUNT);
@@ -77,7 +83,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
         this.sceneModel = new SceneModel();
 
-        this.sceneViewportModel = new SceneViewportModel<>(sceneModel);
+        this.sceneViewportModel = new SceneViewportModel(sceneModel);
         this.sceneViewportModel.addSceneObjectType("SceneObject");
     }
 
@@ -119,14 +125,26 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             this.simpleTexDrawable = context.createDrawable(simpleTexProgram);
             this.simpleTexDrawable.addVertexBuffer("position", this.rectangleVertices);
 
-            lightCalibration = new LightCalibrationRoot<>(resources, sceneModel, sceneViewportModel);
+            ViewSelection viewSelection = new ViewSelectionImpl(getActiveViewSet(), sceneModel);
+
+            lightCalibration = new LightCalibrationRoot<>(resources, sceneModel, viewSelection, sceneViewportModel);
             lightCalibration.initialize();
 
             litRoot = new LitRoot<>(context, sceneModel);
             StandardScene<ContextType> scene = new StandardScene<>(resources, sceneModel, sceneViewportModel);
+//            scene.setLightVisualsEnabled(true); // Enable light visuals when not in light calibration mode
             litRoot.takeLitContentRoot(scene);
             litRoot.initialize();
             litRoot.setShadowCaster(resources.getGeometryResources().positionBuffer);
+
+            lightCalibration3DRoot = new LitRoot<>(context, sceneModel);
+            LightCalibration3DScene<ContextType> lightCalibScene =
+                new LightCalibration3DScene<>(resources, sceneModel, sceneViewportModel, viewSelection);
+            lightCalibration3DRoot.takeLitContentRoot(lightCalibScene);
+            lightCalibration3DRoot.initialize();
+            lightCalibration3DRoot.setShadowCaster(resources.getGeometryResources().positionBuffer);
+
+            lightCalibrationSplitScreen = new SplitScreenComponent<>(lightCalibration, lightCalibration3DRoot);
 
             IBRSubject<ContextType> subject = scene.getSubject();
             this.dynamicResourceLoader = new DynamicResourceLoader<>(loadingMonitor,
@@ -177,6 +195,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             dynamicResourceLoader.update();
             litRoot.update();
             lightCalibration.update();
+            lightCalibration3DRoot.update();
         }
         catch (Exception e)
         {
@@ -216,7 +235,8 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     }
 
     @Override
-    public void draw(Framebuffer<ContextType> framebuffer, Matrix4 modelViewOverride, Matrix4 projectionOverride, int subdivWidth, int subdivHeight)
+    public void draw(Framebuffer<ContextType> framebuffer, Matrix4 modelViewOverride, Matrix4 projectionOverride,
+                     int subdivWidth, int subdivHeight)
     {
         try
         {
@@ -268,7 +288,9 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
                 if (sceneModel.getSettingsModel().getBoolean("lightCalibrationMode"))
                 {
-                    lightCalibration.drawInSubdivisions(offscreenFBO, subdivWidth, subdivHeight, view, projection);
+                    // Split needs to be updated every time as FBO width may have changed.
+                    lightCalibrationSplitScreen.setSplit(0.5f, fboWidth);
+                    lightCalibrationSplitScreen.drawInSubdivisions(offscreenFBO, subdivWidth, subdivHeight, view, projection);
                 }
                 else
                 {
@@ -288,9 +310,15 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         {
             if (!suppressErrors)
             {
-                log.error("Error during draw call:", e);
+                log.error("Error during draw call", e);
                 suppressErrors = true; // Prevent excessive errors
             }
+        }
+        catch (Error e)
+        {
+            log.error("Error during draw call", e);
+            //noinspection ProhibitedExceptionThrown
+            throw e;
         }
     }
 
@@ -333,6 +361,12 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             {
                 litRoot.close();
                 litRoot = null;
+            }
+
+            if (lightCalibration3DRoot != null)
+            {
+                lightCalibration3DRoot.close();
+                lightCalibration3DRoot = null;
             }
 
             for (FramebufferObject<ContextType> fbo : shadingFramebuffers)
@@ -381,6 +415,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         {
             litRoot.reloadShaders();
             lightCalibration.reloadShaders();
+            lightCalibration3DRoot.reloadShaders();
 
             suppressErrors = false;
         }
@@ -405,6 +440,12 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
     @Override
     public void saveGlTF(File outputDirectory, ExportSettings settings)
+    {
+        saveGlTF(outputDirectory, "model.glb", settings);
+    }
+
+    @Override
+    public void saveGlTF(File outputDirectory, String filename, ExportSettings settings)
     {
         if (outputDirectory != null)
         {
@@ -461,7 +502,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
                     }
                 }
 
-                exporter.write(new File(outputDirectory, "model.glb"));
+                exporter.write(new File(outputDirectory, filename));
                 log.info("DONE!");
             }
             catch (IOException e)

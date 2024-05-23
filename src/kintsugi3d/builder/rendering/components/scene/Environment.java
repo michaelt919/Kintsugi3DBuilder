@@ -12,87 +12,46 @@
 
 package kintsugi3d.builder.rendering.components.scene;
 
-import kintsugi3d.gl.core.*;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.builder.core.CameraViewport;
-import kintsugi3d.builder.core.RenderedComponent;
-import kintsugi3d.builder.core.SceneModel;
-import kintsugi3d.builder.resources.LightingResources;
-import kintsugi3d.builder.rendering.SceneViewportModel;
-import kintsugi3d.builder.state.BackgroundMode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Map;
 
-public class Environment<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
+import kintsugi3d.builder.core.CameraViewport;
+import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.rendering.SceneViewportModel;
+import kintsugi3d.builder.rendering.components.ShaderComponent;
+import kintsugi3d.builder.resources.LightingResources;
+import kintsugi3d.builder.state.BackgroundMode;
+import kintsugi3d.gl.core.*;
+import kintsugi3d.gl.vecmath.Matrix4;
+
+public class Environment<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
 {
-    private static final Logger log = LoggerFactory.getLogger(Environment.class);
-    private final ContextType context;
     private final LightingResources<ContextType> lightingResources;
     private final SceneModel sceneModel;
-    private final SceneViewportModel<ContextType> sceneViewportModel;
 
-    private ProgramObject<ContextType> environmentBackgroundProgram;
-    private Drawable<ContextType> environmentBackgroundDrawable;
-    private VertexBuffer<ContextType> rectangleVertices;
-
-    public Environment(ContextType context, LightingResources<ContextType> lightingResources,
-                       SceneModel sceneModel, SceneViewportModel<ContextType> sceneViewportModel)
+    public Environment(ContextType context, SceneViewportModel sceneViewportModel, LightingResources<ContextType> lightingResources,
+                       SceneModel sceneModel)
     {
-        this.context = context;
+        super(context, sceneViewportModel, "EnvironmentMap");
         this.lightingResources = lightingResources;
         this.sceneModel = sceneModel;
-        this.sceneViewportModel = sceneViewportModel;
-        this.sceneViewportModel.addSceneObjectType("EnvironmentMap");
     }
 
     @Override
-    public void initialize()
+    protected ProgramObject<ContextType> createProgram(ContextType context) throws IOException
     {
-        this.rectangleVertices = context.createRectangle();
-
-        try
-        {
-            this.environmentBackgroundProgram = context.getShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
-                    .createProgram();
-
-            this.environmentBackgroundDrawable = context.createDrawable(environmentBackgroundProgram);
-            this.environmentBackgroundDrawable.addVertexBuffer("position", this.rectangleVertices);
-        }
-        catch (FileNotFoundException|RuntimeException e)
-        {
-            log.error("Failed to load shader.", e);
-        }
+        return context.getShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
+            .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
+            .createProgram();
     }
 
     @Override
-    public void reloadShaders()
+    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context)
     {
-        ProgramObject<ContextType> newEnvironmentBackgroundProgram = null;
-        try
-        {
-            newEnvironmentBackgroundProgram = context.getShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
-                    .createProgram();
-
-            if (this.environmentBackgroundProgram != null)
-            {
-                this.environmentBackgroundProgram.close();
-            }
-
-            this.environmentBackgroundProgram = newEnvironmentBackgroundProgram;
-            this.environmentBackgroundDrawable = context.createDrawable(environmentBackgroundProgram);
-            this.environmentBackgroundDrawable.addVertexBuffer("position", rectangleVertices);
-        }
-        catch (FileNotFoundException|RuntimeException e)
-        {
-            log.error("Failed to load shader.", e);
-        }
+        return Map.of("position", context.createRectangle());
     }
 
     @Override
@@ -102,44 +61,21 @@ public class Environment<ContextType extends Context<ContextType>> implements Re
         {
             Matrix4 envMapMatrix = sceneModel.getLightingModel().getEnvironmentMapMatrix();
 
-            environmentBackgroundProgram.setUniform("objectID", sceneViewportModel.lookupSceneObjectID("EnvironmentMap"));
-            environmentBackgroundProgram.setUniform("useEnvironmentTexture", true);
-            environmentBackgroundProgram.setTexture("env", lightingResources.getEnvironmentMap());
-            environmentBackgroundProgram.setUniform("model_view", cameraViewport.getView());
-            environmentBackgroundProgram.setUniform("projection", cameraViewport.getViewportProjection());
-            environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix);
-            environmentBackgroundProgram.setUniform("envMapIntensity", sceneModel.getClearColor());
+            getDrawable().program().setUniform("useEnvironmentTexture", true);
+            getDrawable().program().setTexture("env", lightingResources.getEnvironmentMap());
+            getDrawable().program().setUniform("model_view", cameraViewport.getView());
+            getDrawable().program().setUniform("projection", cameraViewport.getViewportProjection());
+            getDrawable().program().setUniform("envMapMatrix", envMapMatrix);
+            getDrawable().program().setUniform("envMapIntensity", sceneModel.getClearColor());
 
-            environmentBackgroundProgram.setUniform("gamma",
-                    lightingResources.getEnvironmentMap().isInternalFormatCompressed() ||
-                            lightingResources.getEnvironmentMap().getInternalUncompressedColorFormat().dataType != ColorFormat.DataType.FLOATING_POINT
-                            ? 1.0f : 2.2f);
+            getDrawable().program().setUniform("gamma",
+                lightingResources.getEnvironmentMap().isInternalFormatCompressed() ||
+                    lightingResources.getEnvironmentMap().getInternalUncompressedColorFormat().dataType != ColorFormat.DataType.FLOATING_POINT
+                    ? 1.0f : 2.2f);
 
-            context.getState().disableDepthTest();
-            environmentBackgroundDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
-            context.getState().enableDepthTest();
-        }
-    }
-
-    @Override
-    public void close() throws Exception
-    {
-        if (this.environmentBackgroundProgram != null)
-        {
-            this.environmentBackgroundProgram.close();
-            this.environmentBackgroundProgram = null;
-        }
-
-        if (environmentBackgroundDrawable != null)
-        {
-            environmentBackgroundDrawable.close();
-            environmentBackgroundDrawable = null;
-        }
-
-        if (rectangleVertices != null)
-        {
-            rectangleVertices.close();
-            rectangleVertices = null;
+            getContext().getState().disableDepthTest();
+            getDrawable().draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+            getContext().getState().enableDepthTest();
         }
     }
 }
