@@ -292,23 +292,34 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                     Objects.equals(reader.getAttributeValue(null, "enabled"), "1") ||
                                     Objects.equals(reader.getAttributeValue(null, "enabled"), null))
                                 {
-                                    if (lightIndex < 0)
-                                    {
-                                        // Set default light index
-                                        lightIndex = defaultLightIndex = nextLightIndex;
-                                        nextLightIndex++;
-                                        log.debug("Using default light index: " + lightIndex);
-                                    }
-
                                     sensorID = reader.getAttributeValue(null, "sensor_id");
                                     imageFile = reader.getAttributeValue(null, "label");
-                                    camera = new Camera(cameraID, sensorSet.get(sensorID), lightIndex);
-                                    camera.filename = imageFile;
+
+                                    if (sensorID != null && imageFile != null)
+                                    {
+                                        if (lightIndex < 0)
+                                        {
+                                            // Set default light index
+                                            lightIndex = defaultLightIndex = nextLightIndex;
+                                            nextLightIndex++;
+                                            log.debug("Using default light index: " + lightIndex);
+                                        }
+
+                                        camera = new Camera(cameraID, sensorSet.get(sensorID), lightIndex);
+                                        camera.filename = imageFile;
+                                    }
+                                    else
+                                    {
+                                        // Camera is incomplete for use as a calibrated photo (i.e. keyframe)
+                                        camera = null;
+                                    }
                                 }
                                 else
                                 {
+                                    // Camera is disabled
                                     camera = null;
                                 }
+
                             }
                             break;
                         case "orientation":
