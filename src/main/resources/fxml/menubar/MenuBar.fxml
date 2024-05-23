@@ -338,7 +338,7 @@
                             </Menu>
                         </Menu>
                         <Menu text="Help">
-                            <MenuItem disable="true" mnemonicParsing="false" onAction="#help_userManual" text="Documentation" />
+                            <MenuItem mnemonicParsing="false" onAction="#help_userManual" text="Documentation" />
                             <MenuItem mnemonicParsing="false" onAction="#help_console" text="View Log" />
                             <MenuItem mnemonicParsing="false" text="Process Guides (UNFINISHED)" visible="false" />
                         </Menu>
