@@ -1,6 +1,5 @@
 ## Download
-[Latest release](https://github.com/michaelt919/Kintsugi3DBuilder/releases/latest)
-
+[Latest release](https://github.com/michaelt919/Kintsugi3DBuilder/releases/latest)\
 [Documentation](https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf)
 
 ## Overview
