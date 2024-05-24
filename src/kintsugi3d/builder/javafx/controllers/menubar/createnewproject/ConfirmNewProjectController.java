@@ -2,6 +2,7 @@ package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
@@ -33,6 +34,7 @@ public class ConfirmNewProjectController extends FXMLPageController {
     private Runnable loadStartCallback;
     private BiConsumer<ViewSet, File> viewSetCallback;
     private String primaryView;
+    private MetashapeObjectChunk metashapeObjectChunk;
 
     @Override
     public Region getHostRegion() {
@@ -106,24 +108,39 @@ public class ConfirmNewProjectController extends FXMLPageController {
         }
 
 
-        if(super.hostPage.getPrevPage().getController() instanceof LoaderController){
-            if (loadStartCallback != null) {
-                loadStartCallback.run();
-            }
+        if (loadStartCallback != null) {
+            loadStartCallback.run();
+        }
 
+
+        if(super.hostPage.getPrevPage().getController() instanceof LoaderController) {
             if (viewSetCallback != null) {
                 MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(
                         viewSet -> viewSetCallback.accept(viewSet, cameraFile.getParentFile()));
             }
-
             new Thread(() ->
                     MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(
                             cameraFile.getPath(), cameraFile, objFile, photoDir,
                             primaryView))
                     .start();
-            WelcomeWindowController.getInstance().hideWelcomeWindow();
-            close();
         }
+        else{//loading from metashape import
+            if (viewSetCallback != null) {
+                //MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(viewSet ->viewSetCallback.accept(viewSet, null));
+                MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(
+                        viewSet ->viewSetCallback.accept(viewSet, new File(metashapeObjectChunk.getPsxFilePath()).getParentFile()));
+            }
+            //TODO: investigate why progress bar is not updated here
+            new Thread(() ->
+                    MultithreadModels.getInstance().getLoadingModel()
+                            .loadAgisoftFromZIP(
+                                    metashapeObjectChunk.getFramePath(),
+                                    metashapeObjectChunk,
+                                    primaryView))
+                    .start();
+        }
+        WelcomeWindowController.getInstance().hideWelcomeWindow();
+        close();
 
     }
 
@@ -137,6 +154,7 @@ public class ConfirmNewProjectController extends FXMLPageController {
         photoDir = hostScrollerController.getInfo(ShareInfo.Info.PHOTO_DIR);
         objFile = hostScrollerController.getInfo(ShareInfo.Info.OBJ_FILE);
         primaryView = hostScrollerController.getInfo(ShareInfo.Info.PRIMARY_VIEW);
+        metashapeObjectChunk = hostScrollerController.getInfo(ShareInfo.Info.METASHAPE_OBJ_CHUNK);
     }
 
     private boolean areAllFieldsValid() {
