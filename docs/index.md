@@ -44,6 +44,7 @@ Michael Tetzlaff, Gary Meyer, and Alex Kautz, “IBRelight: An Image-Based 3D Re
 - Jacob Buelow (University of Wisconsin - Stout) - contributor
 - Luke Denney (University of Wisconsin - Stout) - contributor
 - Ian Anderson (University of Wisconsin - Stout) - contributor
+- Zoe Cuthrell (University of Wisconsin - Stout) - contributor
 - Blane Suess (University of Wisconsin - Stout) - contributor
 - Isaac Tesch (University of Wisconsin - Stout) - contributor
 - Nathaniel Willius (University of Wisconsin - Stout) - contributor
@@ -52,6 +53,12 @@ Michael Tetzlaff, Gary Meyer, and Alex Kautz, “IBRelight: An Image-Based 3D Re
 - Elliot Duffy (University of Wisconsin - Stout) - UX designer
 - Augusto Freitas (University of Wisconsin - Stout) - UX designer
 - Gary Meyer (University of Minnesota) - designer and advisor
+
+Kintsugi 3D was developed with support from a grant from the National Endowment for the Humanities (NEH PR-290101-23).
+
+Additional student research support came from a Minority Student Research grant from the National Science Foundation through the Wisconsin Louis Stokes Alliance for Minority Participation (WiscAMP) program.
+
+Special thanks to Carla Schroer and Mark Mudge from Cultural Heritage Imaging and Charles Walbridge, Lou Brown, Pierre Ware, and Dan Dennehy from the Minneapolis Institute of Art (Mia) for their involvement on this project.
 
 ## Copyright and License
 
