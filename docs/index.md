@@ -37,6 +37,7 @@ Michael Tetzlaff, Gary Meyer, and Alex Kautz, “IBRelight: An Image-Based 3D Re
 - Sam Steinkamp (University of Minnesota) - contributor
 - Jacob Buelow (University of Wisconsin - Stout) - contributor
 - Luke Denney (University of Wisconsin - Stout) - contributor
+- Ian Anderson (University of Wisconsin - Stout) - contributor
 - Blane Suess (University of Wisconsin - Stout) - contributor
 - Isaac Tesch (University of Wisconsin - Stout) - contributor
 - Nathaniel Willius (University of Wisconsin - Stout) - contributor
@@ -48,7 +49,7 @@ Michael Tetzlaff, Gary Meyer, and Alex Kautz, “IBRelight: An Image-Based 3D Re
 
 ## Copyright and License
 
-Copyright (c) Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius 2024\
+Copyright (c) Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Blane Suess, Isaac Tesch, Nathaniel Willius 2024\
 Copyright (c) The Regents of the University of Minnesota 2019
 
 Licensed under [GPLv3](http://www.gnu.org/licenses/gpl-3.0.html)
