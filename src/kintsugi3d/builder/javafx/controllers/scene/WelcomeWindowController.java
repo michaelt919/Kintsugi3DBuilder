@@ -172,7 +172,6 @@ public class WelcomeWindowController
     private void file_openProject()//TODO: CHANGE NAMING CONVENTION? (file_...)
     {
         ProjectIO.getInstance().openProjectWithPrompt(parentWindow);
-        hideWelcomeWindow();
     }
 
     @FXML
