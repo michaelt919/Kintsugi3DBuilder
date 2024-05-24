@@ -29,8 +29,11 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.*;
@@ -40,15 +43,17 @@ import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.function.Consumer;
-
-public class LoaderControllerIan implements Initializable
+public class LoaderController extends FXMLPageController implements Initializable, ShareInfo
 {
-    private static final Logger log = LoggerFactory.getLogger(LoaderControllerIan.class);
+    private static final Logger log = LoggerFactory.getLogger(LoaderController.class);
+    @FXML private Button backButton;
+    @FXML private Button nextButton;
 
     @FXML private ChoiceBox<String> primaryViewChoiceBox;
     @FXML private Text loadCheckCameras;
@@ -94,12 +99,29 @@ public class LoaderControllerIan implements Initializable
         metaFileChooser.setTitle("Select MetaShape project file");
 
         photoDirectoryChooser.setTitle("Select photo directory");
+    }
 
-
+    @Override
+    public Region getHostRegion() {
+        return root;
     }
 
     public void init()
     {
+    }
+
+    @Override
+    public void refresh() {
+        if (isEmbedded()){
+            backButton.setVisible(false);
+            nextButton.setVisible(false);
+            updateNextPage();
+        }
+    }
+
+    @Override
+    public boolean isNextButtonValid() {
+        return super.isNextButtonValid() && areAllFilesLoaded();
     }
 
     public void setLoadStartCallback(Runnable callback)
@@ -173,6 +195,25 @@ public class LoaderControllerIan implements Initializable
                 new Alert(AlertType.ERROR, e.toString()).show();
             }
         }
+
+        if (isEmbedded()){
+            updateNextPage();
+            hostScrollerController.updatePrevAndNextButtons();
+        }
+    }
+
+    private void updateNextPage() {
+        if (areAllFilesLoaded()){
+            hostPage.setNextPage(hostScrollerController.getPage("fxml/menubar/createnewproject/ConfirmNewProject.fxml"));
+        }
+        else{
+            hostPage.setNextPage(null);
+        }
+    }
+
+    //return true if loader is embedded into an fxml page scroller
+    private boolean isEmbedded() {
+        return hostScrollerController != null;
     }
 
     @FXML
@@ -188,6 +229,11 @@ public class LoaderControllerIan implements Initializable
             loadCheckObj.setText("Loaded");
             loadCheckObj.setFill(Paint.valueOf("Green"));
         }
+
+        if (isEmbedded()){
+            updateNextPage();
+            hostScrollerController.updatePrevAndNextButtons();
+        }
     }
 
     @FXML
@@ -202,6 +248,11 @@ public class LoaderControllerIan implements Initializable
             setHomeDir(temp);
             loadCheckImages.setText("Loaded");
             loadCheckImages.setFill(Paint.valueOf("Green"));
+        }
+
+        if (isEmbedded()){
+            updateNextPage();
+            hostScrollerController.updatePrevAndNextButtons();
         }
     }
 
@@ -264,6 +315,10 @@ public class LoaderControllerIan implements Initializable
         }
     }
 
+    private boolean areAllFilesLoaded() {
+        return (cameraFile != null) && (objFile != null) && (photoDir != null);
+    }
+
     @FXML
     private void cancelButtonPress()
     {
@@ -295,6 +350,20 @@ public class LoaderControllerIan implements Initializable
     }
 
     private static final String QUICK_FILENAME = "quickSaveLoadConfig.txt";
+
+    @Override
+    public void shareInfo() {
+        if (hostScrollerController == null){
+            log.error("Loader controller cannot send info to null hostScrollerController. " +
+                    "This function can only be used in an embedded loader");
+            return;
+        }
+
+        hostScrollerController.addInfo(Info.CAM_FILE, cameraFile);
+        hostScrollerController.addInfo(Info.PHOTO_DIR, photoDir);
+        hostScrollerController.addInfo(Info.OBJ_FILE, objFile);
+        hostScrollerController.addInfo(Info.PRIMARY_VIEW, primaryViewChoiceBox.getSelectionModel().getSelectedItem());
+    }
 
     @FXML
     public void plySelect(ActionEvent actionEvent) {

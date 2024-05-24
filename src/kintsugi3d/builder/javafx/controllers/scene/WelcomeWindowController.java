@@ -14,10 +14,7 @@ package kintsugi3d.builder.javafx.controllers.scene;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.SplitMenuButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -31,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.ArrayList;
 
 public class WelcomeWindowController
 {
@@ -44,11 +42,18 @@ public class WelcomeWindowController
     private final Flag unzipperOpen = new Flag(false);
 
     private static WelcomeWindowController INSTANCE;
+    @FXML private Button recent1;
+    @FXML private Button recent2;
+    @FXML private Button recent3;
+    @FXML private Button recent4;
+    @FXML private Button recent5;
+    public ArrayList<Button> recentButtons = new ArrayList<>();
+    public ArrayList<String> recentButtonFiles = new ArrayList<>();
+
     public static WelcomeWindowController getInstance()
     {
         return INSTANCE;
     }
-
 
     @FXML private ProgressBar progressBar;
 
@@ -69,7 +74,15 @@ public class WelcomeWindowController
         this.window = injectedStage;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
 
+        recentButtons.add(recent1);
+        recentButtons.add(recent2);
+        recentButtons.add(recent3);
+        recentButtons.add(recent4);
+        recentButtons.add(recent5);
+
+        //initializeWelcomeWindowController initializes recentButtonFiles ArrayList
         RecentProjects.initializeWelcomeWindowController(this);
+
         updateRecentProjectsButton();
 
 //        MultithreadModels.getInstance().getLoadingModel().addLoadingMonitor(new LoadingMonitor()
@@ -110,7 +123,6 @@ public class WelcomeWindowController
 //                loadingComplete();
 //            }
 //        });
-
         INSTANCE = this;
     }
 
@@ -125,12 +137,10 @@ public class WelcomeWindowController
 
     public void splitMenuButtonActions(ActionEvent actionEvent) {
         Object source = actionEvent.getSource();
-
         //user clicks on a menu item
         if (source.getClass() == MenuItem.class) {
             handleMenuItemSelection((MenuItem) actionEvent.getSource());
         }
-
         //user clicks on the button, so unroll the menu
         else{
             unrollMenu();
@@ -142,6 +152,8 @@ public class WelcomeWindowController
     {
         if (!ProjectIO.getInstance().isCreateProjectWindowOpen())
         {
+            //if able to put scene for Loader
+            //window.setScene(parentWindow.getScene());
             ProjectIO.getInstance().createProject(parentWindow);
             updateRecentProjectsButton();
         }
@@ -153,17 +165,14 @@ public class WelcomeWindowController
         {
             ProjectIO.getInstance().createProjectNew(parentWindow);
             updateRecentProjectsButton();
-
         }
     }
 
     @FXML
     private void file_openProject()//TODO: CHANGE NAMING CONVENTION? (file_...)
     {
-
         ProjectIO.getInstance().openProjectWithPrompt(parentWindow);
         hideWelcomeWindow();
-
     }
 
     @FXML
@@ -173,7 +182,7 @@ public class WelcomeWindowController
         ProjectIO.getInstance().closeProjectAfterConfirmation();
     }
 
-    //TODO: HIDE WELCOME WINDOW WHEN A PROJECT IS MADE/OPENED
+    //TODO: FIND WAY TO NOT CLOSE FILE, BUT HIDE SO IT CAN BE RESHOWN
     public void hideWelcomeWindow(){
         window.close();
     }
@@ -195,5 +204,23 @@ public class WelcomeWindowController
     public void hideMenu(MouseEvent mouseEvent){
         //recentProjectsSplitMenuButton.hide();
         //TODO: ONLY HIDE THE MENU WHEN THE USER'S MOUSE LEAVES THE CONTEXT MENU
+    }
+
+    public void recentButton(ActionEvent actionEvent) {
+        Object source = actionEvent.getSource();
+        //user clicks on a menu item
+        if (source.getClass() == Button.class) {
+            handleButtonSelection((Button) actionEvent.getSource());
+        }
+    }
+
+    public void handleButtonSelection(Button item) {
+        int i = 0;
+        for (Button button : recentButtons){
+            if (button == item){
+                ProjectIO.getInstance().openProjectFromFile(new File(recentButtonFiles.get(i)));
+            }
+            i++;
+        }
     }
 }

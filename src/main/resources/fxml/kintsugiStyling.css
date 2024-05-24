@@ -11,7 +11,7 @@
 }
 
 .button {
-    -fx-background-color: #272727;
+    -fx-background-color: #383838;
     -fx-text-fill: #FFFFFF;
     -fx-background-radius: 30 30 30 30;
 }
@@ -102,7 +102,7 @@ dialog-pane{
 }
 
 .menu{
-    -fx-background-color: #272727;
+    -fx-background-color: #383838;
     -fx-background-radius: 30 30 30 30;
 }
 
@@ -148,11 +148,11 @@ dialog-pane{
     -fx-background-color: #272727;
 }
 
-.table-row-cell: even{
+.table-row-cell:even{
     -fx-background-color: #333333; /* Even cell background color */
 }
 
-.table-row-cell: odd{
+.table-row-cell:odd{
     -fx-background-color: #272727; /* Odd cell background color */
 }
 

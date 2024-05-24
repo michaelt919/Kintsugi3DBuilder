@@ -29,6 +29,7 @@ import java.util.function.Consumer;
 import com.sun.javafx.menu.CheckMenuItemBase;
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -981,5 +982,15 @@ public class MenubarController
             });
             alert.show();
         });
+    }
+
+    public void file_cleanRecentProjects(ActionEvent actionEvent) {
+        RecentProjects.cleanRecentProjects();
+
+        RecentProjects.updateAllControlStructures();
+    }
+
+    public void file_purgeRecentProjectsList(ActionEvent actionEvent) {
+        RecentProjects.purgeRecentProjectsList();
     }
 }
