@@ -4,3 +4,4 @@ plugins:
 title: Kintsugi 3D Builder
 description: Software for synthesizing empirically-based roughness, specularity, normal, and diffuse textures from an image set containing photographs of an object captured with flash-on-camera illumination.
 logo: kintsugi3d-banner.png
+show_downloads: true
