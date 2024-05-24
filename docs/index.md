@@ -2,6 +2,11 @@
 [Latest release](https://github.com/michaelt919/Kintsugi3DBuilder/releases/latest)\
 [Documentation](https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf)
 
+On Windows, download and run "Kintsugi3DBuilder-\<version\>-setup.exe" to install Kintsugi 3D.
+
+On Mac OS, download and open "Kintsugi3DBuilder-\<version\>-macos.dmg" and copy "Kintsugi 3D Viewer" and "Kintsugi 3D Builder" into the Applications folder.
+For the time being, Kintsugi 3D is not signed or notarized and must be manually allowed through Mac OS's "Gatekeeper" feature.  Instructions for how to do this are included in the documentation linked above.
+
 ## Overview
 Developed by a team at the University of Wisconsin – Stout with support from the Minneapolis Institute of Art (Mia) and Cultural Heritage Imaging (CHI) under a grant from the National Endowment for the Humanities (NEH), Kintsugi 3D is a novel software platform for synthesizing empirically-based roughness, specularity, normal, and diffuse textures from an image set containing photographs of an object captured with flash-on-camera illumination. What sets Kintsugi 3D apart from other workflows that produce specularity maps is that all the textures produced are empirically-based: they are derived directly from photographic data using classical optimization methods, and the reconstruction error from this optimization process can be recorded as metadata for the object as documentation of the fidelity of the digitized form.
 
