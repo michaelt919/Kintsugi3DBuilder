@@ -1,4 +1,3 @@
-## Download and Support
 ### [Download latest release](https://github.com/michaelt919/Kintsugi3DBuilder/releases/latest)
 ### [Documentation](https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf)
 ### [CHI forums](https://forums.culturalheritageimaging.org/forum/48-kintsugi-3d/)
