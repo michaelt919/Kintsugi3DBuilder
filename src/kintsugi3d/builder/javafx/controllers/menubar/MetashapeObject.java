@@ -86,39 +86,45 @@ public class MetashapeObject {
 
                 //...chunk.zip holds the information we need to extract (chunk name, id, etc)
 
-                String chunkZipPath;
-                chunkNames = new ArrayList<>();
-                chunkZipPathPairs = new HashMap<>();
-                for (int i = 0; i < chunkList.getLength(); ++i) {//add all chunks to chunkNames list
-                    Node chunk = chunkList.item(i);
-
-                    if (chunk.getNodeType() == Node.ELEMENT_NODE) {
-                        //chunkElement holds simple info
-                        //<chunk id="0" path="0/chunk.zip"/>
-                        Element chunkElement = (Element) chunk;
-
-                        //open doc.xml within each chunk and read the chunk's label attribute --> display it to user
-                        chunkZipPath = chunkElement.getAttribute("path"); //gives xx/chunk.zip where xx is a number
-
-                        //append this path to the psxFilePath (without ".psx" at the end)
-                        chunkZipPath = psxFilePath.substring(0, psxFilePath.length() - 4) + ".files\\" + chunkZipPath;
-
-                        //fullChunkDocument has info about chunk name, cameras, images, etc.
-                        Document fullChunkDocument = UnzipHelper.unzipToDocument(chunkZipPath);
-
-                        //only one chunk in this inner chunk document, so no need for a for loop
-                        Element fullChunkElement = (Element) fullChunkDocument.getElementsByTagName("chunk").item(0);
-
-                        String chunkName = fullChunkElement.getAttribute("label");
-                        chunkNames.add(chunkName);
-                        chunkZipPathPairs.put(chunkName, chunkZipPath);
-                    }
-                }
-            } catch (ParserConfigurationException | IOException | SAXException e) {
+                //add all chunks to chunkNames list
+                loadChunkNamesList(psxFilePath, chunkList);
+            }
+            catch (ParserConfigurationException | IOException | SAXException e) {
                 log.error("An error occurred:", e);
             }
         }
         return chunkNames;
+    }
+
+    private void loadChunkNamesList(String psxFilePath, NodeList chunkList) throws IOException {
+        String chunkZipPath;
+        chunkNames = new ArrayList<>();
+        chunkZipPathPairs = new HashMap<>();
+        for (int i = 0; i < chunkList.getLength(); ++i) {
+            Node chunk = chunkList.item(i);
+
+            if (chunk.getNodeType() == Node.ELEMENT_NODE) {
+                //chunkElement holds simple info
+                //<chunk id="0" path="0/chunk.zip"/>
+                Element chunkElement = (Element) chunk;
+
+                //open doc.xml within each chunk and read the chunk's label attribute --> display it to user
+                chunkZipPath = chunkElement.getAttribute("path"); //gives xx/chunk.zip where xx is a number
+
+                //append this path to the psxFilePath (without ".psx" at the end)
+                chunkZipPath = psxFilePath.substring(0, psxFilePath.length() - 4) + ".files\\" + chunkZipPath;
+
+                //fullChunkDocument has info about chunk name, cameras, images, etc.
+                Document fullChunkDocument = UnzipHelper.unzipToDocument(chunkZipPath);
+
+                //only one chunk in this inner chunk document, so no need for a for loop
+                Element fullChunkElement = (Element) fullChunkDocument.getElementsByTagName("chunk").item(0);
+
+                String chunkName = fullChunkElement.getAttribute("label");
+                chunkNames.add(chunkName);
+                chunkZipPathPairs.put(chunkName, chunkZipPath);
+            }
+        }
     }
 
     public List<String> getChunkNames(){
