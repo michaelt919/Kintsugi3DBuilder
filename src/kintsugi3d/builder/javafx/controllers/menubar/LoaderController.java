@@ -19,6 +19,7 @@ import java.net.URL;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
 import javafx.application.Platform;
@@ -59,10 +60,9 @@ public class LoaderController extends FXMLPageController implements Initializabl
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
     @FXML private Text loadCheckImages;
-    //@FXML private VBox root;
+    @FXML private VBox root;
     @FXML private Text loadCheckPLY;
     @FXML private Text loadCheckMeta;
-    @FXML private GridPane root;
 
     private Stage thisStage;
 
