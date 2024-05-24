@@ -34,7 +34,7 @@ import javafx.stage.WindowEvent;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.javafx.controllers.menubar.LoaderController;
+import kintsugi3d.builder.javafx.controllers.menubar.LoaderControllerIan;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.scene.CreateProjectController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
@@ -277,7 +277,7 @@ public final class ProjectIO
             {
                 try//recent files are updated in CreateProjectController after project is made
                 {
-                    LoaderController createProjectController =
+                    LoaderControllerIan createProjectController =
                         makeWindow(parentWindow, "Load Files", loaderWindowOpen, 750, 330, "fxml/menubar/Loader.fxml");
                     createProjectController.setLoadStartCallback(this::onLoadStart);
                     createProjectController.setViewSetCallback(
