@@ -53,4 +53,4 @@ Kintsugi 3D Builder is free software: you can redistribute it and/or modify it u
 Kintsugi 3D Builder is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  
 Requests for source code, comments, or bug reports should be sent to
-Michael Tetzlaff (tetzlaffm@uwstout.edu)
+Michael Tetzlaff ([tetzlaffm@uwstout.edu](mailto:tetzlaffm@uwstout.edu))
