@@ -309,8 +309,7 @@ public final class ProjectIO
         String[] fxmlFiles = fxmlFilesDirectory.list();
         String[] controllerFiles = controllersDirectory.list();
 
-        if (fxmlFiles == null || controllerFiles == null ||
-                fxmlFiles.length != controllerFiles.length) {
+        if (fxmlFiles == null || controllerFiles == null) {
             log.error("Could not file fxml files for create new project process");
                 return;
         }
