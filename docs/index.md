@@ -1,15 +1,15 @@
-### [Download latest release](https://github.com/michaelt919/Kintsugi3DBuilder/releases/latest)
-### [Documentation](https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf)
-### [CHI forums](https://forums.culturalheritageimaging.org/forum/48-kintsugi-3d/)
+## [Download latest release](https://github.com/michaelt919/Kintsugi3DBuilder/releases/latest)
+## [Documentation](https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf)
+## [CHI forums](https://forums.culturalheritageimaging.org/forum/48-kintsugi-3d/)
 
-### Install instructions:
+## Install instructions:
 
 On Windows, download and run "Kintsugi3DBuilder-\<version\>-setup.exe" to install Kintsugi 3D.
 
 On Mac OS, download and open "Kintsugi3DBuilder-\<version\>-macos.dmg" and copy "Kintsugi 3D Viewer" and "Kintsugi 3D Builder" into the Applications folder.
 For the time being, Kintsugi 3D is not signed or notarized and must be manually allowed through Mac OS's "Gatekeeper" feature.  Instructions for how to do this are included in the documentation linked above.
 
-### Support
+## Support
 
 Kintsugi 3D Builder is beta software and may contain bugs or other issues.  We welcome feedback on your experience with the software so that we can continue improving it.  Comments or bug reports should be directed to Michael Tetzlaff ([tetzlaffm@uwstout.edu](mailto:tetzlaffm@uwstout.edu)) or posted on the CHI forums (linked above).
 
