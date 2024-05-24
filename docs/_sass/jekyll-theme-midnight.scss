@@ -236,7 +236,7 @@ section {
   margin: 20px 0;
   margin-top: 70px;
 
-  #title {
+  #title, #footer {
     border: 0;
     outline: none;
     margin: 0 0 50px 0;
@@ -279,7 +279,7 @@ section {
 
 @media print, screen and (max-width: 720px) {
 
-  #title {
+  #title, #footer {
     .credits {
       display: block;
       width: 100%;
