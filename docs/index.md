@@ -1,11 +1,18 @@
-## Download
-[Latest release](https://github.com/michaelt919/Kintsugi3DBuilder/releases/latest)\
-[Documentation](https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf)
+## Download and Support
+### [Download latest release](https://github.com/michaelt919/Kintsugi3DBuilder/releases/latest)
+### [Documentation](https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf)
+### [CHI forums](https://forums.culturalheritageimaging.org/forum/48-kintsugi-3d/)
+
+### Install instructions:
 
 On Windows, download and run "Kintsugi3DBuilder-\<version\>-setup.exe" to install Kintsugi 3D.
 
 On Mac OS, download and open "Kintsugi3DBuilder-\<version\>-macos.dmg" and copy "Kintsugi 3D Viewer" and "Kintsugi 3D Builder" into the Applications folder.
 For the time being, Kintsugi 3D is not signed or notarized and must be manually allowed through Mac OS's "Gatekeeper" feature.  Instructions for how to do this are included in the documentation linked above.
+
+### Support
+
+Kintsugi 3D Builder is beta software and may contain bugs or other issues.  We welcome feedback on your experience with the software so that we can continue improving it.  Comments or bug reports should be directed to Michael Tetzlaff ([tetzlaffm@uwstout.edu](mailto:tetzlaffm@uwstout.edu)) or posted on the CHI forums (linked above).
 
 ## Overview
 Developed by a team at the University of Wisconsin – Stout with support from the Minneapolis Institute of Art (Mia) and Cultural Heritage Imaging (CHI) under a grant from the National Endowment for the Humanities (NEH), Kintsugi 3D is a novel software platform for synthesizing empirically-based roughness, specularity, normal, and diffuse textures from an image set containing photographs of an object captured with flash-on-camera illumination. What sets Kintsugi 3D apart from other workflows that produce specularity maps is that all the textures produced are empirically-based: they are derived directly from photographic data using classical optimization methods, and the reconstruction error from this optimization process can be recorded as metadata for the object as documentation of the fidelity of the digitized form.
@@ -56,6 +63,3 @@ Licensed under [GPLv3](http://www.gnu.org/licenses/gpl-3.0.html)
 
 Kintsugi 3D Builder is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 Kintsugi 3D Builder is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- 
-Requests for source code, comments, or bug reports should be sent to
-Michael Tetzlaff ([tetzlaffm@uwstout.edu](mailto:tetzlaffm@uwstout.edu))
