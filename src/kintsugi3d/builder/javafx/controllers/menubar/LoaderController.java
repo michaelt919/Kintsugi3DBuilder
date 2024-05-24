@@ -14,7 +14,6 @@ package kintsugi3d.builder.javafx.controllers.menubar;
 
 import java.awt.*;
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -23,16 +22,12 @@ import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
@@ -76,9 +71,6 @@ public class LoaderController extends FXMLPageController implements Initializabl
     private File cameraFile;
     private File objFile;
     private File photoDir;
-    private File plyFile;
-    private MetashapeObjectChunk metashapeObjectChunk;
-
     private Runnable loadStartCallback;
     private Consumer<ViewSet> viewSetCallback;
 

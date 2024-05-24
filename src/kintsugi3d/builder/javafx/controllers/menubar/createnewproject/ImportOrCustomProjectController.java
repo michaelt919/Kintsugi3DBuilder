@@ -2,15 +2,11 @@ package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 
 public class ImportOrCustomProjectController extends FXMLPageController {
-
-    @FXML private Button metashapeImportButton;
 
     @FXML private AnchorPane anchorPane;
 

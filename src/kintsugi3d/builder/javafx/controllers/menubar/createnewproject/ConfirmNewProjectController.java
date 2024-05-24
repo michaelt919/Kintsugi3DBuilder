@@ -2,7 +2,6 @@ package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
@@ -61,7 +60,7 @@ public class ConfirmNewProjectController extends FXMLPageController {
             }
         }
         else{
-            File objFile = hostScrollerController.getInfo(ShareInfo.Info.OBJ_FILE);
+            objFile = hostScrollerController.getInfo(ShareInfo.Info.OBJ_FILE);
 
             if(objFile != null){
                 String fileName = objFile.getName();
