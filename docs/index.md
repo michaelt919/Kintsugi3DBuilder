@@ -1,6 +1,9 @@
 ## Download
 Get the latest release here: https://github.com/michaelt919/Kintsugi3DBuilder/releases/latest
 
+## Documentation
+Read the documentation here: https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf
+
 ## Overview
 Developed by a team at the University of Wisconsin – Stout with support from the Minneapolis Institute of Art (Mia) and Cultural Heritage Imaging (CHI) under a grant from the National Endowment for the Humanities (NEH), Kintsugi 3D is a novel software platform for synthesizing empirically-based roughness, specularity, normal, and diffuse textures from an image set containing photographs of an object captured with flash-on-camera illumination. What sets Kintsugi 3D apart from other workflows that produce specularity maps is that all the textures produced are empirically-based: they are derived directly from photographic data using classical optimization methods, and the reconstruction error from this optimization process can be recorded as metadata for the object as documentation of the fidelity of the digitized form.
 
