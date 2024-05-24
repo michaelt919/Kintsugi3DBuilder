@@ -259,60 +259,29 @@ public class LoaderController extends FXMLPageController implements Initializabl
     @FXML
     private void okButtonPress()
     {
-        if (metashapeObjectChunk != null){
-            if(metashapeObjectChunk.getFrameZip() == null) {
-                // Make an alert pop up
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                return;
-            }
-
-            // Add a viewSetCallback
-            if (viewSetCallback != null) {
-                MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(viewSetCallback);
-            }
-
-            //TODO: investigate why progress bar is not updated here
-            new Thread(() ->
-                    MultithreadModels.getInstance().getLoadingModel()
-                            .loadAgisoftFromZIP(
-                                    metashapeObjectChunk.getFramePath(),
-                                    metashapeObjectChunk,
-                                    primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
-                    .start();
-            close();
-        }
-
-        else if ((cameraFile != null) && ((objFile != null) || (plyFile != null)) && (photoDir != null))
-        {
-            if (loadStartCallback != null)
-            {
-                loadStartCallback.run();
-            }
-
-            if (viewSetCallback != null)
-            {
-                MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(viewSetCallback);
-            }
-            File choosenFile;
-            if(objFile != null){
-                choosenFile = objFile;
-            }else{
-                choosenFile = plyFile;
-            }
-            new Thread(() ->
-                MultithreadModels.getInstance()
-                        .getLoadingModel()
-                            .loadFromAgisoftFiles(
-                                cameraFile.getPath(), cameraFile, choosenFile, photoDir,
-                                primaryViewChoiceBox.getSelectionModel().getSelectedItem()
-                            )
-            ).start();
-            WelcomeWindowController.getInstance().hideWelcomeWindow();
-            close();
-        }
-        else{
+        if (!areAllFilesLoaded()) {
             Toolkit.getDefaultToolkit().beep();
+            return;
         }
+
+        if (loadStartCallback != null)
+        {
+            loadStartCallback.run();
+        }
+
+        if (viewSetCallback != null)
+        {
+            MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(
+                    viewSet -> viewSetCallback.accept(viewSet));
+        }
+
+        new Thread(() ->
+                MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(
+                        cameraFile.getPath(), cameraFile, objFile, photoDir,
+                        primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
+                .start();
+        WelcomeWindowController.getInstance().hideWelcomeWindow();
+        close();
     }
 
     private boolean areAllFilesLoaded() {
@@ -349,8 +318,6 @@ public class LoaderController extends FXMLPageController implements Initializabl
         return thisStage;
     }
 
-    private static final String QUICK_FILENAME = "quickSaveLoadConfig.txt";
-
     @Override
     public void shareInfo() {
         if (hostScrollerController == null){
@@ -364,48 +331,4 @@ public class LoaderController extends FXMLPageController implements Initializabl
         hostScrollerController.addInfo(Info.OBJ_FILE, objFile);
         hostScrollerController.addInfo(Info.PRIMARY_VIEW, primaryViewChoiceBox.getSelectionModel().getSelectedItem());
     }
-
-    @FXML
-    public void plySelect(ActionEvent actionEvent) {
-        File temp = plyFileChooser.showOpenDialog(getStage());
-
-        if (temp != null)
-        {
-            plyFile = temp;
-            setHomeDir(temp);
-            loadCheckPLY.setText("Loaded");
-            loadCheckPLY.setFill(Paint.valueOf("Green"));
-        }
-    }
-
-    @FXML
-    public void metaSelect(ActionEvent actionEvent) throws IOException {
-        //get FXML URLs
-        String menuBarFXMLFileName = "fxml/menubar/MenuBar.fxml";
-        URL menuBarURL = getClass().getClassLoader().getResource(menuBarFXMLFileName);
-        assert menuBarURL != null : "cant find " + menuBarFXMLFileName;
-        // Make a new Menu Bar Controller to handle the unzipping menu
-        FXMLLoader menuBarFXMLLoader = new FXMLLoader(menuBarURL);
-        Parent menuBarRoot = menuBarFXMLLoader.load();
-        MenubarController menuBarController = menuBarFXMLLoader.getController();
-        // Open unzip window and pass reference to this controller so a callback function (chunkChosen) can be called later.
-        menuBarController.unzip(this::chunkChosen);
-    }
-
-    /**
-     * Callback function that is called once the user has selected a chunk and submitted it.
-     * This function will extract all the proper parts from the Metashape project and store them to be picked up once the
-     *  OK button is clicked.
-     * @param metashapeChunk The Metashape chunk in memory chosen.
-     */
-    public void chunkChosen(MetashapeObjectChunk metashapeChunk)
-    {
-        //IBRResourcesImageSpace.Builder<ContextType> loadAgisoftFromZIP(File chunkDirectory, File supportingFilesDirectory)
-        //TODO: Do we need the chunk object or the chunkDirectory?
-        //TODO: If this is such a simple function, perhaps change it to just be a setter.
-        this.metashapeObjectChunk = metashapeChunk;
-        //this.chunkDirectory = ;
-    }
-
-
 }
