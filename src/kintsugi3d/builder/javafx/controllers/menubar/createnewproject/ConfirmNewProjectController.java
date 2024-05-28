@@ -16,12 +16,16 @@ import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.File;
 import java.util.function.BiConsumer;
 
 public class ConfirmNewProjectController extends FXMLPageController {
+    private static final Logger log = LoggerFactory.getLogger(ConfirmNewProjectController.class);
+
     @FXML private AnchorPane anchorPane;
     @FXML private TextField projectNameTxtField;
     @FXML private TextField projectPathTxtField;
@@ -111,11 +115,40 @@ public class ConfirmNewProjectController extends FXMLPageController {
             loadStartCallback.run();
         }
 
+        String projName = projectNameTxtField.getText();
+        String projSaveLoc = projectPathTxtField.getText();
 
+        //append ".k3d" to file name if it does not already exist
+
+        if (!projName.endsWith(".k3d")){
+            //remove suffix if it exists
+            int index = projName.lastIndexOf('.');
+
+            if (index != -1) {
+                projName = projName.substring(0, projName.lastIndexOf('.'));
+            }
+
+            projName += ".k3d";
+        }
+
+        File saveLoc = new File(projSaveLoc);
+
+        if (!saveLoc.exists()){
+            Toolkit.getDefaultToolkit().beep();
+            //TODO: make this more user friendly
+            //add popup?
+            log.error("Save file location does not exist.");
+            return;
+        }
+
+        File toBeSaved = new File(saveLoc, projName);
+
+
+        //loading from custom import
         if(super.hostPage.getPrevPage().getController() instanceof LoaderController) {
             if (viewSetCallback != null) {
                 MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(
-                        viewSet -> viewSetCallback.accept(viewSet, cameraFile.getParentFile()));
+                        viewSet -> viewSetCallback.accept(viewSet, toBeSaved));
             }
             new Thread(() ->
                     MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(
@@ -125,9 +158,8 @@ public class ConfirmNewProjectController extends FXMLPageController {
         }
         else{//loading from metashape import
             if (viewSetCallback != null) {
-                //MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(viewSet ->viewSetCallback.accept(viewSet, null));
                 MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(
-                        viewSet ->viewSetCallback.accept(viewSet, new File(metashapeObjectChunk.getPsxFilePath()).getParentFile()));
+                        viewSet ->viewSetCallback.accept(viewSet, toBeSaved));
             }
             //TODO: investigate why progress bar is not updated here
             new Thread(() ->
@@ -140,7 +172,6 @@ public class ConfirmNewProjectController extends FXMLPageController {
         }
         WelcomeWindowController.getInstance().hideWelcomeWindow();
         close();
-
     }
 
     private void close() {
@@ -158,6 +189,7 @@ public class ConfirmNewProjectController extends FXMLPageController {
 
     private boolean areAllFieldsValid() {
         //TODO: need more robust checking for file paths
+        // move confirmButtonPress() path verifications to here?
         return !projectNameTxtField.getText().isEmpty() && !projectPathTxtField.getText().isEmpty();
     }
 }

@@ -220,57 +220,44 @@ public final class ProjectIO
         projectLoaded = true;
     }
 
-    private void onViewSetCreated(ViewSet viewSet, Window parentWindow, File defaultDirectory)
-    {
-        // Force user to save the project before proceeding, so that they have a place to save the results
-        saveProjectAs(parentWindow, () ->
-        {
-            File filesDirectory = ViewSet.getDefaultSupportingFilesDirectory(projectFile);
-            filesDirectory.mkdirs();
-
-            // need to use a lambda callback so that this is called after the file location is chosen
-            // but before its actually saved
-            if (Objects.equals(vsetFile, projectFile)) // Saved as a VSET
-            {
-                // Set the root directory first, then the supporting files directory
-                MultithreadModels.getInstance().getLoadingModel()
-                    .getLoadedViewSet().setRootDirectory(projectFile.getParentFile());
-
-                viewSet.setSupportingFilesDirectory(filesDirectory);
-            }
-            else // Saved as a Kintsugi 3D project
-            {
-                viewSet.setRootDirectory(filesDirectory);
-                viewSet.setSupportingFilesDirectory(filesDirectory);
-            }
-        }, defaultDirectory);
-    }
-
     private void onViewSetCreated(ViewSet viewSet, Window parentWindow)
     {
         // Force user to save the project before proceeding, so that they have a place to save the results
-        saveProjectAs(parentWindow, () ->
-        {
-            File filesDirectory = ViewSet.getDefaultSupportingFilesDirectory(projectFile);
-            filesDirectory.mkdirs();
-
-            // need to use a lambda callback so that this is called after the file location is chosen
-            // but before its actually saved
-            if (Objects.equals(vsetFile, projectFile)) // Saved as a VSET
-            {
-                // Set the root directory first, then the supporting files directory
-                MultithreadModels.getInstance().getLoadingModel()
-                        .getLoadedViewSet().setRootDirectory(projectFile.getParentFile());
-
-                viewSet.setSupportingFilesDirectory(filesDirectory);
-            }
-            else // Saved as a Kintsugi 3D project
-            {
-                viewSet.setRootDirectory(filesDirectory);
-                viewSet.setSupportingFilesDirectory(filesDirectory);
-            }
-        });
+        saveProjectAs(parentWindow, () -> setViewsetDirectories(viewSet));
     }
+
+    private void setViewsetDirectories(ViewSet viewSet) {
+        File filesDirectory = ViewSet.getDefaultSupportingFilesDirectory(projectFile);
+        filesDirectory.mkdirs();
+
+        // need to use a lambda callback so that this is called after the file location is chosen
+        // but before its actually saved
+        if (Objects.equals(vsetFile, projectFile)) // Saved as a VSET
+        {
+            // Set the root directory first, then the supporting files directory
+            MultithreadModels.getInstance().getLoadingModel()
+                    .getLoadedViewSet().setRootDirectory(projectFile.getParentFile());
+
+            viewSet.setSupportingFilesDirectory(filesDirectory);
+        }
+        else // Saved as a Kintsugi 3D project
+        {
+            viewSet.setRootDirectory(filesDirectory);
+            viewSet.setSupportingFilesDirectory(filesDirectory);
+        }
+    }
+
+    private void onViewSetCreatedFromDirectFile(ViewSet viewSet, Window parentWindow, File toBeSaved){
+        if (toBeSaved != null)
+        {
+            this.projectFile = toBeSaved;
+
+            setViewsetDirectories(viewSet);
+
+            saveProject(parentWindow);
+        }
+    }
+
 
 
     public void createProject(Window parentWindow)
@@ -337,7 +324,10 @@ public final class ProjectIO
                     ConfirmNewProjectController cnpController = (ConfirmNewProjectController) controller;
                     cnpController.setLoadStartCallback(this::onLoadStart);
                     cnpController.setViewSetCallback(
-                            (viewSet, defaultDirectory) -> onViewSetCreated(viewSet, parentWindow, defaultDirectory));
+                            (viewSet, projectFileToBeSaved) -> {
+                                onViewSetCreatedFromDirectFile(viewSet, parentWindow, projectFileToBeSaved);
+                                RecentProjects.updateRecentFiles(projectFileToBeSaved.getAbsolutePath());
+                            });
                 }
             }
 
@@ -583,7 +573,6 @@ public final class ProjectIO
             {
                 fileContainer.selectedFile = fileChooser.showSaveDialog(parentWindow);
                 fileContainer.complete = true;
-                RecentProjects.updateRecentFiles(fileContainer.selectedFile.toString());
             });
 
             while (!fileContainer.complete)
@@ -601,9 +590,11 @@ public final class ProjectIO
                 callback.run();
             }
 
+            RecentProjects.updateRecentFiles(fileContainer.selectedFile.toString());
             saveProject(parentWindow);
         }
     }
+
 
     /**
      * NOTE: After "Save As", view set will share the same UUID as the original project,

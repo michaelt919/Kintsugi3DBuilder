@@ -45,6 +45,11 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
     @Override
     public void shareInfo() {
+        //update metashapeObjectChunk with selected chunk from chunkSelectionChoiceBox
+        if (metashapeObjectChunk != null){
+            updateMetashapeObjectChunk(metashapeObjectChunk.getMetashapeObject());
+        }
+
         hostScrollerController.addInfo(Info.METASHAPE_OBJ_CHUNK, metashapeObjectChunk);
     }
 
@@ -61,10 +66,14 @@ public class MetashapeImportController extends FXMLPageController implements Sha
             MetashapeObject metashapeObject = new MetashapeObject(metashapePsxFile.getAbsolutePath());
             initMetashapeObject(metashapeObject);
 
-            String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
-            metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, chunkName);
-            initMetashapeObjectChunk(metashapeObjectChunk);
+            updateMetashapeObjectChunk(metashapeObject);
         }
+    }
+
+    private void updateMetashapeObjectChunk(MetashapeObject metashapeObject) {
+        String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
+        metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, chunkName);
+        initMetashapeObjectChunk(metashapeObjectChunk);
     }
 
     public void initMetashapeObjectChunk(MetashapeObjectChunk metashapeObjectChunk){
