@@ -279,14 +279,14 @@ public final class ProjectIO
         {
             if (confirmClose("Are you sure you want to create a new project?"))
             {
-                try//recent files are updated in CreateProjectController after project is made
+                try//recent files are updated in LoaderController after project is made
                 {
-                    LoaderController createProjectController =
+                    LoaderController loaderController =
                         makeWindow(parentWindow, "Load Files", loaderWindowOpen, 750, 330, "fxml/menubar/Loader.fxml");
-                    createProjectController.setLoadStartCallback(this::onLoadStart);
-                    createProjectController.setViewSetCallback(
+                    loaderController.setLoadStartCallback(this::onLoadStart);
+                    loaderController.setViewSetCallback(
                         viewSet -> onViewSetCreated(viewSet, parentWindow));
-                    createProjectController.init();
+                    loaderController.init();
                 }
                 catch (Exception e)
                 {
