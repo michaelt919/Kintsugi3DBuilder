@@ -38,7 +38,6 @@ import kintsugi3d.gl.material.TextureLoadOptions;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
-import kintsugi3d.gl.util.UnzipHelper;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.ImageFinder;
@@ -209,11 +208,11 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             // Get reference to the chunk directory
             File chunkDirectory = new File(metashapeObjectChunk.getChunkDirectoryPath());
             if (!chunkDirectory.exists()){
-                System.out.println("Chunk directory does not exist: " + chunkDirectory);
+                log.error("Chunk directory does not exist: " + chunkDirectory);
             }
             File rootDirectory = new File(metashapeObjectChunk.getPsxFilePath()).getParentFile();
             if (!rootDirectory.exists()){
-                System.out.println("Root directory does not exist: " + rootDirectory);
+                log.error("Root directory does not exist: " + rootDirectory);
             }
 
         // 1) Construct camera ID to filename map from frame's ZIP
@@ -221,7 +220,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             // Open the xml files that contains all the cameras' ids and file paths
             Document frame = metashapeObjectChunk.getFrameZip();
             if (frame == null || frame.getDocumentElement() == null){
-                System.out.println("Frame document is null");
+                log.error("Frame document is null");
                 return null;
             }
 
@@ -261,8 +260,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
                 zis.close(); // Close the zip stream
             } catch (IOException e) {
-                // Print error to log
-                System.out.println("Error reading zip file: " + e.getMessage());
+                log.error("Error reading zip file: " + e.getMessage());
             }
 
         // 3) load geometry from ZipInputStream from model's ZIP
@@ -279,7 +277,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             File undistortedImageDirectory = new File(psxFile.getParent()); // The directory of undistorted photos //TODO: verify this
             // Print error to log if unable to find undistortedImageDirectory
             if (!undistortedImageDirectory.exists()) {
-                System.out.println("Unable to find undistortedImageDirectory: " + undistortedImageDirectory);
+                log.error("Unable to find undistortedImageDirectory: " + undistortedImageDirectory);
             }
 
             // Set the fullResImage Directory to be the root directory
