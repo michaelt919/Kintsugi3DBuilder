@@ -233,4 +233,8 @@ public class MetashapeObjectChunk {
 
         return list;
     }
+
+    public int getModelID() {
+        return modelID;
+    }
 }

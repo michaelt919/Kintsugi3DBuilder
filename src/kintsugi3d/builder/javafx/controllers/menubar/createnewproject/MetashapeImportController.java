@@ -52,12 +52,18 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         if (metashapeObjectChunk != null){
             MetashapeObject metashapeObject = metashapeObjectChunk.getMetashapeObject();
             String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
+            int modelID = getSelectedModelID();
 
-            //TODO: actually find model id instead of defaulting to 0
-            metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, chunkName, 0);
+            metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, chunkName, modelID);
         }
 
         hostScrollerController.addInfo(Info.METASHAPE_OBJ_CHUNK, metashapeObjectChunk);
+    }
+
+    private int getSelectedModelID() {
+        String modelIDAsString = (String) modelSelectionChoiceBox.getSelectionModel().getSelectedItem();
+        int modelID = Integer.parseInt(modelIDAsString.substring(0, modelIDAsString.indexOf(' ')));
+        return modelID;
     }
 
     @FXML
@@ -70,25 +76,27 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         metashapePsxFile = fileChooser.showOpenDialog(stage);
 
         if(metashapePsxFile != null){
-            MetashapeObject metashapeObject = new MetashapeObject(metashapePsxFile.getAbsolutePath());
-            updateChunkSelectionChoiceBox();
-
-            String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
-            //TODO: actually find model id instead of defaulting to 0
-            metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, chunkName, 0);
-            updateModelSelectionChoiceBox();
-
+            metashapeObjectChunk = null;
+            updateChoiceBoxes();
             updateLoadedIndicators();
         }
     }
 
     private void updateChoiceBoxes() {
         updateChunkSelectionChoiceBox();
-
         updateModelSelectionChoiceBox();
     }
 
     private void updateModelSelectionChoiceBox() {
+        modelSelectionChoiceBox.setDisable(true);
+
+        if (metashapeObjectChunk == null){
+            MetashapeObject metashapeObject = new MetashapeObject(metashapePsxFile.getAbsolutePath());
+            String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
+            int modelID = 0;
+
+            metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, chunkName, modelID);
+        }
         ArrayList<Pair<Integer, String>> modelNames = metashapeObjectChunk.getAllModelNames();
 
         modelSelectionChoiceBox.getItems().clear();
@@ -103,10 +111,13 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         if (modelSelectionChoiceBox.getItems() != null &&
                 modelSelectionChoiceBox.getItems().get(0) != null){
             modelSelectionChoiceBox.setValue(modelSelectionChoiceBox.getItems().get(0));
+            modelSelectionChoiceBox.setDisable(false);
         }
     }
 
     private void updateChunkSelectionChoiceBox() {
+        chunkSelectionChoiceBox.setDisable(true);
+
         //load chunks into chunk selection module
         MetashapeObject metashapeObject = new MetashapeObject(metashapePsxFile.getPath());
 
@@ -119,17 +130,17 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         //   needed info that the chunk selection choice box didn't have yet
         chunkSelectionChoiceBox.getItems().addAll(chunkNames);
 
-        chunkSelectionChoiceBox.setDisable(false);
 
         //initialize choice box to first option instead of null option
         if (chunkSelectionChoiceBox.getItems() != null &&
                 chunkSelectionChoiceBox.getItems().get(0) != null){
             chunkSelectionChoiceBox.setValue(chunkSelectionChoiceBox.getItems().get(0));
+            chunkSelectionChoiceBox.setDisable(false);
         }
     }
 
     private void updateLoadedIndicators() {
-        if (isMetashapeObjectLoaded()) {
+        if (isMetashapeObjectLoaded()) {//TODO: change condition to check for metashapeObjectChunk != null?
             loadMetashapeObject.setText("Loaded");
             loadMetashapeObject.setFill(Paint.valueOf("Green"));
 
