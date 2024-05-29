@@ -152,7 +152,9 @@ public class UnzipFileSelectionController {
             ChunkViewerController chunkViewerController = fxmlLoader.getController();
 
             metashapeObject.setPsxFilePath(psxPathTxtField.getText());
-            MetashapeObjectChunk metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, selectedChunkName);
+
+            //TODO: actually find model id instead of defaulting to 0
+            MetashapeObjectChunk metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, selectedChunkName, 0);
 
             chunkViewerController.initializeChunkSelectionAndTreeView(metashapeObjectChunk);
 

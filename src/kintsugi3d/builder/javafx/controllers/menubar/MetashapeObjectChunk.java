@@ -13,6 +13,7 @@
 package kintsugi3d.builder.javafx.controllers.menubar;
 
 import javafx.scene.image.Image;
+import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -28,6 +29,7 @@ import java.util.List;
 
 public class MetashapeObjectChunk {
     private static final Logger log = LoggerFactory.getLogger(MetashapeObjectChunk.class);
+    private int modelID;
 
     //contains a metashape object and a specific chunk
     private MetashapeObject metashapeObject;
@@ -56,11 +58,13 @@ public class MetashapeObjectChunk {
         chunkID = -1;//TODO: GOOD NULL CHUNK ID?
         chunkXML = null;
         frameZip = null;
+        modelID = -1;
     }
 
-    public MetashapeObjectChunk(MetashapeObject metashapeObject, String chunkName) {
+    public MetashapeObjectChunk(MetashapeObject metashapeObject, String chunkName, int modelID) {
         this.metashapeObject = metashapeObject;
         this.chunkName = chunkName;
+        this.modelID = modelID;
 
         this.chunkZipPath = metashapeObject.getChunkZipPathPairs().get(chunkName);
 
@@ -87,6 +91,7 @@ public class MetashapeObjectChunk {
         } catch (IOException e) {
             log.error("An error occurred loading Metashape chunk:", e);
         }
+
     }
 
 
@@ -188,8 +193,6 @@ public class MetashapeObjectChunk {
     public String getModelPath() {
         //  <model id="0" path="model.1/model.zip"/> --> returns "model.1/model.zip"
 
-        int modelID = 0; //TODO: make this a member var and read in while parsing xml
-
         try{
             NodeList elems = ((Element) frameZip.getElementsByTagName("frame").item(0))
                     .getElementsByTagName("model");
@@ -208,5 +211,26 @@ public class MetashapeObjectChunk {
         }
 
         return "";
+    }
+
+    public ArrayList<Pair<Integer, String>> getAllModelNames() {
+        ArrayList<Pair<Integer, String>> list = new ArrayList<>();
+
+        try{
+            NodeList elems = ((Element) frameZip.getElementsByTagName("frame").item(0))
+                    .getElementsByTagName("model");
+
+            for (int i = 0; i < elems.getLength(); i++) {
+                Element element = (Element) elems.item(i);
+
+                list.add(new Pair<>(Integer.parseInt(element.getAttribute("id")),element.getAttribute("path")));
+            }
+
+        }
+        catch(NullPointerException e){
+            return new ArrayList<>();
+        }
+
+        return list;
     }
 }

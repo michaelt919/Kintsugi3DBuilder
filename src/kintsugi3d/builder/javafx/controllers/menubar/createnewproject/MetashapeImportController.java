@@ -9,6 +9,7 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Pair;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObject;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
@@ -21,6 +22,8 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     @FXML private AnchorPane anchorPane;
     @FXML private Text loadMetashapeObject;
     @FXML private ChoiceBox chunkSelectionChoiceBox;
+    @FXML private ChoiceBox modelSelectionChoiceBox;
+
     private File metashapePsxFile;
     private MetashapeObjectChunk metashapeObjectChunk;
 
@@ -47,7 +50,11 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     public void shareInfo() {
         //update metashapeObjectChunk with selected chunk from chunkSelectionChoiceBox
         if (metashapeObjectChunk != null){
-            updateMetashapeObjectChunk(metashapeObjectChunk.getMetashapeObject());
+            MetashapeObject metashapeObject = metashapeObjectChunk.getMetashapeObject();
+            String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
+
+            //TODO: actually find model id instead of defaulting to 0
+            metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, chunkName, 0);
         }
 
         hostScrollerController.addInfo(Info.METASHAPE_OBJ_CHUNK, metashapeObjectChunk);
@@ -62,40 +69,54 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         Stage stage = (Stage) ((Node)actionEvent.getSource()).getScene().getWindow();
         metashapePsxFile = fileChooser.showOpenDialog(stage);
 
-        if(isMetashapeObjectLoaded()){
+        if(metashapePsxFile != null){
             MetashapeObject metashapeObject = new MetashapeObject(metashapePsxFile.getAbsolutePath());
-            initMetashapeObject(metashapeObject);
+            updateChunkSelectionChoiceBox();
 
-            updateMetashapeObjectChunk(metashapeObject);
+            String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
+            //TODO: actually find model id instead of defaulting to 0
+            metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, chunkName, 0);
+            updateModelSelectionChoiceBox();
+
+            updateLoadedIndicators();
         }
     }
 
-    private void updateMetashapeObjectChunk(MetashapeObject metashapeObject) {
-        String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
-        metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, chunkName);
-        initMetashapeObjectChunk(metashapeObjectChunk);
+    private void updateChoiceBoxes() {
+        updateChunkSelectionChoiceBox();
+
+        updateModelSelectionChoiceBox();
     }
 
-    public void initMetashapeObjectChunk(MetashapeObjectChunk metashapeObjectChunk){
-        initMetashapeObject(metashapeObjectChunk.getMetashapeObject());
-        chunkSelectionChoiceBox.setValue(metashapeObjectChunk.getChunkName());
+    private void updateModelSelectionChoiceBox() {
+        ArrayList<Pair<Integer, String>> modelNames = metashapeObjectChunk.getAllModelNames();
+
+        modelSelectionChoiceBox.getItems().clear();
+
+        for (Pair<Integer, String> pair : modelNames){
+            modelSelectionChoiceBox.getItems().add(pair.getKey() + "   " + pair.getValue());
+        }
+
+        modelSelectionChoiceBox.setDisable(false);
+
+        //initialize choice box to first option instead of null option
+        if (modelSelectionChoiceBox.getItems() != null &&
+                modelSelectionChoiceBox.getItems().get(0) != null){
+            modelSelectionChoiceBox.setValue(modelSelectionChoiceBox.getItems().get(0));
+        }
     }
 
-    public void initMetashapeObject(MetashapeObject metashapeObject){
-
-        this.metashapePsxFile = new File(metashapeObject.getPsxFilePath());
-
-        updateChoiceBox(metashapeObject);
-
-        updateLoadedIndicators();
-    }
-
-    private void updateChoiceBox(MetashapeObject metashapeObject) {
+    private void updateChunkSelectionChoiceBox() {
         //load chunks into chunk selection module
+        MetashapeObject metashapeObject = new MetashapeObject(metashapePsxFile.getPath());
+
         ArrayList<String> chunkNames = (ArrayList<String>) metashapeObject.
                 getChunkNamesDynamic(metashapeObject.getPsxFilePath());
 
         chunkSelectionChoiceBox.getItems().clear();
+        //TODO: implement recursive / platform.run later from LoaderController?
+        //first attempt led to data dependency issues where the model selection choice box
+        //   needed info that the chunk selection choice box didn't have yet
         chunkSelectionChoiceBox.getItems().addAll(chunkNames);
 
         chunkSelectionChoiceBox.setDisable(false);

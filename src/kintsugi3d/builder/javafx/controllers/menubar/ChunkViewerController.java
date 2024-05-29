@@ -171,7 +171,8 @@ public class ChunkViewerController implements Initializable {
             root = fxmlLoader.load();
             ChunkViewerController chunkViewerController = fxmlLoader.getController();
 
-            MetashapeObjectChunk newMetashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, selectedChunkName);
+            //TODO: actually retrieve model id instead of defaulting to 0
+            MetashapeObjectChunk newMetashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, selectedChunkName, 0);
             chunkViewerController.initializeChunkSelectionAndTreeView(newMetashapeObjectChunk);
 
             stage = (Stage) ((javafx.scene.Node) actionEvent.getSource()).getScene().getWindow();

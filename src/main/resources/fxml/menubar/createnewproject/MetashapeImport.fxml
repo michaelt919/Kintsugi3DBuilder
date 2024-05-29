@@ -6,7 +6,7 @@
 
 <AnchorPane fx:id="anchorPane" prefHeight="334.0" prefWidth="600.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.createnewproject.MetashapeImportController">
    <children>
-      <VBox alignment="CENTER" layoutX="180.6666717529297" layoutY="76.66666412353516" prefHeight="189.33333079020184" prefWidth="416.6666717529297" spacing="20.0"  AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <VBox alignment="CENTER" layoutX="180.6666717529297" layoutY="76.66666412353516" prefHeight="189.33333079020184" prefWidth="416.6666717529297" spacing="20.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
             <Text fx:id="loadMetashapeObject" fill="RED" strokeType="OUTSIDE" strokeWidth="0.0" text="Unloaded" textAlignment="CENTER">
                <font>
@@ -24,6 +24,7 @@
                </font>
             </Text>
             <ChoiceBox fx:id="chunkSelectionChoiceBox" disable="true" prefHeight="25.0" prefWidth="223.0" styleClass="choicebox" />
+            <ChoiceBox fx:id="modelSelectionChoiceBox" disable="true" layoutX="199.0" layoutY="238.0" prefHeight="25.0" prefWidth="223.0" styleClass="choicebox" />
          </children>
       </VBox>
    </children>
