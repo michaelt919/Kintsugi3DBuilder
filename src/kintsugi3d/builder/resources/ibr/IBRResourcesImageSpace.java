@@ -264,11 +264,11 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             }
 
         // 3) load geometry from ZipInputStream from model's ZIP
-            this.geometry = VertexGeometry.createFromZippedPLYFile(new File(chunkDirectory, "0/model/model.zip"), "mesh.ply");
+            String modelPath = metashapeObjectChunk.getModelPath();
+            this.geometry = VertexGeometry.createFromZippedPLYFile(new File(chunkDirectory, "0/" + modelPath), "mesh.ply");
 
-            if (this.geometry != null) { //TODO: Why does it say it can never equal null? Shouldn't createFromPLYFile be capable of failing?
-                viewSet.setGeometryFile(geometry.getFilename());
-            }
+            viewSet.setGeometryFile(geometry.getFilename());
+
 
         // 4) Set image directory to be parent directory of MetaShape project (and add to the photos' paths)
             this.imageDirectoryOverride = chunkDirectory.getParentFile().getParentFile();

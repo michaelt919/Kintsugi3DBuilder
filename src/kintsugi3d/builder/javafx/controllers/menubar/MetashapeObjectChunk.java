@@ -126,6 +126,7 @@ public class MetashapeObjectChunk {
         String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4);//remove ".psx" from path
 
         //Note: the 0 denotes that these thumbnails are for frame 0
+        //TODO: can get this info from thumbnails tag in frameXML instead of hard coding
         String thumbnailPath = psxPathBase + ".files\\" + chunkID + "\\0\\thumbnails\\thumbnails.zip";
         return UnzipHelper.unzipImages(thumbnailPath);
     }
@@ -182,5 +183,20 @@ public class MetashapeObjectChunk {
 
         //String path now holds the full path to the selected thumbnail's full-res image
         return new File(path);
+    }
+
+    public String getModelPath() {
+        //  <model id="0" path="model.1/model.zip"/> --> returns "model.1/model.zip"
+
+        Element modelElem;
+        try{
+            modelElem = (Element) ((Element) frameZip.getElementsByTagName("frame").item(0))
+                    .getElementsByTagName("model").item(0);
+        }
+        catch(NullPointerException e){
+            return "";
+        }
+
+        return modelElem.getAttribute("path");
     }
 }
