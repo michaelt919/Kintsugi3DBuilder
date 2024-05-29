@@ -268,6 +268,9 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
         // TODO There currently isn't functionality for a supportingFilesDirectory at this early in the process
         //  Restructuring required from Tetzlaff.
+
+        this.loadingMonitor.startLoading();
+
         File supportingFilesDirectory = null;
 
         try {
