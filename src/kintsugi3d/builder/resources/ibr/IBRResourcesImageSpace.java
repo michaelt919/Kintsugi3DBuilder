@@ -21,6 +21,7 @@ import java.util.stream.IntStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import javax.imageio.ImageIO;
+import javax.xml.stream.XMLStreamException;
 
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.app.Rendering;
@@ -202,9 +203,9 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
          * @param metashapeObjectChunk
          * @param supportingFilesDirectory
          * @return
-         * @throws Exception
+         * @throws IOException
          */
-        public Builder<ContextType> loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, File supportingFilesDirectory) throws Exception {
+        public Builder<ContextType> loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, File supportingFilesDirectory) throws IOException {
             // Get reference to the chunk directory
             File chunkDirectory = new File(metashapeObjectChunk.getChunkDirectoryPath());
             if (!chunkDirectory.exists()){
@@ -259,12 +260,14 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 }
 
                 zis.close(); // Close the zip stream
-            } catch (IOException e) {
+            } catch (IOException | XMLStreamException e) {
                 log.error("Error reading zip file: " + e.getMessage());
             }
 
         // 3) load geometry from ZipInputStream from model's ZIP
             String modelPath = metashapeObjectChunk.getModelPath();
+            if (modelPath.isEmpty()){throw new FileNotFoundException("Could not find model path");}
+
             this.geometry = VertexGeometry.createFromZippedPLYFile(new File(chunkDirectory, "0/" + modelPath), "mesh.ply");
 
             viewSet.setGeometryFile(geometry.getFilename());

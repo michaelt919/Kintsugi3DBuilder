@@ -188,15 +188,25 @@ public class MetashapeObjectChunk {
     public String getModelPath() {
         //  <model id="0" path="model.1/model.zip"/> --> returns "model.1/model.zip"
 
-        Element modelElem;
+        int modelID = 0; //TODO: make this a member var and read in while parsing xml
+
         try{
-            modelElem = (Element) ((Element) frameZip.getElementsByTagName("frame").item(0))
-                    .getElementsByTagName("model").item(0);
+            NodeList elems = ((Element) frameZip.getElementsByTagName("frame").item(0))
+                    .getElementsByTagName("model");
+
+            for (int i = 0; i < elems.getLength(); i++) {
+                Element element = (Element) elems.item(i);
+
+                if (Integer.parseInt(element.getAttribute("id")) == modelID){
+                    return element.getAttribute("path");
+                }
+            }
+
         }
         catch(NullPointerException e){
             return "";
         }
 
-        return modelElem.getAttribute("path");
+        return "";
     }
 }
