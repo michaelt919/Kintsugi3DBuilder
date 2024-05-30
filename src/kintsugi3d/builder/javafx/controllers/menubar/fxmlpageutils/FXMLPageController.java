@@ -1,5 +1,9 @@
 package kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils;
 
+import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.Region;
 import javafx.util.Pair;
 
@@ -32,4 +36,14 @@ public abstract class FXMLPageController {
     }
 
     public boolean isNextButtonValid(){return hostPage.hasNextPage();}
+
+    public void setButtonShortcuts(){
+        KeyCombination leftKeyCode = new KeyCodeCombination(KeyCode.A);
+
+        KeyCombination rightKeyCode = new KeyCodeCombination(KeyCode.D);
+
+        Scene scene = getHostRegion().getScene();
+        scene.getAccelerators().put(leftKeyCode, ()-> hostScrollerController.prevPage());
+        scene.getAccelerators().put(rightKeyCode, ()-> hostScrollerController.nextPage());
+    }
 }

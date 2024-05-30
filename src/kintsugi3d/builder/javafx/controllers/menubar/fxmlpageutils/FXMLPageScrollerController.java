@@ -20,9 +20,9 @@ import java.util.Map;
 public class FXMLPageScrollerController {
     private static final Logger log = LoggerFactory.getLogger(FXMLPageScrollerController.class);
     @FXML private GridPane outerGridPane;
+
     @FXML private Button prevButton;
     @FXML private Button nextButton;
-
 
     @FXML private AnchorPane hostAnchorPane;
     ArrayList<FXMLPage> pages;
@@ -43,6 +43,8 @@ public class FXMLPageScrollerController {
         initControllerAndUpdatePanel(fileName);
 
         sharedInfo = new HashMap<>();
+
+        currentPage.getController().setButtonShortcuts();
     }
     public void prevPage() {
         if (currentPage.hasPrevPage()){
@@ -52,28 +54,30 @@ public class FXMLPageScrollerController {
     }
 
     public void nextPage() {
-        if (currentPage.hasNextPage()){
-            String nextPath;
-            try{
-                nextPath = currentPage.getNextPage().getFxmlFilePath();
-            }
-            catch(NullPointerException e){
-                log.error("Failed to load next page", e);
-                return;
-            }
+        if (!currentPage.hasNextPage()){return;}
 
-            //send relevant info to shareInfo collection variable
-            if (currentPage.getController() instanceof ShareInfo) {
-                ShareInfo shareableController = (ShareInfo) currentPage.getController();
-                shareableController.shareInfo();
-            }
-
-            currentPage.getNextPage().setPrevPage(currentPage);
-            currentPage = currentPage.getNextPage();
-
-            initControllerAndUpdatePanel(nextPath);
+        String nextPath;
+        try{
+            nextPath = currentPage.getNextPage().getFxmlFilePath();
         }
+        catch(NullPointerException e){
+            log.error("Failed to load next page", e);
+            return;
+        }
+
+        //send relevant info to shareInfo collection variable
+        if (currentPage.getController() instanceof ShareInfo) {
+            ShareInfo shareableController = (ShareInfo) currentPage.getController();
+            shareableController.shareInfo();
+        }
+
+        currentPage.getNextPage().setPrevPage(currentPage);
+        currentPage = currentPage.getNextPage();
+
+        initControllerAndUpdatePanel(nextPath);
+        currentPage.getController().setButtonShortcuts();
     }
+
 
     public void setPages(ArrayList<FXMLPage> pages, String firstPageFXMLPath){
         this.pages = pages;
@@ -157,5 +161,8 @@ public class FXMLPageScrollerController {
             System.out.println("Key: " + entry.getKey() + ", Value: " + entry.getValue());
         }
     }
+
+    public Button getNextButton(){return nextButton;}
+    public Button getPrevButton(){return prevButton;}
 }
 

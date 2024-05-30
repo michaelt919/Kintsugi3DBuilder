@@ -1,8 +1,6 @@
 package kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils;
 
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
-import javafx.util.Pair;
 
 public class FXMLPage {
     private String fxmlFilePath;
