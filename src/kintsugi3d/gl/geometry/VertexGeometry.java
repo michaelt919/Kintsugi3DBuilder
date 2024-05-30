@@ -112,7 +112,11 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
         VertexGeometry.geometryFile = geometryFile;
         String fileName = geometryFile.getName();
         String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
-        if("obj".equalsIgnoreCase(fileExtension)) {
+
+        if ("zip".equalsIgnoreCase(fileExtension)){
+            //TODO: set VertexGeometry.geometryFile to unzipped file?
+            return VertexGeometry.createFromZippedPLYFile(geometryFile, "mesh.ply");
+        } else if("obj".equalsIgnoreCase(fileExtension)) {
              return VertexGeometry.createFromOBJFile(geometryFile);
         }else if("ply".equalsIgnoreCase(fileExtension)){
             return VertexGeometry.createFromPLYFile(geometryFile);
@@ -337,9 +341,9 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
     {
         return createFromPLY(file, PLY.load(file.toPath()));
     }
-    public static VertexGeometry createFromZippedPLYFile(File zipFile, String fileName) throws IOException
+    public static VertexGeometry createFromZippedPLYFile(File zipFolder, String targetFileName) throws IOException
     {
-        return createFromPLY(zipFile, PLY.loadFromZip(zipFile, fileName));
+        return createFromPLY(zipFolder, PLY.loadFromZip(zipFolder, targetFileName));
     }
 
     private static VertexGeometry createFromPLY(File file, PLY ply) throws IOException

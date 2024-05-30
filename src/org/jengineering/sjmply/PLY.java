@@ -1,6 +1,6 @@
 package org.jengineering.sjmply;
 /* Copyright 2016 Dirk Toewe
- * 
+ *
  * This file is part of org.jengineering.sjmply.
  *
  * org.jengineering.sjmply is free software: you can redistribute it and/or
@@ -52,7 +52,6 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import org.jengineering.sjmply.PLYType.PLYList;
 import org.jengineering.sjmply.PLYType.PLYSequence;
 import org.jengineering.sjmply.PLYType.PLYUInt;
@@ -212,20 +211,20 @@ public class PLY
 
   /**
    * Loads a PLY file from inside a zip file.
-   * @param zipFile The File object of the zip file
-   * @param fileName The name of the PLY file that is zipped inside zip file
+   * @param zipFolder The File object of the zip file
+   * @param targetFileName The name of the PLY file that is zipped inside zip file
    * @return PLY object
    * @throws IOException
    */
-  public static PLY loadFromZip(File zipFile, String fileName) throws IOException {
+  public static PLY loadFromZip(File zipFolder, String targetFileName) throws IOException {
 
-    // Make an input stream from zipFile
-    try(ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFile))) {
+    // Make an input stream from zipFolder
+    try(ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFolder))) {
 
-      // Target zipIn to be on the fileName entry
+      // Target zipIn to be on the targetFileName entry
       ZipEntry entry = zipIn.getNextEntry();
       while (entry != null) {
-        if (entry.getName().equals(fileName)) {
+        if (entry.getName().equals(targetFileName)) {
           break;
         }
         entry = zipIn.getNextEntry();
@@ -317,7 +316,7 @@ public class PLY
   }
 
   /** Returns the element list by the given name from this PLY object.
-   *  
+   *
    *  @param name The name of the requested element list.
    *  @return The element list by the name <code>name</code>.
    *  @throws NoSuchElementException If there is no element list by the given name.
