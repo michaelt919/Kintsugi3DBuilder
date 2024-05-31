@@ -156,13 +156,6 @@ public class FXMLPageScrollerController {
         return (T) sharedInfo.get(key);
     }
 
-    public void dumpInfo() {
-        for (Map.Entry<ShareInfo.Info, ?> entry : sharedInfo.entrySet()) {
-            System.out.println("Key: " + entry.getKey() + ", Value: " + entry.getValue());
-        }
-    }
-
-    public Button getNextButton(){return nextButton;}
-    public Button getPrevButton(){return prevButton;}
+    public FXMLPage getCurrentPage(){return currentPage;}
 }
 

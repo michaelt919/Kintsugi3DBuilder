@@ -24,12 +24,13 @@ import kintsugi3d.gl.util.UnzipHelper;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MetashapeObjectChunk {
     private static final Logger log = LoggerFactory.getLogger(MetashapeObjectChunk.class);
-    private int modelID;
+    private Integer modelID;
 
     //contains a metashape object and a specific chunk
     private MetashapeObject metashapeObject;
@@ -61,7 +62,7 @@ public class MetashapeObjectChunk {
         modelID = -1;
     }
 
-    public MetashapeObjectChunk(MetashapeObject metashapeObject, String chunkName, int modelID) {
+    public MetashapeObjectChunk(MetashapeObject metashapeObject, String chunkName, Integer modelID) {
         this.metashapeObject = metashapeObject;
         this.chunkName = chunkName;
         this.modelID = modelID;
@@ -197,6 +198,12 @@ public class MetashapeObjectChunk {
             NodeList elems = ((Element) frameZip.getElementsByTagName("frame").item(0))
                     .getElementsByTagName("model");
 
+            //this if statement triggers if chunk has one model and that model has no id
+            if (elems.getLength() == 1 &&
+                    ((Element) elems.item(0)).getAttribute("id").isEmpty()){
+                return ((Element) elems.item(0)).getAttribute("path");
+            }
+
             for (int i = 0; i < elems.getLength(); i++) {
                 Element element = (Element) elems.item(i);
 
@@ -216,6 +223,9 @@ public class MetashapeObjectChunk {
     public ArrayList<Pair<Integer, String>> getAllModelNames() {
         ArrayList<Pair<Integer, String>> list = new ArrayList<>();
 
+        //some metashape files only have one model and their doc.xml does not give them an id
+        //ex. mia arrowhead chunk #2 just has:   <model path="model.1/model.zip"/>
+
         try{
             NodeList elems = ((Element) frameZip.getElementsByTagName("frame").item(0))
                     .getElementsByTagName("model");
@@ -223,18 +233,27 @@ public class MetashapeObjectChunk {
             for (int i = 0; i < elems.getLength(); i++) {
                 Element element = (Element) elems.item(i);
 
-                list.add(new Pair<>(Integer.parseInt(element.getAttribute("id")),element.getAttribute("path")));
-            }
+                String e = element.getAttribute("id");
 
+                //only for chunks which have one model w/ no id
+                if (e.isEmpty() && i == 0 && elems.getLength() == 1) {
+                    list.add(new Pair<>(null, element.getAttribute("path")));
+                }
+
+                else if (!e.isEmpty()){
+                    list.add(new Pair<>(Integer.parseInt(element.getAttribute("id")),
+                            element.getAttribute("path")));
+                }
+            }
         }
         catch(NullPointerException e){
-            return new ArrayList<>();
+            return list;
         }
 
         return list;
     }
 
-    public int getModelID() {
+    public Integer getModelID() {
         return modelID;
     }
 }

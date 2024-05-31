@@ -1,8 +1,9 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
-import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
@@ -43,7 +44,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
     @Override
     public boolean isNextButtonValid() {
-        return super.isNextButtonValid() && isMetashapeObjectLoaded();
+        return super.isNextButtonValid() && hasModels();
     }
 
     @Override
@@ -52,7 +53,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         if (metashapeObjectChunk != null){
             MetashapeObject metashapeObject = metashapeObjectChunk.getMetashapeObject();
             String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
-            int modelID = getSelectedModelID();
+            Integer modelID = getSelectedModelID();
 
             metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, chunkName, modelID);
         }
@@ -60,10 +61,12 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         hostScrollerController.addInfo(Info.METASHAPE_OBJ_CHUNK, metashapeObjectChunk);
     }
 
-    private int getSelectedModelID() {
+    private Integer getSelectedModelID() {
         String modelIDAsString = (String) modelSelectionChoiceBox.getSelectionModel().getSelectedItem();
-        int modelID = Integer.parseInt(modelIDAsString.substring(0, modelIDAsString.indexOf(' ')));
-        return modelID;
+        //TODO: need to revisit this when formatting of model selection choice box changes
+        if (modelIDAsString.startsWith("null")){return null;}
+
+        return Integer.parseInt(modelIDAsString.substring(0, modelIDAsString.indexOf(' ')));
     }
 
     @FXML
@@ -105,14 +108,34 @@ public class MetashapeImportController extends FXMLPageController implements Sha
             modelSelectionChoiceBox.getItems().add(pair.getKey() + "   " + pair.getValue());
         }
 
-        modelSelectionChoiceBox.setDisable(false);
-
         //initialize choice box to first option instead of null option
-        if (modelSelectionChoiceBox.getItems() != null &&
-                modelSelectionChoiceBox.getItems().get(0) != null){
+        if (hasModels()){
             modelSelectionChoiceBox.setValue(modelSelectionChoiceBox.getItems().get(0));
             modelSelectionChoiceBox.setDisable(false);
         }
+        else{
+            Platform.runLater(() ->
+            {
+                ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+                ButtonType openCustomProj = new ButtonType("Create Custom Project", ButtonBar.ButtonData.YES);
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Metashape chunk has no models." +
+                        "\nPlease select another chunk or create a custom project.", ok, openCustomProj);
+                ((ButtonBase) alert.getDialogPane().lookupButton(openCustomProj)).setOnAction(event -> {
+                    //manually navigate though pages to get to custom loader
+                    hostScrollerController.prevPage();//go to ImportOrCustomProject.fxml
+                    ImportOrCustomProjectController controller = (ImportOrCustomProjectController)
+                            hostScrollerController.getCurrentPage().getController();
+                    controller.customImportSelect();
+                });
+                alert.show();
+            });
+        }
+    }
+
+    private boolean hasModels() {
+        return modelSelectionChoiceBox.getItems() != null &&
+                !modelSelectionChoiceBox.getItems().isEmpty() &&
+                modelSelectionChoiceBox.getItems().get(0) != null;
     }
 
     private void updateChunkSelectionChoiceBox() {
@@ -140,7 +163,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     }
 
     private void updateLoadedIndicators() {
-        if (isMetashapeObjectLoaded()) {//TODO: change condition to check for metashapeObjectChunk != null?
+        if (isMetashapeObjectLoaded() && hasModels()) {//TODO: change condition to check for metashapeObjectChunk != null?
             loadMetashapeObject.setText("Loaded");
             loadMetashapeObject.setFill(Paint.valueOf("Green"));
 

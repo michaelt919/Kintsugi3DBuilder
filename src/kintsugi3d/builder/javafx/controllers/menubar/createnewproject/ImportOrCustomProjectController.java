@@ -1,6 +1,5 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
@@ -27,12 +26,12 @@ public class ImportOrCustomProjectController extends FXMLPageController {
     public void refresh() {
     }
 
-    public void metashapeImportSelect(ActionEvent actionEvent) {
+    public void metashapeImportSelect() {
         String importMetashapeFXMLPath = "fxml/menubar/createnewproject/MetashapeImport.fxml";
         openChildPage(importMetashapeFXMLPath);
     }
 
-    public void customImportSelect(ActionEvent actionEvent) {
+    public void customImportSelect() {
         String customImportFXMLPath = "fxml/menubar/createnewproject/CustomImport.fxml";
         openChildPage(customImportFXMLPath);
     }
@@ -46,7 +45,7 @@ public class ImportOrCustomProjectController extends FXMLPageController {
         KeyCombination chooseCustomCode = new KeyCodeCombination(KeyCode.S);
 
         Scene scene = getHostRegion().getScene();
-        scene.getAccelerators().put(chooseMetashapeCode, ()->metashapeImportSelect(null));
-        scene.getAccelerators().put(chooseCustomCode, ()->customImportSelect(null));
+        scene.getAccelerators().put(chooseMetashapeCode, this::metashapeImportSelect);
+        scene.getAccelerators().put(chooseCustomCode, this::customImportSelect);
     }
 }
