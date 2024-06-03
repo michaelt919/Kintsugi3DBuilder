@@ -265,7 +265,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             }
 
         // 3) load geometry from ZipInputStream from model's ZIP
-            String modelPath = metashapeObjectChunk.getModelPath();
+            String modelPath = metashapeObjectChunk.getCurrentModelPath();
             if (modelPath.isEmpty()){throw new FileNotFoundException("Could not find model path");}
 
             this.geometry = VertexGeometry.createFromZippedPLYFile(new File(chunkDirectory, "0/" + modelPath), "mesh.ply");
