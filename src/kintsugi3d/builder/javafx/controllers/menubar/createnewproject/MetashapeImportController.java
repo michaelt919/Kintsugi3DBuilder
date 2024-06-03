@@ -15,6 +15,7 @@ import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObject;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
+import kintsugi3d.util.Triplet;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -100,12 +101,11 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
             metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, chunkName, modelID);
         }
-        ArrayList<Pair<Integer, String>> modelNames = metashapeObjectChunk.getAllModelNames();
 
-        modelSelectionChoiceBox.getItems().clear();
+        ArrayList<Triplet<Integer, String, String>> modelInfo = metashapeObjectChunk.getModelInfo();
 
-        for (Pair<Integer, String> pair : modelNames){
-            modelSelectionChoiceBox.getItems().add(pair.getKey() + "   " + pair.getValue());
+        for (Triplet<Integer, String, String> triplet : modelInfo){
+            modelSelectionChoiceBox.getItems().add(triplet.first + "   " + triplet.second);
         }
 
         //initialize choice box to first option instead of null option

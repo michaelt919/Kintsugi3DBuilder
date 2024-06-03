@@ -112,18 +112,21 @@ public class MetashapeObjectChunk {
             Element elem = (Element) chunkXML.getElementsByTagName("models").item(0);
             this.activeID = Integer.parseInt(elem.getAttribute("active_id"));
         }
-        catch(NumberFormatException e){
+        catch(NumberFormatException | NullPointerException e){
             log.warn("Could not find active id for " + this.getPsxFilePath(), e);
         }
         
         NodeList modelList = chunkXML.getElementsByTagName("model");
+        Integer tempModelID = null;
+        String tempLabel = null;
+        String tempPath;
 
         for(int i = 0; i < modelList.getLength(); ++i){
             Element elem = (Element) modelList.item(i);
             
-            Integer tempModelID = null;
-            String tempLabel = null;
-            String tempPath;
+            tempModelID = null;
+            tempLabel = null;
+            tempPath = null;
             try{
                 tempModelID = Integer.parseInt(elem.getAttribute("id"));
             }
@@ -141,6 +144,15 @@ public class MetashapeObjectChunk {
             tempPath = getModelPathFromXML(tempModelID);
             
             modelInfo.add(new Triplet<>(tempModelID, tempLabel, tempPath));
+        }
+
+        //if no model info yet, might be a single model in chunk which isn't labeled in chunk xml
+        //need to look in frame xml instead
+        //default to looking in frame xml first?
+        //ex. mia arrowhead
+        if (modelInfo.isEmpty()){
+            //TODO: needs more work, this is a quick hack to get arrowhead to work
+            modelInfo.add(new Triplet<>(null, null, getModelPathFromXML(null)));
         }
     }
 
@@ -308,5 +320,9 @@ public class MetashapeObjectChunk {
 
     public Integer getModelID() {
         return modelID;
+    }
+
+    public ArrayList<Triplet<Integer, String, String>> getModelInfo(){
+        return modelInfo;
     }
 }
