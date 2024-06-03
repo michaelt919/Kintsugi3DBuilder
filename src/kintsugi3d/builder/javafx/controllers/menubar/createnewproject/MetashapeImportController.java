@@ -104,6 +104,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
         ArrayList<Triplet<Integer, String, String>> modelInfo = metashapeObjectChunk.getModelInfo();
 
+        modelSelectionChoiceBox.getItems().clear();
         for (Triplet<Integer, String, String> triplet : modelInfo){
             modelSelectionChoiceBox.getItems().add(triplet.first + "   " + triplet.second);
         }
