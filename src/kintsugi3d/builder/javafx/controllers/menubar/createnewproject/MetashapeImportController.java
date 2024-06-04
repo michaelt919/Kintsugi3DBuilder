@@ -28,8 +28,8 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     private File metashapePsxFile;
     private MetashapeObjectChunk metashapeObjectChunk;
 
-    private static final String noModelIDMsg = "No Model ID";
-    private static final String noModelNameMsg = "Unnamed Model";
+    private static final String NO_MODEL_ID_MSG = "No Model ID";
+    private static final String NO_MODEL_NAME_MSG = "Unnamed Model";
     private volatile boolean alertShown = false;
 
     @Override
@@ -70,7 +70,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     private Integer getSelectedModelID() {
         String modelIDAsString = (String) modelSelectionChoiceBox.getSelectionModel().getSelectedItem();
         //TODO: need to revisit this when formatting of model selection choice box changes
-        if (modelIDAsString.startsWith(noModelIDMsg)){return null;}
+        if (modelIDAsString.startsWith(NO_MODEL_ID_MSG)){return null;}
 
         return Integer.parseInt(modelIDAsString.substring(0, modelIDAsString.indexOf(' ')));
     }
@@ -111,8 +111,8 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
         modelSelectionChoiceBox.getItems().clear();
         for (Triplet<Integer, String, String> triplet : modelInfo){
-            String modelID = triplet.first != null ? String.valueOf(triplet.first) : noModelIDMsg;
-            String modelName = !triplet.second.isBlank() ? triplet.second : noModelNameMsg;
+            String modelID = triplet.first != null ? String.valueOf(triplet.first) : NO_MODEL_ID_MSG;
+            String modelName = !triplet.second.isBlank() ? triplet.second : NO_MODEL_NAME_MSG;
             modelSelectionChoiceBox.getItems().add(modelID + "   " + modelName);
         }
 
