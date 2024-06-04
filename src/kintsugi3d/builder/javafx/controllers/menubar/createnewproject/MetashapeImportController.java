@@ -69,11 +69,17 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     }
 
     private Integer getSelectedModelID() {
-        String modelIDAsString = (String) modelSelectionChoiceBox.getSelectionModel().getSelectedItem();
-        //TODO: need to revisit this when formatting of model selection choice box changes
-        if (modelIDAsString.startsWith(NO_MODEL_ID_MSG)){return null;}
+        String selectionAsString = (String) modelSelectionChoiceBox.getSelectionModel().getSelectedItem();
+        return getModelIDFromSelection(selectionAsString);
+    }
 
-        return Integer.parseInt(modelIDAsString.substring(0, modelIDAsString.indexOf(' ')));
+    private static Integer getModelIDFromSelection(String selectionAsString) {
+        //TODO: need to revisit this when formatting of model selection choice box changes
+        if (selectionAsString.startsWith(NO_MODEL_ID_MSG)){
+            return null;
+        }
+
+        return Integer.parseInt(selectionAsString.substring(0, selectionAsString.indexOf(' ')));
     }
 
     @FXML
@@ -101,13 +107,18 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     private void updateModelSelectionChoiceBox() {
         modelSelectionChoiceBox.setDisable(true);
 
-        if (metashapeObjectChunk == null){
+        if (metashapeObjectChunk != null){
+            String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
+            metashapeObjectChunk.updateChunk(chunkName);
+        }
+        else{
             MetashapeObject metashapeObject = new MetashapeObject(metashapePsxFile.getAbsolutePath());
             String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
             int modelID = 0;
 
             metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, chunkName, modelID);
         }
+
 
         ArrayList<Triplet<Integer, String, String>> modelInfo = metashapeObjectChunk.getModelInfo();
 
@@ -118,37 +129,59 @@ public class MetashapeImportController extends FXMLPageController implements Sha
             modelSelectionChoiceBox.getItems().add(modelID + "   " + modelName);
         }
 
+
+        if (!hasModels()){
+            showNoModelsAlert();
+            return;
+        }
+
         //initialize choice box to first option instead of null option
-        if (hasModels()){
-            modelSelectionChoiceBox.setValue(modelSelectionChoiceBox.getItems().get(0));
-            modelSelectionChoiceBox.setDisable(false);
+        //then set to default model if the chunk has one
+        modelSelectionChoiceBox.setValue(modelSelectionChoiceBox.getItems().get(0));
+        modelSelectionChoiceBox.setDisable(false);
+
+        if (metashapeObjectChunk.getActiveID() == null){return;}
+
+        for (int i = 0; i < modelSelectionChoiceBox.getItems().size(); ++i){
+            Object obj = modelSelectionChoiceBox.getItems().get(i);
+            Integer modelID = getModelIDFromSelection((String) obj);
+            if (modelID == null){continue;}
+
+            if (modelID.equals(metashapeObjectChunk.getActiveID())){
+                modelSelectionChoiceBox.setValue(obj);
+                break;
+            }
         }
-        else{
-            if (alertShown){return;} //prevent multiple alerts from showing at once
 
-            alertShown = true;
-            Platform.runLater(() ->
-            {
-                ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-                ButtonType openCustomProj = new ButtonType("Create Custom Project", ButtonBar.ButtonData.YES);
+    }
 
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Metashape chunk has no models." +
-                        "\nPlease select another chunk or create a custom project.", ok, openCustomProj);
+    private void showNoModelsAlert() {
+        if (alertShown){
+            return;
+        } //prevent multiple alerts from showing at once
 
-                ((ButtonBase) alert.getDialogPane().lookupButton(openCustomProj)).setOnAction(event -> {
-                    //manually navigate though pages to get to custom loader
-                    hostScrollerController.prevPage();//go to ImportOrCustomProject.fxml
-                    ImportOrCustomProjectController controller = (ImportOrCustomProjectController)
-                            hostScrollerController.getCurrentPage().getController();
-                    controller.customImportSelect();
-                    alertShown = false;
-                });
+        alertShown = true;
+        Platform.runLater(() ->
+        {
+            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+            ButtonType openCustomProj = new ButtonType("Create Custom Project", ButtonBar.ButtonData.YES);
 
-                ((ButtonBase) alert.getDialogPane().lookupButton(ok)).setOnAction(event -> alertShown = false);
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Metashape chunk has no models." +
+                    "\nPlease select another chunk or create a custom project.", ok, openCustomProj);
 
-                alert.show();
+            ((ButtonBase) alert.getDialogPane().lookupButton(openCustomProj)).setOnAction(event -> {
+                //manually navigate though pages to get to custom loader
+                hostScrollerController.prevPage();//go to ImportOrCustomProject.fxml
+                ImportOrCustomProjectController controller = (ImportOrCustomProjectController)
+                        hostScrollerController.getCurrentPage().getController();
+                controller.customImportSelect();
+                alertShown = false;
             });
-        }
+
+            ((ButtonBase) alert.getDialogPane().lookupButton(ok)).setOnAction(event -> alertShown = false);
+
+            alert.show();
+        });
     }
 
     private boolean hasModels() {

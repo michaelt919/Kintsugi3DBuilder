@@ -68,8 +68,13 @@ public class MetashapeObjectChunk {
 
     public MetashapeObjectChunk(MetashapeObject metashapeObject, String chunkName, Integer modelID) {
         this.metashapeObject = metashapeObject;
-        this.chunkName = chunkName;
         this.modelID = modelID;
+
+        updateChunk(chunkName);
+    }
+
+    public void updateChunk(String chunkName) {
+        this.chunkName = chunkName;
 
         this.chunkZipPath = metashapeObject.getChunkZipPathPairs().get(chunkName);
 
@@ -117,6 +122,7 @@ public class MetashapeObjectChunk {
         
         NodeList modelList = chunkXML.getElementsByTagName("model");
 
+        modelInfo = new ArrayList<>();
         for(int i = 0; i < modelList.getLength(); ++i){
             Element elem = (Element) modelList.item(i);
 
@@ -284,11 +290,9 @@ public class MetashapeObjectChunk {
         return "";
     }
 
-    public Integer getModelID() {
-        return modelID;
-    }
-
     public ArrayList<Triplet<Integer, String, String>> getModelInfo(){
         return modelInfo;
     }
+
+    public Integer getActiveID(){return activeID;}
 }
