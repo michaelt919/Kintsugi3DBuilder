@@ -13,7 +13,6 @@
 package kintsugi3d.builder.javafx.controllers.menubar;
 
 import javafx.scene.image.Image;
-import javafx.util.Pair;
 import kintsugi3d.util.Triplet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,16 +116,13 @@ public class MetashapeObjectChunk {
         }
         
         NodeList modelList = chunkXML.getElementsByTagName("model");
-        Integer tempModelID = null;
-        String tempLabel = null;
-        String tempPath;
 
         for(int i = 0; i < modelList.getLength(); ++i){
             Element elem = (Element) modelList.item(i);
-            
-            tempModelID = null;
-            tempLabel = null;
-            tempPath = null;
+
+            Integer tempModelID = null;
+            String tempLabel = null;
+            String tempPath;
             try{
                 tempModelID = Integer.parseInt(elem.getAttribute("id"));
             }
@@ -152,7 +148,10 @@ public class MetashapeObjectChunk {
         //ex. mia arrowhead
         if (modelInfo.isEmpty()){
             //TODO: needs more work, this is a quick hack to get arrowhead to work
-            modelInfo.add(new Triplet<>(null, null, getModelPathFromXML(null)));
+            String path = getModelPathFromXML(null);
+            if (!path.isBlank()) {
+                modelInfo.add(new Triplet<>(null, "", path));
+            }
         }
     }
 
@@ -283,39 +282,6 @@ public class MetashapeObjectChunk {
         }
 
         return "";
-    }
-
-    public ArrayList<Pair<Integer, String>> getAllModelNames() {
-        ArrayList<Pair<Integer, String>> list = new ArrayList<>();
-
-        //some metashape files only have one model and their doc.xml does not give them an id
-        //ex. mia arrowhead chunk #2 just has:   <model path="model.1/model.zip"/>
-
-        try{
-            NodeList elems = ((Element) frameZip.getElementsByTagName("frame").item(0))
-                    .getElementsByTagName("model");
-
-            for (int i = 0; i < elems.getLength(); i++) {
-                Element element = (Element) elems.item(i);
-
-                String e = element.getAttribute("id");
-
-                //only for chunks which have one model w/ no id
-                if (e.isEmpty() && i == 0 && elems.getLength() == 1) {
-                    list.add(new Pair<>(null, element.getAttribute("path")));
-                }
-
-                else if (!e.isEmpty()){
-                    list.add(new Pair<>(Integer.parseInt(element.getAttribute("id")),
-                            element.getAttribute("path")));
-                }
-            }
-        }
-        catch(NullPointerException e){
-            return list;
-        }
-
-        return list;
     }
 
     public Integer getModelID() {
