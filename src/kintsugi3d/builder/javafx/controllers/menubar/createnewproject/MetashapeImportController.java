@@ -20,6 +20,7 @@ import java.io.File;
 import java.util.ArrayList;
 
 public class MetashapeImportController extends FXMLPageController implements ShareInfo {
+    @FXML private Text fileNameTxtField;
     @FXML private AnchorPane anchorPane;
     @FXML private Text loadMetashapeObject;
     @FXML private ChoiceBox chunkSelectionChoiceBox;
@@ -86,6 +87,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
         if(metashapePsxFile != null){
             metashapeObjectChunk = null;
+            fileNameTxtField.setText(metashapePsxFile.getName());
             updateChoiceBoxes();
             updateLoadedIndicators();
         }
