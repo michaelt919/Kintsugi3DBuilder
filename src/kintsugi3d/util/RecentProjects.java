@@ -72,18 +72,25 @@ public class RecentProjects {
 
         List<MenuItem> menuItems = new ArrayList<>();
         for (String item : items){
-            //TODO: work on handling duplicates
-            File file = new File(item);
-            File ancestorFile = file;
-            while (ancestorFile.getParentFile()!= null){
-                ancestorFile = ancestorFile.getParentFile();
-            }
-
-            String shortenedPath = ancestorFile.getAbsolutePath() + "...\\" + file.getName();
-            menuItems.add(new MenuItem(shortenedPath));
+            menuItems.add(new MenuItem(shortenedPath(item)));
         }
 
         return menuItems;
+    }
+
+    public static String shortenedPath(String path){
+        File file = new File(path);
+        File ancestorFile = getAncestorFile(file);
+
+        return ancestorFile.getAbsolutePath() + "...\\" + file.getName();
+    }
+
+    private static File getAncestorFile(File file) {
+        File ancestorFile = file;
+        while (ancestorFile.getParentFile()!= null){
+            ancestorFile = ancestorFile.getParentFile();
+        }
+        return ancestorFile;
     }
 
     public static void updateRecentFiles(String fileName) {
@@ -163,11 +170,15 @@ public class RecentProjects {
         //attach event handlers to all menu items
         int i = 0;
         for (MenuItem item : recentItems) {
+            String fileName = RecentProjects.getItemsFromRecentsFile().get(i);
+            Tooltip tooltip = new Tooltip(fileName);
+
             //add first few items to quick access buttons
             if (i < recentButtons.size()){
                 Button recentButton = recentButtons.get(i);
-                String fileName = RecentProjects.getItemsFromRecentsFile().get(i);
                 addItemToQuickAccess(fileName, recentButton);
+
+                recentButton.setTooltip(tooltip);
 
                 //note: this will still enable the button even if the project does not load properly
                 recentButton.setDisable(false);
@@ -187,6 +198,8 @@ public class RecentProjects {
     private static void addItemToQuickAccess(String fileName, Button recentButton) {
         //set project file name
         File file = new File(fileName);
+
+
         recentButton.setText(file.getName());
 
         //set graphic to ? image if proper thumbnail cannot be found
