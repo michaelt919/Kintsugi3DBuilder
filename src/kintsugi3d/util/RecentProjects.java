@@ -72,7 +72,15 @@ public class RecentProjects {
 
         List<MenuItem> menuItems = new ArrayList<>();
         for (String item : items){
-            menuItems.add(new MenuItem(item));
+            //TODO: work on handling duplicates
+            File file = new File(item);
+            File ancestorFile = file;
+            while (ancestorFile.getParentFile()!= null){
+                ancestorFile = ancestorFile.getParentFile();
+            }
+
+            String shortenedPath = ancestorFile.getAbsolutePath() + "...\\" + file.getName();
+            menuItems.add(new MenuItem(shortenedPath));
         }
 
         return menuItems;
@@ -110,7 +118,7 @@ public class RecentProjects {
     }
 
     public static void updateAllControlStructures() {
-        welcomeWindowController.updateRecentProjectsButton();
+        updateRecentProjectsInWelcomeWindow();
         MenubarController.getInstance().updateRecentProjectsMenu();
     }
 
@@ -118,7 +126,7 @@ public class RecentProjects {
         RecentProjects.welcomeWindowController = welcomeWindowController;
     }
 
-    public static void updateRecentProjectsMenu(Menu menu){
+    public static void updateRecentProjectsInMenuBar(Menu menu){
         menu.getItems().clear();
 
         ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
@@ -134,13 +142,16 @@ public class RecentProjects {
         }
     }
 
-    public static void updateRecentProjectsInWelcomeWindow(SplitMenuButton menu) {
-        menu.getItems().clear();
+    public static void updateRecentProjectsInWelcomeWindow() {
+
+        SplitMenuButton splitMenuButton = welcomeWindowController.recentProjectsSplitMenuButton;
+        ArrayList<Button> recentButtons = welcomeWindowController.recentButtons;
+        ArrayList<String> recentStrings = welcomeWindowController.recentButtonFileNames;
 
         ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
+        ArrayList<String> recentItemFullPaths = (ArrayList<String>) RecentProjects.getItemsFromRecentsFile();
 
-        ArrayList<Button> recentButtons = welcomeWindowController.recentButtons;
-
+        splitMenuButton.getItems().clear();
         //disable all quick action buttons then enable them if they hold a project
         for (Button button : recentButtons){
             button.setDisable(true);
@@ -149,7 +160,7 @@ public class RecentProjects {
         }
 
         //disable split menu button and enable it if it holds projects
-        menu.setDisable(true);
+        splitMenuButton.setDisable(true);
 
         //attach event handlers to all menu items
         int i = 0;
@@ -157,6 +168,7 @@ public class RecentProjects {
             //add first few items to quick access buttons
             if (i < recentButtons.size()){
                 Button recentButton = recentButtons.get(i);
+                recentStrings.add(recentItemFullPaths.get(i));
                 addItemToQuickAccess(item, recentButton);
 
                 //note: this will still enable the button even if the project does not load properly
@@ -165,8 +177,8 @@ public class RecentProjects {
 
             //add remaining items under the split menu button
             else{
-                menu.setDisable(false);
-                menu.getItems().addAll(item);
+                splitMenuButton.setDisable(false);
+                splitMenuButton.getItems().add(item);
                 item.setOnAction(event -> handleMenuItemSelection(item));
             }
 
@@ -175,13 +187,10 @@ public class RecentProjects {
     }
 
     private static void addItemToQuickAccess(MenuItem item, Button recentButton) {
-        ArrayList<String> recentStrings = welcomeWindowController.recentButtonFiles;
-
         //set project file name
-        String fileName = item.getText();
+        String fileName = welcomeWindowController.recentButtonFileNames.get(welcomeWindowController.recentButtonFileNames.size() - 1);
         File file = new File(fileName);
         recentButton.setText(file.getName());
-        recentStrings.add(fileName);
 
         //set graphic to ? image if proper thumbnail cannot be found
         recentButton.setGraphic(new ImageView(new Image(new File("question-mark.png").toURI().toString())));
@@ -264,8 +273,27 @@ public class RecentProjects {
     }
 
     private static void handleMenuItemSelection(MenuItem item) {
-        String projectName = item.getText();
-        ProjectIO.getInstance().openProjectFromFile(new File(projectName));
+        int i = 0;
+        ArrayList<String> recentFileNames = (ArrayList<String>) RecentProjects.getItemsFromRecentsFile();
+        //check recent projects menu for match
+        for (MenuItem menuItem : MenubarController.getInstance().getRecentProjectsMenu().getItems()) {
+            if (menuItem.equals(item)) {
+                ProjectIO.getInstance().openProjectFromFile(new File(recentFileNames.get(i)));
+                break;
+            }
+            ++i;
+        }
+
+        //check split menu button for match
+        i = welcomeWindowController.recentButtons.size(); //need to offset the search by the number of buttons
+        //ex. first menu item is actually the sixth recent project if there are five buttons
+        for (MenuItem menuItem : WelcomeWindowController.getInstance().recentProjectsSplitMenuButton.getItems()) {
+            if (menuItem.equals(item)) {
+                ProjectIO.getInstance().openProjectFromFile(new File(recentFileNames.get(i)));
+                break;
+            }
+            ++i;
+        }
     }
 
     public static void removeInvalidReferences() {

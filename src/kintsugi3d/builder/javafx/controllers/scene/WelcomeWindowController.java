@@ -48,7 +48,7 @@ public class WelcomeWindowController
     @FXML private Button recent4;
     @FXML private Button recent5;
     public ArrayList<Button> recentButtons = new ArrayList<>();
-    public ArrayList<String> recentButtonFiles = new ArrayList<>();
+    public ArrayList<String> recentButtonFileNames = new ArrayList<>();
 
     public static WelcomeWindowController getInstance()
     {
@@ -83,7 +83,7 @@ public class WelcomeWindowController
         //initializeWelcomeWindowController initializes recentButtonFiles ArrayList
         RecentProjects.initializeWelcomeWindowController(this);
 
-        updateRecentProjectsButton();
+        RecentProjects.updateRecentProjectsInWelcomeWindow();
 
 //        MultithreadModels.getInstance().getLoadingModel().addLoadingMonitor(new LoadingMonitor()
 //        {
@@ -126,10 +126,6 @@ public class WelcomeWindowController
         INSTANCE = this;
     }
 
-    public void updateRecentProjectsButton() {
-        RecentProjects.updateRecentProjectsInWelcomeWindow(recentProjectsSplitMenuButton);
-    }
-
     public void handleMenuItemSelection(MenuItem item) {
         String projectName = item.getText();
         ProjectIO.getInstance().openProjectFromFile(new File(projectName));
@@ -155,7 +151,7 @@ public class WelcomeWindowController
             //if able to put scene for Loader
             //window.setScene(parentWindow.getScene());
             ProjectIO.getInstance().createProject(parentWindow);
-            updateRecentProjectsButton();
+            RecentProjects.updateRecentProjectsInWelcomeWindow();
         }
     }
 
@@ -164,7 +160,7 @@ public class WelcomeWindowController
         if (!ProjectIO.getInstance().isCreateProjectWindowOpen())
         {
             ProjectIO.getInstance().createProjectNew(parentWindow);
-            updateRecentProjectsButton();
+            RecentProjects.updateRecentProjectsInWelcomeWindow();
         }
     }
 
@@ -217,7 +213,7 @@ public class WelcomeWindowController
         int i = 0;
         for (Button button : recentButtons){
             if (button == item){
-                ProjectIO.getInstance().openProjectFromFile(new File(recentButtonFiles.get(i)));
+                ProjectIO.getInstance().openProjectFromFile(new File(recentButtonFileNames.get(i)));
             }
             i++;
         }

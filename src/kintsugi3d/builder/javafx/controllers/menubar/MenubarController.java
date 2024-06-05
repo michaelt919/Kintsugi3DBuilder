@@ -794,13 +794,9 @@ public class MenubarController
     }
 
     public void updateRecentProjectsMenu() {
-        RecentProjects.updateRecentProjectsMenu(recentProjectsMenu);
+        RecentProjects.updateRecentProjectsInMenuBar(recentProjectsMenu);
     }
 
-    public static void handleMenuItemSelection(MenuItem item) {
-        String projectName = item.getText();
-        ProjectIO.getInstance().openProjectFromFile(new File(projectName));
-    }
 
 //    private void handleDirectoryDropdownSelection(ActionEvent actionEvent) {
 //        //if user clicks "choose directory" option, open the directory chooser
@@ -967,5 +963,9 @@ public class MenubarController
 
     public void file_removeAllReferences(ActionEvent actionEvent) {
         RecentProjects.removeAllReferences();
+    }
+
+    public Menu getRecentProjectsMenu() {
+        return recentProjectsMenu;
     }
 }
