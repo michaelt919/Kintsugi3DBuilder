@@ -59,8 +59,12 @@
                                     <MenuItem mnemonicParsing="false" text="Action 1" />
                                 </items>
                             </Menu>
-                            <MenuItem mnemonicParsing="false" onAction="#file_cleanRecentProjects" text="Clean Recent Projects" />
-                            <MenuItem mnemonicParsing="false" onAction="#file_purgeRecentProjectsList" text="Purge Recent Projects List" />
+                     <Menu mnemonicParsing="false" text="Clean Recent Projects">
+                        <items>
+                                  <MenuItem mnemonicParsing="false" onAction="#file_removeInvalidReferences" text="Remove Invalid References" />
+                                  <MenuItem mnemonicParsing="false" onAction="#file_removeAllReferences" text="Remove All References" />
+                        </items>
+                     </Menu>
 
                             <SeparatorMenuItem mnemonicParsing="false" />
                             <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />

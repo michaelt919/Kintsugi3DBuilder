@@ -127,7 +127,7 @@ public class WelcomeWindowController
     }
 
     public void updateRecentProjectsButton() {
-        RecentProjects.updateRecentProjectsControl(recentProjectsSplitMenuButton);
+        RecentProjects.updateRecentProjectsInWelcomeWindow(recentProjectsSplitMenuButton);
     }
 
     public void handleMenuItemSelection(MenuItem item) {

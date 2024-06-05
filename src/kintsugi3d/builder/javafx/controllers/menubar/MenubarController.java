@@ -26,7 +26,6 @@ import java.util.Locale;
 import java.util.Scanner;
 import java.util.function.Consumer;
 
-import com.sun.javafx.menu.CheckMenuItemBase;
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.event.ActionEvent;
@@ -43,13 +42,11 @@ import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
-import kintsugi3d.gl.util.UnzipHelper;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.javafx.FramebufferView;
-import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.IBRRequestUI;
@@ -61,29 +58,9 @@ import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
-import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
-import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
 import kintsugi3d.builder.javafx.controllers.scene.object.ObjectPoseSetting;
 import kintsugi3d.builder.javafx.controllers.scene.object.SettingsObjectSceneController;
-import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.javafx.FramebufferView;
 import kintsugi3d.util.Flag;
-import kintsugi3d.util.RecentProjects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Scanner;
-import java.util.function.Consumer;
 
 public class MenubarController
 {
@@ -817,7 +794,7 @@ public class MenubarController
     }
 
     public void updateRecentProjectsMenu() {
-        RecentProjects.updateRecentProjectsControl(recentProjectsMenu);
+        RecentProjects.updateRecentProjectsMenu(recentProjectsMenu);
     }
 
     public static void handleMenuItemSelection(MenuItem item) {
@@ -984,13 +961,11 @@ public class MenubarController
         });
     }
 
-    public void file_cleanRecentProjects(ActionEvent actionEvent) {
-        RecentProjects.cleanRecentProjects();
-
-        RecentProjects.updateAllControlStructures();
+    public void file_removeInvalidReferences(ActionEvent actionEvent) {
+        RecentProjects.removeInvalidReferences();
     }
 
-    public void file_purgeRecentProjectsList(ActionEvent actionEvent) {
-        RecentProjects.purgeRecentProjectsList();
+    public void file_removeAllReferences(ActionEvent actionEvent) {
+        RecentProjects.removeAllReferences();
     }
 }

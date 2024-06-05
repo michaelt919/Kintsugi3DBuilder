@@ -59,7 +59,7 @@ public class RecentProjects {
             }
             catch (IOException e)
             {
-                e.printStackTrace();
+                log.error("Could not get items from recent files list", e);
             }
         }
 
@@ -87,7 +87,7 @@ public class RecentProjects {
                 existingFileNames.add(line);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Failed to update recent files list", e);
         }
 
         // Check if the fileName is already present
@@ -102,7 +102,7 @@ public class RecentProjects {
                 writer.println(name);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Failed to update recent files list", e);
         }
 
         //update list of recent projects in program
@@ -118,30 +118,15 @@ public class RecentProjects {
         RecentProjects.welcomeWindowController = welcomeWindowController;
     }
 
-    public static void updateRecentProjectsControl(Object menu) {
-        //change formatting in menu? Currently just the path of the object
-        if (menu instanceof Menu){
-            Menu castedMenu = (Menu) menu;
-            updateRecentProjectsMenu(castedMenu);
-        }
-
-        else if (menu instanceof SplitMenuButton){
-            SplitMenuButton castedSplitMenuButton = (SplitMenuButton) menu;
-            updateRecentProjectsSplitMenuButton(castedSplitMenuButton);
-        }
-    }
-
-    private static void updateRecentProjectsMenu(Menu menu){
+    public static void updateRecentProjectsMenu(Menu menu){
         menu.getItems().clear();
 
         ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
 
         menu.getItems().addAll(recentItems);
 
-        //disable button if there are no recent projects
-        if (menu.getItems().isEmpty()) {
-            menu.setDisable(true);
-        }
+        //disable button if there are no recent projects, otherwise enable
+        menu.setDisable(menu.getItems().isEmpty());
 
         //attach event handlers to all menu items
         for (MenuItem item : recentItems) {
@@ -149,7 +134,7 @@ public class RecentProjects {
         }
     }
 
-    private static void updateRecentProjectsSplitMenuButton(SplitMenuButton menu) {
+    public static void updateRecentProjectsInWelcomeWindow(SplitMenuButton menu) {
         menu.getItems().clear();
 
         ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
@@ -162,6 +147,9 @@ public class RecentProjects {
             button.setGraphic(null);
             button.setText("");
         }
+
+        //disable split menu button and enable it if it holds projects
+        menu.setDisable(true);
 
         //attach event handlers to all menu items
         int i = 0;
@@ -177,16 +165,12 @@ public class RecentProjects {
 
             //add remaining items under the split menu button
             else{
+                menu.setDisable(false);
                 menu.getItems().addAll(item);
                 item.setOnAction(event -> handleMenuItemSelection(item));
             }
 
             i++;
-        }
-
-        //disable button if there are no recent projects
-        if (menu.getItems().isEmpty()) {
-            menu.setDisable(true);
         }
     }
 
@@ -284,7 +268,7 @@ public class RecentProjects {
         ProjectIO.getInstance().openProjectFromFile(new File(projectName));
     }
 
-    public static void cleanRecentProjects() {
+    public static void removeInvalidReferences() {
         ArrayList<String> recentItems = (ArrayList<String>) RecentProjects.getItemsFromRecentsFile();
 
         ArrayList<String> newRecentItems = new ArrayList<>();
@@ -305,18 +289,18 @@ public class RecentProjects {
                 writer.println(name);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Failed to update recent files list while removing invalid references.", e);
         }
 
         updateAllControlStructures();
     }
 
-    public static void purgeRecentProjectsList() {
+    public static void removeAllReferences() {
         //wipe recent projects list
         try (FileWriter fileWriter = new FileWriter(recentProjectsFile.getAbsolutePath(), false)) {
             fileWriter.write("");
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Could not write to recent files list", e);
         }
 
         updateAllControlStructures();
