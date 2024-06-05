@@ -48,8 +48,6 @@ public class WelcomeWindowController
     @FXML private Button recent4;
     @FXML private Button recent5;
     public ArrayList<Button> recentButtons = new ArrayList<>();
-    public ArrayList<String> recentButtonFileNames = new ArrayList<>();
-
     public static WelcomeWindowController getInstance()
     {
         return INSTANCE;
@@ -80,7 +78,6 @@ public class WelcomeWindowController
         recentButtons.add(recent4);
         recentButtons.add(recent5);
 
-        //initializeWelcomeWindowController initializes recentButtonFiles ArrayList
         RecentProjects.initializeWelcomeWindowController(this);
 
         RecentProjects.updateRecentProjectsInWelcomeWindow();
@@ -210,10 +207,11 @@ public class WelcomeWindowController
     }
 
     public void handleButtonSelection(Button item) {
+        ArrayList<String> recentFileNames = (ArrayList<String>) RecentProjects.getItemsFromRecentsFile();
         int i = 0;
         for (Button button : recentButtons){
             if (button == item){
-                ProjectIO.getInstance().openProjectFromFile(new File(recentButtonFileNames.get(i)));
+                ProjectIO.getInstance().openProjectFromFile(new File(recentFileNames.get(i)));
             }
             i++;
         }

@@ -146,10 +146,8 @@ public class RecentProjects {
 
         SplitMenuButton splitMenuButton = welcomeWindowController.recentProjectsSplitMenuButton;
         ArrayList<Button> recentButtons = welcomeWindowController.recentButtons;
-        ArrayList<String> recentStrings = welcomeWindowController.recentButtonFileNames;
 
         ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
-        ArrayList<String> recentItemFullPaths = (ArrayList<String>) RecentProjects.getItemsFromRecentsFile();
 
         splitMenuButton.getItems().clear();
         //disable all quick action buttons then enable them if they hold a project
@@ -168,8 +166,8 @@ public class RecentProjects {
             //add first few items to quick access buttons
             if (i < recentButtons.size()){
                 Button recentButton = recentButtons.get(i);
-                recentStrings.add(recentItemFullPaths.get(i));
-                addItemToQuickAccess(item, recentButton);
+                String fileName = RecentProjects.getItemsFromRecentsFile().get(i);
+                addItemToQuickAccess(fileName, recentButton);
 
                 //note: this will still enable the button even if the project does not load properly
                 recentButton.setDisable(false);
@@ -186,9 +184,8 @@ public class RecentProjects {
         }
     }
 
-    private static void addItemToQuickAccess(MenuItem item, Button recentButton) {
+    private static void addItemToQuickAccess(String fileName, Button recentButton) {
         //set project file name
-        String fileName = welcomeWindowController.recentButtonFileNames.get(welcomeWindowController.recentButtonFileNames.size() - 1);
         File file = new File(fileName);
         recentButton.setText(file.getName());
 
@@ -286,7 +283,7 @@ public class RecentProjects {
 
         //check split menu button for match
         i = welcomeWindowController.recentButtons.size(); //need to offset the search by the number of buttons
-        //ex. first menu item is actually the sixth recent project if there are five buttons
+        //ex. first split menu item is actually the sixth recent project if there are five buttons
         for (MenuItem menuItem : WelcomeWindowController.getInstance().recentProjectsSplitMenuButton.getItems()) {
             if (menuItem.equals(item)) {
                 ProjectIO.getInstance().openProjectFromFile(new File(recentFileNames.get(i)));
@@ -308,8 +305,6 @@ public class RecentProjects {
                 newRecentItems.add(item);
             }
         }
-
-        //write items to recent projects file and update control structures
 
         // Write the updated content back to the file
         try (PrintWriter writer = new PrintWriter(new FileWriter(recentProjectsFile, StandardCharsets.UTF_8))) {
