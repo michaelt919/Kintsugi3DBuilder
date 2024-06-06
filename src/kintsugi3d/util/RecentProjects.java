@@ -216,9 +216,9 @@ public class RecentProjects {
 
     private static void addItemToQuickAccess(String fileName, Button recentButton) {
         //set project file name
-        File file = new File(fileName);
+        File projFile = new File(fileName);
 
-        recentButton.setText(file.getName());
+        recentButton.setText(projFile.getName());
 
         //set graphic to ? image if proper thumbnail cannot be found
         recentButton.setGraphic(new ImageView(new Image(new File("question-mark.png").toURI().toString())));
@@ -229,48 +229,92 @@ public class RecentProjects {
         //open file and convert to xml document
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         try {
-            String imgsPath = findImgsPath(factory, file);
+            String fullRes = "# Full resolution image file path";
+            String prevRes = "# Preview resolution image file path";
 
-            if (imgsPath == null) {
-                log.warn("Could not find preview image for " + file.getName());
+            String prevResImgsPath = findImgsPath(factory, projFile, prevRes);
+            String fullResImgsPath = findImgsPath(factory, projFile, fullRes);
+
+            if (prevResImgsPath == null && fullResImgsPath == null) {
+                log.warn("Could not find preview image for " + projFile.getName());
                 return;
             }
 
-            String basePath = System.getProperty("user.home");
-            File baseDir = new File(basePath);
+            String previewImgPath = null;
 
-            //build path off of home directory, otherwise correct path would not be found
-            File imgFolder = new File(baseDir, imgsPath);
-
-            String canonicalPath = imgFolder.getCanonicalPath();
-            File resolvedFile = new File(canonicalPath);
-
-            // Check if the path is a directory
-            if (!resolvedFile.isDirectory()) {
-                log.warn("Could not find preview image for " + file.getName());
-                return;
+            if (prevResImgsPath != null) {
+                previewImgPath = getPreviewImgPath(prevResImgsPath, projFile);
             }
 
-            // List child files
-            String[] childFilePaths = resolvedFile.list();
+            if (previewImgPath == null) {
+                //try full imgPath before giving up
+                if (fullResImgsPath == null) {
+                    log.warn("Could not find preview image for " + projFile.getName());
+                    return;
+                }
 
-            if (childFilePaths == null || childFilePaths.length == 0) {
-                log.warn("Could not find preview image for " + file.getName());
-                return;
+                previewImgPath = getPreviewImgPath(fullResImgsPath, projFile);
+
+                if (previewImgPath == null){
+                    log.warn("Could not find preview image for " + projFile.getName());
+                    return;
+                }
             }
 
-            String previewImgPath = canonicalPath + "\\" + childFilePaths[0];
             ImageView previewImgView = new ImageView(new Image(new File(previewImgPath).toURI().toString()));
             previewImgView.setFitHeight(80);
             previewImgView.setPreserveRatio(true);
             recentButton.setGraphic(previewImgView);
         }
         catch (ParserConfigurationException | IOException | SAXException e) {
-            log.warn("Could not find preview image for " + file.getName(), e);
+            log.warn("Could not find preview image for " + projFile.getName(), e);
         }
     }
 
-    private static String findImgsPath(DocumentBuilderFactory factory, File file) throws ParserConfigurationException, SAXException, IOException {
+    private static String getPreviewImgPath(String imgsPath, File projFile) throws IOException {
+
+        //build path off of home directory if path is not complete, otherwise correct path would not be found
+        File imgFolder;
+        if (!imgsPath.matches("^[A-Za-z]:\\\\.*")){
+            String basePath = System.getProperty("user.home");
+            File baseDir = new File(basePath);
+            imgFolder = new File(baseDir, imgsPath);
+        }
+        else{
+            //full path is given (starting with C:\, G:\, etc)
+            imgFolder = new File(imgsPath);
+        }
+
+        String canonicalPath = imgFolder.getCanonicalPath();
+        File resolvedFile = new File(canonicalPath);
+
+        // Check if the path is a directory
+        if (!resolvedFile.isDirectory()) {
+            //try again w/ project file parent + imgFolder
+            imgFolder = new File(projFile.getParent(), imgsPath);
+            canonicalPath = imgFolder.getCanonicalPath();
+            resolvedFile = new File(canonicalPath);
+
+            if (!resolvedFile.isDirectory()) {
+                //not a warning because we might find the preview image in the other image path
+                //first checks preview images, then full res images
+                log.info("Could not find preview image for " + projFile.getName() + " in " + resolvedFile.getAbsolutePath());
+                return null;
+            }
+        }
+
+        // List child files
+        String[] childFilePaths = resolvedFile.list();
+
+        if (childFilePaths == null || childFilePaths.length == 0) {
+            log.warn("No preview images found in " + resolvedFile.getAbsolutePath());
+            return null;
+        }
+
+        return canonicalPath + "\\" + childFilePaths[0];
+    }
+
+    private static String findImgsPath(DocumentBuilderFactory factory, File file, String target) throws ParserConfigurationException, SAXException, IOException {
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document document = builder.parse(file);
 
@@ -289,7 +333,8 @@ public class RecentProjects {
             read = sc.nextLine();
 
             //if (read.equals("# Full resolution image file path")){
-            if (read.equals("# Preview resolution image file path")) {
+            //if (read.equals("# Preview resolution image file path")) {
+            if (read.equals(target)){
                 imgsPath = sc.nextLine();
                 //remove the first two chars of the path because it starts with "i "
                 imgsPath = imgsPath.substring(2);
@@ -302,6 +347,7 @@ public class RecentProjects {
                 break;
             }
         }
+
         return imgsPath;
     }
 
