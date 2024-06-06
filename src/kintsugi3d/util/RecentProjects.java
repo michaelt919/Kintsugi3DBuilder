@@ -67,15 +67,28 @@ public class RecentProjects {
         return new ArrayList<>(new LinkedHashSet<>(projectItems));
     }
 
-    public static List<MenuItem> getItemsAsMenuItems(){
+    public static List<CustomMenuItem> getItemsAsCustomMenuItems(){
         List<String> items = RecentProjects.getItemsFromRecentsFile();
 
-        List<MenuItem> menuItems = new ArrayList<>();
+        List<CustomMenuItem> customMenuItems = new ArrayList<>();
+        int i = 0;
+
+        //attach tooltips and event handlers
         for (String item : items){
-            menuItems.add(new MenuItem(shortenedPath(item)));
+            customMenuItems.add(new CustomMenuItem(new Label(shortenedPath(item))));
+
+            CustomMenuItem justAdded = customMenuItems.get(i);
+
+            String fileName = RecentProjects.getItemsFromRecentsFile().get(i);
+            Tooltip tooltip = new Tooltip(fileName);
+            Tooltip.install(justAdded.getContent(), tooltip);
+
+            justAdded.setOnAction(event -> handleMenuItemSelection(justAdded));
+
+            ++i;
         }
 
-        return menuItems;
+        return customMenuItems;
     }
 
     public static String shortenedPath(String path){
@@ -136,17 +149,24 @@ public class RecentProjects {
     public static void updateRecentProjectsInMenuBar(Menu menu){
         menu.getItems().clear();
 
-        ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
+        ArrayList<CustomMenuItem> recentItems = (ArrayList<CustomMenuItem>) RecentProjects.getItemsAsCustomMenuItems();
 
         menu.getItems().addAll(recentItems);
 
         //disable button if there are no recent projects, otherwise enable
         menu.setDisable(menu.getItems().isEmpty());
 
-        //attach event handlers to all menu items
-        for (MenuItem item : recentItems) {
-            item.setOnAction(event -> handleMenuItemSelection(item));
-        }
+//        //attach event handlers and tooltips to all menu items
+//        int i = 0;
+//        for (CustomMenuItem item : recentItems) {
+//            item.setOnAction(event -> handleMenuItemSelection(item));
+//
+//            String fileName = RecentProjects.getItemsFromRecentsFile().get(i);
+//            Tooltip tooltip = new Tooltip(fileName);
+//            Tooltip.install(item.getContent(), tooltip);
+//
+//            ++i;
+//        }
     }
 
     public static void updateRecentProjectsInWelcomeWindow() {
@@ -154,7 +174,8 @@ public class RecentProjects {
         SplitMenuButton splitMenuButton = welcomeWindowController.recentProjectsSplitMenuButton;
         ArrayList<Button> recentButtons = welcomeWindowController.recentButtons;
 
-        ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
+        ArrayList<CustomMenuItem> recentItems = (ArrayList<CustomMenuItem>)
+                RecentProjects.getItemsAsCustomMenuItems();
 
         splitMenuButton.getItems().clear();
         //disable all quick action buttons then enable them if they hold a project
@@ -164,20 +185,19 @@ public class RecentProjects {
             button.setText("");
         }
 
-        //disable split menu button and enable it if it holds projects
+        //disable split menu button then enable it if it holds projects
         splitMenuButton.setDisable(true);
 
-        //attach event handlers to all menu items
         int i = 0;
-        for (MenuItem item : recentItems) {
-            String fileName = RecentProjects.getItemsFromRecentsFile().get(i);
-            Tooltip tooltip = new Tooltip(fileName);
-
+        for (CustomMenuItem item : recentItems) {
             //add first few items to quick access buttons
             if (i < recentButtons.size()){
                 Button recentButton = recentButtons.get(i);
-                addItemToQuickAccess(fileName, recentButton);
 
+                String fileName = RecentProjects.getItemsFromRecentsFile().get(i);
+                Tooltip tooltip = new Tooltip(fileName);
+
+                addItemToQuickAccess(fileName, recentButton);
                 recentButton.setTooltip(tooltip);
 
                 //note: this will still enable the button even if the project does not load properly
@@ -188,7 +208,6 @@ public class RecentProjects {
             else{
                 splitMenuButton.setDisable(false);
                 splitMenuButton.getItems().add(item);
-                item.setOnAction(event -> handleMenuItemSelection(item));
             }
 
             i++;
@@ -198,7 +217,6 @@ public class RecentProjects {
     private static void addItemToQuickAccess(String fileName, Button recentButton) {
         //set project file name
         File file = new File(fileName);
-
 
         recentButton.setText(file.getName());
 
@@ -211,37 +229,7 @@ public class RecentProjects {
         //open file and convert to xml document
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         try {
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document document = builder.parse(file);
-
-            //get view set path
-            Element projectDomElement = (Element) document.getElementsByTagName("Project").item(0);
-            Element viewSetDomElement = (Element) projectDomElement.getElementsByTagName("ViewSet").item(0);
-            String viewSetPath = file.getParent() + "\\" + viewSetDomElement.getAttribute("src");
-
-            //open images in view set path
-            File viewSetFile = new File(viewSetPath);
-
-            Scanner sc = new Scanner(viewSetFile);
-            String imgsPath = null;
-            String read;
-            while (sc.hasNextLine()) {
-                read = sc.nextLine();
-
-                //if (read.equals("# Full resolution image file path")){
-                if (read.equals("# Preview resolution image file path")) {
-                    imgsPath = sc.nextLine();
-                    //remove the first two chars of the path because it starts with "i "
-                    imgsPath = imgsPath.substring(2);
-
-                    //remove references to parent directories
-                    String parentPrefix = "..\\";
-                    while (imgsPath.startsWith(parentPrefix)) {
-                        imgsPath = imgsPath.substring(parentPrefix.length());
-                    }
-                    break;
-                }
-            }
+            String imgsPath = findImgsPath(factory, file);
 
             if (imgsPath == null) {
                 log.warn("Could not find preview image for " + file.getName());
@@ -280,6 +268,41 @@ public class RecentProjects {
         catch (ParserConfigurationException | IOException | SAXException e) {
             log.warn("Could not find preview image for " + file.getName(), e);
         }
+    }
+
+    private static String findImgsPath(DocumentBuilderFactory factory, File file) throws ParserConfigurationException, SAXException, IOException {
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document document = builder.parse(file);
+
+        //get view set path
+        Element projectDomElement = (Element) document.getElementsByTagName("Project").item(0);
+        Element viewSetDomElement = (Element) projectDomElement.getElementsByTagName("ViewSet").item(0);
+        String viewSetPath = file.getParent() + "\\" + viewSetDomElement.getAttribute("src");
+
+        //open images in view set path
+        File viewSetFile = new File(viewSetPath);
+
+        Scanner sc = new Scanner(viewSetFile);
+        String imgsPath = null;
+        String read;
+        while (sc.hasNextLine()) {
+            read = sc.nextLine();
+
+            //if (read.equals("# Full resolution image file path")){
+            if (read.equals("# Preview resolution image file path")) {
+                imgsPath = sc.nextLine();
+                //remove the first two chars of the path because it starts with "i "
+                imgsPath = imgsPath.substring(2);
+
+                //remove references to parent directories
+                String parentPrefix = "..\\";
+                while (imgsPath.startsWith(parentPrefix)) {
+                    imgsPath = imgsPath.substring(parentPrefix.length());
+                }
+                break;
+            }
+        }
+        return imgsPath;
     }
 
     private static void handleMenuItemSelection(MenuItem item) {
