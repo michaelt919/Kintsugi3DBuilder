@@ -12,6 +12,7 @@
 
 package kintsugi3d.util;
 
+import javafx.application.Platform;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -37,7 +38,6 @@ import java.util.Scanner;
 
 public class RecentProjects {
 
-    private static WelcomeWindowController welcomeWindowController;
     private static File recentProjectsFile = new File(ApplicationFolders.getUserAppDirectory().toFile(), "recentFiles.txt");
 
     private static final Logger log = LoggerFactory.getLogger(RecentProjects.class);
@@ -59,7 +59,7 @@ public class RecentProjects {
             }
             catch (IOException e)
             {
-                e.printStackTrace();
+                log.error("Could not get items from recent files list", e);
             }
         }
 
@@ -67,15 +67,43 @@ public class RecentProjects {
         return new ArrayList<>(new LinkedHashSet<>(projectItems));
     }
 
-    public static List<MenuItem> getItemsAsMenuItems(){
+    public static List<CustomMenuItem> getItemsAsCustomMenuItems(){
         List<String> items = RecentProjects.getItemsFromRecentsFile();
 
-        List<MenuItem> menuItems = new ArrayList<>();
+        List<CustomMenuItem> customMenuItems = new ArrayList<>();
+        int i = 0;
+
+        //attach tooltips and event handlers
         for (String item : items){
-            menuItems.add(new MenuItem(item));
+            customMenuItems.add(new CustomMenuItem(new Label(shortenedPath(item))));
+
+            CustomMenuItem justAdded = customMenuItems.get(i);
+
+            String fileName = RecentProjects.getItemsFromRecentsFile().get(i);
+            Tooltip tooltip = new Tooltip(fileName);
+            Tooltip.install(justAdded.getContent(), tooltip);
+
+            justAdded.setOnAction(event -> handleMenuItemSelection(justAdded));
+
+            ++i;
         }
 
-        return menuItems;
+        return customMenuItems;
+    }
+
+    public static String shortenedPath(String path){
+        File file = new File(path);
+        File ancestorFile = getAncestorFile(file);
+
+        return ancestorFile.getAbsolutePath() + "...\\" + file.getName();
+    }
+
+    private static File getAncestorFile(File file) {
+        File ancestorFile = file;
+        while (ancestorFile.getParentFile()!= null){
+            ancestorFile = ancestorFile.getParentFile();
+        }
+        return ancestorFile;
     }
 
     public static void updateRecentFiles(String fileName) {
@@ -87,7 +115,7 @@ public class RecentProjects {
                 existingFileNames.add(line);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Failed to update recent files list", e);
         }
 
         // Check if the fileName is already present
@@ -102,7 +130,7 @@ public class RecentProjects {
                 writer.println(name);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Failed to update recent files list", e);
         }
 
         //update list of recent projects in program
@@ -110,52 +138,38 @@ public class RecentProjects {
     }
 
     public static void updateAllControlStructures() {
-        welcomeWindowController.updateRecentProjectsButton();
-        MenubarController.getInstance().updateRecentProjectsMenu();
+        if (MenubarController.getInstance()!= null){updateRecentProjectsInMenuBar();}
+
+        if (WelcomeWindowController.getInstance() != null){ updateRecentProjectsInWelcomeWindow();}
     }
 
-    public static void initializeWelcomeWindowController(WelcomeWindowController welcomeWindowController) {
-        RecentProjects.welcomeWindowController = welcomeWindowController;
+
+    private static void updateRecentProjectsInMenuBar(){
+        Menu recentProjsList = MenubarController.getInstance().getRecentProjectsMenu();
+        Menu cleanRecentProjectsMenu = MenubarController.getInstance().getCleanRecentProjectsMenu();
+
+        recentProjsList.getItems().clear();
+
+        ArrayList<CustomMenuItem> recentItems = (ArrayList<CustomMenuItem>) RecentProjects.getItemsAsCustomMenuItems();
+
+        recentProjsList.getItems().addAll(recentItems);
+
+        //disable menus if there are no recent projects, otherwise enable
+        boolean isListEmpty = recentProjsList.getItems().isEmpty();
+        recentProjsList.setDisable(isListEmpty);
+        cleanRecentProjectsMenu.setDisable(isListEmpty);
     }
 
-    public static void updateRecentProjectsControl(Object menu) {
-        //change formatting in menu? Currently just the path of the object
-        if (menu instanceof Menu){
-            Menu castedMenu = (Menu) menu;
-            updateRecentProjectsMenu(castedMenu);
-        }
+    private static void updateRecentProjectsInWelcomeWindow() {
+        WelcomeWindowController welcomeWindowController = WelcomeWindowController.getInstance();
 
-        else if (menu instanceof SplitMenuButton){
-            SplitMenuButton castedSplitMenuButton = (SplitMenuButton) menu;
-            updateRecentProjectsSplitMenuButton(castedSplitMenuButton);
-        }
-    }
+        SplitMenuButton splitMenuButton = welcomeWindowController.recentProjectsSplitMenuButton;
+        List<Button> recentButtons = welcomeWindowController.recentButtons;
 
-    private static void updateRecentProjectsMenu(Menu menu){
-        menu.getItems().clear();
+        ArrayList<CustomMenuItem> recentItems = (ArrayList<CustomMenuItem>)
+                RecentProjects.getItemsAsCustomMenuItems();
 
-        ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
-
-        menu.getItems().addAll(recentItems);
-
-        //disable button if there are no recent projects
-        if (menu.getItems().isEmpty()) {
-            menu.setDisable(true);
-        }
-
-        //attach event handlers to all menu items
-        for (MenuItem item : recentItems) {
-            item.setOnAction(event -> handleMenuItemSelection(item));
-        }
-    }
-
-    private static void updateRecentProjectsSplitMenuButton(SplitMenuButton menu) {
-        menu.getItems().clear();
-
-        ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
-
-        ArrayList<Button> recentButtons = welcomeWindowController.recentButtons;
-
+        splitMenuButton.getItems().clear();
         //disable all quick action buttons then enable them if they hold a project
         for (Button button : recentButtons){
             button.setDisable(true);
@@ -163,13 +177,20 @@ public class RecentProjects {
             button.setText("");
         }
 
-        //attach event handlers to all menu items
+        //disable split menu button then enable it if it holds projects
+        splitMenuButton.setDisable(true);
+
         int i = 0;
-        for (MenuItem item : recentItems) {
+        for (CustomMenuItem item : recentItems) {
             //add first few items to quick access buttons
             if (i < recentButtons.size()){
                 Button recentButton = recentButtons.get(i);
-                addItemToQuickAccess(item, recentButton);
+
+                String fileName = RecentProjects.getItemsFromRecentsFile().get(i);
+                Tooltip tooltip = new Tooltip(fileName);
+
+                addItemToQuickAccess(fileName, recentButton);
+                recentButton.setTooltip(tooltip);
 
                 //note: this will still enable the button even if the project does not load properly
                 recentButton.setDisable(false);
@@ -177,114 +198,190 @@ public class RecentProjects {
 
             //add remaining items under the split menu button
             else{
-                menu.getItems().addAll(item);
-                item.setOnAction(event -> handleMenuItemSelection(item));
+                splitMenuButton.setDisable(false);
+                splitMenuButton.getItems().add(item);
             }
 
             i++;
         }
-
-        //disable button if there are no recent projects
-        if (menu.getItems().isEmpty()) {
-            menu.setDisable(true);
-        }
     }
 
-    private static void addItemToQuickAccess(MenuItem item, Button recentButton) {
-        ArrayList<String> recentStrings = welcomeWindowController.recentButtonFiles;
-
+    private static void addItemToQuickAccess(String fileName, Button recentButton) {
         //set project file name
-        String fileName = item.getText();
-        File file = new File(fileName);
-        recentButton.setText(file.getName());
-        recentStrings.add(fileName);
+        File projFile = new File(fileName);
+
+        recentButton.setText(projFile.getName());
 
         //set graphic to ? image if proper thumbnail cannot be found
         recentButton.setGraphic(new ImageView(new Image(new File("question-mark.png").toURI().toString())));
         recentButton.setContentDisplay(ContentDisplay.TOP);
 
         //get preview image from .k3d file or .ibr file
+        //use Platform.runLater so loading/downloading preview images doesn't slow down the builder
+        Platform.runLater(()->{
+            setRecentButtonImg(recentButton, projFile);
+        });
 
+    }
+
+    private static void setRecentButtonImg(Button recentButton, File projFile) {
         //open file and convert to xml document
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         try {
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document document = builder.parse(file);
+            String fullRes = "# Full resolution image file path";
+            String prevRes = "# Preview resolution image file path";
 
-            //get view set path
-            Element projectDomElement = (Element) document.getElementsByTagName("Project").item(0);
-            Element viewSetDomElement = (Element) projectDomElement.getElementsByTagName("ViewSet").item(0);
-            String viewSetPath = file.getParent() + "\\" + viewSetDomElement.getAttribute("src");
+            String prevResImgsPath = findImgsPath(factory, projFile, prevRes);
+            String fullResImgsPath = findImgsPath(factory, projFile, fullRes);
 
-            //open images in view set path
-            File viewSetFile = new File(viewSetPath);
+            if (prevResImgsPath == null && fullResImgsPath == null) {
+                log.warn("Could not find preview image for " + projFile.getName());
+                return;
+            }
 
-            Scanner sc = new Scanner(viewSetFile);
-            String imgsPath = null;
-            String read;
-            while (sc.hasNextLine()) {
-                read = sc.nextLine();
+            String previewImgPath = null;
 
-                //if (read.equals("# Full resolution image file path")){
-                if (read.equals("# Preview resolution image file path")) {
-                    imgsPath = sc.nextLine();
-                    //remove the first two chars of the path because it starts with "i "
-                    imgsPath = imgsPath.substring(2);
+            if (prevResImgsPath != null) {
+                previewImgPath = getPreviewImgPath(prevResImgsPath, projFile);
+            }
 
-                    //remove references to parent directories
-                    String parentPrefix = "..\\";
-                    while (imgsPath.startsWith(parentPrefix)) {
-                        imgsPath = imgsPath.substring(parentPrefix.length());
-                    }
-                    break;
+            if (previewImgPath == null) {
+                //try full imgPath before giving up
+                if (fullResImgsPath == null) {
+                    log.warn("Could not find preview image for " + projFile.getName());
+                    return;
+                }
+
+                previewImgPath = getPreviewImgPath(fullResImgsPath, projFile);
+
+                if (previewImgPath == null) {
+                    log.warn("Could not find preview image for " + projFile.getName());
+                    return;
                 }
             }
 
-            if (imgsPath == null) {
-                log.warn("Could not find preview image for " + file.getName());
-                return;
-            }
+            //TODO: set to loading icon
+            recentButton.setGraphic(new ImageView(new Image(new File("Kintsugi3D-icon.png").toURI().toString())));
+            String finalPreviewImgPath = previewImgPath;
 
-            String basePath = System.getProperty("user.home");
-            File baseDir = new File(basePath);
-
-            //build path off of home directory, otherwise correct path would not be found
-            File imgFolder = new File(baseDir, imgsPath);
-
-            String canonicalPath = imgFolder.getCanonicalPath();
-            File resolvedFile = new File(canonicalPath);
-
-            // Check if the path is a directory
-            if (!resolvedFile.isDirectory()) {
-                log.warn("Could not find preview image for " + file.getName());
-                return;
-            }
-
-            // List child files
-            String[] childFilePaths = resolvedFile.list();
-
-            if (childFilePaths == null || childFilePaths.length == 0) {
-                log.warn("Could not find preview image for " + file.getName());
-                return;
-            }
-
-            String previewImgPath = canonicalPath + "\\" + childFilePaths[0];
-            ImageView previewImgView = new ImageView(new Image(new File(previewImgPath).toURI().toString()));
-            previewImgView.setFitHeight(80);
-            previewImgView.setPreserveRatio(true);
-            recentButton.setGraphic(previewImgView);
+            //downloading the img may take time, so put it in another thread
+            Platform.runLater(()->{
+                ImageView previewImgView = new ImageView(new Image(new File(finalPreviewImgPath).toURI().toString()));
+                previewImgView.setFitHeight(80);
+                previewImgView.setPreserveRatio(true);
+                recentButton.setGraphic(previewImgView);
+            });
         }
         catch (ParserConfigurationException | IOException | SAXException e) {
-            log.warn("Could not find preview image for " + file.getName(), e);
+            log.warn("Could not find preview image for " + projFile.getName(), e);
         }
+    }
+
+    private static String getPreviewImgPath(String imgsPath, File projFile) throws IOException {
+
+        //build path off of home directory if path is not complete, otherwise correct path would not be found
+        File imgFolder;
+        if (!imgsPath.matches("^[A-Za-z]:\\\\.*")){
+            String basePath = System.getProperty("user.home");
+            File baseDir = new File(basePath);
+            imgFolder = new File(baseDir, imgsPath);
+        }
+        else{
+            //full path is given (starting with C:\, G:\, etc)
+            imgFolder = new File(imgsPath);
+        }
+
+        String canonicalPath = imgFolder.getCanonicalPath();
+        File resolvedFile = new File(canonicalPath);
+
+        // Check if the path is a directory
+        if (!resolvedFile.isDirectory()) {
+            //try again w/ project file parent + imgFolder
+            imgFolder = new File(projFile.getParent(), imgsPath);
+            canonicalPath = imgFolder.getCanonicalPath();
+            resolvedFile = new File(canonicalPath);
+
+            if (!resolvedFile.isDirectory()) {
+                //not a warning because we might find the preview image in the other image path
+                //first checks preview images, then full res images
+                log.info("Could not find preview image for " + projFile.getName() + " in " + resolvedFile.getAbsolutePath());
+                return null;
+            }
+        }
+
+        // List child files
+        String[] childFilePaths = resolvedFile.list();
+
+        if (childFilePaths == null || childFilePaths.length == 0) {
+            log.warn("No preview images found in " + resolvedFile.getAbsolutePath());
+            return null;
+        }
+
+        return canonicalPath + "\\" + childFilePaths[0];
+    }
+
+    private static String findImgsPath(DocumentBuilderFactory factory, File file, String target) throws ParserConfigurationException, SAXException, IOException {
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document document = builder.parse(file);
+
+        //get view set path
+        Element projectDomElement = (Element) document.getElementsByTagName("Project").item(0);
+        Element viewSetDomElement = (Element) projectDomElement.getElementsByTagName("ViewSet").item(0);
+        String viewSetPath = file.getParent() + "\\" + viewSetDomElement.getAttribute("src");
+
+        //open images in view set path
+        File viewSetFile = new File(viewSetPath);
+
+        Scanner sc = new Scanner(viewSetFile);
+        String imgsPath = null;
+        String read;
+        while (sc.hasNextLine()) {
+            read = sc.nextLine();
+
+            //if (read.equals("# Full resolution image file path")){
+            //if (read.equals("# Preview resolution image file path")) {
+            if (read.equals(target)){
+                imgsPath = sc.nextLine();
+                //remove the first two chars of the path because it starts with "i "
+                imgsPath = imgsPath.substring(2);
+
+                //remove references to parent directories
+                String parentPrefix = "..\\";
+                while (imgsPath.startsWith(parentPrefix)) {
+                    imgsPath = imgsPath.substring(parentPrefix.length());
+                }
+                break;
+            }
+        }
+
+        return imgsPath;
     }
 
     private static void handleMenuItemSelection(MenuItem item) {
-        String projectName = item.getText();
-        ProjectIO.getInstance().openProjectFromFile(new File(projectName));
+        int i = 0;
+        ArrayList<String> recentFileNames = (ArrayList<String>) RecentProjects.getItemsFromRecentsFile();
+        //check recent projects menu for match
+        for (MenuItem menuItem : MenubarController.getInstance().getRecentProjectsMenu().getItems()) {
+            if (menuItem.equals(item)) {
+                ProjectIO.getInstance().openProjectFromFile(new File(recentFileNames.get(i)));
+                break;
+            }
+            ++i;
+        }
+
+        //check split menu button for match
+        i = WelcomeWindowController.getInstance().recentButtons.size(); //need to offset the search by the number of buttons
+        //ex. first split menu item is actually the sixth recent project if there are five buttons
+        for (MenuItem menuItem : WelcomeWindowController.getInstance().recentProjectsSplitMenuButton.getItems()) {
+            if (menuItem.equals(item)) {
+                ProjectIO.getInstance().openProjectFromFile(new File(recentFileNames.get(i)));
+                break;
+            }
+            ++i;
+        }
     }
 
-    public static void cleanRecentProjects() {
+    public static void removeInvalidReferences() {
         ArrayList<String> recentItems = (ArrayList<String>) RecentProjects.getItemsFromRecentsFile();
 
         ArrayList<String> newRecentItems = new ArrayList<>();
@@ -297,26 +394,24 @@ public class RecentProjects {
             }
         }
 
-        //write items to recent projects file and update control structures
-
         // Write the updated content back to the file
         try (PrintWriter writer = new PrintWriter(new FileWriter(recentProjectsFile, StandardCharsets.UTF_8))) {
             for (String name : newRecentItems) {
                 writer.println(name);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Failed to update recent files list while removing invalid references.", e);
         }
 
         updateAllControlStructures();
     }
 
-    public static void purgeRecentProjectsList() {
+    public static void removeAllReferences() {
         //wipe recent projects list
         try (FileWriter fileWriter = new FileWriter(recentProjectsFile.getAbsolutePath(), false)) {
             fileWriter.write("");
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Could not write to recent files list", e);
         }
 
         updateAllControlStructures();

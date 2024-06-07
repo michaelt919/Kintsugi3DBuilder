@@ -297,7 +297,7 @@ public final class ProjectIO
         String[] controllerFiles = controllersDirectory.list();
 
         if (fxmlFiles == null || controllerFiles == null) {
-            log.error("Could not file fxml files for create new project process");
+            log.error("Could not find fxml files for create new project process");
                 return;
         }
 
@@ -407,7 +407,7 @@ public final class ProjectIO
 
     public void openProjectFromFile(File selectedFile)
     {
-        //open the project and update the recent files list
+        //open the project, update the recent files list, disable shaders which aren't useful until processing textures
         this.projectFile = selectedFile;
         File newVsetFile = null;
 
@@ -439,6 +439,9 @@ public final class ProjectIO
 
             WelcomeWindowController.getInstance().hideWelcomeWindow();
             RecentProjects.updateAllControlStructures();
+
+            //disable some shaders because they only function properly after processing textures
+            MenubarController.getInstance().setToggleableShaderDisable(true);
         }
     }
 
@@ -616,6 +619,8 @@ public final class ProjectIO
 
         MultithreadModels.getInstance().getLoadingModel().unload();
         projectLoaded = false;
+
+        MenubarController.getInstance().setToggleableShaderDisable(true);
     }
 
     public void closeProjectAfterConfirmation()

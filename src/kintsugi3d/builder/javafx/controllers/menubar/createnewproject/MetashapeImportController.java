@@ -140,14 +140,14 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         modelSelectionChoiceBox.setValue(modelSelectionChoiceBox.getItems().get(0));
         modelSelectionChoiceBox.setDisable(false);
 
-        if (metashapeObjectChunk.getActiveID() == null){return;}
+        if (metashapeObjectChunk.getActiveModelID() == null){return;}
 
         for (int i = 0; i < modelSelectionChoiceBox.getItems().size(); ++i){
             Object obj = modelSelectionChoiceBox.getItems().get(i);
             Integer modelID = getModelIDFromSelection((String) obj);
             if (modelID == null){continue;}
 
-            if (modelID.equals(metashapeObjectChunk.getActiveID())){
+            if (modelID.equals(metashapeObjectChunk.getActiveModelID())){
                 modelSelectionChoiceBox.setValue(obj);
                 break;
             }
@@ -211,6 +211,20 @@ public class MetashapeImportController extends FXMLPageController implements Sha
                 chunkSelectionChoiceBox.getItems().get(0) != null){
             chunkSelectionChoiceBox.setValue(chunkSelectionChoiceBox.getItems().get(0));
             chunkSelectionChoiceBox.setDisable(false);
+
+            //set chunk to default chunk if it has one
+            Integer activeChunkID = metashapeObject.getActiveChunkID();
+            if (activeChunkID != null){
+                String chunkName = metashapeObject.getChunkNameFromID(activeChunkID);
+
+                for (Object obj : chunkSelectionChoiceBox.getItems()){
+                    String str = (String) obj;
+                    if (str.equals(chunkName)){
+                        chunkSelectionChoiceBox.setValue(obj);
+                        break;
+                    }
+                }
+            }
         }
     }
 

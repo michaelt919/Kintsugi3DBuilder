@@ -42,7 +42,7 @@ public class MetashapeObjectChunk {
     private Document frameZip;
 
     private ArrayList<Triplet<Integer, String, String>> modelInfo = new ArrayList<>();
-    private Integer activeID; //TODO: is this equivalent to default model id?
+    private Integer activeModelID; //TODO: is this equivalent to default model id?
 
     public String getChunkZipPath() { return chunkZipPath; }
     public Document getChunkXML() { return chunkXML; }
@@ -114,7 +114,7 @@ public class MetashapeObjectChunk {
         //get active id
         try {
             Element elem = (Element) chunkXML.getElementsByTagName("models").item(0);
-            this.activeID = Integer.parseInt(elem.getAttribute("active_id"));
+            this.activeModelID = Integer.parseInt(elem.getAttribute("active_id"));
         }
         catch(NumberFormatException | NullPointerException e){
             log.warn("Could not find active id for " + this.getPsxFilePath(), e);
@@ -294,5 +294,5 @@ public class MetashapeObjectChunk {
         return modelInfo;
     }
 
-    public Integer getActiveID(){return activeID;}
+    public Integer getActiveModelID(){return activeModelID;}
 }

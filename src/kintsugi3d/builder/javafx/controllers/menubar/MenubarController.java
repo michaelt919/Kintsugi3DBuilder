@@ -20,16 +20,11 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Locale;
-import java.util.Scanner;
+import java.util.*;
 import java.util.function.Consumer;
 
-import com.sun.javafx.menu.CheckMenuItemBase;
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -43,13 +38,11 @@ import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
-import kintsugi3d.gl.util.UnzipHelper;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.javafx.FramebufferView;
-import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.IBRRequestUI;
@@ -61,38 +54,12 @@ import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
-import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
-import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
 import kintsugi3d.builder.javafx.controllers.scene.object.ObjectPoseSetting;
 import kintsugi3d.builder.javafx.controllers.scene.object.SettingsObjectSceneController;
-import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.javafx.FramebufferView;
 import kintsugi3d.util.Flag;
-import kintsugi3d.util.RecentProjects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Scanner;
-import java.util.function.Consumer;
 
 public class MenubarController
 {
-    String defaultAutosavePath = "C:\\";//TODO: WILL CHANGE WHEN FILE STRUCTURE IS CEMENTED
-
-    String defaultAutosaveSelection = "Default Path: --> " + defaultAutosavePath;
-    static final String CHOOSE_LOCATION = "Choose Location...";
-    private DirectoryChooser directoryChooser = new DirectoryChooser();
-
     private static final Logger log = LoggerFactory.getLogger(MenubarController.class);
 
     private static MenubarController instance;
@@ -171,6 +138,15 @@ public class MenubarController
 
     @FXML private Menu exportMenu;
     @FXML private Menu recentProjectsMenu;
+    @FXML private Menu cleanRecentProjectsMenu;
+
+    //shaders which should only be enabled after processing textures
+    @FXML private RadioMenuItem materialMetallicity;
+    @FXML private RadioMenuItem materialReflectivity;
+    @FXML private RadioMenuItem materialBasis;
+    @FXML private RadioMenuItem imgBasedWithTextures;
+
+    private List<RadioMenuItem> toggleableShaders = new ArrayList<>();
 
     @FXML private VBox cameraViewList;
     @FXML private CameraViewListController cameraViewListController;
@@ -343,7 +319,7 @@ public class MenubarController
 //            }
 //        });
 
-        updateRecentProjectsMenu();
+        RecentProjects.updateAllControlStructures();
 
 //        //add "Default Path" and "Choose Location..." items to choiceBox
 //        //initialize directory selection dropdown menu
@@ -354,6 +330,13 @@ public class MenubarController
 //
 //        //attach event handler (this cannot be done in scenebuilder)
 //        autosaveOptionsChoiceBox.setOnAction(this::handleDirectoryDropdownSelection);
+
+        toggleableShaders.add(materialMetallicity);
+        toggleableShaders.add(materialReflectivity);
+        toggleableShaders.add(materialBasis);
+        toggleableShaders.add(imgBasedWithTextures);
+
+        setToggleableShaderDisable(true);
     }
 
     public void file_exportGLTF()
@@ -816,14 +799,6 @@ public class MenubarController
         }
     }
 
-    public void updateRecentProjectsMenu() {
-        RecentProjects.updateRecentProjectsControl(recentProjectsMenu);
-    }
-
-    public static void handleMenuItemSelection(MenuItem item) {
-        String projectName = item.getText();
-        ProjectIO.getInstance().openProjectFromFile(new File(projectName));
-    }
 
 //    private void handleDirectoryDropdownSelection(ActionEvent actionEvent) {
 //        //if user clicks "choose directory" option, open the directory chooser
@@ -984,13 +959,27 @@ public class MenubarController
         });
     }
 
-    public void file_cleanRecentProjects(ActionEvent actionEvent) {
-        RecentProjects.cleanRecentProjects();
-
-        RecentProjects.updateAllControlStructures();
+    public void file_removeInvalidReferences() {
+        RecentProjects.removeInvalidReferences();
     }
 
-    public void file_purgeRecentProjectsList(ActionEvent actionEvent) {
-        RecentProjects.purgeRecentProjectsList();
+    public void file_removeAllReferences() {
+        RecentProjects.removeAllReferences();
+    }
+
+    public Menu getRecentProjectsMenu() {
+        return recentProjectsMenu;
+    }
+
+    public Menu getCleanRecentProjectsMenu() {
+        return cleanRecentProjectsMenu;
+    }
+
+    //come up with a clearer name for this
+    //set the disable of shaders which only work after processing textures
+    public void setToggleableShaderDisable(boolean b) {
+        for (RadioMenuItem item : toggleableShaders){
+            item.setDisable(b);
+        }
     }
 }

@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 public class WelcomeWindowController
 {
@@ -47,9 +48,7 @@ public class WelcomeWindowController
     @FXML private Button recent3;
     @FXML private Button recent4;
     @FXML private Button recent5;
-    public ArrayList<Button> recentButtons = new ArrayList<>();
-    public ArrayList<String> recentButtonFiles = new ArrayList<>();
-
+    public List<Button> recentButtons = new ArrayList<>();
     public static WelcomeWindowController getInstance()
     {
         return INSTANCE;
@@ -70,6 +69,8 @@ public class WelcomeWindowController
     public <ContextType extends Context<ContextType>> void init(
             Stage injectedStage, IBRRequestManager<ContextType> requestQueue, InternalModels injectedInternalModels,
             Runnable injectedUserDocumentationHandler) {
+        INSTANCE = this;
+
         this.parentWindow = injectedStage.getOwner();
         this.window = injectedStage;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
@@ -80,10 +81,7 @@ public class WelcomeWindowController
         recentButtons.add(recent4);
         recentButtons.add(recent5);
 
-        //initializeWelcomeWindowController initializes recentButtonFiles ArrayList
-        RecentProjects.initializeWelcomeWindowController(this);
-
-        updateRecentProjectsButton();
+        RecentProjects.updateAllControlStructures();
 
 //        MultithreadModels.getInstance().getLoadingModel().addLoadingMonitor(new LoadingMonitor()
 //        {
@@ -123,11 +121,6 @@ public class WelcomeWindowController
 //                loadingComplete();
 //            }
 //        });
-        INSTANCE = this;
-    }
-
-    public void updateRecentProjectsButton() {
-        RecentProjects.updateRecentProjectsControl(recentProjectsSplitMenuButton);
     }
 
     public void handleMenuItemSelection(MenuItem item) {
@@ -155,7 +148,7 @@ public class WelcomeWindowController
             //if able to put scene for Loader
             //window.setScene(parentWindow.getScene());
             ProjectIO.getInstance().createProject(parentWindow);
-            updateRecentProjectsButton();
+            RecentProjects.updateAllControlStructures();
         }
     }
 
@@ -164,7 +157,6 @@ public class WelcomeWindowController
         if (!ProjectIO.getInstance().isCreateProjectWindowOpen())
         {
             ProjectIO.getInstance().createProjectNew(parentWindow);
-            updateRecentProjectsButton();
         }
     }
 
@@ -214,10 +206,11 @@ public class WelcomeWindowController
     }
 
     public void handleButtonSelection(Button item) {
+        ArrayList<String> recentFileNames = (ArrayList<String>) RecentProjects.getItemsFromRecentsFile();
         int i = 0;
         for (Button button : recentButtons){
             if (button == item){
-                ProjectIO.getInstance().openProjectFromFile(new File(recentButtonFiles.get(i)));
+                ProjectIO.getInstance().openProjectFromFile(new File(recentFileNames.get(i)));
             }
             i++;
         }
