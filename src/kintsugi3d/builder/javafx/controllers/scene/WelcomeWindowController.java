@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 public class WelcomeWindowController
 {
@@ -47,7 +48,7 @@ public class WelcomeWindowController
     @FXML private Button recent3;
     @FXML private Button recent4;
     @FXML private Button recent5;
-    public ArrayList<Button> recentButtons = new ArrayList<>();
+    public List<Button> recentButtons = new ArrayList<>();
     public static WelcomeWindowController getInstance()
     {
         return INSTANCE;
@@ -68,6 +69,8 @@ public class WelcomeWindowController
     public <ContextType extends Context<ContextType>> void init(
             Stage injectedStage, IBRRequestManager<ContextType> requestQueue, InternalModels injectedInternalModels,
             Runnable injectedUserDocumentationHandler) {
+        INSTANCE = this;
+
         this.parentWindow = injectedStage.getOwner();
         this.window = injectedStage;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
@@ -78,9 +81,7 @@ public class WelcomeWindowController
         recentButtons.add(recent4);
         recentButtons.add(recent5);
 
-        RecentProjects.initializeWelcomeWindowController(this);
-
-        RecentProjects.updateRecentProjectsInWelcomeWindow();
+        RecentProjects.updateAllControlStructures();
 
 //        MultithreadModels.getInstance().getLoadingModel().addLoadingMonitor(new LoadingMonitor()
 //        {
@@ -120,7 +121,6 @@ public class WelcomeWindowController
 //                loadingComplete();
 //            }
 //        });
-        INSTANCE = this;
     }
 
     public void handleMenuItemSelection(MenuItem item) {
@@ -148,7 +148,7 @@ public class WelcomeWindowController
             //if able to put scene for Loader
             //window.setScene(parentWindow.getScene());
             ProjectIO.getInstance().createProject(parentWindow);
-            RecentProjects.updateRecentProjectsInWelcomeWindow();
+            RecentProjects.updateAllControlStructures();
         }
     }
 
@@ -157,7 +157,7 @@ public class WelcomeWindowController
         if (!ProjectIO.getInstance().isCreateProjectWindowOpen())
         {
             ProjectIO.getInstance().createProjectNew(parentWindow);
-            RecentProjects.updateRecentProjectsInWelcomeWindow();
+            RecentProjects.updateAllControlStructures();
         }
     }
 

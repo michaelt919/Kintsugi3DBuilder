@@ -59,7 +59,7 @@
                                     <MenuItem mnemonicParsing="false" text="Action 1" />
                                 </items>
                             </Menu>
-                     <Menu mnemonicParsing="false" text="Clean Recent Projects">
+                     <Menu fx:id="cleanRecentProjectsMenu" mnemonicParsing="false" text="Clean Recent Projects">
                         <items>
                                   <MenuItem mnemonicParsing="false" onAction="#file_removeInvalidReferences" text="Remove Invalid References" />
                                   <MenuItem mnemonicParsing="false" onAction="#file_removeAllReferences" text="Remove All References" />

@@ -64,12 +64,6 @@ import kintsugi3d.util.Flag;
 
 public class MenubarController
 {
-    String defaultAutosavePath = "C:\\";//TODO: WILL CHANGE WHEN FILE STRUCTURE IS CEMENTED
-
-    String defaultAutosaveSelection = "Default Path: --> " + defaultAutosavePath;
-    static final String CHOOSE_LOCATION = "Choose Location...";
-    private DirectoryChooser directoryChooser = new DirectoryChooser();
-
     private static final Logger log = LoggerFactory.getLogger(MenubarController.class);
 
     private static MenubarController instance;
@@ -148,6 +142,7 @@ public class MenubarController
 
     @FXML private Menu exportMenu;
     @FXML private Menu recentProjectsMenu;
+    @FXML private Menu cleanRecentProjectsMenu;
 
     @FXML private VBox cameraViewList;
     @FXML private CameraViewListController cameraViewListController;
@@ -320,7 +315,7 @@ public class MenubarController
 //            }
 //        });
 
-        updateRecentProjectsMenu();
+        RecentProjects.updateAllControlStructures();
 
 //        //add "Default Path" and "Choose Location..." items to choiceBox
 //        //initialize directory selection dropdown menu
@@ -793,10 +788,6 @@ public class MenubarController
         }
     }
 
-    public void updateRecentProjectsMenu() {
-        RecentProjects.updateRecentProjectsInMenuBar(recentProjectsMenu);
-    }
-
 
 //    private void handleDirectoryDropdownSelection(ActionEvent actionEvent) {
 //        //if user clicks "choose directory" option, open the directory chooser
@@ -957,15 +948,19 @@ public class MenubarController
         });
     }
 
-    public void file_removeInvalidReferences(ActionEvent actionEvent) {
+    public void file_removeInvalidReferences() {
         RecentProjects.removeInvalidReferences();
     }
 
-    public void file_removeAllReferences(ActionEvent actionEvent) {
+    public void file_removeAllReferences() {
         RecentProjects.removeAllReferences();
     }
 
     public Menu getRecentProjectsMenu() {
         return recentProjectsMenu;
+    }
+
+    public Menu getCleanRecentProjectsMenu() {
+        return cleanRecentProjectsMenu;
     }
 }

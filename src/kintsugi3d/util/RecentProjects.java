@@ -37,7 +37,6 @@ import java.util.Scanner;
 
 public class RecentProjects {
 
-    private static WelcomeWindowController welcomeWindowController;
     private static File recentProjectsFile = new File(ApplicationFolders.getUserAppDirectory().toFile(), "recentFiles.txt");
 
     private static final Logger log = LoggerFactory.getLogger(RecentProjects.class);
@@ -138,41 +137,33 @@ public class RecentProjects {
     }
 
     public static void updateAllControlStructures() {
-        updateRecentProjectsInWelcomeWindow();
-        MenubarController.getInstance().updateRecentProjectsMenu();
+        if (MenubarController.getInstance()!= null){updateRecentProjectsInMenuBar();}
+
+        if (WelcomeWindowController.getInstance() != null){ updateRecentProjectsInWelcomeWindow();}
     }
 
-    public static void initializeWelcomeWindowController(WelcomeWindowController welcomeWindowController) {
-        RecentProjects.welcomeWindowController = welcomeWindowController;
-    }
 
-    public static void updateRecentProjectsInMenuBar(Menu menu){
-        menu.getItems().clear();
+    private static void updateRecentProjectsInMenuBar(){
+        Menu recentProjsList = MenubarController.getInstance().getRecentProjectsMenu();
+        Menu cleanRecentProjectsMenu = MenubarController.getInstance().getCleanRecentProjectsMenu();
+
+        recentProjsList.getItems().clear();
 
         ArrayList<CustomMenuItem> recentItems = (ArrayList<CustomMenuItem>) RecentProjects.getItemsAsCustomMenuItems();
 
-        menu.getItems().addAll(recentItems);
+        recentProjsList.getItems().addAll(recentItems);
 
-        //disable button if there are no recent projects, otherwise enable
-        menu.setDisable(menu.getItems().isEmpty());
-
-//        //attach event handlers and tooltips to all menu items
-//        int i = 0;
-//        for (CustomMenuItem item : recentItems) {
-//            item.setOnAction(event -> handleMenuItemSelection(item));
-//
-//            String fileName = RecentProjects.getItemsFromRecentsFile().get(i);
-//            Tooltip tooltip = new Tooltip(fileName);
-//            Tooltip.install(item.getContent(), tooltip);
-//
-//            ++i;
-//        }
+        //disable menus if there are no recent projects, otherwise enable
+        boolean isListEmpty = recentProjsList.getItems().isEmpty();
+        recentProjsList.setDisable(isListEmpty);
+        cleanRecentProjectsMenu.setDisable(isListEmpty);
     }
 
-    public static void updateRecentProjectsInWelcomeWindow() {
+    private static void updateRecentProjectsInWelcomeWindow() {
+        WelcomeWindowController welcomeWindowController = WelcomeWindowController.getInstance();
 
         SplitMenuButton splitMenuButton = welcomeWindowController.recentProjectsSplitMenuButton;
-        ArrayList<Button> recentButtons = welcomeWindowController.recentButtons;
+        List<Button> recentButtons = welcomeWindowController.recentButtons;
 
         ArrayList<CustomMenuItem> recentItems = (ArrayList<CustomMenuItem>)
                 RecentProjects.getItemsAsCustomMenuItems();
@@ -364,7 +355,7 @@ public class RecentProjects {
         }
 
         //check split menu button for match
-        i = welcomeWindowController.recentButtons.size(); //need to offset the search by the number of buttons
+        i = WelcomeWindowController.getInstance().recentButtons.size(); //need to offset the search by the number of buttons
         //ex. first split menu item is actually the sixth recent project if there are five buttons
         for (MenuItem menuItem : WelcomeWindowController.getInstance().recentProjectsSplitMenuButton.getItems()) {
             if (menuItem.equals(item)) {

@@ -297,7 +297,7 @@ public final class ProjectIO
         String[] controllerFiles = controllersDirectory.list();
 
         if (fxmlFiles == null || controllerFiles == null) {
-            log.error("Could not file fxml files for create new project process");
+            log.error("Could not find fxml files for create new project process");
                 return;
         }
 
