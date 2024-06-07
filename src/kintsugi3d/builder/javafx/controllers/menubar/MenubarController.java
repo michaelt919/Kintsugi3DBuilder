@@ -20,15 +20,11 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Locale;
-import java.util.Scanner;
+import java.util.*;
 import java.util.function.Consumer;
 
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -143,6 +139,14 @@ public class MenubarController
     @FXML private Menu exportMenu;
     @FXML private Menu recentProjectsMenu;
     @FXML private Menu cleanRecentProjectsMenu;
+
+    //shaders which should only be enabled after processing textures
+    @FXML private RadioMenuItem materialMetallicity;
+    @FXML private RadioMenuItem materialReflectivity;
+    @FXML private RadioMenuItem materialBasis;
+    @FXML private RadioMenuItem imgBasedWithTextures;
+
+    private List<RadioMenuItem> toggleableShaders = new ArrayList<>();
 
     @FXML private VBox cameraViewList;
     @FXML private CameraViewListController cameraViewListController;
@@ -326,6 +330,13 @@ public class MenubarController
 //
 //        //attach event handler (this cannot be done in scenebuilder)
 //        autosaveOptionsChoiceBox.setOnAction(this::handleDirectoryDropdownSelection);
+
+        toggleableShaders.add(materialMetallicity);
+        toggleableShaders.add(materialReflectivity);
+        toggleableShaders.add(materialBasis);
+        toggleableShaders.add(imgBasedWithTextures);
+
+        setToggleableShaderDisable(true);
     }
 
     public void file_exportGLTF()
@@ -962,5 +973,13 @@ public class MenubarController
 
     public Menu getCleanRecentProjectsMenu() {
         return cleanRecentProjectsMenu;
+    }
+
+    //come up with a clearer name for this
+    //set the disable of shaders which only work after processing textures
+    public void setToggleableShaderDisable(boolean b) {
+        for (RadioMenuItem item : toggleableShaders){
+            item.setDisable(b);
+        }
     }
 }

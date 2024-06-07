@@ -252,17 +252,17 @@
                             <RadioMenuItem mnemonicParsing="false" text="Textured Lambertian" toggleGroup="$renderGroup">
                                 <userData>renderModes/texturedLambertian.frag</userData>
                             </RadioMenuItem>
-                            <RadioMenuItem mnemonicParsing="false" text="Material (metallicity)" toggleGroup="$renderGroup" userData="renderModes/texturedORMMaterial.frag">
+                            <RadioMenuItem fx:id="materialMetallicity" mnemonicParsing="false" text="Material (metallicity)" toggleGroup="$renderGroup" userData="renderModes/texturedORMMaterial.frag">
                             </RadioMenuItem>
-                            <RadioMenuItem mnemonicParsing="false" text="Material (reflectivity)" toggleGroup="$renderGroup">
+                            <RadioMenuItem fx:id="materialReflectivity"  mnemonicParsing="false" text="Material (reflectivity)" toggleGroup="$renderGroup">
                                 <userData>renderModes/texturedMaterial.frag</userData>
                             </RadioMenuItem>
-                            <RadioMenuItem mnemonicParsing="false" text="Material (basis)" toggleGroup="$renderGroup" userData="renderModes/basisMaterial.frag">
+                            <RadioMenuItem fx:id="materialBasis"  mnemonicParsing="false" text="Material (basis)" toggleGroup="$renderGroup" userData="renderModes/basisMaterial.frag">
                             </RadioMenuItem>
                             <RadioMenuItem mnemonicParsing="false" selected="true" text="Image-based" toggleGroup="$renderGroup">
                                 <userData>renderModes/ibrUntextured.frag</userData>
                             </RadioMenuItem>
-                            <RadioMenuItem mnemonicParsing="false" text="Image-based with textures" toggleGroup="$renderGroup">
+                            <RadioMenuItem fx:id="imgBasedWithTextures" mnemonicParsing="false" text="Image-based with textures" toggleGroup="$renderGroup">
                                 <userData>renderModes/ibrTextured.frag</userData>
                             </RadioMenuItem>
                         </Menu>
