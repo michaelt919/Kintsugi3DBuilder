@@ -157,7 +157,6 @@ public class WelcomeWindowController
         if (!ProjectIO.getInstance().isCreateProjectWindowOpen())
         {
             ProjectIO.getInstance().createProjectNew(parentWindow);
-            RecentProjects.updateAllControlStructures();
         }
     }
 
