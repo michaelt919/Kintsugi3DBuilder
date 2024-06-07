@@ -12,6 +12,7 @@
 
 package kintsugi3d.util;
 
+import javafx.application.Platform;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -216,7 +217,14 @@ public class RecentProjects {
         recentButton.setContentDisplay(ContentDisplay.TOP);
 
         //get preview image from .k3d file or .ibr file
+        //use Platform.runLater so loading/downloading preview images doesn't slow down the builder
+        Platform.runLater(()->{
+            setRecentButtonImg(recentButton, projFile);
+        });
 
+    }
+
+    private static void setRecentButtonImg(Button recentButton, File projFile) {
         //open file and convert to xml document
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         try {
@@ -246,16 +254,23 @@ public class RecentProjects {
 
                 previewImgPath = getPreviewImgPath(fullResImgsPath, projFile);
 
-                if (previewImgPath == null){
+                if (previewImgPath == null) {
                     log.warn("Could not find preview image for " + projFile.getName());
                     return;
                 }
             }
 
-            ImageView previewImgView = new ImageView(new Image(new File(previewImgPath).toURI().toString()));
-            previewImgView.setFitHeight(80);
-            previewImgView.setPreserveRatio(true);
-            recentButton.setGraphic(previewImgView);
+            //TODO: set to loading icon
+            recentButton.setGraphic(new ImageView(new Image(new File("Kintsugi3D-icon.png").toURI().toString())));
+            String finalPreviewImgPath = previewImgPath;
+
+            //downloading the img may take time, so put it in another thread
+            Platform.runLater(()->{
+                ImageView previewImgView = new ImageView(new Image(new File(finalPreviewImgPath).toURI().toString()));
+                previewImgView.setFitHeight(80);
+                previewImgView.setPreserveRatio(true);
+                recentButton.setGraphic(previewImgView);
+            });
         }
         catch (ParserConfigurationException | IOException | SAXException e) {
             log.warn("Could not find preview image for " + projFile.getName(), e);
