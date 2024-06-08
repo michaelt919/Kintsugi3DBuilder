@@ -46,7 +46,10 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     public void refresh() {
         updateLoadedIndicators();
         //need to do Platform.runLater so updateModelSelectionChoiceBox can pull info from chunkSelectionChoiceBox
-        chunkSelectionChoiceBox.setOnAction(event -> Platform.runLater(this::updateModelSelectionChoiceBox));
+        chunkSelectionChoiceBox.setOnAction(event -> Platform.runLater(()->{
+                updateModelSelectionChoiceBox();
+                updateLoadedIndicators();
+        }));
     }
 
     @Override
@@ -102,6 +105,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     private void updateChoiceBoxes() {
         updateChunkSelectionChoiceBox();
         updateModelSelectionChoiceBox();
+        updateLoadedIndicators();
     }
 
     private void updateModelSelectionChoiceBox() {
