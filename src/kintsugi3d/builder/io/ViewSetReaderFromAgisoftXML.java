@@ -282,18 +282,19 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             }
                             log.debug("Reading chunk '%s'\n", chunkLabel);
 
-                            // chunk XMLs put the version in the chunk tag
-                            String tryVersion = reader.getAttributeValue(null, "version");
-                            if (tryVersion != null)
-                            {
-                                version = tryVersion;
-                                String[] verComponents = version.split("\\.");
-                                for (String verComponent : verComponents)
-                                {
-                                    intVersion *= 10;
-                                    intVersion += Integer.parseInt(verComponent);
-                                }
-                            }
+                            // Commented out; chunk XMLs seem to always be labelled version 1.2.0; regardless of Metashape version or actual format details.
+//                            // chunk XMLs put the version in the chunk tag
+//                            String tryVersion = reader.getAttributeValue(null, "version");
+//                            if (tryVersion != null)
+//                            {
+//                                version = tryVersion;
+//                                String[] verComponents = version.split("\\.");
+//                                for (String verComponent : verComponents)
+//                                {
+//                                    intVersion *= 10;
+//                                    intVersion += Integer.parseInt(verComponent);
+//                                }
+//                            }
 
                             break;
                         }
