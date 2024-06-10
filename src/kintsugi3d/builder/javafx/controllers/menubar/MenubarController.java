@@ -139,6 +139,9 @@ public class MenubarController
     @FXML private Menu recentProjectsMenu;
     @FXML private Menu cleanRecentProjectsMenu;
 
+    @FXML private CustomMenuItem removeAllRefsCustMenuItem;
+    @FXML private CustomMenuItem removeSomeRefsCustMenuItem;
+
     //shaders which should only be enabled after processing textures
     @FXML private RadioMenuItem materialMetallicity;
     @FXML private RadioMenuItem materialReflectivity;
@@ -252,6 +255,22 @@ public class MenubarController
 
         RecentProjects.updateAllControlStructures();
 
+        toggleableShaders.add(materialMetallicity);
+        toggleableShaders.add(materialReflectivity);
+        toggleableShaders.add(materialBasis);
+        toggleableShaders.add(imgBasedWithTextures);
+
+        setToggleableShaderDisable(true);
+
+        //add tooltips to recent projects list modifiers
+        Tooltip tip = new Tooltip("Remove references to items not found in file explorer. " +
+                "Does not modify your file system.");
+        Tooltip.install(removeSomeRefsCustMenuItem.getContent(), tip);
+
+        tip = new Tooltip("Remove references to all recent projects. Does not modify your file system.");
+        Tooltip.install(removeAllRefsCustMenuItem.getContent(), tip);
+
+
 //        updatePreloadVisibilityEtc();
 
 //        setupTxtFieldProperties(widthIntProperty, widthTxtField);
@@ -280,13 +299,6 @@ public class MenubarController
 //
 //        //attach event handler (this cannot be done in scenebuilder)
 //        autosaveOptionsChoiceBox.setOnAction(this::handleDirectoryDropdownSelection);
-
-        toggleableShaders.add(materialMetallicity);
-        toggleableShaders.add(materialReflectivity);
-        toggleableShaders.add(materialBasis);
-        toggleableShaders.add(imgBasedWithTextures);
-
-        setToggleableShaderDisable(true);
     }
 
     private boolean loadExportClasses(Stage injectedStage, File exportClassDefinitionFile) {

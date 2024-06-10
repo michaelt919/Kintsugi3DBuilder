@@ -58,10 +58,18 @@
                                     <MenuItem mnemonicParsing="false" text="Action 1" />
                                 </items>
                             </Menu>
-                     <Menu fx:id="cleanRecentProjectsMenu" mnemonicParsing="false" text="Clean Recent Projects">
+                     <Menu fx:id="cleanRecentProjectsMenu" mnemonicParsing="false" text="Clear Recent Projects">
                         <items>
-                                  <MenuItem mnemonicParsing="false" onAction="#file_removeInvalidReferences" text="Remove Invalid References" />
-                                  <MenuItem mnemonicParsing="false" onAction="#file_removeAllReferences" text="Remove All References" />
+                            <CustomMenuItem fx:id = "removeSomeRefsCustMenuItem" onAction="#file_removeInvalidReferences">
+                                <content>
+                                    <Label text="Clear Missing Projects" />
+                                </content>
+                            </CustomMenuItem>
+                            <CustomMenuItem fx:id = "removeAllRefsCustMenuItem" onAction="#file_removeAllReferences">
+                                <content>
+                                    <Label  text="Clear All Projects" />
+                                </content>
+                            </CustomMenuItem>
                         </items>
                      </Menu>
 
@@ -253,10 +261,10 @@
                             </RadioMenuItem>
                             <RadioMenuItem fx:id="materialMetallicity" mnemonicParsing="false" text="Material (metallicity)" toggleGroup="$renderGroup" userData="renderModes/texturedORMMaterial.frag">
                             </RadioMenuItem>
-                            <RadioMenuItem fx:id="materialReflectivity"  mnemonicParsing="false" text="Material (reflectivity)" toggleGroup="$renderGroup">
+                            <RadioMenuItem fx:id="materialReflectivity" mnemonicParsing="false" text="Material (reflectivity)" toggleGroup="$renderGroup">
                                 <userData>renderModes/texturedMaterial.frag</userData>
                             </RadioMenuItem>
-                            <RadioMenuItem fx:id="materialBasis"  mnemonicParsing="false" text="Material (basis)" toggleGroup="$renderGroup" userData="renderModes/basisMaterial.frag">
+                            <RadioMenuItem fx:id="materialBasis" mnemonicParsing="false" text="Material (basis)" toggleGroup="$renderGroup" userData="renderModes/basisMaterial.frag">
                             </RadioMenuItem>
                             <RadioMenuItem mnemonicParsing="false" selected="true" text="Image-based" toggleGroup="$renderGroup">
                                 <userData>renderModes/ibrUntextured.frag</userData>
