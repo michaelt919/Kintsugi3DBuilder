@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,7 +7,6 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
@@ -78,7 +77,7 @@ public class CustomImportController extends FXMLPageController implements Initia
 
         setHomeDir(new File(System.getProperty("user.home")));
         camFileChooser.getExtensionFilters().add(new ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
-        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ file", "*.obj"));
+        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ or PLY file", "*.obj", "*.ply"));
         plyFileChooser.getExtensionFilters().add(new ExtensionFilter("PLY file", "*.ply"));
         metaFileChooser.getExtensionFilters().add(new ExtensionFilter("MetaShape project file", "*.psx"));
 
