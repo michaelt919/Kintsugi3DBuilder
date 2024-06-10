@@ -11,7 +11,6 @@ import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.builder.javafx.controllers.menubar.LoaderController;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
@@ -145,7 +144,7 @@ public class ConfirmNewProjectController extends FXMLPageController {
 
 
         //loading from custom import
-        if(super.hostPage.getPrevPage().getController() instanceof LoaderController) {
+        if(super.hostPage.getPrevPage().getController() instanceof CustomImportController) {
             if (viewSetCallback != null) {
                 MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(
                         viewSet -> viewSetCallback.accept(viewSet, toBeSaved));
@@ -161,7 +160,6 @@ public class ConfirmNewProjectController extends FXMLPageController {
                 MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(
                         viewSet ->viewSetCallback.accept(viewSet, toBeSaved));
             }
-            //TODO: investigate why progress bar is not updated here
             new Thread(() ->
                     MultithreadModels.getInstance().getLoadingModel()
                             .loadAgisoftFromZIP(

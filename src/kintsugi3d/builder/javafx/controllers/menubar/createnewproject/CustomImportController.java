@@ -10,7 +10,7 @@
  *
  */
 
-package kintsugi3d.builder.javafx.controllers.menubar;
+package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
 import java.awt.*;
 import java.io.File;
@@ -45,9 +45,9 @@ import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class LoaderController extends FXMLPageController implements Initializable, ShareInfo
+public class CustomImportController extends FXMLPageController implements Initializable, ShareInfo
 {
-    private static final Logger log = LoggerFactory.getLogger(LoaderController.class);
+    private static final Logger log = LoggerFactory.getLogger(CustomImportController.class);
     @FXML private Button backButton;
     @FXML private Button nextButton;
 
@@ -56,8 +56,6 @@ public class LoaderController extends FXMLPageController implements Initializabl
     @FXML private Text loadCheckObj;
     @FXML private Text loadCheckImages;
     @FXML private VBox root;
-    @FXML private Text loadCheckPLY;
-    @FXML private Text loadCheckMeta;
 
     private Stage thisStage;
 
@@ -104,11 +102,9 @@ public class LoaderController extends FXMLPageController implements Initializabl
 
     @Override
     public void refresh() {
-        if (isEmbedded()){
-            backButton.setVisible(false);
-            nextButton.setVisible(false);
-            updateNextPage();
-        }
+        backButton.setVisible(false);
+        nextButton.setVisible(false);
+        updateNextPage();
     }
 
     @Override
@@ -188,10 +184,8 @@ public class LoaderController extends FXMLPageController implements Initializabl
             }
         }
 
-        if (isEmbedded()){
-            updateNextPage();
-            hostScrollerController.updatePrevAndNextButtons();
-        }
+        updateNextPage();
+        hostScrollerController.updatePrevAndNextButtons();
     }
 
     private void updateNextPage() {
@@ -203,10 +197,6 @@ public class LoaderController extends FXMLPageController implements Initializabl
         }
     }
 
-    //return true if loader is embedded into an fxml page scroller
-    private boolean isEmbedded() {
-        return hostScrollerController != null;
-    }
 
     @FXML
     private void objFileSelect()
@@ -222,10 +212,8 @@ public class LoaderController extends FXMLPageController implements Initializabl
             loadCheckObj.setFill(Paint.valueOf("Green"));
         }
 
-        if (isEmbedded()){
-            updateNextPage();
-            hostScrollerController.updatePrevAndNextButtons();
-        }
+        updateNextPage();
+        hostScrollerController.updatePrevAndNextButtons();
     }
 
     @FXML
@@ -242,10 +230,8 @@ public class LoaderController extends FXMLPageController implements Initializabl
             loadCheckImages.setFill(Paint.valueOf("Green"));
         }
 
-        if (isEmbedded()){
-            updateNextPage();
-            hostScrollerController.updatePrevAndNextButtons();
-        }
+        updateNextPage();
+        hostScrollerController.updatePrevAndNextButtons();
     }
 
     @FXML

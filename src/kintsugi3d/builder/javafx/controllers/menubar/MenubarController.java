@@ -238,58 +238,7 @@ public class MenubarController
         File exportClassDefinitionFile = new File("export-classes.txt");
         if (exportClassDefinitionFile.exists())
         {
-            try (Scanner scanner = new Scanner(exportClassDefinitionFile, StandardCharsets.UTF_8))
-            {
-                scanner.useLocale(Locale.US);
-
-                while (scanner.hasNext())
-                {
-                    String className = scanner.next();
-
-                    if (scanner.hasNextLine())
-                    {
-                        String menuName = scanner.nextLine().trim();
-
-                        try
-                        {
-                            Class<?> requestUIClass = Class.forName(className);
-                            Method createMethod = requestUIClass.getDeclaredMethod("create", Window.class, Kintsugi3DBuilderState.class);
-                            if (IBRRequestUI.class.isAssignableFrom(createMethod.getReturnType())
-                                && ((createMethod.getModifiers() & (Modifier.PUBLIC | Modifier.STATIC)) == (Modifier.PUBLIC | Modifier.STATIC)))
-                            {
-                                MenuItem newItem = new MenuItem(menuName);
-                                newItem.setOnAction(event ->
-                                {
-                                    try
-                                    {
-                                        IBRRequestUI requestUI = (IBRRequestUI) createMethod.invoke(null, injectedStage, MultithreadModels.getInstance());
-                                        requestUI.bind(internalModels.getSettingsModel());
-                                        requestUI.prompt(Rendering.getRequestQueue());
-                                    }
-                                    catch (IllegalAccessException | InvocationTargetException e)
-                                    {
-                                        log.error("An error has occurred:", e);
-                                    }
-                                });
-                                exportMenu.getItems().add(newItem);
-                                foundExportClass = true;
-                            }
-                            else
-                            {
-                                System.err.println("create() method for " + requestUIClass.getName() + " is invalid.");
-                            }
-                        }
-                        catch (ClassNotFoundException | NoSuchMethodException e)
-                        {
-                            log.error("An error has occurred:", e);
-                        }
-                    }
-                }
-            }
-            catch (IOException e)
-            {
-                log.error("Failed to find export classes file:", e);
-            }
+            foundExportClass = loadExportClasses(injectedStage, exportClassDefinitionFile);
         }
 
         if (!foundExportClass)
@@ -301,6 +250,9 @@ public class MenubarController
         bindCheckMenuItems();
         bindSlidersToTxtFields();
         updateRelightingVisibility();
+
+        RecentProjects.updateAllControlStructures();
+
 //        updatePreloadVisibilityEtc();
 
 //        setupTxtFieldProperties(widthIntProperty, widthTxtField);
@@ -319,7 +271,6 @@ public class MenubarController
 //            }
 //        });
 
-        RecentProjects.updateAllControlStructures();
 
 //        //add "Default Path" and "Choose Location..." items to choiceBox
 //        //initialize directory selection dropdown menu
@@ -337,6 +288,63 @@ public class MenubarController
         toggleableShaders.add(imgBasedWithTextures);
 
         setToggleableShaderDisable(true);
+    }
+
+    private boolean loadExportClasses(Stage injectedStage, File exportClassDefinitionFile) {
+        boolean foundExportClass = false;
+        try (Scanner scanner = new Scanner(exportClassDefinitionFile, StandardCharsets.UTF_8))
+        {
+            scanner.useLocale(Locale.US);
+
+            while (scanner.hasNext())
+            {
+                String className = scanner.next();
+
+                if (scanner.hasNextLine())
+                {
+                    String menuName = scanner.nextLine().trim();
+
+                    try
+                    {
+                        Class<?> requestUIClass = Class.forName(className);
+                        Method createMethod = requestUIClass.getDeclaredMethod("create", Window.class, Kintsugi3DBuilderState.class);
+                        if (IBRRequestUI.class.isAssignableFrom(createMethod.getReturnType())
+                            && ((createMethod.getModifiers() & (Modifier.PUBLIC | Modifier.STATIC)) == (Modifier.PUBLIC | Modifier.STATIC)))
+                        {
+                            MenuItem newItem = new MenuItem(menuName);
+                            newItem.setOnAction(event ->
+                            {
+                                try
+                                {
+                                    IBRRequestUI requestUI = (IBRRequestUI) createMethod.invoke(null, injectedStage, MultithreadModels.getInstance());
+                                    requestUI.bind(internalModels.getSettingsModel());
+                                    requestUI.prompt(Rendering.getRequestQueue());
+                                }
+                                catch (IllegalAccessException | InvocationTargetException e)
+                                {
+                                    log.error("An error has occurred:", e);
+                                }
+                            });
+                            exportMenu.getItems().add(newItem);
+                            foundExportClass = true;
+                        }
+                        else
+                        {
+                            System.err.println("create() method for " + requestUIClass.getName() + " is invalid.");
+                        }
+                    }
+                    catch (ClassNotFoundException | NoSuchMethodException e)
+                    {
+                        log.error("An error has occurred:", e);
+                    }
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            log.error("Failed to find export classes file:", e);
+        }
+        return foundExportClass;
     }
 
     public void file_exportGLTF()

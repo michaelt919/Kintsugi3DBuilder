@@ -22,7 +22,6 @@ import kintsugi3d.builder.core.IBRRequestManager;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.gl.core.Context;
-import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,12 +34,6 @@ public class WelcomeWindowController
 {
     private static final Logger log = LoggerFactory.getLogger(WelcomeWindowController.class);
 
-    //Window open flags
-    private final Flag ibrOptionsWindowOpen = new Flag(false);
-    private final Flag jvmOptionsWindowOpen = new Flag(false);
-    private final Flag loadOptionsWindowOpen = new Flag(false);
-    private final Flag colorCheckerWindowOpen = new Flag(false);
-    private final Flag unzipperOpen = new Flag(false);
 
     private static WelcomeWindowController INSTANCE;
     @FXML private Button recent1;
@@ -53,11 +46,6 @@ public class WelcomeWindowController
     {
         return INSTANCE;
     }
-
-    @FXML private ProgressBar progressBar;
-
-    //toggle groups
-    @FXML private ToggleGroup renderGroup;
 
     @FXML public SplitMenuButton recentProjectsSplitMenuButton;
 
@@ -82,45 +70,6 @@ public class WelcomeWindowController
         recentButtons.add(recent5);
 
         RecentProjects.updateAllControlStructures();
-
-//        MultithreadModels.getInstance().getLoadingModel().addLoadingMonitor(new LoadingMonitor()
-//        {
-//            private double maximum = 0.0;
-//            private double progress = 0.0;
-//
-//            @Override
-//            public void startLoading() {
-//                progress = 0.0;
-//                Platform.runLater(() ->
-//                {
-//                    progressBar.setVisible(true);
-//                    progressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
-//                });
-//            }
-//
-//            @Override
-//            public void setMaximum(double maximum) {
-//                this.maximum = maximum;
-//                Platform.runLater(() -> progressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : progress / maximum));
-//            }
-//
-//            @Override
-//            public void setProgress(double progress) {
-//                this.progress = progress;
-//                Platform.runLater(() -> progressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : progress / maximum));
-//            }
-//
-//            @Override
-//            public void loadingComplete() {
-//                this.maximum = 0.0;
-//                Platform.runLater(() -> progressBar.setVisible(false));
-//            }
-//
-//            @Override
-//            public void loadingFailed(Exception e) {
-//                loadingComplete();
-//            }
-//        });
     }
 
     public void handleMenuItemSelection(MenuItem item) {
@@ -140,43 +89,26 @@ public class WelcomeWindowController
         }
     }
 
-    @FXML
-    private void file_createProject()
-    {
-        if (!ProjectIO.getInstance().isCreateProjectWindowOpen())
-        {
-            //if able to put scene for Loader
-            //window.setScene(parentWindow.getScene());
-            ProjectIO.getInstance().createProject(parentWindow);
-            RecentProjects.updateAllControlStructures();
-        }
-    }
-
     public void createProject()
     {
         if (!ProjectIO.getInstance().isCreateProjectWindowOpen())
         {
-            ProjectIO.getInstance().createProjectNew(parentWindow);
+            ProjectIO.getInstance().createProject(parentWindow);
         }
     }
 
     @FXML
-    private void file_openProject()//TODO: CHANGE NAMING CONVENTION? (file_...)
+    private void openProject()
     {
         ProjectIO.getInstance().openProjectWithPrompt(parentWindow);
-    }
-
-    @FXML
-    private void file_closeProject()
-    {
-        //TODO: DISABLE THIS BUTTON IF NO PROJECT IS OPEN?
-        ProjectIO.getInstance().closeProjectAfterConfirmation();
     }
 
     //TODO: FIND WAY TO NOT CLOSE FILE, BUT HIDE SO IT CAN BE RESHOWN
     public void hideWelcomeWindow(){
         window.close();
     }
+
+    //TODO: just create a new welcome window?
 //    public void showWelcomeWindow(){
 //        window.show();
 //    }

@@ -35,7 +35,6 @@ import javafx.stage.WindowEvent;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.javafx.controllers.menubar.LoaderController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.ConfirmNewProjectController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
@@ -258,32 +257,7 @@ public final class ProjectIO
         }
     }
 
-
-
     public void createProject(Window parentWindow)
-    {
-        if (!loaderWindowOpen.get())
-        {
-            if (confirmClose("Are you sure you want to create a new project?"))
-            {
-                try//recent files are updated in LoaderController after project is made
-                {
-                    LoaderController loaderController =
-                        makeWindow(parentWindow, "Load Files", loaderWindowOpen, 750, 330, "fxml/menubar/Loader.fxml");
-                    loaderController.setLoadStartCallback(this::onLoadStart);
-                    loaderController.setViewSetCallback(
-                        viewSet -> onViewSetCreated(viewSet, parentWindow));
-                    loaderController.init();
-                }
-                catch (Exception e)
-                {
-                    handleException("An error occurred creating a new project", e);
-                }
-            }
-        }
-    }
-
-    public void createProjectNew(Window parentWindow)
     {
         if (loaderWindowOpen.get()) {return;}
 
