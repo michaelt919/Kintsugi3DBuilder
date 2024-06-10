@@ -9,13 +9,11 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import javafx.util.Pair;
-import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.ConfirmNewProjectController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 public class FXMLPageScrollerController {
     private static final Logger log = LoggerFactory.getLogger(FXMLPageScrollerController.class);
@@ -130,12 +128,12 @@ public class FXMLPageScrollerController {
         //change next button to confirm button if applicable
         FXMLPageController controller = currentPage.getController();
 
-        if (controller instanceof ConfirmNewProjectController){
+        if (controller instanceof CanConfirm){
             nextButton.setText("Confirm");
             nextButton.setFont(Font.font(nextButton.getFont().getFamily(), FontWeight.BOLD, nextButton.getFont().getSize()));
 
-            ConfirmNewProjectController cnpController = (ConfirmNewProjectController) controller;
-            nextButton.setOnAction(event->cnpController.confirmButtonPress());
+            CanConfirm confirmerController = (CanConfirm) controller;
+            nextButton.setOnAction(event->confirmerController.confirmButtonPress());
         }
         else{
             nextButton.setText("Next");

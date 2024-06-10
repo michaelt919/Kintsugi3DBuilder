@@ -17,7 +17,6 @@ import java.net.URL;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.ResourceBundle;
-import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
 import javafx.application.Platform;
@@ -25,7 +24,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -35,21 +33,18 @@ import javafx.stage.*;
 import javafx.stage.Window;
 import javafx.stage.FileChooser.ExtensionFilter;
 import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CustomImportController extends FXMLPageController implements Initializable, ShareInfo
+public class CustomImportController extends FXMLPageController implements Initializable, ShareInfo, CanConfirm
 {
     private static final Logger log = LoggerFactory.getLogger(CustomImportController.class);
-    @FXML private Button backButton;
-    @FXML private Button nextButton;
-
     @FXML private ChoiceBox<String> primaryViewChoiceBox;
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
@@ -68,8 +63,6 @@ public class CustomImportController extends FXMLPageController implements Initia
     private File cameraFile;
     private File objFile;
     private File photoDir;
-    private Runnable loadStartCallback;
-    private Consumer<ViewSet> viewSetCallback;
 
     @Override
     public void initialize(URL location, ResourceBundle resources)
@@ -101,24 +94,11 @@ public class CustomImportController extends FXMLPageController implements Initia
 
     @Override
     public void refresh() {
-        backButton.setVisible(false);
-        nextButton.setVisible(false);
-        updateNextPage();
     }
 
     @Override
     public boolean isNextButtonValid() {
-        return super.isNextButtonValid() && areAllFilesLoaded();
-    }
-
-    public void setLoadStartCallback(Runnable callback)
-    {
-        this.loadStartCallback = callback;
-    }
-
-    public void setViewSetCallback(Consumer<ViewSet> callback)
-    {
-        this.viewSetCallback = callback;
+        return areAllFilesLoaded();
     }
 
     /**
@@ -183,17 +163,7 @@ public class CustomImportController extends FXMLPageController implements Initia
             }
         }
 
-        updateNextPage();
         hostScrollerController.updatePrevAndNextButtons();
-    }
-
-    private void updateNextPage() {
-        if (areAllFilesLoaded()){
-            hostPage.setNextPage(hostScrollerController.getPage("fxml/menubar/createnewproject/ConfirmNewProject.fxml"));
-        }
-        else{
-            hostPage.setNextPage(null);
-        }
     }
 
 
@@ -211,7 +181,6 @@ public class CustomImportController extends FXMLPageController implements Initia
             loadCheckObj.setFill(Paint.valueOf("Green"));
         }
 
-        updateNextPage();
         hostScrollerController.updatePrevAndNextButtons();
     }
 
@@ -229,7 +198,6 @@ public class CustomImportController extends FXMLPageController implements Initia
             loadCheckImages.setFill(Paint.valueOf("Green"));
         }
 
-        updateNextPage();
         hostScrollerController.updatePrevAndNextButtons();
     }
 
@@ -265,11 +233,6 @@ public class CustomImportController extends FXMLPageController implements Initia
         return (cameraFile != null) && (objFile != null) && (photoDir != null);
     }
 
-    @FXML
-    private void cancelButtonPress()
-    {
-        close();
-    }
 
     private void close()
     {
@@ -297,15 +260,30 @@ public class CustomImportController extends FXMLPageController implements Initia
 
     @Override
     public void shareInfo() {
-        if (hostScrollerController == null){
-            log.error("Loader controller cannot send info to null hostScrollerController. " +
-                    "This function can only be used in an embedded loader");
-            return;
-        }
-
         hostScrollerController.addInfo(Info.CAM_FILE, cameraFile);
         hostScrollerController.addInfo(Info.PHOTO_DIR, photoDir);
         hostScrollerController.addInfo(Info.OBJ_FILE, objFile);
         hostScrollerController.addInfo(Info.PRIMARY_VIEW, primaryViewChoiceBox.getSelectionModel().getSelectedItem());
+    }
+
+    @Override
+    public void confirmButtonPress() {
+        if (!areAllFilesLoaded()){
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
+        if (viewSetCallback != null) {
+            MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(
+                    viewSet -> viewSetCallback.accept(viewSet));
+        }
+        new Thread(() ->
+                MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(
+                        cameraFile.getPath(), cameraFile, objFile, photoDir,
+                        primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
+                .start();
+
+        WelcomeWindowController.getInstance().hideWelcomeWindow();
+        close();
     }
 }

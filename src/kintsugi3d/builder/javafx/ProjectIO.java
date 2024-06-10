@@ -36,7 +36,7 @@ import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
-import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.ConfirmNewProjectController;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
@@ -251,17 +251,6 @@ public final class ProjectIO
         }
     }
 
-    private void onViewSetCreatedFromDirectFile(ViewSet viewSet, Window parentWindow, File toBeSaved){
-        if (toBeSaved != null)
-        {
-            this.projectFile = toBeSaved;
-
-            setViewsetDirectories(viewSet);
-
-            saveProject(parentWindow);
-        }
-    }
-
     public void createProject(Window parentWindow)
     {
         if (loaderWindowOpen.get()) {return;}
@@ -299,14 +288,10 @@ public final class ProjectIO
 
                 FXMLPageController controller = loader.getController();
 
-                if (controller instanceof ConfirmNewProjectController){
-                    ConfirmNewProjectController cnpController = (ConfirmNewProjectController) controller;
-                    cnpController.setLoadStartCallback(this::onLoadStart);
-                    cnpController.setViewSetCallback(
-                            (viewSet, projectFileToBeSaved) -> {
-                                onViewSetCreatedFromDirectFile(viewSet, parentWindow, projectFileToBeSaved);
-                                RecentProjects.updateRecentFiles(projectFileToBeSaved.getAbsolutePath());
-                            });
+                if (controller instanceof CanConfirm){
+                    controller.setLoadStartCallback(this::onLoadStart);
+                    controller.setViewSetCallback(
+                                (viewSet) ->onViewSetCreated(viewSet, parentWindow));
                 }
             }
 

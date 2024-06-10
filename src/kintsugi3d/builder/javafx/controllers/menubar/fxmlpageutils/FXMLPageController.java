@@ -6,11 +6,17 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.Region;
 import javafx.util.Pair;
+import kintsugi3d.builder.core.ViewSet;
+
+import java.util.function.Consumer;
 
 public abstract class FXMLPageController {
 
     protected FXMLPageScrollerController hostScrollerController;
     protected FXMLPage hostPage;
+
+    protected Runnable loadStartCallback;
+    protected Consumer<ViewSet> viewSetCallback;
 
     public void setHostScrollerController(FXMLPageScrollerController scroller){this.hostScrollerController = scroller;}
     public FXMLPageScrollerController getHostScrollerController(){return hostScrollerController;}
@@ -46,4 +52,7 @@ public abstract class FXMLPageController {
         scene.getAccelerators().put(leftKeyCode, ()-> hostScrollerController.prevPage());
         scene.getAccelerators().put(rightKeyCode, ()-> hostScrollerController.nextPage());
     }
+
+    public void setLoadStartCallback(Runnable callback){this.loadStartCallback = callback;}
+    public void setViewSetCallback(Consumer<ViewSet> callback){this.viewSetCallback = callback;}
 }

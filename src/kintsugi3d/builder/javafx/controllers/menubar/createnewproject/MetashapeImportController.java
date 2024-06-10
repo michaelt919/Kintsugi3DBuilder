@@ -10,16 +10,21 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.Window;
+import javafx.stage.WindowEvent;
+import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObject;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
+import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.util.Triplet;
 
 import java.io.File;
 import java.util.ArrayList;
 
-public class MetashapeImportController extends FXMLPageController implements ShareInfo {
+public class MetashapeImportController extends FXMLPageController implements ShareInfo, CanConfirm {
     @FXML private Text fileNameTxtField;
     @FXML private AnchorPane anchorPane;
     @FXML private Text loadMetashapeObject;
@@ -60,6 +65,12 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     @Override
     public void shareInfo() {
         //update metashapeObjectChunk with selected chunk from chunkSelectionChoiceBox
+        updateMetashapeChunk();
+
+        hostScrollerController.addInfo(Info.METASHAPE_OBJ_CHUNK, metashapeObjectChunk);
+    }
+
+    private void updateMetashapeChunk() {
         if (metashapeObjectChunk != null){
             MetashapeObject metashapeObject = metashapeObjectChunk.getMetashapeObject();
             String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
@@ -67,8 +78,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
             metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, chunkName, modelID);
         }
-
-        hostScrollerController.addInfo(Info.METASHAPE_OBJ_CHUNK, metashapeObjectChunk);
     }
 
     private Integer getSelectedModelID() {
@@ -204,7 +213,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
                 getChunkNamesDynamic(metashapeObject.getPsxFilePath());
 
         chunkSelectionChoiceBox.getItems().clear();
-        //TODO: implement recursive / platform.run later from LoaderController?
+        //TODO: implement recursive / platform.run later from CustomImportController?
         //first attempt led to data dependency issues where the model selection choice box
         //   needed info that the chunk selection choice box didn't have yet
         chunkSelectionChoiceBox.getItems().addAll(chunkNames);
@@ -238,18 +247,40 @@ public class MetashapeImportController extends FXMLPageController implements Sha
             loadMetashapeObject.setFill(Paint.valueOf("Green"));
 
             hostScrollerController.setNextButtonDisable(false);
-            hostPage.setNextPage(hostScrollerController.getPage("fxml/menubar/createnewproject/ConfirmNewProject.fxml"));
         }
         else{
             loadMetashapeObject.setText("Unloaded");
             loadMetashapeObject.setFill(Paint.valueOf("Red"));
 
             hostScrollerController.setNextButtonDisable(true);
-            hostPage.setNextPage(null);
         }
     }
 
     private boolean isMetashapeObjectLoaded() {
         return metashapePsxFile != null;
+    }
+
+    @Override
+    public void confirmButtonPress() {
+        updateMetashapeChunk();
+        if (loadStartCallback != null) {
+            loadStartCallback.run();
+        }
+
+        if (viewSetCallback != null) {
+            MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(
+                    viewSet ->viewSetCallback.accept(viewSet));
+        }
+        new Thread(() ->
+                MultithreadModels.getInstance().getLoadingModel()
+                        .loadAgisoftFromZIP(
+                                metashapeObjectChunk.getFramePath(),
+                                metashapeObjectChunk,
+                                ""))//TODO: verify that this works
+                .start();
+        WelcomeWindowController.getInstance().hideWelcomeWindow();
+
+        Window window = anchorPane.getScene().getWindow();
+        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
     }
 }
