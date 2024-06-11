@@ -35,11 +35,13 @@ import javafx.stage.WindowEvent;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.javafx.controllers.menubar.AboutController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
+import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.resources.ibr.MeshImportException;
 import kintsugi3d.util.Flag;
@@ -50,6 +52,7 @@ import org.slf4j.LoggerFactory;
 public final class ProjectIO
 {
     private static final ProjectIO INSTANCE = new ProjectIO();
+
     public static ProjectIO getInstance()
     {
         return INSTANCE;
@@ -62,6 +65,10 @@ public final class ProjectIO
     private boolean projectLoaded;
 
     private final Flag loaderWindowOpen = new Flag(false);
+    private Flag systemSettingsModalOpen = new Flag(false);
+    private Flag aboutWindowOpen = new Flag(false);
+
+
 
     private FileChooser projectFileChooser;
 
@@ -188,6 +195,31 @@ public final class ProjectIO
         stage.setTitle(title);
         stage.setScene(sceneFactory.apply(root));
         stage.initOwner(parentWindow);
+
+        stage.setResizable(false);
+
+        flag.set(true);
+        stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
+
+        stage.show();
+
+        return fxmlLoader.getController();
+    }
+
+    private <ControllerType> ControllerType makeWindow(String title, Flag flag, Window window, String urlString) throws IOException
+    {
+        URL url = MenubarController.class.getClassLoader().getResource(urlString);
+        if (url == null)
+        {
+            throw new FileNotFoundException(urlString);
+        }
+        FXMLLoader fxmlLoader = new FXMLLoader(url);
+        Parent root = fxmlLoader.load();
+        Stage stage = new Stage();
+        stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
+        stage.setTitle(title);
+        stage.setScene(new Scene(root));
+        stage.initOwner(window);
 
         stage.setResizable(false);
 
@@ -594,4 +626,37 @@ public final class ProjectIO
             closeProject();
         }
     }
+
+    public void openSystemSettingsModal(InternalModels internalModels, Window window) {
+        if (systemSettingsModalOpen.get())
+        {
+            return;
+        }
+
+        try
+        {
+            SystemSettingsController systemSettingsController = makeWindow("System Settings", systemSettingsModalOpen, window, "fxml/menubar/systemsettings/SystemSettings.fxml");
+            systemSettingsController.init(internalModels, window);
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred opening the settings modal:", e);
+        }
+    }
+
+    public void openAboutModal(Window window) {
+        try
+        {
+
+            AboutController aboutController = makeWindow(
+                    "About Kintsugi 3D Builder", aboutWindowOpen, window, "fxml/menubar/About.fxml");
+            aboutController.init();
+
+        }
+        catch (Exception e)
+        {
+            handleException("An error occurred showing help and about", e);
+        }
+    }
+
 }

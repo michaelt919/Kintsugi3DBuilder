@@ -60,22 +60,24 @@
                             </Menu>
                      <Menu fx:id="cleanRecentProjectsMenu" mnemonicParsing="false" text="Clear Recent Projects">
                         <items>
-                            <CustomMenuItem fx:id = "removeSomeRefsCustMenuItem" onAction="#file_removeInvalidReferences">
+                            <CustomMenuItem fx:id="removeSomeRefsCustMenuItem" onAction="#file_removeInvalidReferences">
                                 <content>
                                     <Label text="Clear Missing Projects" />
                                 </content>
                             </CustomMenuItem>
-                            <CustomMenuItem fx:id = "removeAllRefsCustMenuItem" onAction="#file_removeAllReferences">
+                            <CustomMenuItem fx:id="removeAllRefsCustMenuItem" onAction="#file_removeAllReferences">
                                 <content>
-                                    <Label  text="Clear All Projects" />
+                                    <Label text="Clear All Projects" />
                                 </content>
                             </CustomMenuItem>
                         </items>
                      </Menu>
 
                             <SeparatorMenuItem mnemonicParsing="false" />
-                            <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
+                            <MenuItem mnemonicParsing="false" onAction="#openSystemSettingsModal" text="Settings..." />
+                     <MenuItem mnemonicParsing="false" onAction="#openAboutModal" text="About Kintsugi 3D Builder..." />
                             <SeparatorMenuItem />
+                     <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
                         </Menu>
                         <Menu mnemonicParsing="false" text="View" visible="false">
                             <CheckMenuItem fx:id="is3DGridCheckMenuItem" mnemonicParsing="false" text="3D grid" visible="false" />
@@ -358,7 +360,7 @@
                         </Menu>
                         <Menu fx:id="aboutMenu" mnemonicParsing="false" onShown="#hideAndShowAboutModal" text="About" visible="false">
                             <items>
-                                <MenuItem mnemonicParsing="false" onAction="#help_about" text="About" />
+                                <MenuItem mnemonicParsing="false" onAction="#openAboutModal" text="About" />
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Lighting" visible="false">
@@ -395,13 +397,13 @@
                         <!--            <Insets />-->
                         <!--        </opaqueInsets>-->
                     </MenuBar>
-                    <HBox alignment="CENTER_LEFT" spacing="10.0" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
+                    <HBox alignment="CENTER_LEFT" spacing="10.0" visible="false" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
                         <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" visible="false" />
                         <Button fx:id="settingsButton" contentDisplay="CENTER" mnemonicParsing="false" onAction="#openSystemSettingsModal" prefHeight="25.0" prefWidth="80.0" text="Settings">
                             <HBox.margin>
                                 <Insets />
                             </HBox.margin></Button>
-                        <Button mnemonicParsing="false" onAction="#help_about" text="About" />
+                        <Button mnemonicParsing="false" onAction="#openAboutModal" text="About" />
                     </HBox>
                 </children>
             </AnchorPane>

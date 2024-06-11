@@ -35,7 +35,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.*;
 import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
-import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
@@ -74,9 +73,6 @@ public class MenubarController
     private final Flag colorCheckerWindowOpen = new Flag(false);
     private final Flag unzipperOpen = new Flag(false);
     private final Flag loggerWindowOpen = new Flag(false);
-    private Flag systemSettingsModalOpen = new Flag(false);
-
-    private Flag aboutWindowOpen = new Flag(false);
 
 
     @FXML private ProgressBar progressBar;
@@ -84,8 +80,7 @@ public class MenubarController
     //toggle groups
     @FXML private ToggleGroup renderGroup;
 
-    public Menu aboutMenu;
-    public Button settingsButton;
+    @FXML private Menu aboutMenu;
 
     //menu items
     //TODO: ORGANIZE CHECK MENU ITEMS
@@ -535,20 +530,10 @@ public class MenubarController
         userDocumentationHandler.run();
     }
 
-    public void help_about()
+    public void openAboutModal()
     {
-        try
-        {
+        ProjectIO.getInstance().openAboutModal(window);
 
-            AboutController aboutController = makeWindow(
-                    "About Kintsugi 3D Builder", aboutWindowOpen, "fxml/menubar/About.fxml");
-            aboutController.init();
-
-        }
-        catch (Exception e)
-        {
-            handleException("An error occurred showing help and about", e);
-        }
     }
 
     private <ControllerType> ControllerType makeWindow(String title, Flag flag, String urlString) throws IOException
@@ -927,24 +912,11 @@ public class MenubarController
     //instead of clicking on a single menu item
     public void hideAndShowAboutModal() {
         aboutMenu.hide();
-        help_about();
+        openAboutModal();
     }
 
     public void openSystemSettingsModal() {
-        if (systemSettingsModalOpen.get())
-        {
-            return;
-        }
-
-        try
-        {
-            SystemSettingsController systemSettingsController = makeWindow("System Settings", systemSettingsModalOpen, "fxml/menubar/systemsettings/SystemSettings.fxml");
-            systemSettingsController.init(internalModels, window);
-        }
-        catch (IOException e)
-        {
-            log.error("An error occurred opening the settings modal:", e);
-        }
+        ProjectIO.getInstance().openSystemSettingsModal(internalModels, window);
     }
 
     public void launchViewerApp()

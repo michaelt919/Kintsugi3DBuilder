@@ -16,10 +16,12 @@
 
 <AnchorPane prefHeight="622.0" prefWidth="924.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController">
      <Button mnemonicParsing="false" onAction="#createProject" prefHeight="77.2" prefWidth="498.0" style="-fx-background-radius: 3;" text="Create Project" AnchorPane.leftAnchor="45.0" AnchorPane.topAnchor="46.0" />
-   <VBox layoutX="635.0" layoutY="125.0" spacing="70.0">
+   <VBox layoutX="634.0" layoutY="96.0" spacing="40.0">
       <children>
-           <Button mnemonicParsing="false" onAction="#help_userManual" prefHeight="76.87" prefWidth="252.0" style="-fx-background-radius: 3;" text="Specularity Guide" />
+           <Button mnemonicParsing="false" onAction="#help_userManual" prefHeight="76.87" prefWidth="252.0" style="-fx-background-radius: 3;" text="Guides &amp; Documentation" />
            <Button mnemonicParsing="false" onAction="#openProject" prefHeight="76.87" prefWidth="252.0" style="-fx-background-radius: 3;" text="Open Project" />
+         <Button layoutX="10.0" layoutY="157.0" mnemonicParsing="false" onAction="#openSystemSettingsModal" prefHeight="76.87" prefWidth="252.0" style="-fx-background-radius: 3;" text="Settings" />
+         <Button layoutX="10.0" layoutY="305.0" mnemonicParsing="false" onAction="#openAboutModal" prefHeight="76.87" prefWidth="252.0" style="-fx-background-radius: 3;" text="About Kintsugi 3D Builder" />
       </children>
    </VBox>
     <ProgressBar fx:id="progressBar" prefWidth="924.0" progress="0.0" visible="false" VBox.vgrow="ALWAYS" />

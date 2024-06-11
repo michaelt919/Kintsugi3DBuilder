@@ -41,6 +41,8 @@ public class WelcomeWindowController
     @FXML private Button recent4;
     @FXML private Button recent5;
     public List<Button> recentButtons = new ArrayList<>();
+    private InternalModels internalModels;
+
     public static WelcomeWindowController getInstance()
     {
         return INSTANCE;
@@ -61,6 +63,7 @@ public class WelcomeWindowController
         this.parentWindow = injectedStage.getOwner();
         this.window = injectedStage;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
+        this.internalModels = injectedInternalModels;
 
         recentButtons.add(recent1);
         recentButtons.add(recent2);
@@ -145,5 +148,13 @@ public class WelcomeWindowController
             }
             i++;
         }
+    }
+
+    public void openSystemSettingsModal() {
+        ProjectIO.getInstance().openSystemSettingsModal(internalModels, window);
+    }
+
+    public void openAboutModal() {
+        ProjectIO.getInstance().openAboutModal(window);
     }
 }
