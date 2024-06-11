@@ -276,7 +276,8 @@ public class MetashapeImportController extends FXMLPageController implements Sha
                         .loadAgisoftFromZIP(
                                 metashapeObjectChunk.getFramePath(),
                                 metashapeObjectChunk,
-                                ""))//TODO: verify that this works
+                                ""))//uses the first image in the viewset as the primary view
+                //TODO: add primary view selection to modal?
                 .start();
         WelcomeWindowController.getInstance().hideWelcomeWindow();
 

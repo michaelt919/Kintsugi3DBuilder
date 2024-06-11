@@ -284,6 +284,13 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
             this.geometry = VertexGeometry.createFromZippedPLYFile(new File(chunkDirectory, "0/" + modelPath), "mesh.ply");
 
+            if (!this.geometry.hasNormals()) {
+                throw new MeshImportException("Imported Object has no Normals");
+            }
+            if (!this.geometry.hasTexCoords()) {
+                throw new MeshImportException("Imported Object has no Texture Coordinates");
+            }
+
             viewSet.setGeometryFile(geometry.getFilename());
 
 
