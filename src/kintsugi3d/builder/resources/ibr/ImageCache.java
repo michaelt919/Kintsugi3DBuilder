@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Locale;
@@ -432,7 +433,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
                     @Override
                     public void setProgress(double progress, String message)
                     {
-                        log.info("[{}%] {}", progress / maxProgress * 100, message);
+                        log.info("[{}%] {}", new DecimalFormat("#.##").format(progress / maxProgress * 100), message);
                     }
                 });
         }

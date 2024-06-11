@@ -12,6 +12,7 @@
 package kintsugi3d.builder.resources.ibr;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 
 import kintsugi3d.builder.core.DefaultProgressMonitor;
 import kintsugi3d.gl.core.Context;
@@ -69,7 +70,7 @@ public class TextureBlockResourceFactory<ContextType extends Context<ContextType
                     @Override
                     public void setProgress(double progress, String message)
                     {
-                        log.info("[{}%] {}", progress / maxProgress * 100, message);
+                        log.info("[{}%] {}", new DecimalFormat("#.##").format(progress / maxProgress * 100), message);
                     }
                 });
         }
