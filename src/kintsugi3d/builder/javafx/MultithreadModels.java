@@ -100,7 +100,7 @@ public final class MultithreadModels implements Kintsugi3DBuilderState
     }
 
     @Override
-    public IOModel getLoadingModel()
+    public IOModel getIOModel()
     {
         return ioModel;
     }

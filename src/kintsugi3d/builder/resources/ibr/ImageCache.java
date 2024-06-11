@@ -11,7 +11,22 @@
 
 package kintsugi3d.builder.resources.ibr;
 
-import kintsugi3d.builder.core.LoadingMonitor;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Random;
+import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import javax.imageio.ImageIO;
+
+import kintsugi3d.builder.core.DefaultProgressMonitor;
+import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.SimpleLoadOptionsModel;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryFramebuffer;
@@ -26,20 +41,6 @@ import kintsugi3d.gl.vecmath.Vector4;
 import kintsugi3d.util.BufferedImageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Locale;
-import java.util.Random;
-import java.util.Scanner;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class ImageCache<ContextType extends Context<ContextType>>
 {
@@ -106,7 +107,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
      * As a side effect of this method, the context's state will have back face culling enabled,
      * @throws IOException
      */
-    public void initialize(LoadingMonitor callback) throws IOException
+    public void initialize(ProgressMonitor monitor) throws IOException
     {
         // Create directories to organize the cache
         sampledDir.mkdirs();
@@ -127,7 +128,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
                 .createFramebufferObject())
         {
             selectSampleLocations(fbo);
-            buildCache(fbo, callback);
+            buildCache(fbo, monitor);
         }
     }
 
@@ -275,7 +276,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         }
     }
 
-    private void buildCache(Framebuffer<ContextType> fbo, LoadingMonitor callback)
+    private void buildCache(Framebuffer<ContextType> fbo, ProgressMonitor monitor)
         throws IOException
     {
         SimpleLoadOptionsModel loadOptions = new SimpleLoadOptionsModel();
@@ -292,20 +293,17 @@ public class ImageCache<ContextType extends Context<ContextType>>
             Drawable<ContextType> texSpaceDrawable = resources.createDrawable(texSpaceProgram))
         {
 
-            log.info("Building cache...");
-
-            if (callback != null)
+            if (monitor != null)
             {
-                callback.setProgress(0.0);
-                callback.setMaximum(resources.getViewSet().getCameraPoseCount());
+                monitor.setMaxProgress(resources.getViewSet().getCameraPoseCount());
             }
 
             // Loop over the images, processing each one at a time
             for (int k = 0; k < resources.getViewSet().getCameraPoseCount(); k++)
             {
-                if (callback != null)
+                if (monitor != null)
                 {
-                    callback.setProgress(k);
+                    monitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(k), k, resources.getViewSet().getCameraPoseCount()));
                 }
 
                 try (SingleCalibratedImageResource<ContextType> image =
@@ -401,8 +399,11 @@ public class ImageCache<ContextType extends Context<ContextType>>
 
                     ImageIO.write(sampled, "PNG", new File(sampledDir, pngFilename));
                 }
+            }
 
-                log.info("Image " + k + "/" + resources.getViewSet().getCameraPoseCount() + " completed.");
+            if (monitor != null)
+            {
+                monitor.setProgress(resources.getViewSet().getCameraPoseCount(), "All images completed.");
             }
         }
     }
@@ -417,7 +418,23 @@ public class ImageCache<ContextType extends Context<ContextType>>
         try
         {
             return new IBRResourcesTextureSpace<>(resources.getSharedResources(), this::createSampledGeometryTextures,
-                sampledDir, loadOptions, settings.getSampledSize(), settings.getSampledSize(), null);
+                sampledDir, loadOptions, settings.getSampledSize(), settings.getSampledSize(),
+                new DefaultProgressMonitor() // simple progress monitor for logging; will not be shown in the UI
+                {
+                    private double maxProgress = 0.0;
+
+                    @Override
+                    public void setMaxProgress(double maxProgress)
+                    {
+                        this.maxProgress = maxProgress;
+                    }
+
+                    @Override
+                    public void setProgress(double progress, String message)
+                    {
+                        log.info("[{}%] {}", progress / maxProgress * 100, message);
+                    }
+                });
         }
         catch (IOException e)
         {

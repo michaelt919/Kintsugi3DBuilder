@@ -12,7 +12,6 @@
 package kintsugi3d.builder.export.specular;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -67,11 +66,11 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
      * @param renderable The implementation of the Kintsugi 3D Builder renderer.
      *                   This can be used to dynamically generate renders of the current view,
      *                   or just to access the IBRResources and the graphics Context.
-     * @param callback A callback that can be fired to update the loading bar.
+     * @param monitor A callback that can be fired to update the loading bar.
      *                 If this is unused, an "infinite loading" indicator will be displayed instead.
      */
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback)
+    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, ProgressMonitor monitor)
     {
         try
         {
@@ -79,7 +78,7 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
             settings.setOutputDirectory(renderable.getActiveViewSet().getSupportingFilesFilePath());
 
             // Perform the specular fit
-            new SpecularFitProcess(settings).optimizeFit(renderable.getIBRResources(), callback);
+            new SpecularFitProcess(settings).optimizeFit(renderable.getIBRResources(), monitor);
 
             // Perform reconstruction
             //performReconstruction(renderable.getIBRResources(), renderable.getIBRResources().getSpecularMaterialResources());

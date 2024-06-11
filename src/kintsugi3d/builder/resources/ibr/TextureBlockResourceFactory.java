@@ -11,14 +11,15 @@
 
 package kintsugi3d.builder.resources.ibr;
 
+import java.io.IOException;
+
+import kintsugi3d.builder.core.DefaultProgressMonitor;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Resource;
 import kintsugi3d.gl.geometry.GeometryTextures;
 import kintsugi3d.gl.material.TextureLoadOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 public class TextureBlockResourceFactory<ContextType extends Context<ContextType>> implements Resource
 {
@@ -54,7 +55,23 @@ public class TextureBlockResourceFactory<ContextType extends Context<ContextType
         {
             return new IBRResourcesTextureSpace<>(sharedResources,
                 () -> fullGeometryTextures.createViewportCopy(x, y, width, height), imageCache.getSettings().getBlockDir(i, j),
-                loadOptions, width, height, null);
+                loadOptions, width, height,
+                new DefaultProgressMonitor() // simple progress monitor for logging; will not be shown in the UI
+                {
+                    private double maxProgress = 0.0;
+
+                    @Override
+                    public void setMaxProgress(double maxProgress)
+                    {
+                        this.maxProgress = maxProgress;
+                    }
+
+                    @Override
+                    public void setProgress(double progress, String message)
+                    {
+                        log.info("[{}%] {}", progress / maxProgress * 100, message);
+                    }
+                });
         }
         catch (IOException e)
         {

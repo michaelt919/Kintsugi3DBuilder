@@ -44,7 +44,7 @@ public interface IOHandler
 
     void unload();
 
-    void setLoadingMonitor(LoadingMonitor loadingMonitor);
+    void setProgressMonitor(ProgressMonitor progressMonitor);
 
     DoubleUnaryOperator getLuminanceEncodingFunction();
     void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues);

@@ -14,14 +14,14 @@ package kintsugi3d.builder.core;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import kintsugi3d.gl.interactive.GraphicsRequest;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
+import kintsugi3d.builder.rendering.IBRInstanceManager;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.interactive.GraphicsRequest;
+import kintsugi3d.gl.interactive.ObservableGraphicsRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.builder.rendering.IBRInstanceManager;
-import kintsugi3d.gl.interactive.ObservableGraphicsRequest;
 
 public class IBRRequestManager<ContextType extends Context<ContextType>> implements IBRRequestQueue<ContextType>
 {
@@ -29,7 +29,7 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
     private final ContextType context;
     private final Queue<Runnable> requestList;
     private IBRInstanceManager<ContextType> instanceManager;
-    private LoadingMonitor loadingMonitor;
+    private ProgressMonitor progressMonitor;
 
     public IBRRequestManager(ContextType context)
     {
@@ -47,9 +47,9 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
         this.instanceManager = instanceManager;
     }
 
-    public void setLoadingMonitor(LoadingMonitor loadingMonitor)
+    public void setProgressMonitor(ProgressMonitor progressMonitor)
     {
-        this.loadingMonitor = loadingMonitor;
+        this.progressMonitor = progressMonitor;
     }
 
     @Override
@@ -100,9 +100,9 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
         {
             this.requestList.add(() ->
             {
-                if (loadingMonitor != null)
+                if (progressMonitor != null)
                 {
-                    loadingMonitor.startLoading();
+                    progressMonitor.start();
                 }
 
                 // Check again for null, just in case
@@ -118,7 +118,7 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
                     //noinspection ErrorNotRethrown
                     try
                     {
-                        request.executeRequest(instanceManager.getLoadedInstance(), loadingMonitor);
+                        request.executeRequest(instanceManager.getLoadedInstance(), progressMonitor);
                     }
                     catch (Exception | AssertionError e)
                     {
@@ -130,9 +130,9 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
                     }
                 }
 
-                if (loadingMonitor != null)
+                if (progressMonitor != null)
                 {
-                    loadingMonitor.loadingComplete();
+                    progressMonitor.complete();
                 }
             });
         }
@@ -167,9 +167,9 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
     {
         this.requestList.add(() ->
         {
-            if (loadingMonitor != null)
+            if (progressMonitor != null)
             {
-                loadingMonitor.startLoading();
+                progressMonitor.start();
             }
 
             // Suppress warning about catching and not rethrowing AssertionError.
@@ -177,16 +177,16 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
             // noinspection ErrorNotRethrown
             try
             {
-                request.executeRequest(context, loadingMonitor);
+                request.executeRequest(context, progressMonitor);
             }
             catch(Exception | AssertionError e)
             {
                 log.error("Error occurred while executing request:", e);
             }
 
-            if (loadingMonitor != null)
+            if (progressMonitor != null)
             {
-                loadingMonitor.loadingComplete();
+                progressMonitor.complete();
             }
         });
     }

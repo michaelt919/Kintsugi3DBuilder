@@ -14,14 +14,18 @@ package kintsugi3d.builder.export.resample;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import kintsugi3d.builder.core.IBRInstance;
+import kintsugi3d.builder.core.ObservableIBRRequest;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
-import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 
 public class ResampleRequest implements ObservableIBRRequest
 {
@@ -39,7 +43,7 @@ public class ResampleRequest implements ObservableIBRRequest
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws Exception
+    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws Exception
     {
         ReadonlyViewSet targetViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(resampleVSETFile);
 
@@ -69,9 +73,10 @@ public class ResampleRequest implements ObservableIBRRequest
                 exportFile.getParentFile().mkdirs();
                 framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", exportFile);
 
-                if (callback != null)
+                if (monitor != null)
                 {
-                    callback.setProgress((double) i / (double) targetViewSet.getCameraPoseCount());
+                    monitor.setProgress((double) i / (double) targetViewSet.getCameraPoseCount(),
+                        MessageFormat.format("{0} ({1}/{2})", targetViewSet.getImageFileName(i), i, targetViewSet.getCameraPoseCount()));
                 }
             }
 

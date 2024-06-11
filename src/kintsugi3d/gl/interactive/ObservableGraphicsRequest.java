@@ -11,8 +11,9 @@
 
 package kintsugi3d.gl.interactive;
 
+import kintsugi3d.builder.core.DefaultProgressMonitor;
+import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.gl.core.Context;
-import kintsugi3d.builder.core.LoadingMonitor;
 
 /**
  * An interface for an executable that only requires a graphics context (no pre-loaded data)
@@ -23,43 +24,17 @@ public interface ObservableGraphicsRequest extends GraphicsRequest
     /**
      * The entry point for the executable.
      * @param context The graphics context to be used.
-     * @param callback A callback that can be fired to update the loading bar.
+     * @param monitor A monitor that can be fired to update the loading bar.
      *                 If this is unused, an "infinite loading" indicator will be displayed instead.
      * @param <ContextType> The type of the graphics context that the renderer implementation uses.
      * @throws Exception An exception may be thrown by the executable that will be caught and logged by Kintsugi 3D Builder.
      */
-    <ContextType extends Context<ContextType>> void executeRequest(ContextType context, LoadingMonitor callback) throws Exception;
+    <ContextType extends Context<ContextType>> void executeRequest(ContextType context, ProgressMonitor monitor) throws Exception;
 
     @Override
     default <ContextType extends Context<ContextType>> void executeRequest(ContextType context) throws Exception
     {
-        // Use a default LoadingMonitor that does nothing but doesn't cause null pointer exceptions
-        this.executeRequest(context, new LoadingMonitor()
-        {
-            @Override
-            public void startLoading()
-            {
-            }
-
-            @Override
-            public void setMaximum(double maximum)
-            {
-            }
-
-            @Override
-            public void setProgress(double progress)
-            {
-            }
-
-            @Override
-            public void loadingComplete()
-            {
-            }
-
-            @Override
-            public void loadingFailed(Throwable e)
-            {
-            }
-        });
+        // Use a default ProgressMonitor that does nothing but doesn't cause null pointer exceptions
+        this.executeRequest(context, new DefaultProgressMonitor());
     }
 }

@@ -11,7 +11,6 @@
 
 package kintsugi3d.gl.interactive;
 
-import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.gl.core.Context;
 
 /**

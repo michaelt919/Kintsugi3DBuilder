@@ -19,6 +19,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
@@ -41,7 +42,7 @@ import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.IBRRequestUI;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
-import kintsugi3d.builder.core.LoadingMonitor;
+import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.export.projectExporter.ExportRequestUI;
 import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
@@ -188,12 +189,21 @@ public class MenubarController
         this.internalModels = injectedInternalModels;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
 
-        MultithreadModels.getInstance().getLoadingModel().addLoadingMonitor(new LoadingMonitor()
+        MultithreadModels.getInstance().getIOModel().addProgressMonitor(new ProgressMonitor()
         {
             private double maximum = 0.0;
             private double progress = 0.0;
+            private int stageCount = 0;
+
             @Override
-            public void startLoading()
+            public boolean isCancelRequested()
+            {
+                // TODO
+                return false;
+            }
+
+            @Override
+            public void start()
             {
                 progress = 0.0;
                 Platform.runLater(() ->
@@ -204,30 +214,50 @@ public class MenubarController
             }
 
             @Override
-            public void setMaximum(double maximum)
+            public void setStageCount(int count)
             {
-                this.maximum = maximum;
-                Platform.runLater(() -> progressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : progress / maximum));
+                stageCount = count;
+                // TODO configure stage progress bar
             }
 
             @Override
-            public void setProgress(double progress)
+            public void setStage(int stage, String message)
+            {
+                maximum = 0.0;
+                progress = 0.0;
+                Platform.runLater(() -> progressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS));
+
+                // TODO
+                log.info("[Stage {}/{}] {}", stage, stageCount, message);
+            }
+
+            @Override
+            public void setMaxProgress(double maxProgress)
+            {
+                this.maximum = maxProgress;
+                Platform.runLater(() -> progressBar.setProgress(maxProgress == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : progress / maxProgress));
+            }
+
+            @Override
+            public void setProgress(double progress, String message)
             {
                 this.progress = progress;
                 Platform.runLater(() -> progressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : progress / maximum));
+                // TODO handle message
+                log.info("[{}%] {}", new DecimalFormat("#.##").format(progress / maximum * 100), message);
             }
 
             @Override
-            public void loadingComplete()
+            public void complete()
             {
                 this.maximum = 0.0;
                 Platform.runLater(() ->  progressBar.setVisible(false));
             }
 
             @Override
-            public void loadingFailed(Throwable e)
+            public void fail(Throwable e)
             {
-                loadingComplete();
+                complete();
             }
         });
 
@@ -345,7 +375,7 @@ public class MenubarController
         {
             if (newValue != null && newValue.getUserData() instanceof String)
             {
-                MultithreadModels.getInstance().getLoadingModel()
+                MultithreadModels.getInstance().getIOModel()
                     .requestFragmentShader(new File("shaders", (String)newValue.getUserData()));
             }
 
@@ -662,7 +692,7 @@ public class MenubarController
                             stageCapture.stage = stage;
                             stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, e ->
                             {
-                                MultithreadModels.getInstance().getLoadingModel().applyLightCalibration();
+                                MultithreadModels.getInstance().getIOModel().applyLightCalibration();
                                 MultithreadModels.getInstance().getSettingsModel().set("lightCalibrationMode", false);
                             });
                         });
@@ -674,10 +704,10 @@ public class MenubarController
                 // Bind controller to settings model to synchronize with "currentLightCalibration".
                 lightCalibrationController.bind(internalModels.getSettingsModel());
 
-                if (MultithreadModels.getInstance().getLoadingModel().isInstanceLoaded())
+                if (MultithreadModels.getInstance().getIOModel().isInstanceLoaded())
                 {
                     // Set the "currentLightCalibration" to the existing calibration values in the view set.
-                    ViewSet loadedViewSet = MultithreadModels.getInstance().getLoadingModel().getLoadedViewSet();
+                    ViewSet loadedViewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
 
                     internalModels.getSettingsModel().set("currentLightCalibration",
                         loadedViewSet.getLightPosition(loadedViewSet.getLightIndex(loadedViewSet.getPrimaryViewIndex())).getXY());
@@ -704,7 +734,7 @@ public class MenubarController
         {
             EyedropperController eyedropperController =
                     makeWindow("Tone Calibration", colorCheckerWindowOpen, "fxml/menubar/EyedropperColorChecker.fxml");
-            eyedropperController.setLoadingModel(MultithreadModels.getInstance().getLoadingModel());
+            eyedropperController.setLoadingModel(MultithreadModels.getInstance().getIOModel());
 
         }
         catch(Exception e)

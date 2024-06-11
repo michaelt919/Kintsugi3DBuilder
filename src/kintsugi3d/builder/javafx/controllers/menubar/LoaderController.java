@@ -195,12 +195,12 @@ public class LoaderController implements Initializable
 
             if (viewSetCallback != null)
             {
-                MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(
+                MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
                     viewSet -> viewSetCallback.accept(viewSet, cameraFile.getParentFile()));
             }
 
             new Thread(() ->
-                MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(
+                MultithreadModels.getInstance().getIOModel().loadFromAgisoftFiles(
                         cameraFile.getPath(), cameraFile, objFile, photoDir,
                         primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
                 .start();

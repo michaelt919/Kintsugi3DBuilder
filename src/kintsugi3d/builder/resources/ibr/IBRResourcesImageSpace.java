@@ -13,6 +13,7 @@ package kintsugi3d.builder.resources.ibr;
 
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
@@ -93,7 +94,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         private VertexGeometry geometry;
         private File imageDirectoryOverride;
         private ReadonlyLoadOptionsModel loadOptions;
-        private LoadingMonitor loadingMonitor;
+        private ProgressMonitor progressMonitor;
 
         private float gamma;
         private double[] linearLuminanceValues;
@@ -131,9 +132,9 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
-        public Builder<ContextType> setLoadingMonitor(LoadingMonitor loadingMonitor)
+        public Builder<ContextType> setProgressMonitor(ProgressMonitor progressMonitor)
         {
-            this.loadingMonitor = loadingMonitor;
+            this.progressMonitor = progressMonitor;
             return this;
         }
 
@@ -242,7 +243,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             if (this.viewSet != null)
             {
                 IBRResourcesImageSpace.generateUndistortedPreviewImages(
-                    this.viewSet, this.loadOptions.getMaxLoadingThreads(), this.loadingMonitor);
+                    this.viewSet, this.loadOptions.getMaxLoadingThreads(), this.progressMonitor);
             }
 
             return this;
@@ -271,7 +272,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 geometry = VertexGeometry.createFromOBJFile(viewSet.getGeometryFile());
             }
 
-            return new IBRResourcesImageSpace<>(context, viewSet, geometry, loadOptions, loadingMonitor);
+            return new IBRResourcesImageSpace<>(context, viewSet, geometry, loadOptions, progressMonitor);
         }
     }
 
@@ -281,7 +282,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     }
 
     private IBRResourcesImageSpace(ContextType context, ViewSet viewSet, VertexGeometry geometry,
-        ReadonlyLoadOptionsModel loadOptions, LoadingMonitor loadingMonitor) throws IOException
+        ReadonlyLoadOptionsModel loadOptions, ProgressMonitor progressMonitor) throws IOException
     {
         super(new IBRSharedResources<>(context, viewSet, geometry,
                     loadOptions != null ? loadOptions.getTextureLoadOptions() : new TextureLoadOptions()),
@@ -328,15 +329,19 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             loadOptions.configureColorTextureBuilder(textureArrayBuilder);
             colorTextures = textureArrayBuilder.createTexture();
 
-            if(loadingMonitor != null)
+            if(progressMonitor != null)
             {
-                loadingMonitor.setMaximum(viewSet.getCameraPoseCount());
+                progressMonitor.setStage(0, "Loading preview-resolution images...");
+                progressMonitor.setMaxProgress(viewSet.getCameraPoseCount());
             }
 
             int m = viewSet.getCameraPoseCount();
             for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
             {
-                log.info("Loading camera pose {}/{}", i, m);
+                if (progressMonitor != null)
+                {
+                    progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i, viewSet.getCameraPoseCount()));
+                }
 
                 try
                 {
@@ -349,11 +354,11 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                     // If the file is not found, continue and try to load other images.
                     log.error("Failed to load image.", e);
                 }
+            }
 
-                if(loadingMonitor != null)
-                {
-                    loadingMonitor.setProgress(i+1);
-                }
+            if (progressMonitor != null)
+            {
+                progressMonitor.setProgress(viewSet.getCameraPoseCount(), "All images loaded.");
             }
 
             log.info("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
@@ -363,9 +368,9 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             this.colorTextures = null;
         }
 
-        if (loadingMonitor != null)
+        if (progressMonitor != null)
         {
-            loadingMonitor.setMaximum(0.0);
+            progressMonitor.setStage(1, "Finished loading images.");
         }
 
         // Store the camera projections in a uniform buffer
@@ -674,7 +679,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         return new SingleCalibratedImageResource<>(getContext(), getViewSet(), viewIndex, imageFile, getGeometry(), loadOptions);
     }
 
-    public ImageCache<ContextType> cache(ImageCacheSettings settings, LoadingMonitor callback) throws IOException
+    public ImageCache<ContextType> cache(ImageCacheSettings settings, ProgressMonitor monitor) throws IOException
     {
         settings.setCacheFolderName(getViewSet().getUuid().toString());
 
@@ -682,7 +687,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         if (!cache.isInitialized())
         {
-            cache.initialize(callback);
+            cache.initialize(monitor);
         }
 
         return cache;
@@ -710,14 +715,14 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         }
     }
 
-    private static void throwUndistortFailed(LoadingMonitor loadingMonitor, AtomicInteger failedCount) throws IOException
+    private static void throwUndistortFailed(ProgressMonitor progressMonitor, AtomicInteger failedCount) throws IOException
     {
         IOException e = new IOException("Failed to undistort " + failedCount.get() + " images");
-        loadingMonitor.loadingWarning(e);
+        progressMonitor.warn(e);
 
         // Generating preview images partially failed, but we'll try to load the rest of the project.
         // Go back to indeterminate progress until it starts to actually load for rendering
-        loadingMonitor.setMaximum(0.0);
+        progressMonitor.setMaxProgress(0.0);
 
         throw e;
     }
@@ -738,7 +743,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     private static void markFinished(ViewSet viewSet, AtomicInteger finishedCount)
     {
         finishedCount.getAndAdd(1);
-        log.info("Finished image {}/{}", finishedCount, viewSet.getCameraPoseCount());
     }
 
     private static void logExists(File previewImageFile)
@@ -751,7 +755,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
      * @param viewSet
      * @throws IOException
      */
-    private static void generateUndistortedPreviewImages(ViewSet viewSet, int maxLoadingThreads, LoadingMonitor loadingMonitor)
+    private static void generateUndistortedPreviewImages(ViewSet viewSet, int maxLoadingThreads, ProgressMonitor progressMonitor)
         throws IOException
     {
         if (Objects.equals(viewSet.getRelativePreviewImagePathName(), viewSet.getRelativeFullResImagePathName()))
@@ -770,14 +774,15 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
             viewSet.getPreviewImageFilePath().mkdirs();
 
-            loadingMonitor.setMaximum(viewSet.getCameraPoseCount());
-            loadingMonitor.setProgress(0);
+            progressMonitor.setMaxProgress(viewSet.getCameraPoseCount());
 
             AtomicInteger finishedCount = new AtomicInteger(0);
             AtomicInteger failedCount = new AtomicInteger(0);
 
             if (MULTITHREAD_PREVIEW_IMAGE_GENERATION)
             {
+                progressMonitor.setProgress(0, "Importing and downsizing images (multithread)...");
+
                 // Need to use custom ForkJoinPool so that number of threads doesn't go out of control and use up the Java heap space
                 ForkJoinPool customThreadPool = new ForkJoinPool(maxLoadingThreads);
 
@@ -791,7 +796,9 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                             File previewImageFile = viewSet.findPreviewImageFile(i);
                             logExists(previewImageFile);
                             markFinished(viewSet, finishedCount);
-                            loadingMonitor.setProgress(finishedCount.get() + failedCount.get());
+                            progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
+                                MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(i),
+                                    finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
                         }
                         catch (FileNotFoundException e)
                         {
@@ -821,7 +828,9 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                                                         ImageIO.write(imageOut, "PNG", viewSet.getPreviewImageFile(i));
                                                         logFinished(viewSet.getPreviewImageFile(i));
                                                         markFinished(viewSet, finishedCount);
-                                                        loadingMonitor.setProgress(finishedCount.get() + failedCount.get());
+                                                        progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
+                                                            MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(i),
+                                                                finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
                                                     }
                                                     catch (IOException|RuntimeException ex)
                                                     {
@@ -857,7 +866,9 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                                     File fullResImageFile = viewSet.findFullResImageFile(i);
                                     resizeImage(fullResImageFile, viewSet, i);
                                     markFinished(viewSet, finishedCount);
-                                    loadingMonitor.setProgress(finishedCount.get() + failedCount.get());
+                                    progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
+                                        MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(i),
+                                            finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
                                 }
                                 catch (IOException|RuntimeException ex)
                                 {
@@ -880,7 +891,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                     {
                        for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
                        {
-                           loadingMonitor.setProgress(i);
+                           progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i, viewSet.getCameraPoseCount()));
 
                            try
                            {
@@ -934,13 +945,13 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
             if (failedCount.get() > 0)
             {
-                throwUndistortFailed(loadingMonitor, failedCount);
+                throwUndistortFailed(progressMonitor, failedCount);
             }
             else
             {
                 // Generating preview images is now complete.
                 // Go back to indeterminate progress until it starts to actually load for rendering
-                loadingMonitor.setMaximum(0.0);
+                progressMonitor.setMaxProgress(0.0);
                 log.info("Undistorted preview images generated in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
             }
         }

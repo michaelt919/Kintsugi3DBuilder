@@ -13,13 +13,14 @@ package kintsugi3d.builder.export.simpleanimation;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.MessageFormat;
 
+import kintsugi3d.builder.core.IBRInstance;
+import kintsugi3d.builder.core.ObservableIBRRequest;
+import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.builder.core.IBRInstance;
-import kintsugi3d.builder.core.ObservableIBRRequest;
-import kintsugi3d.builder.core.LoadingMonitor;
 
 public abstract class SimpleAnimationRequestBase implements ObservableIBRRequest
 {
@@ -109,7 +110,7 @@ public abstract class SimpleAnimationRequestBase implements ObservableIBRRequest
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
+    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
     {
         try
         (
@@ -134,9 +135,10 @@ public abstract class SimpleAnimationRequestBase implements ObservableIBRRequest
                 exportFile.getParentFile().mkdirs();
                 framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", exportFile);
 
-                if (callback != null)
+                if (monitor != null)
                 {
-                    callback.setProgress((double) i / (double) frameCount);
+                    monitor.setProgress((double) i / (double) frameCount,
+                        MessageFormat.format("Frame {0}/{1}", i, frameCount));
                 }
             }
         }

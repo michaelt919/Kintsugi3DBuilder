@@ -13,14 +13,15 @@ package kintsugi3d.builder.export.general;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.function.Consumer;
 
-import kintsugi3d.gl.core.*;
 import kintsugi3d.builder.core.IBRInstance;
 import kintsugi3d.builder.core.ObservableIBRRequest;
-import kintsugi3d.builder.core.LoadingMonitor;
+import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
+import kintsugi3d.gl.core.*;
 
 class MultiviewRenderRequest extends RenderRequestBase
 {
@@ -46,7 +47,7 @@ class MultiviewRenderRequest extends RenderRequestBase
     }
 
     public <ContextType extends Context<ContextType>> void executeRequest(
-        IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
+        IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
     {
         IBRResourcesImageSpace<ContextType> resources = renderable.getIBRResources();
 
@@ -83,9 +84,10 @@ class MultiviewRenderRequest extends RenderRequestBase
                 getOutputDirectory().mkdirs();
                 framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", exportFile);
 
-                if (callback != null)
+                if (monitor != null)
                 {
-                    callback.setProgress((double) i / (double) resources.getViewSet().getCameraPoseCount());
+                    monitor.setProgress((double) i / (double) resources.getViewSet().getCameraPoseCount(),
+                        MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(i), i, resources.getViewSet().getCameraPoseCount()));
                 }
             }
         }

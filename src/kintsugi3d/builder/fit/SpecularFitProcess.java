@@ -11,7 +11,17 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.core.LoadingMonitor;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.function.BiConsumer;
+
+import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.export.specular.SpecularFitTextureRescaler;
 import kintsugi3d.builder.fit.debug.BasisImageCreator;
@@ -30,15 +40,6 @@ import kintsugi3d.optimization.ShaderBasedErrorCalculator;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.function.BiConsumer;
 
 /**
  * Implement specular fit using algorithm described by Nam et al., 2018
@@ -63,25 +64,25 @@ public class SpecularFitProcess
     }
 
     public <ContextType extends Context<ContextType>> void optimizeFit(
-        IBRResourcesImageSpace<ContextType> resources, LoadingMonitor callback)
+        IBRResourcesImageSpace<ContextType> resources, ProgressMonitor monitor)
         throws IOException
     {
         Instant start = Instant.now();
 
-        // Generate cache
-        ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings(), callback);
-
-        if (callback != null)
+        if (monitor != null)
         {
-            // Make indeterminate as building cache is really just the first step.
-            callback.setMaximum(0.0);
+            monitor.setStageCount(3);
+            monitor.setStage(0, "Building cache...");
         }
+
+        // Generate cache
+        ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings(), monitor);
 
         Duration duration = Duration.between(start, Instant.now());
         log.info("Cache found / generated in: " + duration);
 
         // Runs the fit (long process) and then replaces the old material resources / textures
-        resources.replaceSpecularMaterialResources(optimizeFit(cache, resources.getSpecularMaterialResources(), callback));
+        resources.replaceSpecularMaterialResources(optimizeFit(cache, resources.getSpecularMaterialResources(), monitor));
 
 //        // Save basis image visualization for reference and debugging
 //        try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(cache.getContext(), settings.getSpecularBasisSettings()))
@@ -120,10 +121,15 @@ public class SpecularFitProcess
     }
 
     private <ContextType extends Context<ContextType>> SpecularMaterialResources<ContextType> optimizeFit(
-        ImageCache<ContextType> cache, SpecularMaterialResources<ContextType> original, LoadingMonitor callback)
+        ImageCache<ContextType> cache, SpecularMaterialResources<ContextType> original, ProgressMonitor monitor)
         throws IOException
     {
         Instant start = Instant.now();
+
+        if (monitor != null)
+        {
+            monitor.setStage(1, "Performing low-res fit...");
+        }
 
         SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
 
@@ -192,14 +198,19 @@ public class SpecularFitProcess
                 File inputNormalMap = geometryFile == null || material == null || normalMap == null ? null :
                     ImageFinder.getInstance().tryFindImageFile(new File(geometryFile.getParentFile(), normalMap.getMapName()));
 
+                if (monitor != null)
+                {
+                    monitor.setStage(2, "Performing high-res fit...");
+                }
+
                 // Optimize weight maps and normal maps by blocks to fill the full resolution textures
-                optimizeBlocks(fullResolution, cache, sampledDecomposition, inputNormalMap, callback);
+                optimizeBlocks(fullResolution, cache, sampledDecomposition, inputNormalMap, monitor);
             }
 
-            if (callback != null)
+            if (monitor != null)
             {
                 // Go back to indeterminate for wrap-up stuff
-                callback.setMaximum(0.0);
+                monitor.setStage(3, "Texture processing complete.");
             }
 
             // Generate albedo / ORM maps at full resolution (does not require loaded source images)
@@ -241,7 +252,7 @@ public class SpecularFitProcess
         ImageCache<ContextType> cache,
         SpecularDecompositionFromScratch sampledDecomposition,
         File inputNormalMapFile,
-        LoadingMonitor callback)
+        ProgressMonitor monitor)
         throws IOException
     {
         SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
@@ -269,10 +280,9 @@ public class SpecularFitProcess
                 }
             }
 
-            if (callback != null)
+            if (monitor != null)
             {
-                callback.setMaximum(cache.getSettings().getTextureSubdiv() * cache.getSettings().getTextureSubdiv());
-                callback.setProgress(0.0);
+                monitor.setMaxProgress(cache.getSettings().getTextureSubdiv() * cache.getSettings().getTextureSubdiv());
             }
 
             // Optimize each block of the texture map at full resolution.
@@ -280,12 +290,10 @@ public class SpecularFitProcess
             {
                 for (int j = 0; j < cache.getSettings().getTextureSubdiv(); j++)
                 {
-                    if (callback != null)
+                    if (monitor != null)
                     {
-                        callback.setProgress(i * cache.getSettings().getTextureSubdiv() + j);
+                        monitor.setProgress(i * cache.getSettings().getTextureSubdiv() + j, MessageFormat.format("Block ({0}, {1})", i, j));
                     }
-
-                    log.info("Starting block (" + i + ", " + j + ")...");
 
                     try (IBRResourcesTextureSpace<ContextType> blockResources = blockResourceFactory.createBlockResources(i, j))
                     {

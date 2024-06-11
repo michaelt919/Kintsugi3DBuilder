@@ -25,88 +25,121 @@ import kintsugi3d.util.EncodableColorImage;
 
 public class IOModel
 {
-    private static class AggregateLoadingMonitor implements LoadingMonitor
+    private static class AggregateProgressMonitor implements ProgressMonitor
     {
-        private final Collection<LoadingMonitor> subMonitors = new ArrayList<>();
+        private final Collection<ProgressMonitor> subMonitors = new ArrayList<>();
 
-        void addSubMonitor(LoadingMonitor monitor)
+        void addSubMonitor(ProgressMonitor monitor)
         {
             subMonitors.add(monitor);
         }
 
         @Override
-        public void startLoading()
+        public boolean isCancelRequested()
         {
-            for (LoadingMonitor monitor : subMonitors)
+            for (ProgressMonitor monitor : subMonitors)
             {
-                monitor.startLoading();
+                if (isCancelRequested())
+                {
+                    return true;
+                }
+            }
+
+            // if cancel was not requested by any progress monitor
+            return false;
+        }
+
+        @Override
+        public void start()
+        {
+            for (ProgressMonitor monitor : subMonitors)
+            {
+                monitor.start();
             }
         }
 
         @Override
-        public void setMaximum(double maximum)
+        public void setStageCount(int count)
         {
-            for (LoadingMonitor monitor : subMonitors)
+            for (ProgressMonitor monitor : subMonitors)
             {
-                monitor.setMaximum(maximum);
+                monitor.setStageCount(count);
             }
         }
 
         @Override
-        public void setProgress(double progress)
+        public void setStage(int stage, String message)
         {
-            for (LoadingMonitor monitor : subMonitors)
+            for (ProgressMonitor monitor : subMonitors)
             {
-                monitor.setProgress(progress);
+                monitor.setStage(stage, message);
             }
         }
 
         @Override
-        public void loadingComplete()
+        public void setMaxProgress(double maxProgress)
         {
-            for (LoadingMonitor monitor : subMonitors)
+            for (ProgressMonitor monitor : subMonitors)
             {
-                monitor.loadingComplete();
+                monitor.setMaxProgress(maxProgress);
             }
         }
 
         @Override
-        public void loadingFailed(Throwable e)
+        public void setProgress(double progress, String message)
         {
-            for (LoadingMonitor monitor : subMonitors)
+            for (ProgressMonitor monitor : subMonitors)
             {
-                monitor.loadingFailed(e);
+                monitor.setProgress(progress, message);
             }
         }
 
         @Override
-        public void loadingWarning(Throwable e)
+        public void complete()
         {
-            for (LoadingMonitor monitor : subMonitors)
+            for (ProgressMonitor monitor : subMonitors)
             {
-                monitor.loadingWarning(e);
+                monitor.complete();
+            }
+        }
+
+        @Override
+        public void fail(Throwable e)
+        {
+            for (ProgressMonitor monitor : subMonitors)
+            {
+                monitor.fail(e);
+            }
+        }
+
+        @Override
+        public void warn(Throwable e)
+        {
+            for (ProgressMonitor monitor : subMonitors)
+            {
+                monitor.warn(e);
             }
         }
     }
 
     private IOHandler handler;
-    private final AggregateLoadingMonitor loadingMonitor = new AggregateLoadingMonitor();
+    private final AggregateProgressMonitor progressMonitor = new AggregateProgressMonitor();
     private ReadonlyLoadOptionsModel loadOptionsModel;
 
-    public LoadingMonitor getLoadingMonitor()
+    public ProgressMonitor getProgressMonitor()
     {
-        return loadingMonitor;
+        return progressMonitor;
     }
 
     public void setLoadingHandler(IOHandler handler)
     {
         this.handler = handler;
-        this.handler.setLoadingMonitor(loadingMonitor);
+        this.handler.setProgressMonitor(progressMonitor);
     }
 
-    public void addLoadingMonitor(LoadingMonitor monitor)
+    public void addProgressMonitor(ProgressMonitor monitor)
     {
-        this.loadingMonitor.addSubMonitor(monitor);
+        this.progressMonitor.addSubMonitor(monitor);
     }
 
     public void setLoadOptionsModel(ReadonlyLoadOptionsModel loadOptionsModel)

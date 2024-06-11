@@ -63,9 +63,9 @@ public class ExportRequestUI implements IBRRequestUI {
         ExportRequestUI exportRequest = fxmlLoader.getController();
         exportRequest.modelAccess = modelAccess;
 
-        if (modelAccess.getLoadingModel().getLoadedProjectFile() != null)
+        if (modelAccess.getIOModel().getLoadedProjectFile() != null)
         {
-            exportRequest.CurrentDirectoryFile = modelAccess.getLoadingModel().getLoadedProjectFile().getParentFile();
+            exportRequest.CurrentDirectoryFile = modelAccess.getIOModel().getLoadedProjectFile().getParentFile();
         }
 
         exportRequest.stage = new Stage();
@@ -109,13 +109,13 @@ public class ExportRequestUI implements IBRRequestUI {
                 {
                     @Override
                     public <ContextType extends Context<ContextType>> void executeRequest(
-                        IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
+                        IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
                     {
 
                         if (settings.isGlTFEnabled())
                         {
                             renderable.saveGlTF(ExportLocationFile.getParentFile(), ExportLocationFile.getName(), settings);
-                            modelAccess.getLoadingModel().saveMaterialFiles(ExportLocationFile.getParentFile(), null);
+                            modelAccess.getIOModel().saveMaterialFiles(ExportLocationFile.getParentFile(), null);
                         }
 
                         if (settings.isOpenViewerOnceComplete())

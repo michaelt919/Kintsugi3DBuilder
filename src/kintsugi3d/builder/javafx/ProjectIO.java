@@ -31,8 +31,8 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
+import kintsugi3d.builder.core.DefaultProgressMonitor;
 import kintsugi3d.builder.core.IOModel;
-import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.controllers.menubar.LoaderController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
@@ -78,30 +78,10 @@ public final class ProjectIO
         // Try to initialize file chooser in advance of when it will be needed.
         Platform.runLater(this::getProjectFileChooserSafe);
 
-        MultithreadModels.getInstance().getLoadingModel().addLoadingMonitor(new LoadingMonitor()
+        MultithreadModels.getInstance().getIOModel().addProgressMonitor(new DefaultProgressMonitor()
         {
             @Override
-            public void startLoading()
-            {
-            }
-
-            @Override
-            public void setMaximum(double maximum)
-            {
-            }
-
-            @Override
-            public void setProgress(double progress)
-            {
-            }
-
-            @Override
-            public void loadingComplete()
-            {
-            }
-
-            @Override
-            public void loadingFailed(Throwable e)
+            public void fail(Throwable e)
             {
                 projectLoaded = false;
                 if(e instanceof MeshImportException){
@@ -112,7 +92,7 @@ public final class ProjectIO
             }
 
             @Override
-            public void loadingWarning(Throwable e)
+            public void warn(Throwable e)
             {
                 handleException("An error occurred while loading project", e);
             }
@@ -217,7 +197,7 @@ public final class ProjectIO
         projectFile = null;
         vsetFile = null;
 
-        MultithreadModels.getInstance().getLoadingModel().unload();
+        MultithreadModels.getInstance().getIOModel().unload();
         projectLoaded = true;
     }
 
@@ -234,7 +214,7 @@ public final class ProjectIO
             if (Objects.equals(vsetFile, projectFile)) // Saved as a VSET
             {
                 // Set the root directory first, then the supporting files directory
-                MultithreadModels.getInstance().getLoadingModel()
+                MultithreadModels.getInstance().getIOModel()
                     .getLoadedViewSet().setRootDirectory(projectFile.getParentFile());
 
                 viewSet.setSupportingFilesDirectory(filesDirectory);
@@ -296,7 +276,7 @@ public final class ProjectIO
 
     private static void startLoad(File projectFile, File vsetFile)
     {
-        MultithreadModels.getInstance().getLoadingModel().unload();
+        MultithreadModels.getInstance().getIOModel().unload();
 
         RecentProjects.updateRecentFiles(projectFile.getAbsolutePath());
 
@@ -308,7 +288,7 @@ public final class ProjectIO
             {
                 try
                 {
-                    MultithreadModels.getInstance().getLoadingModel()
+                    MultithreadModels.getInstance().getIOModel()
                         .loadFromVSETFile(vsetFile.getPath(), vsetFile, ViewSet.getDefaultSupportingFilesDirectory(projectFile));
                 }
                 catch (RuntimeException e)
@@ -331,7 +311,7 @@ public final class ProjectIO
             {
                 try
                 {
-                    MultithreadModels.getInstance().getLoadingModel()
+                    MultithreadModels.getInstance().getIOModel()
                         .loadFromVSETFile(vsetFile.getPath(), vsetFile);
                 }
                 catch (RuntimeException e)
@@ -383,7 +363,7 @@ public final class ProjectIO
             startLoad(projectFile, vsetFile);
 
             // Have to set loaded project file after startLoad since startLoad resets everything in order to unload a previously loaded project.
-            MultithreadModels.getInstance().getLoadingModel().setLoadedProjectFile(projectFile);
+            MultithreadModels.getInstance().getIOModel().setLoadedProjectFile(projectFile);
 
             WelcomeWindowController.getInstance().hideWelcomeWindow();
         }
@@ -425,7 +405,7 @@ public final class ProjectIO
         {
             try
             {
-                IOModel ioModel = MultithreadModels.getInstance().getLoadingModel();
+                IOModel ioModel = MultithreadModels.getInstance().getIOModel();
 
                 File filesDirectory = ViewSet.getDefaultSupportingFilesDirectory(projectFile);
                 if (projectFile.getName().endsWith(".vset"))
@@ -435,7 +415,7 @@ public final class ProjectIO
                     ioModel.saveToVSETFile(projectFile);
                     this.vsetFile = projectFile;
                     this.projectFile = null;
-                    MultithreadModels.getInstance().getLoadingModel().setLoadedProjectFile(vsetFile);
+                    MultithreadModels.getInstance().getIOModel().setLoadedProjectFile(vsetFile);
                 }
                 else
                 {
@@ -445,7 +425,7 @@ public final class ProjectIO
                     this.vsetFile = new File(filesDirectory, projectFile.getName() + ".vset");
                     ioModel.saveToVSETFile(vsetFile);
                     InternalModels.getInstance().getProjectModel().saveProjectFile(projectFile, vsetFile);
-                    MultithreadModels.getInstance().getLoadingModel().setLoadedProjectFile(projectFile);
+                    MultithreadModels.getInstance().getIOModel().setLoadedProjectFile(projectFile);
                 }
 
                 ioModel.saveGlTF(filesDirectory);
@@ -560,7 +540,7 @@ public final class ProjectIO
         projectFile = null;
         vsetFile = null;
 
-        MultithreadModels.getInstance().getLoadingModel().unload();
+        MultithreadModels.getInstance().getIOModel().unload();
         projectLoaded = false;
     }
 

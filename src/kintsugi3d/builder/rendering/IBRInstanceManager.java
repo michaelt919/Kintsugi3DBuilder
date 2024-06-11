@@ -50,7 +50,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     private ViewSet loadedViewSet;
     private IBRInstance<ContextType> ibrInstance = null;
     private IBRInstance<ContextType> newInstance = null;
-    private LoadingMonitor loadingMonitor;
+    private ProgressMonitor progressMonitor;
 
     private ReadonlyObjectModel objectModel;
     private ReadonlyCameraModel cameraModel;
@@ -103,9 +103,9 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     private void handleMissingFiles(Exception e)
     {
         log.error("An error occurred loading project:", e);
-        if (loadingMonitor != null)
+        if (progressMonitor != null)
         {
-            loadingMonitor.loadingFailed(e);
+            progressMonitor.fail(e);
         }
     }
 
@@ -157,6 +157,12 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         // Invoke callbacks now that view set is loaded
         invokeViewSetLoadCallbacks(loadedViewSet);
 
+        if(progressMonitor != null)
+        {
+            progressMonitor.setStageCount(2);
+            progressMonitor.setStage(0, "Generating preview-resolution images...");
+        }
+
         try
         {
             // Generate preview resolution images
@@ -176,37 +182,70 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         newItem.getSceneModel().setSettingsModel(this.settingsModel);
         newItem.getSceneModel().setCameraViewListModel(this.cameraViewListModel);
 
-        newItem.setLoadingMonitor(new LoadingMonitor()
+        newItem.setProgressMonitor(new ProgressMonitor()
         {
             @Override
-            public void startLoading()
+            public boolean isCancelRequested()
             {
-                if (loadingMonitor != null)
+                if (progressMonitor != null)
                 {
-                    loadingMonitor.startLoading();
+                    return progressMonitor.isCancelRequested();
+                }
+                else
+                {
+                    return false;
                 }
             }
 
             @Override
-            public void setMaximum(double maximum)
+            public void start()
             {
-                if (loadingMonitor != null)
+                if (progressMonitor != null)
                 {
-                    loadingMonitor.setMaximum(maximum);
+                    progressMonitor.start();
                 }
             }
 
             @Override
-            public void setProgress(double progress)
+            public void setStageCount(int count)
             {
-                if (loadingMonitor != null)
+                if (progressMonitor != null)
                 {
-                    loadingMonitor.setProgress(progress);
+                    // Add one for the preview image generation step already completed.
+                    progressMonitor.setStageCount(count + 1);
                 }
             }
 
             @Override
-            public void loadingComplete()
+            public void setStage(int stage, String message)
+            {
+                if (progressMonitor != null)
+                {
+                    // Add one for the preview image generation step already completed.
+                    progressMonitor.setStage(stage + 1, message);
+                }
+            }
+
+            @Override
+            public void setMaxProgress(double maxProgress)
+            {
+                if (progressMonitor != null)
+                {
+                    progressMonitor.setMaxProgress(maxProgress);
+                }
+            }
+
+            @Override
+            public void setProgress(double progress, String message)
+            {
+                if (progressMonitor != null)
+                {
+                    progressMonitor.setProgress(progress, message);
+                }
+            }
+
+            @Override
+            public void complete()
             {
                 double primaryViewDistance = newItem.getIBRResources().getPrimaryViewDistance();
                 Vector3 lightIntensity = new Vector3((float)(primaryViewDistance * primaryViewDistance));
@@ -214,27 +253,27 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                 newItem.getIBRResources().initializeLightIntensities(lightIntensity, false);
                 newItem.reloadShaders();
 
-                if (loadingMonitor != null)
+                if (progressMonitor != null)
                 {
-                    loadingMonitor.loadingComplete();
+                    progressMonitor.complete();
                 }
             }
 
             @Override
-            public void loadingFailed(Throwable e)
+            public void fail(Throwable e)
             {
-                if (loadingMonitor != null)
+                if (progressMonitor != null)
                 {
-                    loadingMonitor.loadingFailed(e);
+                    progressMonitor.fail(e);
                 }
             }
 
             @Override
-            public void loadingWarning(Throwable e)
+            public void warn(Throwable e)
             {
-                if (loadingMonitor != null)
+                if (progressMonitor != null)
                 {
-                    loadingMonitor.loadingWarning(e);
+                    progressMonitor.warn(e);
                 }
             }
         });
@@ -244,12 +283,12 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     @Override
     public void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions)
     {
-        this.loadingMonitor.startLoading();
+        this.progressMonitor.start();
 
         try
         {
             Builder<ContextType> contextTypeBuilder = IBRResourcesImageSpace.getBuilderForContext(this.context)
-                .setLoadingMonitor(this.loadingMonitor)
+                .setProgressMonitor(this.progressMonitor)
                 .setLoadOptions(loadOptions)
                 .loadVSETFile(vsetFile, supportingFilesDirectory);
 
@@ -265,12 +304,12 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory, String primaryViewName,
         ReadonlyLoadOptionsModel loadOptions)
     {
-        this.loadingMonitor.startLoading();
+        this.progressMonitor.start();
 
         try
         {
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
-                .setLoadingMonitor(this.loadingMonitor)
+                .setProgressMonitor(this.progressMonitor)
                 .setLoadOptions(loadOptions)
                 .loadAgisoftFiles(xmlFile, meshFile, imageDirectory)
                 .setPrimaryView(primaryViewName);
@@ -299,9 +338,9 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void setLoadingMonitor(LoadingMonitor loadingMonitor)
+    public void setProgressMonitor(ProgressMonitor progressMonitor)
     {
-        this.loadingMonitor = loadingMonitor;
+        this.progressMonitor = progressMonitor;
     }
 
     @Override

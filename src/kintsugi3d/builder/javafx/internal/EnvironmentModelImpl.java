@@ -148,7 +148,7 @@ public class EnvironmentModelImpl implements EnvironmentModel
             try
             {
                 log.info("Loading environment map file " + newFile.getName());
-                Optional<EncodableColorImage> environmentMapImage = MultithreadModels.getInstance().getLoadingModel().loadEnvironmentMap(newFile);
+                Optional<EncodableColorImage> environmentMapImage = MultithreadModels.getInstance().getIOModel().loadEnvironmentMap(newFile);
                 loadedEnvironmentMapImage.setValue(environmentMapImage.orElse(null));
             }
             catch (FileNotFoundException e)
@@ -186,7 +186,7 @@ public class EnvironmentModelImpl implements EnvironmentModel
             try
             {
                 log.info("Loading backplate file " + newFile.getName());
-                MultithreadModels.getInstance().getLoadingModel().loadBackplate(newFile);
+                MultithreadModels.getInstance().getIOModel().loadBackplate(newFile);
             }
             catch (FileNotFoundException e)
             {
