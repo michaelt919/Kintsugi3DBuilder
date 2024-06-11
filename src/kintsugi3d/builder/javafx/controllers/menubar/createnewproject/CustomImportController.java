@@ -201,34 +201,6 @@ public class CustomImportController extends FXMLPageController implements Initia
         hostScrollerController.updatePrevAndNextButtons();
     }
 
-    @FXML
-    private void okButtonPress()
-    {
-        if (!areAllFilesLoaded()) {
-            Toolkit.getDefaultToolkit().beep();
-            return;
-        }
-
-        if (loadStartCallback != null)
-        {
-            loadStartCallback.run();
-        }
-
-        if (viewSetCallback != null)
-        {
-            MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(
-                    viewSet -> viewSetCallback.accept(viewSet));
-        }
-
-        new Thread(() ->
-                MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(
-                        cameraFile.getPath(), cameraFile, objFile, photoDir,
-                        primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
-                .start();
-        WelcomeWindowController.getInstance().hideWelcomeWindow();
-        close();
-    }
-
     private boolean areAllFilesLoaded() {
         return (cameraFile != null) && (objFile != null) && (photoDir != null);
     }
@@ -273,10 +245,17 @@ public class CustomImportController extends FXMLPageController implements Initia
             return;
         }
 
-        if (viewSetCallback != null) {
+        if (loadStartCallback != null)
+        {
+            loadStartCallback.run();
+        }
+
+        if (viewSetCallback != null)
+        {
             MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(
                     viewSet -> viewSetCallback.accept(viewSet));
         }
+
         new Thread(() ->
                 MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(
                         cameraFile.getPath(), cameraFile, objFile, photoDir,
