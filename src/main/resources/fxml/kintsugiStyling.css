@@ -227,6 +227,10 @@ dialog-pane{
     -fx-background-radius: 0;
 }
 
+.tooltip {
+    -fx-show-duration: indefinite; /* tooltips don't disappear until the user's mouse leaves the node*/
+}
+
 .vbox{
     -fx-background-color: #444444;
 }
