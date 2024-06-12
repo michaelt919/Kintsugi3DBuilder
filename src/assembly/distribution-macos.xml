@@ -29,6 +29,12 @@
             <lineEnding>unix</lineEnding>
         </file>
         <file>
+            <source>target/classes/export-classes.txt</source>
+            <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources</outputDirectory>
+            <fileMode>0755</fileMode>
+            <lineEnding>unix</lineEnding>
+        </file>
+        <file>
             <source>target/${project.artifactId}-${project.version}-shaded.jar</source>
             <outputDirectory>Kintsugi 3D Builder.app/Contents/Resources</outputDirectory>
             <destName>Kintsugi3DBuilder-shaded.jar</destName>
