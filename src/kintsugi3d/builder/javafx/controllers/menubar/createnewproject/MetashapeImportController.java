@@ -59,7 +59,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
     @Override
     public boolean isNextButtonValid() {
-        return super.isNextButtonValid() && hasModels();
+        return isMetashapeObjectLoaded() && hasModels();
     }
 
     @Override

@@ -15,8 +15,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Scanner;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -289,56 +292,106 @@ public final class ProjectIO
 
         if (!confirmClose("Are you sure you want to create a new project?")) {return;}
 
-        //Create an arraylist which contains all needed files (fxml and controllers) for fxml page scroller
-        File fxmlFilesDirectory = new File("src/main/resources/fxml/menubar/createnewproject");
-        File controllersDirectory = new File("src/kintsugi3d/builder/javafx/controllers/menubar/createnewproject");
+        //File fxmlFilesDirectory = new File("src/main/resources/fxml/menubar/createnewproject");
+        File fxmlFilesDirectory = new File("create-new-project-fxmls.txt");
 
-        String[] fxmlFiles = fxmlFilesDirectory.list();
-        String[] controllerFiles = controllersDirectory.list();
-
-        if (fxmlFiles == null || controllerFiles == null) {
-            log.error("Could not find fxml files for create new project process");
-                return;
+        if (!fxmlFilesDirectory.exists()){
+            log.error("Failed to open fxml files directory for \"Create New Project\" process.");
+            return;
         }
 
-        try{
-            ArrayList<FXMLPage> pages = new ArrayList<>();
-            for (String fileName : fxmlFiles)
-            {
-                String pathPrefix = "fxml/menubar/createnewproject/";
-                String fullFileName = pathPrefix + fileName;
+        try (Scanner scanner = new Scanner(fxmlFilesDirectory, StandardCharsets.UTF_8)){
+            scanner.useLocale(Locale.US);
 
-                URL url = MenubarController.class.getClassLoader().getResource(fullFileName);
-                if (url == null)
-                {
-                    throw new FileNotFoundException(fullFileName);
-                }
-                FXMLLoader loader = new FXMLLoader(url);
+            ArrayList<FXMLPage> pages = new ArrayList<>();
+
+            while (scanner.hasNext())
+            {
+                String fileName = scanner.next();
+
+//                URL url = MenubarController.class.getClassLoader().getResource(fileName);
+//                if (url == null)
+//                {
+//                    throw new FileNotFoundException(fileName);
+//                }
+//                FXMLLoader loader = new FXMLLoader(url);
+
+                FXMLLoader loader = new FXMLLoader(getClass().getResource(fileName));
                 loader.load();
 
-                pages.add(new FXMLPage(fullFileName, loader));
+                pages.add(new FXMLPage(fileName, loader));
 
                 FXMLPageController controller = loader.getController();
 
                 if (controller instanceof CanConfirm){
                     controller.setLoadStartCallback(this::onLoadStart);
                     controller.setViewSetCallback(
-                                (viewSet) ->onViewSetCreated(viewSet, parentWindow));
+                            (viewSet) ->onViewSetCreated(viewSet, parentWindow));
                 }
             }
 
+            if(pages.isEmpty()){
+                log.error("Failed to load fxml pages for \"Create New Project\" process.");
+                return;
+            }
 
             String hostFXMLPath = "fxml/menubar/FXMLPageScroller.fxml";
             FXMLPageScrollerController scrollerController =
                     makeWindow(parentWindow, "Load Files", loaderWindowOpen, hostFXMLPath);
 
-            String firstPageFXMLPath = "fxml/menubar/createnewproject/ImportOrCustomProject.fxml";
+            String firstPageFXMLPath = "/fxml/menubar/createnewproject/ImportOrCustomProject.fxml";
             scrollerController.setPages(pages, firstPageFXMLPath);
             scrollerController.init();
-
-        } catch (Exception e) {
-            handleException("An error occurred creating a new project", e);
+        } catch (IOException e) {
+            log.error("Could not find fxml files for \"Create New Project\" process.", e);
         }
+
+
+        //String[] fxmlFiles = fxmlFilesDirectory.list();
+
+//        if (fxmlFiles == null || fxmlFiles.length == 0) {
+//            log.error("Could not find fxml files for \"Create New Project\" process.");
+//                return;
+//        }
+//
+//        try{
+//            ArrayList<FXMLPage> pages = new ArrayList<>();
+//            for (String fileName : fxmlFiles)
+//            {
+//                String pathPrefix = "fxml/menubar/createnewproject/";
+//                String fullFileName = pathPrefix + fileName;
+//
+//                URL url = MenubarController.class.getClassLoader().getResource(fullFileName);
+//                if (url == null)
+//                {
+//                    throw new FileNotFoundException(fullFileName);
+//                }
+//                FXMLLoader loader = new FXMLLoader(url);
+//                loader.load();
+//
+//                pages.add(new FXMLPage(fullFileName, loader));
+//
+//                FXMLPageController controller = loader.getController();
+//
+//                if (controller instanceof CanConfirm){
+//                    controller.setLoadStartCallback(this::onLoadStart);
+//                    controller.setViewSetCallback(
+//                                (viewSet) ->onViewSetCreated(viewSet, parentWindow));
+//                }
+//            }
+//
+//
+//            String hostFXMLPath = "fxml/menubar/FXMLPageScroller.fxml";
+//            FXMLPageScrollerController scrollerController =
+//                    makeWindow(parentWindow, "Load Files", loaderWindowOpen, hostFXMLPath);
+//
+//            String firstPageFXMLPath = "fxml/menubar/createnewproject/ImportOrCustomProject.fxml";
+//            scrollerController.setPages(pages, firstPageFXMLPath);
+//            scrollerController.init();
+//
+//        } catch (Exception e) {
+//            handleException("An error occurred creating a new project", e);
+//        }
 
     }
 

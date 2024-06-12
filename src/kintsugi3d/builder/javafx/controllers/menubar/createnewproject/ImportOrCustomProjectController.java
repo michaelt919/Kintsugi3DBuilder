@@ -27,12 +27,12 @@ public class ImportOrCustomProjectController extends FXMLPageController {
     }
 
     public void metashapeImportSelect() {
-        String importMetashapeFXMLPath = "fxml/menubar/createnewproject/MetashapeImport.fxml";
+        String importMetashapeFXMLPath = "/fxml/menubar/createnewproject/MetashapeImport.fxml";
         openChildPage(importMetashapeFXMLPath);
     }
 
     public void customImportSelect() {
-        String customImportFXMLPath = "fxml/menubar/createnewproject/CustomImport.fxml";
+        String customImportFXMLPath = "/fxml/menubar/createnewproject/CustomImport.fxml";
         openChildPage(customImportFXMLPath);
     }
 
