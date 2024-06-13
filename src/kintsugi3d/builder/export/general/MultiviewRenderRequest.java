@@ -19,6 +19,7 @@ import java.util.function.Consumer;
 import kintsugi3d.builder.core.IBRInstance;
 import kintsugi3d.builder.core.ObservableIBRRequest;
 import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 import kintsugi3d.gl.core.*;
@@ -47,7 +48,8 @@ class MultiviewRenderRequest extends RenderRequestBase
     }
 
     public <ContextType extends Context<ContextType>> void executeRequest(
-        IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
+        IBRInstance<ContextType> renderable, ProgressMonitor monitor)
+            throws IOException, UserCancellationException
     {
         IBRResourcesImageSpace<ContextType> resources = renderable.getIBRResources();
 
@@ -58,9 +60,12 @@ class MultiviewRenderRequest extends RenderRequestBase
             Drawable<ContextType> drawable = createDrawable(program, resources)
         )
         {
-
             for (int i = 0; i < resources.getViewSet().getCameraPoseCount(); i++)
             {
+                if (monitor != null)
+                {
+                    monitor.allowUserCancellation();
+                }
                 program.setUniform("viewIndex", i);
                 program.setUniform("model_view", renderable.getActiveViewSet().getCameraPose(i));
                 program.setUniform("projection",

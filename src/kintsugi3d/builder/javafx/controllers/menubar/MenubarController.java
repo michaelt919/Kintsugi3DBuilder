@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import javafx.application.Platform;
@@ -40,10 +41,7 @@ import javafx.stage.*;
 import javafx.util.StringConverter;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.WindowSynchronization;
-import kintsugi3d.builder.core.IBRRequestUI;
-import kintsugi3d.builder.core.Kintsugi3DBuilderState;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.export.projectExporter.ExportRequestUI;
 import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.javafx.InternalModels;
@@ -94,8 +92,10 @@ public class MenubarController
     //toggle groups
     @FXML private ToggleGroup renderGroup;
 
-    public Menu aboutMenu;
-    public Button settingsButton;
+    @FXML private  Menu aboutMenu;
+    @FXML private  Button settingsButton;
+
+    @FXML private  Button cancelButton;
 
     //menu items
     //TODO: ORGANIZE CHECK MENU ITEMS
@@ -189,6 +189,11 @@ public class MenubarController
         this.internalModels = injectedInternalModels;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
 
+        // Keep track of whether cancellation was requested.
+        AtomicBoolean cancelRequested = new AtomicBoolean(false);
+
+        cancelButton.setOnAction(event -> cancelRequested.set(true));
+
         MultithreadModels.getInstance().getIOModel().addProgressMonitor(new ProgressMonitor()
         {
             private double maximum = 0.0;
@@ -196,10 +201,19 @@ public class MenubarController
             private int stageCount = 0;
 
             @Override
-            public boolean isCancelRequested()
+            public void allowUserCancellation() throws UserCancellationException
             {
-                // TODO
-                return false;
+                if (cancelRequested.get())
+                {
+                    cancelRequested.set(false); // reset cancel flag
+                    throw new UserCancellationException("Cancellation requested by user.");
+                }
+            }
+
+            @Override
+            public void cancelComplete(UserCancellationException e)
+            {
+                complete();
             }
 
             @Override
@@ -209,6 +223,7 @@ public class MenubarController
                 Platform.runLater(() ->
                 {
                     progressBar.setVisible(true);
+                    cancelButton.setVisible(true);
                     progressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
                 });
             }
@@ -251,7 +266,11 @@ public class MenubarController
             public void complete()
             {
                 this.maximum = 0.0;
-                Platform.runLater(() ->  progressBar.setVisible(false));
+                Platform.runLater(() ->
+                {
+                    progressBar.setVisible(false);
+                    cancelButton.setVisible(false);
+                });
             }
 
             @Override

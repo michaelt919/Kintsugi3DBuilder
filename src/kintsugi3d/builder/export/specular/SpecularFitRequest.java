@@ -71,6 +71,7 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
      */
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, ProgressMonitor monitor)
+        throws UserCancellationException
     {
         try
         {

@@ -19,6 +19,7 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
 
@@ -238,7 +239,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
-        public Builder<ContextType> generateUndistortedPreviewImages() throws IOException
+        public Builder<ContextType> generateUndistortedPreviewImages() throws IOException, UserCancellationException
         {
             if (this.viewSet != null)
             {
@@ -249,7 +250,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
-        public IBRResourcesImageSpace<ContextType> create() throws IOException
+        public IBRResourcesImageSpace<ContextType> create() throws IOException, UserCancellationException
         {
             if (linearLuminanceValues != null && encodedLuminanceValues != null)
             {
@@ -282,7 +283,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     }
 
     private IBRResourcesImageSpace(ContextType context, ViewSet viewSet, VertexGeometry geometry,
-        ReadonlyLoadOptionsModel loadOptions, ProgressMonitor progressMonitor) throws IOException
+        ReadonlyLoadOptionsModel loadOptions, ProgressMonitor progressMonitor) throws IOException, UserCancellationException
     {
         super(new IBRSharedResources<>(context, viewSet, geometry,
                     loadOptions != null ? loadOptions.getTextureLoadOptions() : new TextureLoadOptions()),
@@ -341,6 +342,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 if (progressMonitor != null)
                 {
                     progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i, viewSet.getCameraPoseCount()));
+                    progressMonitor.allowUserCancellation();
                 }
 
                 try
@@ -679,7 +681,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         return new SingleCalibratedImageResource<>(getContext(), getViewSet(), viewIndex, imageFile, getGeometry(), loadOptions);
     }
 
-    public ImageCache<ContextType> cache(ImageCacheSettings settings, ProgressMonitor monitor) throws IOException
+    public ImageCache<ContextType> cache(ImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException
     {
         settings.setCacheFolderName(getViewSet().getUuid().toString());
 
@@ -756,7 +758,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
      * @throws IOException
      */
     private static void generateUndistortedPreviewImages(ViewSet viewSet, int maxLoadingThreads, ProgressMonitor progressMonitor)
-        throws IOException
+        throws IOException, UserCancellationException
     {
         if (Objects.equals(viewSet.getRelativePreviewImagePathName(), viewSet.getRelativeFullResImagePathName()))
         {
@@ -778,6 +780,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
             AtomicInteger finishedCount = new AtomicInteger(0);
             AtomicInteger failedCount = new AtomicInteger(0);
+            AtomicReference<UserCancellationException> cancelled = new AtomicReference<>(null);
 
             if (MULTITHREAD_PREVIEW_IMAGE_GENERATION)
             {
@@ -887,11 +890,21 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 Rendering.runLater(new GraphicsRequest()
                 {
                     @Override
-                    public <ContextType extends Context<ContextType>> void executeRequest(ContextType context)
+                    public <ContextType extends Context<ContextType>> void executeRequest(ContextType context) throws UserCancellationException
                     {
                        for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
                        {
                            progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i, viewSet.getCameraPoseCount()));
+
+                           try
+                           {
+                               progressMonitor.allowUserCancellation();
+                           }
+                           catch (UserCancellationException e)
+                           {
+                               cancelled.set(e); // forward exception to another thread
+                               throw e;
+                           }
 
                            try
                            {
@@ -938,12 +951,16 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             }
 
             // Wait for all threads to finish
-            while (failedCount.get() + finishedCount.get() < viewSet.getCameraPoseCount())
+            while (cancelled.get() == null && failedCount.get() + finishedCount.get() < viewSet.getCameraPoseCount())
             {
                 Thread.onSpinWait();
             }
 
-            if (failedCount.get() > 0)
+            if (cancelled.get() != null)
+            {
+                throw cancelled.get();
+            }
+            else if (failedCount.get() > 0)
             {
                 throwUndistortFailed(progressMonitor, failedCount);
             }

@@ -19,10 +19,7 @@ import java.util.Date;
 import java.util.function.Supplier;
 import javax.imageio.ImageIO;
 
-import kintsugi3d.builder.core.ColorAppearanceMode;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
@@ -88,7 +85,8 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
      * @throws IOException
      */
     IBRResourcesTextureSpace(IBRSharedResources<ContextType> sharedResources, Supplier<GeometryTextures<ContextType>> geometryTextureFactory,
-         File textureDirectory, TextureLoadOptions loadOptions, int texWidth, int texHeight, ProgressMonitor progressMonitor) throws IOException
+         File textureDirectory, TextureLoadOptions loadOptions, int texWidth, int texHeight, ProgressMonitor progressMonitor)
+             throws IOException, UserCancellationException
     {
         super(sharedResources, false);
 
@@ -129,6 +127,7 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
                 if (progressMonitor != null)
                 {
                     progressMonitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", getViewSet().getImageFileName(k), k, getViewSet().getCameraPoseCount()));
+                    progressMonitor.allowUserCancellation();
                 }
 
                 textureArray.loadLayer(k,
@@ -171,14 +170,14 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
      * @throws IOException
      */
     IBRResourcesTextureSpace(IBRSharedResources<ContextType> sharedResources, File textureDirectory,
-         TextureLoadOptions loadOptions, int texWidth, int texHeight, ProgressMonitor progressMonitor) throws IOException
+         TextureLoadOptions loadOptions, int texWidth, int texHeight, ProgressMonitor progressMonitor) throws IOException, UserCancellationException
     {
         this(sharedResources, () -> sharedResources.getGeometryResources().createGeometryFramebuffer(texWidth, texHeight),
             textureDirectory, loadOptions, texWidth, texHeight, progressMonitor);
     }
 
     IBRResourcesTextureSpace(IBRSharedResources<ContextType> sharedResources, File textureDirectory,
-         TextureLoadOptions loadOptions, IntVector2 dimensions, ProgressMonitor progressMonitor) throws IOException
+         TextureLoadOptions loadOptions, IntVector2 dimensions, ProgressMonitor progressMonitor) throws IOException, UserCancellationException
     {
         this(sharedResources, textureDirectory, loadOptions, dimensions.x, dimensions.y, progressMonitor);
     }
@@ -197,7 +196,7 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
      * @throws IOException
      */
     IBRResourcesTextureSpace(IBRSharedResources<ContextType> sharedResources, File textureDirectory,
-         TextureLoadOptions loadOptions, ProgressMonitor progressMonitor) throws IOException
+         TextureLoadOptions loadOptions, ProgressMonitor progressMonitor) throws IOException, UserCancellationException
     {
         this(sharedResources, textureDirectory, loadOptions,
             readDimensionsFromFile(ImageFinder.getInstance().findImageFile(new File(textureDirectory,

@@ -16,6 +16,7 @@ import java.util.Queue;
 
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import kintsugi3d.builder.rendering.IBRInstanceManager;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.interactive.GraphicsRequest;
@@ -52,6 +53,17 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
         this.progressMonitor = progressMonitor;
     }
 
+    private void handleCancellation()
+    {
+        Platform.runLater(() ->
+        {
+            Alert alert = new Alert(AlertType.INFORMATION, "The operation was cancelled. Processing has stopped.");
+            alert.setTitle("Cancelled");
+            alert.setHeaderText("Cancelled");
+            alert.show();
+        });
+    }
+
     @Override
     public synchronized void addBackgroundIBRRequest(IBRRequest request)
     {
@@ -78,6 +90,10 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
                     try
                     {
                         request.executeRequest(instanceManager.getLoadedInstance());
+                    }
+                    catch (UserCancellationException e)
+                    {
+                        log.error("Operation was cancelled while executing request:", e);
                     }
                     catch (Exception | AssertionError e)
                     {
@@ -120,13 +136,16 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
                     {
                         request.executeRequest(instanceManager.getLoadedInstance(), progressMonitor);
                     }
+                    catch (UserCancellationException e)
+                    {
+                        log.error("Operation was cancelled while executing request:", e);
+                        handleCancellation();
+                    }
                     catch (Exception | AssertionError e)
                     {
                         log.error("Error occurred while executing request:", e);
                         Platform.runLater(() ->
-                        {
-                            new Alert(Alert.AlertType.ERROR, "An error occurred processing request. Processing has stopped.\nCheck the log for more info.").show();
-                        });
+                            new Alert(AlertType.ERROR, "An error occurred processing request. Processing has stopped.\nCheck the log for more info.").show());
                     }
                 }
 
@@ -155,6 +174,10 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
             {
                 request.executeRequest(context);
             }
+            catch (UserCancellationException e)
+            {
+                log.error("Operation was cancelled while executing request:", e);
+            }
             catch(Exception | AssertionError e)
             {
                 log.error("Error occurred while executing request:", e);
@@ -179,9 +202,16 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
             {
                 request.executeRequest(context, progressMonitor);
             }
+            catch (UserCancellationException e)
+            {
+                log.error("Operation was cancelled while executing request:", e);
+                handleCancellation();
+            }
             catch(Exception | AssertionError e)
             {
                 log.error("Error occurred while executing request:", e);
+                Platform.runLater(() ->
+                    new Alert(AlertType.ERROR, "An error occurred processing request. Processing has stopped.\nCheck the log for more info.").show());
             }
 
             if (progressMonitor != null)

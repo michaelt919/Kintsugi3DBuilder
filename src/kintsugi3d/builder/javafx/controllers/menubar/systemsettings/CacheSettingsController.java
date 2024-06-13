@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.menubar.systemsettings;
 
 import java.io.File;
+import java.util.Locale;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -83,7 +84,7 @@ public class CacheSettingsController implements SystemSettingsControllerBase
                     // Extra check due to danger of this operation
                     String imgName = image.toString();
                     assert imgName.startsWith(directory.toString());
-                    assert imgName.endsWith(".png");
+                    assert imgName.toLowerCase(Locale.US).endsWith(".png");
                     image.delete();
                 }
 
@@ -135,7 +136,7 @@ public class CacheSettingsController implements SystemSettingsControllerBase
                         // Extra check due to danger of this operation
                         String imgName = image.toString();
                         assert imgName.startsWith(directory.toString());
-                        assert imgName.endsWith(".png");
+                        assert imgName.toLowerCase(Locale.US).endsWith(".png");
                         image.delete();
                     }
 

@@ -12,9 +12,10 @@
 package kintsugi3d.builder.resources.ibr;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
 
 import kintsugi3d.builder.core.DefaultProgressMonitor;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Resource;
 import kintsugi3d.gl.geometry.GeometryTextures;
@@ -40,7 +41,7 @@ public class TextureBlockResourceFactory<ContextType extends Context<ContextType
             .createGeometryFramebuffer(imageCache.getSettings().getTextureWidth(), imageCache.getSettings().getTextureHeight());
     }
 
-    public IBRResourcesTextureSpace<ContextType> createBlockResources(int i, int j) throws IOException
+    public IBRResourcesTextureSpace<ContextType> createBlockResources(int i, int j, ProgressMonitor monitor) throws IOException, UserCancellationException
     {
         TextureLoadOptions loadOptions = new TextureLoadOptions();
         loadOptions.setLinearFilteringRequested(false);
@@ -56,33 +57,24 @@ public class TextureBlockResourceFactory<ContextType extends Context<ContextType
         {
             return new IBRResourcesTextureSpace<>(sharedResources,
                 () -> fullGeometryTextures.createViewportCopy(x, y, width, height), imageCache.getSettings().getBlockDir(i, j),
-                loadOptions, width, height,
-                new DefaultProgressMonitor() // simple progress monitor for logging; will not be shown in the UI
-                {
-                    private double maxProgress = 0.0;
-
-                    @Override
-                    public void setMaxProgress(double maxProgress)
-                    {
-                        this.maxProgress = maxProgress;
-                    }
-
-                    @Override
-                    public void setProgress(double progress, String message)
-                    {
-                        log.info("[{}%] {}", new DecimalFormat("#.##").format(progress / maxProgress * 100), message);
-                    }
-                });
+                loadOptions, width, height, monitor);
         }
         catch (IOException e)
         {
             log.warn("Incomplete cache; will try to rebuild.");
 
             // Try to reinitialize in case the cache was only partially complete.
-            imageCache.initialize(null); // no loading monitor for this edge case
+            imageCache.initialize(new DefaultProgressMonitor()
+            {
+                @Override
+                public void allowUserCancellation() throws UserCancellationException
+                {
+                    monitor.allowUserCancellation();
+                }
+            });
 
             // If initialize() completed without exceptions, then createSampledResources() should work now.
-            return createBlockResources(i, j);
+            return createBlockResources(i, j, monitor);
         }
     }
 

@@ -354,9 +354,15 @@ public final class Rendering
         requestQueue.setProgressMonitor(new ProgressMonitor()
         {
             @Override
-            public boolean isCancelRequested()
+            public void allowUserCancellation() throws UserCancellationException
             {
-                return ioModel.getProgressMonitor().isCancelRequested();
+                ioModel.getProgressMonitor().allowUserCancellation();
+            }
+
+            @Override
+            public void cancelComplete(UserCancellationException e)
+            {
+                ioModel.getProgressMonitor().cancelComplete(e);
             }
 
             @Override

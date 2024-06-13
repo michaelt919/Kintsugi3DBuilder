@@ -71,6 +71,11 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
         {
             for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
             {
+                if (monitor != null)
+                {
+                    monitor.allowUserCancellation();
+                }
+
                 program.setUniform("viewIndex", i);
                 program.setUniform("model_view", targetViewSet.getCameraPose(i));
                 program.setUniform("projection",

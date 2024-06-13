@@ -102,10 +102,19 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
     private void handleMissingFiles(Exception e)
     {
-        log.error("An error occurred loading project:", e);
+        log.error("An error occurred loading project: ", e);
         if (progressMonitor != null)
         {
             progressMonitor.fail(e);
+        }
+    }
+
+    private void handleUserCancellation(UserCancellationException e)
+    {
+        log.info("Loading project was cancelled by user: ", e);
+        if (progressMonitor != null)
+        {
+            progressMonitor.cancelComplete(e);
         }
     }
 
@@ -148,7 +157,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         }
     }
 
-    private void loadInstance(String id, Builder<ContextType> builder)
+    private void loadInstance(String id, Builder<ContextType> builder) throws UserCancellationException
     {
         loadedViewSet = builder.getViewSet();
 
@@ -185,15 +194,20 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         newItem.setProgressMonitor(new ProgressMonitor()
         {
             @Override
-            public boolean isCancelRequested()
+            public void allowUserCancellation() throws UserCancellationException
             {
                 if (progressMonitor != null)
                 {
-                    return progressMonitor.isCancelRequested();
+                    progressMonitor.allowUserCancellation();
                 }
-                else
+            }
+
+            @Override
+            public void cancelComplete(UserCancellationException e)
+            {
+                if (progressMonitor != null)
                 {
-                    return false;
+                    progressMonitor.cancelComplete(e);
                 }
             }
 
@@ -294,6 +308,10 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
             loadInstance(id, contextTypeBuilder);
         }
+        catch(UserCancellationException e)
+        {
+            handleUserCancellation(e);
+        }
         catch (Exception e)
         {
             handleMissingFiles(e);
@@ -316,6 +334,10 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
             // Invoke callbacks now that view set is loaded
             loadInstance(id, builder);
+        }
+        catch(UserCancellationException e)
+        {
+            handleUserCancellation(e);
         }
         catch(Exception e)
         {

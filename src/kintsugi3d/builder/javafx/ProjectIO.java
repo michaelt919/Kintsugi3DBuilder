@@ -25,6 +25,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -33,6 +34,7 @@ import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import kintsugi3d.builder.core.DefaultProgressMonitor;
 import kintsugi3d.builder.core.IOModel;
+import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.controllers.menubar.LoaderController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
@@ -81,12 +83,28 @@ public final class ProjectIO
         MultithreadModels.getInstance().getIOModel().addProgressMonitor(new DefaultProgressMonitor()
         {
             @Override
+            public void cancelComplete(UserCancellationException e)
+            {
+                projectLoaded = false;
+                Platform.runLater(() ->
+                {
+                    Alert alert = new Alert(AlertType.INFORMATION, "The operation was cancelled. Loading has stopped.");
+                    alert.setTitle("Cancelled");
+                    alert.setHeaderText("Cancelled");
+                    alert.show();
+                });
+            }
+
+            @Override
             public void fail(Throwable e)
             {
                 projectLoaded = false;
-                if(e instanceof MeshImportException){
+                if (e instanceof MeshImportException)
+                {
                     handleException("Imported object is missing texture coordinates", e);
-                } else {
+                }
+                else
+                {
                     handleException("An error occurred while loading project", e);
                 }
             }

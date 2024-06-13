@@ -55,9 +55,13 @@ public class ResampleRequest implements ObservableIBRRequest
                 .createFramebufferObject()
         )
         {
-
             for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
             {
+                if (monitor != null)
+                {
+                    monitor.allowUserCancellation();
+                }
+
                 framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, /*1.0f*/0.0f);
                 framebuffer.clearDepthBuffer();
 

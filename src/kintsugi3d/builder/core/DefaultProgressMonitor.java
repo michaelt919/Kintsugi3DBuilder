@@ -17,9 +17,13 @@ package kintsugi3d.builder.core;
 public class DefaultProgressMonitor implements ProgressMonitor
 {
     @Override
-    public boolean isCancelRequested()
+    public void allowUserCancellation() throws UserCancellationException
     {
-        return false;
+    }
+
+    @Override
+    public void cancelComplete(UserCancellationException e)
+    {
     }
 
     @Override

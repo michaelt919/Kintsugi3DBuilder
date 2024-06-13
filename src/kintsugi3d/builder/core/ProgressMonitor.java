@@ -23,7 +23,14 @@ public interface ProgressMonitor
      * If it returns true, the process will be cancelled.
      * @return true if cancellation is requested; false otherwise.
      */
-    boolean isCancelRequested();
+    void allowUserCancellation() throws UserCancellationException;
+
+    /**
+     * This method will be called if user cancellation occurred to indicate that cancellation is complete
+     * (usually caused by the UserCancellationException percolating up the call stack to a point outside the operation that was cancelled).
+     * @param e The UserCancellationException indicating the stack trace where the operation was cancelled.
+     */
+    void cancelComplete(UserCancellationException e);
 
     /**
      * A callback fired when the unstructured light field starts to load.
@@ -64,19 +71,19 @@ public interface ProgressMonitor
     void setProgress(double progress, String message);
 
     /**
-     * A callback fired when loading is complete.
+     * A callback fired when the operation is complete.
      * This will always be fired after start() and setProgress() will never be fired after this without start() being fired once again.
      */
     void complete();
 
     /**
-     * A callback fired when an exception occurs while loading.
+     * A callback fired when an exception occurs.
      * @param e The exception that occurred.
      */
     void fail(Throwable e);
 
     /**
-     * A callback fired when an exception occurs while loading, but the process tries to recover and finish loading.
+     * A callback fired when an exception occurs, but the operation tries to recover and finish.
      * @param e The exception that occurred.
      */
     default void warn(Throwable e)

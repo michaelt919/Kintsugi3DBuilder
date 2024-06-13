@@ -16,7 +16,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
-import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Locale;
@@ -29,6 +28,7 @@ import javax.imageio.ImageIO;
 import kintsugi3d.builder.core.DefaultProgressMonitor;
 import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.SimpleLoadOptionsModel;
+import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryFramebuffer;
 import kintsugi3d.gl.geometry.GeometryTextures;
@@ -108,7 +108,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
      * As a side effect of this method, the context's state will have back face culling enabled,
      * @throws IOException
      */
-    public void initialize(ProgressMonitor monitor) throws IOException
+    public void initialize(ProgressMonitor monitor) throws IOException, UserCancellationException
     {
         // Create directories to organize the cache
         sampledDir.mkdirs();
@@ -278,7 +278,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
     }
 
     private void buildCache(Framebuffer<ContextType> fbo, ProgressMonitor monitor)
-        throws IOException
+        throws IOException, UserCancellationException
     {
         SimpleLoadOptionsModel loadOptions = new SimpleLoadOptionsModel();
         loadOptions.requestColorImages(true);
@@ -305,6 +305,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
                 if (monitor != null)
                 {
                     monitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(k), k, resources.getViewSet().getCameraPoseCount()));
+                    monitor.allowUserCancellation();
                 }
 
                 try (SingleCalibratedImageResource<ContextType> image =
@@ -409,7 +410,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
         }
     }
 
-    public IBRResourcesTextureSpace<ContextType> createSampledResources() throws IOException
+    public IBRResourcesTextureSpace<ContextType> createSampledResources(ProgressMonitor monitor) throws IOException, UserCancellationException
     {
         TextureLoadOptions loadOptions = new TextureLoadOptions();
         loadOptions.setLinearFilteringRequested(false);
@@ -419,33 +420,24 @@ public class ImageCache<ContextType extends Context<ContextType>>
         try
         {
             return new IBRResourcesTextureSpace<>(resources.getSharedResources(), this::createSampledGeometryTextures,
-                sampledDir, loadOptions, settings.getSampledSize(), settings.getSampledSize(),
-                new DefaultProgressMonitor() // simple progress monitor for logging; will not be shown in the UI
-                {
-                    private double maxProgress = 0.0;
-
-                    @Override
-                    public void setMaxProgress(double maxProgress)
-                    {
-                        this.maxProgress = maxProgress;
-                    }
-
-                    @Override
-                    public void setProgress(double progress, String message)
-                    {
-                        log.info("[{}%] {}", new DecimalFormat("#.##").format(progress / maxProgress * 100), message);
-                    }
-                });
+                sampledDir, loadOptions, settings.getSampledSize(), settings.getSampledSize(), monitor);
         }
         catch (IOException e)
         {
             log.warn("Incomplete cache; will try to rebuild.");
 
             // Try to reinitialize in case the cache was only partially complete.
-            this.initialize(null); // no loading monitor for this edge case
+            this.initialize(new DefaultProgressMonitor()
+            {
+                @Override
+                public void allowUserCancellation() throws UserCancellationException
+                {
+                    monitor.allowUserCancellation();
+                }
+            });
 
             // If initialize() completed without exceptions, then createSampledResources() should work now.
-            return createSampledResources();
+            return createSampledResources(monitor);
         }
     }
 

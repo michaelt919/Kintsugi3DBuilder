@@ -35,18 +35,21 @@ public class IOModel
         }
 
         @Override
-        public boolean isCancelRequested()
+        public void allowUserCancellation() throws UserCancellationException
         {
             for (ProgressMonitor monitor : subMonitors)
             {
-                if (isCancelRequested())
-                {
-                    return true;
-                }
+                monitor.allowUserCancellation();
             }
+        }
 
-            // if cancel was not requested by any progress monitor
-            return false;
+        @Override
+        public void cancelComplete(UserCancellationException e)
+        {
+            for (ProgressMonitor monitor : subMonitors)
+            {
+                monitor.cancelComplete(e);
+            }
         }
 
         @Override
