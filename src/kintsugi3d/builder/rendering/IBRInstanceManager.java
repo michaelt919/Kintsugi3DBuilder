@@ -21,14 +21,22 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonBase;
+import javafx.scene.control.ButtonType;
+import javafx.stage.DirectoryChooser;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
+import kintsugi3d.builder.resources.ibr.MissingImagesException;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.gl.core.Context;
@@ -271,18 +279,65 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         this.loadingMonitor.startLoading();
 
         File supportingFilesDirectory = null;
-
+        Builder<ContextType>builder = null;
         try {
-            Builder<ContextType>builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
+            builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                     .setLoadingMonitor(this.loadingMonitor)
                     .setLoadOptions(loadOptions)
-                    .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory)
+                    .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, null)
                     .setPrimaryView(primaryViewName);
 
             loadInstance(id, builder);
-        } catch (Exception e) {
+        } catch (MissingImagesException mie){
+            int numMissingImgs = mie.getNumMissingImgs();
+            Platform.runLater(() ->
+                    showMissingImgsAlert(metashapeObjectChunk, numMissingImgs, primaryViewName, supportingFilesDirectory, loadOptions, id));
+        }
+        catch (Exception e) {
             handleMissingFiles(e);
         }
+    }
+
+    private void showMissingImgsAlert(MetashapeObjectChunk metashapeObjectChunk, int numMissingImgs, String primaryViewName, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions, String id) {
+        ButtonType newDirectory = new ButtonType("Choose Different Image Directory", ButtonBar.ButtonData.OK_DONE);
+        ButtonType skipMissingCams = new ButtonType("Skip Missing Cameras", ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        Alert alert = new Alert(Alert.AlertType.ERROR, "Imported object is missing " + numMissingImgs + " images.", newDirectory, skipMissingCams, cancel);
+
+        Builder<ContextType> finalBuilder = IBRResourcesImageSpace.getBuilderForContext(this.context);
+        ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event -> {
+            //TODO: select new camera directory
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setInitialDirectory(new File(metashapeObjectChunk.getPsxFilePath()).getParentFile());
+
+            directoryChooser.setTitle("Choose New Image Directory");
+            File newCamsFile = directoryChooser.showDialog(MenubarController.getInstance().getWindow());
+
+            new Thread(()->{
+                try {
+                    finalBuilder
+                            .setLoadingMonitor(this.loadingMonitor)
+                            .setLoadOptions(loadOptions)
+                            .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, newCamsFile)
+                            .setPrimaryView(primaryViewName);
+
+                    loadInstance(id, finalBuilder);
+                } catch (Exception e) {
+                    handleMissingFiles(e);
+                }
+            }).start();
+        });
+
+        ((ButtonBase) alert.getDialogPane().lookupButton(skipMissingCams)).setOnAction(event -> {
+            //TODO: skip missing cameras
+        });
+
+        ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(event -> {
+            //TODO: do nothing?
+        });
+
+        alert.showAndWait();
     }
 
     @Override

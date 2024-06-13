@@ -973,4 +973,6 @@ public class MenubarController
             item.setDisable(b);
         }
     }
+
+    public Window getWindow(){return window;} //useful for creating alerts in back-end classes
 }

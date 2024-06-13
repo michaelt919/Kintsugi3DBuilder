@@ -268,9 +268,11 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         }
 
         if (viewSetCallback != null) {
+            //"force" the user to save their project (user can still cancel saving)
             MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(
                     viewSet ->viewSetCallback.accept(viewSet));
         }
+
         new Thread(() ->
                 MultithreadModels.getInstance().getLoadingModel()
                         .loadAgisoftFromZIP(
