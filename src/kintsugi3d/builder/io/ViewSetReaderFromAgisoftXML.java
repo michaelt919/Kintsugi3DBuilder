@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Handles loading view sets from a camera definition file exported in XML format from Agisoft PhotoScan.
+ * Handles loading view sets from a camera definition file exported in XML format from Agisoft PhotoScan/Metashape.
  */
 public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 {
@@ -51,7 +51,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     }
 
     /**
-     * A private class for representing a "sensor" in an Agisoft PhotoScan XML file.
+     * A private class for representing a "sensor" in an Agisoft PhotoScan/Metashape XML file.
      * @author Michael Tetzlaff
      *
      */
@@ -82,7 +82,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     }
 
     /**
-     * A private class for representing a "camera" in an Agisoft PhotoScan XML file.
+     * A private class for representing a "camera" in an Agisoft PhotoScan/Metashape XML file.
      * @author Michael Tetzlaff
      *
      */
@@ -125,7 +125,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     }
 
     /**
-     * A subroutine for guessing an appropriate far plane from an Agisoft PhotoScan XML file.
+     * A subroutine for guessing an appropriate far plane from an Agisoft PhotoScan/Metashape XML file.
      * Assumes that the object must lie between all of the cameras in the file.
      * @param cameraPoseInvList The list of camera poses.
      * @return A far plane estimate.
@@ -269,7 +269,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                 intVersion *= 10;
                                 intVersion += Integer.parseInt(verComponent);
                             }
-                            log.debug("PhotoScan XML version %s (%d)\n", version, intVersion);
+                            log.debug("Agisoft XML version {} ({})\n", version, intVersion);
                             break;
                         }
                         case "chunk":
@@ -279,7 +279,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             {
                                 chunkLabel = "unnamed";
                             }
-                            log.debug("Reading chunk '%s'\n", chunkLabel);
+                            log.debug("Reading chunk '{}'\n", chunkLabel);
 
                             // Commented out; chunk XMLs seem to always be labelled version 1.2.0; regardless of Metashape version or actual format details.
 //                            // chunk XMLs put the version in the chunk tag
@@ -299,14 +299,14 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         }
                         case "group":
                             groupLabel = reader.getAttributeValue(null, "label");
-                            log.debug("Reading group '%s'\n", groupLabel);
+                            log.debug("Reading group '{}'\n", groupLabel);
                             lightIndex = nextLightIndex;
                             nextLightIndex++;
                             log.debug("Light index: " + lightIndex);
                             break;
                         case "sensor":
                             sensorID = reader.getAttributeValue(null, "id");
-                            log.debug("\tAdding sensor '%s'\n", sensorID);
+                            log.debug("\tAdding sensor '{}'\n", sensorID);
                             sensor = new Sensor(sensorID);
                             break;
                         case "camera":
@@ -597,13 +597,13 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         case "dense_cloud":
                             if (intVersion < 110)
                             {
-                                log.debug("Unexpected tag '%s' for psz version %s\n",
+                                log.debug("Unexpected tag \'{}\' for psz version {}\n",
                                     reader.getLocalName(), version);
                             }
                             break;
 
                         default:
-                            log.debug("Unexpected tag '%s'\n", reader.getLocalName());
+                            log.debug("Unexpected tag '{}'\n", reader.getLocalName());
                             break;
                     }
                     break;
@@ -613,11 +613,11 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     switch (reader.getLocalName())
                     {
                         case "chunk":
-                            log.debug("Finished chunk '%s'\n", chunkLabel);
+                            log.debug("Finished chunk '{}'\n", chunkLabel);
                             chunkLabel = "";
                             break;
                         case "group":
-                            log.debug("Finished group '%s'\n", groupLabel);
+                            log.debug("Finished group '{}'\n", groupLabel);
                             groupLabel = "";
                             lightIndex = defaultLightIndex;
                             break;
@@ -632,7 +632,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             if (camera != null && camera.transform != null)
                             {
                                 cameraSet.add(camera);
-                                log.debug("\tAdding camera %s, with sensor %s and image %s\n",
+                                log.debug("\tAdding camera {}, with sensor {} and image {}\n",
                                     cameraID, sensorID, imageFile);
                                 camera = null;
                             }
