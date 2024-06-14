@@ -285,6 +285,10 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
         this.loadingMonitor.startLoading();
 
+        loadAgisoftFromZipRec(id, metashapeObjectChunk, loadOptions, primaryViewName);
+    }
+
+    private void loadAgisoftFromZipRec(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions, String primaryViewName) {
         File supportingFilesDirectory = null;
         Builder<ContextType>builder = null;
         try {
@@ -295,10 +299,11 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                     .setPrimaryView(primaryViewName);
 
             loadInstance(id, builder);
-        } catch (MissingImagesException mie){
+        }
+        catch (MissingImagesException mie){
             int numMissingImgs = mie.getNumMissingImgs();
-            Platform.runLater(() ->
-                    showMissingImgsAlert(metashapeObjectChunk, numMissingImgs, primaryViewName, supportingFilesDirectory, loadOptions, id));
+            Platform.runLater(() -> showMissingImgsAlert(
+                    metashapeObjectChunk, numMissingImgs, primaryViewName, supportingFilesDirectory, loadOptions, id));
         }
         catch (Exception e) {
             handleMissingFiles(e);
@@ -314,7 +319,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
         Builder<ContextType> finalBuilder = IBRResourcesImageSpace.getBuilderForContext(this.context);
         ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event -> {
-            //TODO: select new camera directory
+            //TODO: implement checks to prevent recursive calls from consuming memory? Might be overkill
             DirectoryChooser directoryChooser = new DirectoryChooser();
             directoryChooser.setInitialDirectory(new File(metashapeObjectChunk.getPsxFilePath()).getParentFile());
 
@@ -330,7 +335,12 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                             .setPrimaryView(primaryViewName);
 
                     loadInstance(id, finalBuilder);
-                } catch (Exception e) {
+                } catch (MissingImagesException mie){
+                    int newNumMissingImgs = mie.getNumMissingImgs();
+                    Platform.runLater(() ->
+                            showMissingImgsAlert(metashapeObjectChunk, newNumMissingImgs, primaryViewName, supportingFilesDirectory, loadOptions, id));
+                }
+                catch (Exception e) {
                     handleMissingFiles(e);
                 }
             }).start();
@@ -342,6 +352,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
         ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(event -> {
             //TODO: do nothing?
+
         });
 
         alert.showAndWait();
