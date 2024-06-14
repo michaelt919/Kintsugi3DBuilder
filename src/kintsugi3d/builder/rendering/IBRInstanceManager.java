@@ -295,27 +295,30 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                     .setLoadingMonitor(this.loadingMonitor)
                     .setLoadOptions(loadOptions)
-                    .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, null)
+                    .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, null, false)
                     .setPrimaryView(primaryViewName);
 
             loadInstance(id, builder);
         }
         catch (MissingImagesException mie){
-            int numMissingImgs = mie.getNumMissingImgs();
             Platform.runLater(() -> showMissingImgsAlert(
-                    metashapeObjectChunk, numMissingImgs, primaryViewName, supportingFilesDirectory, loadOptions, id));
+                    metashapeObjectChunk, primaryViewName, supportingFilesDirectory, loadOptions, id, mie));
         }
         catch (Exception e) {
             handleMissingFiles(e);
         }
     }
 
-    private void showMissingImgsAlert(MetashapeObjectChunk metashapeObjectChunk, int numMissingImgs, String primaryViewName, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions, String id) {
+    private void showMissingImgsAlert(MetashapeObjectChunk metashapeObjectChunk, String primaryViewName, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions, String id, MissingImagesException mie) {
+        int numMissingImgs = mie.getNumMissingImgs();
+        File fullResImgDirAttempt = mie.getImgDirectory();
+
         ButtonType newDirectory = new ButtonType("Choose Different Image Directory", ButtonBar.ButtonData.OK_DONE);
         ButtonType skipMissingCams = new ButtonType("Skip Missing Cameras", ButtonBar.ButtonData.OK_DONE);
         ButtonType cancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
 
-        Alert alert = new Alert(Alert.AlertType.ERROR, "Imported object is missing " + numMissingImgs + " images.", newDirectory, skipMissingCams, cancel);
+        Alert alert = new Alert(Alert.AlertType.ERROR, "Imported object is missing " + numMissingImgs + " images.\n" +
+                "Attempted search in " + fullResImgDirAttempt.getAbsolutePath(), newDirectory, skipMissingCams, cancel);
 
         Builder<ContextType> finalBuilder = IBRResourcesImageSpace.getBuilderForContext(this.context);
         ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event -> {
@@ -331,14 +334,13 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                     finalBuilder
                             .setLoadingMonitor(this.loadingMonitor)
                             .setLoadOptions(loadOptions)
-                            .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, newCamsFile)
+                            .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, newCamsFile, false)
                             .setPrimaryView(primaryViewName);
 
                     loadInstance(id, finalBuilder);
-                } catch (MissingImagesException mie){
-                    int newNumMissingImgs = mie.getNumMissingImgs();
+                } catch (MissingImagesException mie2){
                     Platform.runLater(() ->
-                            showMissingImgsAlert(metashapeObjectChunk, newNumMissingImgs, primaryViewName, supportingFilesDirectory, loadOptions, id));
+                            showMissingImgsAlert(metashapeObjectChunk, primaryViewName, supportingFilesDirectory, loadOptions, id, mie2));
                 }
                 catch (Exception e) {
                     handleMissingFiles(e);
@@ -347,15 +349,29 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         });
 
         ((ButtonBase) alert.getDialogPane().lookupButton(skipMissingCams)).setOnAction(event -> {
-            //TODO: skip missing cameras
+            new Thread(()->{
+                try {
+                    finalBuilder
+                            .setLoadingMonitor(this.loadingMonitor)
+                            .setLoadOptions(loadOptions)
+                            //skip broken cams on the most recent attempt at processing
+                            .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, fullResImgDirAttempt, true)
+                            .setPrimaryView(primaryViewName);
+
+                    loadInstance(id, finalBuilder);
+                }
+                catch (Exception e) {
+                    handleMissingFiles(e);
+                }
+            }).start();
         });
 
         ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(event -> {
-            //TODO: do nothing?
+            //TODO: cancel task
 
         });
 
-        alert.showAndWait();
+        alert.show();
     }
 
     @Override

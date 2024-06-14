@@ -218,7 +218,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
          * @return
          * @throws IOException
          */
-        public Builder<ContextType> loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, File supportingFilesDirectory, File fullResDirectoryOverride) throws IOException {
+        public Builder<ContextType> loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, File supportingFilesDirectory, File fullResDirectoryOverride, boolean ignoreMissingCams) throws IOException {
             // Get reference to the chunk directory
             File chunkDirectory = new File(metashapeObjectChunk.getChunkDirectoryPath());
             if (!chunkDirectory.exists()){
@@ -243,6 +243,14 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                     .getElementsByTagName("camera");
 
             int numMissingFiles = 0;
+            File fullResSearchDirectory;
+            if (fullResDirectoryOverride == null){
+                fullResSearchDirectory = new File(metashapeObjectChunk.getFramePath()).getParentFile();
+            }
+            else{
+                fullResSearchDirectory = fullResDirectoryOverride;
+            }
+
             for (int i = 0; i < cameraList.getLength(); i++) {
                 Element cameraElement = (Element) cameraList.item(i);
                 int cameraId = Integer.parseInt(cameraElement.getAttribute("camera_id"));
@@ -251,9 +259,10 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
                 File imageFile;
                 if (fullResDirectoryOverride == null){
-                    imageFile = new File(new File(metashapeObjectChunk.getFramePath()).getParentFile(), path);
+                    imageFile = new File(fullResSearchDirectory, path);
 
                     if (imageFile.exists()) {
+                        System.out.println(imageFile.getCanonicalPath());
                         // Add pair to the map
                         cameraPathsMap.put(cameraId, rootDirectory.toPath().relativize(imageFile.toPath()).toString());
                     }
@@ -277,8 +286,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 }
             }
 
-            if (numMissingFiles > 0){
-                throw new MissingImagesException("Project is missing images", numMissingFiles);
+            if (!ignoreMissingCams && numMissingFiles > 0){
+                throw new MissingImagesException("Project is missing images.", numMissingFiles, fullResSearchDirectory);
             }
 
         // 2) Load ViewSet from ZipInputStream from chunk's ZIP (eventually will accept the filename map as a parameter)
