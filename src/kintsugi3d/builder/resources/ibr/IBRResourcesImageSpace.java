@@ -21,7 +21,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import javax.imageio.ImageIO;
 import javax.xml.stream.XMLStreamException;
-
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
@@ -323,8 +322,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
 
         // 4) Set image directory to be parent directory of MetaShape project (and add to the photos' paths)
-            this.imageDirectoryOverride = chunkDirectory.getParentFile().getParentFile();
-
             File psxFile = new File(metashapeObjectChunk.getMetashapeObject().getPsxFilePath());
             File undistortedImageDirectory = new File(psxFile.getParent()); // The directory of undistorted photos //TODO: verify this
             // Print error to log if unable to find undistortedImageDirectory

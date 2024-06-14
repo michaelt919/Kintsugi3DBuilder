@@ -161,7 +161,14 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     {
         loadedViewSet = builder.getViewSet();
 
-        //MultithreadModels.getInstance().getCameraViewListModel().setCameraViewList(loadedViewSet.getImageFileNames());
+//        MultithreadModels.getInstance().getCameraViewListModel().setCameraViewList(loadedViewSet.getImageFileNames());
+
+        List<File> imgFiles = loadedViewSet.getImageFiles();
+        List<String> imgFileNames = new ArrayList<>();
+
+        imgFiles.forEach(file->imgFileNames.add(file.getName()));
+
+        MultithreadModels.getInstance().getCameraViewListModel().setCameraViewList(imgFileNames);
 
         // Invoke callbacks now that view set is loaded
         invokeViewSetLoadCallbacks(loadedViewSet);
