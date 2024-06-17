@@ -510,25 +510,25 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                 }
                                 else
                                 {
-                                    if (expectedSize == 9)
-                                    {
-                                        log.debug("\tSetting global rotation.");
-                                        globalRotation = Matrix3.fromRows(
-                                                new Vector3(m[0], m[3], m[6]),
-                                                new Vector3(m[1], m[4], m[7]),
-                                                new Vector3(m[2], m[5], m[8]))
-                                            .asMatrix4();
-                                    }
-                                    else
-                                    {
-                                        log.debug("\tSetting global transformation.");
-                                        globalRotation = Matrix3.fromRows(
-                                                new Vector3(m[0], m[4], m[8]),
-                                                new Vector3(m[1], m[5], m[9]),
-                                                new Vector3(m[2], m[6], m[10]))
-                                            .asMatrix4()
-                                            .times(Matrix4.translate(m[3], m[7], m[11]));
-                                    }
+//                                    if (expectedSize == 9)
+//                                    {
+//                                        log.debug("\tSetting global rotation.");
+//                                        globalRotation = Matrix3.fromRows(
+//                                                new Vector3(m[0], m[3], m[6]),
+//                                                new Vector3(m[1], m[4], m[7]),
+//                                                new Vector3(m[2], m[5], m[8]))
+//                                            .asMatrix4();
+//                                    }
+//                                    else
+//                                    {
+//                                        log.debug("\tSetting global transformation.");
+//                                        globalRotation = Matrix3.fromRows(
+//                                                new Vector3(m[0], m[4], m[8]),
+//                                                new Vector3(m[1], m[5], m[9]),
+//                                                new Vector3(m[2], m[6], m[10]))
+//                                            .asMatrix4()
+//                                            .times(Matrix4.translate(m[3], m[7], m[11]));
+//                                    }
                                 }
                             }
                         }
@@ -537,20 +537,20 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         case "translation":
                             if (camera == null)
                             {
-                                log.debug("\tSetting global translate.");
-                                String[] components = reader.getElementText().split("\\s");
-                                globalTranslate = new Vector3(
-                                    -Float.parseFloat(components[0]),
-                                    -Float.parseFloat(components[1]),
-                                    -Float.parseFloat(components[2]));
+//                                log.debug("\tSetting global translate.");
+//                                String[] components = reader.getElementText().split("\\s");
+//                                globalTranslate = new Vector3(
+//                                    -Float.parseFloat(components[0]),
+//                                    -Float.parseFloat(components[1]),
+//                                    -Float.parseFloat(components[2]));
                             }
                             break;
 
                         case "scale":
                             if (camera == null)
                             {
-                                log.debug("\tSetting global scale.");
-                                globalScale = 1.0f / Float.parseFloat(reader.getElementText());
+//                                log.debug("\tSetting global scale.");
+//                                globalScale = 1.0f / Float.parseFloat(reader.getElementText());
                             }
                             break;
 
