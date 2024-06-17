@@ -258,6 +258,7 @@ public final class ProjectIO
 
         MultithreadModels.getInstance().getLoadingModel().unload();
         projectLoaded = true;
+        MenubarController.getInstance().setToggleableShaderDisable(true);
     }
 
     private void onViewSetCreated(ViewSet viewSet, Window parentWindow)
