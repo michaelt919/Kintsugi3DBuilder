@@ -80,8 +80,9 @@ public final class ProjectIO
         if (projectFileChooser == null)
         {
             projectFileChooser = new FileChooser();
-            projectFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
         }
+
+        projectFileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
         return projectFileChooser;
     }
@@ -456,8 +457,10 @@ public final class ProjectIO
 
     public void openProjectFromFile(File selectedFile)
     {
-        //open the project, update the recent files list, disable shaders which aren't useful until processing textures
+        //open the project, update the recent files list & recentDirectory, disable shaders which aren't useful until processing textures
         this.projectFile = selectedFile;
+        RecentProjects.setMostRecentDirectory(this.projectFile.getParentFile());
+
         File newVsetFile = null;
 
         if (projectFile.getName().endsWith(".vset"))
@@ -528,6 +531,7 @@ public final class ProjectIO
         }
         else
         {
+            RecentProjects.setMostRecentDirectory(projectFile.getParentFile());
             try
             {
                 IOModel ioModel = MultithreadModels.getInstance().getLoadingModel();

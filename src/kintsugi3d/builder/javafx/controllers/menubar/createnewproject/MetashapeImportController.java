@@ -19,6 +19,7 @@ import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
+import kintsugi3d.util.RecentProjects;
 import kintsugi3d.util.Triplet;
 
 import java.io.File;
@@ -38,6 +39,8 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     private static final String NO_MODEL_NAME_MSG = "Unnamed Model";
     private volatile boolean alertShown = false;
 
+    FileChooser fileChooser;
+
     @Override
     public Region getHostRegion() {
         return anchorPane;
@@ -45,6 +48,10 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
     @Override
     public void init() {
+        fileChooser = new FileChooser();
+        fileChooser.setTitle("Choose .psx file");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Metashape files", "*.psx"));
+        fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
     }
 
     @Override
@@ -55,6 +62,8 @@ public class MetashapeImportController extends FXMLPageController implements Sha
                 updateModelSelectionChoiceBox();
                 updateLoadedIndicators();
         }));
+
+        fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
     }
 
     @Override
@@ -96,10 +105,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
     @FXML
     private void psxFileSelect(ActionEvent actionEvent) {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Choose .psx file");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Metashape files", "*.psx"));
-
         Stage stage = (Stage) ((Node)actionEvent.getSource()).getScene().getWindow();
         metashapePsxFile = fileChooser.showOpenDialog(stage);
 
@@ -108,6 +113,9 @@ public class MetashapeImportController extends FXMLPageController implements Sha
             fileNameTxtField.setText(metashapePsxFile.getName());
             updateChoiceBoxes();
             updateLoadedIndicators();
+
+            RecentProjects.setMostRecentDirectory(metashapePsxFile.getParentFile());
+            fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
         }
     }
 

@@ -40,6 +40,7 @@ public class RecentProjects {
     private static File recentProjectsFile = new File(ApplicationFolders.getUserAppDirectory().toFile(), "recentFiles.txt");
 
     private static final Logger log = LoggerFactory.getLogger(RecentProjects.class);
+    private static File recentDirectory;
 
     private RecentProjects(){throw new IllegalStateException("Utility class");}
     public static List<String> getItemsFromRecentsFile() {
@@ -414,5 +415,28 @@ public class RecentProjects {
         }
 
         updateAllControlStructures();
+    }
+
+    public static String getMostRecentProjectPath(){
+        return getItemsFromRecentsFile().get(0);
+    }
+
+    //use these functions to make file selection more user-friendly across multiple File/Directory Choosers
+    public static void setMostRecentDirectory(File file){recentDirectory = file;}
+    public static File getMostRecentDirectory(){
+        if(recentDirectory != null){
+            return recentDirectory;
+        }
+
+        //loop through recent files and assign/return the first existing one
+        for (String path : getItemsFromRecentsFile()){
+            File file = new File(path);
+            if (file.exists()){
+                setMostRecentDirectory(file.getParentFile());
+                return getMostRecentDirectory();
+            }
+        }
+
+        return new File(System.getProperty("user.home"));
     }
 }

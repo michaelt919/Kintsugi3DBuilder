@@ -28,6 +28,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.builder.core.IOModel;
@@ -605,10 +606,13 @@ public class EyedropperController implements Initializable {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose Image File");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", validExtensions));
+        fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
         Stage stage = (Stage) ((Node)actionEvent.getSource()).getScene().getWindow();
         File file = fileChooser.showOpenDialog(stage);
         if (file != null) {
+            RecentProjects.setMostRecentDirectory(file.getParentFile());
+
             //convert tiff image if necessary
             if (file.getAbsolutePath().toLowerCase().matches(".*\\.tiff?")) {
                 BufferedImage bufferedImage;

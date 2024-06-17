@@ -13,15 +13,12 @@ package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
 import java.awt.*;
 import java.io.File;
-import java.net.URL;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.ResourceBundle;
 import java.util.stream.IntStream;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ChoiceBox;
@@ -39,10 +36,11 @@ import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
+import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CustomImportController extends FXMLPageController implements Initializable, ShareInfo, CanConfirm
+public class CustomImportController extends FXMLPageController implements ShareInfo, CanConfirm
 {
     private static final Logger log = LoggerFactory.getLogger(CustomImportController.class);
     @FXML private ChoiceBox<String> primaryViewChoiceBox;
@@ -56,32 +54,10 @@ public class CustomImportController extends FXMLPageController implements Initia
     private final FileChooser camFileChooser = new FileChooser();
     private final FileChooser objFileChooser = new FileChooser();
     private final DirectoryChooser photoDirectoryChooser = new DirectoryChooser();
-    private final FileChooser plyFileChooser = new FileChooser();
-    private final FileChooser metaFileChooser = new FileChooser();
-
 
     private File cameraFile;
     private File objFile;
     private File photoDir;
-
-    @Override
-    public void initialize(URL location, ResourceBundle resources)
-    {
-
-        setHomeDir(new File(System.getProperty("user.home")));
-        camFileChooser.getExtensionFilters().add(new ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
-        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ or PLY file", "*.obj", "*.ply"));
-        plyFileChooser.getExtensionFilters().add(new ExtensionFilter("PLY file", "*.ply"));
-        metaFileChooser.getExtensionFilters().add(new ExtensionFilter("MetaShape project file", "*.psx"));
-
-
-        camFileChooser.setTitle("Select camera positions file");
-        objFileChooser.setTitle("Select object file");
-        plyFileChooser.setTitle("Select ply file");
-        metaFileChooser.setTitle("Select MetaShape project file");
-
-        photoDirectoryChooser.setTitle("Select photo directory");
-    }
 
     @Override
     public Region getHostRegion() {
@@ -90,10 +66,22 @@ public class CustomImportController extends FXMLPageController implements Initia
 
     public void init()
     {
+        File recentFile = RecentProjects.getMostRecentDirectory();
+        setInitDirectories(recentFile);
+
+        camFileChooser.getExtensionFilters().add(new ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
+        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ or PLY file", "*.obj", "*.ply"));
+
+        camFileChooser.setTitle("Select camera positions file");
+        objFileChooser.setTitle("Select object file");
+
+        photoDirectoryChooser.setTitle("Select photo directory");
     }
 
     @Override
     public void refresh() {
+        File recentFile = RecentProjects.getMostRecentDirectory();
+        setInitDirectories(recentFile);
     }
 
     @Override
@@ -214,11 +202,17 @@ public class CustomImportController extends FXMLPageController implements Initia
 
     private void setHomeDir(File home)
     {
-        File parentDir;
-        parentDir = home.getParentFile();
-        camFileChooser.setInitialDirectory(parentDir);
-        objFileChooser.setInitialDirectory(parentDir);
-        photoDirectoryChooser.setInitialDirectory(parentDir);
+        File parentDir = home.getParentFile();
+
+        setInitDirectories(parentDir);
+    }
+
+    private void setInitDirectories(File file){
+        camFileChooser.setInitialDirectory(file);
+        objFileChooser.setInitialDirectory(file);
+        photoDirectoryChooser.setInitialDirectory(file);
+
+        RecentProjects.setMostRecentDirectory(file);
     }
 
     private Stage getStage()
