@@ -424,7 +424,7 @@ public class RecentProjects {
     //use these functions to make file selection more user-friendly across multiple File/Directory Choosers
     public static void setMostRecentDirectory(File file){recentDirectory = file;}
     public static File getMostRecentDirectory(){
-        if(recentDirectory != null){
+        if(recentDirectory != null && recentDirectory.exists()){
             return recentDirectory;
         }
 

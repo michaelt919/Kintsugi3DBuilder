@@ -328,6 +328,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
             directoryChooser.setTitle("Choose New Image Directory");
             File newCamsFile = directoryChooser.showDialog(MenubarController.getInstance().getWindow());
+            //TODO: update recent project directory here?
 
             new Thread(()->{
                 try {
