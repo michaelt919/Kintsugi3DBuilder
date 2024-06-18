@@ -19,6 +19,10 @@
 #define LUMINANCE_MAP_ENABLED 0
 #endif
 
+#ifndef SRGB_DECODING_ENABLED
+#define SRGB_DECODING_ENABLED 1
+#endif
+
 #if LUMINANCE_MAP_ENABLED
 uniform sampler1D luminanceMap;
 #endif
@@ -56,49 +60,6 @@ float getMaxLuminance()
 #endif
 
     return maxLuminance;
-}
-
-vec3 linearizeColor(vec3 nonlinearColor)
-{
-    vec3 linearColor;
-
-#if LUMINANCE_MAP_ENABLED
-    if (nonlinearColor.r <= 0.0 && nonlinearColor.g <= 0.0 && nonlinearColor.b <= 0.0)
-    {
-        linearColor = vec3(0);
-    }
-    else
-    {
-        // Step 1: remove gamma correction
-        vec3 colorGamma = pow(nonlinearColor, vec3(gamma));
-
-        // Step 2: convert to CIE luminance
-        float pseudoLuminance = getLuminance(colorGamma);
-
-        if (pseudoLuminance > 1.0)
-        {
-            linearColor = colorGamma * getMaxLuminance();
-        }
-        else
-        {
-            // Step 3: determine the ratio between the true luminance and pseudo- (encoded) luminance
-            // Reapply gamma correction to the single luminance value
-            float scale = texture(luminanceMap, pow(pseudoLuminance, 1.0 / gamma)).r / pseudoLuminance;
-
-            // Step 4: return the color, scaled to have the correct luminance, but the original saturation and hue.
-            linearColor = colorGamma * scale;
-        }
-    }
-#else
-    linearColor = pow(nonlinearColor, vec3(gamma));
-#endif
-
-    return linearColor;
-}
-
-vec4 linearizeColor(vec4 nonlinearColor)
-{
-    return vec4(linearizeColor(nonlinearColor.rgb), nonlinearColor.a);
 }
 
 vec3 linearToSRGB(vec3 color)
@@ -167,6 +128,64 @@ vec3 sRGBToLinear(vec3 sRGBColor)
      }
 
      return linearColor;
+}
+
+vec3 linearizeColor(vec3 nonlinearColor)
+{
+    vec3 linearColor;
+
+#if LUMINANCE_MAP_ENABLED
+    if (nonlinearColor.r <= 0.0 && nonlinearColor.g <= 0.0 && nonlinearColor.b <= 0.0)
+    {
+        linearColor = vec3(0);
+    }
+    else
+    {
+#if SRGB_DECODING_ENABLED
+        // Step 1: remove gamma correction
+        vec3 colorGamma = sRGBToLinear(nonlinearColor);
+#else
+        vec3 colorGamma = pow(nonlinearColor, vec3(gamma));
+#endif
+
+        // Step 2: convert to CIE luminance
+        float pseudoLuminance = getLuminance(colorGamma);
+
+        if (pseudoLuminance > 1.0)
+        {
+            linearColor = colorGamma * getMaxLuminance();
+        }
+        else
+        {
+            // Step 3: determine the ratio between the true luminance and pseudo- (encoded) luminance
+            // Reapply gamma correction to the single luminance value
+
+#if SRGB_DECODING_ENABLED
+            float pseudoLuminanceGamma = getLuminance(linearToSRGB(vec3(pseudoLuminance)));
+#else
+            float pseudoLuminanceGamma = pow(pseudoLuminance, 1.0 / gamma);
+#endif
+            int luminanceMapSize = textureSize(luminanceMap, 0);
+            float texCoord = (0.5 + pseudoLuminanceGamma * (luminanceMapSize - 1)) / luminanceMapSize; // adjust for how linear interpolation is performed
+
+            float scale = texture(luminanceMap, texCoord).r / pseudoLuminance;
+
+            // Step 4: return the color, scaled to have the correct luminance, but the original saturation and hue.
+            linearColor = colorGamma * scale;
+        }
+    }
+#elif SRGB_DECODING_ENABLED
+    linearColor = sRGBToLinear(nonlinearColor);
+#else
+    linearColor = pow(nonlinearColor, vec3(gamma));
+#endif
+
+    return linearColor;
+}
+
+vec4 linearizeColor(vec4 nonlinearColor)
+{
+    return vec4(linearizeColor(nonlinearColor.rgb), nonlinearColor.a);
 }
 
 vec3 xyzToLab(vec3 xyzColor)

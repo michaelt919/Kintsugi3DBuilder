@@ -12,6 +12,7 @@
 package kintsugi3d.builder.core;
 
 import java.util.function.DoubleUnaryOperator;
+import java.util.stream.IntStream;
 
 import kintsugi3d.builder.resources.ibr.LuminanceMapResources;
 import kintsugi3d.gl.core.ColorFormat;
@@ -88,7 +89,12 @@ public class SampledLuminanceEncoding
         this.decodeFunction = new CubicHermiteSpline(x, y, true)
             .andThen(gammaCorrected -> Math.pow(gammaCorrected, gamma));
 
-        this.encodeFunction = new CubicHermiteSpline(y, x, true)
+        // Sample decode function to ensure that the round-trip encode(decode(x)) == x is more accurate
+        double[] xSampled = IntStream.range(0, 256).mapToDouble(i -> i).toArray();
+        double[] ySampled = IntStream.range(0, 256).mapToDouble(i -> Math.pow(decodeFunction.applyAsDouble(i), 1.0 / gamma)).toArray();
+
+        //noinspection SuspiciousNameCombination [x and y intentionally inverted]
+        this.encodeFunction = new CubicHermiteSpline(ySampled, xSampled, true)
             .compose(physicallyLinear -> Math.pow(physicallyLinear, 1.0 / gamma));
     }
 
@@ -137,7 +143,7 @@ public class SampledLuminanceEncoding
             {
                 // outside the range of the ColorChecker
                 // remap linear color to the original [0, 1] range and convert to sRGB
-                return SRGB.fromLinear(decoded.dividedBy(maxLuminance));
+                return SRGB.fromLinear(decoded.dividedBy(maxLuminance)).times(255.0);
             }
             else
             {
