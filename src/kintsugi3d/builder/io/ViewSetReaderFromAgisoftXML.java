@@ -175,7 +175,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     @Override
     public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, Map<Integer, String> imagePathMap) throws XMLStreamException
     {
-        return readFromStream(stream, root, supportingFilesDirectory, imagePathMap, -1);
+        return readFromStream(stream, root, supportingFilesDirectory, imagePathMap, -1, false);
     }
 
     /**
@@ -187,10 +187,11 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * @param supportingFilesDirectory
      * @param imagePathMap A map of image IDs to paths, if passed this will override the paths being assigned to the images.
      * @param metashapeVersionOverride A parameter that can be passed to override the version of the XML document being read to circumvent formatting differences.
+     * @param directAgisoftImport Used to ignore global transformations set in Metashape projects which would break rendering if not accounted for.
      * @return
      * @throws XMLStreamException
      */
-    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, Map<Integer, String> imagePathMap, int metashapeVersionOverride) throws XMLStreamException
+    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, Map<Integer, String> imagePathMap, int metashapeVersionOverride, boolean directAgisoftImport) throws XMLStreamException
     {
         Map<String, Sensor> sensorSet = new Hashtable<>();
         TreeSet<Camera> cameraSet = new TreeSet<>((c1, c2) ->
@@ -510,47 +511,46 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                 }
                                 else
                                 {
-//                                    if (expectedSize == 9)
-//                                    {
-//                                        log.debug("\tSetting global rotation.");
-//                                        globalRotation = Matrix3.fromRows(
-//                                                new Vector3(m[0], m[3], m[6]),
-//                                                new Vector3(m[1], m[4], m[7]),
-//                                                new Vector3(m[2], m[5], m[8]))
-//                                            .asMatrix4();
-//                                    }
-//                                    else
-//                                    {
-//                                        log.debug("\tSetting global transformation.");
-//                                        globalRotation = Matrix3.fromRows(
-//                                                new Vector3(m[0], m[4], m[8]),
-//                                                new Vector3(m[1], m[5], m[9]),
-//                                                new Vector3(m[2], m[6], m[10]))
-//                                            .asMatrix4()
-//                                            .times(Matrix4.translate(m[3], m[7], m[11]));
-//                                    }
+                                    if (!directAgisoftImport){
+                                        if (expectedSize == 9) {
+                                            log.debug("\tSetting global rotation.");
+                                            globalRotation = Matrix3.fromRows(
+                                                            new Vector3(m[0], m[3], m[6]),
+                                                            new Vector3(m[1], m[4], m[7]),
+                                                            new Vector3(m[2], m[5], m[8]))
+                                                    .asMatrix4();
+                                        } else {
+                                            log.debug("\tSetting global transformation.");
+                                            globalRotation = Matrix3.fromRows(
+                                                            new Vector3(m[0], m[4], m[8]),
+                                                            new Vector3(m[1], m[5], m[9]),
+                                                            new Vector3(m[2], m[6], m[10]))
+                                                    .asMatrix4()
+                                                    .times(Matrix4.translate(m[3], m[7], m[11]));
+                                        }
+                                    }
                                 }
                             }
                         }
                         break;
 
                         case "translation":
-                            if (camera == null)
+                            if (camera == null && !directAgisoftImport)
                             {
-//                                log.debug("\tSetting global translate.");
-//                                String[] components = reader.getElementText().split("\\s");
-//                                globalTranslate = new Vector3(
-//                                    -Float.parseFloat(components[0]),
-//                                    -Float.parseFloat(components[1]),
-//                                    -Float.parseFloat(components[2]));
+                                log.debug("\tSetting global translate.");
+                                String[] components = reader.getElementText().split("\\s");
+                                globalTranslate = new Vector3(
+                                    -Float.parseFloat(components[0]),
+                                    -Float.parseFloat(components[1]),
+                                    -Float.parseFloat(components[2]));
                             }
                             break;
 
                         case "scale":
-                            if (camera == null)
+                            if (camera == null && !directAgisoftImport)
                             {
-//                                log.debug("\tSetting global scale.");
-//                                globalScale = 1.0f / Float.parseFloat(reader.getElementText());
+                                log.debug("\tSetting global scale.");
+                                globalScale = 1.0f / Float.parseFloat(reader.getElementText());
                             }
                             break;
 
