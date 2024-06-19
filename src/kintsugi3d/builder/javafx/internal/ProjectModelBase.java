@@ -48,7 +48,7 @@ public abstract class ProjectModelBase implements ProjectModel
 
     public abstract List<ObjectPoseSetting> getObjectPoseList();
 
-    public String colorPickerImage;
+    private String colorCheckerFile;
 
 
     /**
@@ -153,21 +153,7 @@ public abstract class ProjectModelBase implements ProjectModel
             Node colorPickerImageNode = document.getElementsByTagName("ColorCheckerFile").item(0);
             if (colorPickerImageNode != null)
             {
-                colorPickerImageNode.getTextContent();
-                NodeList colorPickerImageNodes = colorPickerImageNode.getChildNodes();
-
-//                synchronized (this.colorPickerImage)
-                {
-                    this.colorPickerImage.equals(" ");
-//                    for (int i = 0; i < colorPickerImageNodes.getLength(); i++)
-                    {
-                        Node colorPickerNode = colorPickerImageNodes.item();
-                        if (colorPickerNode instanceof Element)
-                        {
-                            this.getColorCheckerFile().equals(colorPickerImage);
-                        }
-                    }
-                }
+                this.colorCheckerFile = colorPickerImageNode.getTextContent();
             }
 
             return newVsetFile;
@@ -236,18 +222,10 @@ public abstract class ProjectModelBase implements ProjectModel
             }
         }
 
-//        synchronized (this.getColorCheckerFile())
-        {
-            Element colorPickerImageElement = document.createElement("ColorCheckerFile");
-            colorPickerImageElement.setTextContent(this.getColorCheckerFile());
-            rootElement.appendChild(colorPickerImageElement);
+        Element colorPickerImageElement = document.createElement("ColorCheckerFile");
 
-//            for (ObjectPoseSetting objectPose : this.getObjectPoseList())
-//            {
-//                colorPickerImageElement.appendChild(objectPose.toDOMElement(document));
-//            }
-
-        }
+        colorPickerImageElement.setTextContent(this.getColorCheckerFile());
+        rootElement.appendChild(colorPickerImageElement);
 
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
@@ -259,6 +237,10 @@ public abstract class ProjectModelBase implements ProjectModel
         }
     }
 
-    @Override
-    public String getColorCheckerFile() {return this.colorPickerImage;}
+    public String getColorCheckerFile() {return this.colorCheckerFile;}
+
+    public void setColorCheckerFile(String colorCheckerFile)
+    {
+        this.colorCheckerFile = colorCheckerFile;
+    }
 }

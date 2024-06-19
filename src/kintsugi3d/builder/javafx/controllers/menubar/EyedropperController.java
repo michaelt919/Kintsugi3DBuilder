@@ -22,7 +22,6 @@ import java.util.ResourceBundle;
 import java.util.function.DoubleUnaryOperator;
 import javax.imageio.ImageIO;
 
-import com.sun.javafx.embed.swing.SwingFXUtilsImpl;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -40,8 +39,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import kintsugi3d.builder.core.IOModel;
+import kintsugi3d.builder.javafx.internal.ProjectModelBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,6 +85,7 @@ public class EyedropperController implements Initializable {
     @FXML private Rectangle averageColorPreview = new Rectangle(); //displays the average color of selection
 
     private IOModel ioModel = new IOModel();
+    private ProjectModelBase projectModel = null;
 
     private Button sourceButton;
 
@@ -95,8 +95,6 @@ public class EyedropperController implements Initializable {
     {
         instance = this;
     }
-
-    private ObservableProjectModel projectModel;
 
     public static EyedropperController getInstance()
     {
@@ -581,7 +579,16 @@ public class EyedropperController implements Initializable {
 //        return sourceButton;
 //    }
 
-    public void setLoadingModel(IOModel ioModel){
+    public void setProjectModel(ProjectModelBase projectModel)
+    {
+        this.projectModel = projectModel;
+        if (projectModel.getColorCheckerFile() != null)
+        {
+            this.setImage(new File(projectModel.getColorCheckerFile()));
+        }
+    }
+
+    public void setIOModel(IOModel ioModel){
         this.ioModel = ioModel;
 
         //initialize txtFields with their respective values
@@ -627,6 +634,11 @@ public class EyedropperController implements Initializable {
 
         Stage stage = (Stage) ((Node)actionEvent.getSource()).getScene().getWindow();
         File file = fileChooser.showOpenDialog(stage);
+        setImage(file);
+    }
+
+    public void setImage(File file)
+    {
         if (file != null) {
             //convert tiff image if necessary
             if (file.getAbsolutePath().toLowerCase().matches(".*\\.tiff?")) {
@@ -657,13 +669,16 @@ public class EyedropperController implements Initializable {
             //fileChooser.setInitialFileName("colorPickerImage");
 
             //This saves the file to the location path listed
-            String Path = file.getPath().toString();
-            log.error(Path);
-            try{
-                log.error("Within the try (save file) ");
-                projectModel.colorPickerImage = Path;
-                log.error("Within the try (save file) ");
-            }catch(Exception e){
+            String path = file.getPath().toString();
+            try
+            {
+                if (projectModel != null)
+                {
+                    projectModel.setColorCheckerFile(path);
+                }
+            }
+            catch(Exception e)
+            {
                 log.error("Could not save file");
             }
 

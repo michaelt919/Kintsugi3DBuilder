@@ -715,8 +715,8 @@ public class MenubarController
             EyedropperController eyedropperController =
                     makeWindow("Grayscale Calibration", colorCheckerWindowOpen, "fxml/menubar/EyedropperColorChecker.fxml");
 
-            eyedropperController.setLoadingModel(MultithreadModels.getInstance().getLoadingModel());
-
+            eyedropperController.setProjectModel(internalModels.getProjectModel());
+            eyedropperController.setIOModel(MultithreadModels.getInstance().getLoadingModel());
         }
         catch (IOException|RuntimeException e)
         {
