@@ -29,6 +29,11 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
@@ -105,25 +110,27 @@ public class ExportRequestUI implements IBRRequestUI {
             try
             {
                 ExportLocationFile = objFileChooser.showSaveDialog(stage);
-                requestQueue.addIBRRequest(new ObservableIBRRequest()
+                if (ExportLocationFile != null)
                 {
-                    @Override
-                    public <ContextType extends Context<ContextType>> void executeRequest(
-                        IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
+                    requestQueue.addIBRRequest(new ObservableIBRRequest()
                     {
-
-                        if (settings.isGlTFEnabled())
+                        @Override
+                        public <ContextType extends Context<ContextType>> void executeRequest(
+                            IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
                         {
-                            renderable.saveGlTF(ExportLocationFile.getParentFile(), ExportLocationFile.getName(), settings);
-                            modelAccess.getLoadingModel().saveMaterialFiles(ExportLocationFile.getParentFile(), null);
-                        }
+                            if (settings.isGlTFEnabled())
+                            {
+                                    renderable.saveGlTF(ExportLocationFile.getParentFile(), ExportLocationFile.getName(), settings);
+                                    modelAccess.getLoadingModel().saveMaterialFiles(ExportLocationFile.getParentFile(), null);
+                                }
 
-                        if (settings.isOpenViewerOnceComplete())
-                        {
-                            Kintsugi3DViewerLauncher.launchViewer(ExportLocationFile);
-                        }
-                    }
-                });
+                            if (settings.isOpenViewerOnceComplete())
+                            {
+                                    Kintsugi3DViewerLauncher.launchViewer(ExportLocationFile);
+                                }
+                            }
+                    });
+                }
             }
             catch (Exception ex)
             {
@@ -158,5 +165,6 @@ public class ExportRequestUI implements IBRRequestUI {
         settings.setOpenViewerOnceComplete(openViewerOnceCheckBox.isSelected());
         settings.setMinimumTextureResolution(minimumTextureResolutionComboBox.getValue());
         System.out.println(minimumTextureResolutionComboBox.getValue());
+
     }
 }

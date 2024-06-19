@@ -15,9 +15,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import kintsugi3d.util.RecentProjects;
 
 import com.sun.glass.ui.Application;
 import javafx.application.Platform;
@@ -67,11 +69,27 @@ public final class ProjectIO
         if (projectFileChooser == null)
         {
             projectFileChooser = new FileChooser();
-            projectFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
-        }
+            List<String> items = RecentProjects.getItemsFromRecentsFile();
 
+            if(items.isEmpty())
+            {
+                projectFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+            }
+            else
+            {
+                for (int i = items.get(0).length()-1; i > 0; i--) {
+                    if (items.get(0).charAt(i) == '\\')
+                    {
+                        projectFileChooser.setInitialDirectory(new File(items.get(0).substring(0,i)));
+                        break;
+                    }
+                }
+            }
+
+
+        }
         return projectFileChooser;
-    }
+}
 
     private ProjectIO()
     {
@@ -481,6 +499,7 @@ public final class ProjectIO
     {
         FileChooser fileChooser = getProjectFileChooserSafe();
         fileChooser.setTitle("Save project");
+        fileChooser.setInitialDirectory(projectFile.getParentFile());
         projectFileChooser.getExtensionFilters().clear();
         projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Full projects", "*.k3d"));
         projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Standalone view sets", "*.vset"));

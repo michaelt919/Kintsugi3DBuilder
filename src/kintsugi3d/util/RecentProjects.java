@@ -153,9 +153,10 @@ public class RecentProjects {
             item.setOnAction(event -> handleMenuItemSelection(item));
         }
     }
-
+    
     private static void handleMenuItemSelection(MenuItem item) {
         String projectName = item.getText();
         ProjectIO.getInstance().openProjectFromFile(new File(projectName));
     }
+
 }

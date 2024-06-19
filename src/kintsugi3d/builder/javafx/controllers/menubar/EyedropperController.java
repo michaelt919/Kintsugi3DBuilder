@@ -85,6 +85,8 @@ public class EyedropperController implements Initializable {
 
     private IOModel ioModel = new IOModel();
 
+    private Runnable setExitCallback;
+
     public EyedropperController()
     {
         instance = this;
@@ -552,7 +554,7 @@ public class EyedropperController implements Initializable {
         Button sourceButton = (Button) actionEvent.getSource();
         resetButtonsText();
 
-        sourceButton.setText("Draw to select...");
+//        sourceButton.setText("Draw to select...");
 
         isSelecting = true;
         isCropping = false;
@@ -564,7 +566,7 @@ public class EyedropperController implements Initializable {
             if (!button.getText().equals(DEFAULT_BUTTON_TEXT)) {
                 sourceButton = button;
             }
-            button.setText(DEFAULT_BUTTON_TEXT);
+//            button.setText(DEFAULT_BUTTON_TEXT);
         }
 
         return sourceButton;
@@ -598,6 +600,10 @@ public class EyedropperController implements Initializable {
 
     private boolean hasGoodLoadingModel(){
         return ioModel.hasValidHandler();
+    }
+
+    public void ExitEyeDropper(){
+        setExitCallback;
     }
 
     @FXML

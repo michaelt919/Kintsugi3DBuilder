@@ -28,7 +28,7 @@
    <Accordion fx:id="advancedAccordion" layoutY="389.0" AnchorPane.bottomAnchor="48.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="80.0">
      <panes>
        <TitledPane animated="false" expanded="false" text="Advanced">
-          <AnchorPane>
+          <AnchorPane styleClass="anchor-pane">
              <Label layoutX="14.0" layoutY="17.0" text="Specular resolution:" />
              <TextField fx:id="mfdResolutionTextField" layoutX="123.0" layoutY="13.0" prefHeight="25.0" prefWidth="56.0" text="90" />
              <Label layoutX="14.0" layoutY="52.0" text="Convergence tolerance:" />
