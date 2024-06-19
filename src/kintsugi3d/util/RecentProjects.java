@@ -83,7 +83,9 @@ public class RecentProjects {
             Tooltip tooltip = new Tooltip(fileName);
             Tooltip.install(justAdded.getContent(), tooltip);
 
-            justAdded.setOnAction(event -> handleMenuItemSelection(justAdded));
+            justAdded.setOnAction(event -> {
+                ProjectIO.getInstance().openProjectFromFile(new File(fileName));
+            });
 
             ++i;
         }
@@ -355,30 +357,6 @@ public class RecentProjects {
         }
 
         return imgsPath;
-    }
-
-    private static void handleMenuItemSelection(MenuItem item) {
-        int i = 0;
-        ArrayList<String> recentFileNames = (ArrayList<String>) RecentProjects.getItemsFromRecentsFile();
-        //check recent projects menu for match
-        for (MenuItem menuItem : MenubarController.getInstance().getRecentProjectsMenu().getItems()) {
-            if (menuItem.equals(item)) {
-                ProjectIO.getInstance().openProjectFromFile(new File(recentFileNames.get(i)));
-                break;
-            }
-            ++i;
-        }
-
-        //check split menu button for match
-        i = WelcomeWindowController.getInstance().recentButtons.size(); //need to offset the search by the number of buttons
-        //ex. first split menu item is actually the sixth recent project if there are five buttons
-        for (MenuItem menuItem : WelcomeWindowController.getInstance().recentProjectsSplitMenuButton.getItems()) {
-            if (menuItem.equals(item)) {
-                ProjectIO.getInstance().openProjectFromFile(new File(recentFileNames.get(i)));
-                break;
-            }
-            ++i;
-        }
     }
 
     public static void removeInvalidReferences() {
