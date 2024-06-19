@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,7 +7,6 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.javafx.internal;//Created by alexk on 7/28/2017.
@@ -22,15 +21,15 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.paint.Color;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.scene.environment.EnvironmentSetting;
 import kintsugi3d.builder.state.BackgroundMode;
 import kintsugi3d.builder.state.EnvironmentModel;
-import kintsugi3d.util.AbstractImage;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.util.EncodableColorImage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EnvironmentModelImpl implements EnvironmentModel
 {
@@ -43,7 +42,7 @@ public class EnvironmentModelImpl implements EnvironmentModel
     private long lastEnvironmentMapTime;
     private long lastBackplateTime;
 
-    private final Property<AbstractImage> loadedEnvironmentMapImage = new SimpleObjectProperty<>();
+    private final Property<EncodableColorImage> loadedEnvironmentMapImage = new SimpleObjectProperty<>();
 
     public void setSelected(ObservableValue<EnvironmentSetting> selected)
     {
@@ -56,7 +55,7 @@ public class EnvironmentModelImpl implements EnvironmentModel
         return selected != null && selected.getValue() != null;
     }
 
-    public ObservableValue<AbstractImage> loadedEnvironmentMapImageProperty()
+    public ObservableValue<EncodableColorImage> loadedEnvironmentMapImageProperty()
     {
         return loadedEnvironmentMapImage;
     }
@@ -149,7 +148,7 @@ public class EnvironmentModelImpl implements EnvironmentModel
             try
             {
                 log.info("Loading environment map file " + newFile.getName());
-                Optional<AbstractImage> environmentMapImage = MultithreadModels.getInstance().getLoadingModel().loadEnvironmentMap(newFile);
+                Optional<EncodableColorImage> environmentMapImage = MultithreadModels.getInstance().getLoadingModel().loadEnvironmentMap(newFile);
                 loadedEnvironmentMapImage.setValue(environmentMapImage.orElse(null));
             }
             catch (FileNotFoundException e)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,7 +7,6 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.resources;
@@ -20,18 +19,18 @@ import java.util.Objects;
 import java.util.Optional;
 import javax.imageio.ImageIO;
 
+import kintsugi3d.builder.core.DynamicResourceManager;
+import kintsugi3d.builder.core.LoadingMonitor;
 import kintsugi3d.builder.rendering.components.IBRSubject;
 import kintsugi3d.builder.resources.ibr.IBRResources;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.core.DynamicResourceManager;
-import kintsugi3d.builder.core.LoadingMonitor;
-import kintsugi3d.util.AbstractImage;
-import kintsugi3d.util.ArrayBackedImage;
+import kintsugi3d.util.ArrayBackedColorImage;
+import kintsugi3d.util.EncodableColorImage;
 import kintsugi3d.util.EnvironmentMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DynamicResourceLoader<ContextType extends Context<ContextType>> implements DynamicResourceManager
 {
@@ -69,7 +68,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
 
     private volatile File desiredBackplateFile;
 
-    private AbstractImage currentEnvironmentMap;
+    private EncodableColorImage currentEnvironmentMap;
 
     public DynamicResourceLoader(LoadingMonitor loadingMonitor, IBRResources<ContextType> resources,
         IBRSubject<ContextType> subject, LightingResources<ContextType> lightingResources)
@@ -147,7 +146,13 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
             }
             catch (RuntimeException e)
             {
-                log.error("An error has occurred:", e);
+                log.error("An error has occurred", e);
+            }
+            catch (Error e)
+            {
+                log.error("An error has occurred", e);
+                //noinspection ProhibitedExceptionThrown
+                throw e;
             }
             finally
             {
@@ -184,7 +189,13 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
             }
             catch (RuntimeException e)
             {
-                log.error("An error has occurred:", e);
+                log.error("An error has occurred", e);
+            }
+            catch (Error e)
+            {
+                log.error("An error has occurred", e);
+                //noinspection ProhibitedExceptionThrown
+                throw e;
             }
             finally
             {
@@ -212,7 +223,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
     }
 
     @Override
-    public Optional<AbstractImage> loadEnvironmentMap(File environmentFile) throws FileNotFoundException
+    public Optional<EncodableColorImage> loadEnvironmentMap(File environmentFile) throws FileNotFoundException
     {
         if (environmentFile == null)
         {
@@ -270,7 +281,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
             if (readCompleted)
             {
                 environmentLastModified = lastModified;
-                currentEnvironmentMap = new ArrayBackedImage(width, height, pixels);
+                currentEnvironmentMap = new ArrayBackedColorImage(width, height, pixels);
             }
 
             return Optional.ofNullable(currentEnvironmentMap);

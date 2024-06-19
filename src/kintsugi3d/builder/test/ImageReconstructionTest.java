@@ -1,17 +1,18 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2024
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 The Regents of the University of Minnesota
  *
- *  Licensed under GPLv3
- *  ( http://www.gnu.org/licenses/gpl-3.0.html )
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
  *
- *  This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- *
- *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
 package kintsugi3d.builder.test;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -67,7 +68,7 @@ class ImageReconstructionTest
 
         Potato potato = new Potato(50, 0.75f, 0.1f, 250000);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        potato.writeToStream(new PrintStream(out));
+        potato.writeToStream(new PrintStream(out, false, StandardCharsets.UTF_8));
 
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
         potatoGeometry = VertexGeometry.createFromOBJStream(in);
@@ -93,7 +94,7 @@ class ImageReconstructionTest
                             new File("shaders/test/syntheticWithLinearNoise.frag"))
                         .createProgram();
                 }
-                catch (FileNotFoundException e)
+                catch (IOException e)
                 {
                     throw new RuntimeException(e);
                 }
@@ -120,7 +121,7 @@ class ImageReconstructionTest
                             new File("shaders/test/syntheticWithSRGBNoise.frag"))
                         .createProgram();
                 }
-                catch (FileNotFoundException e)
+                catch (IOException e)
                 {
                     throw new RuntimeException(e);
                 }
@@ -147,7 +148,7 @@ class ImageReconstructionTest
                             new File("shaders/test/syntheticWithTonemappedLitNoise.frag"))
                         .createProgram();
                 }
-                catch (FileNotFoundException e)
+                catch (IOException e)
                 {
                     throw new RuntimeException(e);
                 }
@@ -170,7 +171,7 @@ class ImageReconstructionTest
                 .define("SRGB_TONEMAPPING_ENABLED", 0)
                 .createProgram();
         }
-        catch (FileNotFoundException e)
+        catch (IOException e)
         {
             throw new RuntimeException(e);
         }
@@ -186,7 +187,7 @@ class ImageReconstructionTest
                 .define("SRGB_TONEMAPPING_ENABLED", 1)
                 .createProgram();
         }
-        catch (FileNotFoundException e)
+        catch (IOException e)
         {
             throw new RuntimeException(e);
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,7 +7,6 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.io;
@@ -18,6 +17,7 @@ import kintsugi3d.gl.vecmath.Vector3;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 
 public final class ViewSetWriterToVSET implements ViewSetWriter
 {
@@ -36,7 +36,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
     public void writeToStream(ReadonlyViewSet viewSet, OutputStream outputStream)
     {
 
-        PrintStream out = new PrintStream(outputStream);
+        PrintStream out = new PrintStream(outputStream, false, StandardCharsets.UTF_8);
         out.println("# Created by Kintsugi 3D Builder");
 
         out.println();

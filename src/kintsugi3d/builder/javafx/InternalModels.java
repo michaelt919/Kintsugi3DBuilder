@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,12 +7,10 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.javafx;
 
-import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
 import kintsugi3d.builder.javafx.internal.*;
 
 public final class InternalModels
@@ -28,6 +26,7 @@ public final class InternalModels
     private final EnvironmentModelImpl environmentModel;
     private final LightingModelImpl lightingModel;
     private final ObjectModelImpl objectModel;
+    private final CameraViewListModelImpl cameraViewListModel;
     private final LoadOptionsModelImpl loadOptionsModel;
     private final SettingsModelImpl settingsModel;
     private final ObservableProjectModel projectModel;
@@ -38,6 +37,7 @@ public final class InternalModels
         environmentModel = new EnvironmentModelImpl();
         objectModel = new ObjectModelImpl();
         lightingModel = new LightingModelImpl(environmentModel);
+        cameraViewListModel = new CameraViewListModelImpl();
         loadOptionsModel = new LoadOptionsModelImpl();
         settingsModel = new SettingsModelImpl();
         projectModel = new ObservableProjectModel();
@@ -56,6 +56,11 @@ public final class InternalModels
     public ObjectModelImpl getObjectModel()
     {
         return objectModel;
+    }
+
+    public CameraViewListModelImpl getCameraViewListModel()
+    {
+        return cameraViewListModel;
     }
 
     public LoadOptionsModelImpl getLoadOptionsModel()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,10 +7,14 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.export.specular.gltf;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.FloatBuffer;
 
 import de.javagl.jgltf.impl.v2.*;
 import de.javagl.jgltf.model.creation.GltfModelBuilder;
@@ -30,11 +34,6 @@ import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.FloatBuffer;
 
 public class SpecularFitGltfExporter
 {
@@ -282,10 +281,14 @@ public class SpecularFitGltfExporter
 
     public void write(File file) throws IOException
     {
-        asset.getGltf().getMaterials().forEach((material -> material.setExtras(extraData)));
+        asset.getGltf().getMaterials().forEach(material -> material.setExtras(extraData));
 
         GltfAssetWriterV2 writer = new GltfAssetWriterV2();
-        writer.writeBinary(asset, new FileOutputStream(file));
+
+        try (FileOutputStream out = new FileOutputStream(file))
+        {
+            writer.writeBinary(asset, out);
+        }
     }
 
     public void tryWrite(File file)
@@ -411,6 +414,7 @@ public class SpecularFitGltfExporter
             posOutBuffer.put(i+1, position.y);
             posOutBuffer.put(i+2, position.z);
         }
+
         primitiveBuilder.addPositions3D(posOutBuffer);
 
         if (geometry.hasNormals())
@@ -433,6 +437,29 @@ public class SpecularFitGltfExporter
             }
 
             primitiveBuilder.addNormals3D(normOutBuffer);
+
+            if (geometry.hasTexCoords()) // has tangents if both normals and tex coords
+            {
+                // Copy to a new buffer while applying transformation
+                FloatBuffer tangInBuffer = geometry.getTangents().getBuffer().asFloatBuffer();
+                FloatBuffer tangOutBuffer = FloatBuffer.allocate(tangInBuffer.capacity());
+
+                for (int i = 0; i < tangInBuffer.capacity(); i += 4)
+                {
+                    Vector3 tangent = new Vector3(tangInBuffer.get(i), tangInBuffer.get(i + 1), tangInBuffer.get(i + 2));
+
+                    // Ignore translation, only rotation and scale, but normalized to cancel uniform scale
+                    // Non-uniform scale is unsupported
+                    tangent = transformation.getUpperLeft3x3().times(tangent).normalized();
+
+                    tangOutBuffer.put(i, tangent.x);
+                    tangOutBuffer.put(i + 1, tangent.y);
+                    tangOutBuffer.put(i + 2, tangent.z);
+                    tangOutBuffer.put(i + 3, tangInBuffer.get(i + 3)); // bitangent sign
+                }
+
+                primitiveBuilder.addTangents3D(tangOutBuffer);
+            }
         }
 
         if (geometry.hasTexCoords())
@@ -441,7 +468,8 @@ public class SpecularFitGltfExporter
             FloatBuffer inBuffer = geometry.getTexCoords().getBuffer().asFloatBuffer();
             FloatBuffer outBuffer = FloatBuffer.allocate(inBuffer.capacity());
 
-            for (int i = 1; i < inBuffer.capacity(); i++) {
+            for (int i = 0; i < inBuffer.capacity(); i++)
+            {
                 float texCoord = inBuffer.get(i);
 
                 // Flip Y coordinates, leave X

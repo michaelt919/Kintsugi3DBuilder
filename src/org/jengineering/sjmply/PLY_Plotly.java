@@ -1,21 +1,15 @@
-package org.jengineering.sjmply;
-/* Copyright 2016 Dirk Toewe
- * 
- * This file was generated using org.jengineering.sjmply.
+/*
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 The Regents of the University of Minnesota
  *
- * org.jengineering.sjmply is free software: you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
  *
- * org.jengineering.sjmply is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with org.jengineering.sjmply. If not, see <http://www.gnu.org/licenses/>.
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
+
+package org.jengineering.sjmply;
 
 import static java.lang.Float.floatToRawIntBits;
 import static java.lang.String.format;
@@ -30,6 +24,7 @@ import java.awt.Desktop;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
@@ -72,7 +67,7 @@ public class PLY_Plotly
 
   public static void Scatter3d_write( String title, PLY ply, OutputStream out ) throws IOException
   {
-    OutputStreamWriter writer = new OutputStreamWriter(out);
+    OutputStreamWriter writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
     writer.write( Scatter3d_html(title,ply).toString() );
     writer.flush();
   }
@@ -263,7 +258,7 @@ public class PLY_Plotly
 
   public static void Mesh3d_write( String title, PLY ply, OutputStream out ) throws IOException
   {
-    OutputStreamWriter writer = new OutputStreamWriter(out);
+    OutputStreamWriter writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
     writer.write( Mesh3d_html(title,ply).toString() );
     writer.flush();
   }

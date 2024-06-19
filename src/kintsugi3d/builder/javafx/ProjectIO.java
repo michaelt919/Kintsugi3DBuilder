@@ -1,12 +1,12 @@
 /*
- *  Copyright (c) Michael Tetzlaff 2023
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 The Regents of the University of Minnesota
  *
- *  Licensed under GPLv3
- *  ( http://www.gnu.org/licenses/gpl-3.0.html )
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
  *
- *  This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- *
- *  This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
 package kintsugi3d.builder.javafx;
@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -27,6 +28,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
@@ -36,6 +38,8 @@ import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.controllers.menubar.LoaderController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.scene.CreateProjectController;
+import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
+import kintsugi3d.builder.resources.ibr.MeshImportException;
 import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
@@ -64,14 +68,27 @@ public final class ProjectIO
         if (projectFileChooser == null)
         {
             projectFileChooser = new FileChooser();
+            List<String> items = RecentProjects.getItemsFromRecentsFile();
 
-            projectFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
-            projectFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Full projects", "*.ibr"));
-            projectFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Standalone view sets", "*.vset"));
+            if(items.isEmpty())
+            {
+                projectFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+            }
+            else
+            {
+                for (int i = items.get(0).length()-1; i > 0; i--) {
+                    if (items.get(0).charAt(i) == '\\')
+                    {
+                        projectFileChooser.setInitialDirectory(new File(items.get(0).substring(0,i)));
+                        break;
+                    }
+                }
+            }
+
+
         }
-
         return projectFileChooser;
-    }
+}
 
     private ProjectIO()
     {
@@ -101,14 +118,18 @@ public final class ProjectIO
             }
 
             @Override
-            public void loadingFailed(Exception e)
+            public void loadingFailed(Throwable e)
             {
                 projectLoaded = false;
-                handleException("An error occurred while loading project", e);
+                if(e instanceof MeshImportException){
+                    handleException("Imported object is missing texture coordinates", e);
+                } else {
+                    handleException("An error occurred while loading project", e);
+                }
             }
 
             @Override
-            public void loadingWarning(Exception e)
+            public void loadingWarning(Throwable e)
             {
                 handleException("An error occurred while loading project", e);
             }
@@ -130,7 +151,7 @@ public final class ProjectIO
         return projectLoaded;
     }
 
-    private static void handleException(String message, Exception e)
+    private static void handleException(String message, Throwable e)
     {
         log.error("{}:", message, e);
         Platform.runLater(() ->
@@ -217,7 +238,7 @@ public final class ProjectIO
         projectLoaded = true;
     }
 
-    private void onViewSetCreated(ViewSet viewSet, Window parentWindow)
+    private void onViewSetCreated(ViewSet viewSet, Window parentWindow, File defaultDirectory)
     {
         // Force user to save the project before proceeding, so that they have a place to save the results
         saveProjectAs(parentWindow, () ->
@@ -240,8 +261,9 @@ public final class ProjectIO
                 viewSet.setRootDirectory(filesDirectory);
                 viewSet.setSupportingFilesDirectory(filesDirectory);
             }
-        });
+        }, defaultDirectory);
     }
+
 
     public void createProject(Window parentWindow)
     {
@@ -254,7 +276,8 @@ public final class ProjectIO
                     LoaderController createProjectController =
                         makeWindow(parentWindow, "Load Files", loaderWindowOpen, 750, 330, "fxml/menubar/Loader.fxml");
                     createProjectController.setLoadStartCallback(this::onLoadStart);
-                    createProjectController.setViewSetCallback(viewSet -> onViewSetCreated(viewSet, parentWindow));
+                    createProjectController.setViewSetCallback(
+                        (viewSet, defaultDirectory) -> onViewSetCreated(viewSet, parentWindow, defaultDirectory));
                     createProjectController.init();
                 }
                 catch (Exception e)
@@ -276,8 +299,9 @@ public final class ProjectIO
                     CreateProjectController createProjectController =
                             makeWindow(parentWindow, "Load Files", loaderWindowOpen, "fxml/menubar/CreateProject.fxml");
                     createProjectController.setLoadStartCallback(this::onLoadStart);
-                    createProjectController.setViewSetCallback(viewSet -> onViewSetCreated(viewSet, parentWindow));
+                    createProjectController.setViewSetCallback(viewSet -> onViewSetCreated(viewSet, parentWindow, null));
                     createProjectController.init();
+                    WelcomeWindowController.getInstance().hideWelcomeWindow();
                 }
                 catch (Exception e)
                 {
@@ -297,16 +321,48 @@ public final class ProjectIO
         {
             // VSET file is the project file or they're in the same directory.
             // Use a supporting files directory underneath by default
-            new Thread(() -> MultithreadModels.getInstance().getLoadingModel()
-                .loadFromVSETFile(vsetFile.getPath(), vsetFile, ViewSet.getDefaultSupportingFilesDirectory(projectFile)))
-                .start();
+            new Thread(() ->
+            {
+                try
+                {
+                    MultithreadModels.getInstance().getLoadingModel()
+                        .loadFromVSETFile(vsetFile.getPath(), vsetFile, ViewSet.getDefaultSupportingFilesDirectory(projectFile));
+                }
+                catch (RuntimeException e)
+                {
+                    log.error("Error loading view set file", e);
+                }
+                catch (Error e)
+                {
+                    log.error("Error loading view set file", e);
+                    //noinspection ProhibitedExceptionThrown
+                    throw e;
+                }
+            })
+            .start();
         }
         else
         {
             // VSET file is presumably already in a supporting files directory, so just use that directory by default
-            new Thread(() -> MultithreadModels.getInstance().getLoadingModel()
-                .loadFromVSETFile(vsetFile.getPath(), vsetFile))
-                .start();
+            new Thread(() ->
+            {
+                try
+                {
+                    MultithreadModels.getInstance().getLoadingModel()
+                        .loadFromVSETFile(vsetFile.getPath(), vsetFile);
+                }
+                catch (RuntimeException e)
+                {
+                    log.error("Error loading view set file", e);
+                }
+                catch (Error e)
+                {
+                    log.error("Error loading view set file", e);
+                    //noinspection ProhibitedExceptionThrown
+                    throw e;
+                }
+            })
+            .start();
         }
 
         //TODO: update color checker here, if the window for it is open
@@ -342,6 +398,11 @@ public final class ProjectIO
             this.projectLoaded = true;
 
             startLoad(projectFile, vsetFile);
+
+            // Have to set loaded project file after startLoad since startLoad resets everything in order to unload a previously loaded project.
+            MultithreadModels.getInstance().getLoadingModel().setLoadedProjectFile(projectFile);
+
+            WelcomeWindowController.getInstance().hideWelcomeWindow();
         }
     }
 
@@ -351,6 +412,9 @@ public final class ProjectIO
         {
             FileChooser fileChooser = getProjectFileChooserSafe();
             fileChooser.setTitle("Open project");
+            projectFileChooser.getExtensionFilters().clear();
+            projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Full projects", "*.k3d", "*.ibr"));
+            projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Standalone view sets", "*.vset"));
             File selectedFile = fileChooser.showOpenDialog(parentWindow);
             if (selectedFile != null)
             {
@@ -388,6 +452,7 @@ public final class ProjectIO
                     ioModel.saveToVSETFile(projectFile);
                     this.vsetFile = projectFile;
                     this.projectFile = null;
+                    MultithreadModels.getInstance().getLoadingModel().setLoadedProjectFile(vsetFile);
                 }
                 else
                 {
@@ -397,6 +462,7 @@ public final class ProjectIO
                     this.vsetFile = new File(filesDirectory, projectFile.getName() + ".vset");
                     ioModel.saveToVSETFile(vsetFile);
                     InternalModels.getInstance().getProjectModel().saveProjectFile(projectFile, vsetFile);
+                    MultithreadModels.getInstance().getLoadingModel().setLoadedProjectFile(projectFile);
                 }
 
                 ioModel.saveGlTF(filesDirectory);
@@ -425,10 +491,23 @@ public final class ProjectIO
 
     public void saveProjectAs(Window parentWindow, Runnable callback)
     {
+        saveProjectAs(parentWindow, callback, null);
+    }
+
+    public void saveProjectAs(Window parentWindow, Runnable callback, File defaultDirectory)
+    {
         FileChooser fileChooser = getProjectFileChooserSafe();
         fileChooser.setTitle("Save project");
+        projectFileChooser.getExtensionFilters().clear();
+        projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Full projects", "*.k3d"));
+        projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Standalone view sets", "*.vset"));
         fileChooser.setSelectedExtensionFilter(fileChooser.getExtensionFilters().get(0));
-        if (projectFile != null)
+        if (defaultDirectory != null)
+        {
+            fileChooser.setInitialFileName("");
+            fileChooser.setInitialDirectory(defaultDirectory);
+        }
+        else if (projectFile != null)
         {
             fileChooser.setInitialFileName(projectFile.getName());
             fileChooser.setInitialDirectory(projectFile.getParentFile());
@@ -458,6 +537,7 @@ public final class ProjectIO
             {
                 fileContainer.selectedFile = fileChooser.showSaveDialog(parentWindow);
                 fileContainer.complete = true;
+                RecentProjects.updateRecentFiles(fileContainer.selectedFile.toString());
             });
 
             while (!fileContainer.complete)

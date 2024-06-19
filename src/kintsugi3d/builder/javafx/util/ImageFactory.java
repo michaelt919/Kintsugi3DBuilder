@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,7 +7,6 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.javafx.util;
@@ -15,8 +14,8 @@ package kintsugi3d.builder.javafx.util;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
-import kintsugi3d.gl.vecmath.DoubleVector4;
-import kintsugi3d.util.AbstractImage;
+import kintsugi3d.gl.vecmath.Vector4;
+import kintsugi3d.util.EncodableColorImage;
 
 public final class ImageFactory
 {
@@ -32,9 +31,9 @@ public final class ImageFactory
 
     private static class PixelReaderImpl extends PixelReaderBase
     {
-        private final AbstractImage image;
+        private final EncodableColorImage image;
 
-        PixelReaderImpl(AbstractImage image)
+        PixelReaderImpl(EncodableColorImage image)
         {
             this.image = image;
         }
@@ -42,12 +41,12 @@ public final class ImageFactory
         @Override
         public Color getColor(int x, int y)
         {
-            DoubleVector4 colorVector = image.getRGBA(x, y);
+            Vector4 colorVector = image.getGammaEncodedRGBA(x, y);
             return new Color(clamp(colorVector.x), clamp(colorVector.y), clamp(colorVector.z), clamp(colorVector.w));
         }
     }
 
-    public static Image createFromAbstractImage(AbstractImage image)
+    public static Image createFromAbstractImage(EncodableColorImage image)
     {
         return new WritableImage(new PixelReaderImpl(image), image.getWidth(), image.getHeight());
     }

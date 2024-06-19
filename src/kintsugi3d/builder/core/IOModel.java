@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,7 +7,6 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.core;
@@ -22,7 +21,7 @@ import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
 import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.util.AbstractImage;
+import kintsugi3d.util.EncodableColorImage;
 
 public class IOModel
 {
@@ -72,7 +71,7 @@ public class IOModel
         }
 
         @Override
-        public void loadingFailed(Exception e)
+        public void loadingFailed(Throwable e)
         {
             for (LoadingMonitor monitor : subMonitors)
             {
@@ -81,7 +80,7 @@ public class IOModel
         }
 
         @Override
-        public void loadingWarning(Exception e)
+        public void loadingWarning(Throwable e)
         {
             for (LoadingMonitor monitor : subMonitors)
             {
@@ -130,6 +129,16 @@ public class IOModel
         return this.handler.getLoadedViewSet();
     }
 
+    public File getLoadedProjectFile()
+    {
+        return this.handler.getLoadedProjectFile();
+    }
+
+    public void setLoadedProjectFile(File loadedProjectFile)
+    {
+        this.handler.setLoadedProjectFile(loadedProjectFile);
+    }
+
     /**
      * Uses parent of VSET file as supporting files directory, by default
      * @param id
@@ -155,7 +164,7 @@ public class IOModel
         this.handler.requestFragmentShader(shaderFile);
     }
 
-    public Optional<AbstractImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
+    public Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
     {
         return this.handler.loadEnvironmentMap(environmentMapFile);
     }

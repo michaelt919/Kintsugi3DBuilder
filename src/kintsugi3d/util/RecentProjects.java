@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,7 +7,6 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.util;
@@ -21,6 +20,7 @@ import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -36,7 +36,7 @@ public class RecentProjects {
 
         if (recentProjectsFile.exists())
         {
-            try (BufferedReader reader = new BufferedReader(new FileReader(recentProjectsFile.getAbsolutePath())))
+            try (BufferedReader reader = new BufferedReader(new FileReader(recentProjectsFile.getAbsolutePath(), StandardCharsets.UTF_8)))
             {
                 String line;
                 while ((line = reader.readLine()) != null)
@@ -69,7 +69,7 @@ public class RecentProjects {
     public static void updateRecentFiles(String fileName) {
         // Read existing file content into a List
         List<String> existingFileNames = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(recentProjectsFile))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(recentProjectsFile, StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 existingFileNames.add(line);
@@ -85,7 +85,7 @@ public class RecentProjects {
         existingFileNames.add(0, fileName);
 
         // Write the updated content back to the file
-        try (PrintWriter writer = new PrintWriter(new FileWriter(recentProjectsFile))) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(recentProjectsFile, StandardCharsets.UTF_8))) {
             for (String name : existingFileNames) {
                 writer.println(name);
             }
@@ -153,9 +153,10 @@ public class RecentProjects {
             item.setOnAction(event -> handleMenuItemSelection(item));
         }
     }
-
+    
     private static void handleMenuItemSelection(MenuItem item) {
         String projectName = item.getText();
         ProjectIO.getInstance().openProjectFromFile(new File(projectName));
     }
+
 }

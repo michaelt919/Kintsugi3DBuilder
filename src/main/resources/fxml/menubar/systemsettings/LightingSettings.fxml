@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+<AnchorPane styleClass="anchor-pane" prefHeight="178.0" prefWidth="331.0" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.systemsettings.PhotoLightingSettingsController">
+    <VBox spacing="10.0">
+        <padding>
+            <Insets bottom="7.0" left="7.0" right="7.0" top="7.0" />
+        </padding>
+        <CheckBox fx:id="fresnelEffectCheckBox" mnemonicParsing="false" text="Fresnel effect" />
+        <CheckBox fx:id="shadowsCheckBox" mnemonicParsing="false" selected="true" text="Shadows" />
+        <CheckBox fx:id="phyMaskingCheckBox" mnemonicParsing="false" text="Physically based masking/shadowing" />
+        <CheckBox fx:id="relightingCheckBox" mnemonicParsing="false" onAction="#updateRelightingVisibility" selected="true" text="Relighting" />
+        <CheckBox fx:id="visibleLightWidgetsCheckBox" mnemonicParsing="false" selected="true" text="Show light widgets" />
+<!--        <Accordion prefHeight="175.0" prefWidth="412.0" styleClass="accordion">-->
+<!--            <panes>-->
+<!--                <TitledPane maxHeight="-Infinity" styleClass="titled-pane" text="Per-light Intensity (UNFINISHED)">-->
+<!--                    <AnchorPane styleClass="anchor-pane">-->
+<!--                        <VBox spacing="10.0">-->
+<!--                            <HBox spacing="20.0">-->
+<!--                                <padding>-->
+<!--                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />-->
+<!--                                </padding>-->
+<!--                                <VBox spacing="15.0">-->
+<!--                                    <CheckBox fx:id="enableLight1CheckBox" mnemonicParsing="false" onAction="#updateRelightingVisibility" selected="true" styleClass="checkbox" text="Enable Light 1" />-->
+<!--                                    <ColorPicker fx:id="light1ColorPicker" styleClass="color-picker" />-->
+<!--                                </VBox>-->
+<!--                                <VBox spacing="10.0">-->
+<!--                                    <Label fx:id="perLight1IntensityLabel" text="Intensity Selection">text="Intensity Selection"</Label>-->
+<!--                                    <HBox alignment="CENTER_LEFT" spacing="10.0">-->
+<!--                                        <TextField fx:id="perLight1IntensityTxtField" prefWidth="50.0" />-->
+<!--                                        <Slider fx:id="perLight1IntensitySlider" showTickLabels="true" showTickMarks="true">-->
+<!--                                            <HBox.margin>-->
+<!--                                                <Insets />-->
+<!--                                            </HBox.margin>-->
+<!--                                        </Slider>-->
+<!--                                    </HBox>-->
+<!--                                </VBox>-->
+<!--                            </HBox>-->
+<!--                            <HBox spacing="20.0">-->
+<!--                                <padding>-->
+<!--                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />-->
+<!--                                </padding>-->
+<!--                                <VBox spacing="15.0">-->
+<!--                                    <CheckBox fx:id="enableLight2CheckBox" mnemonicParsing="false" onAction="#updateRelightingVisibility" styleClass="checkbox" text="Enable Light 2" />-->
+<!--                                    <ColorPicker fx:id="light2ColorPicker" styleClass="color-picker" />-->
+<!--                                </VBox>-->
+<!--                                <VBox spacing="10.0">-->
+<!--                                    <Label fx:id="perLight2IntensityLabel" text="Intensity Selection">text="Intensity Selection"</Label>-->
+<!--                                    <HBox alignment="CENTER_LEFT" spacing="10.0">-->
+<!--                                        <TextField fx:id="perLight2IntensityTxtField" prefWidth="50.0" />-->
+<!--                                        <Slider fx:id="perLight2IntensitySlider" showTickLabels="true" showTickMarks="true">-->
+<!--                                            <HBox.margin>-->
+<!--                                                <Insets />-->
+<!--                                            </HBox.margin>-->
+<!--                                        </Slider>-->
+<!--                                    </HBox>-->
+<!--                                </VBox>-->
+<!--                            </HBox>-->
+<!--                            <HBox spacing="20.0">-->
+<!--                                <padding>-->
+<!--                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />-->
+<!--                                </padding>-->
+<!--                                <VBox spacing="15.0">-->
+<!--                                    <CheckBox fx:id="enableLight3CheckBox" mnemonicParsing="false" onAction="#updateRelightingVisibility" styleClass="checkbox" text="Enable Light 3" />-->
+<!--                                    <ColorPicker fx:id="light3ColorPicker" styleClass="color-picker" />-->
+<!--                                </VBox>-->
+<!--                                <VBox spacing="10.0">-->
+<!--                                    <Label fx:id="perLight3IntensityLabel" text="Intensity Selection">text="Intensity Selection"</Label>-->
+<!--                                    <HBox alignment="CENTER_LEFT" spacing="10.0">-->
+<!--                                        <TextField fx:id="perLight3IntensityTxtField" prefWidth="50.0" />-->
+<!--                                        <Slider fx:id="perLight3IntensitySlider" showTickLabels="true" showTickMarks="true">-->
+<!--                                            <HBox.margin>-->
+<!--                                                <Insets />-->
+<!--                                            </HBox.margin>-->
+<!--                                        </Slider>-->
+<!--                                    </HBox>-->
+<!--                                </VBox>-->
+<!--                            </HBox>-->
+<!--                            <HBox spacing="20.0">-->
+<!--                                <padding>-->
+<!--                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />-->
+<!--                                </padding>-->
+<!--                                <VBox spacing="15.0">-->
+<!--                                    <CheckBox fx:id="enableLight4CheckBox" mnemonicParsing="false" onAction="#updateRelightingVisibility" styleClass="checkbox" text="Enable Light 4" />-->
+<!--                                    <ColorPicker fx:id="light4ColorPicker" styleClass="color-picker" />-->
+<!--                                </VBox>-->
+<!--                                <VBox spacing="10.0">-->
+<!--                                    <Label fx:id="perLight4IntensityLabel" text="Intensity Selection">text="Intensity Selection"</Label>-->
+<!--                                    <HBox alignment="CENTER_LEFT" spacing="10.0">-->
+<!--                                        <TextField fx:id="perLight4IntensityTxtField" prefWidth="50.0" />-->
+<!--                                        <Slider fx:id="perLight4IntensitySlider" showTickLabels="true" showTickMarks="true">-->
+<!--                                            <HBox.margin>-->
+<!--                                                <Insets />-->
+<!--                                            </HBox.margin>-->
+<!--                                        </Slider>-->
+<!--                                    </HBox>-->
+<!--                                </VBox>-->
+<!--                            </HBox>-->
+<!--                            <padding>-->
+<!--                                <Insets bottom="7.0" left="7.0" right="7.0" top="7.0" />-->
+<!--                            </padding>-->
+<!--                        </VBox>-->
+<!--                    </AnchorPane>-->
+<!--                </TitledPane>-->
+<!--                <TitledPane layoutX="10.0" layoutY="10.0" maxHeight="-Infinity" styleClass="titled-pane" text="Ambient Light (UNFINISHED)">-->
+<!--                    <AnchorPane styleClass="anchor-pane">-->
+<!--                        <VBox spacing="10.0">-->
+<!--                            <padding>-->
+<!--                                <Insets bottom="7.0" left="7.0" right="7.0" top="7.0" />-->
+<!--                            </padding>-->
+<!--                            <HBox spacing="20.0">-->
+<!--                                <padding>-->
+<!--                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />-->
+<!--                                </padding>-->
+<!--                                <VBox spacing="15.0">-->
+<!--                                    <ColorPicker styleClass="color-picker" />-->
+<!--                                </VBox>-->
+<!--                                <VBox spacing="10.0">-->
+<!--                                    <Label text="Intensity Selection" />-->
+<!--                                    <HBox alignment="CENTER_LEFT" spacing="10.0">-->
+<!--                                        <TextField fx:id="ambientLightIntensityTxtField" prefWidth="50.0" />-->
+<!--                                        <Slider fx:id="ambientLightIntensitySlider" showTickLabels="true" showTickMarks="true">-->
+<!--                                            <HBox.margin>-->
+<!--                                                <Insets />-->
+<!--                                            </HBox.margin>-->
+<!--                                        </Slider>-->
+<!--                                    </HBox>-->
+<!--                                </VBox>-->
+<!--                            </HBox>-->
+<!--                        </VBox>-->
+<!--                    </AnchorPane>-->
+<!--                </TitledPane>-->
+<!--            </panes>-->
+<!--        </Accordion>-->
+    </VBox>
+</AnchorPane>

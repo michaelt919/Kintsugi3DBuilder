@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,13 +7,13 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.gl.builders.base;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -26,7 +26,7 @@ public abstract class ProgramBuilderBase<ContextType extends Context<ContextType
     @FunctionalInterface
     private interface ShaderSupplier<ContextType extends Context<ContextType>>
     {
-        Shader<ContextType> get() throws FileNotFoundException;
+        Shader<ContextType> get() throws IOException;
     }
 
     protected final ContextType context;
@@ -41,7 +41,7 @@ public abstract class ProgramBuilderBase<ContextType extends Context<ContextType
         this.defines = new HashMap<>(16);
     }
 
-    protected Iterable<Shader<ContextType>> compileShaders() throws FileNotFoundException
+    protected Iterable<Shader<ContextType>> compileShaders() throws IOException
     {
         Collection<Shader<ContextType>> shaders = new ArrayList<>(shaderBuilders.size());
         for (ShaderSupplier<ContextType> shaderBuilder : shaderBuilders)

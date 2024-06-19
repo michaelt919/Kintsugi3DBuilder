@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,17 +7,16 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.util.AbstractImage;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Optional;
+
+import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.util.EncodableColorImage;
 
 public interface DynamicResourceManager
 {
@@ -35,7 +34,7 @@ public interface DynamicResourceManager
      * @param environmentFile The environment map image file.
      * @throws FileNotFoundException If the environment map image is not found.
      */
-    Optional<AbstractImage> loadEnvironmentMap(File environmentFile) throws FileNotFoundException;
+    Optional<EncodableColorImage> loadEnvironmentMap(File environmentFile) throws FileNotFoundException;
 
     /**
      * Sets the tonemapping curve used to interpret the photographic data.

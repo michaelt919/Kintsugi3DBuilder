@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -23,15 +23,20 @@ import kintsugi3d.builder.javafx.InternalModels;
 public class ObjectVisualsController implements SystemSettingsControllerBase{
 
     final Number DEFAULT_VALUE = 1024;//default value for Preload vis and shadow testing txt fields
-    private IntegerProperty widthIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
-    private IntegerProperty heightIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
+    private IntegerProperty previewWidthIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
+    private IntegerProperty previewHeightIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
+    private IntegerProperty depthWidthIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
+    private IntegerProperty depthHeightIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
+
+    @FXML public TextField previewWidthTxtField;
+    @FXML public TextField previewHeightTxtField;
 
     @FXML public CheckBox imageCompressionCheckBox;
     @FXML public CheckBox preloadVisibilityEtcCheckBox;
     @FXML public Label widthLabel;
-    @FXML public TextField widthTxtField;
+    @FXML public TextField depthWidthTxtField;
     @FXML public Label heightLabel;
-    @FXML public TextField heightTxtField;
+    @FXML public TextField depthHeightTxtField;
     @FXML public CheckBox mipmapCheckBox;
     @FXML public CheckBox reduceViewportResCheckBox;
 
@@ -45,17 +50,22 @@ public class ObjectVisualsController implements SystemSettingsControllerBase{
         imageCompressionCheckBox.selectedProperty().bindBidirectional(
                 internalModels.getLoadOptionsModel().compression);
 
-        setupTxtFieldProperties(widthIntProperty, widthTxtField);
-        setupTxtFieldProperties(heightIntProperty, heightTxtField);
+        setupTxtFieldProperties(previewWidthIntProperty, previewWidthTxtField);
+        setupTxtFieldProperties(previewHeightIntProperty, previewHeightTxtField);
+        setupTxtFieldProperties(depthWidthIntProperty, depthWidthTxtField);
+        setupTxtFieldProperties(depthHeightIntProperty, depthHeightTxtField);
 
-        widthTxtField.disableProperty().bind(preloadVisibilityEtcCheckBox.selectedProperty().not());
-        heightTxtField.disableProperty().bind(preloadVisibilityEtcCheckBox.selectedProperty().not());
+        previewWidthIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().previewWidth);
+        previewHeightIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().previewHeight);
+
+        depthWidthTxtField.disableProperty().bind(preloadVisibilityEtcCheckBox.selectedProperty().not());
+        depthHeightTxtField.disableProperty().bind(preloadVisibilityEtcCheckBox.selectedProperty().not());
 
         preloadVisibilityEtcCheckBox.selectedProperty().bindBidirectional(
                 internalModels.getLoadOptionsModel().depthImages);
 
-        widthIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthWidth);
-        heightIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthHeight);
+        depthWidthIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthWidth);
+        depthHeightIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthHeight);
 
         mipmapCheckBox.selectedProperty().bindBidirectional(internalModels.getLoadOptionsModel().mipmaps);
         reduceViewportResCheckBox.selectedProperty().bindBidirectional(

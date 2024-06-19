@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,10 +7,20 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.io;
+
+import java.io.File;
+import java.io.InputStream;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TreeSet;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.ViewSet;
@@ -22,19 +32,8 @@ import kintsugi3d.gl.vecmath.Vector4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import java.io.File;
-import java.io.InputStream;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Objects;
-
 /**
- * Handles loading view sets from a camera definition file exported in XML format from Agisoft PhotoScan.
+ * Handles loading view sets from a camera definition file exported in XML format from Agisoft PhotoScan/Metashape.
  */
 public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 {
@@ -52,7 +51,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     }
 
     /**
-     * A private class for representing a "sensor" in an Agisoft PhotoScan XML file.
+     * A private class for representing a "sensor" in an Agisoft PhotoScan/Metashape XML file.
      * @author Michael Tetzlaff
      *
      */
@@ -83,7 +82,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     }
 
     /**
-     * A private class for representing a "camera" in an Agisoft PhotoScan XML file.
+     * A private class for representing a "camera" in an Agisoft PhotoScan/Metashape XML file.
      * @author Michael Tetzlaff
      *
      */
@@ -126,7 +125,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     }
 
     /**
-     * A subroutine for guessing an appropriate far plane from an Agisoft PhotoScan XML file.
+     * A subroutine for guessing an appropriate far plane from an Agisoft PhotoScan/Metashape XML file.
      * Assumes that the object must lie between all of the cameras in the file.
      * @param cameraPoseInvList The list of camera poses.
      * @return A far plane estimate.
@@ -165,7 +164,41 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory) throws XMLStreamException
     {
         Map<String, Sensor> sensorSet = new Hashtable<>();
-        HashSet<Camera> cameraSet = new HashSet<>();
+        TreeSet<Camera> cameraSet = new TreeSet<>((c1, c2) ->
+        {
+            // Attempt to sort the camera IDs which are probably integers but not guaranteed to be.
+            try
+            {
+                int id1 = Integer.parseInt(c1.id);
+
+                try
+                {
+                    // Both are integers; compare as numbers.
+                    int id2 = Integer.parseInt(c2.id);
+                    return Integer.compare(id1, id2);
+                }
+                catch (NumberFormatException e)
+                {
+                    // id1 is a number but id2 isn't
+                    return -1;
+                }
+            }
+            catch (NumberFormatException e)
+            {
+                try
+                {
+                    int id2 = Integer.parseInt(c2.id);
+
+                    // id2 is a number but id1 isn't
+                    return 1;
+                }
+                catch (NumberFormatException e2)
+                {
+                    // Neither are numbers; compare as strings.
+                    return c1.id.compareTo(c2.id);
+                }
+            }
+        });
 
         Sensor sensor = null;
         Camera camera = null;
@@ -207,7 +240,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                 intVersion *= 10;
                                 intVersion += Integer.parseInt(verComponent);
                             }
-                            log.debug("PhotoScan XML version %s (%d)\n", version, intVersion);
+                            log.debug("Agisoft XML version {} ({})\n", version, intVersion);
                             break;
                         }
                         case "chunk":
@@ -217,7 +250,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             {
                                 chunkLabel = "unnamed";
                             }
-                            log.debug("Reading chunk '%s'\n", chunkLabel);
+                            log.debug("Reading chunk '{}'\n", chunkLabel);
 
                             // chunk XMLs put the version in the chunk tag
                             String tryVersion = reader.getAttributeValue(null, "version");
@@ -236,14 +269,14 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         }
                         case "group":
                             groupLabel = reader.getAttributeValue(null, "label");
-                            log.debug("Reading group '%s'\n", groupLabel);
+                            log.debug("Reading group '{}'\n", groupLabel);
                             lightIndex = nextLightIndex;
                             nextLightIndex++;
                             log.debug("Light index: " + lightIndex);
                             break;
                         case "sensor":
                             sensorID = reader.getAttributeValue(null, "id");
-                            log.debug("\tAdding sensor '%s'\n", sensorID);
+                            log.debug("\tAdding sensor '{}'\n", sensorID);
                             sensor = new Sensor(sensorID);
                             break;
                         case "camera":
@@ -258,23 +291,34 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                     Objects.equals(reader.getAttributeValue(null, "enabled"), "1") ||
                                     Objects.equals(reader.getAttributeValue(null, "enabled"), null))
                                 {
-                                    if (lightIndex < 0)
-                                    {
-                                        // Set default light index
-                                        lightIndex = defaultLightIndex = nextLightIndex;
-                                        nextLightIndex++;
-                                        log.debug("Using default light index: " + lightIndex);
-                                    }
-
                                     sensorID = reader.getAttributeValue(null, "sensor_id");
                                     imageFile = reader.getAttributeValue(null, "label");
-                                    camera = new Camera(cameraID, sensorSet.get(sensorID), lightIndex);
-                                    camera.filename = imageFile;
+
+                                    if (sensorID != null && imageFile != null)
+                                    {
+                                        if (lightIndex < 0)
+                                        {
+                                            // Set default light index
+                                            lightIndex = defaultLightIndex = nextLightIndex;
+                                            nextLightIndex++;
+                                            log.debug("Using default light index: " + lightIndex);
+                                        }
+
+                                        camera = new Camera(cameraID, sensorSet.get(sensorID), lightIndex);
+                                        camera.filename = imageFile;
+                                    }
+                                    else
+                                    {
+                                        // Camera is incomplete for use as a calibrated photo (i.e. keyframe)
+                                        camera = null;
+                                    }
                                 }
                                 else
                                 {
+                                    // Camera is disabled
                                     camera = null;
                                 }
+
                             }
                             break;
                         case "orientation":
@@ -523,13 +567,13 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         case "dense_cloud":
                             if (intVersion < 110)
                             {
-                                log.debug("Unexpected tag '%s' for psz version %s\n",
+                                log.debug("Unexpected tag \'{}\' for psz version {}\n",
                                     reader.getLocalName(), version);
                             }
                             break;
 
                         default:
-                            log.debug("Unexpected tag '%s'\n", reader.getLocalName());
+                            log.debug("Unexpected tag '{}'\n", reader.getLocalName());
                             break;
                     }
                     break;
@@ -539,11 +583,11 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     switch (reader.getLocalName())
                     {
                         case "chunk":
-                            log.debug("Finished chunk '%s'\n", chunkLabel);
+                            log.debug("Finished chunk '{}'\n", chunkLabel);
                             chunkLabel = "";
                             break;
                         case "group":
-                            log.debug("Finished group '%s'\n", groupLabel);
+                            log.debug("Finished group '{}'\n", groupLabel);
                             groupLabel = "";
                             lightIndex = defaultLightIndex;
                             break;
@@ -558,7 +602,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             if (camera != null && camera.transform != null)
                             {
                                 cameraSet.add(camera);
-                                log.debug("\tAdding camera %s, with sensor %s and image %s\n",
+                                log.debug("\tAdding camera {}, with sensor {} and image {}\n",
                                     cameraID, sensorID, imageFile);
                                 camera = null;
                             }

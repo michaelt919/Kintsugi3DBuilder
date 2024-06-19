@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,12 +7,12 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.resources.ibr;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.GeometryResources;
@@ -37,12 +37,12 @@ public class DepthMapGenerator<ContextType extends Context<ContextType>> impleme
      * @throws FileNotFoundException Thrown if the depth map shader cannot be loaded
      */
     public static <ContextType extends Context<ContextType>>DepthMapGenerator<ContextType> createFromGeometryResources(
-        GeometryResources<ContextType> geometryResources) throws FileNotFoundException
+        GeometryResources<ContextType> geometryResources) throws IOException
     {
         return new DepthMapGenerator<>(geometryResources);
     }
 
-    private DepthMapGenerator(GeometryResources<ContextType> geometryResources) throws FileNotFoundException
+    private DepthMapGenerator(GeometryResources<ContextType> geometryResources) throws IOException
     {
         this.geometryResources = geometryResources;
         depthRenderingProgram = IBRResourcesImageSpace.getDepthMapProgramBuilder(geometryResources.positionBuffer.getContext()).createProgram();

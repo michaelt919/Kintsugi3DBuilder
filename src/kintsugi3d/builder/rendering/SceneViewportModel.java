@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,21 +7,9 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.rendering;
-
-import org.lwjgl.BufferUtils;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.FramebufferObject;
-import kintsugi3d.gl.core.FramebufferSize;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector2;
-import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.gl.vecmath.Vector4;
-import kintsugi3d.builder.core.SceneModel;
-import kintsugi3d.builder.state.SceneViewport;
 
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
@@ -30,7 +18,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SceneViewportModel<ContextType extends Context<ContextType>> implements SceneViewport
+import kintsugi3d.builder.core.SceneModel;
+import kintsugi3d.builder.state.SceneViewport;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.FramebufferObject;
+import kintsugi3d.gl.core.FramebufferSize;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector2;
+import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.gl.vecmath.Vector4;
+import org.lwjgl.*;
+
+public class SceneViewportModel implements SceneViewport
 {
     private final List<String> sceneObjectNameList;
     private final Map<String, Integer> sceneObjectIDLookup;
@@ -64,7 +63,7 @@ public class SceneViewportModel<ContextType extends Context<ContextType>> implem
         return this.sceneObjectIDLookup.get(sceneObjectTag);
     }
 
-    public void refreshBuffers(Matrix4 projection, FramebufferObject<ContextType> offscreenFBO)
+    public <ContextType extends Context<ContextType>> void refreshBuffers(Matrix4 projection, FramebufferObject<ContextType> offscreenFBO)
     {
         this.projection = projection;
         this.fboSize = offscreenFBO.getSize();
@@ -100,12 +99,20 @@ public class SceneViewportModel<ContextType extends Context<ContextType>> implem
             double yRemapped = 1.0 - Math.min(Math.max(y, 0), 1);
 
             int index = 4 * (int)(Math.round((fboSize.height-1) * yRemapped) * fboSize.width + Math.round((fboSize.width-1) * xRemapped));
-            return sceneObjectNameList.get(pixelObjectIDBuffer.get(index));
+
+            if (index >= 0 && index < pixelObjectIDBuffer.limit())
+            {
+                int objectID = pixelObjectIDBuffer.get(index);
+
+                if (objectID >= 0 && objectID < sceneObjectNameList.size())
+                {
+                    return sceneObjectNameList.get(objectID);
+                }
+            }
         }
-        else
-        {
-            return null;
-        }
+
+        // If any conditions were false
+        return null;
     }
 
     private Matrix4 getProjectionInverse()
@@ -128,21 +135,23 @@ public class SceneViewportModel<ContextType extends Context<ContextType>> implem
 
             int index = (int)(Math.round((fboSize.height-1) * yRemapped) * fboSize.width + Math.round((fboSize.width-1) * xRemapped));
 
-            Matrix4 projectionInverse = getProjectionInverse();
+            if (index >= 0 && index < pixelDepthBuffer.limit())
+            {
+                Matrix4 projectionInverse = getProjectionInverse();
 
-            // Transform from screen space into camera space
-            Vector4 unscaledPosition = projectionInverse
-                    .times(new Vector4((float)(2 * x - 1), (float)(1 - 2 * y), 2 * (float)(0x0000FFFF & pixelDepthBuffer.get(index)) / (float)0xFFFF - 1, 1.0f));
+                // Transform from screen space into camera space
+                Vector4 unscaledPosition = projectionInverse
+                        .times(new Vector4((float) (2 * x - 1), (float) (1 - 2 * y), 2 * (float) (0x0000FFFF & pixelDepthBuffer.get(index)) / (float) 0xFFFF - 1, 1.0f));
 
-            // Transform from camera space into world space.
-            return sceneModel.getCurrentViewMatrix().quickInverse(0.01f)
-                    .times(unscaledPosition.getXYZ().dividedBy(unscaledPosition.w).asPosition())
-                    .getXYZ().dividedBy(sceneModel.getScale());
+                // Transform from camera space into world space.
+                return sceneModel.getCurrentViewMatrix().quickInverse(0.01f)
+                        .times(unscaledPosition.getXYZ().dividedBy(unscaledPosition.w).asPosition())
+                        .getXYZ().dividedBy(sceneModel.getScale());
+            }
         }
-        else
-        {
-            return null;
-        }
+
+        // If any conditions were false
+        return null;
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,7 +7,6 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.resources;
@@ -23,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class LightingResources<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -70,7 +70,7 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
                     .createProgram();
             shadowDrawable = context.createDrawable(shadowProgram);
         }
-        catch (FileNotFoundException e)
+        catch (IOException e)
         {
             log.error("Failed to load shader.", e);
         }
@@ -98,7 +98,7 @@ public class LightingResources<ContextType extends Context<ContextType>> impleme
                 shadowDrawable.addVertexBuffer("position", shadowCastingPositionBuffer);
             }
         }
-        catch (FileNotFoundException|RuntimeException e)
+        catch (IOException|RuntimeException e)
         {
             log.error("Failed to load shader.", e);
         }

@@ -1,0 +1,10 @@
+remote_theme: pages-themes/midnight@v0.2.0
+plugins:
+- jekyll-remote-theme # add this line to the plugins list if you already have one
+title: Kintsugi 3D Builder
+description: Software for synthesizing empirically-based roughness, specularity, normal, and diffuse textures from an image set containing photographs of an object captured with flash-on-camera illumination.
+tagline: Empirically-based 3D materials from photos
+logo: kintsugi3d-banner.png
+documentation: Kintsugi3DDocumentation.pdf
+forums: https://forums.culturalheritageimaging.org/forum/48-kintsugi-3d/
+show_downloads: true

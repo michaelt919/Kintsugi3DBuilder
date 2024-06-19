@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,15 +7,20 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.export.specular;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Accordion;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
@@ -34,13 +39,11 @@ import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-
 public class SpecularFitRequestUI implements IBRRequestUI
 {
     private static final Logger log = LoggerFactory.getLogger(SpecularFitRequestUI.class);
+
+    @FXML private Accordion advancedAccordion;
     @FXML private CheckBox smithCheckBox;
     @FXML private TextField unsuccessfulLMIterationsTextField;
     @FXML private TextField widthTextField;
@@ -56,7 +59,6 @@ public class SpecularFitRequestUI implements IBRRequestUI
     @FXML private TextField minNormalDampingTextField;
     @FXML private TextField normalSmoothingIterationsTextField;
 
-    @FXML private CheckBox exportTextureLODsCheckbox;
     @FXML private CheckBox openViewerOnComplete;
 
     @FXML private Button runButton;
@@ -83,9 +85,10 @@ public class SpecularFitRequestUI implements IBRRequestUI
 
         svdRequestUI.stage = new Stage();
         svdRequestUI.stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-        svdRequestUI.stage.setTitle("Specular fit request");
+        svdRequestUI.stage.setTitle("Process Textures");
         svdRequestUI.stage.setScene(new Scene(parent));
         svdRequestUI.stage.initOwner(window);
+
         return svdRequestUI;
     }
 
@@ -98,6 +101,10 @@ public class SpecularFitRequestUI implements IBRRequestUI
     @Override
     public <ContextType extends Context<ContextType>> void prompt(IBRRequestQueue<ContextType> requestQueue)
     {
+        advancedAccordion.expandedPaneProperty().addListener((observable, oldValue, newValue) ->
+            // Use Platform.runLater since the scene layout seems to not be updated yet at this point.
+            Platform.runLater(stage::sizeToScene));
+
         stage.show();
 
         runButton.setOnAction(event ->
@@ -144,8 +151,6 @@ public class SpecularFitRequestUI implements IBRRequestUI
             int unsuccessfulLMIterationsAllowed = Integer.parseInt(unsuccessfulLMIterationsTextField.getText());
             settings.getNormalOptimizationSettings().setUnsuccessfulLMIterationsAllowed(unsuccessfulLMIterationsAllowed);
             settings.getReconstructionSettings().setReconstructAll(false);
-
-            settings.getExportSettings().setGenerateLowResTextures(exportTextureLODsCheckbox.isSelected());
 
             // glTF export settings
             settings.getExportSettings().setGlTFEnabled(true);

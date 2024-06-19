@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,18 +7,17 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.builder.state.*;
+import kintsugi3d.builder.state.impl.DefaultSettingsModel;
+import kintsugi3d.builder.state.impl.SafeSettingsModelWrapperFactory;
 import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.state.*;
-import kintsugi3d.builder.state.impl.DefaultSettingsModel;
-import kintsugi3d.builder.state.impl.SafeSettingsModelWrapperFactory;
 
 public class SceneModel
 {
@@ -26,6 +25,7 @@ public class SceneModel
     private ReadonlyCameraModel cameraModel;
     private ReadonlyLightingModel lightingModel;
     private SafeReadonlySettingsModel settingsModel = new DefaultSettingsModel();
+    private CameraViewListModel cameraViewListModel;
 
     private Vector3 centroid = Vector3.ZERO;
     private Matrix3 orientation = Matrix3.IDENTITY;
@@ -53,6 +53,12 @@ public class SceneModel
         return this.settingsModel;
     }
 
+    public CameraViewListModel getCameraViewListModel()
+    {
+        return cameraViewListModel;
+    }
+
+
     public Vector3 getCentroid()
     {
         return centroid;
@@ -72,7 +78,6 @@ public class SceneModel
     {
         return clearColor;
     }
-
     public void setObjectModel(ReadonlyObjectModel objectModel)
     {
         this.objectModel = objectModel;
@@ -91,6 +96,11 @@ public class SceneModel
     public void setSettingsModel(ReadonlySettingsModel settingsModel)
     {
         this.settingsModel = SafeSettingsModelWrapperFactory.getInstance().wrapUnsafeModel(settingsModel);
+    }
+
+    public void setCameraViewListModel(CameraViewListModel cameraViewListModel)
+    {
+        this.cameraViewListModel = cameraViewListModel;
     }
 
     public void setCentroid(Vector3 centroid)
@@ -116,6 +126,11 @@ public class SceneModel
     public Matrix4 getLightViewMatrix(int lightIndex)
     {
         return getUnscaledMatrix(lightingModel.getLightMatrix(lightIndex));
+    }
+
+    public Matrix4 getInverseLightViewMatrix(int lightIndex)
+    {
+        return getUnscaledMatrix(lightingModel.getLightMatrix(lightIndex).quickInverse(0.01f));
     }
 
     public Matrix4 getLightModelViewMatrix(int lightIndex)

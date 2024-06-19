@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,51 +7,10 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.javafx.controllers.menubar;
 
-import javafx.application.Platform;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.image.Image;
-import javafx.stage.Window;
-import javafx.stage.*;
-import javafx.util.StringConverter;
-import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
-import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
-import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
-import kintsugi3d.util.RecentProjects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.javafx.FramebufferView;
-import kintsugi3d.gl.vecmath.Vector2;
-import kintsugi3d.builder.app.Rendering;
-import kintsugi3d.builder.app.WindowSynchronization;
-import kintsugi3d.builder.core.IBRRequestUI;
-import kintsugi3d.builder.core.Kintsugi3DBuilderState;
-import kintsugi3d.builder.core.LoadingMonitor;
-import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
-import kintsugi3d.builder.javafx.InternalModels;
-import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.builder.javafx.ProjectIO;
-import kintsugi3d.util.Flag;
-
-import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -59,9 +18,47 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Scanner;
+import java.util.function.Consumer;
+
+import javafx.application.Platform;
+import javafx.beans.property.IntegerProperty;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.image.Image;
+import javafx.scene.layout.VBox;
+import javafx.stage.*;
+import javafx.util.StringConverter;
+import kintsugi3d.builder.app.Rendering;
+import kintsugi3d.builder.app.WindowSynchronization;
+import kintsugi3d.builder.core.IBRRequestUI;
+import kintsugi3d.builder.core.Kintsugi3DBuilderState;
+import kintsugi3d.builder.core.LoadingMonitor;
+import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.export.projectExporter.ExportRequestUI;
+import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
+import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.ProjectIO;
+import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
+import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
+import kintsugi3d.builder.javafx.controllers.scene.object.ObjectPoseSetting;
+import kintsugi3d.builder.javafx.controllers.scene.object.SettingsObjectSceneController;
+import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.javafx.FramebufferView;
+import kintsugi3d.util.Flag;
+import kintsugi3d.util.RecentProjects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MenubarController
 {
@@ -81,9 +78,11 @@ public class MenubarController
     private final Flag advPhotoViewWindowOpen = new Flag(false);
     private final Flag systemMemoryWindowOpen = new Flag(false);
     private final Flag loadOptionsWindowOpen = new Flag(false);
+    private final Flag objectOrientationWindowOpen = new Flag(false);
+    private final Flag lightCalibrationWindowOpen = new Flag(false);
     private final Flag colorCheckerWindowOpen = new Flag(false);
     private final Flag unzipperOpen = new Flag(false);
-    private final Flag consoleWindowOpen = new Flag(false);
+    private final Flag loggerWindowOpen = new Flag(false);
     private Flag systemSettingsModalOpen = new Flag(false);
 
     private Flag aboutWindowOpen = new Flag(false);
@@ -99,13 +98,13 @@ public class MenubarController
 
     //menu items
     //TODO: ORGANIZE CHECK MENU ITEMS
-    @FXML private CheckMenuItem lightCalibrationCheckMenuItem;
     @FXML private CheckMenuItem is3DGridCheckMenuItem;
     @FXML private CheckMenuItem compassCheckMenuItem;
     @FXML private CheckMenuItem halfResolutionCheckMenuItem;
     @FXML private CheckMenuItem multiSamplingCheckMenuItem;
     @FXML private CheckMenuItem sceneWindowMenuItem;
     @FXML private CheckMenuItem relightingCheckMenuItem;
+    @FXML private CheckMenuItem sceneWindowCheckMenuItem;
     @FXML private CheckMenuItem environmentMappingCheckMenuItem; //TODO imp. this
     @FXML private CheckMenuItem shadowsCheckMenuItem;
     @FXML private CheckMenuItem visibleLightsCheckMenuItem;
@@ -146,7 +145,9 @@ public class MenubarController
     @FXML private Menu exportMenu;
     @FXML private Menu recentProjectsMenu;
 
-
+    @FXML private VBox cameraViewList;
+//    @FXML private HBox Eyedropper;
+    @FXML private CameraViewListController cameraViewListController;
     @FXML private FramebufferView framebufferView;
 
     private Window window;
@@ -170,8 +171,26 @@ public class MenubarController
     public <ContextType extends Context<ContextType>> void init(
         Stage injectedStage, InternalModels injectedInternalModels, Runnable injectedUserDocumentationHandler)
     {
+
         this.window = injectedStage;
         this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
+
+        // remove camera view list from layout when invisible
+        this.cameraViewList.managedProperty().bind(this.cameraViewList.visibleProperty());
+//        this.Eyedropper.managedProperty().bind(this.Eyedropper.visibleProperty());
+//        Eyedropper.setVisible(false);
+//        Eyedropper.setExitCallback(() -> Eyedropper.setVisible(false));
+
+        // only show camera view list when light calibration mode is active
+        // TODO make this a separate property to allow it to be shown in other contexts
+        this.cameraViewList.visibleProperty().bind(injectedInternalModels.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
+
+
+
+        // remove progress bar from layout when invisible
+        this.progressBar.managedProperty().bind(this.progressBar.visibleProperty());
+
+        this.cameraViewListController.init(injectedInternalModels.getCameraViewListModel());
 
         this.internalModels = injectedInternalModels;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
@@ -213,7 +232,7 @@ public class MenubarController
             }
 
             @Override
-            public void loadingFailed(Exception e)
+            public void loadingFailed(Throwable e)
             {
                 loadingComplete();
             }
@@ -223,8 +242,10 @@ public class MenubarController
         File exportClassDefinitionFile = new File("export-classes.txt");
         if (exportClassDefinitionFile.exists())
         {
-            try (Scanner scanner = new Scanner(exportClassDefinitionFile))
+            try (Scanner scanner = new Scanner(exportClassDefinitionFile, StandardCharsets.UTF_8))
             {
+                scanner.useLocale(Locale.US);
+
                 while (scanner.hasNext())
                 {
                     String className = scanner.next();
@@ -249,7 +270,7 @@ public class MenubarController
                                         requestUI.bind(internalModels.getSettingsModel());
                                         requestUI.prompt(Rendering.getRequestQueue());
                                     }
-                                    catch (IllegalAccessException | InvocationTargetException e)
+                                    catch (IllegalAccessException | InvocationTargetException | RuntimeException e)
                                     {
                                         log.error("An error has occurred:", e);
                                     }
@@ -269,7 +290,7 @@ public class MenubarController
                     }
                 }
             }
-            catch (FileNotFoundException e)
+            catch (IOException e)
             {
                 log.error("Failed to find export classes file:", e);
             }
@@ -293,15 +314,6 @@ public class MenubarController
 //        heightTxtField.disableProperty().bind(preloadVisibilityEtcCheckMenuItem.selectedProperty().not());
 
 
-        lightCalibrationCheckMenuItem.selectedProperty().addListener(observable ->
-        {
-            if (!lightCalibrationCheckMenuItem.isSelected())
-            {
-                MultithreadModels.getInstance().getLoadingModel().applyLightCalibration();
-                MultithreadModels.getInstance().getSettingsModel().set("currentLightCalibration", Vector2.ZERO);
-            }
-        });
-
         updateRecentProjectsMenu();
 
 //        //add "Default Path" and "Choose Location..." items to choiceBox
@@ -315,6 +327,19 @@ public class MenubarController
 //        autosaveOptionsChoiceBox.setOnAction(this::handleDirectoryDropdownSelection);
     }
 
+    public void file_exportGLTF()
+    {
+        try
+        {
+            IBRRequestUI requestUI = ExportRequestUI.create(window, MultithreadModels.getInstance());
+            requestUI.bind(internalModels.getSettingsModel());
+            requestUI.prompt(Rendering.getRequestQueue());
+        }
+        catch (IOException|RuntimeException e)
+        {
+            log.error("Error opening glTF export window", e);
+        }
+    }
 
     public FramebufferView getFramebufferView()
     {
@@ -341,8 +366,6 @@ public class MenubarController
     private void bindCheckMenuItems()
     {
         //value binding
-        lightCalibrationCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
         is3DGridCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("is3DGridEnabled"));
         compassCheckMenuItem.selectedProperty().bindBidirectional(
@@ -356,6 +379,8 @@ public class MenubarController
             internalModels.getSettingsModel().getBooleanProperty("visibleLightsEnabled"));
         visibleLightWidgetsCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("lightWidgetsEnabled"));
+        sceneWindowCheckMenuItem.selectedProperty().bindBidirectional(
+            internalModels.getSettingsModel().getBooleanProperty("sceneWindowOpen"));
         visibleCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("visibleCameraPosesEnabled"));
         visibleSavedCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(
@@ -423,7 +448,7 @@ public class MenubarController
     }
 
     @FXML
-    private void exportSpecularFit(){
+    private void exportSpecularFit() {
         try {
             IBRRequestUI requestUI = SpecularFitRequestUI.create(this.window, MultithreadModels.getInstance());
             requestUI.bind(internalModels.getSettingsModel());
@@ -451,6 +476,17 @@ public class MenubarController
         catch(Exception e)
         {
             handleException("An error occurred opening load options", e);
+        }
+    }
+
+    @FXML
+    private void exportRequestUI(){
+        try{
+            IBRRequestUI requestUI = ExportRequestUI.create(this.window, MultithreadModels.getInstance());
+            requestUI.bind(internalModels.getSettingsModel());
+            requestUI.prompt(Rendering.getRequestQueue());
+        } catch (Exception e) {
+            handleException("An error occurred with ExportRequest handler", e);
         }
     }
 
@@ -492,7 +528,7 @@ public class MenubarController
 
         try
         {
-            AdvPhotoViewController advPhotoViewController = makeWindow("Advanced Photo View", advPhotoViewWindowOpen, "fxml/menubar/systemsettings/AdvancedPhotoView.fxml");
+            AdvPhotoViewController advPhotoViewController = makeWindow("Advanced Photo View", advPhotoViewWindowOpen, "fxml/menubar/systemsettings/PhotoProjectionSettings.fxml");
             advPhotoViewController.bind(internalModels.getSettingsModel());
         }
         catch(Exception e)
@@ -502,25 +538,57 @@ public class MenubarController
     }
 
     //window helpers
-    private <ControllerType> ControllerType makeWindow(String title, Flag flag, String urlString) throws IOException
+    private FXMLLoader getFXMLLoader(String urlString) throws FileNotFoundException
     {
         URL url = MenubarController.class.getClassLoader().getResource(urlString);
         if (url == null)
         {
             throw new FileNotFoundException(urlString);
         }
-        FXMLLoader fxmlLoader = new FXMLLoader(url);
+        return new FXMLLoader(url);
+    }
+
+    private Stage makeStage(String title, Flag flag, int width, int height, FXMLLoader fxmlLoader) throws IOException
+    {
         Parent root = fxmlLoader.load();
         Stage stage = new Stage();
         stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
         stage.setTitle(title);
-        stage.setScene(new Scene(root));
-        stage.initOwner(this.window);
 
-        stage.setResizable(false);
+        if (width >= 0 && height >= 0)
+        {
+            stage.setScene(new Scene(root, width, height));
+        }
+        else
+        {
+            stage.setScene(new Scene(root));
+        }
+
+        stage.initOwner(this.window);
 
         flag.set(true);
         stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
+
+        return stage;
+    }
+
+    private Stage makeStage(String title, Flag flag, String urlString) throws IOException
+    {
+        FXMLLoader fxmlLoader = getFXMLLoader(urlString);
+        return makeStage(title, flag, -1, -1, fxmlLoader);
+    }
+
+    private <ControllerType> ControllerType makeWindow(String title, Flag flag, int width, int height, String urlString, Consumer<Stage> stageCallback) throws IOException
+    {
+        FXMLLoader fxmlLoader = getFXMLLoader(urlString);
+        Stage stage = makeStage(title, flag, width, height, fxmlLoader);
+
+        stage.setResizable(false);
+
+        if (stageCallback != null)
+        {
+            stageCallback.accept(stage);
+        }
 
         stage.show();
 
@@ -529,46 +597,17 @@ public class MenubarController
 
     private <ControllerType> ControllerType makeWindow(String title, Flag flag, int width, int height, String urlString) throws IOException
     {
-        URL url = MenubarController.class.getClassLoader().getResource(urlString);
-        if (url == null)
-        {
-            throw new FileNotFoundException(urlString);
-        }
-
-        FXMLLoader fxmlLoader = new FXMLLoader(url);
-        Parent root = fxmlLoader.load();
-        Stage stage = new Stage();
-        stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-        stage.setTitle(title);
-        stage.setScene(new Scene(root, width, height));
-        stage.initOwner(this.window);
-        stage.setResizable(false);
-        flag.set(true);
-        stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
-        stage.show();
-
-        return fxmlLoader.getController();
+        return makeWindow(title, flag, width, height, urlString, null);
     }
 
-    private Stage makeStage(String title, Flag flag, String urlString) throws IOException
+    private <ControllerType> ControllerType makeWindow(String title, Flag flag, String urlString, Consumer<Stage> stageCallback) throws IOException
     {
-        URL url = MenubarController.class.getClassLoader().getResource(urlString);
-        if (url == null)
-        {
-            throw new FileNotFoundException(urlString);
-        }
-        FXMLLoader fxmlLoader = new FXMLLoader(url);
-        Parent root = fxmlLoader.load();
-        Stage stage = new Stage();
-        stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-        stage.setTitle(title);
-        stage.setScene(new Scene(root));
-        stage.initOwner(this.window);
+        return makeWindow(title, flag, -1, -1, urlString, stageCallback);
+    }
 
-        flag.set(true);
-        stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
-
-        return stage;
+    private <ControllerType> ControllerType makeWindow(String title, Flag flag, String urlString) throws IOException
+    {
+        return makeWindow(title, flag, urlString, null);
     }
 
     public void unzip() {
@@ -582,23 +621,106 @@ public class MenubarController
             handleException("An error occurred opening file unzipper", e);
         }
     }
-          
+
+    public void objectOrientation()
+    {
+        if (!objectOrientationWindowOpen.get())
+        {
+            try
+            {
+                var stageCapture = new Object()
+                {
+                    Stage stage;
+                };
+
+                SettingsObjectSceneController objectOrientationController =
+                    makeWindow("Object Orientation", objectOrientationWindowOpen, "fxml/scene/object/SettingsObjectScene.fxml",
+                        stage -> stageCapture.stage = stage);
+
+                ObjectPoseSetting boundObjectPose = internalModels.getObjectModel().getSelectedObjectPoseProperty().getValue();
+
+                objectOrientationController.bind(boundObjectPose);
+
+                stageCapture.stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST,
+                    e -> objectOrientationController.unbind(boundObjectPose));
+            }
+            catch(Exception e)
+            {
+                handleException("An error occurred opening color checker window", e);
+            }
+        }
+    }
+
+    public void lightCalibration()
+    {
+        if (!lightCalibrationWindowOpen.get())
+        {
+            try
+            {
+                var stageCapture = new Object()
+                {
+                    Stage stage;
+                };
+
+                LightCalibrationController lightCalibrationController =
+                    makeWindow("Light Calibration", lightCalibrationWindowOpen, "fxml/menubar/LightCalibration.fxml",
+                        stage ->
+                        {
+                            stageCapture.stage = stage;
+                            stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, e ->
+                            {
+                                MultithreadModels.getInstance().getLoadingModel().applyLightCalibration();
+                                MultithreadModels.getInstance().getSettingsModel().set("lightCalibrationMode", false);
+                            });
+                        });
+
+                // Must wait until the controllers is created to add this additional window close event handler.
+                stageCapture.stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST,
+                    e -> lightCalibrationController.unbind(internalModels.getSettingsModel()));
+
+                // Bind controller to settings model to synchronize with "currentLightCalibration".
+                lightCalibrationController.bind(internalModels.getSettingsModel());
+
+                if (MultithreadModels.getInstance().getLoadingModel().isInstanceLoaded())
+                {
+                    // Set the "currentLightCalibration" to the existing calibration values in the view set.
+                    ViewSet loadedViewSet = MultithreadModels.getInstance().getLoadingModel().getLoadedViewSet();
+
+                    internalModels.getSettingsModel().set("currentLightCalibration",
+                        loadedViewSet.getLightPosition(loadedViewSet.getLightIndex(loadedViewSet.getPrimaryViewIndex())).getXY());
+                }
+
+                // Enables light calibration mode when the window is opened.
+                internalModels.getSettingsModel().set("lightCalibrationMode", true);
+            }
+            catch (Exception e)
+            {
+                handleException("An error occurred opening light calibration window", e);
+            }
+        }
+    }
+
     public void eyedropperColorChecker()
     {
-        if (colorCheckerWindowOpen.get())
-        {
-            return;
-        }
+//        if (colorCheckerWindowOpen.get())
+//        {
+//            Eyedropper.setVisible(false);
+//
+//            return;
+//        }
 
         try
         {
+//            Eyedropper.setVisible(true);
             EyedropperController eyedropperController =
-                    makeWindow("Color Checker", colorCheckerWindowOpen, "fxml/menubar/EyedropperColorChecker.fxml");
+                    makeWindow("Grayscale Calibration", colorCheckerWindowOpen, "fxml/menubar/EyedropperColorChecker.fxml");
+
             eyedropperController.setLoadingModel(MultithreadModels.getInstance().getLoadingModel());
 
         }
-        catch(Exception e)
+        catch (IOException|RuntimeException e)
         {
+//            Eyedropper.setVisible(false);
             handleException("An error occurred opening color checker window", e);
         }
     }
@@ -612,7 +734,7 @@ public class MenubarController
 
         try
         {
-            makeWindow("System Memory", systemMemoryWindowOpen, "fxml/menubar/systemsettings/SystemMemory.fxml");
+            makeWindow("System Memory", systemMemoryWindowOpen, "fxml/menubar/systemsettings/SystemMemorySettings.fxml");
         }
         catch(Exception e)
         {
@@ -622,14 +744,14 @@ public class MenubarController
 
     public void help_console()
     {
-        if (consoleWindowOpen.get())
+        if (loggerWindowOpen.get())
         {
             return;
         }
 
         try
         {
-            Stage stage = makeStage("Log", consoleWindowOpen, "fxml/menubar/Console.fxml");
+            Stage stage = makeStage("Log", loggerWindowOpen, "fxml/menubar/Logger.fxml");
             stage.setResizable(true);
             stage.initStyle(StageStyle.DECORATED);
             stage.show();

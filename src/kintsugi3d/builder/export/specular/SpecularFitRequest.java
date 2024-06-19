@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,7 +7,6 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.export.specular;
@@ -16,6 +15,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -79,10 +79,10 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
             settings.setOutputDirectory(renderable.getActiveViewSet().getSupportingFilesFilePath());
 
             // Perform the specular fit
-            new SpecularFitProcess(settings).optimizeFit(renderable.getIBRResources());
+            new SpecularFitProcess(settings).optimizeFit(renderable.getIBRResources(), callback);
 
             // Perform reconstruction
-            performReconstruction(renderable.getIBRResources(), renderable.getIBRResources().getSpecularMaterialResources());
+            //performReconstruction(renderable.getIBRResources(), renderable.getIBRResources().getSpecularMaterialResources());
 
             if (settings.getExportSettings().isGlTFEnabled())
             {
@@ -102,7 +102,7 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
 
     private <ContextType extends Context<ContextType>> void performReconstruction(
         ReadonlyIBRResources<ContextType> resources, SpecularMaterialResources<ContextType> specularFit)
-        throws FileNotFoundException
+        throws IOException
     {
         if (settings.getOutputDirectory() != null)
         {
@@ -141,7 +141,7 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
 
                 if (!settings.getReconstructionSettings().shouldReconstructAll()) // Write to just one RMSE file if only doing a single image per reconstruction method
                 {
-                    try (PrintStream rmseOut = new PrintStream(new File(settings.getOutputDirectory(), "rmse.txt")))
+                    try (PrintStream rmseOut = new PrintStream(new File(settings.getOutputDirectory(), "rmse.txt"), StandardCharsets.UTF_8))
                     // Text file containing error information
                     {
                         rmseOut.println("basis, " + reconstructionRMSE);

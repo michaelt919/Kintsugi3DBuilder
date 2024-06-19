@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,7 +7,6 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.gl.javafx;
@@ -16,12 +15,12 @@ import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.OptionalInt;
 
-import com.sun.glass.ui.Application;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
@@ -29,17 +28,18 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
+import javafx.scene.transform.NonInvertibleTransformException;
 import javafx.scene.transform.Scale;
 import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.converter.CharacterStringConverter;
+import kintsugi3d.builder.app.WindowSynchronization;
+import kintsugi3d.gl.core.FramebufferSize;
+import kintsugi3d.gl.window.*;
 import org.lwjgl.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.FramebufferSize;
-import kintsugi3d.gl.window.*;
-import kintsugi3d.builder.app.WindowSynchronization;
 
 public final class FramebufferView extends Region
 {
@@ -124,6 +124,12 @@ public final class FramebufferView extends Region
                 catch(RuntimeException e)
                 {
                     log.error("An error has occurred:", e);
+                }
+                catch(Error e)
+                {
+                    log.error("An error has occurred:", e);
+                    //noinspection ProhibitedExceptionThrown
+                    throw e;
                 }
             }));
         refresh.play();
@@ -447,6 +453,15 @@ public final class FramebufferView extends Region
 
     private CursorPosition getCursorPosition(MouseEvent event)
     {
-        return new CursorPosition((int)Math.round(event.getSceneX() - this.getLayoutX()), (int)Math.round(event.getSceneY() - this.getLayoutY()));
+        try
+        {
+            Point2D localEventPosition = this.getLocalToSceneTransform().inverseTransform(new Point2D(event.getSceneX(), event.getSceneY()));
+            return new CursorPosition((int)Math.round(localEventPosition.getX()), (int)Math.round(localEventPosition.getY()));
+        }
+        catch (NonInvertibleTransformException e)
+        {
+            log.error("Noninvertible transform", e);
+            return new CursorPosition(event.getX(), event.getY());
+        }
     }
 }

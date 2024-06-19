@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,19 +11,19 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.systemsettings;
 
+import java.util.Collection;
+
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Control;
+import javafx.scene.control.MenuItem;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.controllers.scene.lights.LightInstanceSetting;
 import kintsugi3d.builder.javafx.internal.LightInstanceModelImpl;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
-import kintsugi3d.builder.state.LightInstanceModel;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 public class PhotoLightingSettingsController implements SystemSettingsControllerBase{
     @FXML public CheckBox fresnelEffectCheckBox;
@@ -31,28 +31,28 @@ public class PhotoLightingSettingsController implements SystemSettingsController
     @FXML public CheckBox phyMaskingCheckBox;
     @FXML public CheckBox relightingCheckBox;
     @FXML public CheckBox visibleLightWidgetsCheckBox;
-    @FXML public CheckBox enableLight1CheckBox;
-    @FXML public TextField perLight1IntensityTxtField;
-    @FXML public Slider perLight1IntensitySlider;
-    @FXML public CheckBox enableLight2CheckBox;
-    @FXML public TextField perLight2IntensityTxtField;
-    @FXML public Slider perLight2IntensitySlider;
-    @FXML public CheckBox enableLight3CheckBox;
-    @FXML public TextField perLight3IntensityTxtField;
-    @FXML public Slider perLight3IntensitySlider;
-    @FXML public CheckBox enableLight4CheckBox;
-    @FXML public TextField perLight4IntensityTxtField;
-    @FXML public Slider perLight4IntensitySlider;
-    @FXML public TextField ambientLightIntensityTxtField;
-    @FXML public Slider ambientLightIntensitySlider;
-    @FXML public ColorPicker light1ColorPicker;
-    @FXML public ColorPicker light2ColorPicker;
-    @FXML public ColorPicker light3ColorPicker;
-    @FXML public ColorPicker light4ColorPicker;
-    @FXML public Label perLight1IntensityLabel;
-    @FXML public Label perLight2IntensityLabel;
-    @FXML public Label perLight3IntensityLabel;
-    @FXML public Label perLight4IntensityLabel;
+//    @FXML public CheckBox enableLight1CheckBox;
+//    @FXML public TextField perLight1IntensityTxtField;
+//    @FXML public Slider perLight1IntensitySlider;
+//    @FXML public CheckBox enableLight2CheckBox;
+//    @FXML public TextField perLight2IntensityTxtField;
+//    @FXML public Slider perLight2IntensitySlider;
+//    @FXML public CheckBox enableLight3CheckBox;
+//    @FXML public TextField perLight3IntensityTxtField;
+//    @FXML public Slider perLight3IntensitySlider;
+//    @FXML public CheckBox enableLight4CheckBox;
+//    @FXML public TextField perLight4IntensityTxtField;
+//    @FXML public Slider perLight4IntensitySlider;
+//    @FXML public TextField ambientLightIntensityTxtField;
+//    @FXML public Slider ambientLightIntensitySlider;
+//    @FXML public ColorPicker light1ColorPicker;
+//    @FXML public ColorPicker light2ColorPicker;
+//    @FXML public ColorPicker light3ColorPicker;
+//    @FXML public ColorPicker light4ColorPicker;
+//    @FXML public Label perLight1IntensityLabel;
+//    @FXML public Label perLight2IntensityLabel;
+//    @FXML public Label perLight3IntensityLabel;
+//    @FXML public Label perLight4IntensityLabel;
     private InternalModels internalModels;
     private final Property<LightInstanceSetting> light1 = new SimpleObjectProperty<>();
     private final Property<LightInstanceSetting> light2 = new SimpleObjectProperty<>();
@@ -64,33 +64,33 @@ public class PhotoLightingSettingsController implements SystemSettingsController
 
 
     public void updateRelightingVisibility() {
-        Collection<Object> light1ControlItems = new ArrayList<>();
-        light1ControlItems.add(perLight1IntensitySlider);
-        light1ControlItems.add(perLight1IntensityTxtField);
-        light1ControlItems.add(perLight1IntensityLabel);
-        light1ControlItems.add(light1ColorPicker);
-        updateCheckboxVisibilities(enableLight1CheckBox, light1ControlItems);
-
-        Collection<Object> light2ControlItems = new ArrayList<>();
-        light2ControlItems.add(perLight2IntensitySlider);
-        light2ControlItems.add(perLight2IntensityTxtField);
-        light2ControlItems.add(perLight2IntensityLabel);
-        light2ControlItems.add(light2ColorPicker);
-        updateCheckboxVisibilities(enableLight2CheckBox, light2ControlItems);
-
-        Collection<Object> light3ControlItems = new ArrayList<>();
-        light3ControlItems.add(perLight3IntensitySlider);
-        light3ControlItems.add(perLight3IntensityTxtField);
-        light3ControlItems.add(perLight3IntensityLabel);
-        light3ControlItems.add(light3ColorPicker);
-        updateCheckboxVisibilities(enableLight3CheckBox, light3ControlItems);
-
-        Collection<Object> light4ControlItems = new ArrayList<>();
-        light4ControlItems.add(perLight4IntensitySlider);
-        light4ControlItems.add(perLight4IntensityTxtField);
-        light4ControlItems.add(perLight4IntensityLabel);
-        light4ControlItems.add(light4ColorPicker);
-        updateCheckboxVisibilities(enableLight4CheckBox, light4ControlItems);
+//        Collection<Object> light1ControlItems = new ArrayList<>();
+//        light1ControlItems.add(perLight1IntensitySlider);
+//        light1ControlItems.add(perLight1IntensityTxtField);
+//        light1ControlItems.add(perLight1IntensityLabel);
+//        light1ControlItems.add(light1ColorPicker);
+//        updateCheckboxVisibilities(enableLight1CheckBox, light1ControlItems);
+//
+//        Collection<Object> light2ControlItems = new ArrayList<>();
+//        light2ControlItems.add(perLight2IntensitySlider);
+//        light2ControlItems.add(perLight2IntensityTxtField);
+//        light2ControlItems.add(perLight2IntensityLabel);
+//        light2ControlItems.add(light2ColorPicker);
+//        updateCheckboxVisibilities(enableLight2CheckBox, light2ControlItems);
+//
+//        Collection<Object> light3ControlItems = new ArrayList<>();
+//        light3ControlItems.add(perLight3IntensitySlider);
+//        light3ControlItems.add(perLight3IntensityTxtField);
+//        light3ControlItems.add(perLight3IntensityLabel);
+//        light3ControlItems.add(light3ColorPicker);
+//        updateCheckboxVisibilities(enableLight3CheckBox, light3ControlItems);
+//
+//        Collection<Object> light4ControlItems = new ArrayList<>();
+//        light4ControlItems.add(perLight4IntensitySlider);
+//        light4ControlItems.add(perLight4IntensityTxtField);
+//        light4ControlItems.add(perLight4IntensityLabel);
+//        light4ControlItems.add(light4ColorPicker);
+//        updateCheckboxVisibilities(enableLight4CheckBox, light4ControlItems);
     }
 
     @Override

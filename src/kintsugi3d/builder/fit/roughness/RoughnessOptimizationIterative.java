@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,7 +7,6 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.fit.roughness;
@@ -25,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
@@ -52,7 +52,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
     public RoughnessOptimizationIterative(BasisResources<ContextType> basisResources,
         BasisWeightResources<ContextType> basisWeightResources, TextureResolution settings,
         Supplier<Texture2D<ContextType>> getDiffuseTexture, double convergenceTolerance, int unsuccessfulLMIterationsAllowed)
-            throws FileNotFoundException
+            throws IOException
     {
         // Inherit from base class to facilitate initial fit.
         super(basisResources);
@@ -151,7 +151,7 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
     }
 
     private static <ContextType extends Context<ContextType>>
-    Program<ContextType> createErrorCalcProgram(ContextType context) throws FileNotFoundException
+    Program<ContextType> createErrorCalcProgram(ContextType context) throws IOException
     {
         return context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))

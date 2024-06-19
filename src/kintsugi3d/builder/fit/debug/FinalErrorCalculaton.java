@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,7 +7,6 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.fit.debug;
@@ -26,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.FloatBuffer;
 import java.util.stream.IntStream;
@@ -100,7 +100,7 @@ public final class FinalErrorCalculaton
                 // Print out RMSE for normal map ground truth
                 rmseOut.println("Normal map ground truth RMSE: " + rmse);
             }
-            catch (FileNotFoundException e)
+            catch (IOException e)
             {
                 log.error("An error occurred while validating normal map:", e);
             }
@@ -152,7 +152,7 @@ public final class FinalErrorCalculaton
             // Calculate error using the GGX fit rather than the basis functions.
             calculateGGXRMSE(resources, programFactory, specularFit, scratchFramebuffer, rmseOut);
         }
-        catch (FileNotFoundException e)
+        catch (IOException e)
         {
             log.error("An error occurred while calculating error metrics:", e);
         }
@@ -171,7 +171,7 @@ public final class FinalErrorCalculaton
     private <ContextType extends Context<ContextType>> void calculateGGXRMSE(
             ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory,
             SpecularMaterialResources<ContextType> specularFit, Framebuffer<ContextType> scratchFramebuffer, PrintStream rmseOut)
-        throws FileNotFoundException
+        throws IOException
     {
         try (ProgramObject<ContextType> ggxErrorCalcProgram = createGGXErrorCalcProgram(resources, programFactory);
             Drawable<ContextType> ggxErrorCalcDrawable = resources.createDrawable(ggxErrorCalcProgram))
@@ -259,7 +259,7 @@ public final class FinalErrorCalculaton
 
     private static <ContextType extends Context<ContextType>>
     ProgramObject<ContextType> createFinalErrorCalcProgram(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
+        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
     {
         return programFactory.createProgram(resources,
             new File("shaders/colorappearance/imgspace_multi_as_single.vert"),
@@ -269,7 +269,7 @@ public final class FinalErrorCalculaton
 
     private static <ContextType extends Context<ContextType>>
     ProgramObject<ContextType> createGGXErrorCalcProgram(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws FileNotFoundException
+        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory) throws IOException
     {
         return programFactory.createProgram(resources,
             new File("shaders/colorappearance/imgspace_multi_as_single.vert"),

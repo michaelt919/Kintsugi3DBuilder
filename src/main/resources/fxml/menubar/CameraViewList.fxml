@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox prefHeight="600.0" prefWidth="300.0" styleClass="cameraviewlist" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.CameraViewListController">
+   <children>
+      <CheckBox fx:id="snapToView" mnemonicParsing="false" styleClass="cameraviewlist" text="Snap to view">
+         <VBox.margin>
+            <Insets bottom="4.0" left="8.0" right="4.0" top="4.0" />
+         </VBox.margin>
+      </CheckBox>
+      <ListView fx:id="cameraViewList" styleClass="cameraviewlist" VBox.vgrow="ALWAYS">
+         <opaqueInsets>
+            <Insets left="12.0" />
+         </opaqueInsets></ListView>
+   </children>
+</VBox>

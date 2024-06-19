@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,7 +7,6 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.builder.resources.ibr.stream;
@@ -21,6 +20,7 @@ import kintsugi3d.gl.core.Framebuffer;
 import kintsugi3d.util.ColorList;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
 {
@@ -78,7 +78,7 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
      */
     public GraphicsStreamResource<ContextType> streamAsResource(
             ProgramBuilder<ContextType> programBuilder,
-            FramebufferObjectBuilder<ContextType> framebufferBuilder) throws FileNotFoundException
+            FramebufferObjectBuilder<ContextType> framebufferBuilder) throws IOException
     {
         return new GraphicsStreamResource<>(programBuilder, framebufferBuilder,
             (program, framebuffer) -> new SequentialViewRenderStream<>(
@@ -156,7 +156,7 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
     public GraphicsStreamResource<ContextType> parallelStreamAsResource(
             ProgramBuilder<ContextType> programBuilder,
             FramebufferObjectBuilder<ContextType> framebufferBuilder,
-            int maxRunningThreads) throws FileNotFoundException
+            int maxRunningThreads) throws IOException
     {
         return new GraphicsStreamResource<>(programBuilder, framebufferBuilder,
             (program, framebuffer) -> new ParallelViewRenderStream<>(
@@ -180,7 +180,7 @@ public class GraphicsStreamFactory<ContextType extends Context<ContextType>>
      */
     public GraphicsStreamResource<ContextType> parallelStreamAsResource(
             ProgramBuilder<ContextType> programBuilder,
-            FramebufferObjectBuilder<ContextType> framebufferBuilder) throws FileNotFoundException
+            FramebufferObjectBuilder<ContextType> framebufferBuilder) throws IOException
     {
         return new GraphicsStreamResource<>(programBuilder, framebufferBuilder,
             (program, framebuffer) -> new ParallelViewRenderStream<>(

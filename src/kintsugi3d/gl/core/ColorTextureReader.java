@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -7,7 +7,6 @@
  *
  * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
- *
  */
 
 package kintsugi3d.gl.core;
@@ -17,6 +16,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+
+import kintsugi3d.util.ColorList;
+import kintsugi3d.util.ColorNativeBufferList;
 
 public interface ColorTextureReader
 {
@@ -138,6 +140,30 @@ public interface ColorTextureReader
     default float[] readFloatingPointRGBA()
     {
         return this.readFloatingPointRGBA(0, 0, getWidth(), getHeight());
+    }
+
+    /**
+     * Reads the pixels from the texture as floating point numbers.
+     * The entire framebuffer will be read.
+     * @return An array containing the pixels as floating point numbers.
+     */
+    default ColorList readColorListRGBA(int x, int y, int width, int height)
+    {
+        ColorNativeBufferList list = new ColorNativeBufferList(width * height);
+        readFloatingPointRGBA(list.buffer, x, y, width, height);
+        return list;
+    }
+
+    /**
+     * Reads the pixels from the texture as floating point numbers.
+     * The entire framebuffer will be read.
+     * @return An array containing the pixels as floating point numbers.
+     */
+    default ColorList readColorListRGBA()
+    {
+        ColorNativeBufferList list = new ColorNativeBufferList(getWidth() * getHeight());
+        readFloatingPointRGBA(list.buffer);
+        return list;
     }
 
     /**
