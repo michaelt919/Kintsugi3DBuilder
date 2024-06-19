@@ -1,26 +1,23 @@
-/*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
- * Copyright (c) 2019 The Regents of the University of Minnesota
+package org.jengineering.sjmply;
+/* Copyright 2016 Dirk Toewe
+ * 
+ * This file was generated using org.jengineering.sjmply.
  *
- * Licensed under GPLv3
- * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ * org.jengineering.sjmply is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ * org.jengineering.sjmply is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with org.jengineering.sjmply. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.jengineering.sjmply;
-
-import static java.lang.Float.floatToRawIntBits;
-import static java.lang.String.format;
-import static java.nio.file.Files.newOutputStream;
-import static java.util.Arrays.asList;
-import static java.util.Arrays.stream;
-import static org.jengineering.sjmply.PLYType.FLOAT32;
-import static org.jengineering.sjmply.PLYType.LIST;
-import static org.jengineering.sjmply.PLYType.UINT32;
-
-import java.awt.Desktop;
+import java.awt.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -31,6 +28,13 @@ import java.util.Base64;
 import java.util.function.IntConsumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import static java.lang.Float.floatToRawIntBits;
+import static java.lang.String.format;
+import static java.nio.file.Files.newOutputStream;
+import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
+import static org.jengineering.sjmply.PLYType.*;
 
 /** Utility methods to create <a href="https://plot.ly/">Plotly</a> 3D plots of PLY files.
  *  
