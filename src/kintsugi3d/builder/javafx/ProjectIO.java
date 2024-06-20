@@ -155,7 +155,7 @@ public final class ProjectIO
         {
             ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
             ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
-            Alert alert = new Alert(Alert.AlertType.ERROR, message + "\nSee the log for more info.", ok, showLog);
+            Alert alert = new Alert(Alert.AlertType.NONE, message + "\nSee the log for more info.", ok, showLog);
             ((ButtonBase) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
                 // Use the menubar's console open function to prevent 2 console windows from appearing
                 MenubarController.getInstance().help_console();

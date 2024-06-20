@@ -373,6 +373,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
         alert.setTitle("Project is Missing Images");
         //alert.setGraphic(new ImageView(new Image(new File("Kintsugi3D-icon.png").toURI().toString())));
+        //alert.setGraphic(null);
         alert.show();
     }
 

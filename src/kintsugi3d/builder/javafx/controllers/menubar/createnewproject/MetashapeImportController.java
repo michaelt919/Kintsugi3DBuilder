@@ -187,8 +187,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
             ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
             ButtonType openCustomProj = new ButtonType("Create Custom Project", ButtonBar.ButtonData.YES);
 
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Metashape chunk has no models." +
-                    "\nPlease select another chunk or create a custom project.", ok, openCustomProj);
+            Alert alert = new Alert(Alert.AlertType.NONE,"Please select another chunk or create a custom project.", ok, openCustomProj);
 
             ((ButtonBase) alert.getDialogPane().lookupButton(openCustomProj)).setOnAction(event -> {
                 //manually navigate though pages to get to custom loader
@@ -201,6 +200,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
             ((ButtonBase) alert.getDialogPane().lookupButton(ok)).setOnAction(event -> alertShown = false);
 
+            alert.setTitle("Metashape chunk has no models.");
             alert.show();
         });
     }
