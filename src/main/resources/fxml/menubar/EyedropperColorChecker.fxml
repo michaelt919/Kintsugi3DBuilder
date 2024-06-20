@@ -13,10 +13,11 @@
 
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
-<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.*?>
+
 <HBox styleClass="hbox" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.EyedropperController">
    <AnchorPane>
       <children>
@@ -37,15 +38,11 @@
                             <ImageView fx:id="colorPickerImgView" fitHeight="500.0" fitWidth="500.0" pickOnBounds="true" preserveRatio="true" />
                             <Rectangle fx:id="selectionRectangle" fill="TRANSPARENT" stroke="#D4AA00" />
                         </Pane>
-                     <HBox alignment="CENTER" mouseTransparent="true" prefHeight="100.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                        <children>
-                           <Button fx:id="chooseImageButton" alignment="CENTER" contentDisplay="TOP" mnemonicParsing="false" onAction="#selectImage" prefHeight="75.0" text="Choose Image...">
-                              <font>
-                                 <Font size="21.0" />
-                              </font>
-                           </Button>
-                        </children>
-                     </HBox>
+                     <Button fx:id="chooseImageButton" alignment="CENTER" contentDisplay="TOP" layoutX="163.3333282470703" layoutY="212.6666717529297" mnemonicParsing="false" onAction="#selectImage" prefHeight="75.0" text="Choose Image...">
+                        <font>
+                           <Font size="21.0" />
+                        </font>
+                     </Button>
                   </children>
                </AnchorPane>
               </children>
