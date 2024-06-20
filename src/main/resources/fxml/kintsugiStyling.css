@@ -264,7 +264,9 @@ dialog-pane{
  .specularfitcheckbox{
        -fx-background-color: #383838;
  }
- grayscalebuttons{
-    -fx-background-color: #399938;
+ .grayscalebuttons{
     -fx-background-radius: 0 0 0 0;
+ }
+ .button-selected{
+    -fx-background-color: #D4AA00;
  }

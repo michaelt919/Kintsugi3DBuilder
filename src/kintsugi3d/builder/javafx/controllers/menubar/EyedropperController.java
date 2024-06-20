@@ -210,6 +210,7 @@ public class EyedropperController implements Initializable {
         }
         else{//button text is "Crop"
             cropButton.setText("Cropping...");
+            cropButton.getStyleClass().add("button-selected");
             isCropping = true;
         }
 
@@ -237,6 +238,7 @@ public class EyedropperController implements Initializable {
         colorPickerImgView.setViewport(view);
         isCropping = false;
         cropButton.setText("Reset Crop");
+        cropButton.getStyleClass().remove("button-selected");
 
         selectionRectangle.setVisible(false);
     }
@@ -386,6 +388,8 @@ public class EyedropperController implements Initializable {
 
             //disable/enable apply button as needed
             updateApplyButton();
+
+            sourceButton.getStyleClass().remove("button-selected");
         }
         else{
             Toolkit.getDefaultToolkit().beep();
@@ -562,6 +566,8 @@ public class EyedropperController implements Initializable {
 //        resetButtonsText();
 
 //        sourceButton.setText("Draw to select...");
+
+        sourceButton.getStyleClass().add("button-selected");
 
         isSelecting = true;
         isCropping = false;

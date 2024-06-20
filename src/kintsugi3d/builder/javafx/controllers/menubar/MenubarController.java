@@ -713,7 +713,7 @@ public class MenubarController
         {
 //            Eyedropper.setVisible(true);
             EyedropperController eyedropperController =
-                    makeWindow("Grayscale Calibration", colorCheckerWindowOpen, "fxml/menubar/EyedropperColorChecker.fxml");
+                    makeWindow("Tone Calibration", colorCheckerWindowOpen, "fxml/menubar/EyedropperColorChecker.fxml");
 
             eyedropperController.setProjectModel(internalModels.getProjectModel());
             eyedropperController.setIOModel(MultithreadModels.getInstance().getLoadingModel());
