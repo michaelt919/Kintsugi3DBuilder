@@ -11,7 +11,11 @@
 
 package kintsugi3d.builder.resources.ibr;
 
+import java.io.IOException;
+
 import kintsugi3d.builder.core.ColorAppearanceMode;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
@@ -21,7 +25,7 @@ import kintsugi3d.gl.geometry.GeometryMode;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.material.TextureLoadOptions;
 
-public class IBRResourcesAnalytic<ContextType extends Context<ContextType>> extends IBRResourcesBase<ContextType>
+public class IBRResourcesAnalytic<ContextType extends Context<ContextType>> extends IBRResourcesBase<ContextType> implements IBRResourcesCacheable<ContextType>
 {
     public IBRResourcesAnalytic(ContextType context, ViewSet viewSet, VertexGeometry geometry)
     {
@@ -48,5 +52,11 @@ public class IBRResourcesAnalytic<ContextType extends Context<ContextType>> exte
     public Drawable<ContextType> createDrawable(Program<ContextType> program)
     {
         return getGeometryResources().createDrawable(program);
+    }
+
+    @Override
+    public ImageCache<ContextType> cache(ImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException
+    {
+        throw new UnsupportedOperationException("TODO");
     }
 }

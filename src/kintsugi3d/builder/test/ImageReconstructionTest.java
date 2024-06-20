@@ -13,27 +13,34 @@ package kintsugi3d.builder.test;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.fit.ReconstructionShaders;
+import kintsugi3d.builder.fit.SpecularFitProcess;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
+import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
 import kintsugi3d.builder.resources.ibr.IBRResourcesAnalytic;
+import kintsugi3d.builder.resources.ibr.IBRResourcesCacheable;
+import kintsugi3d.builder.state.DefaultSettings;
+import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.builder.state.impl.SimpleSettingsModel;
-import kintsugi3d.gl.core.ColorFormat;
-import kintsugi3d.gl.core.Drawable;
-import kintsugi3d.gl.core.FramebufferObject;
-import kintsugi3d.gl.core.ProgramObject;
+import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.opengl.OpenGLContext;
 import kintsugi3d.gl.opengl.OpenGLContextFactory;
+import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.ColorArrayImage;
 import kintsugi3d.util.Potato;
 import org.junit.jupiter.api.AfterEach;
@@ -51,10 +58,76 @@ class ImageReconstructionTest
     private ViewSet potatoViewSetTonemapped;
     private OpenGLContext context;
     private VertexGeometry potatoGeometry;
+    private BiConsumer<ColorAppearanceRMSE, Float> validationLinear;
+    private BiConsumer<ColorAppearanceRMSE, Float> validationSRGB;
+    private BiConsumer<ColorAppearanceRMSE, Float> validationEncoded;
+    private Consumer<Program<OpenGLContext>> setupColor;
+    private Consumer<Program<OpenGLContext>> setupMetallic;
+
+    private ProgressMonitor progressMonitor;
+
+    private static class ProgressMonitorImpl implements ProgressMonitor
+    {
+        private double maxProgress;
+        private int stageCount;
+
+        @Override
+        public void allowUserCancellation()
+        {
+        }
+
+        @Override
+        public void cancelComplete(UserCancellationException e)
+        {
+        }
+
+        @Override
+        public void start()
+        {
+        }
+
+        @Override
+        public void setStageCount(int count)
+        {
+            this.stageCount = count;
+        }
+
+        @Override
+        public void setStage(int stage, String message)
+        {
+            System.out.println(MessageFormat.format("[{0}/{1}] {2}", stage, stageCount, message));
+        }
+
+        @Override
+        public void setMaxProgress(double maxProgress)
+        {
+            this.maxProgress = maxProgress;
+        }
+
+        @Override
+        public void setProgress(double progress, String message)
+        {
+            System.out.println(MessageFormat.format("[{0}%] {1}", progress / maxProgress, message));
+        }
+
+        @Override
+        public void complete()
+        {
+            System.out.println("COMPLETE!");
+        }
+
+        @Override
+        public void fail(Throwable e)
+        {
+            e.printStackTrace();
+        }
+    }
 
     @BeforeEach
     void setUp() throws Exception
     {
+        progressMonitor = new ProgressMonitorImpl();
+
         potatoViewSet = ViewSetReaderFromVSET.getInstance().readFromStream(getClass().getClassLoader().getResourceAsStream("test/Structured34View.vset"), null);
         potatoViewSetTonemapped = potatoViewSet.copy();
 
@@ -71,6 +144,19 @@ class ImageReconstructionTest
 
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
         potatoGeometry = VertexGeometry.createFromOBJStream(in);
+
+        validationLinear = (rmse, noiseScale) -> assertEquals(noiseScale / (float) Math.sqrt(12.0f), rmse.getNormalizedLinear(), 0.001);
+        validationSRGB = (rmse, noiseScale) -> assertEquals(noiseScale / (float) Math.sqrt(12.0f), rmse.getNormalizedSRGB(), 0.001);
+
+        // TODO figure out why we need a higher validation delta for this one?
+        validationEncoded = (rmse, noiseScale) -> assertEquals(noiseScale / (float) Math.sqrt(12.0f), rmse.getEncodedGroundTruth(), 0.005);
+
+        setupColor = program -> program.setUniform("diffuseColor", new Vector3(1.0f, 0.8f, 0.2f));
+        setupMetallic = program ->
+        {
+            program.setUniform("diffuseColor", new Vector3(0.0f, 0.0f, 0.0f));
+            program.setUniform("specularColor", new Vector3(1.0f, 0.8f, 0.2f));
+        };
     }
 
     @AfterEach
@@ -84,75 +170,19 @@ class ImageReconstructionTest
         return noiseScale / (float) Math.sqrt(12.0f);
     }
 
-    @Test
-    @DisplayName("Normalized linear reconstruction error")
-    void normalizedLinear() throws IOException
+    private BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>>
+        getProgramCreator(String testShaderName, Consumer<Program<OpenGLContext>> setupShader)
     {
-        BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> programCreator =
-            (programFactory, resources) ->
-            {
-                try
-                {
-                    return programFactory.getShaderProgramBuilder(resources,
-                            new File("shaders/common/imgspace.vert"),
-                            new File("shaders/test/syntheticWithLinearNoise.frag"))
-                        .createProgram();
-                }
-                catch (IOException e)
-                {
-                    throw new RuntimeException(e);
-                }
-            };
-
-        BiConsumer<ColorAppearanceRMSE, Float> validation =
-            (rmse, noiseScale) -> assertEquals(noiseScaleToRMSE(noiseScale), rmse.getNormalizedLinear(), 0.001);
-
-        // TODO switch from gamma to sRGB decoding for the case without ColorChecker values
-        multiTest(potatoViewSet, programCreator, ImageReconstructionTest::createGroundTruthProgramGamma, validation);
-        multiTest(potatoViewSetTonemapped, programCreator, ImageReconstructionTest::createGroundTruthProgramSRGB, validation);
-    }
-
-    @Test
-    @DisplayName("Normalized sRGB reconstruction error")
-    void normalizedSRGB() throws IOException
-    {
-        BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> programCreator =
-            (programFactory, resources) ->
-            {
-                try
-                {
-                    return programFactory.getShaderProgramBuilder(resources,
-                            new File("shaders/common/imgspace.vert"),
-                            new File("shaders/test/syntheticWithSRGBNoise.frag"))
-                        .createProgram();
-                }
-                catch (IOException e)
-                {
-                    throw new RuntimeException(e);
-                }
-            };
-
-        BiConsumer<ColorAppearanceRMSE, Float> validation =
-            (rmse, noiseScale) -> assertEquals(noiseScale / (float) Math.sqrt(12.0f), rmse.getNormalizedSRGB(), 0.001);
-
-        multiTest(potatoViewSet, programCreator, ImageReconstructionTest::createGroundTruthProgramGamma, validation);
-        multiTest(potatoViewSetTonemapped, programCreator, ImageReconstructionTest::createGroundTruthProgramSRGB, validation);
-    }
-
-    @Test
-    @DisplayName("Tonemapped and lit reconstruction error")
-    void tonemappedLit() throws IOException
-    {
-        BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> programCreator =
+        return
             (programFactory, resources) ->
             {
                 try
                 {
                     ProgramObject<OpenGLContext> program = programFactory.getShaderProgramBuilder(resources,
                             new File("shaders/common/imgspace.vert"),
-                            new File("shaders/test/syntheticWithTonemappedLitNoise.frag"))
+                            new File("shaders/test/" + testShaderName + ".frag"))
                         .createProgram();
-                    program.setUniform("renderGamma", potatoViewSet.getGamma());
+                    setupShader.accept(program);
                     return program;
                 }
                 catch (IOException e)
@@ -160,25 +190,166 @@ class ImageReconstructionTest
                     throw new RuntimeException(e);
                 }
             };
-
-        // TODO figure out why we need a higher delta for this one?
-        BiConsumer<ColorAppearanceRMSE, Float> validation =
-            (rmse, noiseScale) -> assertEquals(noiseScale / (float) Math.sqrt(12.0f), rmse.getEncodedGroundTruth(), 0.004);
-
-        multiTest(potatoViewSet, programCreator, ImageReconstructionTest::createGroundTruthProgramGamma, validation);
-        multiTest(potatoViewSetTonemapped, programCreator, ImageReconstructionTest::createGroundTruthProgramSRGB, validation);
     }
 
-    static ProgramObject<OpenGLContext> createGroundTruthProgramGamma(SpecularFitProgramFactory<OpenGLContext> programFactory, IBRResourcesAnalytic<OpenGLContext> resources)
+    @Test
+    @DisplayName("Normalized linear reconstruction error, grayscale synthetic data")
+    void normalizedLinear_grayscale() throws IOException
+    {
+        // TODO switch from gamma to sRGB decoding for the cases without ColorChecker values
+        multiTest(potatoViewSet, getProgramCreator("syntheticWithLinearNoise", p->{}),
+            (factory, resources) -> createGroundTruthProgramGamma(factory, resources, p->{}), validationLinear);
+    }
+
+    @Test
+    @DisplayName("Normalized linear reconstruction error, grayscale tonemapped synthetic data")
+    void normalizedLinear_grayscaleTonemapped() throws IOException
+    {
+        multiTest(potatoViewSetTonemapped, getProgramCreator("syntheticWithLinearNoise", p->{}),
+            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, p->{}), validationLinear);
+    }
+
+    @Test
+    @DisplayName("Normalized linear reconstruction error, color synthetic data")
+    void normalizedLinear_color() throws IOException
+    {
+        multiTest(potatoViewSet, getProgramCreator("syntheticWithLinearColorNoise", setupColor),
+            (factory, resources) -> createGroundTruthProgramGamma(factory, resources, setupColor), validationLinear);
+    }
+
+    @Test
+    @DisplayName("Normalized linear reconstruction error, color tonemapped synthetic data")
+    void normalizedLinear_colorTonemapped() throws IOException
+    {
+        multiTest(potatoViewSetTonemapped, getProgramCreator("syntheticWithLinearColorNoise", setupColor),
+            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, setupColor), validationLinear);
+    }
+
+    @Test
+    @DisplayName("Normalized linear reconstruction error, metallic synthetic data")
+    void normalizedLinear_metallic() throws IOException
+    {
+        multiTest(potatoViewSet, getProgramCreator("syntheticWithLinearColorNoise", setupMetallic),
+            (factory, resources) -> createGroundTruthProgramGamma(factory, resources, setupMetallic), validationLinear);
+    }
+
+    @Test
+    @DisplayName("Normalized linear reconstruction error, metallic tonemapped synthetic data")
+    void normalizedLinear_metallicTonemapped() throws IOException
+    {
+        multiTest(potatoViewSetTonemapped, getProgramCreator("syntheticWithLinearColorNoise", setupMetallic),
+            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, setupMetallic), validationLinear);
+    }
+
+    @Test
+    @DisplayName("Normalized sRGB reconstruction error, grayscale synthetic data")
+    void normalizedSRGB_grayscale() throws IOException
+    {
+        multiTest(potatoViewSet, getProgramCreator("syntheticWithSRGBNoise", p->{}),
+            (factory, resources) -> createGroundTruthProgramGamma(factory, resources, p->{}), validationSRGB);
+    }
+
+    @Test
+    @DisplayName("Normalized sRGB reconstruction error, grayscale tonemapped synthetic data")
+    void normalizedSRGB_grayscaleTonemapped() throws IOException
+    {
+        multiTest(potatoViewSetTonemapped, getProgramCreator("syntheticWithSRGBNoise", p->{}),
+            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, p->{}), validationSRGB);
+    }
+
+    @Test
+    @DisplayName("Normalized sRGB reconstruction error, color synthetic data")
+    void normalizedSRGB_color() throws IOException
+    {
+        multiTest(potatoViewSet, getProgramCreator("syntheticWithSRGBColorNoise", setupColor),
+            (factory, resources) -> createGroundTruthProgramGamma(factory, resources, setupColor), validationSRGB);
+    }
+
+    @Test
+    @DisplayName("Normalized sRGB reconstruction error, color tonemapped synthetic data")
+    void normalizedSRGB_colorTonemapped() throws IOException
+    {
+        multiTest(potatoViewSetTonemapped, getProgramCreator("syntheticWithSRGBColorNoise", setupColor),
+            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, setupColor), validationSRGB);
+    }
+
+    @Test
+    @DisplayName("Normalized sRGB reconstruction error, metallic synthetic data")
+    void normalizedSRGB_metallic() throws IOException
+    {
+        multiTest(potatoViewSet, getProgramCreator("syntheticWithSRGBColorNoise", setupMetallic),
+            (factory, resources) -> createGroundTruthProgramGamma(factory, resources, setupMetallic), validationSRGB);
+    }
+
+    @Test
+    @DisplayName("Normalized sRGB reconstruction error, metallic tonemapped synthetic data")
+    void normalizedSRGB_metallicTonemapped() throws IOException
+    {
+        multiTest(potatoViewSetTonemapped, getProgramCreator("syntheticWithSRGBColorNoise", setupMetallic),
+            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, setupMetallic), validationSRGB);
+    }
+
+    @Test
+    @DisplayName("Tonemapped and lit reconstruction error, grayscale synthetic data")
+    void tonemappedLit_grayscale() throws IOException
+    {
+        multiTest(potatoViewSet, getProgramCreator("syntheticWithTonemappedLitNoise", p->{}),
+            (factory, resources) -> createGroundTruthProgramGamma(factory, resources, p->{}), validationEncoded);
+    }
+
+    @Test
+    @DisplayName("Tonemapped and lit reconstruction error, grayscale tonemapped synthetic data")
+    void tonemappedLit_grayscaleTonemapped() throws IOException
+    {
+        multiTest(potatoViewSetTonemapped, getProgramCreator("syntheticWithTonemappedLitNoise", p->{}),
+            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, p->{}), validationEncoded);
+    }
+
+    @Test
+    @DisplayName("Tonemapped and lit reconstruction error, color synthetic data")
+    void tonemappedLit_color() throws IOException
+    {
+        multiTest(potatoViewSet, getProgramCreator("syntheticWithTonemappedLitColorNoise", setupColor),
+            (factory, resources) -> createGroundTruthProgramGamma(factory, resources, setupColor), validationEncoded);
+    }
+
+    @Test
+    @DisplayName("Tonemapped and lit reconstruction error, color tonemapped synthetic data")
+    void tonemappedLit_colorTonemapped() throws IOException
+    {
+        multiTest(potatoViewSetTonemapped, getProgramCreator("syntheticWithTonemappedLitColorNoise", setupColor),
+            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, setupColor), validationEncoded);
+    }
+
+    @Test
+    @DisplayName("Tonemapped and lit reconstruction error, metallic synthetic data")
+    void tonemappedLit_metallic() throws IOException
+    {
+        multiTest(potatoViewSet, getProgramCreator("syntheticWithTonemappedLitColorNoise", setupMetallic),
+            (factory, resources) -> createGroundTruthProgramGamma(factory, resources, setupMetallic), validationEncoded);
+    }
+
+    @Test
+    @DisplayName("Tonemapped and lit reconstruction error, metallic tonemapped synthetic data")
+    void tonemappedLit_metallicTonemapped() throws IOException
+    {
+        multiTest(potatoViewSetTonemapped, getProgramCreator("syntheticWithTonemappedLitColorNoise", setupMetallic),
+            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, setupMetallic), validationEncoded);
+    }
+
+    static ProgramObject<OpenGLContext> createGroundTruthProgramGamma(
+        SpecularFitProgramFactory<OpenGLContext> programFactory, IBRResourcesAnalytic<OpenGLContext> resources, Consumer<Program<OpenGLContext>> setupShader)
     {
         try
         {
-            return programFactory.getShaderProgramBuilder(resources,
+            ProgramObject<OpenGLContext> program = programFactory.getShaderProgramBuilder(resources,
                     new File("shaders/common/imgspace.vert"),
                     new File("shaders/test/syntheticTonemapped.frag"))
                 .define("SRGB_DECODING_ENABLED", 0)
                 .define("SRGB_ENCODING_ENABLED", 0)
                 .createProgram();
+            setupShader.accept(program);
+            return program;
         }
         catch (IOException e)
         {
@@ -186,16 +357,19 @@ class ImageReconstructionTest
         }
     }
 
-    static ProgramObject<OpenGLContext> createGroundTruthProgramSRGB(SpecularFitProgramFactory<OpenGLContext> programFactory, IBRResourcesAnalytic<OpenGLContext> resources)
+    static ProgramObject<OpenGLContext> createGroundTruthProgramSRGB(
+        SpecularFitProgramFactory<OpenGLContext> programFactory, IBRResourcesAnalytic<OpenGLContext> resources, Consumer<Program<OpenGLContext>> setupShader)
     {
         try
         {
-            return programFactory.getShaderProgramBuilder(resources,
+            ProgramObject<OpenGLContext> program = programFactory.getShaderProgramBuilder(resources,
                     new File("shaders/common/imgspace.vert"),
                     new File("shaders/test/syntheticTonemapped.frag"))
                 .define("SRGB_DECODING_ENABLED", 1)
                 .define("SRGB_ENCODING_ENABLED", 1)
                 .createProgram();
+            setupShader.accept(program);
+            return program;
         }
         catch (IOException e)
         {
@@ -306,6 +480,24 @@ class ImageReconstructionTest
                     validation.accept(rmse);
                 }
             }
+        }
+    }
+
+    private void testSyntheticFit(ViewSet viewSet)
+    {
+        try (IBRResourcesCacheable<OpenGLContext> resources = new IBRResourcesAnalytic<>(context, viewSet, potatoGeometry))
+        {
+            SettingsModel settings = new SimpleSettingsModel();
+            DefaultSettings.apply(settings);
+            SpecularFitRequestParams params = new SpecularFitRequestParams(new TextureResolution(512, 512), settings);
+            params.setOutputDirectory(TEST_OUTPUT_DIR);
+
+            // Perform the specular fit
+            new SpecularFitProcess(params).optimizeFit(resources, progressMonitor);
+        }
+        catch (UserCancellationException | IOException e)
+        {
+            throw new RuntimeException(e);
         }
     }
 }

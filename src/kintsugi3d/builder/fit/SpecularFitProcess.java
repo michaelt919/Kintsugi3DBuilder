@@ -66,7 +66,7 @@ public class SpecularFitProcess
     }
 
     public <ContextType extends Context<ContextType>> void optimizeFit(
-        IBRResourcesImageSpace<ContextType> resources, ProgressMonitor monitor)
+        IBRResourcesCacheable<ContextType> resources, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
         Instant start = Instant.now();

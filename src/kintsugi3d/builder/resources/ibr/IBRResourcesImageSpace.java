@@ -52,6 +52,7 @@ import org.slf4j.LoggerFactory;
  * @param <ContextType>
  */
 public final class IBRResourcesImageSpace<ContextType extends Context<ContextType>> extends IBRResourcesBase<ContextType>
+    implements IBRResourcesCacheable<ContextType>
 {
     private static final boolean MULTITHREAD_PREVIEW_IMAGE_GENERATION = false;
 
@@ -681,6 +682,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         return new SingleCalibratedImageResource<>(getContext(), getViewSet(), viewIndex, imageFile, getGeometry(), loadOptions);
     }
 
+    @Override
     public ImageCache<ContextType> cache(ImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException
     {
         settings.setCacheFolderName(getViewSet().getUuid().toString());

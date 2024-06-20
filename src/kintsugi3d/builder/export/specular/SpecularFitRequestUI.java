@@ -164,7 +164,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
                 (int)Math.ceil(Math.max(settings.getTextureResolution().width, settings.getTextureResolution().height) / 256.0));
             settings.getImageCacheSettings().setSampledSize(256); // TODO expose this in the interface
 
-            SpecularFitRequest request = new SpecularFitRequest(settings, modelAccess);
+            SpecularFitRequest request = new SpecularFitRequest(settings);
 
 //            if (priorSolutionCheckBox.isSelected() && priorSolutionField.getText() != null && !priorSolutionField.getText().isEmpty())
 //            {
