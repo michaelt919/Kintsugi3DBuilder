@@ -22,10 +22,10 @@ import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
 import javafx.application.Platform;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonBase;
-import javafx.scene.control.ButtonType;
+import javafx.scene.Node;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.stage.DirectoryChooser;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
@@ -313,12 +313,11 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         int numMissingImgs = mie.getNumMissingImgs();
         File fullResImgDirAttempt = mie.getImgDirectory();
 
-        ButtonType newDirectory = new ButtonType("Choose Different Image Directory", ButtonBar.ButtonData.OK_DONE);
-        ButtonType skipMissingCams = new ButtonType("Skip Missing Cameras", ButtonBar.ButtonData.OK_DONE);
-        ButtonType cancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+        ButtonType cancel = new ButtonType("Cancel", ButtonBar.ButtonData.OTHER);
+        ButtonType newDirectory = new ButtonType("Choose Different Image Directory", ButtonBar.ButtonData.YES);
+        ButtonType skipMissingCams = new ButtonType("Skip Missing Cameras", ButtonBar.ButtonData.NO);
 
-        Alert alert = new Alert(Alert.AlertType.ERROR, "Imported object is missing " + numMissingImgs + " images.\n" +
-                "Attempted search in " + fullResImgDirAttempt.getAbsolutePath(), newDirectory, skipMissingCams, cancel);
+        Alert alert = new Alert(Alert.AlertType.NONE, "Imported object is missing " + numMissingImgs + " images.", cancel, newDirectory, skipMissingCams);
 
         Builder<ContextType> finalBuilder = IBRResourcesImageSpace.getBuilderForContext(this.context);
         ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event -> {
@@ -372,6 +371,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
         });
 
+        alert.setTitle("Project is Missing Images");
+        //alert.setGraphic(new ImageView(new Image(new File("Kintsugi3D-icon.png").toURI().toString())));
         alert.show();
     }
 
