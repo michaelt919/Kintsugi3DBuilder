@@ -30,6 +30,10 @@
             <outputDirectory></outputDirectory>
         </file>
         <file>
+            <source>target/classes/create-new-project-fxmls.txt</source>
+            <outputDirectory></outputDirectory>
+        </file>
+        <file>
             <source>target/Kintsugi3DBuilder.exe</source>
             <outputDirectory></outputDirectory>
         </file>

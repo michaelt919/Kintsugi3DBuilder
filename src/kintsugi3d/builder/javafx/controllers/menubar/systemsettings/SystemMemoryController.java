@@ -76,7 +76,7 @@ public class SystemMemoryController implements Initializable, SystemSettingsCont
         catch (IOException e)
         {
             log.error("Failed to write to launch4j configuration file", e);
-            Alert alert = new Alert(Alert.AlertType.ERROR);
+            Alert alert = new Alert(Alert.AlertType.NONE);
             alert.setTitle("Kintsugi 3D Builder");
             alert.setHeaderText("Writing failed");
             alert.setContentText("Kintsugi 3D Builder failed to write to the configuration file. Try restarting Kintsugi 3D Builder as administrator and try again.");

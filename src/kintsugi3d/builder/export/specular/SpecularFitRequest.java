@@ -12,7 +12,6 @@
 package kintsugi3d.builder.export.specular;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -25,6 +24,7 @@ import kintsugi3d.builder.fit.ReconstructionShaders;
 import kintsugi3d.builder.fit.SpecularFitProcess;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
+import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
@@ -93,6 +93,10 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
             {
                 Kintsugi3DViewerLauncher.launchViewer(new File(settings.getOutputDirectory(), "model.glb"));
             }
+
+            //enable shaders which only work after processing textures
+            MenubarController.getInstance().setToggleableShaderDisable(false);
+
         }
         catch(IOException e) // thrown by createReflectanceProgram
         {

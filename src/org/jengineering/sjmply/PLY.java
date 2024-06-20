@@ -1,6 +1,6 @@
 package org.jengineering.sjmply;
 /* Copyright 2016 Dirk Toewe
- * 
+ *
  * This file is part of org.jengineering.sjmply.
  *
  * org.jengineering.sjmply is free software: you can redistribute it and/or
@@ -36,6 +36,35 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static org.jengineering.sjmply.PLYFormat.ASCII;
 import static org.jengineering.sjmply.PLYFormat.BINARY_BIG_ENDIAN;
+import static org.jengineering.sjmply.PLYType.FLOAT32;
+import static org.jengineering.sjmply.PLYType.FLOAT64;
+import static org.jengineering.sjmply.PLYType.INT16;
+import static org.jengineering.sjmply.PLYType.INT32;
+import static org.jengineering.sjmply.PLYType.INT8;
+import static org.jengineering.sjmply.PLYType.LIST;
+import static org.jengineering.sjmply.PLYType.UINT16;
+import static org.jengineering.sjmply.PLYType.UINT32;
+import static org.jengineering.sjmply.PLYType.UINT8;
+
+import java.io.*;
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import org.jengineering.sjmply.PLYType.PLYList;
+import org.jengineering.sjmply.PLYType.PLYSequence;
+import org.jengineering.sjmply.PLYType.PLYUInt;
 import static org.jengineering.sjmply.PLYType.*;
 
 /** An in-memory representation of a <a href="https://en.wikipedia.org/wiki/PLY_(file_format)">PLY File</a>. PLY files are used to 
@@ -191,6 +220,54 @@ public class PLY
     }
   }
 
+  /**
+   * Loads a PLY file from inside a zip file.
+   * @param zipFolder The File object of the zip file
+   * @param targetFileName The name of the PLY file that is zipped inside zip file
+   * @return PLY object
+   * @throws IOException
+   */
+  public static PLY loadFromZip(File zipFolder, String targetFileName) throws IOException {
+
+    // Make an input stream from zipFolder
+    try(ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFolder))) {
+
+      // Target zipIn to be on the targetFileName entry
+      ZipEntry entry = zipIn.getNextEntry();
+      while (entry != null) {
+        if (entry.getName().equals(targetFileName)) {
+          break;
+        }
+        entry = zipIn.getNextEntry();
+      }
+      // Throw error if unable to find PLY file in zip
+      if (entry == null) {
+        throw new IOException("File not found in zip");
+      }
+
+      // Read the file
+      try (InputStream in = new BufferedInputStream(zipIn)) {
+        PLY result = read(in);
+        int chr = in.read();
+        switch (result.getFormat()) {
+          default:
+            throw new AssertionError();
+          case ASCII:
+            while (Character.isWhitespace(chr))
+              chr = in.read();
+          case BINARY_BIG_ENDIAN:
+          case BINARY_LITTLE_ENDIAN:
+            if (0 <= chr)
+              throw new IOException("File is longer than expected.");
+        }
+
+        return result;
+      }
+    }
+  }
+
+
+
 // FIELDS
   private PLYFormat format;
   private String version;
@@ -250,7 +327,7 @@ public class PLY
   }
 
   /** Returns the element list by the given name from this PLY object.
-   *  
+   *
    *  @param name The name of the requested element list.
    *  @return The element list by the name <code>name</code>.
    *  @throws NoSuchElementException If there is no element list by the given name.

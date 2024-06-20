@@ -32,6 +32,7 @@ import kintsugi3d.builder.core.IBRRequestQueue;
 import kintsugi3d.builder.core.IBRRequestUI;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.export.simpleanimation.SimpleAnimationRequestBase.Builder;
+import kintsugi3d.util.RecentProjects;
 
 public class SimpleAnimationUI implements IBRRequestUI
 {
@@ -42,7 +43,6 @@ public class SimpleAnimationUI implements IBRRequestUI
     @FXML private Button runButton;
 
     private final DirectoryChooser directoryChooser = new DirectoryChooser();
-    private File lastDirectory;
 
     private Supplier<Builder> builderSupplier;
 
@@ -78,10 +78,7 @@ public class SimpleAnimationUI implements IBRRequestUI
         this.directoryChooser.setTitle("Choose an export directory");
         if (exportDirectoryField.getText().isEmpty())
         {
-            if (lastDirectory != null)
-            {
-                this.directoryChooser.setInitialDirectory(lastDirectory);
-            }
+            this.directoryChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
         }
         else
         {
@@ -92,7 +89,7 @@ public class SimpleAnimationUI implements IBRRequestUI
         if (file != null)
         {
             exportDirectoryField.setText(file.toString());
-            lastDirectory = file;
+            RecentProjects.setMostRecentDirectory(file);
         }
     }
 

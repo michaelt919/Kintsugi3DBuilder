@@ -32,6 +32,7 @@ import kintsugi3d.builder.core.IBRRequestQueue;
 import kintsugi3d.builder.core.IBRRequestUI;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.export.screenshot.ScreenshotRequest.Builder;
+import kintsugi3d.util.RecentProjects;
 
 public class ScreenshotUI implements IBRRequestUI
 {
@@ -41,8 +42,6 @@ public class ScreenshotUI implements IBRRequestUI
     @FXML private Button runButton;
 
     private final FileChooser fileChooser = new FileChooser();
-    private File lastDirectory;
-
     public interface BuilderSupplier
     {
         Builder<ScreenshotRequest> get();
@@ -85,10 +84,7 @@ public class ScreenshotUI implements IBRRequestUI
         this.fileChooser.setTitle("Choose an export file");
         if (exportFileField.getText().isEmpty())
         {
-            if (lastDirectory != null)
-            {
-                this.fileChooser.setInitialDirectory(lastDirectory);
-            }
+            this.fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
         }
         else
         {
@@ -99,7 +95,7 @@ public class ScreenshotUI implements IBRRequestUI
         if (file != null)
         {
             exportFileField.setText(file.toString());
-            lastDirectory = file;
+            RecentProjects.setMostRecentDirectory(file);
         }
     }
 

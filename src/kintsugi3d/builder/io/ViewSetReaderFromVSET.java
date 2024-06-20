@@ -47,7 +47,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
     }
 
     @Override
-    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory)
+    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, Map<Integer, String> imagePathMap)
     {
         Date timestamp = new Date();
 
@@ -242,7 +242,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         result.getCameraPoseInvList().add(unorderedCameraPoseInvList.get(poseId));
                         result.getCameraProjectionIndexList().add(projectionId);
                         result.getLightIndexList().add(lightId);
-                        result.getImageFileNames().add(imgFilename);
+                        result.getImageFiles().add(new File(imgFilename));
                         break;
                     }
                     default:
