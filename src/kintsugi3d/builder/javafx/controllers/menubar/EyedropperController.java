@@ -70,9 +70,9 @@ public class EyedropperController implements Initializable {
     @FXML
     private Button applyButton;
     private boolean isCropping;//enabled by crop button and disabled when cropping is finished
-    private boolean isSelecting;//enabled by "Select Color" buttons and disabled when selection is finished
+    private boolean isSelecting;//enabled by "Select Tone Patch" buttons and disabled when selection is finished
     private boolean canResetCrop; //enabled when cropping is finished and disabled when crop is reset to default viewport
-    static final String DEFAULT_BUTTON_TEXT = "Select Color";
+    static final String DEFAULT_BUTTON_TEXT = "Select Tone Patch";
 
     @FXML
     private TextField txtField1, txtField2, txtField3, txtField4, txtField5, txtField6;
@@ -192,7 +192,7 @@ public class EyedropperController implements Initializable {
             Color averageColor = getAvgColorFromSelection();
 
             // Set the color label text
-            colorLabel.setText("Greyscale: " + Math.round(getGreyScaleDouble(averageColor)));
+            colorLabel.setText("Selected Tone [0-255]: " + Math.round(getGreyScaleDouble(averageColor)));
 
             //display average color to user, change text for corresponding text field
             addSelectedColor(averageColor);

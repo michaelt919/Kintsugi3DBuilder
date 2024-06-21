@@ -31,7 +31,7 @@
         </center>
         <top>
             <HBox prefHeight="21.0" prefWidth="565.0" BorderPane.alignment="CENTER">
-                <Label fx:id="colorLabel" alignment="CENTER" prefWidth="400.0" text="No Color Selected" HBox.hgrow="ALWAYS">
+                <Label fx:id="colorLabel" alignment="CENTER" prefWidth="400.0" text="No Tone Selected" HBox.hgrow="ALWAYS">
                     <padding>
                         <Insets top="10.0" />
                     </padding>
@@ -115,12 +115,12 @@
                         <Insets left="5.0" />
                     </GridPane.margin>
                 </TextField>
-                <Button fx:id="button1" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
-                <Button fx:id="button2" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
-                <Button fx:id="button3" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
-                <Button fx:id="button4" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
-                <Button fx:id="button5" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="5" />
-                <Button fx:id="button6" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6" />
+                <Button fx:id="button1" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Tone Patch" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
+                <Button fx:id="button2" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Tone Patch" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
+                <Button fx:id="button3" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Tone Patch" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
+                <Button fx:id="button4" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Tone Patch" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
+                <Button fx:id="button5" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Tone Patch" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="5" />
+                <Button fx:id="button6" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Tone Patch" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6" />
                 <Button fx:id="applyButton" mnemonicParsing="false" onAction="#applyButtonPressed" text="Apply" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="7">
                     <font>
                         <Font size="21.0" />
