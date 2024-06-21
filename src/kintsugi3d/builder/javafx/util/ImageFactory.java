@@ -41,7 +41,7 @@ public final class ImageFactory
         @Override
         public Color getColor(int x, int y)
         {
-            Vector4 colorVector = image.getGammaEncodedRGBA(x, y);
+            Vector4 colorVector = image.getSRGBEncodedRGBA(x, y);
             return new Color(clamp(colorVector.x), clamp(colorVector.y), clamp(colorVector.z), clamp(colorVector.w));
         }
     }

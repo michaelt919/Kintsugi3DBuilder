@@ -11,6 +11,12 @@
 
 package kintsugi3d.builder.resources.ibr;
 
+import java.io.IOException;
+import java.util.AbstractList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.IntStream;
+
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.fit.SpecularFitFinal;
@@ -28,12 +34,6 @@ import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.AbstractList;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.IntStream;
 
 final class IBRSharedResources<ContextType extends Context<ContextType>>
 {
@@ -498,8 +498,6 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
             program.setUniformBuffer("LightIntensities", this.lightIntensityBuffer);
             program.setUniformBuffer("LightIndices", this.lightIndexBuffer);
         }
-
-        program.setUniform("gamma", this.getViewSet().getGamma());
 
         getLuminanceMapResources().setupShaderProgram(program);
         getSpecularMaterialResources().setupShaderProgram(program);

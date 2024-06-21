@@ -11,14 +11,14 @@
 
 package kintsugi3d.builder.resources.ibr;
 
+import java.util.List;
+import java.util.Objects;
+
+import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.geometry.GeometryResources;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.builder.core.ViewSet;
-
-import java.util.List;
-import java.util.Objects;
 
 public abstract class IBRResourcesBase<ContextType extends Context<ContextType>> implements IBRResources<ContextType>
 {
@@ -86,7 +86,6 @@ public abstract class IBRResourcesBase<ContextType extends Context<ContextType>>
     public void updateLuminanceMap(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
     {
         this.getViewSet().setTonemapping(
-            this.getViewSet().getGamma(),
             linearLuminanceValues,
             encodedLuminanceValues);
 

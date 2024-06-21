@@ -11,16 +11,15 @@
 
 package kintsugi3d.builder.fit.finalize;
 
+import java.io.File;
+import java.io.IOException;
+
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.builders.framebuffer.ColorAttachmentSpec;
 import kintsugi3d.gl.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 
 public final class AlbedoORMOptimization<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -119,10 +118,8 @@ public final class AlbedoORMOptimization<ContextType extends Context<ContextType
         }
     }
 
-    public void execute(SpecularMaterialResources<ContextType> specularFit, float gamma)
+    public void execute(SpecularMaterialResources<ContextType> specularFit)
     {
-        estimationProgram.setUniform("gamma", gamma);
-
         // Set up shader program
         estimationProgram.setTexture("diffuseEstimate", specularFit.getDiffuseMap());
         estimationProgram.setTexture("specularEstimate", specularFit.getSpecularReflectivityMap());

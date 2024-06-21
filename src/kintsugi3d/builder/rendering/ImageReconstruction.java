@@ -12,7 +12,6 @@
 package kintsugi3d.builder.rendering;
 
 import java.awt.image.BufferedImage;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.ListIterator;
@@ -31,7 +30,6 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.util.BufferedImageColorList;
 import kintsugi3d.util.ColorImage;
-import kintsugi3d.util.ColorList;
 import kintsugi3d.util.SRGB;
 import org.lwjgl.*;
 
@@ -193,11 +191,6 @@ public class ImageReconstruction<ContextType extends Context<ContextType>> imple
                 @Override
                 public ColorAppearanceRMSE reconstruct(Drawable<ContextType> drawable)
                 {
-                    // Provide gamma to shader in case it's necessary for reconstruction
-                    // TODO: use proper sRGB when possible, not gamma correction
-                    float gamma = viewSet.getGamma();
-                    drawable.program().setUniform("gamma", gamma);
-
                     // Create new framebuffer if necessary.
                     if (reconstructionFramebuffer == null
                         || reconstructionFramebuffer.getSize().width != currentGroundTruth.getWidth()

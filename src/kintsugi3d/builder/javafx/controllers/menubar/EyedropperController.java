@@ -11,6 +11,17 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar;
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.function.DoubleUnaryOperator;
+import javax.imageio.ImageIO;
+
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -28,20 +39,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import kintsugi3d.builder.core.IOModel;
+import kintsugi3d.util.SRGB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.builder.core.IOModel;
-
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
-import java.util.function.DoubleUnaryOperator;
 
 public class EyedropperController implements Initializable {
     private static final Logger log = LoggerFactory.getLogger(EyedropperController.class);
@@ -342,16 +343,16 @@ public class EyedropperController implements Initializable {
         double greenVal = color.getGreen();
         double blueVal = color.getBlue();
 
-        redVal = Math.pow(redVal, 2.2);
-        greenVal = Math.pow(greenVal, 2.2);
-        blueVal = Math.pow(blueVal, 2.2);
+        redVal = SRGB.toLinear(redVal);
+        greenVal = SRGB.toLinear(greenVal);
+        blueVal = SRGB.toLinear(blueVal);
 
         redVal *= 0.2126729;
         greenVal *= 0.71522;
         blueVal *= 0.0721750;
 
         double weightedAverageColor = redVal + greenVal + blueVal;
-        weightedAverageColor = Math.pow(weightedAverageColor, 1/2.2);
+        weightedAverageColor = SRGB.fromLinear(weightedAverageColor);
         return weightedAverageColor * 255;
     }
 

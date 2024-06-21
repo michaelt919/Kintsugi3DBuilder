@@ -12,7 +12,7 @@
 package kintsugi3d.builder.metrics;
 
 /**
- * Bundles linear (physical radiance), sRGB / gamma-corrected, and encoded (tonemapped) RMSE
+ * Bundles linear (physical radiance), sRGB / gamma-encoded, and encoded (tonemapped) RMSE
  */
 public class ColorAppearanceRMSE
 {

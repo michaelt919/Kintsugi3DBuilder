@@ -12,7 +12,6 @@
 package kintsugi3d.builder.rendering.components.scene;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 
@@ -67,10 +66,9 @@ public class Environment<ContextType extends Context<ContextType>> extends Shade
             getDrawable().program().setUniform("envMapMatrix", envMapMatrix);
             getDrawable().program().setUniform("envMapIntensity", sceneModel.getClearColor());
 
-            getDrawable().program().setUniform("gamma",
+            getDrawable().program().setUniform("sRGBEncoded",
                 lightingResources.getEnvironmentMap().isInternalFormatCompressed() ||
-                    lightingResources.getEnvironmentMap().getInternalUncompressedColorFormat().dataType != ColorFormat.DataType.FLOATING_POINT
-                    ? 1.0f : 2.2f);
+                    lightingResources.getEnvironmentMap().getInternalUncompressedColorFormat().dataType != ColorFormat.DataType.FLOATING_POINT);
 
             getContext().getState().disableDepthTest();
             getDrawable().draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);

@@ -13,6 +13,8 @@
  */
 
 #include "basisToGGXError.glsl"
+#include <colorappearance/linearize.glsl>
+#line 17 0
 
 #ifndef PI
 #define PI 3.1415926535897932384626433832795
@@ -22,19 +24,16 @@ in vec2 fTexCoord;
 
 layout(location = 0) out vec4 errorOut;
 
-uniform float gamma;
-uniform float gammaInv;
-
 uniform sampler2D diffuseMap;
 uniform sampler2D specularEstimate;
 uniform sampler2D roughnessMap;
 
 void main()
 {
-    vec3 reflectivity = pow(texture(specularEstimate, fTexCoord).rgb, vec3(gamma));
+    vec3 reflectivity = sRGBToLinear(texture(specularEstimate, fTexCoord).rgb);
     float sqrtRoughness = texture(roughnessMap, fTexCoord)[0];
     float roughness = sqrtRoughness * sqrtRoughness;
-    vec3 diffuse = pow(texture(diffuseColor, fTexCoord).rgb, vec3(gamma));
+    vec3 diffuse = sRGBToLinear(texture(diffuseColor, fTexCoord).rgb);
 
     errorOut = vec4(vec3(calculateError(diffuse, reflectivity, roughness)),
         BASIS_RESOLUTION - 1);

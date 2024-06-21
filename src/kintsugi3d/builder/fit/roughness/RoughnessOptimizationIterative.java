@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,6 +11,12 @@
 
 package kintsugi3d.builder.fit.roughness;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.function.Supplier;
+import java.util.stream.IntStream;
+
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
@@ -21,12 +27,6 @@ import kintsugi3d.optimization.ErrorReport;
 import kintsugi3d.optimization.ShaderBasedOptimization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.function.Supplier;
-import java.util.stream.IntStream;
 
 /**
  * TODO: sketched out but not fully functional; may not be needed
@@ -116,11 +116,11 @@ public class RoughnessOptimizationIterative<ContextType extends Context<ContextT
     }
 
     @Override
-    public void execute(float gamma)
+    public void execute()
     {
         // Generate initial estimate
         // Renders directly into "front" framebuffer which is fine for the first pass since then we don't have to swap
-        super.execute(gamma);
+        super.execute();
 
         // Set damping factor to 1.0 initially at each position.
         roughnessOptimization.getFrontFramebuffer().clearColorBuffer(2, 1.0f, 1.0f, 1.0f, 1.0f);

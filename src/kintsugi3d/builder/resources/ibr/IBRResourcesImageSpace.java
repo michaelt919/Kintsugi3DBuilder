@@ -97,8 +97,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         private File imageDirectoryOverride;
         private ReadonlyLoadOptionsModel loadOptions;
         private ProgressMonitor progressMonitor;
-
-        private float gamma;
         private double[] linearLuminanceValues;
         private byte[] encodedLuminanceValues;
         private String primaryViewName;
@@ -140,9 +138,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
-        public Builder<ContextType> setTonemapping(float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues)
+        public Builder<ContextType> setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
         {
-            this.gamma = gamma;
             this.linearLuminanceValues = Arrays.copyOf(linearLuminanceValues, linearLuminanceValues.length);
             this.encodedLuminanceValues = Arrays.copyOf(encodedLuminanceValues, encodedLuminanceValues.length);
             return this;
@@ -255,7 +252,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         {
             if (linearLuminanceValues != null && encodedLuminanceValues != null)
             {
-                viewSet.setTonemapping(gamma, linearLuminanceValues, encodedLuminanceValues);
+                viewSet.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
             }
 
             if (imageDirectoryOverride != null)

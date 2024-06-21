@@ -18,5 +18,5 @@ public interface EncodableColorImage
     int getWidth();
     int getHeight();
     Vector4 getRawRGBA(int x, int y);
-    Vector4 getGammaEncodedRGBA(int x, int y);
+    Vector4 getSRGBEncodedRGBA(int x, int y);
 }

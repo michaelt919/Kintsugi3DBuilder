@@ -187,7 +187,7 @@ public class SpecularFitProcess
             try
             (
                 SpecularFitOptimizable<ContextType> sampledFit = SpecularFitOptimizable.createNew(
-                    sampled, programFactory, sampledSettings, settings.getGamma(), settings.getSpecularBasisSettings(),
+                    sampled, programFactory, sampledSettings, settings.getSpecularBasisSettings(),
                     settings.getNormalOptimizationSettings(), false)
             )
             {
@@ -207,7 +207,7 @@ public class SpecularFitProcess
                 if (DEBUG_IMAGES && settings.getOutputDirectory() != null)
                 {
                     // write out diffuse texture for debugging
-                    sampledDecomposition.saveDiffuseMap(settings.getGamma(), settings.getOutputDirectory());
+                    sampledDecomposition.saveDiffuseMap(settings.getOutputDirectory());
 
                     // Save basis image visualization for reference and debugging
                     try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(cache.getContext(), settings.getSpecularBasisSettings()))
@@ -242,7 +242,7 @@ public class SpecularFitProcess
             }
 
             // Generate albedo / ORM maps at full resolution (does not require loaded source images)
-            fullResolution.getAlbedoORMOptimization().execute(fullResolution, settings.getGamma());
+            fullResolution.getAlbedoORMOptimization().execute(fullResolution);
 
             Duration duration = Duration.between(start, Instant.now());
             log.info("Total processing time: " + duration);
@@ -355,7 +355,7 @@ public class SpecularFitProcess
                     {
                         TextureResolution blockSettings = blockResources.getTextureResolution();
                         try (SpecularFitOptimizable<ContextType> blockOptimization = SpecularFitOptimizable.createNew(
-                            blockResources, programFactory, blockSettings, settings.getGamma(), settings.getSpecularBasisSettings(),
+                            blockResources, programFactory, blockSettings, settings.getSpecularBasisSettings(),
                             settings.getNormalOptimizationSettings(), settings.shouldIncludeConstantTerm()))
                         {
                             if (inputNormalMapFile != null)
@@ -438,7 +438,7 @@ public class SpecularFitProcess
                             blockOptimization.getDiffuseOptimization().execute(blockOptimization);
 
                             // Fit specular textures after filling holes
-                            blockOptimization.getRoughnessOptimization().execute(settings.getGamma());
+                            blockOptimization.getRoughnessOptimization().execute();
 
                             // Copy partial solution into the full solution.
                             fullResolutionDestination.blit(cache.getSettings().getBlockStartX(i), cache.getSettings().getBlockStartY(j), blockOptimization);
@@ -455,23 +455,21 @@ public class SpecularFitProcess
         SpecularMaterialResources<ContextType> resultsForErrorCalc, ProgressMonitor monitor) throws IOException, UserCancellationException
     {
         SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
-
-        // Create new texture fit settings with a resolution that matches the IBRResources, but the same gamma as specified by the user.
-        TextureResolution texFitSettings = resources.getTextureResolution();
+        TextureResolution resolution = resources.getTextureResolution();
 
         try
         (
             // Reflectance stream: includes a shader program and a framebuffer object for extracting reflectance data from images.
             GraphicsStreamResource<ContextType> stream = resources.streamFactory().streamAsResource(
                 getReflectanceProgramBuilder(resources, programFactory),
-                resources.getContext().buildFramebufferObject(texFitSettings.width, texFitSettings.height)
+                resources.getContext().buildFramebufferObject(resolution.width, resolution.height)
                     .addColorAttachment(ColorFormat.RGBA32F)
                     .addColorAttachment(ColorFormat.RGBA32F));
 
             ShaderBasedErrorCalculator<ContextType> errorCalculator = ShaderBasedErrorCalculator.create(resources.getContext(),
                 () -> createErrorCalcProgram(resources, programFactory),
                 program -> createErrorCalcDrawable(resultsForErrorCalc, resources, program),
-                texFitSettings.width, texFitSettings.height)
+                resolution.width, resolution.height)
         )
         {
             optimizationMethod.optimize(stream, errorCalculator, monitor);
@@ -542,7 +540,7 @@ public class SpecularFitProcess
         specularFit.getBasisWeightResources().useWithShaderProgram(errorCalcProgram);
         errorCalcProgram.setTexture("roughnessMap", specularFit.getSpecularRoughnessMap());
         errorCalcProgram.setTexture("normalMap", specularFit.getNormalMap());
-        errorCalcProgram.setUniform("errorGamma", 1.0f);
+        errorCalcProgram.setUniform("sRGB", false);
         return errorCalcDrawable;
     }
 

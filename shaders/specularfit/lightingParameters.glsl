@@ -13,6 +13,7 @@
 
 uniform sampler2D normalMap;
 #include "../common/constructTBN.glsl"
+#line 17 4002
 
 struct LightingParameters
 {

@@ -39,8 +39,8 @@ public interface DynamicResourceManager
     /**
      * Sets the tonemapping curve used to interpret the photographic data.
      * The data points specified using this function will be interpolated to form a smooth decoding curve.
-     * @param linearLuminanceValues A sequence of luminance values interpreted as physically linear (gamma decoded).
-     * @param encodedLuminanceValues A sequence of gamma-encoded luminance values representing the actual pixel values
+     * @param linearLuminanceValues A sequence of luminance values interpreted as physically linear (linear sRGB / "gamma decoded").
+     * @param encodedLuminanceValues A sequence of sRGB ("gamma-encoded") luminance values representing the actual pixel values
      *                               that might be found in the photographs.
      */
     void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues);

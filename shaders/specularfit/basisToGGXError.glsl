@@ -11,6 +11,7 @@
  */
 
 #include "evaluateBRDF.glsl"
+#include <colorappearance/linearize.glsl>
 
 #line 16 4011
 
@@ -41,7 +42,7 @@ float calculateError(vec3 diffuse, vec3 reflectivity, float roughness)
 
         float weight = nDotH * nDotH; // cosine weighting
 
-        vec3 diff = pow(4 * diffuse + PI * target, vec3(gammaInv)) - pow(brdfTimes4Pi, vec3(gammaInv));
+        vec3 diff = linearToSRGB(4 * diffuse + PI * target) - linearToSRGB(brdfTimes4Pi);
 
         sqError += weight * dot(diff, diff);
     }

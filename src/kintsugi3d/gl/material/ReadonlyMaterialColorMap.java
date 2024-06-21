@@ -13,5 +13,5 @@ package kintsugi3d.gl.material;
 
 public interface ReadonlyMaterialColorMap extends ReadonlyMaterialTextureMap
 {
-    boolean isGammaCorrectionRequired();
+    boolean isSRGBDecodingRequired();
 }

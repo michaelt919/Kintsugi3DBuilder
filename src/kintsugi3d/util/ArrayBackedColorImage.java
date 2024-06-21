@@ -47,13 +47,9 @@ public class ArrayBackedColorImage implements EncodableColorImage
     }
 
     @Override
-    public Vector4 getGammaEncodedRGBA(int x, int y)
+    public Vector4 getSRGBEncodedRGBA(int x, int y)
     {
         int k = (height - 1 - y) * width + x;
-        return new Vector4(
-            (float)Math.pow(pixels[3 * k    ], 1.0 / 2.2),
-            (float)Math.pow(pixels[3 * k + 1], 1.0 / 2.2),
-            (float)Math.pow(pixels[3 * k + 2], 1.0 / 2.2),
-            1.0f);
+        return SRGB.fromLinear(new Vector4(pixels[3 * k], pixels[3 * k + 1], pixels[3 * k + 2], 1.0f));
     }
 }

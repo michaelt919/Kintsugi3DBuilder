@@ -115,7 +115,6 @@ public class SpecularFitRequestUI implements IBRRequestUI
                     Integer.parseInt(widthTextField.getText()),
                     Integer.parseInt(heightTextField.getText())),
                 modelAccess.getSettingsModel());
-            settings.setGamma(modelAccess.getSettingsModel().getFloat("gamma"));
 
             int basisCount = Integer.parseInt(basisCountTextField.getText());
             settings.getSpecularBasisSettings().setBasisCount(basisCount);

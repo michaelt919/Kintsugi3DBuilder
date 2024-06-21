@@ -11,6 +11,12 @@
 
 package kintsugi3d.builder.core;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import kintsugi3d.builder.metrics.ViewRMSE;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
@@ -21,13 +27,6 @@ import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 /**
  * A class representing a collection of photographs, or views.
@@ -125,11 +124,6 @@ public final class ViewSet implements ReadonlyViewSet
      * The mesh file.
      */
     private File geometryFile;
-
-    /**
-     * Used to decode pixel colors according to a gamma curve if reference values are unavailable, otherwise, affects the absolute brightness of the decoded colors.
-     */
-    private float gamma = 2.2f;
 
     /**
      * If false, inverse-square light attenuation should be applied.
@@ -375,7 +369,7 @@ public final class ViewSet implements ReadonlyViewSet
 
         if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
         {
-            result.setTonemapping(this.gamma,
+            result.setTonemapping(
                 Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
                 Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
         }
@@ -411,7 +405,7 @@ public final class ViewSet implements ReadonlyViewSet
 
         if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
         {
-            result.setTonemapping(this.gamma,
+            result.setTonemapping(
                 Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
                 Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
         }
@@ -809,12 +803,6 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public float getGamma()
-    {
-        return gamma;
-    }
-
-    @Override
     public boolean hasCustomLuminanceEncoding()
     {
         return linearLuminanceValues != null && encodedLuminanceValues != null
@@ -826,11 +814,11 @@ public final class ViewSet implements ReadonlyViewSet
     {
         if (hasCustomLuminanceEncoding())
         {
-            return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues, gamma);
+            return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
         }
         else
         {
-            return new SampledLuminanceEncoding(gamma);
+            return new SampledLuminanceEncoding();
         }
     }
 
@@ -846,9 +834,8 @@ public final class ViewSet implements ReadonlyViewSet
         return Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length);
     }
 
-    public void setTonemapping(float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues)
+    public void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
     {
-        this.gamma = gamma;
         this.linearLuminanceValues = linearLuminanceValues;
         this.encodedLuminanceValues = encodedLuminanceValues;
     }

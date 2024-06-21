@@ -11,6 +11,12 @@
 
 package kintsugi3d.builder.io;
 
+import java.io.File;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.stream.IntStream;
+
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
@@ -21,12 +27,6 @@ import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.stream.IntStream;
 
 /**
  * Handles loading view sets from the VSET text file format
@@ -54,8 +54,6 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         ViewSet result = new ViewSet(128);
         result.setRootDirectory(root);
         result.setSupportingFilesDirectory(supportingFilesDirectory);
-
-        float gamma = 2.2f;
 
         List<Double> linearLuminanceList = new ArrayList<>(8);
         List<Byte> encodedLuminanceList = new ArrayList<>(8);
@@ -194,8 +192,8 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                     }
                     case "g":
                     {
-                        // Gamma
-                        gamma = scanner.nextFloat();
+                        // Gamma -- no longer used
+//                        gamma = scanner.nextFloat();
                         scanner.nextLine();
                         break;
                     }
@@ -265,7 +263,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
             encodedLuminanceValues[i] = encodedLuminanceList.get(i);
         }
 
-        result.setTonemapping(gamma, linearLuminanceValues, encodedLuminanceValues);
+        result.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
 
         int maxLightIndex = result.getLightIndexList().stream().max(Comparator.naturalOrder()).orElse(-1);
 

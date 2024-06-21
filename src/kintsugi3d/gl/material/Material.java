@@ -16,10 +16,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.vecmath.Vector3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Material implements ReadonlyMaterial
 {
@@ -419,7 +419,7 @@ public class Material implements ReadonlyMaterial
                 {
                     if ("on".equals(scanner.next()))
                     {
-                        texture.setGammaCorrectionRequired(true);
+                        texture.setSRGBDecodingRequired(true);
                     }
                 }
                 else

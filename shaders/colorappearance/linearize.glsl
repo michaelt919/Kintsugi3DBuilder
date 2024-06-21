@@ -19,15 +19,9 @@
 #define LUMINANCE_MAP_ENABLED 0
 #endif
 
-#ifndef SRGB_DECODING_ENABLED
-#define SRGB_DECODING_ENABLED 1
-#endif
-
 #if LUMINANCE_MAP_ENABLED
 uniform sampler1D luminanceMap;
 #endif
-
-uniform float gamma;
 
 float getLuminance(vec3 rgbColor)
 {
@@ -62,72 +56,48 @@ float getMaxLuminance()
     return maxLuminance;
 }
 
+float linearToSRGB(float linear)
+{
+    if(linear <= 0.0031308)
+    {
+        return 12.92 * linear;
+    }
+    else
+    {
+        return (1.055) * pow(linear, 1.0/2.4) - 0.055;
+    }
+}
+
 vec3 linearToSRGB(vec3 color)
 {
-    vec3 sRGBColor;
+    return vec3(linearToSRGB(color.r), linearToSRGB(color.g), linearToSRGB(color.b));
+}
 
-    if(color.r <= 0.0031308)
-    {
-        sRGBColor.r = 12.92 * color.r;
-    }
-    else
-    {
-        sRGBColor.r = (1.055) * pow(color.r, 1.0/2.4) - 0.055;
-    }
+vec4 linearToSRGB(vec4 color)
+{
+    return vec4(linearToSRGB(color.rgb), color.a);
+}
 
-    if(color.g <= 0.0031308)
-    {
-        sRGBColor.g = 12.92 * color.g;
-    }
-    else
-    {
-        sRGBColor.g = (1.055) * pow(color.g, 1.0/2.4) - 0.055;
-    }
-
-    if(color.b <= 0.0031308)
-    {
-        sRGBColor.b = 12.92 * color.b;
-    }
-    else
-    {
-        sRGBColor.b = (1.055) * pow(color.b, 1.0/2.4) - 0.055;
-    }
-
-    return sRGBColor;
+float sRGBToLinear(float encoded)
+{
+     if(encoded <= 0.04045)
+     {
+         return encoded / 12.92;
+     }
+     else
+     {
+         return pow((encoded + 0.055) / 1.055, 2.4);
+     }
 }
 
 vec3 sRGBToLinear(vec3 sRGBColor)
 {
-     vec3 linearColor;
+     return vec3(sRGBToLinear(sRGBColor.r), sRGBToLinear(sRGBColor.g), sRGBToLinear(sRGBColor.b));
+}
 
-     if(sRGBColor.r <= 0.04045)
-     {
-         linearColor.r = sRGBColor.r / 12.92;
-     }
-     else
-     {
-         linearColor.r = pow((sRGBColor.r + 0.055) / 1.055, 2.4);
-     }
-
-     if(sRGBColor.g <= 0.04045)
-     {
-         linearColor.g = sRGBColor.g / 12.92;
-     }
-     else
-     {
-         linearColor.g = pow((sRGBColor.g + 0.055) / 1.055, 2.4);
-     }
-
-     if(sRGBColor.b <= 0.04045)
-     {
-         linearColor.b = sRGBColor.b / 12.92;
-     }
-     else
-     {
-         linearColor.b = pow((sRGBColor.b + 0.055) / 1.055, 2.4);
-     }
-
-     return linearColor;
+vec4 sRGBToLinear(vec4 sRGBColor)
+{
+    return vec4(sRGBToLinear(sRGBColor.rgb), sRGBColor.a);
 }
 
 vec3 linearizeColor(vec3 nonlinearColor)
@@ -141,12 +111,8 @@ vec3 linearizeColor(vec3 nonlinearColor)
     }
     else
     {
-#if SRGB_DECODING_ENABLED
-        // Step 1: remove gamma correction
+        // Step 1: linearize sRGB
         vec3 colorGamma = sRGBToLinear(nonlinearColor);
-#else
-        vec3 colorGamma = pow(nonlinearColor, vec3(gamma));
-#endif
 
         // Step 2: convert to CIE luminance
         float pseudoLuminance = getLuminance(colorGamma);
@@ -158,13 +124,8 @@ vec3 linearizeColor(vec3 nonlinearColor)
         else
         {
             // Step 3: determine the ratio between the true luminance and pseudo- (encoded) luminance
-            // Reapply gamma correction to the single luminance value
-
-#if SRGB_DECODING_ENABLED
-            float pseudoLuminanceGamma = getLuminance(linearToSRGB(vec3(pseudoLuminance)));
-#else
-            float pseudoLuminanceGamma = pow(pseudoLuminance, 1.0 / gamma);
-#endif
+            // Reapply sRGB encoding curve ("gamma") to the single luminance value
+            float pseudoLuminanceGamma = linearToSRGB(pseudoLuminance);
             int luminanceMapSize = textureSize(luminanceMap, 0);
             float texCoord = (0.5 + pseudoLuminanceGamma * (luminanceMapSize - 1)) / luminanceMapSize; // adjust for how linear interpolation is performed
 
@@ -174,12 +135,9 @@ vec3 linearizeColor(vec3 nonlinearColor)
             linearColor = colorGamma * scale;
         }
     }
-#elif SRGB_DECODING_ENABLED
-    linearColor = sRGBToLinear(nonlinearColor);
 #else
-    linearColor = pow(nonlinearColor, vec3(gamma));
+    linearColor = sRGBToLinear(nonlinearColor);
 #endif
-
     return linearColor;
 }
 
