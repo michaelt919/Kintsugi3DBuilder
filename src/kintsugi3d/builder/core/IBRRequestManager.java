@@ -145,7 +145,9 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
                     {
                         log.error("Error occurred while executing request:", e);
                         Platform.runLater(() ->
-                            new Alert(AlertType.ERROR, "An error occurred processing request. Processing has stopped.\nCheck the log for more info.").show());
+                        {
+                            new Alert(Alert.AlertType.NONE, "An error occurred processing request. Processing has stopped.\nCheck the log for more info.").show();
+                        });
                     }
                 }
 

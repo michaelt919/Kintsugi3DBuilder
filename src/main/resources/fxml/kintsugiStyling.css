@@ -105,6 +105,8 @@ dialog-pane{
 .menu{
     -fx-background-color: #262626;
     -fx-background-radius: 0 0 0 0;
+    /*-fx-background-color: #383838; brought in from main - Nathan merge
+    -fx-background-radius: 30 30 30 30;*/
 }
 .menu:hover{
     -fx-background-color: #D4AA00;
@@ -167,7 +169,7 @@ dialog-pane{
     -fx-background-color: #262626;
 }
 
-.table-row-cell: even{
+.table-row-cell:even{
     -fx-background-color: #333333; /* Even cell background color */
 }
 
@@ -242,6 +244,10 @@ dialog-pane{
 
 .tool-bar .button{
     -fx-background-radius: 0;
+}
+
+.tooltip {
+    -fx-show-duration: indefinite; /* tooltips don't disappear until the user's mouse leaves the node*/
 }
 
 .vbox{

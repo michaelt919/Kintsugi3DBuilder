@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -9,23 +9,20 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.menubar;
+package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
 import java.awt.*;
 import java.io.File;
-import java.net.URL;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.ResourceBundle;
-import java.util.function.BiConsumer;
 import java.util.stream.IntStream;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
@@ -33,28 +30,19 @@ import javafx.stage.*;
 import javafx.stage.Window;
 import javafx.stage.FileChooser.ExtensionFilter;
 import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.util.RecentProjects;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
+import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
-import java.io.File;
-import java.net.URL;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ResourceBundle;
-import java.util.function.Consumer;
-import java.util.stream.IntStream;
-
-public class LoaderController implements Initializable
+public class CustomImportController extends FXMLPageController implements ShareInfo, CanConfirm
 {
-    private static final Logger log = LoggerFactory.getLogger(LoaderController.class);
-
+    private static final Logger log = LoggerFactory.getLogger(CustomImportController.class);
     @FXML private ChoiceBox<String> primaryViewChoiceBox;
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
@@ -71,34 +59,34 @@ public class LoaderController implements Initializable
     private File objFile;
     private File photoDir;
 
-    private Runnable loadStartCallback;
-    private BiConsumer<ViewSet, File> viewSetCallback;
-
     @Override
-    public void initialize(URL location, ResourceBundle resources)
-    {
+    public Region getHostRegion() {
+        return root;
+    }
 
-        setHomeDir(new File(System.getProperty("user.home")));
+    public void init()
+    {
+        File recentFile = RecentProjects.getMostRecentDirectory();
+        setInitDirectories(recentFile);
+
         camFileChooser.getExtensionFilters().add(new ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
         objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ or PLY file", "*.obj", "*.ply"));
 
         camFileChooser.setTitle("Select camera positions file");
         objFileChooser.setTitle("Select object file");
+
         photoDirectoryChooser.setTitle("Select photo directory");
     }
 
-    public void init()
-    {
+    @Override
+    public void refresh() {
+        File recentFile = RecentProjects.getMostRecentDirectory();
+        setInitDirectories(recentFile);
     }
 
-    public void setLoadStartCallback(Runnable callback)
-    {
-        this.loadStartCallback = callback;
-    }
-
-    public void setViewSetCallback(BiConsumer<ViewSet, File> callback)
-    {
-        this.viewSetCallback = callback;
+    @Override
+    public boolean isNextButtonValid() {
+        return areAllFilesLoaded();
     }
 
     /**
@@ -162,7 +150,10 @@ public class LoaderController implements Initializable
                 new Alert(AlertType.ERROR, e.toString()).show();
             }
         }
+
+        hostScrollerController.updatePrevAndNextButtons();
     }
+
 
     @FXML
     private void objFileSelect()
@@ -177,6 +168,8 @@ public class LoaderController implements Initializable
             loadCheckObj.setText("Loaded");
             loadCheckObj.setFill(Paint.valueOf("Green"));
         }
+
+        hostScrollerController.updatePrevAndNextButtons();
     }
 
     @FXML
@@ -192,42 +185,14 @@ public class LoaderController implements Initializable
             loadCheckImages.setText("Loaded");
             loadCheckImages.setFill(Paint.valueOf("Green"));
         }
+
+        hostScrollerController.updatePrevAndNextButtons();
     }
 
-    @FXML
-    private void okButtonPress()
-    {
-        if ((cameraFile != null) && (objFile != null) && (photoDir != null))
-        {
-            if (loadStartCallback != null)
-            {
-                loadStartCallback.run();
-            }
-
-            if (viewSetCallback != null)
-            {
-                MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
-                    viewSet -> viewSetCallback.accept(viewSet, cameraFile.getParentFile()));
-            }
-
-            new Thread(() ->
-                MultithreadModels.getInstance().getIOModel().loadFromAgisoftFiles(
-                        cameraFile.getPath(), cameraFile, objFile, photoDir,
-                        primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
-                .start();
-            WelcomeWindowController.getInstance().hideWelcomeWindow();
-            close();
-        }
-        else{
-            Toolkit.getDefaultToolkit().beep();
-        }
+    private boolean areAllFilesLoaded() {
+        return (cameraFile != null) && (objFile != null) && (photoDir != null);
     }
 
-    @FXML
-    private void cancelButtonPress()
-    {
-        close();
-    }
 
     private void close()
     {
@@ -237,29 +202,17 @@ public class LoaderController implements Initializable
 
     private void setHomeDir(File home)
     {
-        List<String> items = RecentProjects.getItemsFromRecentsFile();
+        File parentDir = home.getParentFile();
 
-        if(items.isEmpty())
-        {
-            File parentDir;
-            parentDir = home.getParentFile();
-            camFileChooser.setInitialDirectory(parentDir);
-            objFileChooser.setInitialDirectory(parentDir);
-            photoDirectoryChooser.setInitialDirectory(parentDir);
-        }
-        else
-        {
-            for (int i = items.get(0).length()-1; i > 0; i--) {
-                if (items.get(0).charAt(i) == '\\')
-                {
-//                    projectFileChooser.setInitialDirectory(new File(items.get(0).substring(0,i)));
-                    camFileChooser.setInitialDirectory(new File(items.get(0).substring(0,i)));
-                    objFileChooser.setInitialDirectory(new File(items.get(0).substring(0,i)));
-                    photoDirectoryChooser.setInitialDirectory(new File(items.get(0).substring(0,i)));
-                    break;
-                }
-            }
-        }
+        setInitDirectories(parentDir);
+    }
+
+    private void setInitDirectories(File file){
+        camFileChooser.setInitialDirectory(file);
+        objFileChooser.setInitialDirectory(file);
+        photoDirectoryChooser.setInitialDirectory(file);
+
+        RecentProjects.setMostRecentDirectory(file);
     }
 
     private Stage getStage()
@@ -271,5 +224,39 @@ public class LoaderController implements Initializable
         return thisStage;
     }
 
-    private static final String QUICK_FILENAME = "quickSaveLoadConfig.txt";
+    @Override
+    public void shareInfo() {
+        hostScrollerController.addInfo(Info.CAM_FILE, cameraFile);
+        hostScrollerController.addInfo(Info.PHOTO_DIR, photoDir);
+        hostScrollerController.addInfo(Info.OBJ_FILE, objFile);
+        hostScrollerController.addInfo(Info.PRIMARY_VIEW, primaryViewChoiceBox.getSelectionModel().getSelectedItem());
+    }
+
+    @Override
+    public void confirmButtonPress() {
+        if (!areAllFilesLoaded()){
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
+        if (loadStartCallback != null)
+        {
+            loadStartCallback.run();
+        }
+
+        if (viewSetCallback != null)
+        {
+            MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
+                    viewSet -> viewSetCallback.accept(viewSet));
+        }
+
+        new Thread(() ->
+                MultithreadModels.getInstance().getIOModel().loadFromAgisoftFiles(
+                        cameraFile.getPath(), cameraFile, objFile, photoDir,
+                        primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
+                .start();
+
+        WelcomeWindowController.getInstance().hideWelcomeWindow();
+        close();
+    }
 }

@@ -21,13 +21,20 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
+import javafx.application.Platform;
+import javafx.event.ActionEvent;
+import javafx.scene.control.*;
+import javafx.stage.DirectoryChooser;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
+import kintsugi3d.builder.resources.ibr.MissingImagesException;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.gl.core.Context;
@@ -161,7 +168,14 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     {
         loadedViewSet = builder.getViewSet();
 
-        MultithreadModels.getInstance().getCameraViewListModel().setCameraViewList(loadedViewSet.getImageFileNames());
+//        MultithreadModels.getInstance().getCameraViewListModel().setCameraViewList(loadedViewSet.getImageFileNames());
+
+        List<File> imgFiles = loadedViewSet.getImageFiles();
+        List<String> imgFileNames = new ArrayList<>();
+
+        imgFiles.forEach(file->imgFileNames.add(file.getName()));
+
+        MultithreadModels.getInstance().getCameraViewListModel().setCameraViewList(imgFileNames);
 
         // Invoke callbacks now that view set is loaded
         invokeViewSetLoadCallbacks(loadedViewSet);
@@ -316,6 +330,138 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         {
             handleMissingFiles(e);
         }
+    }
+
+    @Override
+    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions, String primaryViewName) {
+
+        // TODO There currently isn't functionality for a supportingFilesDirectory at this early in the process
+        //  Restructuring required from Tetzlaff.
+
+        this.progressMonitor.start();
+
+        loadAgisoftFromZipRec(id, metashapeObjectChunk, loadOptions, primaryViewName);
+    }
+
+    private void loadAgisoftFromZipRec(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions, String primaryViewName) {
+        File supportingFilesDirectory = null;
+        Builder<ContextType>builder = null;
+        try {
+            builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
+                    .setProgressMonitor(this.progressMonitor)
+                    .setLoadOptions(loadOptions)
+                    .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, null, false)
+                    .setPrimaryView(primaryViewName);
+
+            loadInstance(id, builder);
+        }
+        catch (MissingImagesException mie){
+            Platform.runLater(() -> showMissingImgsAlert(
+                    metashapeObjectChunk, primaryViewName, supportingFilesDirectory, loadOptions, id, mie));
+        }
+        catch (Exception e) {
+            handleMissingFiles(e);
+        }
+    }
+
+    private void showMissingImgsAlert(MetashapeObjectChunk metashapeObjectChunk, String primaryViewName, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions, String id, MissingImagesException mie) {
+        int numMissingImgs = mie.getNumMissingImgs();
+        File fullResImgDirAttempt = mie.getImgDirectory();
+
+        ButtonType cancel = new ButtonType("Cancel", ButtonBar.ButtonData.OTHER);
+        ButtonType newDirectory = new ButtonType("Choose Different Image Directory", ButtonBar.ButtonData.YES);
+        ButtonType skipMissingCams = new ButtonType("Skip Missing Cameras", ButtonBar.ButtonData.NO);
+        ButtonType openDirectory = new ButtonType("Open Directory", ButtonBar.ButtonData.NO);
+
+        Alert alert = new Alert(Alert.AlertType.NONE,
+                "Imported object is missing " + numMissingImgs + " images.",
+                cancel, newDirectory, skipMissingCams, openDirectory);
+
+        Builder<ContextType> finalBuilder = IBRResourcesImageSpace.getBuilderForContext(this.context);
+
+        ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(event -> {
+            //TODO: cancel task
+
+        });
+
+        ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event -> {
+            //TODO: implement checks to prevent recursive calls from consuming memory? Might be overkill
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setInitialDirectory(new File(metashapeObjectChunk.getPsxFilePath()).getParentFile());
+
+            directoryChooser.setTitle("Choose New Image Directory");
+            File newCamsFile = directoryChooser.showDialog(MenubarController.getInstance().getWindow());
+            //TODO: update recent project directory here?
+
+            new Thread(()->{
+                try {
+                    finalBuilder
+                            .setProgressMonitor(this.progressMonitor)
+                            .setLoadOptions(loadOptions)
+                            .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, newCamsFile, false)
+                            .setPrimaryView(primaryViewName);
+
+                    loadInstance(id, finalBuilder);
+                } catch (MissingImagesException mie2){
+                    Platform.runLater(() ->
+                            showMissingImgsAlert(metashapeObjectChunk, primaryViewName, supportingFilesDirectory, loadOptions, id, mie2));
+                }
+                catch (Exception e) {
+                    handleMissingFiles(e);
+                }
+            }).start();
+        });
+
+        ((ButtonBase) alert.getDialogPane().lookupButton(skipMissingCams)).setOnAction(event -> {
+            new Thread(()->{
+                try {
+                    finalBuilder
+                            .setProgressMonitor(this.progressMonitor)
+                            .setLoadOptions(loadOptions)
+                            //skip broken cams on the most recent attempt at processing
+                            .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, fullResImgDirAttempt, true)
+                            .setPrimaryView(primaryViewName);
+
+                    loadInstance(id, finalBuilder);
+                }
+                catch (Exception e) {
+                    handleMissingFiles(e);
+                }
+            }).start();
+        });
+
+        Button openDirButton =((Button) alert.getDialogPane().lookupButton(openDirectory));
+
+        openDirButton.addEventFilter(ActionEvent.ACTION,
+            event -> {
+                String path = fullResImgDirAttempt.getAbsolutePath();
+
+                //TODO: verify that this works for all windows os
+                if(System.getProperty("os.name").toLowerCase().startsWith("windows")) {
+                    try {
+                        Runtime.getRuntime().exec("explorer /select, " + path);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
+                //TODO: need to verify that this works on mac
+                else if (System.getProperty("os.name").toLowerCase().startsWith("mac")){
+                    try {
+                        Runtime.getRuntime().exec("xdg-open " + path);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
+                event.consume();//prevent alert from being closed after opening directory
+            }
+        );
+
+        alert.setTitle("Project is Missing Images");
+        //alert.setGraphic(new ImageView(new Image(new File("Kintsugi3D-icon.png").toURI().toString())));
+        //alert.setGraphic(null);
+        alert.show();
     }
 
     @Override

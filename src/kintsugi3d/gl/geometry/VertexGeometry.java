@@ -44,6 +44,7 @@ import static org.jengineering.sjmply.PLYType.*;
 public final class VertexGeometry implements ReadonlyVertexGeometry
 {
     private static final Logger log = LoggerFactory.getLogger(VertexGeometry.class);
+    private static File geometryFile;
     private File filename;
 
     private boolean hasNormals;
@@ -97,6 +98,29 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
             int result = normalIndex;
             result = 31 * result + texCoordIndex;
             return result;
+        }
+    }
+
+    /**
+     * Initializes the mesh from a file containing the mesh in Wavefront OBJ format OR in PLY format
+     * @param geometryFile
+     * @throws IOException
+     */
+    public static VertexGeometry createFromGeometryFile(File geometryFile) throws IOException
+    {
+        VertexGeometry.geometryFile = geometryFile;
+        String fileName = geometryFile.getName();
+        String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
+
+        if ("zip".equalsIgnoreCase(fileExtension)){
+            //TODO: set VertexGeometry.geometryFile to unzipped file?
+            return VertexGeometry.createFromZippedPLYFile(geometryFile, "mesh.ply");
+        } else if("obj".equalsIgnoreCase(fileExtension)) {
+             return VertexGeometry.createFromOBJFile(geometryFile);
+        }else if("ply".equalsIgnoreCase(fileExtension)){
+            return VertexGeometry.createFromPLYFile(geometryFile);
+        }else{
+            return null;
         }
     }
 
@@ -315,6 +339,10 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
     public static VertexGeometry createFromPLYFile(File file) throws IOException
     {
         return createFromPLY(file, PLY.load(file.toPath()));
+    }
+    public static VertexGeometry createFromZippedPLYFile(File zipFolder, String targetFileName) throws IOException
+    {
+        return createFromPLY(zipFolder, PLY.loadFromZip(zipFolder, targetFileName));
     }
 
     private static VertexGeometry createFromPLY(File file, PLY ply) throws IOException

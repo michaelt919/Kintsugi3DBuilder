@@ -28,6 +28,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -42,6 +43,7 @@ import javafx.stage.Stage;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.util.SRGB;
 import kintsugi3d.builder.javafx.internal.ProjectModelBase;
+import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -637,7 +639,17 @@ public class EyedropperController implements Initializable {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose Image File");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", validExtensions));
-        fileChooser.setInitialDirectory(ioModel.getLoadedViewSet().getFullResImageFile(ioModel.getLoadedViewSet().getPrimaryViewIndex()).getParentFile());
+        fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
+
+        try{
+            fileChooser.setInitialDirectory(ioModel.getLoadedViewSet().getFullResImageFile(ioModel.getLoadedViewSet().getPrimaryViewIndex()).getParentFile());
+        }
+        catch(NullPointerException e){
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Please load a model before using the color checker.");
+            alert.setGraphic(null);
+            alert.show();
+            return;
+        }
 
         Stage stage = (Stage) ((Node)actionEvent.getSource()).getScene().getWindow();
         File file = fileChooser.showOpenDialog(stage);
@@ -647,6 +659,8 @@ public class EyedropperController implements Initializable {
     public void setImage(File file)
     {
         if (file != null) {
+            RecentProjects.setMostRecentDirectory(file.getParentFile());
+
             //convert tiff image if necessary
             if (file.getAbsolutePath().toLowerCase().matches(".*\\.tiff?")) {
                 BufferedImage bufferedImage;
@@ -656,12 +670,10 @@ public class EyedropperController implements Initializable {
                 } catch (IOException e) {
                     log.error("Could not convert tif image: ", e);
                 }
-
             }
             else {
                 selectedFile = new Image(file.toURI().toString());
                 colorPickerImgView.setImage(selectedFile);
-
             }
 
             //update buttons
