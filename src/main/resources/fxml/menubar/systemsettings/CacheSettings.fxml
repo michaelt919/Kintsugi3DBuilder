@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+  ~ Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
   ~ Copyright (c) 2019 The Regents of the University of Minnesota
   ~
   ~ Licensed under GPLv3
@@ -11,9 +11,10 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+
 <AnchorPane prefHeight="196.0" prefWidth="260.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.systemsettings.CacheSettingsController">
     <VBox spacing="10.0">
         <children>
@@ -23,7 +24,7 @@
                 <panes>
                     <TitledPane animated="true" prefWidth="500.0" styleClass="titled-pane" text="Cache Path">
                         <content>
-                            <AnchorPane minHeight="0.0" minWidth="0.0" prefWidth="200.0" styleClass="anchor-pane">
+                            <AnchorPane minHeight="0.0" minWidth="0.0" prefWidth="200.0" styleClass="cachesettingsanchorepane">
                                 <children>
                                     <VBox spacing="7.0">
                                         <children>

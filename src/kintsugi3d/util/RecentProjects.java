@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -153,9 +153,10 @@ public class RecentProjects {
             item.setOnAction(event -> handleMenuItemSelection(item));
         }
     }
-
+    
     private static void handleMenuItemSelection(MenuItem item) {
         String projectName = item.getText();
         ProjectIO.getInstance().openProjectFromFile(new File(projectName));
     }
+
 }

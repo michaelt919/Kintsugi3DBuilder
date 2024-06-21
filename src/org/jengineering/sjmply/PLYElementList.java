@@ -1,15 +1,29 @@
-/*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
- * Copyright (c) 2019 The Regents of the University of Minnesota
+package org.jengineering.sjmply;
+/* Copyright 2016 Dirk Toewe
+ * 
+ * This file is part of org.jengineering.sjmply.
  *
- * Licensed under GPLv3
- * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ * org.jengineering.sjmply is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ * org.jengineering.sjmply is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with org.jengineering.sjmply. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.jengineering.sjmply;
+import java.lang.reflect.Array;
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.IntFunction;
+import java.util.stream.Stream;
+
+import org.jengineering.sjmply.PLYType.*;
 
 import static java.lang.Math.toIntExact;
 import static java.lang.String.format;
@@ -19,23 +33,6 @@ import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
-
-import java.lang.reflect.Array;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.function.BiFunction;
-import java.util.function.IntFunction;
-import java.util.stream.Stream;
-
-import org.jengineering.sjmply.PLYType.PLYFloat;
-import org.jengineering.sjmply.PLYType.PLYInt;
-import org.jengineering.sjmply.PLYType.PLYList;
-import org.jengineering.sjmply.PLYType.PLYNum;
-import org.jengineering.sjmply.PLYType.PLYSequence;
 
 /** A representation of an PLY series of elements (e.g. vertex, face, edge).
  *  The properties of these elements are themselves represented as an array

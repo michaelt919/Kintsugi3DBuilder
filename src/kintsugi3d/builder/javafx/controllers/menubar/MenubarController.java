@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -147,6 +147,7 @@ public class MenubarController
     @FXML private Menu recentProjectsMenu;
 
     @FXML private VBox cameraViewList;
+//    @FXML private HBox Eyedropper;
     @FXML private CameraViewListController cameraViewListController;
     @FXML private FramebufferView framebufferView;
 
@@ -171,15 +172,21 @@ public class MenubarController
     public <ContextType extends Context<ContextType>> void init(
         Stage injectedStage, InternalModels injectedInternalModels, Runnable injectedUserDocumentationHandler)
     {
+
         this.window = injectedStage;
         this.framebufferView.registerKeyAndWindowEventsFromStage(injectedStage);
 
         // remove camera view list from layout when invisible
         this.cameraViewList.managedProperty().bind(this.cameraViewList.visibleProperty());
+//        this.Eyedropper.managedProperty().bind(this.Eyedropper.visibleProperty());
+//        Eyedropper.setVisible(false);
+//        Eyedropper.setExitCallback(() -> Eyedropper.setVisible(false));
 
         // only show camera view list when light calibration mode is active
         // TODO make this a separate property to allow it to be shown in other contexts
         this.cameraViewList.visibleProperty().bind(injectedInternalModels.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
+
+
 
         // remove progress bar from layout when invisible
         this.progressBar.managedProperty().bind(this.progressBar.visibleProperty());
@@ -744,20 +751,25 @@ public class MenubarController
 
     public void eyedropperColorChecker()
     {
-        if (colorCheckerWindowOpen.get())
-        {
-            return;
-        }
+//        if (colorCheckerWindowOpen.get())
+//        {
+//            Eyedropper.setVisible(false);
+//
+//            return;
+//        }
 
         try
         {
+//            Eyedropper.setVisible(true);
             EyedropperController eyedropperController =
                     makeWindow("Tone Calibration", colorCheckerWindowOpen, "fxml/menubar/EyedropperColorChecker.fxml");
-            eyedropperController.setLoadingModel(MultithreadModels.getInstance().getIOModel());
 
+            eyedropperController.setProjectModel(internalModels.getProjectModel());
+            eyedropperController.setIOModel(MultithreadModels.getInstance().getIOModel());
         }
-        catch(Exception e)
+        catch (IOException|RuntimeException e)
         {
+//            Eyedropper.setVisible(false);
             handleException("An error occurred opening color checker window", e);
         }
     }

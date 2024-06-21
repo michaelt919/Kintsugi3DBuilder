@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -36,9 +36,20 @@ import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.util.RecentProjects;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+import java.io.File;
+import java.net.URL;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 public class LoaderController implements Initializable
 {
@@ -226,11 +237,29 @@ public class LoaderController implements Initializable
 
     private void setHomeDir(File home)
     {
-        File parentDir;
-        parentDir = home.getParentFile();
-        camFileChooser.setInitialDirectory(parentDir);
-        objFileChooser.setInitialDirectory(parentDir);
-        photoDirectoryChooser.setInitialDirectory(parentDir);
+        List<String> items = RecentProjects.getItemsFromRecentsFile();
+
+        if(items.isEmpty())
+        {
+            File parentDir;
+            parentDir = home.getParentFile();
+            camFileChooser.setInitialDirectory(parentDir);
+            objFileChooser.setInitialDirectory(parentDir);
+            photoDirectoryChooser.setInitialDirectory(parentDir);
+        }
+        else
+        {
+            for (int i = items.get(0).length()-1; i > 0; i--) {
+                if (items.get(0).charAt(i) == '\\')
+                {
+//                    projectFileChooser.setInitialDirectory(new File(items.get(0).substring(0,i)));
+                    camFileChooser.setInitialDirectory(new File(items.get(0).substring(0,i)));
+                    objFileChooser.setInitialDirectory(new File(items.get(0).substring(0,i)));
+                    photoDirectoryChooser.setInitialDirectory(new File(items.get(0).substring(0,i)));
+                    break;
+                }
+            }
+        }
     }
 
     private Stage getStage()

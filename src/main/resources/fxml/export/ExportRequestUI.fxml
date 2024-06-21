@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <!--
-  ~ Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+  ~ Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
   ~ Copyright (c) 2019 The Regents of the University of Minnesota
   ~
   ~ Licensed under GPLv3
@@ -20,14 +20,14 @@
     <CheckBox fx:id="generateLowResolutionCheckBox" disable="true" mnemonicParsing="false" text="Generate Low Resolution" />
    <HBox spacing="8.0">
       <children>
-      
+
                       <Label disable="true" text="Minimum Texture Resolution:" />
           <ComboBox fx:id="minimumTextureResolutionComboBox" disable="true" HBox.hgrow="ALWAYS" />
       </children></HBox>
     <CheckBox fx:id="openViewerOnceCheckBox" mnemonicParsing="false" prefHeight="17.0" prefWidth="207.0" text="Open in Kintsugi 3D Viewer" />
    <HBox>
       <children>
-      
+
           <Button fx:id="runButton" mnemonicParsing="false" text="Run" />
           <Button mnemonicParsing="false" onAction="#cancelButtonAction" text="Cancel" />
       </children>

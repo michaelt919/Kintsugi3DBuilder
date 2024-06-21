@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -69,11 +70,27 @@ public final class ProjectIO
         if (projectFileChooser == null)
         {
             projectFileChooser = new FileChooser();
-            projectFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
-        }
+            List<String> items = RecentProjects.getItemsFromRecentsFile();
 
+            if(items.isEmpty())
+            {
+                projectFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+            }
+            else
+            {
+                for (int i = items.get(0).length()-1; i > 0; i--) {
+                    if (items.get(0).charAt(i) == '\\')
+                    {
+                        projectFileChooser.setInitialDirectory(new File(items.get(0).substring(0,i)));
+                        break;
+                    }
+                }
+            }
+
+
+        }
         return projectFileChooser;
-    }
+}
 
     private ProjectIO()
     {
