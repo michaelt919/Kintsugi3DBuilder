@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 
 /**
  * Abstracts the idea of loading a view set from a file as a factory object.
@@ -33,10 +34,27 @@ public interface ViewSetReader
      * @param stream The file to load
      * @param root
      * @param supportingFilesDirectory
+     * @param imagePathMap A map of image IDs to paths, if passed this will override the paths being assigned to the images.
      * @return The view set
      * @throws IOException If I/O errors occur while reading the file.
      */
-    ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory) throws Exception;
+    ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, Map<Integer, String> imagePathMap) throws Exception;
+
+    /**
+     * Loads a view set from an input file.
+     * The root directory and the supporting files directory will be set as specified.
+     * The supporting files directory may be overridden by a directory specified in the file.
+     * @param stream The file to load
+     * @param root
+     * @param supportingFilesDirectory
+     * @return The view set
+     * @throws IOException If I/O errors occur while reading the file.
+     */
+    default ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory) throws Exception
+    {
+        // Use root directory as supporting files directory
+        return readFromStream(stream, root, supportingFilesDirectory, null);
+    }
 
     /**
      * Loads a view set from an input file.
@@ -50,7 +68,7 @@ public interface ViewSetReader
     default ViewSet readFromStream(InputStream stream, File root) throws Exception
     {
         // Use root directory as supporting files directory
-        return readFromStream(stream, root, root);
+        return readFromStream(stream, root, root, null);
     }
 
     /**
@@ -66,7 +84,7 @@ public interface ViewSetReader
     {
         try (InputStream stream = new FileInputStream(file))
         {
-            return readFromStream(stream, file.getParentFile(), supportingFilesDirectory);
+            return readFromStream(stream, file.getParentFile(), supportingFilesDirectory, null);
         }
     }
 

@@ -1,0 +1,3 @@
+/fxml/menubar/createnewproject/CustomImport.fxml
+/fxml/menubar/createnewproject/ImportOrCustomProject.fxml
+/fxml/menubar/createnewproject/MetashapeImport.fxml

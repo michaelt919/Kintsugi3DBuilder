@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -47,7 +47,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
     }
 
     @Override
-    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory)
+    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, Map<Integer, String> imagePathMap)
     {
         Date timestamp = new Date();
 
@@ -242,7 +242,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         result.getCameraPoseInvList().add(unorderedCameraPoseInvList.get(poseId));
                         result.getCameraProjectionIndexList().add(projectionId);
                         result.getLightIndexList().add(lightId);
-                        result.getImageFileNames().add(imgFilename);
+                        result.getImageFiles().add(new File(imgFilename));
                         break;
                     }
                     default:

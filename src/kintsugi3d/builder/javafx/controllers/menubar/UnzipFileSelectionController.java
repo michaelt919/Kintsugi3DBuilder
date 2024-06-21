@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 public class UnzipFileSelectionController {
     private static final Logger log = LoggerFactory.getLogger(UnzipFileSelectionController.class);
@@ -56,6 +57,8 @@ public class UnzipFileSelectionController {
     private Scene scene;
     private Parent root;
 
+    public Consumer<MetashapeObjectChunk> loaderControllerCallback;
+
     MetashapeObject metashapeObject;
 
 
@@ -64,6 +67,13 @@ public class UnzipFileSelectionController {
     }
 
     public void init(){
+        this.directoryChooser = new DirectoryChooser();
+        chunkSelectionChoiceBox.setDisable(true);
+        selectChunkButton.setDisable(true);
+    }
+
+    public void init(Consumer<MetashapeObjectChunk> loaderCallback ){
+        this.loaderControllerCallback = loaderCallback;
         this.directoryChooser = new DirectoryChooser();
         chunkSelectionChoiceBox.setDisable(true);
         selectChunkButton.setDisable(true);
@@ -130,6 +140,7 @@ public class UnzipFileSelectionController {
         }
     }
 
+
     public void selectChunk(ActionEvent actionEvent) {
         String selectedChunkName = chunkSelectionChoiceBox.getValue();
 
@@ -140,9 +151,18 @@ public class UnzipFileSelectionController {
             ChunkViewerController chunkViewerController = fxmlLoader.getController();
 
             metashapeObject.setPsxFilePath(psxPathTxtField.getText());
-            MetashapeObjectChunk metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, selectedChunkName);
+
+            //TODO: actually find model id instead of defaulting to 0
+            MetashapeObjectChunk metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, selectedChunkName, 0);
 
             chunkViewerController.initializeChunkSelectionAndTreeView(metashapeObjectChunk);
+
+            // Pass a reference of the LoaderController to callback in the chunk viewer controller.
+            // This is how the chosen chunk will be passed to the LoaderController
+            if(loaderControllerCallback != null){
+                chunkViewerController.loaderControllerCallback = loaderControllerCallback;
+            }
+
         }
         catch (Exception e){
             unzipPSXButton.fire();//selected .psx file and list of chunks may be referring to different objects

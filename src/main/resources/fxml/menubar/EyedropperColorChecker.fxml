@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+  ~ Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
   ~ Copyright (c) 2019 The Regents of the University of Minnesota
   ~
   ~ Licensed under GPLv3
@@ -13,149 +13,253 @@
 
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
-<?import javafx.scene.text.Font?>
-<HBox prefHeight="402.0" prefWidth="736.0" style="-fx-background-color: black;" styleClass="hbox" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.EyedropperController">
-    <BorderPane prefHeight="421.0" prefWidth="467.0">
-        <center>
-            <Pane fx:id="colorPickerPane" onMouseDragged="#handleMouseDragged" onMousePressed="#handleMousePressed" onMouseReleased="#handleMouseReleased" prefHeight="400.0" prefWidth="399.0">
-                <ImageView fx:id="colorPickerImgView" fitHeight="350.0" fitWidth="350.0" layoutX="25.0" layoutY="30.0" pickOnBounds="true" preserveRatio="true" />
-                <Rectangle fx:id="selectionRectangle" fill="TRANSPARENT" stroke="#D4AA00" />
-            <Button fx:id="chooseImageButton" alignment="CENTER" contentDisplay="TOP" layoutX="105.0" layoutY="150.0" mnemonicParsing="false" onAction="#selectImage" prefHeight="75.0" prefWidth="175.0" text="Choose Image...">
-               <font>
-                  <Font size="21.0" />
-               </font></Button>
-            </Pane>
-        </center>
-        <top>
-            <HBox prefHeight="21.0" prefWidth="565.0" BorderPane.alignment="CENTER">
-                <Label fx:id="colorLabel" alignment="CENTER" prefWidth="400.0" text="No Color Selected" HBox.hgrow="ALWAYS">
-                    <padding>
-                        <Insets top="10.0" />
-                    </padding>
-                </Label>
-            </HBox>
-        </top>
-    </BorderPane>
-   <VBox alignment="TOP_CENTER" spacing="15.0">
-      <children>
-          <GridPane prefHeight="225.0" prefWidth="400.0" vgap="3.0">
-              <columnConstraints>
-                  <ColumnConstraints maxWidth="114.0" minWidth="64.0" prefWidth="84.0" />
-                  <ColumnConstraints maxWidth="118.66666666666669" minWidth="45.333333333333314" prefWidth="94.33333333333331" />
-                  <ColumnConstraints maxWidth="300.0" minWidth="12.0" prefWidth="130.0" />
-                  <ColumnConstraints />
-                  <ColumnConstraints maxWidth="0.0" minWidth="0.0" prefWidth="0.0" />
-                  <ColumnConstraints maxWidth="0.0" minWidth="0.0" prefWidth="0.0" />
-              </columnConstraints>
-              <rowConstraints>
-                  <RowConstraints />
-                  <RowConstraints />
-                  <RowConstraints />
-                  <RowConstraints />
-                  <RowConstraints />
-                  <RowConstraints />
-                  <RowConstraints />
-                  <RowConstraints />
-                  <RowConstraints />
-                  <RowConstraints maxHeight="0.0" minHeight="0.0" prefHeight="0.0" />
-                  <RowConstraints maxHeight="0.0" minHeight="0.0" prefHeight="0.0" />
-                  <RowConstraints maxHeight="0.0" minHeight="0.0" prefHeight="0.0" />
-                  <RowConstraints maxHeight="0.0" minHeight="0.0" prefHeight="0.0" />
-              </rowConstraints>
-              <Label layoutX="183.0" layoutY="160.0" text="3.1 (Black)" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-              <Label layoutX="8.0" layoutY="6.0" text="CIE-Y" GridPane.halignment="RIGHT">
-                  <GridPane.margin>
-                      <Insets bottom="5.0" left="10.0" top="10.0" />
-                  </GridPane.margin>
-          </Label>
-              <Label layoutX="50.0" layoutY="6.0" text="Value (0-255)" GridPane.columnIndex="1">
-                  <GridPane.margin>
-                      <Insets bottom="5.0" left="5.0" top="10.0" />
-                  </GridPane.margin>
-          </Label>
-              <Label layoutX="307.0" layoutY="126.0" text="9.0" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
-              <Label layoutX="307.0" layoutY="143.0" text="19.8" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
-              <Label layoutX="307.0" layoutY="160.0" text="36.2" GridPane.halignment="RIGHT" GridPane.rowIndex="4" />
-              <Label layoutX="311.0" layoutY="177.0" text="59.1" GridPane.halignment="RIGHT" GridPane.rowIndex="5" />
-              <Label layoutX="307.0" layoutY="203.0" text="90.0 (White)" GridPane.halignment="RIGHT" GridPane.rowIndex="6">
-                  <GridPane.margin>
-                      <Insets left="10.0" />
-                  </GridPane.margin>
-          </Label>
-              <TextField fx:id="txtField1" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="29.0" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
-                  <GridPane.margin>
-                      <Insets left="5.0" />
-                  </GridPane.margin>
-              </TextField>
-              <TextField fx:id="txtField2" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="60.0" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="2">
-                  <GridPane.margin>
-                      <Insets left="5.0" />
-                  </GridPane.margin>
-              </TextField>
-              <TextField fx:id="txtField3" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="3">
-                  <GridPane.margin>
-                      <Insets left="5.0" />
-                  </GridPane.margin>
-              </TextField>
-              <TextField fx:id="txtField4" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="4">
-                  <GridPane.margin>
-                      <Insets left="5.0" />
-                  </GridPane.margin>
-              </TextField>
-              <TextField fx:id="txtField5" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="5">
-                  <GridPane.margin>
-                      <Insets left="5.0" />
-                  </GridPane.margin>
-              </TextField>
-              <TextField fx:id="txtField6" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="6">
-                  <GridPane.margin>
-                      <Insets left="5.0" />
-                  </GridPane.margin>
-              </TextField>
-              <Button fx:id="button1" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
-              <Button fx:id="button2" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
-              <Button fx:id="button3" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
-              <Button fx:id="button4" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
-              <Button fx:id="button5" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="5" />
-              <Button fx:id="button6" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6" />
-              <Button fx:id="applyButton" mnemonicParsing="false" onAction="#applyButtonPressed" text="Apply" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="7">
-               <font>
-                  <Font size="21.0" />
-               </font>
-               <GridPane.margin>
-                  <Insets top="8.0" />
-               </GridPane.margin></Button>
-              <Rectangle fx:id="finalSelectRect1" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-              <Rectangle fx:id="finalSelectRect2" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="2" />
-              <Rectangle fx:id="finalSelectRect3" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="3" />
-              <Rectangle fx:id="finalSelectRect4" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="4" />
-              <Rectangle fx:id="finalSelectRect5" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="5" />
-              <Rectangle fx:id="finalSelectRect6" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="6" />
+<?import javafx.scene.text.*?>
 
-          </GridPane>
-         <VBox alignment="CENTER" spacing="18.0">
+<HBox styleClass="hbox" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.EyedropperController">
+   <AnchorPane>
+      <children>
+         <HBox alignment="CENTER" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <children>
-               <Button fx:id="chooseNewImageButton" alignment="CENTER" contentDisplay="TOP" mnemonicParsing="false" onAction="#selectImage" prefHeight="46.0" prefWidth="247.0" text="Choose New Image..." visible="false">
-                  <font>
-                     <Font size="21.0" />
-                  </font>
-               </Button>
-                <Button fx:id="cropButton" mnemonicParsing="false" onAction="#enterCropMode" prefHeight="46.0" prefWidth="247.0" text="Crop" visible="false">
-                  <font>
-                     <Font size="21.0" />
-                  </font>
+                   <Label fx:id="colorLabel" alignment="CENTER" text="No Color Selected">
+                       <padding>
+                           <Insets top="10.0" />
+                       </padding>
+                   </Label>
+            </children>
+         </HBox>
+          <VBox alignment="TOP_CENTER" spacing="18.0" AnchorPane.topAnchor="34.0">
+              <children>
+               <AnchorPane minWidth="500.0">
+                  <children>
+                        <Pane fx:id="colorPickerPane" onMouseDragged="#handleMouseDragged" onMousePressed="#handleMousePressed" onMouseReleased="#handleMouseReleased">
+                            <ImageView fx:id="colorPickerImgView" fitHeight="500.0" fitWidth="500.0" pickOnBounds="true" preserveRatio="true" />
+                            <Rectangle fx:id="selectionRectangle" fill="TRANSPARENT" stroke="#D4AA00" />
+                        </Pane>
+                     <Button fx:id="chooseImageButton" alignment="CENTER" contentDisplay="TOP" layoutX="163.3333282470703" layoutY="212.6666717529297" mnemonicParsing="false" onAction="#selectImage" prefHeight="75.0" text="Choose Image...">
+                        <font>
+                           <Font size="21.0" />
+                        </font>
+                     </Button>
+                  </children>
+               </AnchorPane>
+              </children>
+          </VBox>
+         <VBox alignment="BOTTOM_CENTER" spacing="18.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+            <children>
+                  <Button fx:id="chooseNewImageButton" alignment="CENTER" contentDisplay="TOP" mnemonicParsing="false" onAction="#selectImage" prefHeight="46.0" prefWidth="247.0" text="Choose New Image..." visible="false">
+                      <font>
+                          <Font size="21.0" />
+                      </font>
                   <VBox.margin>
-                     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                     <Insets />
                   </VBox.margin>
-               </Button>
+                  </Button>
+                  <Button fx:id="cropButton" mnemonicParsing="false" onAction="#enterCropMode" prefHeight="46.0" prefWidth="247.0" text="Crop" visible="false">
+                      <font>
+                          <Font size="21.0" />
+                      </font>
+                  </Button>
             </children>
          </VBox>
       </children>
       <HBox.margin>
-         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+         <Insets bottom="24.0" left="34.0" />
       </HBox.margin>
-   </VBox>
+   </AnchorPane>
+
+
+<!--                <GridPane prefHeight="225.0" prefWidth="400.0" vgap="3.0">-->
+<!--                    <columnConstraints>-->
+<!--                        <ColumnConstraints maxWidth="114.0" minWidth="64.0" prefWidth="84.0" />-->
+<!--                        <ColumnConstraints maxWidth="118.66666666666669" minWidth="45.333333333333314" prefWidth="94.33333333333331" />-->
+<!--                        <ColumnConstraints maxWidth="300.0" minWidth="12.0" prefWidth="130.0" />-->
+<!--                        <ColumnConstraints />-->
+<!--                        <ColumnConstraints maxWidth="0.0" minWidth="0.0" prefWidth="0.0" />-->
+<!--                        <ColumnConstraints maxWidth="0.0" minWidth="0.0" prefWidth="0.0" />-->
+<!--                    </columnConstraints>-->
+<!--                    <rowConstraints>-->
+<!--                        <RowConstraints />-->
+<!--                        <RowConstraints />-->
+<!--                        <RowConstraints />-->
+<!--                        <RowConstraints />-->
+<!--                        <RowConstraints />-->
+<!--                        <RowConstraints />-->
+<!--                        <RowConstraints />-->
+<!--                        <RowConstraints />-->
+<!--                        <RowConstraints />-->
+<!--                        <RowConstraints maxHeight="0.0" minHeight="0.0" prefHeight="0.0" />-->
+<!--                        <RowConstraints maxHeight="0.0" minHeight="0.0" prefHeight="0.0" />-->
+<!--                        <RowConstraints maxHeight="0.0" minHeight="0.0" prefHeight="0.0" />-->
+<!--                        <RowConstraints maxHeight="0.0" minHeight="0.0" prefHeight="0.0" />-->
+<!--                    </rowConstraints>-->
+<!--                    <Label layoutX="183.0" layoutY="160.0" text="3.1 (Black)" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />-->
+<!--                    <Label layoutX="8.0" layoutY="6.0" text="CIE-Y" GridPane.halignment="RIGHT">-->
+<!--                        <GridPane.margin>-->
+<!--                            <Insets bottom="5.0" left="10.0" top="10.0" />-->
+<!--                        </GridPane.margin>-->
+<!--                </Label>-->
+<!--                    <Label layoutX="50.0" layoutY="6.0" text="Value (0-255)" GridPane.columnIndex="1">-->
+<!--                        <GridPane.margin>-->
+<!--                            <Insets bottom="5.0" left="5.0" top="10.0" />-->
+<!--                        </GridPane.margin>-->
+<!--                </Label>-->
+<!--                    <Label layoutX="307.0" layoutY="126.0" text="9.0" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />-->
+<!--                    <Label layoutX="307.0" layoutY="143.0" text="19.8" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />-->
+<!--                    <Label layoutX="307.0" layoutY="160.0" text="36.2" GridPane.halignment="RIGHT" GridPane.rowIndex="4" />-->
+<!--                    <Label layoutX="311.0" layoutY="177.0" text="59.1" GridPane.halignment="RIGHT" GridPane.rowIndex="5" />-->
+<!--                    <Label layoutX="307.0" layoutY="203.0" text="90.0 (White)" GridPane.halignment="RIGHT" GridPane.rowIndex="6">-->
+<!--                        <GridPane.margin>-->
+<!--                            <Insets left="10.0" />-->
+<!--                        </GridPane.margin>-->
+<!--                </Label>-->
+<!--                    <TextField fx:id="txtField1" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="29.0" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="1">-->
+<!--                        <GridPane.margin>-->
+<!--                            <Insets left="5.0" />-->
+<!--                        </GridPane.margin>-->
+<!--                    </TextField>-->
+<!--                    <TextField fx:id="txtField2" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="60.0" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="2">-->
+<!--                        <GridPane.margin>-->
+<!--                            <Insets left="5.0" />-->
+<!--                        </GridPane.margin>-->
+<!--                    </TextField>-->
+<!--                    <TextField fx:id="txtField3" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="3">-->
+<!--                        <GridPane.margin>-->
+<!--                            <Insets left="5.0" />-->
+<!--                        </GridPane.margin>-->
+<!--                    </TextField>-->
+<!--                    <TextField fx:id="txtField4" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="4">-->
+<!--                        <GridPane.margin>-->
+<!--                            <Insets left="5.0" />-->
+<!--                        </GridPane.margin>-->
+<!--                    </TextField>-->
+<!--                    <TextField fx:id="txtField5" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="5">-->
+<!--                        <GridPane.margin>-->
+<!--                            <Insets left="5.0" />-->
+<!--                        </GridPane.margin>-->
+<!--                    </TextField>-->
+<!--                    <TextField fx:id="txtField6" alignment="CENTER_RIGHT" onKeyTyped="#updatesFromTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="6">-->
+<!--                        <GridPane.margin>-->
+<!--                            <Insets left="5.0" />-->
+<!--                        </GridPane.margin>-->
+<!--                    </TextField>-->
+<!--                    <Button fx:id="button1" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" />-->
+<!--                    <Button fx:id="button2" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" />-->
+<!--                    <Button fx:id="button3" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" />-->
+<!--                    <Button fx:id="button4" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />-->
+<!--                    <Button fx:id="button5" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="5" />-->
+<!--                    <Button fx:id="button6" mnemonicParsing="false" onAction="#enterColorSelectionMode" text="Select Color" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6" />-->
+<!--                    <Button fx:id="applyButton" mnemonicParsing="false" onAction="#applyButtonPressed" text="Apply" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="7">-->
+<!--                     <font>-->
+<!--                        <Font size="21.0" />-->
+<!--                     </font>-->
+<!--                     <GridPane.margin>-->
+<!--                        <Insets top="8.0" />-->
+<!--                     </GridPane.margin></Button>-->
+<!--                    <Rectangle fx:id="finalSelectRect1" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="1" />-->
+<!--                    <Rectangle fx:id="finalSelectRect2" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="2" />-->
+<!--                    <Rectangle fx:id="finalSelectRect3" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="3" />-->
+<!--                    <Rectangle fx:id="finalSelectRect4" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="4" />-->
+<!--                    <Rectangle fx:id="finalSelectRect5" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="5" />-->
+<!--                    <Rectangle fx:id="finalSelectRect6" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="6" />-->
+<!--      -->
+<!--                </GridPane>-->
+
+
+    <VBox alignment="TOP_CENTER">
+        <children>
+            <Button fx:id="button1" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#enterColorSelectionMode" prefHeight="60.0" prefWidth="60.0" style="-fx-background-radius: 0;" styleClass="grayscalebuttons">
+                <VBox.margin>
+                    <Insets top="10.0" />
+                </VBox.margin>
+                <graphic>
+                    <Rectangle fx:id="finalSelectRect1" arcHeight="5.0" arcWidth="5.0" height="36.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="35.0" />
+                </graphic>
+            </Button>
+            <TextField fx:id="txtField1" alignment="CENTER" layoutX="50.0" layoutY="29.0" maxWidth="-Infinity" minWidth="-Infinity" onKeyTyped="#updatesFromTextField" prefHeight="24.0" prefWidth="79.0" styleClass="Eyedropper">
+                <VBox.margin>
+                    <Insets top="6.0" />
+                </VBox.margin>
+            </TextField>
+            <Button fx:id="button2" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#enterColorSelectionMode" prefHeight="60.0" prefWidth="60.0" style="-fx-background-radius: 0;" styleClass="grayscalebuttons">
+                <VBox.margin>
+                    <Insets top="12.0" />
+                </VBox.margin>
+            <graphic>
+                <Rectangle fx:id="finalSelectRect2" arcHeight="5.0" arcWidth="5.0" height="36.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="35.0" />
+            </graphic>
+         </Button>
+            <TextField fx:id="txtField2" alignment="CENTER" layoutX="50.0" layoutY="29.0" maxWidth="-Infinity" minWidth="-Infinity" onKeyTyped="#updatesFromTextField" prefHeight="24.0" prefWidth="79.0" styleClass="Eyedropper">
+                <VBox.margin>
+                    <Insets top="6.0" />
+                </VBox.margin>
+            </TextField>
+            <Button fx:id="button3" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#enterColorSelectionMode" prefHeight="60.0" prefWidth="60.0" style="-fx-background-radius: 0;" styleClass="grayscalebuttons">
+                <VBox.margin>
+                    <Insets top="12.0" />
+                </VBox.margin>
+                <graphic>
+                    <Rectangle fx:id="finalSelectRect3" arcHeight="5.0" arcWidth="5.0" height="36.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="35.0" />
+                </graphic>
+         </Button>
+            <TextField fx:id="txtField3" alignment="CENTER" layoutX="50.0" layoutY="29.0" maxWidth="-Infinity" minWidth="-Infinity" onKeyTyped="#updatesFromTextField" prefHeight="24.0" prefWidth="79.0" styleClass="Eyedropper">
+                <VBox.margin>
+                    <Insets top="6.0" />
+                </VBox.margin>
+            </TextField>
+            <Button fx:id="button4" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#enterColorSelectionMode" prefHeight="60.0" prefWidth="60.0" style="-fx-background-radius: 0;" styleClass="grayscalebuttons">
+                <VBox.margin>
+                    <Insets top="12.0" />
+                </VBox.margin>
+                <graphic>
+                    <Rectangle fx:id="finalSelectRect4" arcHeight="5.0" arcWidth="5.0" height="36.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="35.0" />
+                </graphic>
+         </Button>
+            <TextField fx:id="txtField4" alignment="CENTER" layoutX="50.0" layoutY="29.0" maxWidth="-Infinity" minWidth="-Infinity" onKeyTyped="#updatesFromTextField" prefHeight="24.0" prefWidth="79.0" styleClass="Eyedropper">
+                <VBox.margin>
+                    <Insets top="6.0" />
+                </VBox.margin>
+            </TextField>
+            <Button fx:id="button5" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#enterColorSelectionMode" prefHeight="60.0" prefWidth="60.0" style="-fx-background-radius: 0;" styleClass="grayscalebuttons">
+                <VBox.margin>
+                    <Insets top="12.0" />
+                </VBox.margin>
+                <graphic>
+                    <Rectangle fx:id="finalSelectRect5" arcHeight="5.0" arcWidth="5.0" height="36.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="35.0" />
+                </graphic>
+         </Button>
+            <TextField fx:id="txtField5" alignment="CENTER" layoutX="50.0" layoutY="29.0" maxWidth="-Infinity" minWidth="-Infinity" onKeyTyped="#updatesFromTextField" prefHeight="24.0" prefWidth="79.0" styleClass="Eyedropper">
+                <VBox.margin>
+                    <Insets top="6.0" />
+                </VBox.margin>
+            </TextField>
+            <Button fx:id="button6" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#enterColorSelectionMode" prefHeight="60.0" prefWidth="60.0" style="-fx-background-radius: 0;" styleClass="grayscalebuttons">
+                <VBox.margin>
+                    <Insets top="12.0" />
+                </VBox.margin>
+                <graphic>
+                    <Rectangle fx:id="finalSelectRect6" arcHeight="5.0" arcWidth="5.0" height="36.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="35.0" />
+                </graphic>
+         </Button>
+            <TextField fx:id="txtField6" alignment="CENTER" layoutX="50.0" layoutY="29.0" maxWidth="-Infinity" minWidth="-Infinity" onKeyTyped="#updatesFromTextField" prefHeight="24.0" prefWidth="79.0" styleClass="Eyedropper">
+                <VBox.margin>
+                    <Insets top="6.0" />
+                </VBox.margin>
+            </TextField>
+            <Button fx:id="applyButton" mnemonicParsing="false" onAction="#applyButtonPressed" text="Apply">
+                <font>
+                    <Font size="21.0" />
+                </font>
+                <VBox.margin>
+                    <Insets bottom="10.0" left="10.0" right="10.0" top="12.0" />
+                </VBox.margin>
+            </Button>
+        </children>
+      <HBox.margin>
+         <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
+      </HBox.margin>
+    </VBox>
+    <!--   <Button fx:id="ExitButton" onAction="ExitEyeDropper" alignment="TOP_RIGHT" contentDisplay="RIGHT" mnemonicParsing="false" style="-fx-background-radius: 0;" text="Exit" />-->
 </HBox>

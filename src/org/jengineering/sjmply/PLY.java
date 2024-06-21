@@ -1,15 +1,31 @@
-/*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
- * Copyright (c) 2019 The Regents of the University of Minnesota
+package org.jengineering.sjmply;
+/* Copyright 2016 Dirk Toewe
  *
- * Licensed under GPLv3
- * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ * This file is part of org.jengineering.sjmply.
  *
- * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ * org.jengineering.sjmply is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * org.jengineering.sjmply is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with org.jengineering.sjmply. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.jengineering.sjmply;
+import java.io.*;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.jengineering.sjmply.PLYType.*;
 
 import static java.lang.String.format;
 import static java.nio.file.Files.newInputStream;
@@ -30,11 +46,7 @@ import static org.jengineering.sjmply.PLYType.UINT16;
 import static org.jengineering.sjmply.PLYType.UINT32;
 import static org.jengineering.sjmply.PLYType.UINT8;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -47,10 +59,13 @@ import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.jengineering.sjmply.PLYType.PLYList;
 import org.jengineering.sjmply.PLYType.PLYSequence;
 import org.jengineering.sjmply.PLYType.PLYUInt;
+import static org.jengineering.sjmply.PLYType.*;
 
 /** An in-memory representation of a <a href="https://en.wikipedia.org/wiki/PLY_(file_format)">PLY File</a>. PLY files are used to 
  *  
@@ -205,6 +220,54 @@ public class PLY
     }
   }
 
+  /**
+   * Loads a PLY file from inside a zip file.
+   * @param zipFolder The File object of the zip file
+   * @param targetFileName The name of the PLY file that is zipped inside zip file
+   * @return PLY object
+   * @throws IOException
+   */
+  public static PLY loadFromZip(File zipFolder, String targetFileName) throws IOException {
+
+    // Make an input stream from zipFolder
+    try(ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFolder))) {
+
+      // Target zipIn to be on the targetFileName entry
+      ZipEntry entry = zipIn.getNextEntry();
+      while (entry != null) {
+        if (entry.getName().equals(targetFileName)) {
+          break;
+        }
+        entry = zipIn.getNextEntry();
+      }
+      // Throw error if unable to find PLY file in zip
+      if (entry == null) {
+        throw new IOException("File not found in zip");
+      }
+
+      // Read the file
+      try (InputStream in = new BufferedInputStream(zipIn)) {
+        PLY result = read(in);
+        int chr = in.read();
+        switch (result.getFormat()) {
+          default:
+            throw new AssertionError();
+          case ASCII:
+            while (Character.isWhitespace(chr))
+              chr = in.read();
+          case BINARY_BIG_ENDIAN:
+          case BINARY_LITTLE_ENDIAN:
+            if (0 <= chr)
+              throw new IOException("File is longer than expected.");
+        }
+
+        return result;
+      }
+    }
+  }
+
+
+
 // FIELDS
   private PLYFormat format;
   private String version;
@@ -264,7 +327,7 @@ public class PLY
   }
 
   /** Returns the element list by the given name from this PLY object.
-   *  
+   *
    *  @param name The name of the requested element list.
    *  @return The element list by the name <code>name</code>.
    *  @throws NoSuchElementException If there is no element list by the given name.

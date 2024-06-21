@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -76,7 +76,7 @@ public class SystemMemoryController implements Initializable, SystemSettingsCont
         catch (IOException e)
         {
             log.error("Failed to write to launch4j configuration file", e);
-            Alert alert = new Alert(Alert.AlertType.ERROR);
+            Alert alert = new Alert(Alert.AlertType.NONE);
             alert.setTitle("Kintsugi 3D Builder");
             alert.setHeaderText("Writing failed");
             alert.setContentText("Kintsugi 3D Builder failed to write to the configuration file. Try restarting Kintsugi 3D Builder as administrator and try again.");

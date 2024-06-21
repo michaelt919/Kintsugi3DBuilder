@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -32,6 +32,7 @@ import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.core.IBRRequestQueue;
 import kintsugi3d.builder.core.IBRRequestUI;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
+import kintsugi3d.util.RecentProjects;
 
 public class ResampleRequestUI implements IBRRequestUI
 {
@@ -45,8 +46,6 @@ public class ResampleRequestUI implements IBRRequestUI
     private final DirectoryChooser directoryChooser = new DirectoryChooser();
 
     private Stage stage;
-
-    private File lastDirectory;
 
     public static ResampleRequestUI create(Window window, Kintsugi3DBuilderState modelAccess) throws IOException
     {
@@ -73,10 +72,7 @@ public class ResampleRequestUI implements IBRRequestUI
         this.directoryChooser.setTitle("Choose an export directory");
         if (exportDirectoryField.getText().isEmpty())
         {
-            if (lastDirectory != null)
-            {
-                this.directoryChooser.setInitialDirectory(lastDirectory);
-            }
+            this.directoryChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
         }
         else
         {
@@ -87,7 +83,7 @@ public class ResampleRequestUI implements IBRRequestUI
         if (file != null)
         {
             exportDirectoryField.setText(file.toString());
-            lastDirectory = file;
+            RecentProjects.setMostRecentDirectory(file);
         }
     }
 
@@ -99,10 +95,7 @@ public class ResampleRequestUI implements IBRRequestUI
         this.fileChooser.getExtensionFilters().add(new ExtensionFilter("View set files", "*.vset"));
         if (targetVSetFileField.getText().isEmpty())
         {
-            if (lastDirectory != null)
-            {
-                this.fileChooser.setInitialDirectory(lastDirectory);
-            }
+            this.fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
         }
         else
         {
@@ -114,7 +107,7 @@ public class ResampleRequestUI implements IBRRequestUI
         if (file != null)
         {
             targetVSetFileField.setText(file.toString());
-            lastDirectory = file.getParentFile();
+            RecentProjects.setMostRecentDirectory(file.getParentFile());
         }
     }
 

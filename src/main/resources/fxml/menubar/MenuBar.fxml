@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+  ~ Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
   ~ Copyright (c) 2019 The Regents of the University of Minnesota
   ~
   ~ Licensed under GPLv3
@@ -15,7 +15,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane prefHeight="720.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.MenubarController">
+<AnchorPane prefHeight="720.0" styleClass="menuebaranchorpane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.MenubarController">
     <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <children>
             <AnchorPane>
@@ -57,9 +57,26 @@
                                     <MenuItem mnemonicParsing="false" text="Action 1" />
                                 </items>
                             </Menu>
+                     <Menu fx:id="cleanRecentProjectsMenu" mnemonicParsing="false" text="Clear Recent Projects">
+                        <items>
+                            <CustomMenuItem fx:id="removeSomeRefsCustMenuItem" onAction="#file_removeInvalidReferences">
+                                <content>
+                                    <Label text="Clear Missing Projects" />
+                                </content>
+                            </CustomMenuItem>
+                            <CustomMenuItem fx:id="removeAllRefsCustMenuItem" onAction="#file_removeAllReferences">
+                                <content>
+                                    <Label text="Clear All Projects" />
+                                </content>
+                            </CustomMenuItem>
+                        </items>
+                     </Menu>
+
                             <SeparatorMenuItem mnemonicParsing="false" />
-                            <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
+                            <MenuItem mnemonicParsing="false" onAction="#openSystemSettingsModal" text="Settings..." />
+                     <MenuItem mnemonicParsing="false" onAction="#openAboutModal" text="About Kintsugi 3D Builder..." />
                             <SeparatorMenuItem />
+                     <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
                         </Menu>
                         <Menu mnemonicParsing="false" text="View" visible="false">
                             <CheckMenuItem fx:id="is3DGridCheckMenuItem" mnemonicParsing="false" text="3D grid" visible="false" />
@@ -243,17 +260,17 @@
                             <RadioMenuItem mnemonicParsing="false" text="Textured Lambertian" toggleGroup="$renderGroup">
                                 <userData>renderModes/texturedLambertian.frag</userData>
                             </RadioMenuItem>
-                            <RadioMenuItem mnemonicParsing="false" text="Material (metallicity)" toggleGroup="$renderGroup" userData="renderModes/texturedORMMaterial.frag">
+                            <RadioMenuItem fx:id="materialMetallicity" mnemonicParsing="false" text="Material (metallicity)" toggleGroup="$renderGroup" userData="renderModes/texturedORMMaterial.frag">
                             </RadioMenuItem>
-                            <RadioMenuItem mnemonicParsing="false" text="Material (reflectivity)" toggleGroup="$renderGroup">
+                            <RadioMenuItem fx:id="materialReflectivity" mnemonicParsing="false" text="Material (reflectivity)" toggleGroup="$renderGroup">
                                 <userData>renderModes/texturedMaterial.frag</userData>
                             </RadioMenuItem>
-                            <RadioMenuItem mnemonicParsing="false" text="Material (basis)" toggleGroup="$renderGroup" userData="renderModes/basisMaterial.frag">
+                            <RadioMenuItem fx:id="materialBasis" mnemonicParsing="false" text="Material (basis)" toggleGroup="$renderGroup" userData="renderModes/basisMaterial.frag">
                             </RadioMenuItem>
                             <RadioMenuItem mnemonicParsing="false" selected="true" text="Image-based" toggleGroup="$renderGroup">
                                 <userData>renderModes/ibrUntextured.frag</userData>
                             </RadioMenuItem>
-                            <RadioMenuItem mnemonicParsing="false" text="Image-based with textures" toggleGroup="$renderGroup">
+                            <RadioMenuItem fx:id="imgBasedWithTextures" mnemonicParsing="false" text="Image-based with textures" toggleGroup="$renderGroup">
                                 <userData>renderModes/ibrTextured.frag</userData>
                             </RadioMenuItem>
                         </Menu>
@@ -342,7 +359,7 @@
                         </Menu>
                         <Menu fx:id="aboutMenu" mnemonicParsing="false" onShown="#hideAndShowAboutModal" text="About" visible="false">
                             <items>
-                                <MenuItem mnemonicParsing="false" onAction="#help_about" text="About" />
+                                <MenuItem mnemonicParsing="false" onAction="#openAboutModal" text="About" />
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Lighting" visible="false">
@@ -379,14 +396,15 @@
                         <!--            <Insets />-->
                         <!--        </opaqueInsets>-->
                     </MenuBar>
-                    <HBox alignment="CENTER_LEFT" spacing="10.0" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
+                    <HBox alignment="CENTER_LEFT" spacing="10.0" visible="false" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
                         <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" visible="false" />
-                  <Button fx:id="cancelButton" mnemonicParsing="false" text="Cancel" visible="false" />
-                        <Button fx:id="settingsButton" contentDisplay="CENTER" mnemonicParsing="false" onAction="#openSystemSettingsModal" prefHeight="25.0" prefWidth="80.0" text="Settings">
+                        <Button fx:id="cancelButton" mnemonicParsing="false" styleClass="menubarbuttons" text="Cancel" visible="false" />
+                        <Button fx:id="settingsButton" contentDisplay="CENTER" mnemonicParsing="false" onAction="#openSystemSettingsModal" prefHeight="25.0" prefWidth="80.0" styleClass="menubarbuttons" text="Settings">
                             <HBox.margin>
                                 <Insets />
-                            </HBox.margin></Button>
-                        <Button mnemonicParsing="false" onAction="#help_about" text="About" />
+                            </HBox.margin>
+                        </Button>
+                        <Button mnemonicParsing="false" onAction="#openAboutModal" text="About" />
                     </HBox>
                 </children>
             </AnchorPane>
@@ -401,8 +419,12 @@
             <HBox VBox.vgrow="ALWAYS">
                 <children>
                     <fx:include fx:id="cameraViewList" source="CameraViewList.fxml" VBox.vgrow="ALWAYS" />
+<!--                <fx:include fx:id="Eyedropper" source="EyedropperColorChecker.fxml" VBox.vgrow="ALWAYS" />-->
                     <fx:include fx:id="framebufferView" source="FramebufferView.fxml" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" />
                 </children>
+            <VBox.margin>
+               <Insets top="-2.0" />
+            </VBox.margin>
             </HBox>
         </children>
     </VBox>

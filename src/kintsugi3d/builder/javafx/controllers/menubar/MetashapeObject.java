@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -39,6 +39,9 @@ public class MetashapeObject {
     private HashMap<String, String> chunkZipPathPairs;
     private ArrayList<String> chunkNames;
 
+    private Integer activeChunkID;
+    private Document projectZipXML;
+
     public MetashapeObject(){
         psxFilePath = "";
         chunkZipPathPairs = new HashMap<>();
@@ -49,79 +52,150 @@ public class MetashapeObject {
         loadChunkNamesFromPSX(path);
     }
 
-    public List<String> loadChunkNamesFromPSX(String psxFilePath) {
+    public String getChunkNameFromID(int id) {
+        //open project.zip
+        //get path from appropriate chunk id
+        //open chunk.zip
+        //TODO: do better logging here
+        NodeList chunks = projectZipXML.getElementsByTagName("chunk");
+        if (chunks == null || chunks.getLength() == 0){return "";}
+
+        String chunkPath = "";
+        for (int i = 0; i < chunks.getLength(); ++i){
+            Element elem = (Element) chunks.item(i);
+            String chunkElemID = elem.getAttribute("id");
+            if (Integer.parseInt(chunkElemID) == id){
+                chunkPath = elem.getAttribute("path");
+                break;
+            }
+        }
+
+        if (chunkPath.isBlank()){return "";}
+
+        chunkPath = getPSXPathBase() + ".files\\" + chunkPath;
+        try {
+            Document chunkXML = UnzipHelper.unzipToDocument(chunkPath);
+            NodeList chunkWrapper = chunkXML.getElementsByTagName("chunk");
+            if (chunkWrapper!= null && chunkWrapper.getLength() >0){
+                Element chunkElem = (Element) chunkWrapper.item(0);
+                return chunkElem.getAttribute("label");
+            }
+            else{
+                return "";
+            }
+        } catch (IOException e) {
+            log.error("Could not open chunk zip document", e);
+            return "";
+        }
+        //get chunk element
+        //return element label
+
+    }
+
+    public List<String> loadChunkNamesFromPSX(String psxPath) {
         //return the chunk names stored in the .psx file (and assigns them to this.chunkNames)
         //also initializes this.psxFilePath to psxFilePath
         //also puts values into this.chunkZipPathPairs
 
-        if (isValidPSXFilePath(psxFilePath)) {
-            try {
-                this.psxFilePath = psxFilePath;
-                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                //TODO: MAY BE PRONE TO XXE ATTACKS
+        chunkNames = new ArrayList<>();
+        chunkZipPathPairs = new HashMap<>();
+        this.psxFilePath = psxPath;
 
-                DocumentBuilder builder = factory.newDocumentBuilder();
+        if (!isValidPSXFilePath(psxFilePath)) {return chunkNames;}
 
-                //Get Document from .psx file
-                Document psxDocument = builder.parse(new File(psxFilePath));
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            //TODO: MAY BE PRONE TO XXE ATTACKS
 
-                //get the path attribute from the document tag
-                NodeList nodes = psxDocument.getElementsByTagName("document");
-                Element documentTag = (Element) nodes.item(0);
+            DocumentBuilder builder = factory.newDocumentBuilder();
 
-                //this gives "{projectname}.files/project.zip"
-                //need to replace {projectname} with full path (except .psx)
-                String documentPathInfo = documentTag.getAttribute("path");
+            //Get Document from .psx file
+            Document psxDocument = builder.parse(new File(psxFilePath));
 
-                documentPathInfo = documentPathInfo.substring(14);
-                documentPathInfo = psxFilePath.substring(0, psxFilePath.length() - 3) + documentPathInfo;
+            //get the path attribute from the document tag
+            NodeList nodes = psxDocument.getElementsByTagName("document");
+            Element documentTag = (Element) nodes.item(0);
 
-                //extract project.zip and open the doc.xml
-                String projectZipString = UnzipHelper.unzipToString(documentPathInfo);
-                Document docXML = UnzipHelper.convertStringToDocument(projectZipString);
+            //this gives "{projectname}.files/project.zip"
+            //need to replace {projectname} with full path (except .psx)
+            String documentPathInfo = documentTag.getAttribute("path");
 
-                //find the chunks and open the .zip for each chunk
-                NodeList chunkList = docXML.getElementsByTagName("chunk");
+            documentPathInfo = documentPathInfo.substring(13);
+            documentPathInfo = getPSXPathBase() + documentPathInfo;
 
-                //...chunk.zip holds the information we need to extract (chunk name, id, etc)
+            //extract project.zip and open the doc.xml
+            String projectZipString = UnzipHelper.unzipToString(documentPathInfo);
+            projectZipXML = UnzipHelper.convertStringToDocument(projectZipString);
 
-                String chunkZipPath;
-                chunkNames = new ArrayList<>();
-                chunkZipPathPairs = new HashMap<>();
-                for (int i = 0; i < chunkList.getLength(); ++i) {//add all chunks to chunkNames list
-                    Node chunk = chunkList.item(i);
+            if (projectZipXML == null){return chunkNames;}
 
-                    if (chunk.getNodeType() == Node.ELEMENT_NODE) {
-                        //chunkElement holds simple info
-                        //<chunk id="0" path="0/chunk.zip"/>
-                        Element chunkElement = (Element) chunk;
-
-                        //open doc.xml within each chunk and read the chunk's label attribute --> display it to user
-                        chunkZipPath = chunkElement.getAttribute("path"); //gives xx/chunk.zip where xx is a number
-
-                        //append this path to the psxFilePath (without ".psx" at the end)
-                        chunkZipPath = psxFilePath.substring(0, psxFilePath.length() - 4) + ".files\\" + chunkZipPath;
-
-                        //fullChunkDocument has info about chunk name, cameras, images, etc.
-                        Document fullChunkDocument = UnzipHelper.unzipToDocument(chunkZipPath);
-
-                        //only one chunk in this inner chunk document, so no need for a for loop
-                        Element fullChunkElement = (Element) fullChunkDocument.getElementsByTagName("chunk").item(0);
-
-                        String chunkName = fullChunkElement.getAttribute("label");
-                        chunkNames.add(chunkName);
-                        chunkZipPathPairs.put(chunkName, chunkZipPath);
-                    }
+            //set active chunk id if the project has one
+            NodeList chunksWrapper = projectZipXML.getElementsByTagName("chunks");
+            if (chunksWrapper.getLength()>0){
+                Element chunkWrapperElem = (Element) chunksWrapper.item(0);
+                String activeID = chunkWrapperElem.getAttribute("active_id");
+                if (!activeID.isBlank()){
+                    activeChunkID = Integer.parseInt(activeID);
                 }
-            } catch (ParserConfigurationException | IOException | SAXException e) {
-                log.error("An error occurred:", e);
             }
+
+            //find the chunks and open the .zip for each chunk
+            NodeList chunkList = projectZipXML.getElementsByTagName("chunk");
+
+            //...chunk.zip holds the information we need to extract (chunk name, id, etc)
+
+            //add all chunks to chunkNames list
+            loadChunkNamesList(chunkList);
+        }
+        catch (ParserConfigurationException | IOException | SAXException e) {
+            log.error("An error occurred:", e);
         }
         return chunkNames;
     }
 
+    private String getPSXPathBase() {
+        return psxFilePath.substring(0, psxFilePath.length() - 4);
+    }
+
+    private void loadChunkNamesList(NodeList chunkList) throws IOException {
+        String chunkZipPath;
+        for (int i = 0; i < chunkList.getLength(); ++i) {
+            Node chunk = chunkList.item(i);
+
+            if (chunk.getNodeType() == Node.ELEMENT_NODE) {
+                //chunkElement holds simple info
+                //<chunk id="0" path="0/chunk.zip"/>
+                Element chunkElement = (Element) chunk;
+
+                //open doc.xml within each chunk and read the chunk's label attribute --> display it to user
+                chunkZipPath = chunkElement.getAttribute("path"); //gives xx/chunk.zip where xx is a number
+
+                //append this path to the psxFilePath (without ".psx" at the end)
+                chunkZipPath = getPSXPathBase() + ".files\\" + chunkZipPath;
+
+                //fullChunkDocument has info about chunk name, cameras, images, etc.
+                Document fullChunkDocument = UnzipHelper.unzipToDocument(chunkZipPath);
+
+                //only one chunk in this inner chunk document, so no need for a for loop
+                Element fullChunkElement = (Element) fullChunkDocument.getElementsByTagName("chunk").item(0);
+
+                String chunkName = fullChunkElement.getAttribute("label");
+                chunkNames.add(chunkName);
+                chunkZipPathPairs.put(chunkName, chunkZipPath);
+            }
+        }
+    }
+
     public List<String> getChunkNames(){
         return chunkNames;
+    }
+
+    public List<String> getChunkNamesDynamic(String psxFilePath){
+        if (chunkNames != null){
+            return chunkNames;
+        }
+
+        return loadChunkNamesFromPSX(psxFilePath);
     }
 
     public Map<String, String> getChunkZipPathPairs(){
@@ -134,6 +208,10 @@ public class MetashapeObject {
 
     public void setPsxFilePath(String path){
         psxFilePath = path;
+    }
+
+    public Integer getActiveChunkID(){
+        return activeChunkID;
     }
 
     private boolean isValidPSXFilePath(String path) {

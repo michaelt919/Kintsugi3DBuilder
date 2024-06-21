@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -72,7 +72,7 @@ public class ImageFinder
             }
 
             // Is it still not there?
-            throw new FileNotFoundException(String.format("'%s' not found.", requestedFile.getName()));
+            throw new FileNotFoundException(String.format("'%s' not found.", requestedFile.getPath()));
         }
     }
 

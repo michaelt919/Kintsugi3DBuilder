@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -160,8 +160,38 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 //        return Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
     }
 
+
+    /**
+     * Loads a view set from an input file.
+     * The root directory and the supporting files directory will be set as specified.
+     * The supporting files directory may be overridden by a directory specified in the file.
+     * * @param stream The file to load
+     * @param root
+     * @param supportingFilesDirectory
+     * @param imagePathMap A map of image IDs to paths, if passed this will override the paths being assigned to the images.
+     * @return
+     * @throws XMLStreamException
+     */
     @Override
-    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory) throws XMLStreamException
+    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, Map<Integer, String> imagePathMap) throws XMLStreamException
+    {
+        return readFromStream(stream, root, supportingFilesDirectory, imagePathMap, -1, false);
+    }
+
+    /**
+     * Loads a view set from an input file.
+     * The root directory and the supporting files directory will be set as specified.
+     * The supporting files directory may be overridden by a directory specified in the file.
+     * * @param stream
+     * @param root
+     * @param supportingFilesDirectory
+     * @param imagePathMap A map of image IDs to paths, if passed this will override the paths being assigned to the images.
+     * @param metashapeVersionOverride A parameter that can be passed to override the version of the XML document being read to circumvent formatting differences.
+     * @param directAgisoftImport Used to ignore global transformations set in Metashape projects which would break rendering if not accounted for.
+     * @return
+     * @throws XMLStreamException
+     */
+    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, Map<Integer, String> imagePathMap, int metashapeVersionOverride, boolean directAgisoftImport) throws XMLStreamException
     {
         Map<String, Sensor> sensorSet = new Hashtable<>();
         TreeSet<Camera> cameraSet = new TreeSet<>((c1, c2) ->
@@ -218,7 +248,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         String sensorID = "";
         String cameraID = "";
         String imageFile = "";
-        int intVersion = 0;
+        int intVersion = Math.max(metashapeVersionOverride, 0);
 
         XMLInputFactory factory = XMLInputFactory.newInstance();
 
@@ -252,18 +282,19 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             }
                             log.debug("Reading chunk '{}'\n", chunkLabel);
 
-                            // chunk XMLs put the version in the chunk tag
-                            String tryVersion = reader.getAttributeValue(null, "version");
-                            if (tryVersion != null)
-                            {
-                                version = tryVersion;
-                                String[] verComponents = version.split("\\.");
-                                for (String verComponent : verComponents)
-                                {
-                                    intVersion *= 10;
-                                    intVersion += Integer.parseInt(verComponent);
-                                }
-                            }
+                            // Commented out; chunk XMLs seem to always be labelled version 1.2.0; regardless of Metashape version or actual format details.
+//                            // chunk XMLs put the version in the chunk tag
+//                            String tryVersion = reader.getAttributeValue(null, "version");
+//                            if (tryVersion != null)
+//                            {
+//                                version = tryVersion;
+//                                String[] verComponents = version.split("\\.");
+//                                for (String verComponent : verComponents)
+//                                {
+//                                    intVersion *= 10;
+//                                    intVersion += Integer.parseInt(verComponent);
+//                                }
+//                            }
 
                             break;
                         }
@@ -480,24 +511,23 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                 }
                                 else
                                 {
-                                    if (expectedSize == 9)
-                                    {
-                                        log.debug("\tSetting global rotation.");
-                                        globalRotation = Matrix3.fromRows(
-                                                new Vector3(m[0], m[3], m[6]),
-                                                new Vector3(m[1], m[4], m[7]),
-                                                new Vector3(m[2], m[5], m[8]))
-                                            .asMatrix4();
-                                    }
-                                    else
-                                    {
-                                        log.debug("\tSetting global transformation.");
-                                        globalRotation = Matrix3.fromRows(
-                                                new Vector3(m[0], m[4], m[8]),
-                                                new Vector3(m[1], m[5], m[9]),
-                                                new Vector3(m[2], m[6], m[10]))
-                                            .asMatrix4()
-                                            .times(Matrix4.translate(m[3], m[7], m[11]));
+                                    if (!directAgisoftImport){
+                                        if (expectedSize == 9) {
+                                            log.debug("\tSetting global rotation.");
+                                            globalRotation = Matrix3.fromRows(
+                                                            new Vector3(m[0], m[3], m[6]),
+                                                            new Vector3(m[1], m[4], m[7]),
+                                                            new Vector3(m[2], m[5], m[8]))
+                                                    .asMatrix4();
+                                        } else {
+                                            log.debug("\tSetting global transformation.");
+                                            globalRotation = Matrix3.fromRows(
+                                                            new Vector3(m[0], m[4], m[8]),
+                                                            new Vector3(m[1], m[5], m[9]),
+                                                            new Vector3(m[2], m[6], m[10]))
+                                                    .asMatrix4()
+                                                    .times(Matrix4.translate(m[3], m[7], m[11]));
+                                        }
                                     }
                                 }
                             }
@@ -505,7 +535,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         break;
 
                         case "translation":
-                            if (camera == null)
+                            if (camera == null && !directAgisoftImport)
                             {
                                 log.debug("\tSetting global translate.");
                                 String[] components = reader.getElementText().split("\\s");
@@ -517,7 +547,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             break;
 
                         case "scale":
-                            if (camera == null)
+                            if (camera == null && !directAgisoftImport)
                             {
                                 log.debug("\tSetting global scale.");
                                 globalScale = 1.0f / Float.parseFloat(reader.getElementText());
@@ -718,7 +748,16 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
             result.getCameraProjectionIndexList().add(cam.sensor.index);
             result.getLightIndexList().add(cam.lightIndex);
-            result.getImageFileNames().add(cam.filename);
+
+            if (imagePathMap != null && imagePathMap.containsKey(Integer.parseInt(cam.id))) {
+                result.getImageFiles().add(new File(imagePathMap.get(Integer.parseInt(cam.id))));
+            }else{
+                result.getImageFiles().add(new File(cam.filename));
+                if (imagePathMap != null) {
+                    log.error("Camera path override not found for camera: " + cam.id);
+                }
+            }
+
             result.getViewErrorMetrics().add(new ViewRMSE());
         }
 

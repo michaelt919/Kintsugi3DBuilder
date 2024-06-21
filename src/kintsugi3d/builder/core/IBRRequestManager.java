@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -145,7 +145,9 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
                     {
                         log.error("Error occurred while executing request:", e);
                         Platform.runLater(() ->
-                            new Alert(AlertType.ERROR, "An error occurred processing request. Processing has stopped.\nCheck the log for more info.").show());
+                        {
+                            new Alert(Alert.AlertType.NONE, "An error occurred processing request. Processing has stopped.\nCheck the log for more info.").show();
+                        });
                     }
                 }
 

@@ -1,9 +1,9 @@
 .accordion{
-    -fx-background-color: #222230;
+    -fx-background-color: #262626;
 }
 
 .anchor-pane{
-    -fx-background-color: #000000;
+    -fx-background-color: #262626;
 }
 
 .accordion .content {
@@ -11,30 +11,31 @@
 }
 
 .button {
-    -fx-background-color: #272727;
+    -fx-background-color: #383838;
     -fx-text-fill: #FFFFFF;
     -fx-background-radius: 30 30 30 30;
 }
 
 .button:hover{
-    -fx-background-color: #222255;
+    -fx-background-color: #D4AA00;
 }
 
 .button:pressed {
-    -fx-background-color: #272727;
+    -fx-background-color: #262626;
 }
 
 .context-menu {
-    -fx-background-color: #000000;
+    -fx-background-color: #262626;
 }
 
 .check-box{
     -fx-text-fill: #FFFFFF;
+    -fx-background-color: #262626;
 }
 
 .color-picker{
-    -fx-background-color: #000000;
-    -fx-border-color: #222230;
+    -fx-background-color: #383838;
+    -fx-border-color: #383838;
     -fx-text-fill:#000000;
 }
 
@@ -49,7 +50,7 @@
 /*TODO: change the color of combo box dropdown arrow*/
 
 .combo-box .text{
-    -fx-fill: #0000ff; /*TODO: trying to change the color of the item
+    -fx-fill: #ffffff; /*TODO: trying to change the color of the item
                             which is presented in the dropdown before it is unrolled*/
 }
 
@@ -58,15 +59,15 @@
 }
 
 dialog-pane{
-    -fx-background-color:#ff0000;
+    -fx-background-color:#ff0000; /*TODO:Should change this*/
 }
 
 .grid-pane{
-    -fx-background-color: #000000;
+    -fx-background-color: #262626;
 }
 
 .hbox{
-    -fx-background-color: #000000;
+    -fx-background-color: #262626;
 }
 
 .label{
@@ -78,7 +79,7 @@ dialog-pane{
 }
 
 .list-view{
-    -fx-background-color: #000000;
+    -fx-background-color: #262626;
     -fx-text-fill: #FFFFFF;
 }
 
@@ -89,7 +90,7 @@ dialog-pane{
 
 /* Apply to odd cells */
 .list-cell:odd {
-    -fx-background-color: #272727; /* Odd cell background color */
+    -fx-background-color: #262626; /* Odd cell background color */
 }
 
 .list-cell:selected{
@@ -102,16 +103,24 @@ dialog-pane{
 }
 
 .menu{
-    -fx-background-color: #272727;
-    -fx-background-radius: 30 30 30 30;
+    -fx-background-color: #262626;
+    -fx-background-radius: 0 0 0 0;
+    /*-fx-background-color: #383838; brought in from main - Nathan merge
+    -fx-background-radius: 30 30 30 30;*/
+}
+.menu:hover{
+    -fx-background-color: #D4AA00;
 }
 
 .menu-bar{
-    -fx-background-color: #000000
+    -fx-background-color: #262626
+}
+.menu-item:hover{
+    -fx-background-color: #D4AA00;
 }
 
 .menu-item{
-    -fx-background-color:#000000;
+    -fx-background-color:#262626;
     -fx-text-fill: #FFFFFF;
 }
 
@@ -124,12 +133,15 @@ dialog-pane{
 }
 
 .split-menu-button {
-    -fx-base: #272727;
+    -fx-base: #383838;
     -fx-text-fill: #FFFFFF;
+}
+.split-menu-button:hover{
+    -fx-background-color: #D4AA00;
 }
 
 .split-button:hover{
-    -fx-background-color: #222255;
+    -fx-background-color: #D4AA00;
 }
 
 .scroll-pane{
@@ -141,19 +153,28 @@ dialog-pane{
 }
 
 .tab{
-    -fx-background-color: #000000;
+    -fx-background-color: #383838;
+}
+.tab:selected{
+    -fx-background-color: #D4AA00;
+    -fx-font-weight:bold;
+}
+
+.tab:hover{
+ /*   -fx-background-color: #222255;*/
+    -fx-background-color: #D4AA00;
 }
 
 .tab-pane .tab-header-area .tab-header-background {
-    -fx-background-color: #272727;
+    -fx-background-color: #262626;
 }
 
-.table-row-cell: even{
+.table-row-cell:even{
     -fx-background-color: #333333; /* Even cell background color */
 }
 
 .table-row-cell: odd{
-    -fx-background-color: #272727; /* Odd cell background color */
+    -fx-background-color: #262626; /* Odd cell background color */
 }
 
 .table-view .column-header{
@@ -174,16 +195,16 @@ dialog-pane{
 }
 
 .text-field{
-    -fx-background-color: #222222;
+    -fx-background-color: #383838;
     -fx-text-fill: #ffffff;
 }
 
 .titled-pane{
-    -fx-background-color: #000000;
+    -fx-background-color: #262626;
 }
 
 .titled-pane > .title{ /*only applies to the dropdown bar, not the text or content within*/
-    -fx-background-color:#222230;
+    -fx-background-color:#383838;
 }
 
 .titled-pane > .title > *.text{
@@ -195,7 +216,7 @@ dialog-pane{
 }
 
 .toggle-button{
-    -fx-background-color: #272727;
+    -fx-background-color: #383838;
     -fx-background-radius: 30 30 30 30;
 }
 
@@ -205,7 +226,8 @@ dialog-pane{
 }
 
 .toggle-button:hover{
-    -fx-background-color: #222255;
+ /*   -fx-background-color: #222255; */
+    -fx-background-color: #D4AA00;
 }
 
 .toggle-button:hover .text{
@@ -213,20 +235,44 @@ dialog-pane{
 }
 
 .toggle-button:pressed {
-    -fx-background-color: #272727;
+    -fx-background-color: #262626;
 }
 
-
-
-
 .tool-bar{
-    -fx-background-color: #000000;
+    -fx-background-color: #262626;
 }
 
 .tool-bar .button{
     -fx-background-radius: 0;
 }
 
-.vbox{
-    -fx-background-color: #444444;
+.tooltip {
+    -fx-show-duration: indefinite; /* tooltips don't disappear until the user's mouse leaves the node*/
 }
+
+.vbox{
+    -fx-background-color: #262626;
+}
+.cameraviewlist{
+    -fx-background-color: #262626;
+    -fx-border-color: #262626;
+}
+.menubarbuttons{
+    -fx-background-color: #262626;
+    -fx-background-radius: 0 0 0 0;
+}
+.menuebaranchorpane{
+     -fx-background-color: #383838;
+ }
+ .cachesettingsanchorepane{
+      -fx-background-color: #383838;
+ }
+ .specularfitcheckbox{
+       -fx-background-color: #383838;
+ }
+ .grayscalebuttons{
+    -fx-background-radius: 0 0 0 0;
+ }
+ .button-selected{
+    -fx-background-color: #D4AA00;
+ }

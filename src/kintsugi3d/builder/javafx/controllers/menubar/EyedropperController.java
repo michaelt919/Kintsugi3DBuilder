@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,12 +11,24 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar;
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.function.DoubleUnaryOperator;
+import javax.imageio.ImageIO;
+
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -28,20 +40,11 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import kintsugi3d.builder.core.IOModel;
+import kintsugi3d.builder.javafx.internal.ProjectModelBase;
+import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.builder.core.IOModel;
-
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
-import java.util.function.DoubleUnaryOperator;
 
 public class EyedropperController implements Initializable {
     private static final Logger log = LoggerFactory.getLogger(EyedropperController.class);
@@ -84,6 +87,11 @@ public class EyedropperController implements Initializable {
     @FXML private Rectangle averageColorPreview = new Rectangle(); //displays the average color of selection
 
     private IOModel ioModel = new IOModel();
+    private ProjectModelBase projectModel = null;
+
+    private Button sourceButton;
+
+//    private Runnable exitCallback;
 
     public EyedropperController()
     {
@@ -204,10 +212,11 @@ public class EyedropperController implements Initializable {
         }
         else{//button text is "Crop"
             cropButton.setText("Cropping...");
+            cropButton.getStyleClass().add("button-selected");
             isCropping = true;
         }
 
-        resetButtonsText();
+//        resetButtonsText();
         isSelecting = false;
         selectionRectangle.setVisible(false);
     }
@@ -231,6 +240,7 @@ public class EyedropperController implements Initializable {
         colorPickerImgView.setViewport(view);
         isCropping = false;
         cropButton.setText("Reset Crop");
+        cropButton.getStyleClass().remove("button-selected");
 
         selectionRectangle.setVisible(false);
     }
@@ -359,7 +369,7 @@ public class EyedropperController implements Initializable {
     @FXML
     private boolean addSelectedColor(Color newColor) {
         //update the text field (to int. greyscale value) and its corresponding color square
-        Button sourceButton = resetButtonsText();
+//        Button sourceButton = resetButtonsText();
 
         if (sourceButton != null) {
             //modify appropriate text field to average greyscale value
@@ -380,12 +390,15 @@ public class EyedropperController implements Initializable {
 
             //disable/enable apply button as needed
             updateApplyButton();
+
+            sourceButton.getStyleClass().remove("button-selected");
         }
         else{
             Toolkit.getDefaultToolkit().beep();
             return false; //source button is null
         }
         isSelecting = false;
+        sourceButton = null;
         return true;//color changed successfully
     }
 
@@ -526,8 +539,10 @@ public class EyedropperController implements Initializable {
                     (byte) Integer.parseInt(txtField5.getText()),
                     (byte) Integer.parseInt(txtField6.getText())
                 });
+
             //Note(ZC): Try Adding the code to save the file here, right after the color calibration
             //NOte(ZC): Save the file into main project file (double check on where exactly in the files we want this saved)
+            //Note(ZC): This function is unable to get the current image sense its a local var to the select image function.
         }
         else{
             Toolkit.getDefaultToolkit().beep();
@@ -549,28 +564,39 @@ public class EyedropperController implements Initializable {
     @FXML
     private void enterColorSelectionMode(ActionEvent actionEvent) {
         //change text of button to indicate selection
-        Button sourceButton = (Button) actionEvent.getSource();
-        resetButtonsText();
+        sourceButton = (Button) actionEvent.getSource();
+//        resetButtonsText();
 
-        sourceButton.setText("Draw to select...");
+//        sourceButton.setText("Draw to select...");
+
+        sourceButton.getStyleClass().add("button-selected");
 
         isSelecting = true;
         isCropping = false;
     }
 
-    private Button resetButtonsText(){
-        Button sourceButton = null;
-        for (Button button: colorSelectButtons){
-            if (!button.getText().equals(DEFAULT_BUTTON_TEXT)) {
-                sourceButton = button;
-            }
-            button.setText(DEFAULT_BUTTON_TEXT);
-        }
+//    private Button resetButtonsText(){
+//        Button sourceButton = null;
+//        for (Button button: colorSelectButtons){
+//            if (!button.getText().equals(DEFAULT_BUTTON_TEXT)) {
+//                sourceButton = button;
+//            }
+////            button.setText(DEFAULT_BUTTON_TEXT);
+//        }
+//
+//        return sourceButton;
+//    }
 
-        return sourceButton;
+    public void setProjectModel(ProjectModelBase projectModel)
+    {
+        this.projectModel = projectModel;
+        if (projectModel.getColorCheckerFile() != null)
+        {
+            this.setImage(new File(projectModel.getColorCheckerFile()));
+        }
     }
 
-    public void setLoadingModel(IOModel ioModel){
+    public void setIOModel(IOModel ioModel){
         this.ioModel = ioModel;
 
         //initialize txtFields with their respective values
@@ -600,15 +626,40 @@ public class EyedropperController implements Initializable {
         return ioModel.hasValidHandler();
     }
 
+//    public void ExitEyeDropper(){
+//        if (exitCallback != null)
+//        {
+//            exitCallback.run();
+//        }
+//    }
+
     @FXML
     private void selectImage(ActionEvent actionEvent) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose Image File");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", validExtensions));
+        fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
+
+        try{
+            fileChooser.setInitialDirectory(ioModel.getLoadedViewSet().getFullResImageFile(ioModel.getLoadedViewSet().getPrimaryViewIndex()).getParentFile());
+        }
+        catch(NullPointerException e){
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Please load a model before using the color checker.");
+            alert.setGraphic(null);
+            alert.show();
+            return;
+        }
 
         Stage stage = (Stage) ((Node)actionEvent.getSource()).getScene().getWindow();
         File file = fileChooser.showOpenDialog(stage);
+        setImage(file);
+    }
+
+    public void setImage(File file)
+    {
         if (file != null) {
+            RecentProjects.setMostRecentDirectory(file.getParentFile());
+
             //convert tiff image if necessary
             if (file.getAbsolutePath().toLowerCase().matches(".*\\.tiff?")) {
                 BufferedImage bufferedImage;
@@ -629,8 +680,33 @@ public class EyedropperController implements Initializable {
             chooseNewImageButton.setVisible(true);
             cropButton.setVisible(true);
 
+            //testing the code for saving the file
+            //Note: Code bellow saves the file however it's not audiomatic. The user has to select where to save it and name the file as well.
+            //Stage secondStage = new Stage();
+            //File savefile = fileChooser.showSaveDialog(secondStage);
+            //fileChooser.setInitialFileName("colorPickerImage");
+
+            //This saves the file to the location path listed
+            String path = file.getPath().toString();
+            try
+            {
+                if (projectModel != null)
+                {
+                    projectModel.setColorCheckerFile(path);
+                }
+            }
+            catch(Exception e)
+            {
+                log.error("Could not save file");
+            }
+
             //reset viewport and crop button text
             resetCrop();
         }
     }
+
+//    public void setExitCallback(Runnable exitCallback)
+//    {
+//        this.exitCallback = exitCallback;
+//    }
 }

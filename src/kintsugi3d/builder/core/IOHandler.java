@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -10,6 +10,10 @@
  */
 
 package kintsugi3d.builder.core;
+
+import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.util.AbstractImage;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -31,6 +35,7 @@ public interface IOHandler
     void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions);
     void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory,
         String primaryViewName, ReadonlyLoadOptionsModel loadOptions);
+    void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptionsModel, String primaryViewName);
 
     void requestFragmentShader(File shaderFile);
 

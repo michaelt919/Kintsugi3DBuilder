@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -17,10 +17,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
 import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.util.AbstractImage;
 import kintsugi3d.util.EncodableColorImage;
 
 public class IOModel
@@ -195,6 +198,10 @@ public class IOModel
         this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, primaryViewName, loadOptionsModel);
     }
 
+    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, String primaryViewName)
+    {
+        this.handler.loadAgisoftFromZIP(id, metashapeObjectChunk, loadOptionsModel, primaryViewName);
+    }
     public void requestFragmentShader(File shaderFile)
     {
         this.handler.requestFragmentShader(shaderFile);
