@@ -11,15 +11,15 @@
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.builder.metrics.ViewRMSE;
-import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.UUID;
+
+import kintsugi3d.builder.metrics.ViewRMSE;
+import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
 
 public interface ReadonlyViewSet
 {
@@ -231,8 +231,6 @@ public interface ReadonlyViewSet
      * @return The far plane value.
      */
     float getRecommendedFarPlane();
-
-    float getGamma();
 
     boolean hasCustomLuminanceEncoding();
 

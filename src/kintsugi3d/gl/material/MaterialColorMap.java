@@ -13,21 +13,21 @@ package kintsugi3d.gl.material;
 
 public class MaterialColorMap extends MaterialTextureMap implements ReadonlyMaterialColorMap
 {
-    private boolean gammaCorrectionRequired;
+    private boolean sRGBDecodingRequired;
 
     public MaterialColorMap()
     {
-        gammaCorrectionRequired = false;
+        sRGBDecodingRequired = false;
     }
 
     @Override
-    public boolean isGammaCorrectionRequired()
+    public boolean isSRGBDecodingRequired()
     {
-        return gammaCorrectionRequired;
+        return sRGBDecodingRequired;
     }
 
-    public void setGammaCorrectionRequired(boolean colorCorrectionEnabled)
+    public void setSRGBDecodingRequired(boolean sRGBDecodingRequired)
     {
-        this.gammaCorrectionRequired = colorCorrectionEnabled;
+        this.sRGBDecodingRequired = sRGBDecodingRequired;
     }
 }
