@@ -74,6 +74,8 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     private static final int SHADING_FRAMEBUFFER_COUNT = 2;
     private final Collection<FramebufferObject<ContextType>> shadingFramebuffers = new ArrayList<>(SHADING_FRAMEBUFFER_COUNT);
 
+    private boolean loaded = false;
+
     IBREngine(String id, ContextType context, Builder<ContextType> resourceBuilder)
     {
         this.id = id;
@@ -168,13 +170,8 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 //
 //            // Flush to prevent timeout
 //            context.flush();
-
-            if (this.loadingMonitor != null)
-            {
-                this.loadingMonitor.loadingComplete();
-            }
         }
-        catch (Exception e)
+        catch (RuntimeException|IOException e)
         {
             log.error("Error occurred initializing IBREngine:", e);
             this.close();
@@ -303,6 +300,17 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
                 simpleTexDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
 
                 context.flush();
+
+                if (!loaded)
+                {
+                    // First frame drawn successfully.
+                    loaded = true;
+
+                    if (this.loadingMonitor != null)
+                    {
+                        this.loadingMonitor.loadingComplete();
+                    }
+                }
             }
         }
         catch(RuntimeException e)
