@@ -20,7 +20,7 @@
         <children>
             <AnchorPane>
                 <children>
-                    <MenuBar styleClass="menu-bar" useSystemMenuBar="true" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                    <MenuBar styleClass="menu-bar" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                         <Menu mnemonicParsing="false" text="File">
                             <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="Create New Project">
                                 <accelerator>
@@ -59,16 +59,8 @@
                             </Menu>
                      <Menu fx:id="cleanRecentProjectsMenu" mnemonicParsing="false" text="Clear Recent Projects">
                         <items>
-                            <CustomMenuItem fx:id="removeSomeRefsCustMenuItem" onAction="#file_removeInvalidReferences">
-                                <content>
-                                    <Label text="Clear Missing Projects" />
-                                </content>
-                            </CustomMenuItem>
-                            <CustomMenuItem fx:id="removeAllRefsCustMenuItem" onAction="#file_removeAllReferences">
-                                <content>
-                                    <Label text="Clear All Projects" />
-                                </content>
-                            </CustomMenuItem>
+                            <MenuItem fx:id="removeSomeRefsCustMenuItem" text="Clear Missing Projects" onAction="#file_removeInvalidReferences" />
+                            <MenuItem fx:id="removeAllRefsCustMenuItem" text="Clear All Projects" onAction="#file_removeAllReferences" />
                         </items>
                      </Menu>
 

@@ -134,8 +134,8 @@ public class MenubarController
     @FXML private Menu recentProjectsMenu;
     @FXML private Menu cleanRecentProjectsMenu;
 
-    @FXML private CustomMenuItem removeAllRefsCustMenuItem;
-    @FXML private CustomMenuItem removeSomeRefsCustMenuItem;
+    @FXML private MenuItem removeAllRefsCustMenuItem;
+    @FXML private MenuItem removeSomeRefsCustMenuItem;
 
     //shaders which should only be enabled after processing textures
     @FXML private RadioMenuItem materialMetallicity;
@@ -267,10 +267,10 @@ public class MenubarController
         //add tooltips to recent projects list modifiers
         Tooltip tip = new Tooltip("Remove references to items not found in file explorer. " +
                 "Does not modify your file system.");
-        Tooltip.install(removeSomeRefsCustMenuItem.getContent(), tip);
+//        Tooltip.install(removeSomeRefsCustMenuItem.getContent(), tip);
 
         tip = new Tooltip("Remove references to all recent projects. Does not modify your file system.");
-        Tooltip.install(removeAllRefsCustMenuItem.getContent(), tip);
+//        Tooltip.install(removeAllRefsCustMenuItem.getContent(), tip);
 
 
 //        updatePreloadVisibilityEtc();

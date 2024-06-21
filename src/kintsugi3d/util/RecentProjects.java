@@ -67,21 +67,21 @@ public class RecentProjects {
         return new ArrayList<>(new LinkedHashSet<>(projectItems));
     }
 
-    public static List<CustomMenuItem> getItemsAsCustomMenuItems(){
+    public static List<MenuItem> getItemsAsMenuItems(){
         List<String> items = RecentProjects.getItemsFromRecentsFile();
 
-        List<CustomMenuItem> customMenuItems = new ArrayList<>();
+        List<MenuItem> customMenuItems = new ArrayList<>();
         int i = 0;
 
         //attach tooltips and event handlers
         for (String item : items){
-            customMenuItems.add(new CustomMenuItem(new Label(shortenedPath(item))));
+            customMenuItems.add(new MenuItem(shortenedPath(item)));
 
-            CustomMenuItem justAdded = customMenuItems.get(i);
+            MenuItem justAdded = customMenuItems.get(i);
 
             String fileName = RecentProjects.getItemsFromRecentsFile().get(i);
             Tooltip tooltip = new Tooltip(fileName);
-            Tooltip.install(justAdded.getContent(), tooltip);
+//            Tooltip.install(justAdded.getContent(), tooltip);
 
             justAdded.setOnAction(event -> {
                 ProjectIO.getInstance().openProjectFromFile(new File(fileName));
@@ -152,7 +152,7 @@ public class RecentProjects {
 
         recentProjsList.getItems().clear();
 
-        ArrayList<CustomMenuItem> recentItems = (ArrayList<CustomMenuItem>) RecentProjects.getItemsAsCustomMenuItems();
+        ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>) RecentProjects.getItemsAsMenuItems();
 
         recentProjsList.getItems().addAll(recentItems);
 
@@ -168,8 +168,8 @@ public class RecentProjects {
         SplitMenuButton splitMenuButton = welcomeWindowController.recentProjectsSplitMenuButton;
         List<Button> recentButtons = welcomeWindowController.recentButtons;
 
-        ArrayList<CustomMenuItem> recentItems = (ArrayList<CustomMenuItem>)
-                RecentProjects.getItemsAsCustomMenuItems();
+        ArrayList<MenuItem> recentItems = (ArrayList<MenuItem>)
+                RecentProjects.getItemsAsMenuItems();
 
         splitMenuButton.getItems().clear();
         //disable all quick action buttons then enable them if they hold a project
@@ -183,7 +183,7 @@ public class RecentProjects {
         splitMenuButton.setDisable(true);
 
         int i = 0;
-        for (CustomMenuItem item : recentItems) {
+        for (MenuItem item : recentItems) {
             //add first few items to quick access buttons
             if (i < recentButtons.size()){
                 Button recentButton = recentButtons.get(i);
