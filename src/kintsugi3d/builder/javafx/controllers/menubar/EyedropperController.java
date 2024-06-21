@@ -392,6 +392,7 @@ public class EyedropperController implements Initializable {
             updateApplyButton();
 
             sourceButton.getStyleClass().remove("button-selected");
+            sourceButton.setText(DEFAULT_BUTTON_TEXT);
         }
         else{
             Toolkit.getDefaultToolkit().beep();
@@ -539,10 +540,6 @@ public class EyedropperController implements Initializable {
                     (byte) Integer.parseInt(txtField5.getText()),
                     (byte) Integer.parseInt(txtField6.getText())
                 });
-
-            //Note(ZC): Try Adding the code to save the file here, right after the color calibration
-            //NOte(ZC): Save the file into main project file (double check on where exactly in the files we want this saved)
-            //Note(ZC): This function is unable to get the current image sense its a local var to the select image function.
         }
         else{
             Toolkit.getDefaultToolkit().beep();
@@ -567,7 +564,7 @@ public class EyedropperController implements Initializable {
         sourceButton = (Button) actionEvent.getSource();
 //        resetButtonsText();
 
-//        sourceButton.setText("Draw to select...");
+        sourceButton.setText("Draw to select...");
 
         sourceButton.getStyleClass().add("button-selected");
 
