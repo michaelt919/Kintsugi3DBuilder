@@ -59,7 +59,7 @@ class ImageReconstructionTest
         potatoViewSetTonemapped = potatoViewSet.copy();
 
         // Using tonemapping from the Guan Yu dataset
-        potatoViewSetTonemapped.setTonemapping(potatoViewSet.getGamma(), new double [] { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 },
+        potatoViewSetTonemapped.setTonemapping(new double [] { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 },
             new byte [] { 50, 105, (byte)140, (byte)167, (byte)176, (byte)185 });
 
         context = OpenGLContextFactory.getInstance().buildWindow("Kintsugi 3D Builder Tests", 1, 1).create().getContext();
@@ -148,12 +148,10 @@ class ImageReconstructionTest
             {
                 try
                 {
-                    ProgramObject<OpenGLContext> program = programFactory.getShaderProgramBuilder(resources,
+                    return programFactory.getShaderProgramBuilder(resources,
                             new File("shaders/common/imgspace.vert"),
                             new File("shaders/test/syntheticWithTonemappedLitNoise.frag"))
                         .createProgram();
-                    program.setUniform("renderGamma", potatoViewSet.getGamma());
-                    return program;
                 }
                 catch (IOException e)
                 {
@@ -193,8 +191,6 @@ class ImageReconstructionTest
             return programFactory.getShaderProgramBuilder(resources,
                     new File("shaders/common/imgspace.vert"),
                     new File("shaders/test/syntheticTonemapped.frag"))
-                .define("SRGB_DECODING_ENABLED", 1)
-                .define("SRGB_ENCODING_ENABLED", 1)
                 .createProgram();
         }
         catch (IOException e)
@@ -264,11 +260,6 @@ class ImageReconstructionTest
                     resources,
                     viewIndex ->
                     {
-                        // TODO: use proper sRGB when possible, not gamma correction
-                        float gamma = viewSet.getGamma();
-                        groundTruthProgram.setUniform("gamma", gamma);
-                        groundTruthProgram.setUniform("renderGamma", gamma);
-
                         groundTruthProgram.setUniform("model_view", viewSet.getCameraPose(viewIndex));
                         groundTruthProgram.setUniform("projection",
                             viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewIndex)).getProjectionMatrix(
