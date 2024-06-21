@@ -1,4 +1,8 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
+
+import java.io.File;
+import java.util.ArrayList;
+
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -21,9 +25,6 @@ import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.util.RecentProjects;
 import kintsugi3d.util.Triplet;
-
-import java.io.File;
-import java.util.ArrayList;
 
 public class MetashapeImportController extends FXMLPageController implements ShareInfo, CanConfirm {
     @FXML private Text fileNameTxtField;
@@ -277,12 +278,12 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
         if (viewSetCallback != null) {
             //"force" the user to save their project (user can still cancel saving)
-            MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(
+            MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
                     viewSet ->viewSetCallback.accept(viewSet));
         }
 
         new Thread(() ->
-                MultithreadModels.getInstance().getLoadingModel()
+                MultithreadModels.getInstance().getIOModel()
                         .loadAgisoftFromZIP(
                                 metashapeObjectChunk.getFramePath(),
                                 metashapeObjectChunk,

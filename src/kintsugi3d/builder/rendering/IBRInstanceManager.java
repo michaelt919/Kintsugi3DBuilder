@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.rendering;
 
-import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -24,12 +23,7 @@ import java.util.function.DoubleUnaryOperator;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
-import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.control.Button;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.stage.DirectoryChooser;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
@@ -344,7 +338,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         // TODO There currently isn't functionality for a supportingFilesDirectory at this early in the process
         //  Restructuring required from Tetzlaff.
 
-        this.loadingMonitor.startLoading();
+        this.progressMonitor.start();
 
         loadAgisoftFromZipRec(id, metashapeObjectChunk, loadOptions, primaryViewName);
     }
@@ -354,7 +348,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         Builder<ContextType>builder = null;
         try {
             builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
-                    .setLoadingMonitor(this.loadingMonitor)
+                    .setProgressMonitor(this.progressMonitor)
                     .setLoadOptions(loadOptions)
                     .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, null, false)
                     .setPrimaryView(primaryViewName);
@@ -402,7 +396,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             new Thread(()->{
                 try {
                     finalBuilder
-                            .setLoadingMonitor(this.loadingMonitor)
+                            .setProgressMonitor(this.progressMonitor)
                             .setLoadOptions(loadOptions)
                             .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, newCamsFile, false)
                             .setPrimaryView(primaryViewName);
@@ -422,7 +416,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             new Thread(()->{
                 try {
                     finalBuilder
-                            .setLoadingMonitor(this.loadingMonitor)
+                            .setProgressMonitor(this.progressMonitor)
                             .setLoadOptions(loadOptions)
                             //skip broken cams on the most recent attempt at processing
                             .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, fullResImgDirAttempt, true)
