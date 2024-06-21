@@ -20,7 +20,7 @@
         <children>
             <AnchorPane>
                 <children>
-                    <MenuBar styleClass="menu-bar" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                    <MenuBar styleClass="menu-bar" useSystemMenuBar="true" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                         <Menu mnemonicParsing="false" text="File">
                             <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="Create New Project">
                                 <accelerator>
