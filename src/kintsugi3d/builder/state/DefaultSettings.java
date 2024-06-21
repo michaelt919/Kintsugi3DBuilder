@@ -29,7 +29,6 @@ public final class DefaultSettings
         settingsModel.createBooleanSetting("lightWidgetsEnabled", false);
         settingsModel.createBooleanSetting("visibleCameraPosesEnabled", false);
         settingsModel.createBooleanSetting("visibleSavedCameraPosesEnabled", false);
-        settingsModel.createNumericSetting("gamma", 2.2f, true);
         settingsModel.createNumericSetting("weightExponent", 16.0f, true);
         settingsModel.createNumericSetting("isotropyFactor", 0.0f, true);
         settingsModel.createNumericSetting("occlusionBias", 0.0025f, true);

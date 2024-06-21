@@ -58,11 +58,6 @@
       <font>
          <Font size="18.0" />
       </font></TextField>
-    <TextField fx:id="gammaTextField" prefHeight="39.0" prefWidth="100.0" GridPane.columnIndex="1">
-      <font>
-         <Font size="18.0" />
-      </font></TextField>
-    <Slider fx:id="gammaSlider" styleClass="slider" blockIncrement="1.0" majorTickUnit="1.0" max="5.0" min="1.0" minorTickCount="4" showTickLabels="true" showTickMarks="true" value="2.2" GridPane.columnIndex="2" />
     <Slider fx:id="weightExponentSlider" styleClass="slider" majorTickUnit="49.0" min="1.0" minorTickCount="8" showTickLabels="true" showTickMarks="true" value="16.0" GridPane.columnIndex="2" GridPane.rowIndex="2" />
     <Slider fx:id="isotropyFactorSlider" styleClass="slider" blockIncrement="0.2" majorTickUnit="0.25" max="1.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.rowIndex="3" />
     <Slider fx:id="occlusionBiasSlider" styleClass="slider" majorTickUnit="0.001" max="0.004" showTickLabels="true" showTickMarks="true" value="0.0025" GridPane.columnIndex="2" GridPane.rowIndex="5" />

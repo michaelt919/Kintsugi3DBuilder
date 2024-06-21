@@ -345,8 +345,6 @@ class ImageReconstructionTest
             ProgramObject<OpenGLContext> program = programFactory.getShaderProgramBuilder(resources,
                     new File("shaders/common/imgspace.vert"),
                     new File("shaders/test/syntheticTonemapped.frag"))
-                .define("SRGB_DECODING_ENABLED", 1)
-                .define("SRGB_ENCODING_ENABLED", 1)
                 .createProgram();
             setupShader.accept(program);
             return program;

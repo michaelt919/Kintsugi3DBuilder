@@ -21,12 +21,6 @@
 #define INVERSE_LUMINANCE_MAP_ENABLED 0
 #endif
 
-#ifndef SRGB_ENCODING_ENABLED
-#define SRGB_ENCODING_ENABLED 1
-#endif
-
-uniform float renderGamma;
-
 #if INVERSE_LUMINANCE_MAP_ENABLED
 uniform sampler1D inverseLuminanceMap;
 #endif
@@ -34,7 +28,7 @@ uniform sampler1D inverseLuminanceMap;
 vec4 tonemap(vec3 color, float alpha)
 {
     // return tonemapFromLuminanceMap(color, alpha);
-    return vec4(pow(color / getMaxLuminance(), vec3(1.0 / renderGamma)), alpha);
+    return vec4(linearToSRGB(color / getMaxLuminance()), alpha);
 }
 
 vec3 tonemapFromLuminanceMap(vec3 color)
@@ -47,11 +41,7 @@ vec3 tonemapFromLuminanceMap(vec3 color)
     float maxLuminance = getMaxLuminance();
     if (luminance >= maxLuminance)
     {
-#if SRGB_ENCODING_ENABLED
         tonemappedColor = linearToSRGB(color / maxLuminance);
-#else
-        tonemappedColor = pow(color / maxLuminance, vec3(1.0 / renderGamma));
-#endif
     }
     else
     {
@@ -67,11 +57,7 @@ vec3 tonemapFromLuminanceMap(vec3 color)
         int inverseLuminanceMapSize = textureSize(inverseLuminanceMap, 0);
         float texCoord = (0.5 + scaledLuminance * (inverseLuminanceMapSize - 1)) / inverseLuminanceMapSize; // adjust for how linear interpolation is performed
         float tonemappedGammaCorrected = texture(inverseLuminanceMap, texCoord).r;
-#if SRGB_ENCODING_ENABLED
         float pseudoLuminance = sRGBToLinear(tonemappedGammaCorrected);
-#else
-        float pseudoLuminance = pow(tonemappedGammaCorrected, renderGamma);
-#endif
 
         // Step 3: return the color, scaled to have the correct luminance,
         // but the original saturation and hue.
@@ -79,16 +65,10 @@ vec3 tonemapFromLuminanceMap(vec3 color)
         vec3 pseudoLinear = color * scale;
 
         // Step 4: apply sRGB encoding
-#if SRGB_ENCODING_ENABLED
         tonemappedColor = linearToSRGB(pseudoLinear);
-#else
-        tonemappedColor = pow(pseudoLinear, vec3(1.0 / renderGamma));
-#endif
     }
-#elif SRGB_ENCODING_ENABLED
-    tonemappedColor = linearToSRGB(color);
 #else
-    tonemappedColor = pow(color, vec3(1.0 / renderGamma));
+    tonemappedColor = linearToSRGB(color);
 #endif
 
     return tonemappedColor;

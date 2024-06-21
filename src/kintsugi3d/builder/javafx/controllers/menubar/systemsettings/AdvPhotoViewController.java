@@ -35,11 +35,9 @@ public class AdvPhotoViewController implements Initializable, SystemSettingsCont
     @FXML private TextField buehlerTextField;
     @FXML private CheckBox buehlerCheckBox;
     @FXML private CheckBox occlusionCheckBox;
-    @FXML private TextField gammaTextField;
     @FXML private TextField weightExponentTextField;
     @FXML private TextField isotropyFactorTextField;
     @FXML private TextField occlusionBiasTextField;
-    @FXML private Slider gammaSlider;
     @FXML private Slider weightExponentSlider;
     @FXML private Slider isotropyFactorSlider;
     @FXML private Slider occlusionBiasSlider;
@@ -63,10 +61,6 @@ public class AdvPhotoViewController implements Initializable, SystemSettingsCont
 
         buehlerTextField.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("buehlerViewCount"),
             new SafeNumberStringConverter(5));
-
-        gammaSlider.valueProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("gamma"));
-        gammaTextField.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("gamma"),
-            new SafeDecimalNumberStringConverter(2.2f));
 
         weightExponentSlider.valueProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("weightExponent"));
         weightExponentTextField.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("weightExponent"),
@@ -96,9 +90,6 @@ public class AdvPhotoViewController implements Initializable, SystemSettingsCont
 
         weightModeChoiceBox.valueProperty().unbindBidirectional(settingsModel.getObjectProperty("weightMode", ShadingParameterMode.class));
 
-        gammaSlider.valueProperty().unbindBidirectional(settingsModel.getNumericProperty("gamma"));
-        gammaTextField.textProperty().unbindBidirectional(settingsModel.getNumericProperty("gamma"));
-
         weightExponentSlider.valueProperty().unbindBidirectional(settingsModel.getNumericProperty("weightExponent"));
         weightExponentTextField.textProperty().unbindBidirectional(settingsModel.getNumericProperty("weightExponent"));
 
@@ -127,7 +118,6 @@ public class AdvPhotoViewController implements Initializable, SystemSettingsCont
         });
         weightModeChoiceBox.getItems().addAll(ShadingParameterMode.values());
 
-        StaticUtilities.makeClampedNumeric(1, 5, gammaTextField);
         StaticUtilities.makeClampedNumeric(1, 1000000, weightExponentTextField);
         StaticUtilities.makeClampedNumeric(0, 1, isotropyFactorTextField);
         StaticUtilities.makeClampedNumeric(0, 0.1, occlusionBiasTextField);
