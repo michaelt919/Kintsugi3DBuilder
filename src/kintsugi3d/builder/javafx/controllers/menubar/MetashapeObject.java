@@ -72,7 +72,7 @@ public class MetashapeObject {
 
         if (chunkPath.isBlank()){return "";}
 
-        chunkPath = getPSXPathBase() + ".files\\" + chunkPath;
+        chunkPath = new File(new File(getPSXPathBase() + ".files"), chunkPath).getPath();
         try {
             Document chunkXML = UnzipHelper.unzipToDocument(chunkPath);
             NodeList chunkWrapper = chunkXML.getElementsByTagName("chunk");
@@ -171,7 +171,7 @@ public class MetashapeObject {
                 chunkZipPath = chunkElement.getAttribute("path"); //gives xx/chunk.zip where xx is a number
 
                 //append this path to the psxFilePath (without ".psx" at the end)
-                chunkZipPath = getPSXPathBase() + ".files\\" + chunkZipPath;
+                chunkZipPath = new File(new File(getPSXPathBase() + ".files"), chunkZipPath).getPath();
 
                 //fullChunkDocument has info about chunk name, cameras, images, etc.
                 Document fullChunkDocument = UnzipHelper.unzipToDocument(chunkZipPath);
