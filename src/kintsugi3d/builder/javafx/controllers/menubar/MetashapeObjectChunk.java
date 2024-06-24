@@ -50,10 +50,10 @@ public class MetashapeObjectChunk {
     public String getChunkDirectoryPath() {
         String psxFilePath = this.metashapeObject.getPsxFilePath();
         String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4); //remove ".psx" from path
-        return psxPathBase + ".files\\" + chunkID;
+        return new File(new File(psxPathBase + ".files"), Integer.toString(chunkID)).getPath();
     }
-    public String getFrameDirectoryPath() { return getChunkDirectoryPath() + "\\0" ;}
-    public String getFramePath() { return getFrameDirectoryPath() + "\\frame.zip"; }
+    public String getFrameDirectoryPath() { return new File(new File(getChunkDirectoryPath()), "0").getPath(); }
+    public String getFramePath() { return new File(new File(getFrameDirectoryPath()), "frame.zip").getPath(); }
 
 
     private MetashapeObjectChunk(){
@@ -93,7 +93,7 @@ public class MetashapeObjectChunk {
         String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4); //remove ".psx" from path
 
         //the 0 means that the program searches for info regarding frame 0
-        String frameZipPath = psxPathBase + ".files\\" + chunkID + "\\0\\frame.zip";
+        String frameZipPath = getFramePath();
 
         try {
             this.frameZip = UnzipHelper.unzipToDocument(frameZipPath);
@@ -198,7 +198,7 @@ public class MetashapeObjectChunk {
 
         //Note: the 0 denotes that these thumbnails are for frame 0
         //TODO: can get this info from thumbnails tag in frameXML instead of hard coding
-        String thumbnailPath = psxPathBase + ".files\\" + chunkID + "\\0\\thumbnails\\thumbnails.zip";
+        String thumbnailPath = new File(new File(getFrameDirectoryPath(), "thumbnails"), "thumbnails.zip").getPath();
         return UnzipHelper.unzipImages(thumbnailPath);
     }
 
@@ -250,7 +250,7 @@ public class MetashapeObjectChunk {
         //need to replace ../../../ with the parent of the .psx file
         File psxFile = new File(this.metashapeObject.getPsxFilePath());
         String parentPath = psxFile.getParentFile().getAbsolutePath();
-        path = parentPath + "\\" + path.substring(9, path.length());
+        path = new File(new File(parentPath), path.substring(9)).getPath();
 
         //String path now holds the full path to the selected thumbnail's full-res image
         return new File(path);
