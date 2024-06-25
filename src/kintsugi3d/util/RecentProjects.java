@@ -97,7 +97,7 @@ public class RecentProjects {
         File file = new File(path);
         File ancestorFile = getAncestorFile(file);
 
-        return ancestorFile.getAbsolutePath() + "...\\" + file.getName();
+        return ancestorFile.getAbsolutePath() + "..." + File.separator + file.getName();
     }
 
     private static File getAncestorFile(File file) {
@@ -319,7 +319,7 @@ public class RecentProjects {
             return null;
         }
 
-        return canonicalPath + "\\" + childFilePaths[0];
+        return new File(canonicalPath, childFilePaths[0]).getPath();
     }
 
     private static String findImgsPath(DocumentBuilderFactory factory, File file, String target) throws ParserConfigurationException, SAXException, IOException {
@@ -329,7 +329,7 @@ public class RecentProjects {
         //get view set path
         Element projectDomElement = (Element) document.getElementsByTagName("Project").item(0);
         Element viewSetDomElement = (Element) projectDomElement.getElementsByTagName("ViewSet").item(0);
-        String viewSetPath = file.getParent() + "\\" + viewSetDomElement.getAttribute("src");
+        String viewSetPath = new File(file.getParent(), viewSetDomElement.getAttribute("src")).getPath();
 
         //open images in view set path
         File viewSetFile = new File(viewSetPath);
@@ -349,7 +349,8 @@ public class RecentProjects {
 
                 //remove references to parent directories
                 String parentPrefix = "..\\";
-                while (imgsPath.startsWith(parentPrefix)) {
+                String parentPrefixUnix = "../";
+                while (imgsPath.startsWith(parentPrefix) || imgsPath.startsWith(parentPrefixUnix)) {
                     imgsPath = imgsPath.substring(parentPrefix.length());
                 }
                 break;

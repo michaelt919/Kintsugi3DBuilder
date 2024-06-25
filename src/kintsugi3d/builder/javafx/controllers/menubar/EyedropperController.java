@@ -71,9 +71,9 @@ public class EyedropperController implements Initializable {
     @FXML
     private Button applyButton;
     private boolean isCropping;//enabled by crop button and disabled when cropping is finished
-    private boolean isSelecting;//enabled by "Select Color" buttons and disabled when selection is finished
+    private boolean isSelecting;//enabled by "Select Tone Patch" buttons and disabled when selection is finished
     private boolean canResetCrop; //enabled when cropping is finished and disabled when crop is reset to default viewport
-    static final String DEFAULT_BUTTON_TEXT = "Select Color";
+    static final String DEFAULT_BUTTON_TEXT = "Select Tone Patch";
 
     @FXML
     private TextField txtField1, txtField2, txtField3, txtField4, txtField5, txtField6;
@@ -193,7 +193,7 @@ public class EyedropperController implements Initializable {
             Color averageColor = getAvgColorFromSelection();
 
             // Set the color label text
-            colorLabel.setText("Greyscale: " + Math.round(getGreyScaleDouble(averageColor)));
+            colorLabel.setText("Selected Tone [0-255]: " + Math.round(getGreyScaleDouble(averageColor)));
 
             //display average color to user, change text for corresponding text field
             addSelectedColor(averageColor);
@@ -393,6 +393,7 @@ public class EyedropperController implements Initializable {
             updateApplyButton();
 
             sourceButton.getStyleClass().remove("button-selected");
+            sourceButton.setText(DEFAULT_BUTTON_TEXT);
         }
         else{
             Toolkit.getDefaultToolkit().beep();
@@ -540,10 +541,6 @@ public class EyedropperController implements Initializable {
                     (byte) Integer.parseInt(txtField5.getText()),
                     (byte) Integer.parseInt(txtField6.getText())
                 });
-
-            //Note(ZC): Try Adding the code to save the file here, right after the color calibration
-            //NOte(ZC): Save the file into main project file (double check on where exactly in the files we want this saved)
-            //Note(ZC): This function is unable to get the current image sense its a local var to the select image function.
         }
         else{
             Toolkit.getDefaultToolkit().beep();
@@ -564,11 +561,26 @@ public class EyedropperController implements Initializable {
 
     @FXML
     private void enterColorSelectionMode(ActionEvent actionEvent) {
+
+        if (cropButton.getStyleClass().contains("button-selected"))
+        {
+            // In case crop had started but not finished
+            cropButton.setText("Crop");
+            cropButton.getStyleClass().remove("button-selected");
+        }
+
+        if (sourceButton != null)
+        {
+            // In case we were already selecting a different patch?
+            sourceButton.getStyleClass().remove("button-selected");
+            sourceButton.setText(DEFAULT_BUTTON_TEXT);
+        }
+
         //change text of button to indicate selection
         sourceButton = (Button) actionEvent.getSource();
 //        resetButtonsText();
 
-//        sourceButton.setText("Draw to select...");
+        sourceButton.setText("Draw to select...");
 
         sourceButton.getStyleClass().add("button-selected");
 
