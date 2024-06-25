@@ -375,7 +375,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
         Alert alert = new Alert(Alert.AlertType.NONE,
                 "Imported object is missing " + numMissingImgs + " images.",
-                cancel, newDirectory, skipMissingCams, openDirectory);
+                cancel, newDirectory, skipMissingCams/*, openDirectory*/);
 
         Builder<ContextType> finalBuilder = IBRResourcesImageSpace.getBuilderForContext(this.context);
 
@@ -430,33 +430,33 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             }).start();
         });
 
-        Button openDirButton =((Button) alert.getDialogPane().lookupButton(openDirectory));
-
-        openDirButton.addEventFilter(ActionEvent.ACTION,
-            event -> {
-                String path = fullResImgDirAttempt.getAbsolutePath();
-
-                //TODO: verify that this works for all windows os
-                if(System.getProperty("os.name").toLowerCase().startsWith("windows")) {
-                    try {
-                        Runtime.getRuntime().exec("explorer /select, " + path);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-
-                //TODO: need to verify that this works on mac
-                else if (System.getProperty("os.name").toLowerCase().startsWith("mac")){
-                    try {
-                        Runtime.getRuntime().exec("xdg-open " + path);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-
-                event.consume();//prevent alert from being closed after opening directory
-            }
-        );
+//        Button openDirButton =((Button) alert.getDialogPane().lookupButton(openDirectory));
+//
+//        openDirButton.addEventFilter(ActionEvent.ACTION,
+//            event -> {
+//                String path = fullResImgDirAttempt.getAbsolutePath();
+//
+//                //TODO: verify that this works for all windows os
+//                if(System.getProperty("os.name").toLowerCase().startsWith("windows")) {
+//                    try {
+//                        Runtime.getRuntime().exec("explorer /select, " + path);
+//                    } catch (IOException e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                }
+//
+//                //TODO: need to verify that this works on mac
+//                else if (System.getProperty("os.name").toLowerCase().startsWith("mac")){
+//                    try {
+//                        Runtime.getRuntime().exec("xdg-open " + path);
+//                    } catch (IOException e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                }
+//
+//                event.consume();//prevent alert from being closed after opening directory
+//            }
+//        );
 
         alert.setTitle("Project is Missing Images");
         //alert.setGraphic(new ImageView(new Image(new File("Kintsugi3D-icon.png").toURI().toString())));

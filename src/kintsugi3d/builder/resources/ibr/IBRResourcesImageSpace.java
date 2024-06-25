@@ -253,6 +253,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 fullResSearchDirectory = fullResDirectoryOverride;
             }
 
+            File exceptionFolder = null;
+
             for (int i = 0; i < cameraList.getLength(); i++) {
                 Element cameraElement = (Element) cameraList.item(i);
                 int cameraId = Integer.parseInt(cameraElement.getAttribute("camera_id"));
@@ -270,6 +272,11 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                     }
                     else{
                         numMissingFiles++;
+
+                        if (exceptionFolder == null)
+                        {
+                            exceptionFolder = imageFile.getParentFile();
+                        }
                     }
                 }
                 else{
@@ -284,12 +291,17 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                     }
                     else{
                         numMissingFiles++;
+
+                        if (exceptionFolder == null)
+                        {
+                            exceptionFolder = imageFile.getParentFile();
+                        }
                     }
                 }
             }
 
             if (!ignoreMissingCams && numMissingFiles > 0){
-                throw new MissingImagesException("Project is missing images.", numMissingFiles, fullResSearchDirectory);
+                throw new MissingImagesException("Project is missing images.", numMissingFiles, exceptionFolder);
             }
 
         // 2) Load ViewSet from ZipInputStream from chunk's ZIP (eventually will accept the filename map as a parameter)
