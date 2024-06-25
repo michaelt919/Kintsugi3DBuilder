@@ -12,9 +12,15 @@
 package kintsugi3d.util;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import javax.imageio.ImageIO;
+
+import kintsugi3d.gl.vecmath.IntVector4;
 
 public class BufferedImageBuilder
 {
@@ -22,10 +28,6 @@ public class BufferedImageBuilder
     private int width;
     private int height;
     private int bufferedImageType = BufferedImage.TYPE_INT_ARGB;
-
-    private BufferedImageBuilder()
-    {
-    }
 
     public static BufferedImageBuilder build()
     {
@@ -67,6 +69,30 @@ public class BufferedImageBuilder
     public BufferedImageBuilder setBufferedImageType(int bufferedImageType)
     {
         this.bufferedImageType = bufferedImageType;
+        return this;
+    }
+
+    public BufferedImageBuilder tonemap(Function<IntVector4, IntVector4> mapper)
+    {
+        return tonemap((color, index) -> mapper.apply(color));
+    }
+
+    public BufferedImageBuilder tonemap(BiFunction<IntVector4, Integer, IntVector4> mapper)
+    {
+        RenderedImage test = new BufferedImage(1, 1, bufferedImageType); // need a BufferedImage to convert imageType to ColorModel.
+        ColorModel colorModel = test.getColorModel();
+
+        for (int k = 0; k < data.length; k++)
+        {
+            int p = data[k];
+            IntVector4 unpacked = new IntVector4(colorModel.getRed(p), colorModel.getGreen(p), colorModel.getBlue(p), colorModel.getAlpha(p));
+
+            // mapper is assumed to operate in unnormalized [0, 255] space, but does not need to guarantee that the mapped value is clamped.
+            IntVector4 mapped = mapper.apply(unpacked, k).applyOperator(c -> Math.max(0, Math.min(255, c)));
+            int[] components = { mapped.x, mapped.y, mapped.z, mapped.w };
+            data[k] = colorModel.getDataElement(components, 0);
+        }
+
         return this;
     }
 

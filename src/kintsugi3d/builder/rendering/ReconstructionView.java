@@ -15,10 +15,13 @@ import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Drawable;
 import kintsugi3d.gl.core.Framebuffer;
+import kintsugi3d.gl.vecmath.DoubleVector3;
 
 public interface ReconstructionView<ContextType extends Context<ContextType>>
 {
     int getIndex();
+
+    DoubleVector3 getIncidentRadiance(int pixelIndex);
 
     Framebuffer<ContextType> getReconstructionFramebuffer();
 

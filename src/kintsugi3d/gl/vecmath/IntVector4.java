@@ -13,6 +13,7 @@ package kintsugi3d.gl.vecmath;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.function.IntUnaryOperator;
 
 /**
  * A vector of four dimensions (for linear algebra calculations) backed by 
@@ -51,6 +52,16 @@ public class IntVector4 implements Iterable<Integer>
     public Vector4 asFloatingPointNormalized()
     {
         return new Vector4(x / 255.0f, y / 255.0f, z / 255.0f, w / 255.0f);
+    }
+
+    public DoubleVector4 asDoubleFloatingPoint()
+    {
+        return new DoubleVector4(x, y, z, w);
+    }
+
+    public DoubleVector4 asDoubleFloatingPointNormalized()
+    {
+        return new DoubleVector4(x / 255.0, y / 255.0, z / 255.0, w / 255.0);
     }
 
     public IntVector2 getXY()
@@ -131,6 +142,21 @@ public class IntVector4 implements Iterable<Integer>
     public double distance(IntVector4 other)
     {
         return this.minus(other).length();
+    }
+
+    public IntVector4 applyOperator(IntUnaryOperator operator)
+    {
+        return new IntVector4(operator.applyAsInt(x), operator.applyAsInt(y), operator.applyAsInt(z), operator.applyAsInt(w));
+    }
+
+    /**
+     * Applies operator to XYZ but leaves W unchanged.
+     * @param operator
+     * @return
+     */
+    public IntVector4 applyOperatorXYZ(IntUnaryOperator operator)
+    {
+        return new IntVector4(operator.applyAsInt(x), operator.applyAsInt(y), operator.applyAsInt(z), w);
     }
 
     @Override

@@ -179,6 +179,16 @@ public class DoubleVector4 implements Iterable<Double>
         return new DoubleVector4(operator.applyAsDouble(x), operator.applyAsDouble(y), operator.applyAsDouble(z), operator.applyAsDouble(w));
     }
 
+    /**
+     * Applies operator to XYZ but leaves W unchanged.
+     * @param operator
+     * @return
+     */
+    public DoubleVector4 applyOperatorXYZ(DoubleUnaryOperator operator)
+    {
+        return new DoubleVector4(operator.applyAsDouble(x), operator.applyAsDouble(y), operator.applyAsDouble(z), w);
+    }
+
     @Override
     public String toString()
     {

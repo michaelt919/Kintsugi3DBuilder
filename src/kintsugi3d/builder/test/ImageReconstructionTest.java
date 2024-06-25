@@ -18,10 +18,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.core.UserCancellationException;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.ReconstructionShaders;
 import kintsugi3d.builder.fit.SpecularFitProcess;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
@@ -33,6 +30,7 @@ import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
 import kintsugi3d.builder.resources.ibr.IBRResourcesAnalytic;
 import kintsugi3d.builder.resources.ibr.IBRResourcesCacheable;
+import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.state.DefaultSettings;
 import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.builder.state.impl.SimpleSettingsModel;
@@ -53,6 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ImageReconstructionTest
 {
     private static final File TEST_OUTPUT_DIR = new File("test-output");
+    private static final boolean SAVE_TEST_IMAGES = true;
 
     private ViewSet potatoViewSet;
     private ViewSet potatoViewSetTonemapped;
@@ -157,6 +156,60 @@ class ImageReconstructionTest
             program.setUniform("diffuseColor", new Vector3(0.0f, 0.0f, 0.0f));
             program.setUniform("specularColor", new Vector3(1.0f, 0.8f, 0.2f));
         };
+
+        saveGroundTruthSyntheticImages(potatoViewSet, (factory, resources) -> createGroundTruthProgram(factory, resources, p->{}),
+            "groundTruthSynthetic_grayscale");
+        saveGroundTruthSyntheticImages(potatoViewSet, (factory, resources) -> createGroundTruthProgram(factory, resources, setupColor),
+            "groundTruthSynthetic_color");
+        saveGroundTruthSyntheticImages(potatoViewSet, (factory, resources) -> createGroundTruthProgram(factory, resources, setupMetallic),
+            "groundTruthSynthetic_metallic");
+        saveGroundTruthSyntheticImages(potatoViewSetTonemapped, (factory, resources) -> createGroundTruthProgram(factory, resources, p->{}),
+            "groundTruthSynthetic_grayscaleTonemapped");
+        saveGroundTruthSyntheticImages(potatoViewSetTonemapped, (factory, resources) -> createGroundTruthProgram(factory, resources, setupColor),
+            "groundTruthSynthetic_colorTonemapped");
+        saveGroundTruthSyntheticImages(potatoViewSetTonemapped, (factory, resources) -> createGroundTruthProgram(factory, resources, setupMetallic),
+            "groundTruthSynthetic_metallicTonemapped");
+    }
+
+    void saveGroundTruthSyntheticImages(
+            ViewSet viewSet,
+            BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
+            String groundTruthName)
+        throws IOException
+    {
+        SimpleSettingsModel ibrSettings = new SimpleSettingsModel();
+        DefaultSettings.apply(ibrSettings);
+        ibrSettings.set("shadowsEnabled", false);
+        ibrSettings.set("occlusionEnabled", false);
+
+        SpecularBasisSettings specularBasisSettings = new SpecularBasisSettings();
+        specularBasisSettings.setBasisCount(1);
+
+        SpecularFitProgramFactory<OpenGLContext> programFactory = new SpecularFitProgramFactory<>(ibrSettings, specularBasisSettings);
+
+        try (IBRResourcesAnalytic<OpenGLContext> resources = new IBRResourcesAnalytic<>(context, viewSet, potatoGeometry);
+            ProgramObject<OpenGLContext> groundTruthProgram = groundTruthProgramCreator.apply(programFactory, resources);
+            Drawable<OpenGLContext> groundTruthDrawable = resources.createDrawable(groundTruthProgram))
+        {
+            groundTruthProgram.setUniform("noiseScale", 0.0f);
+            resources.setupShaderProgram(groundTruthProgram);
+
+            try (FramebufferObject<OpenGLContext> groundTruthFBO = context.buildFramebufferObject(256, 256)
+                .addColorAttachment(ColorFormat.RGBA32F)
+                .addDepthAttachment()
+                .createFramebufferObject())
+            {
+                File outputDirectory = new File(TEST_OUTPUT_DIR, groundTruthName);
+                outputDirectory.mkdirs();
+
+                for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+                {
+                    renderGroundTruth(viewSet, i, groundTruthDrawable, groundTruthFBO);
+                    groundTruthFBO.getTextureReaderForColorAttachment(0).saveToFile("PNG",
+                        new File(outputDirectory, MessageFormat.format("{0,number,0000}.png", i)));
+                }
+            }
+        }
     }
 
     @AfterEach
@@ -198,7 +251,7 @@ class ImageReconstructionTest
     {
         // TODO switch from gamma to sRGB decoding for the cases without ColorChecker values
         multiTest(potatoViewSet, getProgramCreator("syntheticWithLinearNoise", p->{}),
-            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, p->{}), validationLinear);
+            (factory, resources) -> createGroundTruthProgram(factory, resources, p->{}), validationLinear, "normalizedLinear_grayscale");
     }
 
     @Test
@@ -206,7 +259,7 @@ class ImageReconstructionTest
     void normalizedLinear_grayscaleTonemapped() throws IOException
     {
         multiTest(potatoViewSetTonemapped, getProgramCreator("syntheticWithLinearNoise", p->{}),
-            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, p->{}), validationLinear);
+            (factory, resources) -> createGroundTruthProgram(factory, resources, p->{}), validationLinear, "normalizedLinear_grayscaleTonemapped");
     }
 
     @Test
@@ -214,7 +267,7 @@ class ImageReconstructionTest
     void normalizedLinear_color() throws IOException
     {
         multiTest(potatoViewSet, getProgramCreator("syntheticWithLinearColorNoise", setupColor),
-            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, setupColor), validationLinear);
+            (factory, resources) -> createGroundTruthProgram(factory, resources, setupColor), validationLinear, "normalizedLinear_color");
     }
 
     @Test
@@ -222,7 +275,7 @@ class ImageReconstructionTest
     void normalizedLinear_colorTonemapped() throws IOException
     {
         multiTest(potatoViewSetTonemapped, getProgramCreator("syntheticWithLinearColorNoise", setupColor),
-            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, setupColor), validationLinear);
+            (factory, resources) -> createGroundTruthProgram(factory, resources, setupColor), validationLinear, "normalizedLinear_colorTonemapped");
     }
 
     @Test
@@ -230,7 +283,7 @@ class ImageReconstructionTest
     void normalizedLinear_metallic() throws IOException
     {
         multiTest(potatoViewSet, getProgramCreator("syntheticWithLinearColorNoise", setupMetallic),
-            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, setupMetallic), validationLinear);
+            (factory, resources) -> createGroundTruthProgram(factory, resources, setupMetallic), validationLinear, "normalizedLinear_metallic");
     }
 
     @Test
@@ -238,7 +291,7 @@ class ImageReconstructionTest
     void normalizedLinear_metallicTonemapped() throws IOException
     {
         multiTest(potatoViewSetTonemapped, getProgramCreator("syntheticWithLinearColorNoise", setupMetallic),
-            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, setupMetallic), validationLinear);
+            (factory, resources) -> createGroundTruthProgram(factory, resources, setupMetallic), validationLinear, "normalizedLinear_metallicTonemapped");
     }
 
     @Test
@@ -246,7 +299,7 @@ class ImageReconstructionTest
     void normalizedSRGB_grayscale() throws IOException
     {
         multiTest(potatoViewSet, getProgramCreator("syntheticWithSRGBNoise", p->{}),
-            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, p->{}), validationSRGB);
+            (factory, resources) -> createGroundTruthProgram(factory, resources, p->{}), validationSRGB, "normalizedSRGB_grayscale");
     }
 
     @Test
@@ -254,7 +307,7 @@ class ImageReconstructionTest
     void normalizedSRGB_grayscaleTonemapped() throws IOException
     {
         multiTest(potatoViewSetTonemapped, getProgramCreator("syntheticWithSRGBNoise", p->{}),
-            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, p->{}), validationSRGB);
+            (factory, resources) -> createGroundTruthProgram(factory, resources, p->{}), validationSRGB, "normalizedSRGB_grayscaleTonemapped");
     }
 
     @Test
@@ -262,7 +315,7 @@ class ImageReconstructionTest
     void normalizedSRGB_color() throws IOException
     {
         multiTest(potatoViewSet, getProgramCreator("syntheticWithSRGBColorNoise", setupColor),
-            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, setupColor), validationSRGB);
+            (factory, resources) -> createGroundTruthProgram(factory, resources, setupColor), validationSRGB, "normalizedSRGB_color");
     }
 
     @Test
@@ -270,7 +323,7 @@ class ImageReconstructionTest
     void normalizedSRGB_colorTonemapped() throws IOException
     {
         multiTest(potatoViewSetTonemapped, getProgramCreator("syntheticWithSRGBColorNoise", setupColor),
-            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, setupColor), validationSRGB);
+            (factory, resources) -> createGroundTruthProgram(factory, resources, setupColor), validationSRGB, "normalizedSRGB_colorTonemapped");
     }
 
     @Test
@@ -278,7 +331,7 @@ class ImageReconstructionTest
     void normalizedSRGB_metallic() throws IOException
     {
         multiTest(potatoViewSet, getProgramCreator("syntheticWithSRGBColorNoise", setupMetallic),
-            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, setupMetallic), validationSRGB);
+            (factory, resources) -> createGroundTruthProgram(factory, resources, setupMetallic), validationSRGB, "normalizedSRGB_metallic");
     }
 
     @Test
@@ -286,7 +339,7 @@ class ImageReconstructionTest
     void normalizedSRGB_metallicTonemapped() throws IOException
     {
         multiTest(potatoViewSetTonemapped, getProgramCreator("syntheticWithSRGBColorNoise", setupMetallic),
-            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, setupMetallic), validationSRGB);
+            (factory, resources) -> createGroundTruthProgram(factory, resources, setupMetallic), validationSRGB, "normalizedSRGB_metallicTonemapped");
     }
 
     @Test
@@ -294,7 +347,7 @@ class ImageReconstructionTest
     void tonemappedLit_grayscale() throws IOException
     {
         multiTest(potatoViewSet, getProgramCreator("syntheticWithTonemappedLitNoise", p->{}),
-            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, p->{}), validationEncoded);
+            (factory, resources) -> createGroundTruthProgram(factory, resources, p->{}), validationEncoded, "tonemappedLit_grayscale");
     }
 
     @Test
@@ -302,7 +355,7 @@ class ImageReconstructionTest
     void tonemappedLit_grayscaleTonemapped() throws IOException
     {
         multiTest(potatoViewSetTonemapped, getProgramCreator("syntheticWithTonemappedLitNoise", p->{}),
-            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, p->{}), validationEncoded);
+            (factory, resources) -> createGroundTruthProgram(factory, resources, p->{}), validationEncoded, "tonemappedLit_grayscaleTonemapped");
     }
 
     @Test
@@ -310,7 +363,7 @@ class ImageReconstructionTest
     void tonemappedLit_color() throws IOException
     {
         multiTest(potatoViewSet, getProgramCreator("syntheticWithTonemappedLitColorNoise", setupColor),
-            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, setupColor), validationEncoded);
+            (factory, resources) -> createGroundTruthProgram(factory, resources, setupColor), validationEncoded, "tonemappedLit_color");
     }
 
     @Test
@@ -318,7 +371,7 @@ class ImageReconstructionTest
     void tonemappedLit_colorTonemapped() throws IOException
     {
         multiTest(potatoViewSetTonemapped, getProgramCreator("syntheticWithTonemappedLitColorNoise", setupColor),
-            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, setupColor), validationEncoded);
+            (factory, resources) -> createGroundTruthProgram(factory, resources, setupColor), validationEncoded, "tonemappedLit_colorTonemapped");
     }
 
     @Test
@@ -326,7 +379,7 @@ class ImageReconstructionTest
     void tonemappedLit_metallic() throws IOException
     {
         multiTest(potatoViewSet, getProgramCreator("syntheticWithTonemappedLitColorNoise", setupMetallic),
-            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, setupMetallic), validationEncoded);
+            (factory, resources) -> createGroundTruthProgram(factory, resources, setupMetallic), validationEncoded, "tonemappedLit_metallic");
     }
 
     @Test
@@ -334,10 +387,10 @@ class ImageReconstructionTest
     void tonemappedLit_metallicTonemapped() throws IOException
     {
         multiTest(potatoViewSetTonemapped, getProgramCreator("syntheticWithTonemappedLitColorNoise", setupMetallic),
-            (factory, resources) -> createGroundTruthProgramSRGB(factory, resources, setupMetallic), validationEncoded);
+            (factory, resources) -> createGroundTruthProgram(factory, resources, setupMetallic), validationEncoded, "tonemappedLit_metallicTonemapped");
     }
 
-    static ProgramObject<OpenGLContext> createGroundTruthProgramSRGB(
+    static ProgramObject<OpenGLContext> createGroundTruthProgram(
         SpecularFitProgramFactory<OpenGLContext> programFactory, IBRResourcesAnalytic<OpenGLContext> resources, Consumer<Program<OpenGLContext>> setupShader)
     {
         try
@@ -359,7 +412,8 @@ class ImageReconstructionTest
         ViewSet viewSet,
         BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> testProgramCreator,
         BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
-        BiConsumer<ColorAppearanceRMSE, Float> validationByNoiseScale)  throws IOException
+        BiConsumer<ColorAppearanceRMSE, Float> validationByNoiseScale,
+        String testName)  throws IOException
     {
         float[] noiseScaleTests = { 0.0f, 0.1f, 0.25f, 0.5f, 1.0f };
 
@@ -374,7 +428,8 @@ class ImageReconstructionTest
                     return program;
                 },
                 groundTruthProgramCreator,
-                rmse -> validationByNoiseScale.accept(rmse, noiseScale));
+                rmse -> validationByNoiseScale.accept(rmse, noiseScale),
+                MessageFormat.format("{0} ({1,number,0.00})", testName, noiseScale));
         }
     }
 
@@ -382,11 +437,13 @@ class ImageReconstructionTest
         ViewSet viewSet,
         BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> testProgramCreator,
         BiFunction<SpecularFitProgramFactory<OpenGLContext>, IBRResourcesAnalytic<OpenGLContext>, ProgramObject<OpenGLContext>> groundTruthProgramCreator,
-        Consumer<ColorAppearanceRMSE> validation) throws IOException
+        Consumer<ColorAppearanceRMSE> validation,
+        String testName) throws IOException
     {
         SimpleSettingsModel ibrSettings = new SimpleSettingsModel();
-        ibrSettings.createBooleanSetting("shadowsEnabled", false);
-        ibrSettings.createBooleanSetting("occlusionEnabled", false);
+        DefaultSettings.apply(ibrSettings);
+        ibrSettings.set("shadowsEnabled", false);
+        ibrSettings.set("occlusionEnabled", false);
 
         SpecularBasisSettings specularBasisSettings = new SpecularBasisSettings();
         specularBasisSettings.setBasisCount(1);
@@ -414,63 +471,125 @@ class ImageReconstructionTest
                         .addDepthAttachment(),
                     ReconstructionShaders.getIncidentRadianceProgramBuilder(resources, programFactory),
                     resources,
-                    viewIndex ->
-                    {
-                        groundTruthProgram.setUniform("model_view", viewSet.getCameraPose(viewIndex));
-                        groundTruthProgram.setUniform("projection",
-                            viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewIndex)).getProjectionMatrix(
-                                viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
-                        groundTruthProgram.setUniform("reconstructionCameraPos",
-                            viewSet.getCameraPoseInverse(viewIndex).getColumn(3).getXYZ());
-                        groundTruthProgram.setUniform("reconstructionLightPos",
-                            viewSet.getCameraPoseInverse(viewIndex).times(viewSet.getLightPosition(viewSet.getLightIndex(viewIndex)).asPosition()).getXYZ());
-                        groundTruthProgram.setUniform("reconstructionLightIntensity",
-                            viewSet.getLightIntensity(viewSet.getLightIndex(viewIndex)));
-
-                        groundTruthFBO.clearColorBuffer(0, 0, 0, 0, 0);
-                        groundTruthFBO.clearDepthBuffer();
-                        groundTruthDrawable.draw(groundTruthFBO);
-
-                        float[] groundTruth = groundTruthFBO.getTextureReaderForColorAttachment(0).readFloatingPointRGBA();
-                        return new ColorArrayImage(groundTruth, 256, 256);
-                    });
+                    viewIndex -> renderGroundTruth(viewSet, viewIndex, groundTruthDrawable, groundTruthFBO));
                 ProgramObject<OpenGLContext> syntheticWithNoise = testProgramCreator.apply(programFactory, resources);
                 Drawable<OpenGLContext> drawable = resources.createDrawable(syntheticWithNoise))
             {
                 resources.setupShaderProgram(syntheticWithNoise);
 
-                TEST_OUTPUT_DIR.mkdirs();
+                File outputDirectory = new File(TEST_OUTPUT_DIR, testName);
+                outputDirectory.mkdirs();
 
                 for (ReconstructionView<OpenGLContext> view : reconstruction)
                 {
-                    groundTruthFBO.getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(TEST_OUTPUT_DIR, "reference.png"));
-
                     // Pass light intensity for noise generation methods that depend on it.
                     syntheticWithNoise.setUniform("reconstructionLightIntensity", viewSet.getLightIntensity(viewSet.getLightIndex(view.getIndex())));
 
                     ColorAppearanceRMSE rmse = view.reconstruct(drawable);
-                    view.getReconstructionFramebuffer().getTextureReaderForColorAttachment(0).saveToFile("PNG", new File(TEST_OUTPUT_DIR, "test.png"));
+
+                    if (SAVE_TEST_IMAGES)
+                    {
+                        view.getReconstructionFramebuffer().getTextureReaderForColorAttachment(0)
+                            .saveToFile("PNG", new File(outputDirectory,
+                                    MessageFormat.format("{0,number,0000}.png", view.getIndex())),
+                                // Luminance encoding expects [0, 1] range, but encodes in [0, 255] range.
+                                // Tonemapper parameter taken by saveToFile assumes both are [0, 255]
+                                (color, index) -> viewSet.getLuminanceEncoding().encode(
+                                    color.asDoubleFloatingPoint().dividedBy(255.0).times(view.getIncidentRadiance(index).asVector4(1.0))).rounded());
+                    }
                     validation.accept(rmse);
                 }
             }
         }
     }
 
-    private void testSyntheticFit(ViewSet viewSet)
+    private static ColorArrayImage renderGroundTruth(ReadonlyViewSet viewSet, int viewIndex,
+        Drawable<OpenGLContext> groundTruthDrawable, Framebuffer<OpenGLContext> groundTruthFBO)
     {
+        groundTruthDrawable.program().setUniform("model_view", viewSet.getCameraPose(viewIndex));
+        groundTruthDrawable.program().setUniform("projection",
+            viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewIndex)).getProjectionMatrix(
+                viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
+        groundTruthDrawable.program().setUniform("reconstructionCameraPos",
+            viewSet.getCameraPoseInverse(viewIndex).getColumn(3).getXYZ());
+        groundTruthDrawable.program().setUniform("reconstructionLightPos",
+            viewSet.getCameraPoseInverse(viewIndex).times(viewSet.getLightPosition(viewSet.getLightIndex(viewIndex)).asPosition()).getXYZ());
+        groundTruthDrawable.program().setUniform("reconstructionLightIntensity",
+            viewSet.getLightIntensity(viewSet.getLightIndex(viewIndex)));
+
+        groundTruthFBO.clearColorBuffer(0, 0, 0, 0, 0);
+        groundTruthFBO.clearDepthBuffer();
+        groundTruthDrawable.draw(groundTruthFBO);
+
+        float[] groundTruth = groundTruthFBO.getTextureReaderForColorAttachment(0).readFloatingPointRGBA();
+        return new ColorArrayImage(groundTruth, 256, 256);
+    }
+
+    private void testSyntheticFit(ViewSet viewSet, Consumer<ColorAppearanceRMSE> validation, String testName)
+    {
+        // TODO not working yet
         try (IBRResourcesCacheable<OpenGLContext> resources = new IBRResourcesAnalytic<>(context, viewSet, potatoGeometry))
         {
-            SettingsModel settings = new SimpleSettingsModel();
-            DefaultSettings.apply(settings);
-            SpecularFitRequestParams params = new SpecularFitRequestParams(new TextureResolution(512, 512), settings);
-            params.setOutputDirectory(TEST_OUTPUT_DIR);
-
-            // Perform the specular fit
-            new SpecularFitProcess(params).optimizeFit(resources, progressMonitor);
+            testFit(resources, validation, testName);
         }
         catch (UserCancellationException | IOException e)
         {
             throw new RuntimeException(e);
         }
+    }
+
+    private void testRealFit(File viewSetFile, Consumer<ColorAppearanceRMSE> validation, String testName) throws Exception
+    {
+        try (IBRResourcesCacheable<OpenGLContext> resources = IBRResourcesImageSpace.getBuilderForContext(context)
+            .loadVSETFile(viewSetFile, viewSetFile.getParentFile())
+            .setProgressMonitor(progressMonitor)
+            .create())
+        {
+            testFit(resources, validation, testName);
+        }
+        catch (UserCancellationException | IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void testFit(IBRResourcesCacheable<OpenGLContext> resources, Consumer<ColorAppearanceRMSE> validation, String testName)
+        throws IOException, UserCancellationException
+    {
+        // TODO not yet tested
+        File outputDirectory = new File(TEST_OUTPUT_DIR, testName);
+        outputDirectory.mkdirs();
+
+        SettingsModel settings = new SimpleSettingsModel();
+        DefaultSettings.apply(settings);
+        SpecularFitRequestParams params = new SpecularFitRequestParams(new TextureResolution(512, 512), settings);
+        params.setOutputDirectory(outputDirectory);
+
+        // Perform the specular fit
+        SpecularFitProcess specularFitProcess = new SpecularFitProcess(params);
+        specularFitProcess.optimizeFit(resources, progressMonitor);
+
+        specularFitProcess.reconstructAll(resources,
+            (view, rmse) ->
+            {
+                if (SAVE_TEST_IMAGES)
+                {
+                    try
+                    {
+                        view.getReconstructionFramebuffer().getTextureReaderForColorAttachment(0).saveToFile("PNG",
+                            new File(outputDirectory, resources.getViewSet().getImageFileName(view.getIndex())),
+                            // Luminance encoding expects [0, 1] range, but encodes in [0, 255] range.
+                            // Tonemapper parameter taken by saveToFile assumes both are [0, 255]
+                            (color, index) -> resources.getViewSet().getLuminanceEncoding().encode(
+                                color.asDoubleFloatingPoint().dividedBy(255.0).times(view.getIncidentRadiance(index).asVector4(1.0))).rounded());
+                    }
+                    catch (IOException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                }
+
+                validation.accept(rmse);
+            });
     }
 }

@@ -20,17 +20,18 @@ import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.function.BiConsumer;
 
-import kintsugi3d.builder.core.DefaultProgressMonitor;
-import kintsugi3d.builder.core.ProgressMonitor;
-import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.core.UserCancellationException;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.export.specular.SpecularFitTextureRescaler;
 import kintsugi3d.builder.fit.debug.BasisImageCreator;
 import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
 import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromExistingBasis;
 import kintsugi3d.builder.fit.decomposition.SpecularDecompositionFromScratch;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
+import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
+import kintsugi3d.builder.rendering.ImageReconstruction;
+import kintsugi3d.builder.rendering.ReconstructionView;
 import kintsugi3d.builder.resources.ibr.*;
 import kintsugi3d.builder.resources.ibr.stream.GraphicsStreamResource;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
@@ -39,9 +40,12 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.material.ReadonlyMaterial;
 import kintsugi3d.gl.material.ReadonlyMaterialTextureMap;
 import kintsugi3d.optimization.ShaderBasedErrorCalculator;
+import kintsugi3d.util.BufferedImageColorList;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static javax.imageio.ImageIO.read;
 
 /**
  * Implement specular fit using algorithm described by Nam et al., 2018
@@ -91,33 +95,48 @@ public class SpecularFitProcess
 //        {
 //            basisImageCreator.createImages(specularFit, settings.getOutputDirectory());
 //        }
+    }
 
-        // TODO: Final error calculation causes TDR for high-res textures
-        // and is also not accurate as it doesn't load the full resolution images
-        // Need to completely rework error metrics
-//        // Calculate reasonable image resolution for error calculation
-//        int imageWidth = determineImageWidth(resources.getViewSet());
-//        int imageHeight = determineImageHeight(resources.getViewSet());
-//
-//        SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
-//
-//        try (ShaderBasedErrorCalculator<ContextType> errorCalculator =
-//             ShaderBasedErrorCalculator.create(
-//                cache.getContext(),
-//                () -> createErrorCalcProgram(resources, programFactory),
-//                program -> createErrorCalcDrawable(specularFit, resources, program),
-//                imageWidth, imageHeight);
-//             PrintStream rmseOut = new PrintStream(new File(settings.getOutputDirectory(), "rmse.txt")))
-//        {
-//            FinalErrorCalculaton finalErrorCalculaton = FinalErrorCalculaton.getInstance();
-//
-//            // Validate normals using input normal map (mainly for testing / experiment validation, not typical applications)
-//            finalErrorCalculaton.validateNormalMap(resources, specularFit, rmseOut);
-//
-//            // Fill holes in weight maps and calculate some final error statistics.
-//            finalErrorCalculaton.calculateFinalErrorMetrics(resources, programFactory, specularFit, errorCalculator, rmseOut);
-//        }
+    public <ContextType extends Context<ContextType>> void reconstructAll(
+        IBRResourcesCacheable<ContextType> resources, BiConsumer<ReconstructionView<ContextType>, ColorAppearanceRMSE> reconstructionCallback)
+        throws IOException, UserCancellationException
+    {
+        ViewSet viewSet = resources.getViewSet();
+        SpecularFitProgramFactory<ContextType> programFactory = new SpecularFitProgramFactory<>(settings.getIbrSettings(), settings.getSpecularBasisSettings());
+        try(ImageReconstruction<ContextType> reconstruction = new ImageReconstruction<>(
+            viewSet,
+            builder -> builder
+                .addColorAttachment(ColorFormat.RGBA32F)
+                .addDepthAttachment(),
+            builder -> builder
+                .addColorAttachment(ColorFormat.RGBA32F)
+                .addDepthAttachment(),
+            ReconstructionShaders.getIncidentRadianceProgramBuilder(resources, programFactory),
+            resources,
+            viewIndex ->
+            {
+                try
+                {
+                    return new BufferedImageColorList(read(viewSet.getFullResImageFile(viewIndex)));
+                }
+                catch (IOException e)
+                {
+                    throw new RuntimeException(e);
+                }
+            });
+            ProgramObject<ContextType> basisModelReconstructionProgram = ReconstructionShaders.getBasisModelReconstructionProgramBuilder(
+                    resources, resources.getSpecularMaterialResources(), programFactory)
+                .createProgram();
+            Drawable<ContextType> drawable = resources.createDrawable(basisModelReconstructionProgram))
+        {
+            resources.setupShaderProgram(basisModelReconstructionProgram);
 
+            for (ReconstructionView<ContextType> view : reconstruction)
+            {
+                ColorAppearanceRMSE rmse = view.reconstruct(drawable);
+                reconstructionCallback.accept(view, rmse);
+            }
+        }
 
         rescaleTextures();
     }
