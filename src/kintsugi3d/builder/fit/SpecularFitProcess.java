@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.fit;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -42,6 +43,7 @@ import kintsugi3d.gl.material.ReadonlyMaterialTextureMap;
 import kintsugi3d.optimization.ShaderBasedErrorCalculator;
 import kintsugi3d.util.BufferedImageColorList;
 import kintsugi3d.util.ImageFinder;
+import kintsugi3d.util.ImageUndistorter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,7 +119,19 @@ public class SpecularFitProcess
             {
                 try
                 {
-                    return new BufferedImageColorList(read(viewSet.getFullResImageFile(viewIndex)));
+                    Projection projection = resources.getViewSet().getCameraProjection(resources.getViewSet().getCameraProjectionIndex(viewIndex));
+                    BufferedImage image = read(viewSet.findFullResImageFile(viewIndex));
+
+                    if (projection instanceof DistortionProjection)
+                    {
+                        // undistort if we have a DistortionProjection.
+                        return new BufferedImageColorList(new ImageUndistorter<>(resources.getContext())
+                            .undistort(image, false /* no mipmaps for error estimation */, (DistortionProjection)projection));
+                    }
+                    else
+                    {
+                        return new BufferedImageColorList(image);
+                    }
                 }
                 catch (IOException e)
                 {

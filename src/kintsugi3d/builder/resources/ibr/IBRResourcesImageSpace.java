@@ -170,7 +170,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         }
 
         // images are defined in the load options
-        public Builder<ContextType> loadAgisoftFiles(File cameraFile, File geometryFile, File undistortedImageDirectory) throws Exception
+        public Builder<ContextType> loadAgisoftFiles(File cameraFile, File geometryFile, File imageDirectory) throws Exception
         {
             this.viewSet = ViewSetReaderFromAgisoftXML.getInstance().readFromFile(cameraFile);
             if (geometryFile != null)
@@ -192,10 +192,10 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             if (!this.geometry.hasTexCoords()) {
                 throw new MeshImportException("Imported Object has no Texture Coordinates");
             }
-            if (undistortedImageDirectory != null)
+            if (imageDirectory != null)
             {
-                this.imageDirectoryOverride = undistortedImageDirectory;
-                this.viewSet.setRelativeFullResImagePathName(cameraFile.getParentFile().toPath().relativize(undistortedImageDirectory.toPath()).toString());
+                this.imageDirectoryOverride = imageDirectory;
+                this.viewSet.setRelativeFullResImagePathName(cameraFile.getParentFile().toPath().relativize(imageDirectory.toPath()).toString());
             }
 
             if (geometry != null)
@@ -344,10 +344,10 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         // 4) Set image directory to be parent directory of MetaShape project (and add to the photos' paths)
             File psxFile = new File(metashapeObjectChunk.getMetashapeObject().getPsxFilePath());
-            File undistortedImageDirectory = new File(psxFile.getParent()); // The directory of undistorted photos //TODO: verify this
-            // Print error to log if unable to find undistortedImageDirectory
-            if (!undistortedImageDirectory.exists()) {
-                log.error("Unable to find undistortedImageDirectory: " + undistortedImageDirectory);
+            File imageDirectory = new File(psxFile.getParent()); // The directory of full-res photos //TODO: verify this
+            // Print error to log if unable to find imageDirectory
+            if (!imageDirectory.exists()) {
+                log.error("Unable to find imageDirectory: " + imageDirectory);
             }
 
             if (fullResDirectoryOverride != null){
@@ -821,6 +821,19 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         return primaryViewDistance;
     }
 
+    public void calibrateLightIntensities(boolean infiniteLightSources)
+    {
+        if (primaryViewDistance > 0)
+        {
+            Vector3 lightIntensity = new Vector3((float) (primaryViewDistance * primaryViewDistance));
+            initializeLightIntensities(lightIntensity, infiniteLightSources);
+        }
+        else
+        {
+            log.warn("Light intensities not calibrated; primaryViewDistance was zero (were depth images generated first?)");
+        }
+    }
+
     /**
      * Creates a resource for just a single view, using the default image for that view but with custom load options
      * @param viewIndex
@@ -873,7 +886,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     }
 
     private static <ContextType extends Context<ContextType>> BufferedImage undistortImage(
-        BufferedImage distortedImage, ViewSet viewSet, int projectionIndex, ContextType context)
+        BufferedImage distortedImage, boolean mipmapsEnabled, ViewSet viewSet, int projectionIndex, ContextType context)
         throws IOException
     {
         DistortionProjection distortion = (DistortionProjection) viewSet.getCameraProjection(projectionIndex);
@@ -881,7 +894,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         try (ImageUndistorter<?> undistort = new ImageUndistorter<>(context))
         {
-            return undistort.undistort(distortedImage, distortion);
+            return undistort.undistort(distortedImage, mipmapsEnabled, distortion);
         }
     }
 
@@ -1023,7 +1036,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                             {
                                 BufferedImage decodedImage = getDecodedImage(viewSet, i);
                                 log.info("Undistorting image {}", i);
-                                BufferedImage imageOut = undistortImage(decodedImage, viewSet, projectionIndex, context);
+                                BufferedImage imageOut = undistortImage(decodedImage, true, viewSet, projectionIndex, context);
                                 log.info("Saving image {}", i);
                                 ImageIO.write(imageOut, "PNG", viewSet.getPreviewImageFile(i));
                                 logFinished(viewSet.getPreviewImageFile(i));
@@ -1090,7 +1103,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                                 {
                                     try
                                     {
-                                        BufferedImage imageOut = undistortImage(decodedImage, viewSet, projectionIndex, context);
+                                        BufferedImage imageOut = undistortImage(decodedImage, true, viewSet, projectionIndex, context);
 
                                         // Write to a file on another thread so as not to block the rendering thread
                                         new Thread(() ->
@@ -1186,7 +1199,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
                 try (ImageUndistorter<?> undistort = new ImageUndistorter<>(getContext()))
                 {
-                    undistort.undistortFile(getViewSet().findFullResImageFile(poseIndex), distortion, getViewSet().getPreviewImageFile(poseIndex));
+                    undistort.undistortFile(getViewSet().findFullResImageFile(poseIndex), true, distortion, getViewSet().getPreviewImageFile(poseIndex));
                 }
 
                 return true;

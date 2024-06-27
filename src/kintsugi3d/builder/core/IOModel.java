@@ -17,13 +17,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
-import kintsugi3d.util.AbstractImage;
 import kintsugi3d.util.EncodableColorImage;
 
 public class IOModel
@@ -193,9 +191,9 @@ public class IOModel
         this.handler.loadFromVSETFile(id, vsetFile, supportingFilesDirectory, loadOptionsModel);
     }
 
-    public void loadFromAgisoftFiles(String id, File xmlFile, File meshFile, File undistortedImageDirectory, String primaryViewName)
+    public void loadFromAgisoftFiles(String id, File xmlFile, File meshFile, File imageDirectory, String primaryViewName)
     {
-        this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, primaryViewName, loadOptionsModel);
+        this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, imageDirectory, primaryViewName, loadOptionsModel);
     }
 
     public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, String primaryViewName)

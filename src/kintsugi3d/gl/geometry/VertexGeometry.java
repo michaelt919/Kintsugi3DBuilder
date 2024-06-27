@@ -344,6 +344,10 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
     {
         return createFromPLY(zipFolder, PLY.loadFromZip(zipFolder, targetFileName));
     }
+    public static VertexGeometry createFromZippedPLYStream(InputStream zipStream, File file, String targetFileName) throws IOException
+    {
+        return createFromPLY(file, PLY.loadFromZip(zipStream, targetFileName));
+    }
 
     private static VertexGeometry createFromPLY(File file, PLY ply) throws IOException
     {

@@ -749,11 +749,15 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             result.getCameraProjectionIndexList().add(cam.sensor.index);
             result.getLightIndexList().add(cam.lightIndex);
 
-            if (imagePathMap != null && imagePathMap.containsKey(Integer.parseInt(cam.id))) {
+            if (imagePathMap != null && imagePathMap.containsKey(Integer.parseInt(cam.id)))
+            {
                 result.getImageFiles().add(new File(imagePathMap.get(Integer.parseInt(cam.id))));
-            }else{
+            }
+            else
+            {
                 result.getImageFiles().add(new File(cam.filename));
-                if (imagePathMap != null) {
+                if (imagePathMap != null)
+                {
                     log.error("Camera path override not found for camera: " + cam.id);
                 }
             }
@@ -764,8 +768,9 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         for (int i = 0; i < nextLightIndex; i++)
         {
             result.getLightPositionList().add(Vector3.ZERO);
-            result.getLightIntensityList().add(Vector3.ZERO);
+            result.getLightIntensityList().add(new Vector3(1.0f));
         }
+        result.setInfiniteLightSources(true); // assume infinite until calibrated
 
         result.setRecommendedFarPlane(findFarPlane(result.getCameraPoseInvList()));
         result.setRecommendedNearPlane(result.getRecommendedFarPlane() / 32.0f);

@@ -11,16 +11,15 @@
 
 package kintsugi3d.util;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
+
+import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector4;
-import kintsugi3d.builder.core.DistortionProjection;
-
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 
 public class ImageUndistorter<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -72,12 +71,12 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
         }
     }
 
-    public BufferedImage undistort(BufferedImage inputImage, DistortionProjection distortion)
+    public BufferedImage undistort(BufferedImage inputImage, boolean mipmapsEnabled, DistortionProjection distortion)
     {
         try(Texture2D<ContextType> inTex = context.getTextureFactory()
             .build2DColorTextureFromImage(inputImage, true)
             .setLinearFilteringEnabled(true)
-            .setMipmapsEnabled(true)
+            .setMipmapsEnabled(mipmapsEnabled)
             .createTexture();
             Texture2D<ContextType> outTex = undistort(inTex, distortion))
         {
@@ -88,10 +87,10 @@ public class ImageUndistorter<ContextType extends Context<ContextType>> implemen
         }
     }
 
-    public void undistortFile(File inputImage, DistortionProjection distortion, File outputImage) throws IOException
+    public void undistortFile(File inputImage, boolean mipmapsEnabled, DistortionProjection distortion, File outputImage) throws IOException
     {
         BufferedImage imageIn = ImageIO.read(inputImage);
-        BufferedImage imageOut = undistort(imageIn, distortion);
+        BufferedImage imageOut = undistort(imageIn, mipmapsEnabled, distortion);
         ImageIO.write(imageOut, "PNG", outputImage);
     }
 
