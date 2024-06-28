@@ -20,10 +20,6 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import javafx.util.Pair;
-import org.jengineering.sjmply.PLY;
-import org.jengineering.sjmply.PLYElementList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.material.Material;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
@@ -33,6 +29,10 @@ import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
+import org.jengineering.sjmply.PLY;
+import org.jengineering.sjmply.PLYElementList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.jengineering.sjmply.PLYType.*;
 
@@ -443,9 +443,12 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
                     if (facialTexCoords)
                     {
                         texCoordList.add(new Vector2(faceCoords[i][v*2], faceCoords[i][(v*2)+1]));
+                        texCoordIndexList.add(i * 3 + v); // facial texCoords are already in order
                     }
-
-                    texCoordIndexList.add(vertexIndex);
+                    else
+                    {
+                        texCoordIndexList.add(vertexIndex);
+                    }
                 }
             }
         }
