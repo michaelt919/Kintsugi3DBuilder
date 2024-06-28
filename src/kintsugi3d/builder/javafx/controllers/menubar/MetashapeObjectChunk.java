@@ -202,7 +202,7 @@ public class MetashapeObjectChunk {
         return UnzipHelper.unzipImages(thumbnailPath);
     }
 
-    public List<Element> findThumbnailCameras() {
+    public List<Element> findCameras() {
         NodeList cams = this.chunkXML.getElementsByTagName("camera");
         ArrayList<Element> cameras = new ArrayList<>();
         for (int i = 0; i < cams.getLength(); ++i) {

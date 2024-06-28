@@ -1,4 +1,5 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
+
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -21,16 +22,28 @@ import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.util.RecentProjects;
 import kintsugi3d.util.Triplet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Element;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.IntStream;
 
 public class MetashapeImportController extends FXMLPageController implements ShareInfo, CanConfirm {
+    private static final Logger log = LoggerFactory.getLogger(MetashapeImportController.class);
+
     @FXML private Text fileNameTxtField;
     @FXML private AnchorPane anchorPane;
     @FXML private Text loadMetashapeObject;
+
     @FXML private ChoiceBox chunkSelectionChoiceBox;
     @FXML private ChoiceBox modelSelectionChoiceBox;
+    @FXML private ChoiceBox primaryViewChoiceBox;
+
 
     private File metashapePsxFile;
     private MetashapeObjectChunk metashapeObjectChunk;
@@ -60,6 +73,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         //need to do Platform.runLater so updateModelSelectionChoiceBox can pull info from chunkSelectionChoiceBox
         chunkSelectionChoiceBox.setOnAction(event -> Platform.runLater(()->{
                 updateModelSelectionChoiceBox();
+                updatePrimaryViewChoiceBox();
                 updateLoadedIndicators();
         }));
 
@@ -116,6 +130,64 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
             RecentProjects.setMostRecentDirectory(metashapePsxFile.getParentFile());
             fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
+        }
+    }
+
+    private void updatePrimaryViewChoiceBox()
+    {
+        // Disable while updating the choices as it won't be responsive until it's done adding all the options
+        primaryViewChoiceBox.setValue("Loading Views...");
+        primaryViewChoiceBox.setDisable(true);
+        primaryViewChoiceBox.getItems().clear();
+
+        List<Element> cameras = metashapeObjectChunk.findCameras();
+        if (cameras.size() > 0)
+        {
+            //prevent recursion from going more than 100 layers deep
+            final int MAX_REC_DEPTH = 100;
+
+            addToChoiceBoxRecWithLimit(0, Math.min(MAX_REC_DEPTH, cameras.size()), MAX_REC_DEPTH, cameras);
+
+        }
+
+    }
+
+    private void addToChoiceBoxRecWithLimit(int startIdx, int endIdx, final int MAX_REC_DEPTH, List<Element> cameras) {
+        Iterator<String> imageIterator = IntStream.range(startIdx, endIdx)
+                .mapToObj(i -> cameras.get(i).getAttribute("label"))
+                .sorted(Comparator.naturalOrder())
+                .iterator();
+
+
+        // Use individual Platform.runLater calls, chained together recursively
+        // to prevent locking up the JavaFX Application thread
+        addToViewListRecursive(imageIterator, startIdx + 1, cameras.size());
+
+        startIdx += MAX_REC_DEPTH;
+        endIdx = Math.min(startIdx + MAX_REC_DEPTH, cameras.size());
+
+        addToChoiceBoxRecWithLimit(startIdx, endIdx, MAX_REC_DEPTH, cameras);
+    }
+
+    private void addToViewListRecursive(Iterator<String> iterator, int index, int numImgs)
+    {
+        primaryViewChoiceBox.getItems().add(iterator.next());
+
+        //leave out progress markings for now because they appear out of order
+        //primaryViewChoiceBox.setValue(String.format("Loading Views: %d/%d", index, numImgs));
+
+        if (iterator.hasNext())
+        {
+            Platform.runLater(() -> addToViewListRecursive(iterator, index + 1, numImgs));
+        }
+        else
+        {
+            //sort image names because they might have been added out of order
+            primaryViewChoiceBox.setItems(primaryViewChoiceBox.getItems().sorted());
+
+            // Finished adding all the choices; select the first one by default and re-enable
+            primaryViewChoiceBox.getSelectionModel().select(0);
+            primaryViewChoiceBox.setDisable(false);
         }
     }
 
@@ -286,8 +358,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
                         .loadAgisoftFromZIP(
                                 metashapeObjectChunk.getFramePath(),
                                 metashapeObjectChunk,
-                                ""))//uses the first image in the viewset as the primary view
-                //TODO: add primary view selection to modal?
+                                primaryViewChoiceBox.getSelectionModel().getSelectedItem().toString()))
                 .start();
         WelcomeWindowController.getInstance().hideWelcomeWindow();
 
