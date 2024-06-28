@@ -17,9 +17,11 @@ import java.text.MessageFormat;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.ReconstructionShaders;
+import kintsugi3d.builder.fit.SpecularFitOptimizable;
 import kintsugi3d.builder.fit.SpecularFitProcess;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
@@ -29,25 +31,32 @@ import kintsugi3d.builder.javafx.internal.LoadOptionsModelImpl;
 import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.rendering.ImageReconstruction;
 import kintsugi3d.builder.rendering.ReconstructionView;
+import kintsugi3d.builder.resources.ibr.IBRResources;
 import kintsugi3d.builder.resources.ibr.IBRResourcesAnalytic;
 import kintsugi3d.builder.resources.ibr.IBRResourcesCacheable;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
+import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.builder.state.DefaultSettings;
 import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.builder.state.impl.SimpleSettingsModel;
+import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.VertexGeometry;
 import kintsugi3d.gl.opengl.OpenGLContext;
 import kintsugi3d.gl.opengl.OpenGLContextFactory;
 import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.gl.vecmath.Vector4;
 import kintsugi3d.util.ColorArrayImage;
+import kintsugi3d.util.ColorList;
 import kintsugi3d.util.Potato;
+import kintsugi3d.util.SRGB;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ImageReconstructionTests
 {
@@ -396,8 +405,374 @@ class ImageReconstructionTests
     }
 
     @Test
-    @DisplayName("Rodin, from Metashape export")
-    void testRodinMetashape() throws Exception
+    @DisplayName("Grayscale smooth synthetic data fit")
+    void testFit_grayscaleSmooth()
+    {
+        testFitSynthetic(potatoViewSet,
+            builder -> builder
+                .define("NORMAL_MAP_SCALE", 0.0)
+                .define("DEFAULT_DIFFUSE_COLOR", "vec3(0.5, 0.5, 0.5)")
+                .define("DEFAULT_SPECULAR_COLOR", "vec3(0.04, 0.04, 0.04)")
+                .define("DEFAULT_SPECULAR_ROUGHNESS", "vec3(0.25, 0.25, 0.25)"),
+            fit ->
+            {
+                ColorList specularReflectivityList = fit.getSpecularReflectivityMap().getColorTextureReader().readColorListRGBA();
+                ColorList roughnessList = fit.getSpecularRoughnessMap().getColorTextureReader().readColorListRGBA();
+                ColorList diffuseList = fit.getDiffuseMap().getColorTextureReader().readColorListRGBA();
+                ColorList normalList = fit.getNormalMap().getColorTextureReader().readColorListRGBA();
+
+                float expectedReflectivity = (float)SRGB.fromLinear(0.04);
+                float expectedRoughness = 0.25f;
+                float expectedDiffuseTone = (float)SRGB.fromLinear(0.5);
+
+                for (Vector4 reflectivity : specularReflectivityList)
+                {
+                    assertEquals(expectedReflectivity, reflectivity.x, 0.001f);
+                    assertEquals(expectedReflectivity, reflectivity.y, 0.001f);
+                    assertEquals(expectedReflectivity, reflectivity.z, 0.001f);
+                    assertEquals(1.0f, reflectivity.w);
+                }
+
+                for (Vector4 roughness : roughnessList)
+                {
+                    assertEquals(expectedRoughness, roughness.x, 0.001f);
+                    assertEquals(expectedRoughness, roughness.y, 0.001f);
+                    assertEquals(expectedRoughness, roughness.z, 0.001f);
+                    assertEquals(1.0f, roughness.w);
+                }
+
+                for (Vector4 diffuseColor : diffuseList)
+                {
+                    assertEquals(expectedDiffuseTone, diffuseColor.x, 0.001f);
+                    assertEquals(expectedDiffuseTone, diffuseColor.y, 0.001f);
+                    assertEquals(expectedDiffuseTone, diffuseColor.z, 0.001f);
+                    assertEquals(1.0f, diffuseColor.w);
+                }
+
+                for (Vector4 packedNormal : normalList)
+                {
+                    assertEquals(0.5f, packedNormal.x, 0.001f);
+                    assertEquals(0.5f, packedNormal.y, 0.001f);
+                    assertEquals(1.0f, packedNormal.z, 0.001f);
+                    assertEquals(1.0f, packedNormal.w);
+                }
+            },
+            rmse ->
+            {
+                System.out.println("Encoded RMSE: " + rmse.getEncodedGroundTruth());
+                System.out.println("Normalized sRGB RMSE: " + rmse.getNormalizedSRGB());
+                System.out.println("Normalized linear RMSE: " + rmse.getNormalizedLinear());
+                assertTrue (rmse.getEncodedGroundTruth() < 0.1);
+                assertTrue (rmse.getNormalizedSRGB() < 0.1);
+                assertTrue (rmse.getNormalizedLinear() < 0.1);
+            },
+            "testFit_grayscaleSmooth");
+    }
+
+    @Test
+    @DisplayName("Color smooth synthetic data fit")
+    void testFit_colorSmooth()
+    {
+        testFitSynthetic(potatoViewSet,
+            builder -> builder
+                .define("DEFAULT_DIFFUSE_COLOR", "vec3(1.0, 0.8, 0.2)")
+                .define("DEFAULT_SPECULAR_COLOR", "vec3(0.04, 0.04, 0.04)")
+                .define("DEFAULT_SPECULAR_ROUGHNESS", "vec3(0.25, 0.25, 0.25)")
+                .define("NORMAL_MAP_SCALE", 0.0),
+            fit ->
+            {
+                ColorList specularReflectivityList = fit.getSpecularReflectivityMap().getColorTextureReader().readColorListRGBA();
+                ColorList roughnessList = fit.getSpecularRoughnessMap().getColorTextureReader().readColorListRGBA();
+                ColorList diffuseList = fit.getDiffuseMap().getColorTextureReader().readColorListRGBA();
+                ColorList normalList = fit.getNormalMap().getColorTextureReader().readColorListRGBA();
+
+                float expectedReflectivity = (float)SRGB.fromLinear(0.04);
+                float expectedRoughness = 0.25f;
+                Vector3 expectedDiffuseColor = SRGB.fromLinear(new Vector3(1.0f, 0.8f, 0.2f));
+
+                for (Vector4 reflectivity : specularReflectivityList)
+                {
+                    assertEquals(expectedReflectivity, reflectivity.x, 0.001f);
+                    assertEquals(expectedReflectivity, reflectivity.y, 0.001f);
+                    assertEquals(expectedReflectivity, reflectivity.z, 0.001f);
+                    assertEquals(1.0f, reflectivity.w);
+                }
+
+                for (Vector4 roughness : roughnessList)
+                {
+                    assertEquals(expectedRoughness, roughness.x, 0.001f);
+                    assertEquals(expectedRoughness, roughness.y, 0.001f);
+                    assertEquals(expectedRoughness, roughness.z, 0.001f);
+                    assertEquals(1.0f, roughness.w);
+                }
+
+                for (Vector4 diffuseColor : diffuseList)
+                {
+                    assertEquals(expectedDiffuseColor.x, diffuseColor.x, 0.001f);
+                    assertEquals(expectedDiffuseColor.y, diffuseColor.y, 0.001f);
+                    assertEquals(expectedDiffuseColor.z, diffuseColor.z, 0.001f);
+                    assertEquals(1.0f, diffuseColor.w);
+                }
+
+                for (Vector4 packedNormal : normalList)
+                {
+                    assertEquals(0.5f, packedNormal.x, 0.001f);
+                    assertEquals(0.5f, packedNormal.y, 0.001f);
+                    assertEquals(1.0f, packedNormal.z, 0.001f);
+                    assertEquals(1.0f, packedNormal.w);
+                }
+            },
+            rmse ->
+            {
+                System.out.println("Encoded RMSE: " + rmse.getEncodedGroundTruth());
+                System.out.println("Normalized sRGB RMSE: " + rmse.getNormalizedSRGB());
+                System.out.println("Normalized linear RMSE: " + rmse.getNormalizedLinear());
+                assertTrue (rmse.getEncodedGroundTruth() < 0.1);
+                assertTrue (rmse.getNormalizedSRGB() < 0.1);
+                assertTrue (rmse.getNormalizedLinear() < 0.1);
+            },
+            "testFit_colorSmooth");
+    }
+
+    @Test
+    @DisplayName("Metallic smooth synthetic data fit")
+    void testFit_metallicSmooth()
+    {
+        testFitSynthetic(potatoViewSet,
+            builder -> builder
+                .define("DEFAULT_DIFFUSE_COLOR", "vec3(0.0, 0.0, 0.0)")
+                .define("DEFAULT_SPECULAR_COLOR", "vec3(1.0, 0.8, 0.2)")
+                .define("DEFAULT_SPECULAR_ROUGHNESS", "vec3(0.25, 0.25, 0.25)")
+                .define("NORMAL_MAP_SCALE", 0.0),
+            fit ->
+            {
+                ColorList specularReflectivityList = fit.getSpecularReflectivityMap().getColorTextureReader().readColorListRGBA();
+                ColorList roughnessList = fit.getSpecularRoughnessMap().getColorTextureReader().readColorListRGBA();
+                ColorList diffuseList = fit.getDiffuseMap().getColorTextureReader().readColorListRGBA();
+                ColorList normalList = fit.getNormalMap().getColorTextureReader().readColorListRGBA();
+
+                Vector3 expectedReflectivity = SRGB.fromLinear(new Vector3(1.0f, 0.8f, 0.2f));
+                float expectedDiffuse = 0.0f;
+                float expectedRoughness = 0.25f;
+
+                for (Vector4 reflectivity : specularReflectivityList)
+                {
+                    assertEquals(expectedReflectivity.x, reflectivity.x, 0.001f);
+                    assertEquals(expectedReflectivity.y, reflectivity.y, 0.001f);
+                    assertEquals(expectedReflectivity.z, reflectivity.z, 0.001f);
+                    assertEquals(1.0f, reflectivity.w);
+                }
+
+                for (Vector4 roughness : roughnessList)
+                {
+                    assertEquals(expectedRoughness, roughness.x, 0.001f);
+                    assertEquals(expectedRoughness, roughness.y, 0.001f);
+                    assertEquals(expectedRoughness, roughness.z, 0.001f);
+                    assertEquals(1.0f, roughness.w);
+                }
+
+                for (Vector4 diffuseColor : diffuseList)
+                {
+                    assertEquals(expectedDiffuse, diffuseColor.x, 0.001f);
+                    assertEquals(expectedDiffuse, diffuseColor.y, 0.001f);
+                    assertEquals(expectedDiffuse, diffuseColor.z, 0.001f);
+                    assertEquals(1.0f, diffuseColor.w);
+                }
+
+                for (Vector4 packedNormal : normalList)
+                {
+                    assertEquals(0.5f, packedNormal.x, 0.001f);
+                    assertEquals(0.5f, packedNormal.y, 0.001f);
+                    assertEquals(1.0f, packedNormal.z, 0.001f);
+                    assertEquals(1.0f, packedNormal.w);
+                }
+            },
+            rmse ->
+            {
+                System.out.println("Encoded RMSE: " + rmse.getEncodedGroundTruth());
+                System.out.println("Normalized sRGB RMSE: " + rmse.getNormalizedSRGB());
+                System.out.println("Normalized linear RMSE: " + rmse.getNormalizedLinear());
+                assertTrue (rmse.getEncodedGroundTruth() < 0.1);
+                assertTrue (rmse.getNormalizedSRGB() < 0.1);
+                assertTrue (rmse.getNormalizedLinear() < 0.1);
+            },
+            "testFit_metallicSmooth");
+    }
+
+    @Test
+    @DisplayName("Grayscale bumpy synthetic data fit")
+    void testFit_grayscaleBumpy()
+    {
+        testFitSynthetic(potatoViewSet,
+            builder -> builder
+                .define("NORMAL_MAP_SCALE", 1.0)
+                .define("DEFAULT_DIFFUSE_COLOR", "vec3(0.5, 0.5, 0.5)")
+                .define("DEFAULT_SPECULAR_COLOR", "vec3(0.04, 0.04, 0.04)")
+                .define("DEFAULT_SPECULAR_ROUGHNESS", "vec3(0.25, 0.25, 0.25)"),
+            fit ->
+            {
+                ColorList specularReflectivityList = fit.getSpecularReflectivityMap().getColorTextureReader().readColorListRGBA();
+                ColorList roughnessList = fit.getSpecularRoughnessMap().getColorTextureReader().readColorListRGBA();
+                ColorList diffuseList = fit.getDiffuseMap().getColorTextureReader().readColorListRGBA();
+                ColorList normalList = fit.getNormalMap().getColorTextureReader().readColorListRGBA();
+
+                float expectedReflectivity = (float)SRGB.fromLinear(0.04);
+                float expectedRoughness = 0.25f;
+                float expectedDiffuseTone = (float)SRGB.fromLinear(0.5);
+
+                for (Vector4 reflectivity : specularReflectivityList)
+                {
+                    assertEquals(expectedReflectivity, reflectivity.x, 0.001f);
+                    assertEquals(expectedReflectivity, reflectivity.y, 0.001f);
+                    assertEquals(expectedReflectivity, reflectivity.z, 0.001f);
+                    assertEquals(1.0f, reflectivity.w);
+                }
+
+                for (Vector4 roughness : roughnessList)
+                {
+                    assertEquals(expectedRoughness, roughness.x, 0.001f);
+                    assertEquals(expectedRoughness, roughness.y, 0.001f);
+                    assertEquals(expectedRoughness, roughness.z, 0.001f);
+                    assertEquals(1.0f, roughness.w);
+                }
+
+                for (Vector4 diffuseColor : diffuseList)
+                {
+                    assertEquals(expectedDiffuseTone, diffuseColor.x, 0.001f);
+                    assertEquals(expectedDiffuseTone, diffuseColor.y, 0.001f);
+                    assertEquals(expectedDiffuseTone, diffuseColor.z, 0.001f);
+                    assertEquals(1.0f, diffuseColor.w);
+                }
+            },
+            rmse ->
+            {
+                System.out.println("Encoded RMSE: " + rmse.getEncodedGroundTruth());
+                System.out.println("Normalized sRGB RMSE: " + rmse.getNormalizedSRGB());
+                System.out.println("Normalized linear RMSE: " + rmse.getNormalizedLinear());
+                assertTrue (rmse.getEncodedGroundTruth() < 0.1);
+                assertTrue (rmse.getNormalizedSRGB() < 0.1);
+                assertTrue (rmse.getNormalizedLinear() < 0.1);
+            },
+            "testFit_grayscaleBumpy");
+    }
+
+    @Test
+    @DisplayName("Color bumpy synthetic data fit")
+    void testFit_colorBumpy()
+    {
+        testFitSynthetic(potatoViewSet,
+            builder -> builder
+                .define("DEFAULT_DIFFUSE_COLOR", "vec3(1.0, 0.8, 0.2)")
+                .define("DEFAULT_SPECULAR_COLOR", "vec3(0.04, 0.04, 0.04)")
+                .define("DEFAULT_SPECULAR_ROUGHNESS", "vec3(0.25, 0.25, 0.25)")
+                .define("NORMAL_MAP_SCALE", 1.0),
+            fit ->
+            {
+                ColorList specularReflectivityList = fit.getSpecularReflectivityMap().getColorTextureReader().readColorListRGBA();
+                ColorList roughnessList = fit.getSpecularRoughnessMap().getColorTextureReader().readColorListRGBA();
+                ColorList diffuseList = fit.getDiffuseMap().getColorTextureReader().readColorListRGBA();
+                ColorList normalList = fit.getNormalMap().getColorTextureReader().readColorListRGBA();
+
+                float expectedReflectivity = (float)SRGB.fromLinear(0.04);
+                float expectedRoughness = 0.25f;
+                Vector3 expectedDiffuseColor = SRGB.fromLinear(new Vector3(1.0f, 0.8f, 0.2f));
+
+                for (Vector4 reflectivity : specularReflectivityList)
+                {
+                    assertEquals(expectedReflectivity, reflectivity.x, 0.001f);
+                    assertEquals(expectedReflectivity, reflectivity.y, 0.001f);
+                    assertEquals(expectedReflectivity, reflectivity.z, 0.001f);
+                    assertEquals(1.0f, reflectivity.w);
+                }
+
+                for (Vector4 roughness : roughnessList)
+                {
+                    assertEquals(expectedRoughness, roughness.x, 0.001f);
+                    assertEquals(expectedRoughness, roughness.y, 0.001f);
+                    assertEquals(expectedRoughness, roughness.z, 0.001f);
+                    assertEquals(1.0f, roughness.w);
+                }
+
+                for (Vector4 diffuseColor : diffuseList)
+                {
+                    assertEquals(expectedDiffuseColor.x, diffuseColor.x, 0.001f);
+                    assertEquals(expectedDiffuseColor.y, diffuseColor.y, 0.001f);
+                    assertEquals(expectedDiffuseColor.z, diffuseColor.z, 0.001f);
+                    assertEquals(1.0f, diffuseColor.w);
+                }
+            },
+            rmse ->
+            {
+                System.out.println("Encoded RMSE: " + rmse.getEncodedGroundTruth());
+                System.out.println("Normalized sRGB RMSE: " + rmse.getNormalizedSRGB());
+                System.out.println("Normalized linear RMSE: " + rmse.getNormalizedLinear());
+                assertTrue (rmse.getEncodedGroundTruth() < 0.1);
+                assertTrue (rmse.getNormalizedSRGB() < 0.1);
+                assertTrue (rmse.getNormalizedLinear() < 0.1);
+            },
+            "testFit_colorBumpy");
+    }
+
+    @Test
+    @DisplayName("Metallic bumpy synthetic data fit")
+    void testFit_metallicBumpy()
+    {
+        testFitSynthetic(potatoViewSet,
+            builder -> builder
+                .define("DEFAULT_DIFFUSE_COLOR", "vec3(0.0, 0.0, 0.0)")
+                .define("DEFAULT_SPECULAR_COLOR", "vec3(1.0, 0.8, 0.2)")
+                .define("DEFAULT_SPECULAR_ROUGHNESS", "vec3(0.25, 0.25, 0.25)")
+                .define("NORMAL_MAP_SCALE", 1.0),
+            fit ->
+            {
+                ColorList specularReflectivityList = fit.getSpecularReflectivityMap().getColorTextureReader().readColorListRGBA();
+                ColorList roughnessList = fit.getSpecularRoughnessMap().getColorTextureReader().readColorListRGBA();
+                ColorList diffuseList = fit.getDiffuseMap().getColorTextureReader().readColorListRGBA();
+                ColorList normalList = fit.getNormalMap().getColorTextureReader().readColorListRGBA();
+
+                Vector3 expectedReflectivity = SRGB.fromLinear(new Vector3(1.0f, 0.8f, 0.2f));
+                float expectedDiffuse = 0.0f;
+                float expectedRoughness = 0.25f;
+
+                for (Vector4 reflectivity : specularReflectivityList)
+                {
+                    assertEquals(expectedReflectivity.x, reflectivity.x, 0.001f);
+                    assertEquals(expectedReflectivity.y, reflectivity.y, 0.001f);
+                    assertEquals(expectedReflectivity.z, reflectivity.z, 0.001f);
+                    assertEquals(1.0f, reflectivity.w);
+                }
+
+                for (Vector4 roughness : roughnessList)
+                {
+                    assertEquals(expectedRoughness, roughness.x, 0.001f);
+                    assertEquals(expectedRoughness, roughness.y, 0.001f);
+                    assertEquals(expectedRoughness, roughness.z, 0.001f);
+                    assertEquals(1.0f, roughness.w);
+                }
+
+                for (Vector4 diffuseColor : diffuseList)
+                {
+                    assertEquals(expectedDiffuse, diffuseColor.x, 0.001f);
+                    assertEquals(expectedDiffuse, diffuseColor.y, 0.001f);
+                    assertEquals(expectedDiffuse, diffuseColor.z, 0.001f);
+                    assertEquals(1.0f, diffuseColor.w);
+                }
+            },
+            rmse ->
+            {
+                System.out.println("Encoded RMSE: " + rmse.getEncodedGroundTruth());
+                System.out.println("Normalized sRGB RMSE: " + rmse.getNormalizedSRGB());
+                System.out.println("Normalized linear RMSE: " + rmse.getNormalizedLinear());
+                assertTrue (rmse.getEncodedGroundTruth() < 0.1);
+                assertTrue (rmse.getNormalizedSRGB() < 0.1);
+                assertTrue (rmse.getNormalizedLinear() < 0.1);
+            },
+            "testFit_metallicBumpy");
+    }
+
+    @Test
+    @DisplayName("Rodin fit, from Metashape export")
+    void testFit_rodinMetashape() throws Exception
     {
         testFitMetashape(
             "Rodin/Mia_001239_Rodin_399cameras.xml",
@@ -405,7 +780,12 @@ class ImageReconstructionTests
             "Rodin/Processed dark 25",
             rmse ->
             {
-                System.out.println("RMSE: " + rmse.getEncodedGroundTruth());
+                System.out.println("Encoded RMSE: " + rmse.getEncodedGroundTruth());
+                System.out.println("Normalized sRGB RMSE: " + rmse.getNormalizedSRGB());
+                System.out.println("Normalized linear RMSE: " + rmse.getNormalizedLinear());
+                assertTrue (rmse.getEncodedGroundTruth() < 0.1);
+                assertTrue (rmse.getNormalizedSRGB() < 0.1);
+                assertTrue (rmse.getNormalizedLinear() < 0.1);
             },
             "Rodin_metashape");
     }
@@ -545,12 +925,56 @@ class ImageReconstructionTests
         return new ColorArrayImage(groundTruth, 256, 256);
     }
 
-    private void testFitSynthetic(ViewSet viewSet, Consumer<ColorAppearanceRMSE> validation, String testName)
+    private void testFitSynthetic(ViewSet viewSet, Function<ProgramBuilder<OpenGLContext>, ProgramBuilder<OpenGLContext>> injectDefines,
+        Consumer<SpecularMaterialResources<?>> fitValidation, Consumer<ColorAppearanceRMSE> rmseValidation, String testName)
     {
-        // TODO not working yet -- IBRResources doesn't fully implement IBRResourcesCacheable
-        try (IBRResourcesCacheable<OpenGLContext> resources = new IBRResourcesAnalytic<>(context, viewSet, potatoGeometry))
+        try (IBRResources<OpenGLContext> resources = new IBRResourcesAnalytic<>(context, viewSet, potatoGeometry)
         {
-            testFit(resources, validation, testName);
+            @Override
+            public ProgramBuilder<OpenGLContext> getShaderProgramBuilder()
+            {
+                return injectDefines.apply(super.getShaderProgramBuilder());
+            }
+        })
+        {
+            // TODO not yet tested
+            File outputDirectory = new File(TEST_OUTPUT_DIR, testName);
+            outputDirectory.mkdirs();
+
+            SettingsModel settings = new SimpleSettingsModel();
+            DefaultSettings.apply(settings);
+            SpecularFitRequestParams params = new SpecularFitRequestParams(new TextureResolution(512, 512), settings);
+            params.setOutputDirectory(outputDirectory);
+
+            // Perform the specular fit
+            SpecularFitProcess specularFitProcess = new SpecularFitProcess(params);
+            try (SpecularFitOptimizable<OpenGLContext> specularFit = specularFitProcess.optimizeFit(resources, progressMonitor))
+            {
+                fitValidation.accept(specularFit);
+
+                specularFitProcess.reconstructAll(resources,
+                    (view, rmse) ->
+                    {
+                        if (SAVE_TEST_IMAGES)
+                        {
+                            try
+                            {
+                                view.getReconstructionFramebuffer().getTextureReaderForColorAttachment(0).saveToFile("PNG",
+                                    new File(outputDirectory, resources.getViewSet().getImageFileNameWithFormat(view.getIndex(), "png")),
+                                    // Luminance encoding expects [0, 1] range, but encodes in [0, 255] range.
+                                    // Tonemapper parameter taken by saveToFile assumes both are [0, 255]
+                                    (color, index) -> resources.getViewSet().getLuminanceEncoding().encode(
+                                        color.asDoubleFloatingPoint().dividedBy(255.0).times(view.getIncidentRadiance(index).asVector4(1.0))).rounded());
+                            }
+                            catch (IOException e)
+                            {
+                                throw new RuntimeException(e);
+                            }
+                        }
+
+                        rmseValidation.accept(rmse);
+                    });
+            }
         }
         catch (UserCancellationException | IOException e)
         {
@@ -612,7 +1036,7 @@ class ImageReconstructionTests
 
         // Perform the specular fit
         SpecularFitProcess specularFitProcess = new SpecularFitProcess(params);
-        specularFitProcess.optimizeFit(resources, progressMonitor);
+        specularFitProcess.optimizeFitWithCache(resources, progressMonitor);
 
         specularFitProcess.reconstructAll(resources,
             (view, rmse) ->
@@ -622,7 +1046,7 @@ class ImageReconstructionTests
                     try
                     {
                         view.getReconstructionFramebuffer().getTextureReaderForColorAttachment(0).saveToFile("PNG",
-                            new File(outputDirectory, resources.getViewSet().getImageFileName(view.getIndex())),
+                            new File(outputDirectory, resources.getViewSet().getImageFileNameWithFormat(view.getIndex(), "png")),
                             // Luminance encoding expects [0, 1] range, but encodes in [0, 255] range.
                             // Tonemapper parameter taken by saveToFile assumes both are [0, 255]
                             (color, index) -> resources.getViewSet().getLuminanceEncoding().encode(

@@ -17,7 +17,7 @@ public class NormalOptimizationSettings
     private double minNormalDamping = 1.0;
     private int normalSmoothingIterations = 0;
     private boolean levenbergMarquardtEnabled = true;
-    private int unsuccessfulLMIterationsAllowed = 8;
+    private int unsuccessfulLMIterationsAllowed = 0;
 
     public NormalOptimizationSettings()
     {
