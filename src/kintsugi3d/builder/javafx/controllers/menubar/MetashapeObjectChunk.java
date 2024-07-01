@@ -41,7 +41,7 @@ public class MetashapeObjectChunk {
     private Document frameZip;
 
     private ArrayList<Triplet<Integer, String, String>> modelInfo = new ArrayList<>();
-    private Integer activeModelID; //TODO: is this equivalent to default model id?
+    private Integer activeModelID;
 
     public String getChunkZipPath() { return chunkZipPath; }
     public Document getChunkXML() { return chunkXML; }
