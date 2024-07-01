@@ -53,6 +53,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     private volatile boolean alertShown = false;
 
     FileChooser fileChooser;
+    private volatile boolean updatingPrimaryView;
 
     @Override
     public Region getHostRegion() {
@@ -73,8 +74,12 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         //need to do Platform.runLater so updateModelSelectionChoiceBox can pull info from chunkSelectionChoiceBox
         chunkSelectionChoiceBox.setOnAction(event -> Platform.runLater(()->{
                 updateModelSelectionChoiceBox();
-                updatePrimaryViewChoiceBox();
+
+                if (!updatingPrimaryView){
+                    updatePrimaryViewChoiceBox();
+                }
                 updateLoadedIndicators();
+
         }));
 
         fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
@@ -133,61 +138,44 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         }
     }
 
-    private void updatePrimaryViewChoiceBox()
+    private synchronized void updatePrimaryViewChoiceBox()
     {
+        updatingPrimaryView = true;
+
         // Disable while updating the choices as it won't be responsive until it's done adding all the options
         primaryViewChoiceBox.setValue("Loading Views...");
         primaryViewChoiceBox.setDisable(true);
         primaryViewChoiceBox.getItems().clear();
 
+
         List<Element> cameras = metashapeObjectChunk.findCameras();
-        if (cameras.size() > 0)
+        if (!cameras.isEmpty())
         {
-            //prevent recursion from going more than 100 layers deep
-            final int MAX_REC_DEPTH = 100;
+            Iterator<String> imageIterator = cameras.stream().map(camera -> camera.getAttribute("label"))
+                    .sorted(Comparator.naturalOrder())
+                    .iterator();
 
-            addToChoiceBoxRecWithLimit(0, Math.min(MAX_REC_DEPTH, cameras.size()), MAX_REC_DEPTH, cameras);
 
+            // Use individual Platform.runLater calls, chained together recursively
+            // to prevent locking up the JavaFX Application thread
+            addToViewListRecursive(imageIterator);
         }
 
     }
 
-    private void addToChoiceBoxRecWithLimit(int startIdx, int endIdx, final int MAX_REC_DEPTH, List<Element> cameras) {
-        Iterator<String> imageIterator = IntStream.range(startIdx, endIdx)
-                .mapToObj(i -> cameras.get(i).getAttribute("label"))
-                .sorted(Comparator.naturalOrder())
-                .iterator();
-
-
-        // Use individual Platform.runLater calls, chained together recursively
-        // to prevent locking up the JavaFX Application thread
-        addToViewListRecursive(imageIterator, startIdx + 1, cameras.size());
-
-        startIdx += MAX_REC_DEPTH;
-        endIdx = Math.min(startIdx + MAX_REC_DEPTH, cameras.size());
-
-        addToChoiceBoxRecWithLimit(startIdx, endIdx, MAX_REC_DEPTH, cameras);
-    }
-
-    private void addToViewListRecursive(Iterator<String> iterator, int index, int numImgs)
+    private void addToViewListRecursive(Iterator<String> iterator)
     {
         primaryViewChoiceBox.getItems().add(iterator.next());
 
-        //leave out progress markings for now because they appear out of order
-        //primaryViewChoiceBox.setValue(String.format("Loading Views: %d/%d", index, numImgs));
-
         if (iterator.hasNext())
         {
-            Platform.runLater(() -> addToViewListRecursive(iterator, index + 1, numImgs));
+            Platform.runLater(() -> addToViewListRecursive(iterator));
         }
         else
         {
-            //sort image names because they might have been added out of order
-            primaryViewChoiceBox.setItems(primaryViewChoiceBox.getItems().sorted());
-
-            // Finished adding all the choices; select the first one by default and re-enable
             primaryViewChoiceBox.getSelectionModel().select(0);
             primaryViewChoiceBox.setDisable(false);
+            updatingPrimaryView = false;
         }
     }
 
@@ -293,9 +281,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
                 getChunkNamesDynamic(metashapeObject.getPsxFilePath());
 
         chunkSelectionChoiceBox.getItems().clear();
-        //TODO: implement recursive / platform.run later from CustomImportController?
-        //first attempt led to data dependency issues where the model selection choice box
-        //   needed info that the chunk selection choice box didn't have yet
         chunkSelectionChoiceBox.getItems().addAll(chunkNames);
 
 

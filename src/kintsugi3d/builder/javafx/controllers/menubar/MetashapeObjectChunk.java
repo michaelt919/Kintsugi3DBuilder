@@ -40,7 +40,7 @@ public class MetashapeObjectChunk {
     private Document chunkXML;
     private Document frameZip;
 
-    private ArrayList<Triplet<Integer, String, String>> modelInfo = new ArrayList<>();
+    private ArrayList<Triplet<Integer, String, String>> modelInfo = new ArrayList<>(); //model id, name/label, and path
     private Integer activeModelID; //TODO: is this equivalent to default model id?
 
     public String getChunkZipPath() { return chunkZipPath; }
