@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -725,6 +724,28 @@ public final class ViewSet implements ReadonlyViewSet
         {
             this.primaryViewIndex = poseIndex;
         }
+        else{
+            //comb through manually because imageFiles contains parent files
+            //ex. target file is photo314.jpg and imageFiles contains myPhotos/photo314.jpg
+
+            //another possibility is an extension mismatch
+            //sometimes the camera label is photo314.jpg, other times just photo314
+            for (int i = 0; i < imageFiles.size(); ++i){
+                String shortenedImgName = removeExt(imageFiles.get(i).getName());
+                String shortenedViewName = removeExt(viewName);
+
+                //TODO: will this cause issues if extensions are different? (ex. photo.jpg and photo.tiff)
+                if (shortenedImgName.equals(shortenedViewName)){
+                    this.primaryViewIndex = i;
+                    break;
+                }
+            }
+        }
+    }
+
+    public static String removeExt(String fileName) {
+        int dotIndex = fileName.lastIndexOf('.');
+        return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
     }
 
     @Override

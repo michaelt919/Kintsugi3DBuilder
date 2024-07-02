@@ -22,9 +22,10 @@ import java.io.FileNotFoundException;
  */
 public class ImageFinder
 {
-    private final static Logger log = LoggerFactory.getLogger(ImageFinder.class);
+    private static final Logger log = LoggerFactory.getLogger(ImageFinder.class);
 
     private static final ImageFinder INSTANCE = new ImageFinder();
+    private static final String[] altFormats  = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "tif", "TIF", "tiff", "TIFF" };
 
     public static ImageFinder getInstance()
     {
@@ -34,6 +35,8 @@ public class ImageFinder
     private ImageFinder()
     {
     }
+
+    public String[] getSupportedImgFormats(){return altFormats;}
 
     // TODO move outside this class
     public File findImageFile(File requestedFile) throws FileNotFoundException
@@ -45,7 +48,6 @@ public class ImageFinder
         else
         {
             // Try some alternate file formats/extensions
-            String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "tif", "TIF", "tiff", "TIFF" };
             for(String extension : altFormats)
             {
                 String[] filenameParts = requestedFile.getName().split("\\.");

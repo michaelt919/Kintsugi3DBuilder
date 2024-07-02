@@ -230,7 +230,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             }
 
         // 1) Construct camera ID to filename map from frame's ZIP
-            Map<Integer, String> cameraPathsMap = new HashMap<Integer, String>();
+            Map<Integer, String> cameraPathsMap = new HashMap<>();
             // Open the xml files that contains all the cameras' ids and file paths
             Document frame = metashapeObjectChunk.getFrameZip();
             if (frame == null || frame.getDocumentElement() == null){
@@ -257,43 +257,32 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 Element cameraElement = (Element) cameraList.item(i);
                 int cameraId = Integer.parseInt(cameraElement.getAttribute("camera_id"));
 
-                String path = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
+                String pathAttribute = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
 
                 File imageFile;
+                String finalPath = "";
                 if (fullResDirectoryOverride == null){
-                    imageFile = new File(fullResSearchDirectory, path);
-
-                    if (imageFile.exists()) {
-                        System.out.println(imageFile.getCanonicalPath());
-                        // Add pair to the map
-                        cameraPathsMap.put(cameraId, rootDirectory.toPath().relativize(imageFile.toPath()).toString());
-                    }
-                    else{
-                        numMissingFiles++;
-
-                        if (exceptionFolder == null)
-                        {
-                            exceptionFolder = imageFile.getParentFile();
-                        }
-                    }
+                    imageFile = new File(fullResSearchDirectory, pathAttribute);
+                    finalPath = rootDirectory.toPath().relativize(imageFile.toPath()).toString();
                 }
                 else{
                     //if this doesn't work, then replace metashapeObjectChunk.getFramePath()).getParentFile()
                     //    and the first part of path with the file that the user selected
-                    path = new File(path).getName();
-                    imageFile = new File(fullResDirectoryOverride, path);
+                    String pathAttributeName = new File(pathAttribute).getName();
+                    imageFile = new File(fullResDirectoryOverride, pathAttributeName);
+                    finalPath = imageFile.getName();
+                }
 
-                    if (imageFile.exists()) {
-                        // Add pair to the map
-                        cameraPathsMap.put(cameraId, imageFile.getName());
-                    }
-                    else{
-                        numMissingFiles++;
+                if (imageFile.exists() && !finalPath.isBlank()) {
+                    // Add pair to the map
+                    cameraPathsMap.put(cameraId, finalPath);
+                }
+                else{
+                    numMissingFiles++;
 
-                        if (exceptionFolder == null)
-                        {
-                            exceptionFolder = imageFile.getParentFile();
-                        }
+                    if (exceptionFolder == null)
+                    {
+                        exceptionFolder = imageFile.getParentFile();
                     }
                 }
             }
@@ -368,6 +357,11 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             }
 
             return this;
+        }
+
+        public static String removeExt(String fileName) {
+            int dotIndex = fileName.lastIndexOf('.');
+            return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
         }
 
         public ViewSet getViewSet()
