@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.IntStream;
 
 public class MetashapeImportController extends FXMLPageController implements ShareInfo, CanConfirm {
     private static final Logger log = LoggerFactory.getLogger(MetashapeImportController.class);
@@ -148,7 +147,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         primaryViewChoiceBox.getItems().clear();
 
 
-        List<Element> cameras = metashapeObjectChunk.findCameras();
+        List<Element> cameras = metashapeObjectChunk.findEnabledCameras();
         if (!cameras.isEmpty())
         {
             Iterator<String> imageIterator = cameras.stream().map(camera -> camera.getAttribute("label"))
@@ -159,6 +158,10 @@ public class MetashapeImportController extends FXMLPageController implements Sha
             // Use individual Platform.runLater calls, chained together recursively
             // to prevent locking up the JavaFX Application thread
             addToViewListRecursive(imageIterator);
+        }
+        else{
+            //TODO: create warning alert because no enabled cameras were found
+            primaryViewChoiceBox.setValue("No Enabled Cameras Found");
         }
 
     }
