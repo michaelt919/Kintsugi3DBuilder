@@ -54,7 +54,7 @@
                         <Font name="Monospaced Regular" size="14.0" />
                      </font>
                   </Text>
-                  <ChoiceBox fx:id="primaryViewChoiceBox" prefWidth="400.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                  <ChoiceBox fx:id="primaryViewChoiceBox" disable="true" prefWidth="400.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                </children>
                <VBox.margin>
                   <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
