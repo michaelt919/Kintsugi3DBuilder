@@ -11,8 +11,10 @@
 
 package kintsugi3d.builder.javafx.controllers.scene;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
@@ -21,6 +23,9 @@ import org.slf4j.LoggerFactory;
 public class ProgressBarsController {
     private static final Logger log = LoggerFactory.getLogger(ProgressBarsController.class);
     private static ProgressBarsController INSTANCE;
+
+    @FXML private Label localTextLabel;
+    @FXML private Label overallTextLabel;
 
     @FXML private ProgressBar overallProgressBar;
     @FXML private ProgressBar localProgressBar;
@@ -39,15 +44,19 @@ public class ProgressBarsController {
     }
 
     public ProgressBar getOverallProgressBar(){return overallProgressBar;}
-    public ProgressBar getLocalProgressBar(){
-        return localProgressBar;
-    }
+    public ProgressBar getLocalProgressBar(){return localProgressBar;}
+    public Stage getStage(){return stage;}
+    public Label getLocalTextLabel(){return localTextLabel;}
+    public Label getOverallTextLabel() {return overallTextLabel;}
 
     public void showStage() {
-        stage.show();
+        Platform.runLater(()-> stage.show());
     }
 
-    public Stage getStage(){return stage;}
 
     public Button getCancelButton() {return cancelButton;}
+
+    public void hideStage() {
+        Platform.runLater(()->stage.hide());
+    }
 }

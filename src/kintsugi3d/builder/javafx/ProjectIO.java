@@ -692,10 +692,7 @@ public final class ProjectIO
             return;
         }
 
-
         ProgressBarsController.getInstance().showStage();
-
-
     }
 
     public void openSystemSettingsModal(InternalModels internalModels, Window window) {

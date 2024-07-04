@@ -79,6 +79,8 @@ public class MenubarController
 
     private ProgressBar localProgressBar;
     private Button cancelButton;
+    private Label localTextLabel;
+    private Label overallTextLabel;
 
     //toggle groups
     @FXML private ToggleGroup renderGroup;
@@ -189,11 +191,10 @@ public class MenubarController
         this.cameraViewList.visibleProperty().bind(injectedInternalModels.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
 
         this.cancelButton = ProgressBarsController.getInstance().getCancelButton();
+        this.localTextLabel = ProgressBarsController.getInstance().getLocalTextLabel();
+        this.overallTextLabel = ProgressBarsController.getInstance().getOverallTextLabel();
 
         this.localProgressBar = ProgressBarsController.getInstance().getLocalProgressBar();
-
-        // remove progress bar from layout when invisible
-        this.localProgressBar.managedProperty().bind(this.localProgressBar.visibleProperty());
 
         this.cameraViewListController.init(injectedInternalModels.getCameraViewListModel());
 
@@ -233,10 +234,9 @@ public class MenubarController
                 progress = 0.0;
                 Platform.runLater(() ->
                 {
-                    localProgressBar.setVisible(true);
-                    cancelButton.setVisible(true);
                     localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
                 });
+                ProgressBarsController.getInstance().showStage();
             }
 
             @Override
@@ -253,8 +253,10 @@ public class MenubarController
                 progress = 0.0;
                 Platform.runLater(() -> localProgressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS));
 
-                // TODO
                 log.info("[Stage {}/{}] {}", stage, stageCount, message);
+
+                //TODO: index from 0 or 1?
+                Platform.runLater(()-> overallTextLabel.setText(String.format("[Stage %d/%d] %s", stage, stageCount, message)));
             }
 
             @Override
@@ -269,8 +271,9 @@ public class MenubarController
             {
                 this.progress = progress;
                 Platform.runLater(() -> localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : progress / maximum));
-                // TODO handle message
+
                 log.info("[{}%] {}", new DecimalFormat("#.##").format(progress / maximum * 100), message);
+                Platform.runLater(()-> localTextLabel.setText(message));
             }
 
             @Override
@@ -279,8 +282,7 @@ public class MenubarController
                 this.maximum = 0.0;
                 Platform.runLater(() ->
                 {
-                    localProgressBar.setVisible(false);
-                    cancelButton.setVisible(false);
+                    ProgressBarsController.getInstance().hideStage();
                 });
             }
 

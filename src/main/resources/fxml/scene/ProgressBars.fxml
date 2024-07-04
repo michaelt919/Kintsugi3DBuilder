@@ -27,7 +27,7 @@
             </Label>
             <VBox spacing="10.0">
                <children>
-                  <Label text="Overall Progress (TEMP)">
+                  <Label fx:id="overallTextLabel" text="Overall Progress (TEMP)">
                      <font>
                         <Font size="20.0" />
                      </font>
@@ -37,7 +37,7 @@
             </VBox>
             <VBox spacing="10.0">
                <children>
-                  <Label text="Resizing myPhoto400.jpeg (219/400) (TEMP)" />
+                  <Label fx:id="localTextLabel" text="Resizing myPhoto400.jpeg (219/400) (TEMP)" />
                   <ProgressBar fx:id="localProgressBar" prefHeight="18.0" prefWidth="582.0" progress="0.8" />
                </children>
             </VBox>

@@ -510,7 +510,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             {
                 if (progressMonitor != null)
                 {
-                    progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i, viewSet.getCameraPoseCount()));
+                    progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i + 1, viewSet.getCameraPoseCount()));
                     progressMonitor.allowUserCancellation();
                 }
 
