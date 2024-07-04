@@ -730,6 +730,8 @@ public final class ViewSet implements ReadonlyViewSet
 
             //another possibility is an extension mismatch
             //sometimes the camera label is photo314.jpg, other times just photo314
+
+            //this is due to inconsistencies with camera labels in frame.zip and chunk.zip xml's
             for (int i = 0; i < imageFiles.size(); ++i){
                 String shortenedImgName = removeExt(imageFiles.get(i).getName());
                 String shortenedViewName = removeExt(viewName);
