@@ -32,13 +32,13 @@
                         <Font size="20.0" />
                      </font>
                   </Label>
-                  <ProgressBar prefHeight="18.0" prefWidth="582.0" progress="0.39" styleClass="overall-progress-bar" />
+                  <ProgressBar fx:id="overallProgressBar" prefHeight="18.0" prefWidth="582.0" progress="0.39" styleClass="overall-progress-bar" />
                </children>
             </VBox>
             <VBox spacing="10.0">
                <children>
                   <Label text="Resizing myPhoto400.jpeg (219/400) (TEMP)" />
-                  <ProgressBar prefHeight="18.0" prefWidth="582.0" progress="0.8" />
+                  <ProgressBar fx:id="localProgressBar" prefHeight="18.0" prefWidth="582.0" progress="0.8" />
                </children>
             </VBox>
          </children>

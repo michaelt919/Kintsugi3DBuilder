@@ -27,6 +27,7 @@ import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.SynchronizedWindow;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.RootSceneController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
@@ -160,20 +161,27 @@ public class MainApplication extends Application
         URL welcomeWindowURL = getClass().getClassLoader().getResource(welcomeWindowFXMLFileName);
         assert welcomeWindowURL != null : "cant find " + welcomeWindowFXMLFileName;
 
+        String progressBarsFXMLFileName = "fxml/scene/ProgressBars.fxml";
+        URL progressBarsURL = getClass().getClassLoader().getResource(progressBarsFXMLFileName);
+        assert progressBarsURL != null : "cant find " + progressBarsFXMLFileName;
+
         //init fxml loaders
         FXMLLoader sceneFXMLLoader = new FXMLLoader(sceneURL);
         FXMLLoader menuBarFXMLLoader = new FXMLLoader(menuBarURL);
         FXMLLoader welcomeWindowFXMLLoader = new FXMLLoader(welcomeWindowURL);
+        FXMLLoader progressBarsFXMLLoader = new FXMLLoader(progressBarsURL);
 
         //load Parents
         Parent menuBarRoot = menuBarFXMLLoader.load();
         Parent sceneRoot = sceneFXMLLoader.load();
         Parent welcomeRoot = welcomeWindowFXMLLoader.load();
+        Parent progressBarsRoot = progressBarsFXMLLoader.load();
 
         //load Controllers
         RootSceneController sceneController = sceneFXMLLoader.getController();
         MenubarController menuBarController = menuBarFXMLLoader.getController();
         WelcomeWindowController welcomeWindowController = welcomeWindowFXMLLoader.getController();
+        ProgressBarsController progressBarsController = progressBarsFXMLLoader.getController();
 
         //load stages
         primaryStage.setTitle("Kintsugi 3D Builder");
@@ -190,6 +198,13 @@ public class MainApplication extends Application
         sceneStage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
         sceneStage.setTitle("Scene");
         sceneStage.setScene(new Scene(sceneRoot));
+
+        Stage progressBarsStage = new Stage();
+        progressBarsStage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
+        progressBarsStage.setTitle("Progress");
+        progressBarsStage.setScene(new Scene(progressBarsRoot));
+        progressBarsStage.initOwner(primaryStage.getScene().getWindow());
+
 
         //set positions
 
@@ -287,6 +302,9 @@ public class MainApplication extends Application
             InternalModels.getInstance().getObjectModel(),
             InternalModels.getInstance().getProjectModel(),
             MultithreadModels.getInstance().getSceneViewportModel());
+
+        //init progress bars first so other controllers can access the progress bar fxml components
+        progressBarsController.init(progressBarsStage);
 
         menuBarController.init(primaryStage, InternalModels.getInstance(),
             () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));

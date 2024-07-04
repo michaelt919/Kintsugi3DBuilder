@@ -37,6 +37,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.*;
 import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
+import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
@@ -74,7 +75,9 @@ public class MenubarController
     private final Flag loggerWindowOpen = new Flag(false);
 
 
-    @FXML private ProgressBar progressBar;
+//    @FXML private ProgressBar progressBar;
+
+    private ProgressBar localProgressBar;
 
     //toggle groups
     @FXML private ToggleGroup renderGroup;
@@ -186,9 +189,10 @@ public class MenubarController
         this.cameraViewList.visibleProperty().bind(injectedInternalModels.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
 
 
+        this.localProgressBar = ProgressBarsController.getInstance().getLocalProgressBar();
 
         // remove progress bar from layout when invisible
-        this.progressBar.managedProperty().bind(this.progressBar.visibleProperty());
+        this.localProgressBar.managedProperty().bind(this.localProgressBar.visibleProperty());
 
         this.cameraViewListController.init(injectedInternalModels.getCameraViewListModel());
 
@@ -228,9 +232,9 @@ public class MenubarController
                 progress = 0.0;
                 Platform.runLater(() ->
                 {
-                    progressBar.setVisible(true);
+                    localProgressBar.setVisible(true);
                     cancelButton.setVisible(true);
-                    progressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
+                    localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
                 });
             }
 
@@ -246,7 +250,7 @@ public class MenubarController
             {
                 maximum = 0.0;
                 progress = 0.0;
-                Platform.runLater(() -> progressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS));
+                Platform.runLater(() -> localProgressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS));
 
                 // TODO
                 log.info("[Stage {}/{}] {}", stage, stageCount, message);
@@ -256,14 +260,14 @@ public class MenubarController
             public void setMaxProgress(double maxProgress)
             {
                 this.maximum = maxProgress;
-                Platform.runLater(() -> progressBar.setProgress(maxProgress == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : progress / maxProgress));
+                Platform.runLater(() -> localProgressBar.setProgress(maxProgress == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : progress / maxProgress));
             }
 
             @Override
             public void setProgress(double progress, String message)
             {
                 this.progress = progress;
-                Platform.runLater(() -> progressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : progress / maximum));
+                Platform.runLater(() -> localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : progress / maximum));
                 // TODO handle message
                 log.info("[{}%] {}", new DecimalFormat("#.##").format(progress / maximum * 100), message);
             }
@@ -274,7 +278,7 @@ public class MenubarController
                 this.maximum = 0.0;
                 Platform.runLater(() ->
                 {
-                    progressBar.setVisible(false);
+                    localProgressBar.setVisible(false);
                     cancelButton.setVisible(false);
                 });
             }
@@ -319,7 +323,6 @@ public class MenubarController
 
         tip = new Tooltip("Remove references to all recent projects. Does not modify your file system.");
         Tooltip.install(removeAllRefsCustMenuItem.getContent(), tip);
-
 
 //        updatePreloadVisibilityEtc();
 

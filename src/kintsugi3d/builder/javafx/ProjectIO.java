@@ -692,14 +692,10 @@ public final class ProjectIO
             return;
         }
 
-        try
-        {
-            ProgressBarsController progressBarsController = makeWindow("Progress", progressBarsModalOpen, window, "fxml/scene/ProgressBars.fxml");
-        }
-        catch (IOException e)
-        {
-            log.error("An error occurred opening the progress bars modal:", e);
-        }
+
+        ProgressBarsController.getInstance().showStage();
+
+
     }
 
     public void openSystemSettingsModal(InternalModels internalModels, Window window) {
