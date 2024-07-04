@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.scene;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.ProgressBar;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
@@ -20,8 +21,10 @@ import org.slf4j.LoggerFactory;
 public class ProgressBarsController {
     private static final Logger log = LoggerFactory.getLogger(ProgressBarsController.class);
     private static ProgressBarsController INSTANCE;
+
     @FXML private ProgressBar overallProgressBar;
     @FXML private ProgressBar localProgressBar;
+    @FXML private Button cancelButton;
 
     private Stage stage;
 
@@ -43,4 +46,8 @@ public class ProgressBarsController {
     public void showStage() {
         stage.show();
     }
+
+    public Stage getStage(){return stage;}
+
+    public Button getCancelButton() {return cancelButton;}
 }

@@ -78,12 +78,12 @@ public class MenubarController
 //    @FXML private ProgressBar progressBar;
 
     private ProgressBar localProgressBar;
+    private Button cancelButton;
 
     //toggle groups
     @FXML private ToggleGroup renderGroup;
 
     @FXML private Menu aboutMenu;
-    @FXML private Button cancelButton;
 
     //menu items
     //TODO: ORGANIZE CHECK MENU ITEMS
@@ -188,6 +188,7 @@ public class MenubarController
         // TODO make this a separate property to allow it to be shown in other contexts
         this.cameraViewList.visibleProperty().bind(injectedInternalModels.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
 
+        this.cancelButton = ProgressBarsController.getInstance().getCancelButton();
 
         this.localProgressBar = ProgressBarsController.getInstance().getLocalProgressBar();
 

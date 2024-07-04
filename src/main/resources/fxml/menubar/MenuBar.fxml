@@ -400,7 +400,6 @@
                     </MenuBar>
                     <HBox alignment="CENTER_LEFT" spacing="10.0" visible="false" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
                         <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" visible="false" />
-                        <Button fx:id="cancelButton" mnemonicParsing="false" styleClass="menubarbuttons" text="Cancel" visible="false" />
                         <Button fx:id="settingsButton" contentDisplay="CENTER" mnemonicParsing="false" onAction="#openSystemSettingsModal" prefHeight="25.0" prefWidth="80.0" styleClass="menubarbuttons" text="Settings">
                             <HBox.margin>
                                 <Insets />
