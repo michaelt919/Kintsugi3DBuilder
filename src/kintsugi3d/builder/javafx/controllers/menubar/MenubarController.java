@@ -863,6 +863,10 @@ public class MenubarController
         }
     }
 
+    public void testProgressBarsModal(){
+        ProjectIO.getInstance().openProgressBars(window);
+    }
+
 
 //    private void handleDirectoryDropdownSelection(ActionEvent actionEvent) {
 //        //if user clicks "choose directory" option, open the directory chooser

@@ -47,8 +47,11 @@ import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
+import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.resources.ibr.MeshImportException;
+import kintsugi3d.gl.interactive.InteractiveRenderable;
+import kintsugi3d.gl.interactive.InteractiveRenderableList;
 import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
@@ -71,6 +74,7 @@ public final class ProjectIO
 
     private final Flag loaderWindowOpen = new Flag(false);
     private Flag systemSettingsModalOpen = new Flag(false);
+    private Flag progressBarsModalOpen = new Flag(false);
     private Flag aboutWindowOpen = new Flag(false);
 
 
@@ -680,6 +684,21 @@ public final class ProjectIO
         if (confirmClose("Are you sure you want to close the current project?"))
         {
             closeProject();
+        }
+    }
+
+    public void openProgressBars(Window window){
+        if(progressBarsModalOpen.get()){
+            return;
+        }
+
+        try
+        {
+            ProgressBarsController progressBarsController = makeWindow("Progress", progressBarsModalOpen, window, "fxml/scene/ProgressBars.fxml");
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred opening the progress bars modal:", e);
         }
     }
 
