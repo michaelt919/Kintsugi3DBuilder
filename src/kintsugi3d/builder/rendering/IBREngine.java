@@ -174,7 +174,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             if (this.progressMonitor != null)
             {
                 this.progressMonitor.cancelComplete(e);
-            }
+        }
             throw new InitializationException(e);
         }
         catch (RuntimeException|IOException e)
