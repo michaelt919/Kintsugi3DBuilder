@@ -78,6 +78,7 @@ public class MenubarController
 //    @FXML private ProgressBar progressBar;
 
     private ProgressBar localProgressBar;
+    private ProgressBar overallProgressBar;
     private Button cancelButton;
     private Label localTextLabel;
     private Label overallTextLabel;
@@ -195,6 +196,7 @@ public class MenubarController
         this.overallTextLabel = ProgressBarsController.getInstance().getOverallTextLabel();
 
         this.localProgressBar = ProgressBarsController.getInstance().getLocalProgressBar();
+        this.overallProgressBar = ProgressBarsController.getInstance().getOverallProgressBar();
 
         this.cameraViewListController.init(injectedInternalModels.getCameraViewListModel());
 
@@ -209,8 +211,11 @@ public class MenubarController
         MultithreadModels.getInstance().getIOModel().addProgressMonitor(new ProgressMonitor()
         {
             private double maximum = 0.0;
-            private double progress = 0.0;
+            private double localProgress = 0.0;
+
+            private double overallProgress = 0.0;
             private int stageCount = 0;
+            private int currentStage = 0;
 
             @Override
             public void allowUserCancellation() throws UserCancellationException
@@ -231,10 +236,12 @@ public class MenubarController
             @Override
             public void start()
             {
-                progress = 0.0;
+                localProgress = 0.0;
+                overallProgress = 0.0;
                 Platform.runLater(() ->
                 {
                     localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
+                    overallProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
                 });
                 ProgressBarsController.getInstance().showStage();
             }
@@ -249,30 +256,40 @@ public class MenubarController
             @Override
             public void setStage(int stage, String message)
             {
-                maximum = 0.0;
-                progress = 0.0;
+                this.maximum = 0.0;
+                this.localProgress = 0.0;
+                this.currentStage = stage;
+
                 Platform.runLater(() -> localProgressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS));
 
-                log.info("[Stage {}/{}] {}", stage, stageCount, message);
+                overallProgress = (double) currentStage/stageCount;
+                Platform.runLater(()-> overallProgressBar.setProgress(overallProgress));
+
+                log.info("[Stage {}/{}] {}", currentStage, stageCount, message);
 
                 //TODO: index from 0 or 1?
-                Platform.runLater(()-> overallTextLabel.setText(String.format("[Stage %d/%d] %s", stage, stageCount, message)));
+                Platform.runLater(()-> overallTextLabel.setText(String.format("[Stage %d/%d] %s", currentStage, stageCount, message)));
             }
 
             @Override
             public void setMaxProgress(double maxProgress)
             {
                 this.maximum = maxProgress;
-                Platform.runLater(() -> localProgressBar.setProgress(maxProgress == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : progress / maxProgress));
+                Platform.runLater(() -> localProgressBar.setProgress(maxProgress == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : localProgress / maxProgress));
             }
 
             @Override
             public void setProgress(double progress, String message)
             {
-                this.progress = progress;
-                Platform.runLater(() -> localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : progress / maximum));
+                this.localProgress = progress / maximum;
+                Platform.runLater(() -> localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : localProgress));
 
-                log.info("[{}%] {}", new DecimalFormat("#.##").format(progress / maximum * 100), message);
+                double offset = (double) currentStage / stageCount;
+                this.overallProgress = offset + (localProgress / stageCount);
+                Platform.runLater(() -> overallProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : overallProgress));
+
+
+                log.info("[{}%] {}", new DecimalFormat("#.##").format(localProgress * 100), message);
                 Platform.runLater(()-> localTextLabel.setText(message));
             }
 
