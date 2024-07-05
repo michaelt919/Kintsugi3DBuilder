@@ -19,15 +19,18 @@ public class Stopwatch {
     private int trackingIdx = 0;
 
     private long initTime;
-    private long totalTime;
+    private boolean running = false;
+
 
     public Stopwatch(){
     }
 
     public long start(){
+        running = true;
+
         initTime = System.nanoTime();
-        totalTime = 0;
         Arrays.fill(rollingAverageStorage, initTime);
+
         click();
         return initTime;
     }
@@ -42,12 +45,17 @@ public class Stopwatch {
         }
 
         long difference = rollingAverageStorage[trackingIdx] - rollingAverageStorage[prevIndex];
-        totalTime += difference;
         trackingIdx = (trackingIdx + 1) % ARR_SIZE;
         return difference;
     }
 
     public long getInitTime() {return initTime;}
 
-    public long getTotalElapsedTime() {return totalTime;}
+    public boolean isRunning(){return running;}
+
+    public long getTotalElapsedTime() {return System.nanoTime() - initTime;}
+
+    public void stop() {
+        running = false;
+    }
 }

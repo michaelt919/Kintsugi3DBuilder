@@ -247,6 +247,18 @@ public class MenubarController
                 ProgressBarsController.getInstance().resetText();
                 ProgressBarsController.getInstance().showStage();
                 ProgressBarsController.getInstance().stopwatchStart();
+
+                new Thread(() -> {
+                    while (ProgressBarsController.getInstance().isStopwatchRunning()) {
+                        try {
+                            Thread.sleep(200);
+                            ProgressBarsController.getInstance().updateTotalElapsedTime();
+                        } catch (InterruptedException e) {
+                            break;
+                        }
+                    }
+                }).start();
+
             }
 
             @Override
@@ -295,15 +307,13 @@ public class MenubarController
                 Platform.runLater(()-> localTextLabel.setText(message));
 
                 ProgressBarsController.getInstance().stopwatchClick();
-
-                //TODO: need to update this more often
-                ProgressBarsController.getInstance().updateTotalElapsedTime();
             }
 
             @Override
             public void complete()
             {
                 this.maximum = 0.0;
+                ProgressBarsController.getInstance().stopwatchStop();
                 Platform.runLater(() ->
                 {
                     ProgressBarsController.getInstance().hideStage();

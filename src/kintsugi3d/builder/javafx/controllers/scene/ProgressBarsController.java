@@ -101,7 +101,7 @@ public class ProgressBarsController {
         long seconds = TimeUnit.NANOSECONDS.toSeconds(difference) -
                 TimeUnit.MINUTES.toSeconds(minutes);
 
-
+        //TODO: replace with 00:00 format?
         String minutesString = minutes == 1 ? "minute" : "minutes";
         String secondsString = seconds == 1 ? "second" : "seconds";
 
@@ -116,11 +116,20 @@ public class ProgressBarsController {
         long totalSecs = TimeUnit.NANOSECONDS.toSeconds(totalElapsedTime) -
                 TimeUnit.MINUTES.toSeconds(totalMins);
 
+        //TODO: replace with 00:00 format?
         String minutesString = totalMins == 1 ? "minute" : "minutes";
         String secondsString = totalSecs == 1 ? "second" : "seconds";
 
         String formattedTotalElapsedTime = String.format("%d %s, %d %s", totalMins, minutesString, totalSecs, secondsString);
 
         Platform.runLater(()->totalTimeElapsedLabel.setText(formattedTotalElapsedTime));
+    }
+
+    public void stopwatchStop() {
+        stopwatch.stop();
+    }
+
+    public boolean isStopwatchRunning() {
+        return stopwatch.isRunning();
     }
 }
