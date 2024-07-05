@@ -14,7 +14,7 @@ package kintsugi3d.util;
 import java.util.Arrays;
 
 public class Stopwatch {
-    private static final int ARR_SIZE = 30;
+    private static final int ARR_SIZE = 15;
     private Long[] rollingAverageStorage = new Long[ARR_SIZE];
     private int trackingIdx = 0;
 
@@ -27,6 +27,7 @@ public class Stopwatch {
 
     public long start(){
         running = true;
+        trackingIdx = 0;
 
         initTime = System.nanoTime();
         Arrays.fill(rollingAverageStorage, initTime);
@@ -57,5 +58,22 @@ public class Stopwatch {
 
     public void stop() {
         running = false;
+    }
+
+    public long getAvgDifference(){
+        long recordedTimes = 0;
+        int numToDivide = 0;
+        for(int i = 1; i < ARR_SIZE; ++i){
+            if (rollingAverageStorage[i] == initTime){break;}
+
+            long difference = rollingAverageStorage[i] - rollingAverageStorage[i-1];
+
+            if (difference > 0){
+                recordedTimes += difference;
+                numToDivide++;
+            }
+        }
+
+        return numToDivide == 0 ? 0 : recordedTimes / numToDivide;
     }
 }

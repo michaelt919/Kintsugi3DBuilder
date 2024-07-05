@@ -27,8 +27,9 @@ public class ProgressBarsController {
     private static final Logger log = LoggerFactory.getLogger(ProgressBarsController.class);
     private static ProgressBarsController INSTANCE;
 
+    @FXML private Label localEstimTimeRemainingLabel;
+    @FXML private Label totalEstimTimeRemainingLabel;
     @FXML private Label totalTimeElapsedLabel;
-    @FXML private Label timeElapsedLabel;
 
     @FXML private Label localTextLabel;
     @FXML private Label overallTextLabel;
@@ -41,9 +42,10 @@ public class ProgressBarsController {
 
     private String defaultLocalText;
     private String defaultOverallText;
-
-    private String defaultTimeElapsedText;
     private String defaultTotalTimeElapsedText;
+    private String defaultEstimTimeRemainingTxt;
+
+    private String defaultEstimLocalTimeRemainingTxt;
 
     private Stage stage;
 
@@ -56,8 +58,10 @@ public class ProgressBarsController {
         this.stage = stage;
         defaultLocalText = localTextLabel.getText();
         defaultOverallText = overallTextLabel.getText();
-        defaultTimeElapsedText = timeElapsedLabel.getText();
+
         defaultTotalTimeElapsedText = totalTimeElapsedLabel.getText();
+        defaultEstimTimeRemainingTxt = totalEstimTimeRemainingLabel.getText();
+        defaultEstimLocalTimeRemainingTxt = localEstimTimeRemainingLabel.getText();
 
         stopwatch = new Stopwatch();
 
@@ -74,8 +78,9 @@ public class ProgressBarsController {
         Platform.runLater(()->{
             localTextLabel.setText(defaultLocalText);
             overallTextLabel.setText(defaultOverallText);
-            timeElapsedLabel.setText(defaultTimeElapsedText);
             totalTimeElapsedLabel.setText(defaultTotalTimeElapsedText);
+            totalEstimTimeRemainingLabel.setText(defaultEstimTimeRemainingTxt);
+            localEstimTimeRemainingLabel.setText(defaultEstimLocalTimeRemainingTxt);
         });
     }
 
@@ -94,36 +99,49 @@ public class ProgressBarsController {
         stopwatch.start();
     }
 
-    public void stopwatchClick(){
-        long difference = stopwatch.click();
+    public void stopwatchClick(double localProgress, double overallProgress){
+        stopwatch.click();
+        updateTotalRemainingTime(overallProgress);
+        updateLocalRemainingTime(localProgress);
+    }
 
-        long minutes = TimeUnit.NANOSECONDS.toMinutes(difference);
-        long seconds = TimeUnit.NANOSECONDS.toSeconds(difference) -
+    private void updateTotalRemainingTime(double progress) {
+        long elapsedTime = stopwatch.getTotalElapsedTime();
+
+        double remainingProgress = 1.0 / progress;
+
+        Platform.runLater(()-> totalEstimTimeRemainingLabel.setText(nanoToMinAndSec((long) (elapsedTime * remainingProgress))));
+    }
+
+    private void updateLocalRemainingTime(double localProgress) {
+        long avgDif = stopwatch.getAvgDifference();
+
+        double remainingProgress = (1.0 - localProgress) * 100;
+
+        long estimatedRemaining = (long) (avgDif * remainingProgress);
+
+        Platform.runLater(()-> localEstimTimeRemainingLabel.setText(nanoToMinAndSec(estimatedRemaining)));
+    }
+
+
+    public void updateTotalElapsedTime() {
+        long totalElapsedTime = stopwatch.getTotalElapsedTime();
+
+        Platform.runLater(()->totalTimeElapsedLabel.setText(nanoToMinAndSec(totalElapsedTime)));
+    }
+
+    private static String nanoToMinAndSec(long nanoTime){
+        long minutes = TimeUnit.NANOSECONDS.toMinutes(nanoTime);
+        long seconds = TimeUnit.NANOSECONDS.toSeconds(nanoTime) -
                 TimeUnit.MINUTES.toSeconds(minutes);
 
         //TODO: replace with 00:00 format?
         String minutesString = minutes == 1 ? "minute" : "minutes";
         String secondsString = seconds == 1 ? "second" : "seconds";
 
-        String formattedElapsedTime = String.format("%d %s, %d %s", minutes, minutesString, seconds, secondsString);
-        Platform.runLater(()->timeElapsedLabel.setText(formattedElapsedTime));
+        return String.format("%d %s, %d %s", minutes, minutesString, seconds, secondsString);
     }
 
-    public void updateTotalElapsedTime() {
-        long totalElapsedTime = stopwatch.getTotalElapsedTime();
-
-        long totalMins = TimeUnit.NANOSECONDS.toMinutes(totalElapsedTime);
-        long totalSecs = TimeUnit.NANOSECONDS.toSeconds(totalElapsedTime) -
-                TimeUnit.MINUTES.toSeconds(totalMins);
-
-        //TODO: replace with 00:00 format?
-        String minutesString = totalMins == 1 ? "minute" : "minutes";
-        String secondsString = totalSecs == 1 ? "second" : "seconds";
-
-        String formattedTotalElapsedTime = String.format("%d %s, %d %s", totalMins, minutesString, totalSecs, secondsString);
-
-        Platform.runLater(()->totalTimeElapsedLabel.setText(formattedTotalElapsedTime));
-    }
 
     public void stopwatchStop() {
         stopwatch.stop();
