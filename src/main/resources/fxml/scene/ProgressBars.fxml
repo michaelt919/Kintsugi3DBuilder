@@ -51,14 +51,14 @@
                <children>
                   <Label fx:id="localTextLabel" text="..." />
                   <ProgressBar fx:id="localProgressBar" prefHeight="18.0" prefWidth="582.0" progress="0.0" />
+                  <HBox>
+                     <children>
+                        <Label text="Estimated Time Remaining: " />
+                        <Label fx:id="localEstimTimeRemainingLabel" text="N/A" />
+                     </children>
+                  </HBox>
                </children>
             </VBox>
-            <HBox>
-               <children>
-                  <Label text="Estimated Time Remaining: " />
-                  <Label fx:id="localEstimTimeRemainingLabel" text="N/A" />
-               </children>
-            </HBox>
             <HBox alignment="CENTER">
                <children>
                   <Button fx:id="cancelButton" alignment="CENTER" mnemonicParsing="false" text="Cancel" />

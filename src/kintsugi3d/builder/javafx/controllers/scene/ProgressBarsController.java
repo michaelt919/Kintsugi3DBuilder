@@ -106,11 +106,13 @@ public class ProgressBarsController {
     }
 
     private void updateTotalRemainingTime(double progress) {
-        long elapsedTime = stopwatch.getTotalElapsedTime();
+        long avgDif = stopwatch.getAvgDifference();
 
-        double remainingProgress = 1.0 / progress;
+        double remainingProgress = (1.0 - progress) * 100;
 
-        Platform.runLater(()-> totalEstimTimeRemainingLabel.setText(nanoToMinAndSec((long) (elapsedTime * remainingProgress))));
+        long estimatedRemaining = Math.max(0, (long) (avgDif * remainingProgress));
+
+        Platform.runLater(()-> totalEstimTimeRemainingLabel.setText(nanoToMinAndSec(estimatedRemaining)));
     }
 
     private void updateLocalRemainingTime(double localProgress) {
@@ -118,7 +120,7 @@ public class ProgressBarsController {
 
         double remainingProgress = (1.0 - localProgress) * 100;
 
-        long estimatedRemaining = (long) (avgDif * remainingProgress);
+        long estimatedRemaining = Math.max(0, (long) (avgDif * remainingProgress));
 
         Platform.runLater(()-> localEstimTimeRemainingLabel.setText(nanoToMinAndSec(estimatedRemaining)));
     }
