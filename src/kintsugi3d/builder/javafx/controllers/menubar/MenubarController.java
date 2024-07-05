@@ -243,6 +243,8 @@ public class MenubarController
                     localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
                     overallProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
                 });
+
+                ProgressBarsController.getInstance().resetText();
                 ProgressBarsController.getInstance().showStage();
             }
 
@@ -250,7 +252,6 @@ public class MenubarController
             public void setStageCount(int count)
             {
                 stageCount = count;
-                // TODO configure stage progress bar
             }
 
             @Override

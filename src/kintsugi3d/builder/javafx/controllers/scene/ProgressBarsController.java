@@ -31,6 +31,9 @@ public class ProgressBarsController {
     @FXML private ProgressBar localProgressBar;
     @FXML private Button cancelButton;
 
+    private String defaultLocalText;
+    private String defaultOverallText;
+
     private Stage stage;
 
     public static ProgressBarsController getInstance()
@@ -40,6 +43,8 @@ public class ProgressBarsController {
 
     public void init(Stage stage){
         this.stage = stage;
+        defaultLocalText = localTextLabel.getText();
+        defaultOverallText = overallTextLabel.getText();
         INSTANCE = this;
     }
 
@@ -48,6 +53,13 @@ public class ProgressBarsController {
     public Stage getStage(){return stage;}
     public Label getLocalTextLabel(){return localTextLabel;}
     public Label getOverallTextLabel() {return overallTextLabel;}
+
+    public void resetText(){
+        Platform.runLater(()->{
+            localTextLabel.setText(defaultLocalText);
+            overallTextLabel.setText(defaultOverallText);
+        });
+    }
 
     public void showStage() {
         Platform.runLater(()-> stage.show());

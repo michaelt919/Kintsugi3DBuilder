@@ -20,25 +20,25 @@
    <children>
       <VBox prefHeight="400.0" prefWidth="600.0" spacing="30.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
-            <Label text="Importing and Resizing -- Complete (TEMP)">
+            <Label fx:id="overallTextLabel" text="Loading..." wrapText="true">
                <font>
                   <Font size="28.0" />
                </font>
             </Label>
             <VBox spacing="10.0">
                <children>
-                  <Label fx:id="overallTextLabel" text="Overall Progress (TEMP)">
+                  <Label text="Overall Progress">
                      <font>
                         <Font size="20.0" />
                      </font>
                   </Label>
-                  <ProgressBar fx:id="overallProgressBar" prefHeight="18.0" prefWidth="582.0" progress="0.39" styleClass="overall-progress-bar" />
+                  <ProgressBar fx:id="overallProgressBar" prefHeight="18.0" prefWidth="582.0" progress="0.0" styleClass="overall-progress-bar" />
                </children>
             </VBox>
             <VBox spacing="10.0">
                <children>
-                  <Label fx:id="localTextLabel" text="Resizing myPhoto400.jpeg (219/400) (TEMP)" />
-                  <ProgressBar fx:id="localProgressBar" prefHeight="18.0" prefWidth="582.0" progress="0.8" />
+                  <Label fx:id="localTextLabel" text="..." />
+                  <ProgressBar fx:id="localProgressBar" prefHeight="18.0" prefWidth="582.0" progress="0.0" />
                </children>
             </VBox>
             <HBox alignment="CENTER">
