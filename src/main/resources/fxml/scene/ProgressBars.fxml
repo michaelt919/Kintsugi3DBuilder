@@ -39,6 +39,18 @@
                <children>
                   <Label fx:id="localTextLabel" text="..." />
                   <ProgressBar fx:id="localProgressBar" prefHeight="18.0" prefWidth="582.0" progress="0.0" />
+                  <HBox>
+                     <children>
+                        <Label text="Time Elapsed for Previous Step: " />
+                        <Label fx:id="timeElapsedLabel" text="N/A" />
+                     </children>
+                  </HBox>
+                  <HBox layoutX="10.0" layoutY="65.0">
+                     <children>
+                        <Label text="Total Time Elapsed: " />
+                        <Label fx:id="totalTimeElapsedLabel" text="N/A" />
+                     </children>
+                  </HBox>
                </children>
             </VBox>
             <HBox alignment="CENTER">

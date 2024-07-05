@@ -246,6 +246,7 @@ public class MenubarController
 
                 ProgressBarsController.getInstance().resetText();
                 ProgressBarsController.getInstance().showStage();
+                ProgressBarsController.getInstance().stopwatchStart();
             }
 
             @Override
@@ -292,6 +293,11 @@ public class MenubarController
 
                 log.info("[{}%] {}", new DecimalFormat("#.##").format(localProgress * 100), message);
                 Platform.runLater(()-> localTextLabel.setText(message));
+
+                ProgressBarsController.getInstance().stopwatchClick();
+
+                //TODO: need to update this more often
+                ProgressBarsController.getInstance().updateTotalElapsedTime();
             }
 
             @Override

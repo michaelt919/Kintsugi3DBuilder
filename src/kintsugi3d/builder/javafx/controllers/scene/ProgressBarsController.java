@@ -17,12 +17,18 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.stage.Stage;
+import kintsugi3d.util.Stopwatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.TimeUnit;
 
 public class ProgressBarsController {
     private static final Logger log = LoggerFactory.getLogger(ProgressBarsController.class);
     private static ProgressBarsController INSTANCE;
+
+    @FXML private Label totalTimeElapsedLabel;
+    @FXML private Label timeElapsedLabel;
 
     @FXML private Label localTextLabel;
     @FXML private Label overallTextLabel;
@@ -31,8 +37,13 @@ public class ProgressBarsController {
     @FXML private ProgressBar localProgressBar;
     @FXML private Button cancelButton;
 
+    private Stopwatch stopwatch;
+
     private String defaultLocalText;
     private String defaultOverallText;
+
+    private String defaultTimeElapsedText;
+    private String defaultTotalTimeElapsedText;
 
     private Stage stage;
 
@@ -45,6 +56,11 @@ public class ProgressBarsController {
         this.stage = stage;
         defaultLocalText = localTextLabel.getText();
         defaultOverallText = overallTextLabel.getText();
+        defaultTimeElapsedText = timeElapsedLabel.getText();
+        defaultTotalTimeElapsedText = totalTimeElapsedLabel.getText();
+
+        stopwatch = new Stopwatch();
+
         INSTANCE = this;
     }
 
@@ -58,6 +74,8 @@ public class ProgressBarsController {
         Platform.runLater(()->{
             localTextLabel.setText(defaultLocalText);
             overallTextLabel.setText(defaultOverallText);
+            timeElapsedLabel.setText(defaultTimeElapsedText);
+            totalTimeElapsedLabel.setText(defaultTotalTimeElapsedText);
         });
     }
 
@@ -70,5 +88,39 @@ public class ProgressBarsController {
 
     public void hideStage() {
         Platform.runLater(()->stage.hide());
+    }
+
+    public void stopwatchStart(){
+        stopwatch.start();
+    }
+
+    public void stopwatchClick(){
+        long difference = stopwatch.click();
+
+        long minutes = TimeUnit.NANOSECONDS.toMinutes(difference);
+        long seconds = TimeUnit.NANOSECONDS.toSeconds(difference) -
+                TimeUnit.MINUTES.toSeconds(minutes);
+
+
+        String minutesString = minutes == 1 ? "minute" : "minutes";
+        String secondsString = seconds == 1 ? "second" : "seconds";
+
+        String formattedElapsedTime = String.format("%d %s, %d %s", minutes, minutesString, seconds, secondsString);
+        Platform.runLater(()->timeElapsedLabel.setText(formattedElapsedTime));
+    }
+
+    public void updateTotalElapsedTime() {
+        long totalElapsedTime = stopwatch.getTotalElapsedTime();
+
+        long totalMins = TimeUnit.NANOSECONDS.toMinutes(totalElapsedTime);
+        long totalSecs = TimeUnit.NANOSECONDS.toSeconds(totalElapsedTime) -
+                TimeUnit.MINUTES.toSeconds(totalMins);
+
+        String minutesString = totalMins == 1 ? "minute" : "minutes";
+        String secondsString = totalSecs == 1 ? "second" : "seconds";
+
+        String formattedTotalElapsedTime = String.format("%d %s, %d %s", totalMins, minutesString, totalSecs, secondsString);
+
+        Platform.runLater(()->totalTimeElapsedLabel.setText(formattedTotalElapsedTime));
     }
 }
