@@ -32,6 +32,7 @@ import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.ibr.MissingImagesException;
@@ -359,6 +360,10 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             Platform.runLater(() -> showMissingImgsAlert(
                     metashapeObjectChunk, primaryViewName, supportingFilesDirectory, loadOptions, id, mie));
         }
+        catch(UserCancellationException e)
+        {
+            handleUserCancellation(e);
+        }
         catch (Exception e) {
             handleMissingFiles(e);
         }
@@ -380,8 +385,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         Builder<ContextType> finalBuilder = IBRResourcesImageSpace.getBuilderForContext(this.context);
 
         ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(event -> {
-            //TODO: cancel task
-
+            //TODO: best practice or no? Also doesn't work yet, need to factor in allowUserCancellation() after this
+            ProgressBarsController.getInstance().getCancelButton().fire();
         });
 
         ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event -> {
@@ -406,6 +411,10 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                     Platform.runLater(() ->
                             showMissingImgsAlert(metashapeObjectChunk, primaryViewName, supportingFilesDirectory, loadOptions, id, mie2));
                 }
+                catch(UserCancellationException e)
+                {
+                    handleUserCancellation(e);
+                }
                 catch (Exception e) {
                     handleMissingFiles(e);
                 }
@@ -423,6 +432,11 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                             .setPrimaryView(primaryViewName);
 
                     loadInstance(id, finalBuilder);
+                }
+                //shouldn't need to handle MissingImagesException because we're ignoring missing cameras/images
+                catch(UserCancellationException e)
+                {
+                    handleUserCancellation(e);
                 }
                 catch (Exception e) {
                     handleMissingFiles(e);

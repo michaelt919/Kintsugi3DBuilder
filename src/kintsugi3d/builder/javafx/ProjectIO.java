@@ -119,6 +119,7 @@ public final class ProjectIO
                 projectLoaded = false;
                 if (e instanceof MeshImportException)
                 {
+                    //TODO: change to (e.getMessage(), e)?
                     handleException("Imported object is missing texture coordinates", e);
                 }
                 else
