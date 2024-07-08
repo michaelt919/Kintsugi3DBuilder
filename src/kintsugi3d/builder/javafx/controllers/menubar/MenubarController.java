@@ -246,19 +246,7 @@ public class MenubarController
 
                 ProgressBarsController.getInstance().resetText();
                 ProgressBarsController.getInstance().showStage();
-                ProgressBarsController.getInstance().stopwatchStart();
-
-                new Thread(() -> {
-                    while (ProgressBarsController.getInstance().isStopwatchRunning()) {
-                        try {
-                            Thread.sleep(200);
-                            ProgressBarsController.getInstance().updateTotalElapsedTime();
-                        } catch (InterruptedException e) {
-                            break;
-                        }
-                    }
-                }).start();
-
+                ProgressBarsController.getInstance().startStopwatches();
             }
 
             @Override
@@ -283,6 +271,8 @@ public class MenubarController
 
                 //TODO: index from 0 or 1?
                 Platform.runLater(()-> overallTextLabel.setText(String.format("[Stage %d/%d] %s", currentStage, stageCount, message)));
+
+                ProgressBarsController.getInstance().beginNewStage();
             }
 
             @Override
@@ -306,14 +296,14 @@ public class MenubarController
                 log.info("[{}%] {}", new DecimalFormat("#.##").format(localProgress * 100), message);
                 Platform.runLater(()-> localTextLabel.setText(message));
 
-                ProgressBarsController.getInstance().stopwatchClick(localProgress, overallProgress);
+                ProgressBarsController.getInstance().clickStopwatches(localProgress, overallProgress);
             }
 
             @Override
             public void complete()
             {
                 this.maximum = 0.0;
-                ProgressBarsController.getInstance().stopwatchStop();
+                ProgressBarsController.getInstance().endStopwatches();
                 Platform.runLater(() ->
                 {
                     ProgressBarsController.getInstance().hideStage();

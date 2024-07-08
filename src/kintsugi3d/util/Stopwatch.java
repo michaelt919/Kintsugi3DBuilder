@@ -15,17 +15,25 @@ import java.util.Arrays;
 
 public class Stopwatch {
     private static final int ARR_SIZE = 15;
-    private Long[] rollingAverageStorage = new Long[ARR_SIZE];
+    private final Long[] rollingAverageStorage = new Long[ARR_SIZE];
     private int trackingIdx = 0;
 
     private long initTime;
     private boolean running = false;
+
+    //used to manually set elapsed time for a stopwatch which is stopped and
+    //   has its elapsed time retrieved later
+    private long manualElapsedTime = -1;
 
 
     public Stopwatch(){
     }
 
     public long start(){
+        if(running){
+            throw new IllegalStateException("Stopwatch object cannot be started multiple times.");
+        }
+
         running = true;
         trackingIdx = 0;
 
@@ -54,10 +62,20 @@ public class Stopwatch {
 
     public boolean isRunning(){return running;}
 
-    public long getTotalElapsedTime() {return System.nanoTime() - initTime;}
+    public long getElapsedTime() {
+        if (running){
+            //TODO: need to redo this if we want to support starting and stopping stopwatches
+            return System.nanoTime() - initTime;
+        }
 
-    public void stop() {
+        return manualElapsedTime;
+    }
+
+    public long stop() {
         running = false;
+        manualElapsedTime = System.nanoTime() - initTime;
+
+        return manualElapsedTime;
     }
 
     public long getAvgDifference(){

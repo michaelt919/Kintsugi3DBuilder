@@ -27,9 +27,10 @@ public class ProgressBarsController {
     private static final Logger log = LoggerFactory.getLogger(ProgressBarsController.class);
     private static ProgressBarsController INSTANCE;
 
+    @FXML private Label localElapsedTimeLabel;
     @FXML private Label localEstimTimeRemainingLabel;
     @FXML private Label totalEstimTimeRemainingLabel;
-    @FXML private Label totalTimeElapsedLabel;
+    @FXML private Label totalElapsedTimeLabel;
 
     @FXML private Label localTextLabel;
     @FXML private Label overallTextLabel;
@@ -38,7 +39,8 @@ public class ProgressBarsController {
     @FXML private ProgressBar localProgressBar;
     @FXML private Button cancelButton;
 
-    private Stopwatch stopwatch;
+    private Stopwatch overallStopwatch;
+    private Stopwatch localStopwatch;
 
     private String defaultLocalText;
     private String defaultOverallText;
@@ -48,6 +50,7 @@ public class ProgressBarsController {
     private String defaultEstimLocalTimeRemainingTxt;
 
     private Stage stage;
+    private String defaultOverallElapsedTimeTxt;
 
     public static ProgressBarsController getInstance()
     {
@@ -59,11 +62,13 @@ public class ProgressBarsController {
         defaultLocalText = localTextLabel.getText();
         defaultOverallText = overallTextLabel.getText();
 
-        defaultTotalTimeElapsedText = totalTimeElapsedLabel.getText();
+        defaultTotalTimeElapsedText = totalElapsedTimeLabel.getText();
         defaultEstimTimeRemainingTxt = totalEstimTimeRemainingLabel.getText();
         defaultEstimLocalTimeRemainingTxt = localEstimTimeRemainingLabel.getText();
+        defaultOverallElapsedTimeTxt = localElapsedTimeLabel.getText();
 
-        stopwatch = new Stopwatch();
+        overallStopwatch = new Stopwatch();
+        localStopwatch = new Stopwatch();
 
         INSTANCE = this;
     }
@@ -78,7 +83,10 @@ public class ProgressBarsController {
         Platform.runLater(()->{
             localTextLabel.setText(defaultLocalText);
             overallTextLabel.setText(defaultOverallText);
-            totalTimeElapsedLabel.setText(defaultTotalTimeElapsedText);
+
+            totalElapsedTimeLabel.setText(defaultTotalTimeElapsedText);
+            localElapsedTimeLabel.setText(defaultOverallElapsedTimeTxt);
+
             totalEstimTimeRemainingLabel.setText(defaultEstimTimeRemainingTxt);
             localEstimTimeRemainingLabel.setText(defaultEstimLocalTimeRemainingTxt);
         });
@@ -95,18 +103,31 @@ public class ProgressBarsController {
         Platform.runLater(()->stage.hide());
     }
 
-    public void stopwatchStart(){
-        stopwatch.start();
+    public void startStopwatches(){
+        overallStopwatch.start();
+        localStopwatch.start();
+
+        new Thread(() -> {
+            while (isProcessing()) {
+                try {
+                    Thread.sleep(200);
+                    updateElapsedTime();
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        }).start();
     }
 
-    public void stopwatchClick(double localProgress, double overallProgress){
-        stopwatch.click();
+    public void clickStopwatches(double localProgress, double overallProgress){
+        overallStopwatch.click();
+        localStopwatch.click();
         updateTotalRemainingTime(overallProgress);
         updateLocalRemainingTime(localProgress);
     }
 
     private void updateTotalRemainingTime(double progress) {
-        long avgDif = stopwatch.getAvgDifference();
+        long avgDif = overallStopwatch.getAvgDifference();
 
         double remainingProgress = (1.0 - progress) * 100;
 
@@ -116,7 +137,7 @@ public class ProgressBarsController {
     }
 
     private void updateLocalRemainingTime(double localProgress) {
-        long avgDif = stopwatch.getAvgDifference();
+        long avgDif = localStopwatch.getAvgDifference();
 
         double remainingProgress = (1.0 - localProgress) * 100;
 
@@ -126,10 +147,12 @@ public class ProgressBarsController {
     }
 
 
-    public void updateTotalElapsedTime() {
-        long totalElapsedTime = stopwatch.getTotalElapsedTime();
+    public void updateElapsedTime() {
+        long totalElapsedTime = overallStopwatch.getElapsedTime();
+        long localElapsedTime = localStopwatch.getElapsedTime();
 
-        Platform.runLater(()->totalTimeElapsedLabel.setText(nanoToMinAndSec(totalElapsedTime)));
+        Platform.runLater(()-> totalElapsedTimeLabel.setText(nanoToMinAndSec(totalElapsedTime)));
+        Platform.runLater(()->localElapsedTimeLabel.setText(nanoToMinAndSec(localElapsedTime)));
     }
 
     private static String nanoToMinAndSec(long nanoTime){
@@ -145,11 +168,17 @@ public class ProgressBarsController {
     }
 
 
-    public void stopwatchStop() {
-        stopwatch.stop();
+    public void endStopwatches() {
+        overallStopwatch.stop();
+        localStopwatch.stop();
     }
 
-    public boolean isStopwatchRunning() {
-        return stopwatch.isRunning();
+    public boolean isProcessing() {
+        return overallStopwatch.isRunning();
+    }
+
+    public void beginNewStage() {
+        localStopwatch = new Stopwatch();
+        localStopwatch.start();
     }
 }

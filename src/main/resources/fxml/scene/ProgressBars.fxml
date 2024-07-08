@@ -36,7 +36,7 @@
                   <HBox>
                      <children>
                         <Label text="Total Time Elapsed: " />
-                        <Label fx:id="totalTimeElapsedLabel" text="N/A" />
+                        <Label fx:id="totalElapsedTimeLabel" text="N/A" />
                      </children>
                   </HBox>
                   <HBox>
@@ -51,6 +51,12 @@
                <children>
                   <Label fx:id="localTextLabel" text="..." />
                   <ProgressBar fx:id="localProgressBar" prefHeight="18.0" prefWidth="582.0" progress="0.0" />
+                  <HBox>
+                     <children>
+                        <Label text="Time Elapsed: " />
+                        <Label fx:id="localElapsedTimeLabel" text="N/A" />
+                     </children>
+                  </HBox>
                   <HBox>
                      <children>
                         <Label text="Estimated Time Remaining: " />
