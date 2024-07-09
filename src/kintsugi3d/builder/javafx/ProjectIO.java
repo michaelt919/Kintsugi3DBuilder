@@ -682,6 +682,7 @@ public final class ProjectIO
         if (confirmClose("Are you sure you want to close the current project?"))
         {
             closeProject();
+            WelcomeWindowController.getInstance().show();
         }
     }
 
