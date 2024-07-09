@@ -236,6 +236,8 @@ public class MenubarController
             @Override
             public void start()
             {
+                cancelRequested.set(false);
+
                 localProgress = 0.0;
                 overallProgress = 0.0;
                 Platform.runLater(() ->
@@ -244,7 +246,6 @@ public class MenubarController
                     overallProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
                 });
 
-                ProgressBarsController.getInstance().resetText();
                 ProgressBarsController.getInstance().showStage();
                 ProgressBarsController.getInstance().startStopwatches();
             }

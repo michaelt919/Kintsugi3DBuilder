@@ -104,8 +104,10 @@ public class ProgressBarsController {
 
     private void reset() {
         resetText();
-        overallProgressBar.setProgress(0.0);
-        localProgressBar.setProgress(0.0);
+        Platform.runLater(()->{
+            overallProgressBar.setProgress(0.0);
+            localProgressBar.setProgress(0.0);
+        });
     }
 
 
