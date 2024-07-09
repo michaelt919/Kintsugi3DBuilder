@@ -725,7 +725,7 @@ public final class ViewSet implements ReadonlyViewSet
             this.primaryViewIndex = poseIndex;
         }
         else{
-            //comb through manually because imageFiles contains parent files
+            //comb through manually because imageFiles could contain parent files
             //ex. target file is photo314.jpg and imageFiles contains myPhotos/photo314.jpg
 
             //another possibility is an extension mismatch
@@ -733,7 +733,7 @@ public final class ViewSet implements ReadonlyViewSet
 
             //this is due to inconsistencies with camera labels in frame.zip and chunk.zip xml's
             for (int i = 0; i < imageFiles.size(); ++i){
-                String shortenedImgName = removeExt(imageFiles.get(i).getName());
+                String shortenedImgName = removeExt(getImageFileName(i));
                 String shortenedViewName = removeExt(viewName);
 
                 //TODO: will this cause issues if extensions are different? (ex. photo.jpg and photo.tiff)
