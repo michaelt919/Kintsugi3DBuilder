@@ -204,6 +204,7 @@ public class MenubarController
                 if (cancelRequested.get())
                 {
                     cancelRequested.set(false); // reset cancel flag
+                    WelcomeWindowController.getInstance().showIfNoModelLoaded();
                     throw new UserCancellationException("Cancellation requested by user.");
                 }
             }

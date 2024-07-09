@@ -385,8 +385,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(event -> {
             //nothing has really started loading yet, so just reset the progress bars and close
             ProgressBarsController.getInstance().stopAndClose();
-            //TODO: cancel task
-            WelcomeWindowController.getInstance().show();
+            WelcomeWindowController.getInstance().showIfNoModelLoaded();
         });
 
         ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event -> {

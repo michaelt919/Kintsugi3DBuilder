@@ -20,6 +20,7 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.IBRRequestManager;
 import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.util.RecentProjects;
@@ -154,5 +155,11 @@ public class WelcomeWindowController
 
     public void openAboutModal() {
         ProjectIO.getInstance().openAboutModal(window);
+    }
+
+    public void showIfNoModelLoaded() {
+        if(!MultithreadModels.getInstance().getIOModel().isInstanceLoaded()){
+            show();
+        }
     }
 }
