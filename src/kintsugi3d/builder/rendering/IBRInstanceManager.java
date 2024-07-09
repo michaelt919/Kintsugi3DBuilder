@@ -22,7 +22,6 @@ import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.scene.control.*;
 import javafx.stage.DirectoryChooser;
 import kintsugi3d.builder.app.Rendering;
@@ -385,8 +384,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         Builder<ContextType> finalBuilder = IBRResourcesImageSpace.getBuilderForContext(this.context);
 
         ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(event -> {
-            //TODO: best practice or no? Also doesn't work yet, need to factor in allowUserCancellation() after this
-            ProgressBarsController.getInstance().getCancelButton().fire();
+            //nothing has really started loading yet, so just reset the progress bars and close
+            ProgressBarsController.getInstance().stopAndClose();
         });
 
         ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event -> {

@@ -303,11 +303,8 @@ public class MenubarController
             public void complete()
             {
                 this.maximum = 0.0;
-                ProgressBarsController.getInstance().endStopwatches();
-                Platform.runLater(() ->
-                {
-                    ProgressBarsController.getInstance().hideStage();
-                });
+                //TODO: disable progress bars menu item if not processing?
+                ProgressBarsController.getInstance().stopAndClose();
             }
 
             @Override
@@ -893,8 +890,8 @@ public class MenubarController
         }
     }
 
-    public void testProgressBarsModal(){
-        ProjectIO.getInstance().openProgressBars(window);
+    public void showProgressBars(){
+        ProjectIO.getInstance().openProgressBars();
     }
 
 

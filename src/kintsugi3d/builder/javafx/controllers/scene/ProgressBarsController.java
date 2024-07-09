@@ -93,7 +93,19 @@ public class ProgressBarsController {
     }
 
     public void showStage() {
-        Platform.runLater(()-> stage.show());
+        Platform.runLater(()-> {
+            stage.show();
+
+            if(!isProcessing()){
+                reset();
+            }
+        });
+    }
+
+    private void reset() {
+        resetText();
+        overallProgressBar.setProgress(0.0);
+        localProgressBar.setProgress(0.0);
     }
 
 
@@ -171,6 +183,12 @@ public class ProgressBarsController {
     public void endStopwatches() {
         overallStopwatch.stop();
         localStopwatch.stop();
+    }
+
+    public void stopAndClose(){
+        endStopwatches();
+        reset();
+        hideStage();
     }
 
     public boolean isProcessing() {

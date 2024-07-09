@@ -688,7 +688,7 @@ public final class ProjectIO
         }
     }
 
-    public void openProgressBars(Window window){
+    public void openProgressBars(){
         if(progressBarsModalOpen.get()){
             return;
         }

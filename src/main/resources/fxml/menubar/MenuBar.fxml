@@ -78,7 +78,7 @@
                      <MenuItem mnemonicParsing="false" onAction="#openAboutModal" text="About Kintsugi 3D Builder..." />
                             <SeparatorMenuItem />
                      <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
-                     <MenuItem mnemonicParsing="false" onAction="#testProgressBarsModal" text="PROGRESS BARS TEST" />
+                     <MenuItem mnemonicParsing="false" onAction="#showProgressBars" text="PROGRESS BARS TEST" />
                         </Menu>
                         <Menu mnemonicParsing="false" text="View" visible="false">
                             <CheckMenuItem fx:id="is3DGridCheckMenuItem" mnemonicParsing="false" text="3D grid" visible="false" />
