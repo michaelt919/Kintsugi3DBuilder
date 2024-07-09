@@ -107,7 +107,7 @@ public class WelcomeWindowController
     }
 
     public void hide(){
-        window.show();
+        window.hide();
     }
 
     public void show(){
