@@ -40,7 +40,7 @@ public class MetashapeObjectChunk {
     private Document chunkXML;
     private Document frameZip;
 
-    private ArrayList<Triplet<Integer, String, String>> modelInfo = new ArrayList<>();
+    private ArrayList<Triplet<Integer, String, String>> modelInfo = new ArrayList<>(); //model id, name/label, and path
     private Integer activeModelID;
 
     public String getChunkZipPath() { return chunkZipPath; }
@@ -89,8 +89,6 @@ public class MetashapeObjectChunk {
         this.chunkID = getChunkIdFromZipPath();
 
         //unzip frame.zip
-        String psxFilePath = metashapeObject.getPsxFilePath();
-        String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4); //remove ".psx" from path
 
         //the 0 means that the program searches for info regarding frame 0
         String frameZipPath = getFramePath();
@@ -193,8 +191,6 @@ public class MetashapeObjectChunk {
 
     public List<Image> loadThumbnailImageList() {
         //unzip thumbnail folder
-        String psxFilePath = this.metashapeObject.getPsxFilePath();
-        String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4);//remove ".psx" from path
 
         //Note: the 0 denotes that these thumbnails are for frame 0
         //TODO: can get this info from thumbnails tag in frameXML instead of hard coding
@@ -202,7 +198,7 @@ public class MetashapeObjectChunk {
         return UnzipHelper.unzipImages(thumbnailPath);
     }
 
-    public List<Element> findThumbnailCameras() {
+    public List<Element> findAllCameras() {
         NodeList cams = this.chunkXML.getElementsByTagName("camera");
         ArrayList<Element> cameras = new ArrayList<>();
         for (int i = 0; i < cams.getLength(); ++i) {
@@ -212,6 +208,22 @@ public class MetashapeObjectChunk {
             }
         }
         return cameras;
+    }
+
+    public List<Element> findEnabledCameras() {
+        List<Element> allCams = findAllCameras();
+        List<Element> enabledCams = new ArrayList<>();
+
+        for(Element cam : allCams){
+            String enabled = cam.getAttribute("enabled");
+
+            if (enabled.equals("true") ||
+                enabled.equals("1") ||
+                    enabled.isEmpty() /*cam is enabled by default*/){
+                enabledCams.add(cam);
+            }
+        }
+        return enabledCams;
     }
 
     public Element matchImageToCam(String imageName) {
