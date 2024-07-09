@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.javafx.controllers.scene;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -105,16 +106,13 @@ public class WelcomeWindowController
         ProjectIO.getInstance().openProjectWithPrompt(parentWindow);
     }
 
-    //TODO: FIND WAY TO NOT CLOSE FILE, BUT HIDE SO IT CAN BE RESHOWN
-    public void hideWelcomeWindow(){
-        window.close();
+    public void hide(){
+        window.show();
     }
 
-    //TODO: just create a new welcome window?
-//    public void showWelcomeWindow(){
-//        window.show();
-//    }
-//
+    public void show(){
+        Platform.runLater(()->window.show());
+    }
 
     @FXML
     private void help_userManual()

@@ -23,7 +23,6 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import javafx.application.Platform;
-import javafx.beans.property.IntegerProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -33,8 +32,8 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import javafx.stage.*;
-import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
+import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
@@ -829,4 +828,8 @@ public class MenubarController
     }
 
     public Window getWindow(){return window;} //useful for creating alerts in back-end classes
+
+    public void showWelcomeWindow() {
+        WelcomeWindowController.getInstance().show();
+    }
 }

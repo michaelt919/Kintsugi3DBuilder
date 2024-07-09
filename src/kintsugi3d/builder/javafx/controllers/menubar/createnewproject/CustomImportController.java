@@ -256,7 +256,7 @@ public class CustomImportController extends FXMLPageController implements ShareI
                         primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
                 .start();
 
-        WelcomeWindowController.getInstance().hideWelcomeWindow();
+        WelcomeWindowController.getInstance().hide();
         close();
     }
 }

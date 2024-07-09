@@ -11,10 +11,11 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
+
 <AnchorPane prefHeight="720.0" styleClass="menuebaranchorpane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.MenubarController">
     <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <children>
@@ -77,6 +78,7 @@
                      <MenuItem mnemonicParsing="false" onAction="#openAboutModal" text="About Kintsugi 3D Builder..." />
                             <SeparatorMenuItem />
                      <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
+                     <MenuItem mnemonicParsing="false" onAction="#showWelcomeWindow" text="SHOW WELCOME WINDOW TEST" />
                         </Menu>
                         <Menu mnemonicParsing="false" text="View" visible="false">
                             <CheckMenuItem fx:id="is3DGridCheckMenuItem" mnemonicParsing="false" text="3D grid" visible="false" />
