@@ -1,5 +1,6 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
+
 import java.io.File;
 import java.util.ArrayList;
 
@@ -25,13 +26,27 @@ import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.util.RecentProjects;
 import kintsugi3d.util.Triplet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Element;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
 
 public class MetashapeImportController extends FXMLPageController implements ShareInfo, CanConfirm {
+    private static final Logger log = LoggerFactory.getLogger(MetashapeImportController.class);
+
     @FXML private Text fileNameTxtField;
     @FXML private AnchorPane anchorPane;
     @FXML private Text loadMetashapeObject;
+
     @FXML private ChoiceBox chunkSelectionChoiceBox;
     @FXML private ChoiceBox modelSelectionChoiceBox;
+    @FXML private ChoiceBox primaryViewChoiceBox;
+
 
     private File metashapePsxFile;
     private MetashapeObjectChunk metashapeObjectChunk;
@@ -41,6 +56,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     private volatile boolean alertShown = false;
 
     FileChooser fileChooser;
+    private volatile boolean updatingPrimaryView;
 
     @Override
     public Region getHostRegion() {
@@ -61,7 +77,12 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         //need to do Platform.runLater so updateModelSelectionChoiceBox can pull info from chunkSelectionChoiceBox
         chunkSelectionChoiceBox.setOnAction(event -> Platform.runLater(()->{
                 updateModelSelectionChoiceBox();
+
+                if (!updatingPrimaryView){
+                    updatePrimaryViewChoiceBox();
+                }
                 updateLoadedIndicators();
+
         }));
 
         fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
@@ -117,6 +138,51 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
             RecentProjects.setMostRecentDirectory(metashapePsxFile.getParentFile());
             fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
+        }
+    }
+
+    private synchronized void updatePrimaryViewChoiceBox()
+    {
+        updatingPrimaryView = true;
+
+        // Disable while updating the choices as it won't be responsive until it's done adding all the options
+        primaryViewChoiceBox.setValue("Loading Views...");
+        primaryViewChoiceBox.setDisable(true);
+        primaryViewChoiceBox.getItems().clear();
+
+
+        List<Element> cameras = metashapeObjectChunk.findEnabledCameras();
+        if (!cameras.isEmpty())
+        {
+            Iterator<String> imageIterator = cameras.stream().map(camera -> camera.getAttribute("label"))
+                    .sorted(Comparator.naturalOrder())
+                    .iterator();
+
+
+            // Use individual Platform.runLater calls, chained together recursively
+            // to prevent locking up the JavaFX Application thread
+            addToViewListRecursive(imageIterator);
+        }
+        else{
+            //TODO: create warning alert because no enabled cameras were found
+            primaryViewChoiceBox.setValue("No Enabled Cameras Found");
+        }
+
+    }
+
+    private void addToViewListRecursive(Iterator<String> iterator)
+    {
+        primaryViewChoiceBox.getItems().add(iterator.next());
+
+        if (iterator.hasNext())
+        {
+            Platform.runLater(() -> addToViewListRecursive(iterator));
+        }
+        else
+        {
+            primaryViewChoiceBox.getSelectionModel().select(0);
+            primaryViewChoiceBox.setDisable(false);
+            updatingPrimaryView = false;
         }
     }
 
@@ -222,9 +288,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
                 getChunkNamesDynamic(metashapeObject.getPsxFilePath());
 
         chunkSelectionChoiceBox.getItems().clear();
-        //TODO: implement recursive / platform.run later from CustomImportController?
-        //first attempt led to data dependency issues where the model selection choice box
-        //   needed info that the chunk selection choice box didn't have yet
         chunkSelectionChoiceBox.getItems().addAll(chunkNames);
 
 
@@ -287,8 +350,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
                         .loadAgisoftFromZIP(
                                 metashapeObjectChunk.getFramePath(),
                                 metashapeObjectChunk,
-                                ""))//uses the first image in the viewset as the primary view
-                //TODO: add primary view selection to modal?
+                                primaryViewChoiceBox.getSelectionModel().getSelectedItem().toString()))
                 .start();
         WelcomeWindowController.getInstance().hideWelcomeWindow();
 

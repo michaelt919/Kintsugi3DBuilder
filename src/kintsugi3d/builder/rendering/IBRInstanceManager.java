@@ -168,8 +168,6 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     {
         loadedViewSet = builder.getViewSet();
 
-//        MultithreadModels.getInstance().getCameraViewListModel().setCameraViewList(loadedViewSet.getImageFileNames());
-
         List<File> imgFiles = loadedViewSet.getImageFiles();
         List<String> imgFileNames = new ArrayList<>();
 
