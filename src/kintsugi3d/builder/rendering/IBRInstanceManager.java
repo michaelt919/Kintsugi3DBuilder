@@ -32,6 +32,7 @@ import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
+import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.ibr.MissingImagesException;
@@ -384,6 +385,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(event -> {
             //nothing has really started loading yet, so just reset the progress bars and close
             ProgressBarsController.getInstance().stopAndClose();
+            //TODO: cancel task
+            WelcomeWindowController.getInstance().show();
         });
 
         ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event -> {

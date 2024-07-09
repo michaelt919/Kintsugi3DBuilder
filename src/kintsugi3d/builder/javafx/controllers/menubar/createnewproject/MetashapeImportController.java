@@ -349,7 +349,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
                                 metashapeObjectChunk,
                                 primaryViewChoiceBox.getSelectionModel().getSelectedItem().toString()))
                 .start();
-        WelcomeWindowController.getInstance().hideWelcomeWindow();
+        WelcomeWindowController.getInstance().hide();
 
         Window window = anchorPane.getScene().getWindow();
         window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));

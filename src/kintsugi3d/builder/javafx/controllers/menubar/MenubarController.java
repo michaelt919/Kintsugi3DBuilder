@@ -25,7 +25,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import javafx.application.Platform;
-import javafx.beans.property.IntegerProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -35,9 +34,9 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import javafx.stage.*;
-import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
+import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
@@ -89,7 +88,6 @@ public class MenubarController
     @FXML private Menu aboutMenu;
 
     //menu items
-    //TODO: ORGANIZE CHECK MENU ITEMS
     @FXML private CheckMenuItem is3DGridCheckMenuItem;
     @FXML private CheckMenuItem compassCheckMenuItem;
     @FXML private CheckMenuItem halfResolutionCheckMenuItem;
@@ -109,21 +107,12 @@ public class MenubarController
 
     @FXML private CheckMenuItem autoCacheClearingCheckMenuItem;
     @FXML private CheckMenuItem autoSaveCheckMenuItem;
-//    @FXML private CheckMenuItem preloadVisibilityEtcCheckMenuItem;
     @FXML private CheckMenuItem mipmapCheckMenuItem;
     @FXML private CheckMenuItem reduceViewportResolutionCheckMenuItem;
     @FXML private CheckMenuItem darkModeCheckMenuItem;
     @FXML private CheckMenuItem standAlone3dViewerCheckMenuItem;
-//    @FXML public ChoiceBox<String> autosaveOptionsChoiceBox;
 
     @FXML private CheckMenuItem imageCompressionCheckMenuItem;
-    //@FXML private CheckMenuItem lightCalibrationCheckMenuItem;
-
-
-//    @FXML private Label widthLabel;
-//    @FXML private TextField widthTxtField;
-//    @FXML private Label heightLabel;
-//    @FXML private TextField heightTxtField;
 
     @FXML private Menu perLightIntensityMenu;
     @FXML private Menu ambientLightSettingsMenu;
@@ -152,17 +141,12 @@ public class MenubarController
     private List<RadioMenuItem> toggleableShaders = new ArrayList<>();
 
     @FXML private VBox cameraViewList;
-//    @FXML private HBox Eyedropper;
     @FXML private CameraViewListController cameraViewListController;
     @FXML private FramebufferView framebufferView;
 
     private Window window;
 
     private Runnable userDocumentationHandler;
-
-    final static Number DEFAULT_VALUE = 1024;
-//    private IntegerProperty widthIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
-//    private IntegerProperty heightIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
 
     public MenubarController()
     {
@@ -183,9 +167,6 @@ public class MenubarController
 
         // remove camera view list from layout when invisible
         this.cameraViewList.managedProperty().bind(this.cameraViewList.visibleProperty());
-//        this.Eyedropper.managedProperty().bind(this.Eyedropper.visibleProperty());
-//        Eyedropper.setVisible(false);
-//        Eyedropper.setExitCallback(() -> Eyedropper.setVisible(false));
 
         // only show camera view list when light calibration mode is active
         // TODO make this a separate property to allow it to be shown in other contexts
@@ -329,7 +310,6 @@ public class MenubarController
 
         initToggleGroups();
         bindCheckMenuItems();
-        bindSlidersToTxtFields();
         updateRelightingVisibility();
 
         RecentProjects.updateAllControlStructures();
@@ -343,40 +323,11 @@ public class MenubarController
 
         //add tooltips to recent projects list modifiers
         Tooltip tip = new Tooltip("Remove references to items not found in file explorer. " +
-                "Does not modify your file system.");
+                "Will not modify your file system.");
         Tooltip.install(removeSomeRefsCustMenuItem.getContent(), tip);
 
-        tip = new Tooltip("Remove references to all recent projects. Does not modify your file system.");
+        tip = new Tooltip("Remove references to all recent projects. Will not modify your file system.");
         Tooltip.install(removeAllRefsCustMenuItem.getContent(), tip);
-
-//        updatePreloadVisibilityEtc();
-
-//        setupTxtFieldProperties(widthIntProperty, widthTxtField);
-//        setupTxtFieldProperties(heightIntProperty, heightTxtField);
-//
-//        widthTxtField.disableProperty().bind(preloadVisibilityEtcCheckMenuItem.selectedProperty().not());
-//        heightTxtField.disableProperty().bind(preloadVisibilityEtcCheckMenuItem.selectedProperty().not());
-
-
-//        lightCalibrationCheckMenuItem.selectedProperty().addListener(observable ->
-//        {
-//            if (!lightCalibrationCheckMenuItem.isSelected())
-//            {
-//                MultithreadModels.getInstance().getLoadingModel().applyLightCalibration();
-//                MultithreadModels.getInstance().getSettingsModel().set("currentLightCalibration", Vector2.ZERO);
-//            }
-//        });
-
-
-//        //add "Default Path" and "Choose Location..." items to choiceBox
-//        //initialize directory selection dropdown menu
-//        autosaveOptionsChoiceBox.getItems().addAll(defaultAutosaveSelection, CHOOSE_LOCATION);
-//
-//        //initialize option to default path
-//        autosaveOptionsChoiceBox.setValue(defaultAutosaveSelection);
-//
-//        //attach event handler (this cannot be done in scenebuilder)
-//        autosaveOptionsChoiceBox.setOnAction(this::handleDirectoryDropdownSelection);
     }
 
     private boolean loadExportClasses(Stage injectedStage, File exportClassDefinitionFile) {
@@ -508,20 +459,9 @@ public class MenubarController
             internalModels.getSettingsModel().getBooleanProperty("sceneWindowOpen"));
 
         mipmapCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getLoadOptionsModel().mipmaps);
-//        preloadVisibilityEtcCheckMenuItem.selectedProperty().bindBidirectional(
-//                internalModels.getLoadOptionsModel().depthImages);
-
-//        widthIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthWidth);
-//        heightIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthHeight);
 
         imageCompressionCheckMenuItem.selectedProperty().bindBidirectional(
                 internalModels.getLoadOptionsModel().compression);
-    }
-
-    private void bindSlidersToTxtFields()
-    {
-        //TODO: BIND INTENSITY SLIDERS TO TEXT FIELDS HERE
-        //ignore now that this setting is in the system settings modal?
     }
 
     //Menubar->File
@@ -722,17 +662,6 @@ public class MenubarController
         return fxmlLoader.getController();
     }
 
-
-    /**
-     * This function is to allow the LoaderController to pass a call back to the ChunkViewerController.
-     * @param loaderControllerCallback Reference to loaderController in order to call a callback function later.
-     * @return Returns a reference to the UnzipFileSelectionController
-     */
-    public void unzip(Consumer<MetashapeObjectChunk> loaderControllerCallback){
-        UnzipFileSelectionController unzipFileSelectionController = unzip();
-        unzipFileSelectionController.loaderControllerCallback = loaderControllerCallback;
-    }
-
     public UnzipFileSelectionController unzip() {
         UnzipFileSelectionController unzipFileSelectionController = null;
         try {
@@ -831,16 +760,8 @@ public class MenubarController
 
     public void eyedropperColorChecker()
     {
-//        if (colorCheckerWindowOpen.get())
-//        {
-//            Eyedropper.setVisible(false);
-//
-//            return;
-//        }
-
         try
         {
-//            Eyedropper.setVisible(true);
             EyedropperController eyedropperController =
                     makeWindow("Tone Calibration", colorCheckerWindowOpen, "fxml/menubar/EyedropperColorChecker.fxml");
 
@@ -849,7 +770,6 @@ public class MenubarController
         }
         catch (IOException|RuntimeException e)
         {
-//            Eyedropper.setVisible(false);
             handleException("An error occurred opening color checker window", e);
         }
     }
@@ -896,38 +816,6 @@ public class MenubarController
     }
 
 
-//    private void handleDirectoryDropdownSelection(ActionEvent actionEvent) {
-//        //if user clicks "choose directory" option, open the directory chooser
-//        //then add an item to the dropdown which contains the path they selected
-//
-//        if (autosaveOptionsChoiceBox.getValue().equals(CHOOSE_LOCATION)){
-//            this.directoryChooser.setTitle("Choose an output directory");
-//
-//            Stage stage = (Stage) window;
-//            File file = this.directoryChooser.showDialog(stage.getOwner());
-//
-//            if (file != null && file.exists()){
-//                directoryChooser.setInitialDirectory(file);
-//                autosaveOptionsChoiceBox.getItems().add(file.getAbsolutePath());
-//                autosaveOptionsChoiceBox.setValue(file.getAbsolutePath());
-//            }
-//            else{
-//                Toolkit.getDefaultToolkit().beep();
-//            }
-//        }
-//    }
-
-//    public void updatePreloadVisibilityEtc() {
-//        //if check menu item is unchecked, disable "Preload Visibility & Shadow Testing" options
-//        ArrayList<Object> controlItems = new ArrayList<>();
-//        controlItems.add(heightLabel);
-//        controlItems.add(widthLabel);
-//        controlItems.add(heightTxtField);
-//        controlItems.add(widthTxtField);
-//
-//        updateCheckMenuItemVisibilities(preloadVisibilityEtcCheckMenuItem, controlItems);
-//    }
-
     public void updateRelightingVisibility() {
         ArrayList<Object> controlItems = new ArrayList<>();
         controlItems.add(visibleLightWidgetsCheckMenuItem);
@@ -953,55 +841,10 @@ public class MenubarController
         }
     }
 
-    //this function is used to hook up the text field's string property to the backend
-    //StringProperty --> IntegerProperty
-    private void setupTxtFieldProperties(IntegerProperty integerProperty, TextField txtField) {StringConverter<Number> numberStringConverter = new StringConverter<Number>()
-        {
-            @Override
-            public String toString(Number object)
-            {
-                if (object != null)
-                {
-                    return Integer.toString(object.intValue());
-                }
-                else
-                {
-                    return String.valueOf(DEFAULT_VALUE);
-                }
-            }
-
-            @Override
-            public Number fromString(String string)
-            {
-                try
-                {
-                    return Integer.valueOf(string);
-                }
-                catch (NumberFormatException nfe)
-                {
-                    return DEFAULT_VALUE;
-                }
-            }
-        };
-        txtField.textProperty().bindBidirectional(integerProperty, numberStringConverter);
-        txtField.focusedProperty().addListener((ob, o, n) ->
-        {
-            if (o && !n)
-            {
-                txtField.setText(integerProperty.getValue().toString());
-            }
-        });
-        integerProperty.addListener((ob, o, n) ->
-        {
-            if (n.intValue() < 1)
-            {
-                integerProperty.setValue(1);
-            }
-        });
-    }
 
     //used so the user can click on the About menu and immediately see the about modal
     //instead of clicking on a single menu item
+    //NOT IN USE as of July 9, 2024
     public void hideAndShowAboutModal() {
         aboutMenu.hide();
         openAboutModal();
@@ -1067,4 +910,8 @@ public class MenubarController
     }
 
     public Window getWindow(){return window;} //useful for creating alerts in back-end classes
+
+    public void showWelcomeWindow() {
+        WelcomeWindowController.getInstance().show();
+    }
 }
