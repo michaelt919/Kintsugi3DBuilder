@@ -1,9 +1,6 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
 
-import java.io.File;
-import java.util.ArrayList;
-
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
