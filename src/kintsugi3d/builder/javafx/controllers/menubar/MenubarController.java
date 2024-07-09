@@ -266,10 +266,10 @@ public class MenubarController
 
         //add tooltips to recent projects list modifiers
         Tooltip tip = new Tooltip("Remove references to items not found in file explorer. " +
-                "Does not modify your file system.");
+                "Will not modify your file system.");
         Tooltip.install(removeSomeRefsCustMenuItem.getContent(), tip);
 
-        tip = new Tooltip("Remove references to all recent projects. Does not modify your file system.");
+        tip = new Tooltip("Remove references to all recent projects. Will not modify your file system.");
         Tooltip.install(removeAllRefsCustMenuItem.getContent(), tip);
 
 
