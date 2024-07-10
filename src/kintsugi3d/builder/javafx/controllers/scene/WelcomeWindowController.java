@@ -17,7 +17,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.IBRRequestManager;
@@ -38,7 +37,6 @@ public class WelcomeWindowController
 
 
     private static WelcomeWindowController INSTANCE;
-    @FXML private GridPane outerPane;
 
     @FXML private Button recent1;
     @FXML private Button recent2;
