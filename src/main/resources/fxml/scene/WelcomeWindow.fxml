@@ -15,7 +15,7 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<GridPane hgap="40.0" styleClass="grid-pane" stylesheets="@../kintsugiStyling.css" vgap="10.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController">
+<GridPane fx:id="outerPane" hgap="40.0" styleClass="grid-pane" stylesheets="@../kintsugiStyling.css" vgap="10.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController">
    <columnConstraints>
        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />

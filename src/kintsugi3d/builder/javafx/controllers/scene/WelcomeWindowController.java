@@ -15,7 +15,9 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.IBRRequestManager;
@@ -36,6 +38,8 @@ public class WelcomeWindowController
 
 
     private static WelcomeWindowController INSTANCE;
+    @FXML private GridPane outerPane;
+
     @FXML private Button recent1;
     @FXML private Button recent2;
     @FXML private Button recent3;
@@ -154,5 +158,9 @@ public class WelcomeWindowController
 
     public void openAboutModal() {
         ProjectIO.getInstance().openAboutModal(window);
+    }
+
+    public void addAccelerator(KeyCombination keyCodeCombo, Runnable r) {
+        recent1.getScene().getAccelerators().put(keyCodeCombo, r);
     }
 }
