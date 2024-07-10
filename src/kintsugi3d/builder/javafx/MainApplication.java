@@ -306,11 +306,11 @@ public class MainApplication extends Application
         //init progress bars first so other controllers can access the progress bar fxml components
         progressBarsController.init(progressBarsStage);
 
-        menuBarController.init(primaryStage, InternalModels.getInstance(),
-            () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
-
         welcomeWindowController.init(welcomeStage, Rendering.getRequestQueue(), InternalModels.getInstance(),
                 () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
+
+        menuBarController.init(primaryStage, InternalModels.getInstance(),
+            () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
 
         // Open scene window from the menu
         settingsModel.getBooleanProperty("sceneWindowOpen").addListener(sceneWindowOpen ->

@@ -25,6 +25,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -32,6 +34,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.VBox;
 import javafx.stage.*;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
@@ -86,6 +89,8 @@ public class MenubarController
     @FXML private ToggleGroup renderGroup;
 
     @FXML private Menu aboutMenu;
+
+    @FXML private MenuBar mainMenubar;
 
     //menu items
     @FXML private CheckMenuItem is3DGridCheckMenuItem;
@@ -188,7 +193,23 @@ public class MenubarController
         AtomicBoolean cancelRequested = new AtomicBoolean(false);
 
         cancelButton.setOnAction(event -> cancelRequested.set(true));
+//send accelerators to welcome window
+        List<Menu> menus = mainMenubar.getMenus();
 
+        for (Menu menu : menus){
+            List<MenuItem> menuItems = menu.getItems();
+            for (MenuItem item : menuItems){
+                KeyCombination keyCodeCombo =  item.getAccelerator();
+                EventHandler<ActionEvent> action = item.getOnAction();
+
+
+                if (keyCodeCombo == null || action == null){continue;}
+
+                WelcomeWindowController.getInstance().addAccelerator(keyCodeCombo, () -> {
+                    Platform.runLater(() -> action.handle(new ActionEvent()));
+                });
+            }
+        }
         MultithreadModels.getInstance().getIOModel().addProgressMonitor(new ProgressMonitor()
         {
             private double maximum = 0.0;
