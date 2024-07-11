@@ -1,3 +1,63 @@
+/*Note: line height is not supported as a native JavaFX CSS feature.*/
+
+.wireframeCaption {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-style: normal;
+    -fx-font-weight: normal; /* equivalent to 400 */
+    -fx-font-size: 12px;
+}
+
+.wireframeBody {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-style: normal;
+    -fx-font-weight: normal; /* equivalent to 400 */
+    -fx-font-size: 14px;
+}
+
+.wireframeBodyStrong {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-style: normal;
+    -fx-font-weight: bold; /* equivalent to 600 */
+    -fx-font-size: 12px;
+}
+
+.wireframeBodyLarge {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-style: normal;
+    -fx-font-weight: normal; /* equivalent to 400 */
+    -fx-font-size: 18px;
+}
+
+.wireframeSubtitle {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-style: normal;
+    -fx-font-weight: bold; /* equivalent to 600 */
+    -fx-font-size: 20px;
+}
+
+.wireframeTitle {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-style: normal;
+    -fx-font-weight: bold; /* equivalent to 600 */
+    -fx-font-size: 28px;
+}
+
+.wireframeTitleLarge {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-style: normal;
+    -fx-font-weight: bold; /* equivalent to 600 */
+    -fx-font-size: 40px;
+}
+
+.wireframeDisplay {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-style: normal;
+    -fx-font-weight: bold; /* equivalent to 600 */
+    -fx-font-size: 68px;
+}
+
+
+/********************************************************************************/
 .accordion{
     -fx-background-color: #262626;
 }
