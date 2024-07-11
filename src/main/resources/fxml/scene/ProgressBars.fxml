@@ -22,7 +22,7 @@
          <children>
             <Label fx:id="overallTextLabel" text="Loading..." wrapText="true">
                <font>
-                  <Font size="28.0" />
+                  <Font name="Segoe UI" size="28.0" />
                </font>
             </Label>
             <VBox spacing="10.0">
@@ -32,35 +32,34 @@
                         <Font size="20.0" />
                      </font>
                   </Label>
-                  <ProgressBar fx:id="overallProgressBar" prefHeight="18.0" prefWidth="582.0" progress="0.0" styleClass="overall-progress-bar" />
-                  <HBox>
+                  <ProgressBar fx:id="overallProgressBar" prefHeight="40.0" prefWidth="582.0" progress="0.0" />
+                  <HBox spacing="2.0">
                      <children>
-                        <Label text="Total Time Elapsed: " />
-                        <Label fx:id="totalElapsedTimeLabel" text="N/A" />
-                     </children>
-                  </HBox>
-                  <HBox>
-                     <children>
-                        <Label text="Estimated Time Remaining: " />
-                        <Label fx:id="totalEstimTimeRemainingLabel" text="N/A" />
+                        <Label fx:id="totalElapsedTimeLabel" text="00:00:00">
+                           </Label>
+                        <Label layoutX="10.0" layoutY="10.0" text="of">
+                           </Label>
+                        <Label fx:id="totalEstimTimeRemainingLabel" text="00:00:00">
+                           </Label>
+                        <Label text="Estimated time remaining">
+                           </Label>
                      </children>
                   </HBox>
                </children>
             </VBox>
             <VBox spacing="10.0">
                <children>
-                  <Label fx:id="localTextLabel" text="..." />
-                  <ProgressBar fx:id="localProgressBar" prefHeight="18.0" prefWidth="582.0" progress="0.0" />
-                  <HBox>
+                  <Label fx:id="localTextLabel" text="...">
+                     <font>
+                        <Font size="18.0" />
+                     </font></Label>
+                  <ProgressBar fx:id="localProgressBar" prefHeight="24.0" prefWidth="582.0" progress="0.0" />
+                  <HBox spacing="2.0">
                      <children>
-                        <Label text="Time Elapsed: " />
-                        <Label fx:id="localElapsedTimeLabel" text="N/A" />
-                     </children>
-                  </HBox>
-                  <HBox>
-                     <children>
-                        <Label text="Estimated Time Remaining: " />
-                        <Label fx:id="localEstimTimeRemainingLabel" text="N/A" />
+                        <Label fx:id="localElapsedTimeLabel" text="00:00:00" />
+                        <Label layoutX="10.0" layoutY="10.0" text="of" />
+                        <Label fx:id="localEstimTimeRemainingLabel" text="00:00:00" />
+                        <Label text="Estimated time remaining" />
                      </children>
                   </HBox>
                </children>

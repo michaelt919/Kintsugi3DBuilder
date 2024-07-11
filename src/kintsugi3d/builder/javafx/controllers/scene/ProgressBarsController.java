@@ -59,8 +59,8 @@ public class ProgressBarsController {
 
     public void init(Stage stage){
         this.stage = stage;
-        defaultLocalText = localTextLabel.getText();
         defaultOverallText = overallTextLabel.getText();
+        defaultLocalText = localTextLabel.getText();
 
         defaultTotalTimeElapsedText = totalElapsedTimeLabel.getText();
         defaultEstimTimeRemainingTxt = totalEstimTimeRemainingLabel.getText();
@@ -147,7 +147,7 @@ public class ProgressBarsController {
 
         long estimatedRemaining = Math.max(0, (long) (avgDif * remainingProgress));
 
-        Platform.runLater(()-> totalEstimTimeRemainingLabel.setText(nanoToMinAndSec(estimatedRemaining)));
+        Platform.runLater(()-> totalEstimTimeRemainingLabel.setText(nanosecToFormatTime(estimatedRemaining)));
     }
 
     private void updateLocalRemainingTime(double localProgress) {
@@ -157,7 +157,7 @@ public class ProgressBarsController {
 
         long estimatedRemaining = Math.max(0, (long) (avgDif * remainingProgress));
 
-        Platform.runLater(()-> localEstimTimeRemainingLabel.setText(nanoToMinAndSec(estimatedRemaining)));
+        Platform.runLater(()-> localEstimTimeRemainingLabel.setText(nanosecToFormatTime(estimatedRemaining)));
     }
 
 
@@ -165,20 +165,21 @@ public class ProgressBarsController {
         long totalElapsedTime = overallStopwatch.getElapsedTime();
         long localElapsedTime = localStopwatch.getElapsedTime();
 
-        Platform.runLater(()-> totalElapsedTimeLabel.setText(nanoToMinAndSec(totalElapsedTime)));
-        Platform.runLater(()->localElapsedTimeLabel.setText(nanoToMinAndSec(localElapsedTime)));
+        Platform.runLater(()-> totalElapsedTimeLabel.setText(nanosecToFormatTime(totalElapsedTime)));
+        Platform.runLater(()->localElapsedTimeLabel.setText(nanosecToFormatTime(localElapsedTime)));
     }
 
-    private static String nanoToMinAndSec(long nanoTime){
-        long minutes = TimeUnit.NANOSECONDS.toMinutes(nanoTime);
+    private static String nanosecToFormatTime(long nanoTime){
+        long hours = TimeUnit.NANOSECONDS.toHours(nanoTime);
+
+        long minutes = TimeUnit.NANOSECONDS.toMinutes(nanoTime) -
+                TimeUnit.HOURS.toMinutes(hours);
+
         long seconds = TimeUnit.NANOSECONDS.toSeconds(nanoTime) -
+                TimeUnit.HOURS.toSeconds(hours) -
                 TimeUnit.MINUTES.toSeconds(minutes);
 
-        //TODO: replace with 00:00 format?
-        String minutesString = minutes == 1 ? "minute" : "minutes";
-        String secondsString = seconds == 1 ? "second" : "seconds";
-
-        return String.format("%d %s, %d %s", minutes, minutesString, seconds, secondsString);
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 
 

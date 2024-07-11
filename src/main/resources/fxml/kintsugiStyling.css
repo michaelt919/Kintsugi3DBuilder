@@ -24,6 +24,19 @@
     -fx-background-color: #262626;
 }
 
+.button-selected{
+    -fx-background-color: #D4AA00;
+ }
+
+.cachesettingsanchorepane{
+      -fx-background-color: #383838;
+ }
+
+.cameraviewlist{
+    -fx-background-color: #262626;
+    -fx-border-color: #262626;
+}
+
 .context-menu {
     -fx-background-color: #262626;
 }
@@ -62,6 +75,10 @@ dialog-pane{
     -fx-background-color:#ff0000; /*TODO:Should change this*/
 }
 
+.grayscalebuttons{
+    -fx-background-radius: 0 0 0 0;
+ }
+
 .grid-pane{
     -fx-background-color: #262626;
 }
@@ -77,6 +94,10 @@ dialog-pane{
 .slider .axis {
     -fx-tick-label-fill: #FFFFFF;
 }
+
+.specularfitcheckbox{
+       -fx-background-color: #383838;
+ }
 
 .list-view{
     -fx-background-color: #262626;
@@ -123,6 +144,14 @@ dialog-pane{
     -fx-background-color:#262626;
     -fx-text-fill: #FFFFFF;
 }
+
+.menubarbuttons{
+    -fx-background-color: #262626;
+    -fx-background-radius: 0 0 0 0;
+}
+.menuebaranchorpane{
+     -fx-background-color: #383838;
+ }
 
 .overall-progress-bar{
     -fx-accent: #D4AA00; /*color of completed portion (Kintsugi yellow)*/
@@ -261,26 +290,3 @@ dialog-pane{
 .vbox{
     -fx-background-color: #262626;
 }
-.cameraviewlist{
-    -fx-background-color: #262626;
-    -fx-border-color: #262626;
-}
-.menubarbuttons{
-    -fx-background-color: #262626;
-    -fx-background-radius: 0 0 0 0;
-}
-.menuebaranchorpane{
-     -fx-background-color: #383838;
- }
- .cachesettingsanchorepane{
-      -fx-background-color: #383838;
- }
- .specularfitcheckbox{
-       -fx-background-color: #383838;
- }
- .grayscalebuttons{
-    -fx-background-radius: 0 0 0 0;
- }
- .button-selected{
-    -fx-background-color: #D4AA00;
- }
