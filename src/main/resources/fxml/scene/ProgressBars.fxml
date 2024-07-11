@@ -16,63 +16,108 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" styleClass="anchor-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController">
+<GridPane styleClass="grid-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController">
+   <columnConstraints>
+      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+   </columnConstraints>
+   <rowConstraints>
+      <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+   </rowConstraints>
    <children>
-      <VBox prefHeight="400.0" prefWidth="600.0" spacing="30.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <VBox>
          <children>
-            <Label fx:id="overallTextLabel" text="Loading..." wrapText="true">
+            <Label fx:id="overallTextLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeTitle" text="Loading..." wrapText="true">
                <font>
                   <Font name="Segoe UI" size="28.0" />
                </font>
+               <padding>
+                  <Insets right="20.0" />
+               </padding>
             </Label>
-            <VBox spacing="10.0">
+            <VBox maxWidth="1.7976931348623157E308">
                <children>
-                  <Label text="Overall Progress">
+                  <Label alignment="TOP_LEFT" style="-fx-text-fill: #CECECE;" styleClass="wireframeSubtitle" text="Overall Progress">
                      <font>
                         <Font size="20.0" />
                      </font>
                   </Label>
-                  <ProgressBar fx:id="overallProgressBar" prefHeight="40.0" prefWidth="582.0" progress="0.0" />
-                  <HBox spacing="2.0">
+                  <ProgressBar fx:id="overallProgressBar" maxWidth="1.7976931348623157E308" prefHeight="40.0" prefWidth="582.0" progress="0.0">
+                     <VBox.margin>
+                        <Insets left="12.0" top="16.0" />
+                     </VBox.margin>
+                     <padding>
+                        <Insets right="52.0" />
+                     </padding>
+                  </ProgressBar>
+                  <HBox spacing="4.0">
                      <children>
-                        <Label fx:id="totalElapsedTimeLabel" text="00:00:00">
+                        <Label fx:id="totalElapsedTimeLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="00:00:00">
                            </Label>
-                        <Label layoutX="10.0" layoutY="10.0" text="of">
+                        <Label layoutX="10.0" layoutY="10.0" style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="of">
                            </Label>
-                        <Label fx:id="totalEstimTimeRemainingLabel" text="00:00:00">
+                        <Label fx:id="totalEstimTimeRemainingLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="00:00:00">
                            </Label>
-                        <Label text="Estimated time remaining">
+                        <Label style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="Estimated time remaining">
                            </Label>
                      </children>
+                     <VBox.margin>
+                        <Insets left="20.0" top="8.0" />
+                     </VBox.margin>
                   </HBox>
                </children>
+               <VBox.margin>
+                  <Insets left="16.0" top="16.0" />
+               </VBox.margin>
             </VBox>
-            <VBox spacing="10.0">
+            <VBox maxWidth="1.7976931348623157E308">
                <children>
-                  <Label fx:id="localTextLabel" text="...">
+                  <Label fx:id="localTextLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="...">
                      <font>
                         <Font size="18.0" />
-                     </font></Label>
-                  <ProgressBar fx:id="localProgressBar" prefHeight="24.0" prefWidth="582.0" progress="0.0" />
+                     </font>
+                     <VBox.margin>
+                        <Insets />
+                     </VBox.margin>
+                  </Label>
+                  <ProgressBar fx:id="localProgressBar" maxWidth="1.7976931348623157E308" prefHeight="24.0" prefWidth="582.0" progress="0.0">
+                     <VBox.margin>
+                        <Insets left="20.0" top="16.0" />
+                     </VBox.margin>
+                     <padding>
+                        <Insets right="52.0" />
+                     </padding>
+                  </ProgressBar>
                   <HBox spacing="2.0">
                      <children>
-                        <Label fx:id="localElapsedTimeLabel" text="00:00:00" />
-                        <Label layoutX="10.0" layoutY="10.0" text="of" />
-                        <Label fx:id="localEstimTimeRemainingLabel" text="00:00:00" />
-                        <Label text="Estimated time remaining" />
+                        <Label fx:id="localElapsedTimeLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeCaption" text="00:00:00" />
+                        <Label layoutX="10.0" layoutY="10.0" style="-fx-text-fill: #CECECE;" styleClass="wireframeCaption" text="of" />
+                        <Label fx:id="localEstimTimeRemainingLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeCaption" text="00:00:00" />
+                        <Label style="-fx-text-fill: #CECECE;" styleClass="wireframeCaption" text="Estimated time remaining" />
                      </children>
+                     <padding>
+                        <Insets left="32.0" />
+                     </padding>
+                     <VBox.margin>
+                        <Insets top="8.0" />
+                     </VBox.margin>
                   </HBox>
                </children>
+               <VBox.margin>
+                  <Insets left="28.0" top="48.0" />
+               </VBox.margin>
             </VBox>
             <HBox alignment="CENTER">
                <children>
                   <Button fx:id="cancelButton" alignment="CENTER" mnemonicParsing="false" text="Cancel" />
                </children>
+               <VBox.margin>
+                  <Insets top="40.0" />
+               </VBox.margin>
             </HBox>
          </children>
-         <padding>
-            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-         </padding>
+         <GridPane.margin>
+            <Insets bottom="12.0" left="24.0" top="24.0" />
+         </GridPane.margin>
       </VBox>
    </children>
-</AnchorPane>
+</GridPane>
