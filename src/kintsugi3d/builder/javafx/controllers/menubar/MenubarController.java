@@ -300,7 +300,7 @@ public class MenubarController
                 log.info("[{}%] {}", new DecimalFormat("#.##").format(localProgress * 100), message);
                 Platform.runLater(()-> localTextLabel.setText(message));
 
-                ProgressBarsController.getInstance().clickStopwatches(localProgress, overallProgress);
+                ProgressBarsController.getInstance().clickStopwatches(progress, maximum, overallProgress);
             }
 
             @Override
