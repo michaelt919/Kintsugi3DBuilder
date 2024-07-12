@@ -38,6 +38,7 @@ import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.ibr.MissingImagesException;
@@ -164,8 +165,6 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     private void loadInstance(String id, Builder<ContextType> builder)
     {
         loadedViewSet = builder.getViewSet();
-
-//        MultithreadModels.getInstance().getCameraViewListModel().setCameraViewList(loadedViewSet.getImageFileNames());
 
         List<File> imgFiles = loadedViewSet.getImageFiles();
         List<String> imgFileNames = new ArrayList<>();
@@ -330,7 +329,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
         ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(event -> {
             //TODO: cancel task
-
+            WelcomeWindowController.getInstance().show();
         });
 
         ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event -> {

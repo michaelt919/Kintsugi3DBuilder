@@ -11,9 +11,11 @@
 
 package kintsugi3d.builder.javafx.controllers.scene;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -35,6 +37,7 @@ public class WelcomeWindowController
 
 
     private static WelcomeWindowController INSTANCE;
+
     @FXML private Button recent1;
     @FXML private Button recent2;
     @FXML private Button recent3;
@@ -105,16 +108,13 @@ public class WelcomeWindowController
         ProjectIO.getInstance().openProjectWithPrompt(parentWindow);
     }
 
-    //TODO: FIND WAY TO NOT CLOSE FILE, BUT HIDE SO IT CAN BE RESHOWN
-    public void hideWelcomeWindow(){
-        window.close();
+    public void hide(){
+        window.hide();
     }
 
-    //TODO: just create a new welcome window?
-//    public void showWelcomeWindow(){
-//        window.show();
-//    }
-//
+    public void show(){
+        Platform.runLater(()->window.show());
+    }
 
     @FXML
     private void help_userManual()
@@ -156,5 +156,9 @@ public class WelcomeWindowController
 
     public void openAboutModal() {
         ProjectIO.getInstance().openAboutModal(window);
+    }
+
+    public void addAccelerator(KeyCombination keyCodeCombo, Runnable r) {
+        recent1.getScene().getAccelerators().put(keyCodeCombo, r);
     }
 }

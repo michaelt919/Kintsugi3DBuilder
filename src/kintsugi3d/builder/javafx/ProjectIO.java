@@ -490,7 +490,7 @@ public final class ProjectIO
             // Have to set loaded project file after startLoad since startLoad resets everything in order to unload a previously loaded project.
             MultithreadModels.getInstance().getLoadingModel().setLoadedProjectFile(projectFile);
 
-            WelcomeWindowController.getInstance().hideWelcomeWindow();
+            WelcomeWindowController.getInstance().hide();
             RecentProjects.updateAllControlStructures();
 
             //disable some shaders because they only function properly after processing textures
@@ -682,6 +682,7 @@ public final class ProjectIO
         if (confirmClose("Are you sure you want to close the current project?"))
         {
             closeProject();
+            WelcomeWindowController.getInstance().show();
         }
     }
 

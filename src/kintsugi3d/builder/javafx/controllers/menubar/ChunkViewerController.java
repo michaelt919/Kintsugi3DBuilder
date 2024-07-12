@@ -93,7 +93,7 @@ public class ChunkViewerController implements Initializable {
         ArrayList <Image> thumbnailImageList = (ArrayList<Image>) metashapeObjectChunk.loadThumbnailImageList();
 
         //add full-res images as children to the chunk name in treeview
-        ArrayList<Element> cameras = (ArrayList<Element>) metashapeObjectChunk.findThumbnailCameras();
+        ArrayList<Element> cameras = (ArrayList<Element>) metashapeObjectChunk.findAllCameras();
 
         for (int i = 0; i < cameras.size(); ++i) {
             Element camera = cameras.get(i);

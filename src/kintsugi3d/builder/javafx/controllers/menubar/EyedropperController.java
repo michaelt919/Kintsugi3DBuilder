@@ -560,6 +560,21 @@ public class EyedropperController implements Initializable {
 
     @FXML
     private void enterColorSelectionMode(ActionEvent actionEvent) {
+
+        if (cropButton.getStyleClass().contains("button-selected"))
+        {
+            // In case crop had started but not finished
+            cropButton.setText("Crop");
+            cropButton.getStyleClass().remove("button-selected");
+        }
+
+        if (sourceButton != null)
+        {
+            // In case we were already selecting a different patch?
+            sourceButton.getStyleClass().remove("button-selected");
+            sourceButton.setText(DEFAULT_BUTTON_TEXT);
+        }
+
         //change text of button to indicate selection
         sourceButton = (Button) actionEvent.getSource();
 //        resetButtonsText();
