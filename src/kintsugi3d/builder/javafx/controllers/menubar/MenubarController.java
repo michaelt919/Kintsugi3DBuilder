@@ -35,6 +35,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.*;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
@@ -64,6 +65,7 @@ public class MenubarController
 
     private static MenubarController instance;
 
+
     private InternalModels internalModels;
 
     //Window open flags
@@ -76,14 +78,17 @@ public class MenubarController
     private final Flag unzipperOpen = new Flag(false);
     private final Flag loggerWindowOpen = new Flag(false);
 
-
-//    @FXML private ProgressBar progressBar;
-
+    //progress bar modal
     private ProgressBar localProgressBar;
     private ProgressBar overallProgressBar;
     private Button cancelButton;
     private Label localTextLabel;
     private Label overallTextLabel;
+
+    //minimized progress bar
+    @FXML private HBox miniProgressHBox;
+    @FXML private Label miniProgressLabel;
+    @FXML private ProgressBar miniProgressBar;
 
     //toggle groups
     @FXML private ToggleGroup renderGroup;
@@ -251,6 +256,9 @@ public class MenubarController
 
                 ProgressBarsController.getInstance().showStage();
                 ProgressBarsController.getInstance().startStopwatches();
+
+                miniProgressBar.progressProperty().bind(overallProgressBar.progressProperty());
+                miniProgressLabel.textProperty().bind(overallTextLabel.textProperty());
             }
 
             @Override

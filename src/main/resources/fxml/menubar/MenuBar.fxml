@@ -79,7 +79,7 @@
                             <SeparatorMenuItem />
                      <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
                      <MenuItem mnemonicParsing="false" onAction="#showProgressBars" text="PROGRESS BARS TEST" />
-                     <MenuItem mnemonicParsing="false" onAction="#showWelcomeWindow" text="SHOW WELCOME WINDOW TEST" visible="false"/>
+                     <MenuItem mnemonicParsing="false" onAction="#showWelcomeWindow" text="SHOW WELCOME WINDOW TEST" visible="false" />
                         </Menu>
                         <Menu mnemonicParsing="false" text="View" visible="false">
                             <CheckMenuItem fx:id="is3DGridCheckMenuItem" mnemonicParsing="false" text="3D grid" visible="false" />
@@ -410,12 +410,7 @@
                     </HBox>
                 </children>
             </AnchorPane>
-            <AnchorPane>
-                <VBox.margin>
-                    <Insets />
-                </VBox.margin>
-            </AnchorPane>
-            <HBox VBox.vgrow="ALWAYS">
+            <HBox prefHeight="675.0" prefWidth="3046.0" VBox.vgrow="ALWAYS">
                 <children>
                     <fx:include fx:id="cameraViewList" source="CameraViewList.fxml" VBox.vgrow="ALWAYS" />
 <!--                <fx:include fx:id="Eyedropper" source="EyedropperColorChecker.fxml" VBox.vgrow="ALWAYS" />-->
@@ -425,6 +420,19 @@
                <Insets top="-2.0" />
             </VBox.margin>
             </HBox>
+         <HBox fx:id="miniProgressHBox" alignment="BOTTOM_RIGHT" prefHeight="17.0" prefWidth="309.0" style="-fx-background-color: #202020;">
+            <children>
+               <HBox alignment="BOTTOM_RIGHT" prefHeight="16.0" prefWidth="200.0" spacing="8.0" HBox.hgrow="SOMETIMES">
+                  <children>
+                     <Label fx:id="miniProgressLabel" text="Unfinished label..." />
+                     <ProgressBar fx:id="miniProgressBar" prefHeight="16.0" prefWidth="200.0" progress="0.87" />
+                  </children>
+                  <HBox.margin>
+                     <Insets right="24.0" />
+                  </HBox.margin>
+               </HBox>
+            </children>
+         </HBox>
         </children>
     </VBox>
 </AnchorPane>
