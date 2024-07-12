@@ -35,6 +35,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.*;
@@ -65,7 +66,6 @@ public class MenubarController
 
     private static MenubarController instance;
 
-
     private InternalModels internalModels;
 
     //Window open flags
@@ -86,7 +86,8 @@ public class MenubarController
     private Label overallTextLabel;
 
     //minimized progress bar
-    @FXML private HBox miniProgressHBox;
+    @FXML private HBox miniProgressHBox; //entire bottom bar
+    @FXML private HBox miniProgBarBoundingHBox; //only label and progress bar
     @FXML private Label miniProgressLabel;
     @FXML private ProgressBar miniProgressBar;
 
@@ -188,6 +189,9 @@ public class MenubarController
 
         this.localProgressBar = ProgressBarsController.getInstance().getLocalProgressBar();
         this.overallProgressBar = ProgressBarsController.getInstance().getOverallProgressBar();
+
+        this.localProgressBar.getScene().getWindow().setOnCloseRequest(
+                event->this.miniProgressHBox.setVisible(true));
 
         this.cameraViewListController.init(injectedInternalModels.getCameraViewListModel());
 
@@ -317,6 +321,7 @@ public class MenubarController
                 this.maximum = 0.0;
                 //TODO: disable progress bars menu item if not processing?
                 ProgressBarsController.getInstance().stopAndClose();
+                miniProgressHBox.setVisible(false);
             }
 
             @Override
@@ -843,6 +848,7 @@ public class MenubarController
 
     public void showProgressBars(){
         ProjectIO.getInstance().openProgressBars();
+        miniProgressHBox.setVisible(false);
     }
 
 

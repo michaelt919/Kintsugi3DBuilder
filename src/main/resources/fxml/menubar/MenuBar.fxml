@@ -420,12 +420,12 @@
                <Insets top="-2.0" />
             </VBox.margin>
             </HBox>
-         <HBox fx:id="miniProgressHBox" alignment="BOTTOM_RIGHT" prefHeight="17.0" prefWidth="309.0" style="-fx-background-color: #202020;">
+         <HBox fx:id="miniProgressHBox" alignment="BOTTOM_RIGHT" onMouseClicked="#showProgressBars" prefHeight="17.0" prefWidth="309.0" style="-fx-background-color: #202020;" visible="false">
             <children>
-               <HBox alignment="BOTTOM_RIGHT" prefHeight="16.0" prefWidth="200.0" spacing="8.0" HBox.hgrow="SOMETIMES">
+               <HBox fx:id="miniProgBarBoundingHBox" alignment="BOTTOM_RIGHT" prefHeight="17.0" prefWidth="334.0" spacing="8.0" HBox.hgrow="ALWAYS">
                   <children>
-                     <Label fx:id="miniProgressLabel" text="Unfinished label..." />
-                     <ProgressBar fx:id="miniProgressBar" prefHeight="16.0" prefWidth="200.0" progress="0.87" />
+                     <Label fx:id="miniProgressLabel" styleClass="wireframeBodyStrong" text="Loading..." />
+                     <ProgressBar fx:id="miniProgressBar" onMouseClicked="#showProgressBars" prefHeight="16.0" prefWidth="60.0" progress="0.0" />
                   </children>
                   <HBox.margin>
                      <Insets right="24.0" />
