@@ -422,12 +422,15 @@
             </HBox>
         </children>
     </VBox>
-   <HBox fx:id="miniProgressHBox" alignment="BOTTOM_RIGHT" onMouseClicked="#showProgressBars" prefHeight="32.0" style="-fx-background-color: #202020;" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+   <HBox fx:id="miniProgressHBox" alignment="BOTTOM_RIGHT" onMouseClicked="#handleMiniProgressBar" prefHeight="32.0" style="-fx-background-color: #202020;" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
       <children>
          <HBox fx:id="miniProgBarBoundingHBox" alignment="CENTER_RIGHT" prefHeight="17.0" prefWidth="334.0" spacing="8.0" HBox.hgrow="ALWAYS">
             <children>
-               <Label fx:id="miniProgressLabel" styleClass="wireframeBodyStrong" text="Loading..." />
-               <ProgressBar fx:id="miniProgressBar" onMouseClicked="#showProgressBars" prefHeight="16.0" prefWidth="60.0" progress="0.0" />
+               <Label fx:id="miniProgressLabel" styleClass="wireframeBodyStrong" text="Loading...">
+                  <padding>
+                     <Insets bottom="8.0" left="16.0" right="16.0" top="8.0" />
+                  </padding></Label>
+               <ProgressBar fx:id="miniProgressBar" onMouseClicked="#handleMiniProgressBar" prefHeight="16.0" prefWidth="60.0" progress="0.0" />
             </children>
             <HBox.margin>
                <Insets right="24.0" />

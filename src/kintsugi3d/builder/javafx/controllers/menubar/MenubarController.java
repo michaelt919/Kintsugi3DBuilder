@@ -11,19 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.text.DecimalFormat;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
-
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -38,16 +25,11 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.stage.*;
-import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
-import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
-import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
-import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
-import kintsugi3d.util.RecentProjects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.javafx.FramebufferView;
+import javafx.scene.text.Font;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.stage.Window;
+import javafx.stage.WindowEvent;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.*;
@@ -56,9 +38,31 @@ import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
+import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
+import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
+import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.javafx.controllers.scene.object.ObjectPoseSetting;
 import kintsugi3d.builder.javafx.controllers.scene.object.SettingsObjectSceneController;
+import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.javafx.FramebufferView;
 import kintsugi3d.util.Flag;
+import kintsugi3d.util.RecentProjects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 public class MenubarController
 {
@@ -90,6 +94,7 @@ public class MenubarController
     @FXML private HBox miniProgBarBoundingHBox; //only label and progress bar
     @FXML private Label miniProgressLabel;
     @FXML private ProgressBar miniProgressBar;
+    private Font origMiniProgLabelFont;
 
     //toggle groups
     @FXML private ToggleGroup renderGroup;
@@ -196,6 +201,7 @@ public class MenubarController
                         this.miniProgressHBox.setVisible(true);
                     }
                 });
+        this.origMiniProgLabelFont = miniProgressLabel.getFont();
 
         this.cameraViewListController.init(injectedInternalModels.getCameraViewListModel());
 
@@ -262,11 +268,15 @@ public class MenubarController
                     overallProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
                 });
 
+                ProgressBarsController.getInstance().resetText();
                 ProgressBarsController.getInstance().showStage();
                 ProgressBarsController.getInstance().startStopwatches();
 
                 miniProgressBar.progressProperty().bind(overallProgressBar.progressProperty());
                 miniProgressLabel.textProperty().bind(overallTextLabel.textProperty());
+
+                miniProgressHBox.setVisible(false);
+                resetMiniProgressBar();
             }
 
             @Override
@@ -325,7 +335,7 @@ public class MenubarController
                 this.maximum = 0.0;
                 //TODO: disable progress bars menu item if not processing?
                 ProgressBarsController.getInstance().stopAndClose();
-                miniProgressHBox.setVisible(false);
+                setReadyToDismissMiniProgBar();
             }
 
             @Override
@@ -367,6 +377,13 @@ public class MenubarController
 
         tip = new Tooltip("Remove references to all recent projects. Will not modify your file system.");
         Tooltip.install(removeAllRefsCustMenuItem.getContent(), tip);
+    }
+
+    private void setReadyToDismissMiniProgBar() {
+        //need to set all styling at the same time because JavaFX CSS is fussy
+        miniProgressLabel.setStyle("-fx-text-fill: #202020; " +
+                                    "-fx-background-color: #CECECE;");
+        miniProgressBar.setVisible(false);
     }
 
     private boolean loadExportClasses(Stage injectedStage, File exportClassDefinitionFile) {
@@ -953,5 +970,22 @@ public class MenubarController
 
     public void showWelcomeWindow() {
         WelcomeWindowController.getInstance().show();
+    }
+
+    public void handleMiniProgressBar(MouseEvent mouseEvent) {
+        if(ProgressBarsController.getInstance().isProcessing()){
+            showProgressBars();
+        }
+        else{
+            //dismiss and reset mini progress bar
+            miniProgressHBox.setVisible(false);
+            resetMiniProgressBar();
+        }
+    }
+
+    private void resetMiniProgressBar() {
+        miniProgressBar.setVisible(true);
+        miniProgressLabel.setFont(origMiniProgLabelFont);
+        miniProgressLabel.setStyle("-fx-background-color: none;");
     }
 }

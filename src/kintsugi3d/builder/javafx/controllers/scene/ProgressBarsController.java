@@ -190,7 +190,6 @@ public class ProgressBarsController {
 
     public void stopAndClose(){
         endStopwatches();
-        reset();
         hideStage();
     }
 
