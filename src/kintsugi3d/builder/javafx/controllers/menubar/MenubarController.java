@@ -191,7 +191,11 @@ public class MenubarController
         this.overallProgressBar = ProgressBarsController.getInstance().getOverallProgressBar();
 
         this.localProgressBar.getScene().getWindow().setOnCloseRequest(
-                event->this.miniProgressHBox.setVisible(true));
+                event->{
+                    if(ProgressBarsController.getInstance().isProcessing()){
+                        this.miniProgressHBox.setVisible(true);
+                    }
+                });
 
         this.cameraViewListController.init(injectedInternalModels.getCameraViewListModel());
 
