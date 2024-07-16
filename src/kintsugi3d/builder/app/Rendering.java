@@ -28,7 +28,6 @@ import javafx.application.Platform;
 import javafx.stage.Stage;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.rendering.IBRInstanceManager;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.builder.tools.DragToolType;
@@ -463,8 +462,6 @@ public final class Rendering
 
     private static void processArgs(String... args)
     {
-        if (args.length == 0){WelcomeWindowController.getInstance().show();}
-
         // Load project if requested
         if (args.length >= 1)
         {

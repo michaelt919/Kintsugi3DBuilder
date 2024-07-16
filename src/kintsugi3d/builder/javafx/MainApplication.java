@@ -54,6 +54,8 @@ public class MainApplication extends Application
 
     private static MainApplication appInstance;
 
+    private static String[] arguments;
+
     public MainApplication()
     {
         appInstance = this;
@@ -62,6 +64,10 @@ public class MainApplication extends Application
     public static MainApplication getAppInstance()
     {
         return appInstance;
+    }
+
+    public static void setArgs(String[] args) {
+        arguments = args;
     }
 
     private static class StageSynchronization implements SynchronizedWindow
@@ -232,8 +238,9 @@ public class MainApplication extends Application
         primaryStage.show();
 
         //only show the welcome window after determining that no projects are being loaded from command line
-        //see Rendering.java --> processArgs(String... args)
-        //welcomeStage.show();
+        if(arguments.length == 0){
+            welcomeStage.show();
+        }
 
         MultithreadModels.getInstance().getCanvasModel().addCanvasChangedListener(
             canvas -> menuBarController.getFramebufferView().setCanvas(canvas));
