@@ -1,5 +1,6 @@
 package kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
@@ -12,6 +13,7 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import javafx.util.Pair;
+import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +48,7 @@ public class FXMLPageScrollerController {
         sharedInfo = new HashMap<>();
 
         currentPage.getController().setButtonShortcuts();
+        Platform.runLater(()-> outerGridPane.getScene().getWindow().requestFocus());
     }
     public void prevPage() {
         if (currentPage.hasPrevPage()){
@@ -161,6 +164,7 @@ public class FXMLPageScrollerController {
     private void close(ActionEvent actionEvent) {
         Window window = currentPage.getController().getHostRegion().getScene().getWindow();
         window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
+        WelcomeWindowController.getInstance().show();
     }
 
     public void setNextButtonDisable(boolean b) {
