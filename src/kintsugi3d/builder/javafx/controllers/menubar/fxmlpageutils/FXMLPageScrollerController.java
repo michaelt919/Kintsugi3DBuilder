@@ -1,5 +1,6 @@
 package kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
@@ -8,6 +9,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import javafx.stage.Window;
+import javafx.stage.WindowEvent;
 import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +52,11 @@ public class FXMLPageScrollerController {
             currentPage = currentPage.getPrevPage();
             initControllerAndUpdatePanel(currentPage.getFxmlFilePath());
         }
+    }
+
+    private void prevPage(ActionEvent e){
+        //use this method for setOnAction() lamdas
+        prevPage();
     }
 
     public void nextPage() {
@@ -122,7 +130,15 @@ public class FXMLPageScrollerController {
 
 
     public void updatePrevAndNextButtons() {
-        prevButton.setDisable(!currentPage.hasPrevPage());
+        //prevButton.setDisable(!currentPage.hasPrevPage());
+        //instead of disabling prevButton, have it close the window instead
+
+        if(currentPage.hasPrevPage()){
+            prevButton.setOnAction(this::prevPage);
+        }
+        else{
+            prevButton.setOnAction(this::close);
+        }
         nextButton.setDisable(!currentPage.getController().isNextButtonValid());
 
         //change next button to confirm button if applicable
@@ -142,6 +158,11 @@ public class FXMLPageScrollerController {
         }
     }
 
+    private void close(ActionEvent actionEvent) {
+        Window window = currentPage.getController().getHostRegion().getScene().getWindow();
+        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
+    }
+
     public void setNextButtonDisable(boolean b) {
         nextButton.setDisable(b);
     }
@@ -155,5 +176,8 @@ public class FXMLPageScrollerController {
     }
 
     public FXMLPage getCurrentPage(){return currentPage;}
+
+    public Button getNextButton(){return nextButton;}
+    public Button getPrevButton(){return prevButton;}
 }
 
