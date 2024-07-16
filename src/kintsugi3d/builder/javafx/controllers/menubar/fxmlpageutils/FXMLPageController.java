@@ -49,8 +49,8 @@ public abstract class FXMLPageController {
         KeyCombination rightKeyCode = new KeyCodeCombination(KeyCode.D);
 
         Scene scene = getHostRegion().getScene();
-        scene.getAccelerators().put(leftKeyCode, ()-> hostScrollerController.prevPage());
-        scene.getAccelerators().put(rightKeyCode, ()-> hostScrollerController.nextPage());
+        scene.getAccelerators().put(leftKeyCode, ()-> hostScrollerController.getPrevButton().fire());
+        scene.getAccelerators().put(rightKeyCode, ()-> hostScrollerController.getNextButton().fire());
     }
 
     public void setLoadStartCallback(Runnable callback){this.loadStartCallback = callback;}

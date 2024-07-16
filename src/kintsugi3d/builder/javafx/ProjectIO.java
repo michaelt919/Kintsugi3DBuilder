@@ -347,57 +347,10 @@ public final class ProjectIO
             String firstPageFXMLPath = "/fxml/menubar/createnewproject/ImportOrCustomProject.fxml";
             scrollerController.setPages(pages, firstPageFXMLPath);
             scrollerController.init();
+            WelcomeWindowController.getInstance().hide();
         } catch (IOException e) {
             log.error("Could not find fxml files for \"Create New Project\" process.", e);
         }
-
-
-        //String[] fxmlFiles = fxmlFilesDirectory.list();
-
-//        if (fxmlFiles == null || fxmlFiles.length == 0) {
-//            log.error("Could not find fxml files for \"Create New Project\" process.");
-//                return;
-//        }
-//
-//        try{
-//            ArrayList<FXMLPage> pages = new ArrayList<>();
-//            for (String fileName : fxmlFiles)
-//            {
-//                String pathPrefix = "fxml/menubar/createnewproject/";
-//                String fullFileName = pathPrefix + fileName;
-//
-//                URL url = MenubarController.class.getClassLoader().getResource(fullFileName);
-//                if (url == null)
-//                {
-//                    throw new FileNotFoundException(fullFileName);
-//                }
-//                FXMLLoader loader = new FXMLLoader(url);
-//                loader.load();
-//
-//                pages.add(new FXMLPage(fullFileName, loader));
-//
-//                FXMLPageController controller = loader.getController();
-//
-//                if (controller instanceof CanConfirm){
-//                    controller.setLoadStartCallback(this::onLoadStart);
-//                    controller.setViewSetCallback(
-//                                (viewSet) ->onViewSetCreated(viewSet, parentWindow));
-//                }
-//            }
-//
-//
-//            String hostFXMLPath = "fxml/menubar/FXMLPageScroller.fxml";
-//            FXMLPageScrollerController scrollerController =
-//                    makeWindow(parentWindow, "Load Files", loaderWindowOpen, hostFXMLPath);
-//
-//            String firstPageFXMLPath = "fxml/menubar/createnewproject/ImportOrCustomProject.fxml";
-//            scrollerController.setPages(pages, firstPageFXMLPath);
-//            scrollerController.init();
-//
-//        } catch (Exception e) {
-//            handleException("An error occurred creating a new project", e);
-//        }
-
     }
 
     private static void startLoad(File projectFile, File vsetFile)
