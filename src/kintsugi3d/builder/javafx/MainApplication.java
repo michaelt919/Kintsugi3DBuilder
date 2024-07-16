@@ -230,7 +230,10 @@ public class MainApplication extends Application
 
         primaryStage.requestFocus();
         primaryStage.show();
-        welcomeStage.show();
+
+        //only show the welcome window after determining that no projects are being loaded from command line
+        //see Rendering.java --> processArgs(String... args)
+        //welcomeStage.show();
 
         MultithreadModels.getInstance().getCanvasModel().addCanvasChangedListener(
             canvas -> menuBarController.getFramebufferView().setCanvas(canvas));
