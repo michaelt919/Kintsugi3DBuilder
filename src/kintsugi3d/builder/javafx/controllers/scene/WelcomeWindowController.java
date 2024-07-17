@@ -14,7 +14,9 @@ package kintsugi3d.builder.javafx.controllers.scene;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SplitMenuButton;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
@@ -152,7 +154,7 @@ public class WelcomeWindowController
     }
 
     public void openSystemSettingsModal() {
-        ProjectIO.getInstance().openSystemSettingsModal(internalModels, window);
+        ProjectIO.getInstance().openSystemSettingsModal(internalModels, parentWindow);
     }
 
     public void openAboutModal() {
@@ -167,5 +169,12 @@ public class WelcomeWindowController
 
     public void addAccelerator(KeyCombination keyCodeCombo, Runnable r) {
         recent1.getScene().getAccelerators().put(keyCodeCombo, r);
+    }
+
+    public void showIfNoModelLoaded() {
+        //TODO: need to change this once progress bar is merged in
+        if(!MultithreadModels.getInstance().getLoadingModel().isInstanceLoaded()){
+            show();
+        }
     }
 }
