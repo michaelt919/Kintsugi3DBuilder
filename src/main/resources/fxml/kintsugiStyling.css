@@ -71,9 +71,11 @@
 }
 
 .button {
-    -fx-background-color: #383838;
-    -fx-text-fill: #FFFFFF;
-    -fx-background-radius: 30 30 30 30;
+    -fx-background-color: #CECECE;
+}
+
+.button .text{
+    -fx-fill:#030303;
 }
 
 .button:hover{
@@ -109,10 +111,9 @@
 .color-picker{
     -fx-background-color: #383838;
     -fx-border-color: #383838;
-    -fx-text-fill:#000000;
 }
 
-.accordion .combo-box-base .text{ /*text within the dropdown for the color picker label in lighting settings*/
+.color-picker .text{
     -fx-fill: #000000;
 }
 
@@ -229,16 +230,24 @@ dialog-pane{
     -fx-background-color: #444444; /*color of incomplete portion*/
 }
 
-.split-menu-button {
-    -fx-base: #383838;
-    -fx-text-fill: #FFFFFF;
-}
-.split-menu-button:hover{
+.split-button:hover{
     -fx-background-color: #D4AA00;
 }
 
-.split-button:hover{
-    -fx-background-color: #D4AA00;
+.split-menu-button {
+    -fx-background-color: #CECECE;
+}
+
+.split-menu-button .text{
+    -fx-fill:#030303;
+}
+
+.split-menu-button:hover{
+    -fx-base: #D4AA00;
+}
+
+.split-menu-button .menu-item .text{
+    -fx-fill:#CECECE;
 }
 
 .scroll-pane{
@@ -345,6 +354,10 @@ dialog-pane{
 
 .tooltip {
     -fx-show-duration: indefinite; /* tooltips don't disappear until the user's mouse leaves the node*/
+}
+
+.tooltip .text{
+    -fx-fill: #CECECE;
 }
 
 .vbox{
