@@ -12,6 +12,7 @@
   -->
 
 <?import javafx.geometry.*?>
+<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
@@ -435,6 +436,9 @@
             <HBox.margin>
                <Insets right="24.0" />
             </HBox.margin>
+            <cursor>
+               <Cursor fx:constant="HAND" />
+            </cursor>
          </HBox>
       </children>
    </HBox>
