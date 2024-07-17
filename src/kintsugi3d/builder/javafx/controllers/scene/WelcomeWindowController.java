@@ -167,7 +167,7 @@ public class WelcomeWindowController
 
     public void showIfNoModelLoaded() {
         //TODO: need to change this once progress bar is merged in
-        if(!MultithreadModels.getInstance().getLoadingModel().isInstanceLoaded()){
+        if(!MultithreadModels.getInstance().getLoadingModel().hasValidHandler()){
             show();
         }
     }

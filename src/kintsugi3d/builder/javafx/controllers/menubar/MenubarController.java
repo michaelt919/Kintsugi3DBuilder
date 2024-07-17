@@ -35,6 +35,7 @@ import javafx.scene.image.Image;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.VBox;
 import javafx.stage.*;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
@@ -45,10 +46,6 @@ import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.javafx.FramebufferView;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.WindowSynchronization;
-import kintsugi3d.builder.core.IBRRequestUI;
-import kintsugi3d.builder.core.Kintsugi3DBuilderState;
-import kintsugi3d.builder.core.LoadingMonitor;
-import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.export.projectExporter.ExportRequestUI;
 import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.javafx.InternalModels;
@@ -684,7 +681,7 @@ public class MenubarController
                 // Bind controller to settings model to synchronize with "currentLightCalibration".
                 lightCalibrationController.bind(internalModels.getSettingsModel());
 
-                if (MultithreadModels.getInstance().getLoadingModel().isInstanceLoaded())
+                if (MultithreadModels.getInstance().getLoadingModel().hasValidHandler())
                 {
                     // Set the "currentLightCalibration" to the existing calibration values in the view set.
                     ViewSet loadedViewSet = MultithreadModels.getInstance().getLoadingModel().getLoadedViewSet();
