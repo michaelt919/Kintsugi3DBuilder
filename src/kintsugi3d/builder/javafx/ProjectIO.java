@@ -310,14 +310,6 @@ public final class ProjectIO
             while (scanner.hasNext())
             {
                 String fileName = scanner.next();
-
-//                URL url = MenubarController.class.getClassLoader().getResource(fileName);
-//                if (url == null)
-//                {
-//                    throw new FileNotFoundException(fileName);
-//                }
-//                FXMLLoader loader = new FXMLLoader(url);
-
                 FXMLLoader loader = new FXMLLoader(getClass().getResource(fileName));
                 loader.load();
 
@@ -647,8 +639,10 @@ public final class ProjectIO
 
         try
         {
-            SystemSettingsController systemSettingsController = makeWindow("System Settings", systemSettingsModalOpen, window, "fxml/menubar/systemsettings/SystemSettings.fxml");
+            SystemSettingsController systemSettingsController = makeWindow(window, "System Settings", systemSettingsModalOpen, "fxml/menubar/systemsettings/SystemSettings.fxml");
             systemSettingsController.init(internalModels, window);
+            WelcomeWindowController.getInstance().hide();
+            systemSettingsController.getHostWindow().setOnCloseRequest(e->WelcomeWindowController.getInstance().showIfNoModelLoaded());
         }
         catch (IOException e)
         {
