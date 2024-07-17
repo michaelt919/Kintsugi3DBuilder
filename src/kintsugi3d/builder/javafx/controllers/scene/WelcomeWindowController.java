@@ -170,11 +170,4 @@ public class WelcomeWindowController
     public void addAccelerator(KeyCombination keyCodeCombo, Runnable r) {
         recent1.getScene().getAccelerators().put(keyCodeCombo, r);
     }
-
-    public void showIfNoModelLoaded() {
-        //TODO: need to change this once progress bar is merged in
-        if(!MultithreadModels.getInstance().getLoadingModel().isInstanceLoaded()){
-            show();
-        }
-    }
 }
