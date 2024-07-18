@@ -27,8 +27,10 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -73,7 +75,6 @@ public class MenubarController
     private static final Logger log = LoggerFactory.getLogger(MenubarController.class);
 
     private static MenubarController instance;
-
     private InternalModels internalModels;
 
     //Window open flags
@@ -94,7 +95,7 @@ public class MenubarController
     private Label overallTextLabel;
 
     //minimized progress bar
-    @FXML private HBox miniProgressHBox; //entire bottom bar
+    @FXML private AnchorPane miniProgressPane; //entire bottom bar
     @FXML private HBox miniProgBarBoundingHBox; //only label and progress bar
     @FXML private Label miniProgressLabel;
     @FXML private ProgressBar miniProgressBar;
@@ -202,7 +203,7 @@ public class MenubarController
         this.localProgressBar.getScene().getWindow().setOnCloseRequest(
                 event->{
                     if(ProgressBarsController.getInstance().isProcessing()){
-                        this.miniProgressHBox.setVisible(true);
+                        this.miniProgressPane.setVisible(true);
                     }
                 });
         this.origMiniProgLabelFont = miniProgressLabel.getFont();
@@ -292,7 +293,7 @@ public class MenubarController
 
                 }, overallTextLabel.textProperty(), currentStageProperty, stageCountProperty));
 
-                miniProgressHBox.setVisible(false);
+                miniProgressPane.setVisible(false);
                 resetMiniProgressBar();
             }
 
@@ -402,9 +403,7 @@ public class MenubarController
     }
 
     private void setReadyToDismissMiniProgBar() {
-        //need to set all styling at the same time because JavaFX CSS is fussy
-        miniProgressLabel.setStyle("-fx-text-fill: #202020; " +
-                                    "-fx-background-color: #CECECE;");
+        lightenMiniBar();
         miniProgressBar.setVisible(false);
     }
 
@@ -891,7 +890,7 @@ public class MenubarController
 
     public void showProgressBars(){
         ProjectIO.getInstance().openProgressBars();
-        miniProgressHBox.setVisible(false);
+        miniProgressPane.setVisible(false);
     }
 
 
@@ -1000,14 +999,24 @@ public class MenubarController
         }
         else{
             //dismiss and reset mini progress bar
-            miniProgressHBox.setVisible(false);
+            miniProgressPane.setVisible(false);
             resetMiniProgressBar();
         }
     }
 
     private void resetMiniProgressBar() {
         miniProgressBar.setVisible(true);
-        miniProgressLabel.setFont(origMiniProgLabelFont);
-        miniProgressLabel.setStyle("-fx-background-color: none;");
+        darkenMiniBar();
+    }
+
+    public void lightenMiniBar() {
+        miniProgBarBoundingHBox.setStyle("-fx-background-color: #CECECE;");
+        miniProgressLabel.setStyle("-fx-text-fill: #202020;");
+    }
+
+    public void darkenMiniBar() {
+        miniProgBarBoundingHBox.setStyle("-fx-background-color: none;");
+        miniProgressLabel.setStyle("-fx-text-fill: #CECECE;");
+
     }
 }
