@@ -210,7 +210,7 @@ public class MainApplication extends Application
         progressBarsStage.setTitle("Progress");
         progressBarsStage.setScene(new Scene(progressBarsRoot));
         progressBarsStage.initOwner(primaryStage.getScene().getWindow());
-        progressBarsStage.setResizable(false); //remove minimize and maximize
+        progressBarsStage.setResizable(false); //remove minimize and maximize buttons from system nav
 
         //set positions
 
