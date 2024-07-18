@@ -80,7 +80,7 @@ public class ResampleRequest implements ObservableIBRRequest
                 if (monitor != null)
                 {
                     monitor.setProgress((double) i / (double) targetViewSet.getCameraPoseCount(),
-                        MessageFormat.format("{0} ({1}/{2})", targetViewSet.getImageFileName(i), i, targetViewSet.getCameraPoseCount()));
+                        MessageFormat.format("{0} ({1}/{2})", targetViewSet.getImageFileName(i), i+1, targetViewSet.getCameraPoseCount()));
                 }
             }
 

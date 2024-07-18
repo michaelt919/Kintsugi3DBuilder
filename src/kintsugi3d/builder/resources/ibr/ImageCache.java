@@ -304,7 +304,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
             {
                 if (monitor != null)
                 {
-                    monitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(k), k, resources.getViewSet().getCameraPoseCount()));
+                    monitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(k), k+1, resources.getViewSet().getCameraPoseCount()));
                     monitor.allowUserCancellation();
                 }
 

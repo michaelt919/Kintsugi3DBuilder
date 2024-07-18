@@ -989,7 +989,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             {
                 for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
                 {
-                    progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i, viewSet.getCameraPoseCount()));
+                    progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i+1, viewSet.getCameraPoseCount()));
 
                     try
                     {

@@ -91,7 +91,7 @@ class MultiframeRenderRequest extends RenderRequestBase
                 if (monitor != null)
                 {
                     monitor.setProgress((double) i / (double) frameCount,
-                        MessageFormat.format("Frame {0}/{1}", i, frameCount));
+                        MessageFormat.format("Frame {0}/{1}", i+1, frameCount));
                 }
             }
         }

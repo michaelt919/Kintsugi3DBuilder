@@ -126,7 +126,7 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
             {
                 if (progressMonitor != null)
                 {
-                    progressMonitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", getViewSet().getImageFileName(k), k, getViewSet().getCameraPoseCount()));
+                    progressMonitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", getViewSet().getImageFileName(k), k+1, getViewSet().getCameraPoseCount()));
                     progressMonitor.allowUserCancellation();
                 }
 
