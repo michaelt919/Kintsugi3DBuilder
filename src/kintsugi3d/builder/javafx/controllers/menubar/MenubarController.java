@@ -311,7 +311,8 @@ public class MenubarController
 
                 Platform.runLater(() -> localProgressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS));
 
-                overallProgress = (double) currentStageProperty.getValue() / stageCountProperty.getValue();
+                //index current stage from 0 in this instance
+                overallProgress = (double) (currentStageProperty.getValue() - 1) / stageCountProperty.getValue();
                 Platform.runLater(()-> overallProgressBar.setProgress(overallProgress));
 
                 log.info("[Stage {}/{}] {}", currentStageProperty.getValue(), stageCountProperty.getValue(), message);
@@ -338,7 +339,8 @@ public class MenubarController
                 this.localProgress = progress / maximum;
                 Platform.runLater(() -> localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : localProgress));
 
-                double offset = (double) currentStageProperty.getValue() / stageCountProperty.getValue();
+                //index current stage from 0 in this instance
+                double offset = (double) (currentStageProperty.getValue() - 1) / stageCountProperty.getValue();
                 this.overallProgress = offset + (localProgress / stageCountProperty.getValue());
                 Platform.runLater(() -> overallProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : overallProgress));
 
