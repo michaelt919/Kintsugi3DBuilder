@@ -165,8 +165,11 @@ public class ProgressBarsController {
         long totalElapsedTime = overallStopwatch.getElapsedTime();
         long localElapsedTime = localStopwatch.getElapsedTime();
 
-        Platform.runLater(()-> totalElapsedTimeLabel.setText(nanosecToFormatTime(totalElapsedTime)));
-        Platform.runLater(()->localElapsedTimeLabel.setText(nanosecToFormatTime(localElapsedTime)));
+        String totalTimeTxt = nanosecToFormatTime(totalElapsedTime);
+        String localTimeTxt = nanosecToFormatTime(localElapsedTime);
+
+        Platform.runLater(()-> totalElapsedTimeLabel.setText("(" + totalTimeTxt + " Lapsed)"));
+        Platform.runLater(()->localElapsedTimeLabel.setText("(" + localTimeTxt + " Lapsed)"));
     }
 
     private static String nanosecToFormatTime(long nanoTime){

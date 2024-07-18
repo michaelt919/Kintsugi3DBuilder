@@ -51,13 +51,11 @@
                   </ProgressBar>
                   <HBox spacing="4.0">
                      <children>
-                        <Label fx:id="totalElapsedTimeLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="00:00:00">
+                        <Label fx:id="totalEstimTimeRemainingLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="--:--:--">
                            </Label>
-                        <Label layoutX="10.0" layoutY="10.0" style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="of">
+                        <Label style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="Remaining">
                            </Label>
-                        <Label fx:id="totalEstimTimeRemainingLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="00:00:00">
-                           </Label>
-                        <Label style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="Estimated time remaining">
+                        <Label fx:id="totalElapsedTimeLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="(--:--:-- Lapsed)">
                            </Label>
                      </children>
                      <VBox.margin>
@@ -89,10 +87,9 @@
                   </ProgressBar>
                   <HBox spacing="2.0">
                      <children>
-                        <Label fx:id="localElapsedTimeLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeCaption" text="00:00:00" />
-                        <Label layoutX="10.0" layoutY="10.0" style="-fx-text-fill: #CECECE;" styleClass="wireframeCaption" text="of" />
-                        <Label fx:id="localEstimTimeRemainingLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeCaption" text="00:00:00" />
-                        <Label style="-fx-text-fill: #CECECE;" styleClass="wireframeCaption" text="Estimated time remaining" />
+                        <Label fx:id="localEstimTimeRemainingLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeCaption" text="--:--:--" />
+                        <Label style="-fx-text-fill: #CECECE;" styleClass="wireframeCaption" text="Remaining" />
+                        <Label fx:id="localElapsedTimeLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeCaption" text="(--:--:-- Lapsed)" />
                      </children>
                      <padding>
                         <Insets left="32.0" />
