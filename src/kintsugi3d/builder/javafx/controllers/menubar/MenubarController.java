@@ -281,6 +281,12 @@ public class MenubarController
 
                 miniProgressLabel.textProperty().bind(Bindings.createStringBinding(()-> {
                     StringProperty stringProperty = overallTextLabel.textProperty();
+
+                    if (currentStageProperty.getValue() > stageCountProperty.getValue() ||
+                        stageCountProperty.getValue() == 0){
+                        return stringProperty.getValue();
+                    }
+
                     return String.format("%s (Stage %s/%s)",
                             stringProperty.getValue(), currentStageProperty.getValue(), stageCountProperty.getValue());
 
@@ -301,16 +307,20 @@ public class MenubarController
             {
                 this.maximum = 0.0;
                 this.localProgress = 0.0;
-                this.currentStageProperty.setValue(stage);
+                this.currentStageProperty.setValue(stage + 1); //index starting from 1
 
                 Platform.runLater(() -> localProgressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS));
 
                 overallProgress = (double) currentStageProperty.getValue() / stageCountProperty.getValue();
                 Platform.runLater(()-> overallProgressBar.setProgress(overallProgress));
 
-                log.info("[Stage {}/{}] {}", currentStageProperty, stageCountProperty, message);
+                log.info("[Stage {}/{}] {}", currentStageProperty.getValue(), stageCountProperty.getValue(), message);
 
                 Platform.runLater(()-> overallTextLabel.setText(message));
+
+                if(currentStageProperty.getValue() > stageCountProperty.getValue()){
+                    Platform.runLater(()->localTextLabel.setText("Finishing up..."));
+                }
 
                 ProgressBarsController.getInstance().beginNewStage();
             }
@@ -332,9 +342,9 @@ public class MenubarController
                 this.overallProgress = offset + (localProgress / stageCountProperty.getValue());
                 Platform.runLater(() -> overallProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : overallProgress));
 
-                //TODO: index from 1, say "Finishing up" if currentStage == stageCount (before adding 1 to currentStage)
                 log.info("[{}%] {}", new DecimalFormat("#.##").format(localProgress * 100), message);
-                Platform.runLater(()-> localTextLabel.setText(String.format("Stage %s/%s—%s", currentStageProperty.getValue(), stageCountProperty.getValue(), message)));
+                Platform.runLater(()-> localTextLabel.setText(
+                        String.format("Stage %s/%s—%s", currentStageProperty.getValue(), stageCountProperty.getValue(), message)));
 
                 ProgressBarsController.getInstance().clickStopwatches(progress, maximum, overallProgress);
             }
