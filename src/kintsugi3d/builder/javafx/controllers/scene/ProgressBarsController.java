@@ -12,6 +12,8 @@
 package kintsugi3d.builder.javafx.controllers.scene;
 
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -51,6 +53,7 @@ public class ProgressBarsController {
 
     private Stage stage;
     private String defaultOverallElapsedTimeTxt;
+    private BooleanProperty processingProperty = new SimpleBooleanProperty(false);
 
     public static ProgressBarsController getInstance()
     {
@@ -69,6 +72,8 @@ public class ProgressBarsController {
 
         overallStopwatch = new Stopwatch();
         localStopwatch = new Stopwatch();
+
+        processingProperty.bind(overallStopwatch.isRunningProperty());
 
         INSTANCE = this;
     }
@@ -95,10 +100,6 @@ public class ProgressBarsController {
     public void showStage() {
         Platform.runLater(()-> {
             stage.show();
-
-            if(!isProcessing()){
-                reset();
-            }
         });
     }
 
@@ -197,11 +198,15 @@ public class ProgressBarsController {
     }
 
     public boolean isProcessing() {
-        return overallStopwatch.isRunning();
+        return processingProperty.getValue();
     }
 
     public void beginNewStage() {
         localStopwatch = new Stopwatch();
         localStopwatch.start();
+    }
+
+    public BooleanProperty getProcessingProperty() {
+        return processingProperty;
     }
 }

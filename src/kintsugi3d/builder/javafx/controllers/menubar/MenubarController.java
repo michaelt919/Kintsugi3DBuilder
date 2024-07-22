@@ -15,7 +15,6 @@ import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -30,7 +29,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -98,8 +96,9 @@ public class MenubarController
     @FXML private AnchorPane miniProgressPane; //entire bottom bar
     @FXML private HBox miniProgBarBoundingHBox; //only label and progress bar
     @FXML private Label miniProgressLabel;
+
     @FXML private ProgressBar miniProgressBar;
-    private Font origMiniProgLabelFont;
+    @FXML private Button dismissButton;
 
     //toggle groups
     @FXML private ToggleGroup renderGroup;
@@ -202,12 +201,10 @@ public class MenubarController
 
         this.localProgressBar.getScene().getWindow().setOnCloseRequest(
                 event->{
-                    if(ProgressBarsController.getInstance().isProcessing()){
+//                    if(ProgressBarsController.getInstance().isProcessing()){
                         this.miniProgressPane.setVisible(true);
-                    }
+//                    }
                 });
-        this.origMiniProgLabelFont = miniProgressLabel.getFont();
-
         this.cameraViewListController.init(injectedInternalModels.getCameraViewListModel());
 
         this.internalModels = injectedInternalModels;
@@ -217,7 +214,9 @@ public class MenubarController
         AtomicBoolean cancelRequested = new AtomicBoolean(false);
 
         cancelButton.setOnAction(event -> cancelRequested.set(true));
-//send accelerators to welcome window
+        cancelButton.disableProperty().bind(ProgressBarsController.getInstance().getProcessingProperty().not());
+
+        //send accelerators to welcome window
         List<Menu> menus = mainMenubar.getMenus();
 
         for (Menu menu : menus){
@@ -243,6 +242,8 @@ public class MenubarController
             private IntegerProperty stageCountProperty = new SimpleIntegerProperty(0);
             private IntegerProperty currentStageProperty = new SimpleIntegerProperty(0);
 
+            private String revertText; //when process is finishing up, store last msg into here while displaying "Finishing up..."
+
             @Override
             public void allowUserCancellation() throws UserCancellationException
             {
@@ -258,6 +259,7 @@ public class MenubarController
             public void cancelComplete(UserCancellationException e)
             {
                 complete();
+                dismissMiniProgressBar();
             }
 
             @Override
@@ -277,24 +279,32 @@ public class MenubarController
                 ProgressBarsController.getInstance().showStage();
                 ProgressBarsController.getInstance().startStopwatches();
 
+                miniProgressPane.setVisible(false);
+                resetMiniProgressBar();
+
                 miniProgressBar.progressProperty().bind(overallProgressBar.progressProperty());
-//                miniProgressLabel.textProperty().bind(overallTextLabel.textProperty());
 
                 miniProgressLabel.textProperty().bind(Bindings.createStringBinding(()-> {
-                    StringProperty stringProperty = overallTextLabel.textProperty();
+                    String currProcessTxt = overallTextLabel.textProperty().getValue();
 
-                    if (currentStageProperty.getValue() > stageCountProperty.getValue() ||
+                    //Display "Finishing up..." or something similar
+                    if (currentStageProperty.getValue() > stageCountProperty.getValue() &&
+                    ProgressBarsController.getInstance().isProcessing()){
+                        return localTextLabel.getText();
+                    }
+
+                    //Display "Loading..." or some end message (ex. "Finished loading images")
+                    if (!ProgressBarsController.getInstance().isProcessing() ||
                         stageCountProperty.getValue() == 0){
-                        return stringProperty.getValue();
+                        return currProcessTxt;
                     }
 
                     return String.format("%s (Stage %s/%s)",
-                            stringProperty.getValue(), currentStageProperty.getValue(), stageCountProperty.getValue());
+                            currProcessTxt, currentStageProperty.getValue(), stageCountProperty.getValue());
 
-                }, overallTextLabel.textProperty(), currentStageProperty, stageCountProperty));
 
-                miniProgressPane.setVisible(false);
-                resetMiniProgressBar();
+                }, overallTextLabel.textProperty(), currentStageProperty, stageCountProperty,
+                        localTextLabel.textProperty()));//pass localTextLabel text property so this binding updates more often
             }
 
             @Override
@@ -323,8 +333,9 @@ public class MenubarController
                 if(currentStageProperty.getValue() > stageCountProperty.getValue()){
                     Platform.runLater(()->localTextLabel.setText("Finishing up..."));
                 }
-
-                ProgressBarsController.getInstance().beginNewStage();
+                else{
+                    ProgressBarsController.getInstance().beginNewStage();
+                }
             }
 
             @Override
@@ -346,8 +357,9 @@ public class MenubarController
                 Platform.runLater(() -> overallProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : overallProgress));
 
                 log.info("[{}%] {}", new DecimalFormat("#.##").format(localProgress * 100), message);
-                Platform.runLater(()-> localTextLabel.setText(
-                        String.format("Stage %s/%s—%s", currentStageProperty.getValue(), stageCountProperty.getValue(), message)));
+
+                revertText = String.format("Stage %s/%s—%s", currentStageProperty.getValue(), stageCountProperty.getValue(), message);
+                Platform.runLater(()-> localTextLabel.setText(revertText));
 
                 ProgressBarsController.getInstance().clickStopwatches(progress, maximum, overallProgress);
             }
@@ -357,8 +369,12 @@ public class MenubarController
             {
                 this.maximum = 0.0;
                 //TODO: disable progress bars menu item if not processing?
-                ProgressBarsController.getInstance().stopAndClose();
+                ProgressBarsController.getInstance().endStopwatches();
+                ProgressBarsController.getInstance().hideStage();
                 setReadyToDismissMiniProgBar();
+
+                Platform.runLater(()->localProgressBar.setProgress(1.0));
+                Platform.runLater(()->localTextLabel.setText(revertText));
             }
 
             @Override
@@ -405,6 +421,8 @@ public class MenubarController
     private void setReadyToDismissMiniProgBar() {
         lightenMiniBar();
         miniProgressBar.setVisible(false);
+        dismissButton.setVisible(true);
+        miniProgressPane.setVisible(true);
     }
 
     private boolean loadExportClasses(Stage injectedStage, File exportClassDefinitionFile) {
@@ -993,19 +1011,13 @@ public class MenubarController
         WelcomeWindowController.getInstance().show();
     }
 
-    public void handleMiniProgressBar(MouseEvent mouseEvent) {
-        if(ProgressBarsController.getInstance().isProcessing()){
-            showProgressBars();
-        }
-        else{
-            //dismiss and reset mini progress bar
-            miniProgressPane.setVisible(false);
-            resetMiniProgressBar();
-        }
+    public void handleMiniProgressBar() {
+        showProgressBars();
     }
 
     private void resetMiniProgressBar() {
         miniProgressBar.setVisible(true);
+        dismissButton.setVisible(false);
         darkenMiniBar();
     }
 
@@ -1018,5 +1030,15 @@ public class MenubarController
         miniProgBarBoundingHBox.setStyle("-fx-background-color: none;");
         miniProgressLabel.setStyle("-fx-text-fill: #CECECE;");
 
+    }
+
+    public void mouseExitMiniBar() {
+        if(ProgressBarsController.getInstance().isProcessing()){
+            darkenMiniBar();
+        }
+    }
+
+    public void dismissMiniProgressBar() {
+        miniProgressPane.setVisible(false);
     }
 }

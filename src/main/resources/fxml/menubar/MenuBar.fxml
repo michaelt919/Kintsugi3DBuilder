@@ -425,7 +425,7 @@
     </VBox>
    <AnchorPane fx:id="miniProgressPane" layoutY="688.6666870117188" prefHeight="24.0" style="-fx-background-color: #202020;" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
       <children>
-         <HBox fx:id="miniProgBarBoundingHBox" alignment="CENTER_RIGHT" onMouseClicked="#handleMiniProgressBar" onMouseEntered="#lightenMiniBar" onMouseExited="#darkenMiniBar" spacing="8.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="24.0">
+         <HBox fx:id="miniProgBarBoundingHBox" alignment="CENTER_RIGHT" onMouseClicked="#handleMiniProgressBar" onMouseEntered="#lightenMiniBar" onMouseExited="#mouseExitMiniBar" spacing="8.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="24.0">
             <children>
                <Label fx:id="miniProgressLabel" styleClass="wireframeBodyStrong" text="Loading...">
                   <padding>
@@ -435,7 +435,12 @@
                      <Insets />
                   </HBox.margin>
                </Label>
-               <ProgressBar fx:id="miniProgressBar" onMouseClicked="#handleMiniProgressBar" prefHeight="16.0" prefWidth="60.0" progress="0.0" />
+               <StackPane>
+                  <children>
+                     <ProgressBar fx:id="miniProgressBar" onMouseClicked="#handleMiniProgressBar" prefHeight="16.0" prefWidth="60.0" progress="0.0" />
+                     <Button fx:id="dismissButton" mnemonicParsing="false" onAction="#dismissMiniProgressBar" text="Dismiss" visible="false" />
+                  </children>
+               </StackPane>
             </children>
             <cursor>
                <Cursor fx:constant="HAND" />

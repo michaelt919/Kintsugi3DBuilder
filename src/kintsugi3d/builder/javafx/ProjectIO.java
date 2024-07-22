@@ -631,6 +631,8 @@ public final class ProjectIO
         {
             closeProject();
             WelcomeWindowController.getInstance().show();
+            //TODO: do we want this here?
+            MenubarController.getInstance().dismissMiniProgressBar();
         }
     }
 

@@ -11,6 +11,9 @@
 
 package kintsugi3d.util;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+
 import java.util.Arrays;
 
 public class Stopwatch {
@@ -19,7 +22,7 @@ public class Stopwatch {
     private int trackingIdx = 0;
 
     private long initTime;
-    private boolean running = false;
+    private BooleanProperty running = new SimpleBooleanProperty(false);
 
     //used to manually set elapsed time for a stopwatch which is stopped and
     //   has its elapsed time retrieved later
@@ -30,11 +33,11 @@ public class Stopwatch {
     }
 
     public long start(){
-        if(running){
+        if(running.getValue()){
             throw new IllegalStateException("Stopwatch object cannot be started multiple times.");
         }
 
-        running = true;
+        running.setValue(true);
         trackingIdx = 0;
 
         initTime = System.nanoTime();
@@ -60,10 +63,10 @@ public class Stopwatch {
 
     public long getInitTime() {return initTime;}
 
-    public boolean isRunning(){return running;}
+    public BooleanProperty isRunningProperty(){return running;}
 
     public long getElapsedTime() {
-        if (running){
+        if (running.getValue()){
             //TODO: need to redo this if we want to support starting and stopping stopwatches
             return System.nanoTime() - initTime;
         }
@@ -72,7 +75,7 @@ public class Stopwatch {
     }
 
     public long stop() {
-        running = false;
+        running.setValue(false);
         manualElapsedTime = System.nanoTime() - initTime;
 
         return manualElapsedTime;
