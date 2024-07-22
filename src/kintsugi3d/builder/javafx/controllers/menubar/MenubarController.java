@@ -279,6 +279,8 @@ public class MenubarController
                 ProgressBarsController.getInstance().showStage();
                 ProgressBarsController.getInstance().startStopwatches();
 
+                //Stage progressStage = (Stage) overallProgressBar.getScene().getWindow();
+                //progressStage.setTitle("Set a title here"); //TODO: do this, pass title in through start()?
                 miniProgressPane.setVisible(false);
                 resetMiniProgressBar();
 
