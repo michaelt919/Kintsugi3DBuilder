@@ -268,6 +268,8 @@ public class MenubarController
                 cancelRequested.set(false);
 
                 stageCountProperty.setValue(0);
+                currentStageProperty.setValue(0);
+
                 localProgress = 0.0;
                 overallProgress = 0.0;
                 Platform.runLater(() ->
@@ -365,7 +367,12 @@ public class MenubarController
 
                 log.info("[{}%] {}", new DecimalFormat("#.##").format(localProgress * 100), message);
 
-                revertText = String.format("Stage %s/%s—%s", currentStageProperty.getValue(), stageCountProperty.getValue(), message);
+                //remove stage/stageCount from txt if it wouldn't make sense for it to be there (Stage 0/0)
+                //useful for simple exports like orbit animation
+                boolean removeStageNums = stageCountProperty.getValue() == 0 || currentStageProperty.getValue() == 0;
+                revertText = removeStageNums ? message :
+                        String.format("Stage %s/%s—%s", currentStageProperty.getValue(), stageCountProperty.getValue(), message);
+
                 Platform.runLater(()-> localTextLabel.setText(revertText));
 
                 ProgressBarsController.getInstance().clickStopwatches(progress, maximum, overallProgress);
