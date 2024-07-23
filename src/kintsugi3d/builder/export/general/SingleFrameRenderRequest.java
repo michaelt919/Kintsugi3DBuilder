@@ -63,6 +63,9 @@ class SingleFrameRenderRequest extends RenderRequestBase
             Drawable<ContextType> drawable = createDrawable(program, resources)
         )
         {
+            if(monitor != null){
+                monitor.setProcessName("Generic Export");
+            }
 
             program.setUniform("model_view", renderable.getActiveViewSet().getCameraPose(0));
             program.setUniform("projection",

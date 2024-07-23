@@ -104,6 +104,9 @@ public class ScreenshotRequest implements ObservableIBRRequest
                 .createFramebufferObject()
         )
         {
+            if(monitor != null){
+                monitor.setProcessName("Screenshot");
+            }
             framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, /*1.0f*/0.0f);
             framebuffer.clearDepthBuffer();
 

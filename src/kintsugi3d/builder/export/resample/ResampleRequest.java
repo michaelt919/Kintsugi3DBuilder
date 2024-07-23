@@ -55,6 +55,9 @@ public class ResampleRequest implements ObservableIBRRequest
                 .createFramebufferObject()
         )
         {
+            if(monitor != null){
+                monitor.setProcessName("Resample");
+            }
             for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
             {
                 if (monitor != null)

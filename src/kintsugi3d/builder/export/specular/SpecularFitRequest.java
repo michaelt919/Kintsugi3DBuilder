@@ -80,8 +80,7 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
             settings.setOutputDirectory(renderable.getActiveViewSet().getSupportingFilesFilePath());
 
             if(monitor !=null){
-                //TODO: "Process textures"?
-                monitor.setProcessName("Specular Fit Request");
+                monitor.setProcessName("Process Textures");
             }
 
             // Perform the specular fit

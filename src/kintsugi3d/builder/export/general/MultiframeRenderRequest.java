@@ -66,6 +66,9 @@ class MultiframeRenderRequest extends RenderRequestBase
             Drawable<ContextType> drawable = createDrawable(program, resources)
         )
         {
+            if(monitor != null){
+                monitor.setProcessName("Generic Export");
+            }
             for (int i = 0; i < frameCount; i++)
             {
                 if (monitor != null)

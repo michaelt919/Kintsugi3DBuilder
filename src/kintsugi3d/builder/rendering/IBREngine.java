@@ -468,6 +468,9 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             }
 
             log.info("Starting glTF export...");
+            if(progressMonitor != null){
+                progressMonitor.setProcessName("glTF Export");
+            }
 
             try
             {
