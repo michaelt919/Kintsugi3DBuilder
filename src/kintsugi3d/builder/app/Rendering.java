@@ -372,6 +372,11 @@ public final class Rendering
             }
 
             @Override
+            public void setProcessName(String processName) {
+                ioModel.getProgressMonitor().setProcessName(processName);
+            }
+
+            @Override
             public void setStageCount(int count)
             {
                 ioModel.getProgressMonitor().setStageCount(count);

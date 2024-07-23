@@ -254,6 +254,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
                 {
                     this.progressMonitor.start();
                     this.progressMonitor.setMaxProgress(0.0);
+                    this.progressMonitor.setProcessName("Load Environment Map");
 
                     try
                     {

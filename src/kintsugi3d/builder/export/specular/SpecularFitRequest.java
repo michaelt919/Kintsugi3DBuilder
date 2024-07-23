@@ -79,6 +79,11 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
             // Set the output directory based on the view set's texture fit file path
             settings.setOutputDirectory(renderable.getActiveViewSet().getSupportingFilesFilePath());
 
+            if(monitor !=null){
+                //TODO: "Process textures"?
+                monitor.setProcessName("Specular Fit Request");
+            }
+
             // Perform the specular fit
             new SpecularFitProcess(settings).optimizeFit(renderable.getIBRResources(), monitor);
 

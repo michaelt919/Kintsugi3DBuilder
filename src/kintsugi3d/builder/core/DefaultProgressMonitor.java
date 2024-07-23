@@ -32,6 +32,11 @@ public class DefaultProgressMonitor implements ProgressMonitor
     }
 
     @Override
+    public void setProcessName(String processName)
+    {
+    }
+
+    @Override
     public void setStageCount(int count)
     {
     }

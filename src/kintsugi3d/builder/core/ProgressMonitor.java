@@ -39,6 +39,12 @@ public interface ProgressMonitor
     void start();
 
     /**
+     * Send the name of the process up the call stack to the title of the Progress Bars modal.
+     * @param processName The name of the process.
+     */
+    void setProcessName(String processName);
+
+    /**
      * A callback fired when the total number of stages is known.
      * setStageComplete() will never indicate a number of completed stages greater than this,
      * and when the number of completed stages reaches the total count, complete() should be fired shortly afterward.

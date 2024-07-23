@@ -48,8 +48,8 @@ public class ProgressBarsController {
     private String defaultOverallText;
     private String defaultTotalTimeElapsedText;
     private String defaultEstimTimeRemainingTxt;
-
     private String defaultEstimLocalTimeRemainingTxt;
+    private String defaultTitle;
 
     private Stage stage;
     private String defaultOverallElapsedTimeTxt;
@@ -69,6 +69,8 @@ public class ProgressBarsController {
         defaultEstimTimeRemainingTxt = totalEstimTimeRemainingLabel.getText();
         defaultEstimLocalTimeRemainingTxt = localEstimTimeRemainingLabel.getText();
         defaultOverallElapsedTimeTxt = localElapsedTimeLabel.getText();
+
+        defaultTitle = stage.getTitle();
 
         overallStopwatch = new Stopwatch();
         localStopwatch = new Stopwatch();
@@ -94,6 +96,8 @@ public class ProgressBarsController {
 
             totalEstimTimeRemainingLabel.setText(defaultEstimTimeRemainingTxt);
             localEstimTimeRemainingLabel.setText(defaultEstimLocalTimeRemainingTxt);
+
+            stage.setTitle(defaultTitle);
         });
     }
 

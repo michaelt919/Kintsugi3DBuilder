@@ -11,20 +11,18 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.util.EncodableColorImage;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
-
-import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
-import kintsugi3d.util.AbstractImage;
-import kintsugi3d.util.EncodableColorImage;
 
 public class IOModel
 {
@@ -61,6 +59,14 @@ public class IOModel
             for (ProgressMonitor monitor : subMonitors)
             {
                 monitor.start();
+            }
+        }
+
+        @Override
+        public void setProcessName(String processName) {
+            for (ProgressMonitor monitor : subMonitors)
+            {
+                monitor.setProcessName(processName);
             }
         }
 

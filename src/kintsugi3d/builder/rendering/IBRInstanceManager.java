@@ -234,6 +234,14 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             }
 
             @Override
+            public void setProcessName(String processName) {
+                if (progressMonitor != null)
+                {
+                    progressMonitor.setProcessName(processName);
+                }
+            }
+
+            @Override
             public void setStageCount(int count)
             {
                 if (progressMonitor != null)
@@ -311,6 +319,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     public void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions)
     {
         this.progressMonitor.start();
+        this.progressMonitor.setProcessName("Load from File");
 
         try
         {
@@ -338,6 +347,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         //  Restructuring required from Tetzlaff.
 
         this.progressMonitor.start();
+        this.progressMonitor.setProcessName("Load from Agisoft Project");
 
         loadAgisoftFromZipRec(id, metashapeObjectChunk, loadOptions, primaryViewName);
     }
@@ -482,6 +492,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         ReadonlyLoadOptionsModel loadOptions)
     {
         this.progressMonitor.start();
+        this.progressMonitor.setProcessName("Load from Agisoft Files");
 
         try
         {

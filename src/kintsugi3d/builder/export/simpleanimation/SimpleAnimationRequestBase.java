@@ -122,6 +122,9 @@ public abstract class SimpleAnimationRequestBase implements ObservableIBRRequest
                 .createFramebufferObject()
         )
         {
+            if(monitor!=null){
+                monitor.setProcessName("Orbit Animation");
+            }
             for (int i = 0; i < frameCount; i++)
             {
                 if (monitor != null)

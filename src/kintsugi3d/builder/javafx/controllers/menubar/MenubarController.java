@@ -279,8 +279,6 @@ public class MenubarController
                 ProgressBarsController.getInstance().showStage();
                 ProgressBarsController.getInstance().startStopwatches();
 
-                //Stage progressStage = (Stage) overallProgressBar.getScene().getWindow();
-                //progressStage.setTitle("Set a title here"); //TODO: do this, pass title in through start()?
                 miniProgressPane.setVisible(false);
                 resetMiniProgressBar();
 
@@ -307,6 +305,12 @@ public class MenubarController
 
                 }, overallTextLabel.textProperty(), currentStageProperty, stageCountProperty,
                         localTextLabel.textProperty()));//pass localTextLabel text property so this binding updates more often
+            }
+
+            @Override
+            public void setProcessName(String processName) {
+                Stage progressStage = (Stage) overallProgressBar.getScene().getWindow();
+                Platform.runLater(()->progressStage.setTitle(processName));
             }
 
             @Override
@@ -375,8 +379,18 @@ public class MenubarController
                 ProgressBarsController.getInstance().hideStage();
                 setReadyToDismissMiniProgBar();
 
-                Platform.runLater(()->localProgressBar.setProgress(1.0));
-                Platform.runLater(()->localTextLabel.setText(revertText));
+                if(overallProgressBar.getProgress() == ProgressIndicator.INDETERMINATE_PROGRESS){
+                    Platform.runLater(()->overallProgressBar.setProgress(1.0));
+                }
+
+                if(localProgressBar.getProgress() == ProgressIndicator.INDETERMINATE_PROGRESS){
+                    Platform.runLater(()->localProgressBar.setProgress(1.0));
+                }
+
+                //only revert text for processes which are not lightweight
+                if(stageCountProperty.getValue() != 0){
+                    Platform.runLater(()->localTextLabel.setText(revertText));
+                }
             }
 
             @Override
