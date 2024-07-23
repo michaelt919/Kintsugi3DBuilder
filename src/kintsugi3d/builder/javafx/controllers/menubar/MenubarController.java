@@ -235,6 +235,7 @@ public class MenubarController
         }
         MultithreadModels.getInstance().getIOModel().addProgressMonitor(new ProgressMonitor()
         {
+            private static final String FINISHING_UP = "Finishing up...";
             private double maximum = 0.0;
             private double localProgress = 0.0;
 
@@ -340,7 +341,7 @@ public class MenubarController
                 Platform.runLater(()-> overallTextLabel.setText(message));
 
                 if(currentStageProperty.getValue() > stageCountProperty.getValue()){
-                    Platform.runLater(()->localTextLabel.setText("Finishing up..."));
+                    Platform.runLater(()->localTextLabel.setText(FINISHING_UP));
                 }
                 else{
                     ProgressBarsController.getInstance().beginNewStage();
@@ -396,7 +397,7 @@ public class MenubarController
                 }
 
                 //only revert text for processes which are not lightweight
-                if(stageCountProperty.getValue() != 0){
+                if(localTextLabel.getText().equals(FINISHING_UP)){
                     Platform.runLater(()->localTextLabel.setText(revertText));
                 }
             }
