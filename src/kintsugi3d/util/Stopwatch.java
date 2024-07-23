@@ -12,6 +12,7 @@
 package kintsugi3d.util;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
 import java.util.Arrays;
@@ -63,7 +64,7 @@ public class Stopwatch {
 
     public long getInitTime() {return initTime;}
 
-    public BooleanProperty isRunningProperty(){return running;}
+    public ReadOnlyBooleanProperty isRunningProperty(){return running;}
 
     public long getElapsedTime() {
         if (running.getValue()){

@@ -13,6 +13,7 @@ package kintsugi3d.builder.javafx.controllers.scene;
 
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -219,7 +220,7 @@ public class ProgressBarsController {
         localStopwatch.start();
     }
 
-    public BooleanProperty getProcessingProperty() {
+    public ReadOnlyBooleanProperty getProcessingProperty() {
         return processingProperty;
     }
 }
