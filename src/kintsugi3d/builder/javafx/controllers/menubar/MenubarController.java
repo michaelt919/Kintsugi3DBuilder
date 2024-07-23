@@ -267,6 +267,7 @@ public class MenubarController
             {
                 cancelRequested.set(false);
 
+                stageCountProperty.setValue(0);
                 localProgress = 0.0;
                 overallProgress = 0.0;
                 Platform.runLater(() ->

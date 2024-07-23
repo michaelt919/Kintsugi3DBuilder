@@ -72,6 +72,13 @@ public class ProgressBarsController {
 
         defaultTitle = stage.getTitle();
 
+        //remove estimated times from view if not processing (would just be 00:00:00/otherwise useless anyway)
+        totalEstimTimeRemainingLabel.managedProperty().bind(processingProperty);
+        totalEstimTimeRemainingLabel.visibleProperty().bind(processingProperty);
+
+        localEstimTimeRemainingLabel.managedProperty().bind(processingProperty);
+        localEstimTimeRemainingLabel.visibleProperty().bind(processingProperty);
+
         overallStopwatch = new Stopwatch();
         localStopwatch = new Stopwatch();
 
@@ -152,7 +159,8 @@ public class ProgressBarsController {
 
         long estimatedRemaining = (long) Math.max(0L, elapsedTime * remainingProgress);
 
-        Platform.runLater(()-> totalEstimTimeRemainingLabel.setText(nanosecToFormatTime(estimatedRemaining)));
+        String timeTxt = nanosecToFormatTime(estimatedRemaining);
+        Platform.runLater(()-> totalEstimTimeRemainingLabel.setText(timeTxt + " Remaining"));
     }
 
     private void updateLocalRemainingTime(double progress, double maximum) {
@@ -162,7 +170,8 @@ public class ProgressBarsController {
 
         long estimatedRemaining = Math.max(0, (long) (avgDif * remainingProcesses));
 
-        Platform.runLater(()-> localEstimTimeRemainingLabel.setText(nanosecToFormatTime(estimatedRemaining)));
+        String timeTxt = nanosecToFormatTime(estimatedRemaining);
+        Platform.runLater(()-> localEstimTimeRemainingLabel.setText(timeTxt + " Remaining"));
     }
 
 
