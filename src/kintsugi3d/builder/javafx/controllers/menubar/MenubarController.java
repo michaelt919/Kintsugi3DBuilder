@@ -296,8 +296,9 @@ public class MenubarController
                     }
 
                     //Display "Loading..." or some end message (ex. "Finished loading images")
+                    // or just remove redundant "Stage 1/1"
                     if (!ProgressBarsController.getInstance().isProcessing() ||
-                        stageCountProperty.getValue() == 0){
+                        stageCountProperty.getValue() <= 1){
                         return currProcessTxt;
                     }
 
@@ -366,9 +367,9 @@ public class MenubarController
 
                 log.info("[{}%] {}", new DecimalFormat("#.##").format(localProgress * 100), message);
 
-                //remove stage/stageCount from txt if it wouldn't make sense for it to be there (Stage 0/0)
+                //remove stage/stageCount from txt if it wouldn't make sense for it to be there (ex. Stage 0/0)
                 //useful for simple exports like orbit animation
-                boolean removeStageNums = stageCountProperty.getValue() == 0 || currentStageProperty.getValue() == 0;
+                boolean removeStageNums = stageCountProperty.getValue() <= 1 || currentStageProperty.getValue() == 0;
                 revertText = removeStageNums ? message :
                         String.format("Stage %s/%s—%s", currentStageProperty.getValue(), stageCountProperty.getValue(), message);
 
