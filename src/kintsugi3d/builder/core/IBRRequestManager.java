@@ -14,9 +14,10 @@ package kintsugi3d.builder.core;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import javafx.scene.control.*;
+import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.gl.interactive.GraphicsRequest;
 import javafx.application.Platform;
-import javafx.scene.control.Alert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.Context;
@@ -125,7 +126,17 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
                         log.error("Error occurred while executing request:", e);
                         Platform.runLater(() ->
                         {
-                            new Alert(Alert.AlertType.NONE, "An error occurred processing request. Processing has stopped.\nCheck the log for more info.").show();
+                            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
+                            ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
+                            Alert alert = new Alert(Alert.AlertType.NONE,
+                                    "An error occurred processing request. Processing has stopped\nSee the log for more info.",
+                                    ok, showLog);
+
+                            ((ButtonBase) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
+                                // Use the menubar's console open function to prevent 2 console windows from appearing
+                                MenubarController.getInstance().help_console();
+                            });
+                            alert.show();
                         });
                     }
                 }

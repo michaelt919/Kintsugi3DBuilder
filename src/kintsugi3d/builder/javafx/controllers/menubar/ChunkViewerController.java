@@ -289,7 +289,9 @@ public class ChunkViewerController implements Initializable {
         // If no chunk is chosen somehow, prompt user to select a chunk.
         if (metashapeObjectChunk == null) {
             // Create a popup telling user to choose a chunk.
-            Alert alert = new Alert(Alert.AlertType.NONE);
+            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+            Alert alert = new Alert(Alert.AlertType.NONE, "", ok);
             alert.setTitle("Error");
             alert.setHeaderText("No chunk selected");
             alert.setContentText("Please choose a chunk to continue.");

@@ -247,7 +247,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         alertShown = true;
         Platform.runLater(() ->
         {
-            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
             ButtonType openCustomProj = new ButtonType("Create Custom Project", ButtonBar.ButtonData.YES);
 
             Alert alert = new Alert(Alert.AlertType.NONE,"Please select another chunk or create a custom project.", ok, openCustomProj);

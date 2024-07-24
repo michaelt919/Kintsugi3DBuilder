@@ -60,6 +60,7 @@ public class SystemMemoryController implements Initializable, SystemSettingsCont
         configuration.setEnableMaxMemory(maxMemCheckbox.isSelected());
         configuration.setMaxMemoryMb((Integer)maxMemSpinner.getValue());
 
+        ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
         try
         {
             try
@@ -76,14 +77,14 @@ public class SystemMemoryController implements Initializable, SystemSettingsCont
         catch (IOException e)
         {
             log.error("Failed to write to launch4j configuration file", e);
-            Alert alert = new Alert(Alert.AlertType.NONE);
+            Alert alert = new Alert(Alert.AlertType.NONE, "", ok);
             alert.setTitle("Kintsugi 3D Builder");
             alert.setHeaderText("Writing failed");
             alert.setContentText("Kintsugi 3D Builder failed to write to the configuration file. Try restarting Kintsugi 3D Builder as administrator and try again.");
             alert.show();
         }
 
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        Alert alert = new Alert(Alert.AlertType.INFORMATION, "", ok);
         alert.setTitle("Kintsugi 3D Builder");
         alert.setHeaderText("Restart Required");
         alert.setContentText("A restart of Kintsugi 3D Builder is needed for changes to take effect.");
