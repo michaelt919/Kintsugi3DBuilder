@@ -25,11 +25,9 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
@@ -326,7 +324,7 @@ public class MenubarController
             @Override
             public void setStage(int stage, String message)
             {
-                this.maximum = 0.0;
+//                this.maximum = 0.0; //leave this in and only call setMaxProgress() after setStage()?
                 this.localProgress = 0.0;
                 this.currentStageProperty.setValue(stage + 1); //index starting from 1
 
