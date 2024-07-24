@@ -159,11 +159,6 @@ public class IOModel
         this.loadOptionsModel = loadOptionsModel;
     }
 
-    public boolean isInstanceLoaded()
-    {
-        return this.handler != null && this.handler.isInstanceLoaded();
-    }
-
     public void addViewSetLoadCallback(Consumer<ViewSet> callback)
     {
         this.handler.addViewSetLoadCallback(callback);

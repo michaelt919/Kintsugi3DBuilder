@@ -156,7 +156,7 @@ public final class ProjectIO
         log.error("{}:", message, e);
         Platform.runLater(() ->
         {
-            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
             ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
             Alert alert = new Alert(Alert.AlertType.NONE, message + "\nSee the log for more info.", ok, showLog);
             ((ButtonBase) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {

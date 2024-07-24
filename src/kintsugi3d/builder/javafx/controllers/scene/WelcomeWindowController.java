@@ -162,7 +162,7 @@ public class WelcomeWindowController
     }
 
     public void showIfNoModelLoaded() {
-        if(!MultithreadModels.getInstance().getIOModel().isInstanceLoaded()){
+        if(!MultithreadModels.getInstance().getIOModel().hasValidHandler()){
             show();
         }
     }
