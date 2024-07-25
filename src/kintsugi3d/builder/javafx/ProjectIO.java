@@ -215,12 +215,6 @@ public final class ProjectIO
         return makeWindow(parentWindow, title, flag, Scene::new, urlString);
     }
 
-    private static <ControllerType> ControllerType makeWindow(
-        Window parentWindow, String title, Flag flag, int width, int height, String urlString) throws IOException
-    {
-        return makeWindow(parentWindow, title, flag, root -> new Scene(root, width, height), urlString);
-    }
-
     public boolean isCreateProjectWindowOpen()
     {
         return loaderWindowOpen.get();
