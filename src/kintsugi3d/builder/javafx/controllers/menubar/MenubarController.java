@@ -211,7 +211,10 @@ public class MenubarController
         // Keep track of whether cancellation was requested.
         AtomicBoolean cancelRequested = new AtomicBoolean(false);
 
-        cancelButton.setOnAction(event -> cancelRequested.set(true));
+        cancelButton.setOnAction(event -> {
+            cancelRequested.set(true);
+            Platform.runLater(()->cancelButton.setText("Cancelling..."));
+        });
         cancelButton.disableProperty().bind(ProgressBarsController.getInstance().getProcessingProperty().not());
 
         //send accelerators to welcome window
@@ -399,6 +402,8 @@ public class MenubarController
                 if(localTextLabel.getText().equals(FINISHING_UP)){
                     Platform.runLater(()->localTextLabel.setText(revertText));
                 }
+
+                Platform.runLater(()->cancelButton.setText("Cancel"));
             }
 
             @Override
