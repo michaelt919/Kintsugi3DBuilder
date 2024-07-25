@@ -35,7 +35,8 @@ public class Stopwatch {
 
     public long start(){
         if(running.getValue()){
-            throw new IllegalStateException("Stopwatch object cannot be started multiple times.");
+            throw new IllegalStateException("Stopwatch object cannot be started multiple times.\n" +
+                    "This exception was likely caused by starting two processes which both require use of the progress bars modal.");
         }
 
         running.setValue(true);
@@ -76,6 +77,9 @@ public class Stopwatch {
     }
 
     public long stop() {
+        if(!running.getValue()){
+            return manualElapsedTime;
+        }
         running.setValue(false);
         manualElapsedTime = System.nanoTime() - initTime;
 

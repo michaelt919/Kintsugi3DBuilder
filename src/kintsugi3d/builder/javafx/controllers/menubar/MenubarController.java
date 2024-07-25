@@ -252,7 +252,14 @@ public class MenubarController
                 if (cancelRequested.get())
                 {
                     cancelRequested.set(false); // reset cancel flag
+
                     WelcomeWindowController.getInstance().showIfNoModelLoaded();
+                    dismissMiniProgressBar();
+
+                    //need to end stopwatches here because they might need to be reused for another process
+                    //   before cancelComplete() is called
+                    ProgressBarsController.getInstance().endStopwatches();
+
                     throw new UserCancellationException("Cancellation requested by user.");
                 }
             }
@@ -261,12 +268,18 @@ public class MenubarController
             public void cancelComplete(UserCancellationException e)
             {
                 complete();
+
+                //TODO: sometimes causes a small flash of the mini progress bar before it fully disappears
+                ProgressBarsController.getInstance().hideStage();
                 dismissMiniProgressBar();
             }
 
             @Override
             public void start()
             {
+                //TODO: deal with conflicting processes here
+                //if process is already happening, cancel it and continue with the new one?
+
                 cancelRequested.set(false);
 
                 stageCountProperty.setValue(0);
@@ -385,9 +398,9 @@ public class MenubarController
             public void complete()
             {
                 this.maximum = 0.0;
-                //TODO: disable progress bars menu item if not processing?
                 ProgressBarsController.getInstance().endStopwatches();
-                ProgressBarsController.getInstance().hideStage();
+                //TODO: desaturate progress bars instead of hiding stage
+//                ProgressBarsController.getInstance().hideStage();
                 setReadyToDismissMiniProgBar();
 
                 if(overallProgressBar.getProgress() == ProgressIndicator.INDETERMINATE_PROGRESS){
@@ -451,7 +464,10 @@ public class MenubarController
         lightenMiniBar();
         miniProgressBar.setVisible(false);
         dismissButton.setVisible(true);
-        miniProgressPane.setVisible(true);
+
+        if(!ProgressBarsController.getInstance().getStage().isShowing()){
+            miniProgressPane.setVisible(true);
+        }
     }
 
     private boolean loadExportClasses(Stage injectedStage, File exportClassDefinitionFile) {
@@ -1067,6 +1083,6 @@ public class MenubarController
     }
 
     public void dismissMiniProgressBar() {
-        miniProgressPane.setVisible(false);
+        Platform.runLater(()->miniProgressPane.setVisible(false));
     }
 }
