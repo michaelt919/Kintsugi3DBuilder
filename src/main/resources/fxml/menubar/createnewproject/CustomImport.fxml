@@ -40,7 +40,7 @@
             <Insets />
          </GridPane.margin>
       </Text>
-      <Text layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text" text="Mesh&#10;(Wavefront OBJ file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+      <Text layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text" text="Mesh&#10;(Wavefront OBJ or PLY file)&#10;" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
          <font>
             <Font name="Monospaced Regular" size="14.0" />
          </font>

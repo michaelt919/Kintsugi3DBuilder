@@ -213,40 +213,9 @@ public final class ProjectIO
         return fxmlLoader.getController();
     }
 
-    private <ControllerType> ControllerType makeWindow(String title, Flag flag, Window window, String urlString) throws IOException
-    {
-        URL url = MenubarController.class.getClassLoader().getResource(urlString);
-        if (url == null)
-        {
-            throw new FileNotFoundException(urlString);
-        }
-        FXMLLoader fxmlLoader = new FXMLLoader(url);
-        Parent root = fxmlLoader.load();
-        Stage stage = new Stage();
-        stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-        stage.setTitle(title);
-        stage.setScene(new Scene(root));
-        stage.initOwner(window);
-
-        stage.setResizable(false);
-
-        flag.set(true);
-        stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
-
-        stage.show();
-
-        return fxmlLoader.getController();
-    }
-
     private static <ControllerType> ControllerType makeWindow(Window parentWindow, String title, Flag flag, String urlString) throws IOException
     {
         return makeWindow(parentWindow, title, flag, Scene::new, urlString);
-    }
-
-    private static <ControllerType> ControllerType makeWindow(
-        Window parentWindow, String title, Flag flag, int width, int height, String urlString) throws IOException
-    {
-        return makeWindow(parentWindow, title, flag, root -> new Scene(root, width, height), urlString);
     }
 
     public boolean isCreateProjectWindowOpen()
@@ -667,10 +636,10 @@ public final class ProjectIO
         try
         {
 
-            AboutController aboutController = makeWindow(
-                    "About Kintsugi 3D Builder", aboutWindowOpen, window, "fxml/menubar/About.fxml");
+            AboutController aboutController = makeWindow(window,
+                    "About Kintsugi 3D Builder", aboutWindowOpen, "fxml/menubar/About.fxml");
             aboutController.init();
-
+            WelcomeWindowController.getInstance().hide();
         }
         catch (Exception e)
         {

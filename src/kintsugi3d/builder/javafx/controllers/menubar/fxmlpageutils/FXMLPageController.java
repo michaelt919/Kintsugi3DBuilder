@@ -38,7 +38,8 @@ public abstract class FXMLPageController {
     public Pair<Double, Double> getSizePreferences(){
         Region hostNode = getHostRegion();
 
-        return new Pair<>(hostNode.getPrefWidth(), hostNode.getPrefHeight());
+        //add a bit of padding
+        return new Pair<>(hostNode.getPrefWidth() * 1.02, hostNode.getPrefHeight() * 1.02);
     }
 
     public boolean isNextButtonValid(){return hostPage.hasNextPage();}

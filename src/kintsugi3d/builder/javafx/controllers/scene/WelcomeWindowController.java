@@ -158,7 +158,7 @@ public class WelcomeWindowController
     }
 
     public void openAboutModal() {
-        ProjectIO.getInstance().openAboutModal(window);
+        ProjectIO.getInstance().openAboutModal(parentWindow);
     }
 
     public void showIfNoModelLoaded() {
