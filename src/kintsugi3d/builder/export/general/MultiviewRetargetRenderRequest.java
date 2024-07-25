@@ -89,8 +89,13 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
                 if (!fileName.endsWith(".png"))
                 {
                     String[] parts = fileName.split("\\.");
-                    parts[parts.length - 1] = "png";
-                    fileName = String.join(".", parts);
+                    if (parts.length == 1){
+                        fileName = fileName + ".png";
+                    }
+                    else{
+                        parts[parts.length - 1] = "png";
+                        fileName = String.join(".", parts);
+                    }
                 }
 
                 File exportFile = new File(getOutputDirectory(), fileName);
