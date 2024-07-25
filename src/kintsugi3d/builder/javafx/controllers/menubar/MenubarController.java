@@ -498,7 +498,6 @@ public class MenubarController
     public void openAboutModal()
     {
         ProjectIO.getInstance().openAboutModal(window);
-
     }
 
     private <ControllerType> ControllerType makeWindow(String title, Flag flag, String urlString) throws IOException
