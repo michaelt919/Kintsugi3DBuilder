@@ -41,6 +41,7 @@ public class ProgressBarsController {
     @FXML private ProgressBar overallProgressBar;
     @FXML private ProgressBar localProgressBar;
     @FXML private Button cancelButton;
+    @FXML private Button doneButton;
 
     private Stopwatch overallStopwatch;
     private Stopwatch localStopwatch;
@@ -125,6 +126,7 @@ public class ProgressBarsController {
 
 
     public Button getCancelButton() {return cancelButton;}
+    public Button getDoneButton(){return doneButton;}
 
     public void hideStage() {
         Platform.runLater(()->stage.hide());
@@ -138,7 +140,10 @@ public class ProgressBarsController {
             while (isProcessing()) {
                 try {
                     Thread.sleep(200);
-                    updateElapsedTime();
+
+                    if(isProcessing()){
+                        updateElapsedTime();
+                    }
                 } catch (InterruptedException e) {
                     break;
                 }
@@ -183,8 +188,10 @@ public class ProgressBarsController {
         String totalTimeTxt = nanosecToFormatTime(totalElapsedTime);
         String localTimeTxt = nanosecToFormatTime(localElapsedTime);
 
-        Platform.runLater(()-> totalElapsedTimeLabel.setText("(" + totalTimeTxt + " Lapsed)"));
-        Platform.runLater(()->localElapsedTimeLabel.setText("(" + localTimeTxt + " Lapsed)"));
+        if(isProcessing()){
+            Platform.runLater(()-> totalElapsedTimeLabel.setText("(" + totalTimeTxt + " Lapsed)"));
+            Platform.runLater(()->localElapsedTimeLabel.setText("(" + localTimeTxt + " Lapsed)"));
+        }
     }
 
     private static String nanosecToFormatTime(long nanoTime){
@@ -204,6 +211,16 @@ public class ProgressBarsController {
     public void endStopwatches() {
         overallStopwatch.stop();
         localStopwatch.stop();
+
+        //remove parenthesis from elapsed times
+        Platform.runLater(()->{
+            totalElapsedTimeLabel.setText(totalElapsedTimeLabel.getText().replace("(", "")
+                    .replace(")", ""));
+
+            localElapsedTimeLabel.setText(localElapsedTimeLabel.getText().replace("(", "")
+                    .replace(")", ""));
+        });
+
     }
 
     public void stopAndClose(){

@@ -3,6 +3,7 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
 <?import javafx.scene.text.*?>
 
 <!--
@@ -16,7 +17,7 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<GridPane styleClass="grid-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController">
+<GridPane prefWidth="924.0" styleClass="grid-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController">
    <columnConstraints>
       <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
    </columnConstraints>
@@ -80,7 +81,7 @@
                         <Insets left="20.0" top="16.0" />
                      </VBox.margin>
                      <padding>
-                        <Insets right="52.0" />
+                        <Insets right="72.0" />
                      </padding>
                   </ProgressBar>
                   <HBox spacing="2.0">
@@ -100,17 +101,26 @@
                   <Insets left="28.0" top="48.0" />
                </VBox.margin>
             </VBox>
-            <HBox alignment="CENTER">
+            <HBox alignment="CENTER_LEFT">
                <children>
-                  <Button fx:id="cancelButton" alignment="CENTER" mnemonicParsing="false" text="Cancel" />
+                  <Line endX="876.0" fill="#cecece" stroke="#cecece" strokeWidth="2.0">
+                     <HBox.margin>
+                        <Insets top="80.0" />
+                     </HBox.margin></Line>
+               </children>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="652.0">
+               <children>
+                  <Button fx:id="cancelButton" styleClass="wireframeBodyLarge" alignment="CENTER" mnemonicParsing="false" prefHeight="40.0" prefWidth="112.0" text="Cancel" />
+                  <Button fx:id="doneButton" styleClass="wireframeBodyLarge" alignment="CENTER" layoutX="299.0" layoutY="10.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="112.0" text="Done" />
                </children>
                <VBox.margin>
-                  <Insets top="40.0" />
+                  <Insets bottom="52.0" right="24.0" top="36.0" />
                </VBox.margin>
             </HBox>
          </children>
          <GridPane.margin>
-            <Insets bottom="12.0" left="24.0" top="24.0" />
+            <Insets left="24.0" top="48.0" />
          </GridPane.margin>
       </VBox>
    </children>

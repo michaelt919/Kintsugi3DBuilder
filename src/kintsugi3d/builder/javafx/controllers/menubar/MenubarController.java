@@ -87,6 +87,8 @@ public class MenubarController
     private ProgressBar localProgressBar;
     private ProgressBar overallProgressBar;
     private Button cancelButton;
+    private Button doneButton;
+
     private Label localTextLabel;
     private Label overallTextLabel;
 
@@ -191,6 +193,7 @@ public class MenubarController
         this.cameraViewList.visibleProperty().bind(injectedInternalModels.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
 
         this.cancelButton = ProgressBarsController.getInstance().getCancelButton();
+        this.doneButton = ProgressBarsController.getInstance().getDoneButton();
         this.localTextLabel = ProgressBarsController.getInstance().getLocalTextLabel();
         this.overallTextLabel = ProgressBarsController.getInstance().getOverallTextLabel();
 
@@ -215,7 +218,13 @@ public class MenubarController
             cancelRequested.set(true);
             Platform.runLater(()->cancelButton.setText("Cancelling..."));
         });
+
+        doneButton.setOnAction(event ->{
+            hideAllProgress();
+        });
+
         cancelButton.disableProperty().bind(ProgressBarsController.getInstance().getProcessingProperty().not());
+        doneButton.disableProperty().bind(ProgressBarsController.getInstance().getProcessingProperty());
 
         //send accelerators to welcome window
         List<Menu> menus = mainMenubar.getMenus();
@@ -268,10 +277,7 @@ public class MenubarController
             public void cancelComplete(UserCancellationException e)
             {
                 complete();
-
-                //TODO: sometimes causes a small flash of the mini progress bar before it fully disappears
-                ProgressBarsController.getInstance().hideStage();
-                dismissMiniProgressBar();
+                hideAllProgress();
             }
 
             @Override
@@ -458,6 +464,12 @@ public class MenubarController
 
         tip = new Tooltip("Remove references to all recent projects. Will not modify your file system.");
         Tooltip.install(removeAllRefsCustMenuItem.getContent(), tip);
+    }
+
+    private void hideAllProgress() {
+        //TODO: sometimes causes a small flash of the mini progress bar before it fully disappears
+        ProgressBarsController.getInstance().hideStage();
+        dismissMiniProgressBar();
     }
 
     private void setReadyToDismissMiniProgBar() {
