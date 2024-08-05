@@ -51,7 +51,7 @@
                   </ProgressBar>
                   <HBox spacing="4.0">
                      <children>
-                        <Label fx:id="totalEstimTimeRemainingLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="--:--:-- Remaining">
+                        <Label fx:id="totalEstimTimeRemainingLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="Calculating remaining time... ">
                            </Label>
                         <Label fx:id="totalElapsedTimeLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="(--:--:-- Lapsed)">
                            </Label>
@@ -85,7 +85,7 @@
                   </ProgressBar>
                   <HBox spacing="2.0">
                      <children>
-                        <Label fx:id="localEstimTimeRemainingLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeCaption" text="--:--:-- Remaining" />
+                        <Label fx:id="localEstimTimeRemainingLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeCaption" text="Calculating remaining time... " />
                         <Label fx:id="localElapsedTimeLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeCaption" text="(--:--:-- Lapsed)" />
                      </children>
                      <padding>
