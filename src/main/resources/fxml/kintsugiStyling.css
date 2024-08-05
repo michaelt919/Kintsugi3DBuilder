@@ -56,6 +56,40 @@
     -fx-font-size: 68px;
 }
 
+.kintsugi-3D-1{
+    -fx-fill: #FFE790; /* light yellow */
+}
+.kintsugi-3D-2{
+    -fx-fill: #EFCB5C; /* kintsugi yellow */
+}
+.kintsugi-3D-3{
+    -fx-fill: #383838; /* med gray */
+}
+.kintsugi-3D-4{
+    -fx-fill: #202020; /* dark gray */
+}
+.kintsugi-3D-5{
+    -fx-fill: #030305; /* off-black.*/
+}
+
+
+.kintsugi-3D-Wireframe-1{
+    fx-fill: #CECECE; /* off-white */
+}
+.kintsugi-3D-Wireframe-2{
+    fx-fill: #ADADAD; /* light gray */
+}
+.kintsugi-3D-Wireframe-3{
+    fx-fill: #383838; /* med gray */
+}
+.kintsugi-3D-Wireframe-4{
+    fx-fill: #202020; /* dark gray */
+}
+.kintsugi-3D-Wireframe-5{
+    fx-fill: #030303; /* off-black */
+}
+
+
 
 /********************************************************************************/
 .accordion{
