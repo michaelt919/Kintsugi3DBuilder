@@ -79,7 +79,7 @@
                      <MenuItem mnemonicParsing="false" onAction="#openAboutModal" text="About Kintsugi 3D Builder..." />
                             <SeparatorMenuItem />
                      <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
-                     <MenuItem mnemonicParsing="false" visible="false" onAction="#showProgressBars" text="PROGRESS BARS TEST" />
+                     <MenuItem mnemonicParsing="false" onAction="#showProgressBars" text="PROGRESS BARS TEST" visible="false" />
                      <MenuItem mnemonicParsing="false" onAction="#showWelcomeWindow" text="SHOW WELCOME WINDOW TEST" visible="false" />
                         </Menu>
                         <Menu mnemonicParsing="false" text="View" visible="false">
@@ -429,25 +429,25 @@
             <children>
                <Label fx:id="miniProgressLabel" styleClass="wireframeBodyStrong" text="Loading...">
                   <padding>
-                     <Insets bottom="8.0" top="8.0" />
+                     <Insets bottom="8.0" left="8.0" top="8.0" />
                   </padding>
                   <HBox.margin>
                      <Insets />
                   </HBox.margin>
                </Label>
-               <StackPane>
+               <StackPane fx:id="swapControlsStackPane">
                   <children>
                      <ProgressBar fx:id="miniProgressBar" onMouseClicked="#handleMiniProgressBar" prefHeight="16.0" prefWidth="60.0" progress="0.0" />
                      <Button fx:id="dismissButton" mnemonicParsing="false" onAction="#dismissMiniProgressBar" text="Dismiss" visible="false" />
                   </children>
+                  <padding>
+                     <Insets right="8.0" />
+                  </padding>
                </StackPane>
             </children>
             <cursor>
                <Cursor fx:constant="HAND" />
             </cursor>
-            <padding>
-               <Insets left="8.0" right="8.0" />
-            </padding>
          </HBox>
       </children>
    </AnchorPane>

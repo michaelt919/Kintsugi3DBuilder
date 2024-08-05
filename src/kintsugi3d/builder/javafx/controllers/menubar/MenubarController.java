@@ -25,8 +25,10 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -97,6 +99,7 @@ public class MenubarController
     @FXML private HBox miniProgBarBoundingHBox; //only label and progress bar
     @FXML private Label miniProgressLabel;
 
+    @FXML private StackPane swapControlsStackPane; //contains either the progress bar or the dismiss button
     @FXML private ProgressBar miniProgressBar;
     @FXML private Button dismissButton;
 
@@ -1067,8 +1070,17 @@ public class MenubarController
         WelcomeWindowController.getInstance().show();
     }
 
-    public void handleMiniProgressBar() {
-        showProgressBars();
+    public void handleMiniProgressBar(MouseEvent event) {
+        double relX = event.getX() - swapControlsStackPane.getLayoutX();
+        double relY = event.getY() - swapControlsStackPane.getLayoutY();
+
+        if(!ProgressBarsController.getInstance().isProcessing() &&
+            swapControlsStackPane.contains(relX, relY)){
+            dismissMiniProgressBar();
+        }
+        else {
+            showProgressBars();
+        }
     }
 
     private void resetMiniProgressBar() {
