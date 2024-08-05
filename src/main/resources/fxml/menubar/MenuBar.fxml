@@ -437,8 +437,8 @@
                </Label>
                <StackPane fx:id="swapControlsStackPane">
                   <children>
+                     <Button fx:id="dismissButton" mnemonicParsing="false" onAction="#dismissMiniProgressBar" style="-fx-background-color: #262626; -fx-text-fill: #CECECE;" text="Dismiss" visible="false" />
                      <ProgressBar fx:id="miniProgressBar" onMouseClicked="#handleMiniProgressBar" prefHeight="16.0" prefWidth="60.0" progress="0.0" />
-                     <Button fx:id="dismissButton" mnemonicParsing="false" onAction="#dismissMiniProgressBar" text="Dismiss" visible="false" />
                   </children>
                   <padding>
                      <Insets right="8.0" />
