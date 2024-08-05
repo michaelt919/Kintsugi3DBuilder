@@ -476,7 +476,7 @@ public class MenubarController
     }
 
     private void setReadyToDismissMiniProgBar() {
-        lightenMiniBar();
+        setLighterMiniBar();
         miniProgressBar.setVisible(false);
         dismissButton.setVisible(true);
 
@@ -1086,24 +1086,67 @@ public class MenubarController
     private void resetMiniProgressBar() {
         miniProgressBar.setVisible(true);
         dismissButton.setVisible(false);
-        darkenMiniBar();
+        setDarkestMiniBar();
     }
 
-    public void lightenMiniBar() {
-        miniProgBarBoundingHBox.setStyle("-fx-background-color: #CECECE;");
-        miniProgressLabel.setStyle("-fx-text-fill: #202020;");
-    }
+    public void mouseEnterMiniBar(MouseEvent event){
+        double relX;
+        double relY;
 
-    public void darkenMiniBar() {
-        miniProgBarBoundingHBox.setStyle("-fx-background-color: none;");
-        miniProgressLabel.setStyle("-fx-text-fill: #CECECE;");
+        if(!event.getSource().equals(swapControlsStackPane)){
+            relX = event.getX() - swapControlsStackPane.getLayoutX();
+            relY = event.getY() - swapControlsStackPane.getLayoutY();
+        }
+        else{
+            relX = event.getX();
+            relY = event.getY();
+        }
 
+        setLightestMiniBar();
+
+        //don't highlight individual elements if still processing
+        if(ProgressBarsController.getInstance().isProcessing()){
+            return;
+        }
+
+        if(!swapControlsStackPane.contains(relX, relY)){
+            //highlight label if it's hovered over
+            miniProgBarBoundingHBox.setStyle("-fx-background-color: #CECECE");
+            swapControlsStackPane.setStyle("-fx-background-color: #ADADAD;");
+
+        }
+        else{
+            //highlight dismiss button area if it's hovered over
+            miniProgBarBoundingHBox.setStyle("-fx-background-color: #ADADAD;");
+            swapControlsStackPane.setStyle("-fx-background-color: #CECECE;");
+        }
     }
 
     public void mouseExitMiniBar() {
         if(ProgressBarsController.getInstance().isProcessing()){
-            darkenMiniBar();
+            setDarkestMiniBar();
         }
+        else{
+            setLighterMiniBar();
+        }
+    }
+
+    private void setLighterMiniBar() {
+        miniProgBarBoundingHBox.setStyle("-fx-background-color: #ADADAD;");
+        miniProgressLabel.setStyle("-fx-text-fill: #202020;");
+        swapControlsStackPane.setStyle("fx-fill: #ADADAD");
+    }
+    private void setLightestMiniBar(){
+        miniProgBarBoundingHBox.setStyle("-fx-background-color: #CECECE");
+        miniProgressLabel.setStyle("-fx-text-fill: #202020;");
+        swapControlsStackPane.setStyle("-fx-background-color: #CECECE;");
+
+    }
+
+    public void setDarkestMiniBar() {
+        miniProgBarBoundingHBox.setStyle("-fx-background-color: none;");
+        miniProgressLabel.setStyle("-fx-text-fill: #CECECE;");
+        swapControlsStackPane.setStyle("fx-fill: none");
     }
 
     public void dismissMiniProgressBar() {
