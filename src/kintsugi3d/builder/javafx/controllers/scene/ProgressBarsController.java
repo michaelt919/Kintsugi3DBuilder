@@ -149,6 +149,8 @@ public class ProgressBarsController {
                 }
             }
         }).start();
+
+        saturateProgressBars();
     }
 
     public void clickStopwatches(double progress, double maximum, double overallProgress){
@@ -221,6 +223,20 @@ public class ProgressBarsController {
                     .replace(")", ""));
         });
 
+        desaturateProgressBars();
+    }
+
+    private void desaturateProgressBars() {
+        overallProgressBar.getStyleClass().add("desaturated-progress-bar");
+        localProgressBar.getStyleClass().add("desaturated-progress-bar");
+    }
+
+    private void saturateProgressBars() {
+        overallProgressBar.getStyleClass().clear();
+        localProgressBar.getStyleClass().clear();
+
+        overallProgressBar.getStyleClass().add("progress-bar");
+        localProgressBar.getStyleClass().add("progress-bar");
     }
 
     public void stopAndClose(){
