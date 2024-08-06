@@ -408,8 +408,6 @@ public class MenubarController
             {
                 this.maximum = 0.0;
                 ProgressBarsController.getInstance().endStopwatches();
-                //TODO: desaturate progress bars instead of hiding stage
-//                ProgressBarsController.getInstance().hideStage();
                 setReadyToDismissMiniProgBar();
 
                 if(overallProgressBar.getProgress() == ProgressIndicator.INDETERMINATE_PROGRESS){
