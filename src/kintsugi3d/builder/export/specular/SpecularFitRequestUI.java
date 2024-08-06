@@ -35,6 +35,7 @@ import kintsugi3d.builder.core.IBRRequestUI;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
+import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,6 +111,10 @@ public class SpecularFitRequestUI implements IBRRequestUI
         runButton.setOnAction(event ->
         {
             //stage.close();
+
+            if(MultithreadModels.getInstance().getIOModel().getProgressMonitor().isConflictingProcess()){
+                return;
+            }
 
             SpecularFitRequestParams settings = new SpecularFitRequestParams(new TextureResolution(
                     Integer.parseInt(widthTextField.getText()),

@@ -65,4 +65,9 @@ public class DefaultProgressMonitor implements ProgressMonitor
     public void fail(Throwable e)
     {
     }
+
+    @Override
+    public boolean isConflictingProcess() {
+        return false;
+    }
 }

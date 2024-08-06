@@ -24,10 +24,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import kintsugi3d.builder.rendering.IBRInstanceManager;
 import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.interactive.GraphicsRequest;
 import kintsugi3d.gl.interactive.ObservableGraphicsRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class IBRRequestManager<ContextType extends Context<ContextType>> implements IBRRequestQueue<ContextType>
 {
@@ -112,6 +109,10 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
     @Override
     public synchronized void addIBRRequest(ObservableIBRRequest request)
     {
+        if(this.progressMonitor.isConflictingProcess()){
+            return;
+        }
+
         if (instanceManager.getLoadedInstance() == null)
         {
             // Instance is currently null, wait for a load and then call this function again (recursive-ish)
@@ -209,6 +210,9 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
         {
             if (progressMonitor != null)
             {
+                if(this.progressMonitor.isConflictingProcess()){
+                    return;
+                }
                 progressMonitor.start();
             }
 

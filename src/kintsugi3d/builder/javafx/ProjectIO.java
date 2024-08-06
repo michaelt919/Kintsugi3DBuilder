@@ -50,8 +50,6 @@ import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettin
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.resources.ibr.MeshImportException;
-import kintsugi3d.gl.interactive.InteractiveRenderable;
-import kintsugi3d.gl.interactive.InteractiveRenderableList;
 import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
@@ -375,6 +373,11 @@ public final class ProjectIO
 
     public void openProjectFromFile(File selectedFile)
     {
+        //need to check for conflicting process early so crucial info isn't unloaded
+        if(MultithreadModels.getInstance().getIOModel().getProgressMonitor().isConflictingProcess()){
+            return;
+        }
+
         //open the project, update the recent files list & recentDirectory, disable shaders which aren't useful until processing textures
         this.projectFile = selectedFile;
         RecentProjects.setMostRecentDirectory(this.projectFile.getParentFile());

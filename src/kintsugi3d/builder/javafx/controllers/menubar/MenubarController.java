@@ -286,9 +286,6 @@ public class MenubarController
             @Override
             public void start()
             {
-                //TODO: deal with conflicting processes here
-                //if process is already happening, cancel it and continue with the new one?
-
                 cancelRequested.set(false);
 
                 stageCountProperty.setValue(0);
@@ -432,6 +429,36 @@ public class MenubarController
             public void fail(Throwable e)
             {
                 complete();
+            }
+
+            @Override
+            public boolean isConflictingProcess(){
+                if (!ProgressBarsController.getInstance().isProcessing()){
+                    return false;
+                }
+
+                Platform.runLater(() ->
+                {
+                    ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+                    //ButtonType stopProcess = new ButtonType("Start New Process", ButtonBar.ButtonData.YES);
+                    Alert alert = new Alert(AlertType.NONE, "Cannot run multiple tasks at the same time.\n" +
+                            "Either wait for the current task to complete or cancel it." /*+
+                            "Press OK to finish the current process."*/, ok/*, stopProcess*/);
+                    alert.setHeaderText("Conflicting Tasks");
+
+//                    //continue current process, don't start a new one
+//                    ((Button) alert.getDialogPane().lookupButton(ok)).setOnAction(event -> {
+//                    });
+//
+//                    //cancel current process and start new one
+//                    ((Button) alert.getDialogPane().lookupButton(stopProcess)).setOnAction(event -> {
+//                        cancelRequested.set(true);
+//                    });
+
+                    alert.showAndWait();
+                });
+
+                return true;
             }
         });
 

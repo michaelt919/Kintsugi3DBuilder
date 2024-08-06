@@ -132,6 +132,19 @@ public class IOModel
                 monitor.warn(e);
             }
         }
+
+        @Override
+        public boolean isConflictingProcess() {
+            boolean processing = false;
+            for (ProgressMonitor monitor : subMonitors)
+            {
+                if(monitor.isConflictingProcess()){
+                    processing = true;
+                }
+            }
+
+            return processing;
+        }
     }
 
     private IOHandler handler;
