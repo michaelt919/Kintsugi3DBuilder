@@ -109,15 +109,25 @@
                      </HBox.margin></Line>
                </children>
             </HBox>
-            <HBox alignment="CENTER_LEFT" spacing="652.0">
-               <children>
-                  <Button fx:id="cancelButton" styleClass="wireframeBodyLarge" alignment="CENTER" mnemonicParsing="false" prefHeight="40.0" prefWidth="112.0" text="Cancel" />
-                  <Button fx:id="doneButton" styleClass="wireframeBodyLarge" alignment="CENTER" layoutX="299.0" layoutY="10.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="112.0" text="Done" />
-               </children>
+            <GridPane>
                <VBox.margin>
                   <Insets bottom="52.0" right="24.0" top="36.0" />
                </VBox.margin>
-            </HBox>
+               <columnConstraints>
+                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="458.0" minWidth="10.0" prefWidth="173.66666666666666" />
+                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="751.0" minWidth="10.0" prefWidth="703.0" />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+               </rowConstraints>
+               <children>
+                  <Button fx:id="cancelButton" alignment="CENTER" mnemonicParsing="false" prefHeight="40.0" styleClass="wireframeBodyLarge" text="Cancel">
+                     <padding>
+                        <Insets left="30.0" right="30.0" />
+                     </padding></Button>
+                  <Button fx:id="doneButton" alignment="CENTER" mnemonicParsing="false" prefHeight="40.0" prefWidth="112.0" styleClass="wireframeBodyLarge" text="Done" GridPane.columnIndex="1" GridPane.halignment="RIGHT" />
+               </children>
+            </GridPane>
          </children>
          <GridPane.margin>
             <Insets left="24.0" top="48.0" />
