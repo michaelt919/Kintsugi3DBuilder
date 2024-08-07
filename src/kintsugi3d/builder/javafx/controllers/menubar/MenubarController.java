@@ -68,6 +68,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
+import static kintsugi3d.builder.javafx.ProjectIO.handleException;
+
 public class MenubarController
 {
     private static final Logger log = LoggerFactory.getLogger(MenubarController.class);
@@ -405,8 +407,6 @@ public class MenubarController
             {
                 this.maximum = 0.0;
                 ProgressBarsController.getInstance().endStopwatches();
-                //TODO: desaturate progress bars instead of hiding stage
-//                ProgressBarsController.getInstance().hideStage();
                 setReadyToDismissMiniProgBar();
 
                 if(overallProgressBar.getProgress() == ProgressIndicator.INDETERMINATE_PROGRESS){
@@ -1050,21 +1050,6 @@ public class MenubarController
         {
             handleException("Failed to launch Kintsugi 3D Viewer", e);
         }
-    }
-
-    private void handleException(String message, Exception e)
-    {
-        log.error("{}:", message, e);
-        Platform.runLater(() ->
-        {
-            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-            ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
-            Alert alert = new Alert(AlertType.ERROR, message + "\nSee the log for more info.", ok, showLog);
-            ((Button) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
-                help_console();
-            });
-            alert.show();
-        });
     }
 
     public void file_removeInvalidReferences() {

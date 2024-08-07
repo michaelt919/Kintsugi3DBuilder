@@ -24,6 +24,7 @@ import kintsugi3d.builder.fit.ReconstructionShaders;
 import kintsugi3d.builder.fit.SpecularFitProcess;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
+import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
@@ -105,7 +106,7 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
         }
         catch(IOException e) // thrown by createReflectanceProgram
         {
-            log.error("Error executing specular fit request:", e);
+            ProjectIO.handleException("Error executing specular fit request:", e);
         }
     }
 
