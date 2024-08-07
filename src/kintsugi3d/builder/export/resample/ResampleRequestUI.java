@@ -28,6 +28,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.core.IBRRequestQueue;
 import kintsugi3d.builder.core.IBRRequestUI;
@@ -125,6 +126,10 @@ public class ResampleRequestUI implements IBRRequestUI
         runButton.setOnAction(event ->
         {
             //stage.close();
+
+            if(MultithreadModels.getInstance().getIOModel().getProgressMonitor().isConflictingProcess()){
+                return;
+            }
 
             requestQueue.addIBRRequest(
                 new ResampleRequest(

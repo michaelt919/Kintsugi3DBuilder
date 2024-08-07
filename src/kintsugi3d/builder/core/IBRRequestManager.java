@@ -11,23 +11,19 @@
 
 package kintsugi3d.builder.core;
 
-import java.util.LinkedList;
-import java.util.Queue;
-
-import javafx.scene.control.*;
-import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
-import kintsugi3d.gl.interactive.GraphicsRequest;
 import javafx.application.Platform;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.rendering.IBRInstanceManager;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.interactive.GraphicsRequest;
 import kintsugi3d.gl.interactive.ObservableGraphicsRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class IBRRequestManager<ContextType extends Context<ContextType>> implements IBRRequestQueue<ContextType>
 {
@@ -112,6 +108,10 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
     @Override
     public synchronized void addIBRRequest(ObservableIBRRequest request)
     {
+        if(this.progressMonitor.isConflictingProcess()){
+            return;
+        }
+
         if (instanceManager.getLoadedInstance() == null)
         {
             // Instance is currently null, wait for a load and then call this function again (recursive-ish)
@@ -148,21 +148,7 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
                     }
                     catch (Exception | AssertionError e)
                     {
-                        log.error("Error occurred while executing request:", e);
-                        Platform.runLater(() ->
-                        {
-                            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
-                            ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
-                            Alert alert = new Alert(Alert.AlertType.NONE,
-                                    "An error occurred processing request. Processing has stopped\nSee the log for more info.",
-                                    ok, showLog);
-
-                            ((ButtonBase) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
-                                // Use the menubar's console open function to prevent 2 console windows from appearing
-                                MenubarController.getInstance().help_console();
-                            });
-                            alert.show();
-                        });
+                        ProjectIO.handleException("Error occured while excecuting request", e);
                     }
                 }
 
@@ -209,6 +195,9 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
         {
             if (progressMonitor != null)
             {
+                if(this.progressMonitor.isConflictingProcess()){
+                    return;
+                }
                 progressMonitor.start();
             }
 

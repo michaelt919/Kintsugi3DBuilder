@@ -50,8 +50,6 @@ import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettin
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.resources.ibr.MeshImportException;
-import kintsugi3d.gl.interactive.InteractiveRenderable;
-import kintsugi3d.gl.interactive.InteractiveRenderableList;
 import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
@@ -119,8 +117,7 @@ public final class ProjectIO
                 projectLoaded = false;
                 if (e instanceof MeshImportException)
                 {
-                    //TODO: change to (e.getMessage(), e)?
-                    handleException("Imported object is missing texture coordinates", e);
+                    handleException(e.getMessage(), e);
                 }
                 else
                 {
@@ -151,7 +148,7 @@ public final class ProjectIO
         return projectLoaded;
     }
 
-    private static void handleException(String message, Throwable e)
+    public static void handleException(String message, Throwable e)
     {
         log.error("{}:", message, e);
         Platform.runLater(() ->
@@ -375,6 +372,11 @@ public final class ProjectIO
 
     public void openProjectFromFile(File selectedFile)
     {
+        //need to check for conflicting process early so crucial info isn't unloaded
+        if(MultithreadModels.getInstance().getIOModel().getProgressMonitor().isConflictingProcess()){
+            return;
+        }
+
         //open the project, update the recent files list & recentDirectory, disable shaders which aren't useful until processing textures
         this.projectFile = selectedFile;
         RecentProjects.setMostRecentDirectory(this.projectFile.getParentFile());

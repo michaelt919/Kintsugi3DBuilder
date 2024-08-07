@@ -95,4 +95,11 @@ public interface ProgressMonitor
     default void warn(Throwable e)
     {
     }
+
+    /**
+     * Usually a call to ProgressBarsController.getInstance().isProcessing().
+     * Used to stop multiple processes from conflicting with each other.
+     * @return true if a process is in progress.
+     */
+    boolean isConflictingProcess();
 }

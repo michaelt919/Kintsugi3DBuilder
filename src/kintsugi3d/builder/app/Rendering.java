@@ -417,6 +417,11 @@ public final class Rendering
             {
                 ioModel.getProgressMonitor().warn(e);
             }
+
+            @Override
+            public boolean isConflictingProcess() {
+                return ioModel.getProgressMonitor().isConflictingProcess();
+            }
         });
 
         app.addRefreshable(new Refreshable()

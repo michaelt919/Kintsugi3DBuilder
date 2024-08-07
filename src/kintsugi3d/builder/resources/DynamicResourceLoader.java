@@ -252,6 +252,10 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
                 if (Objects.equals(environmentFile, desiredEnvironmentFile) &&
                         (!Objects.equals(environmentFile, currentEnvironmentFile) || lastModified != environmentLastModified))
                 {
+                    if(this.progressMonitor.isConflictingProcess()){
+                        return Optional.empty();
+                    }
+
                     this.progressMonitor.start();
                     this.progressMonitor.setMaxProgress(0.0);
                     this.progressMonitor.setProcessName("Load Environment Map");

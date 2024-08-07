@@ -311,6 +311,11 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                     progressMonitor.warn(e);
                 }
             }
+
+            @Override
+            public boolean isConflictingProcess() {
+                return progressMonitor.isConflictingProcess();
+            }
         });
         newInstance = newItem;
     }
@@ -318,6 +323,10 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     @Override
     public void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions)
     {
+        if(this.progressMonitor.isConflictingProcess()){
+            return;
+        }
+
         this.progressMonitor.start();
         this.progressMonitor.setProcessName("Load from File");
 
@@ -345,6 +354,10 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
         // TODO There currently isn't functionality for a supportingFilesDirectory at this early in the process
         //  Restructuring required from Tetzlaff.
+
+        if(this.progressMonitor.isConflictingProcess()){
+            return;
+        }
 
         this.progressMonitor.start();
         this.progressMonitor.setProcessName("Load from Agisoft Project");
@@ -491,6 +504,9 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory, String primaryViewName,
         ReadonlyLoadOptionsModel loadOptions)
     {
+        if(this.progressMonitor.isConflictingProcess()){
+            return;
+        }
         this.progressMonitor.start();
         this.progressMonitor.setProcessName("Load from Agisoft Files");
 
