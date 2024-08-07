@@ -30,10 +30,7 @@ import javafx.stage.Window;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-
+import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
@@ -53,8 +50,8 @@ public class ExportRequestUI implements IBRRequestUI {
     @FXML private CheckBox glTFPackTexturesCheckBox;
     @FXML private CheckBox openViewerOnceCheckBox;
     @FXML private ComboBox<Integer> minimumTextureResolutionComboBox;
-    public File CurrentDirectoryFile;
-    public File ExportLocationFile;
+    public File currentDirectoryFile;
+    public File exportLocationFile;
     private final FileChooser objFileChooser = new FileChooser();
 
 
@@ -68,9 +65,9 @@ public class ExportRequestUI implements IBRRequestUI {
         ExportRequestUI exportRequest = fxmlLoader.getController();
         exportRequest.modelAccess = modelAccess;
 
-        if (modelAccess.getLoadingModel().getLoadedProjectFile() != null)
+        if (modelAccess.getIOModel().getLoadedProjectFile() != null)
         {
-            exportRequest.CurrentDirectoryFile = modelAccess.getLoadingModel().getLoadedProjectFile().getParentFile();
+            exportRequest.currentDirectoryFile = modelAccess.getIOModel().getLoadedProjectFile().getParentFile();
         }
 
         exportRequest.stage = new Stage();
@@ -92,10 +89,10 @@ public class ExportRequestUI implements IBRRequestUI {
         setAllVariables(settings);
 
         //Sets FileChooser defaults
-        if (CurrentDirectoryFile != null)
+        if (currentDirectoryFile != null)
         {
-            objFileChooser.setInitialDirectory(CurrentDirectoryFile);
-            objFileChooser.setInitialFileName(CurrentDirectoryFile.getName());
+            objFileChooser.setInitialDirectory(currentDirectoryFile);
+            objFileChooser.setInitialFileName(currentDirectoryFile.getName());
         }
 
         objFileChooser.setTitle("Save project");
@@ -107,26 +104,30 @@ public class ExportRequestUI implements IBRRequestUI {
             //Updates settings to equal what widget is displaying
             saveAllVariables(settings);
 
+            if(MultithreadModels.getInstance().getIOModel().getProgressMonitor().isConflictingProcess()){
+                return;
+            }
+
             try
             {
-                ExportLocationFile = objFileChooser.showSaveDialog(stage);
-                if (ExportLocationFile != null)
+                exportLocationFile = objFileChooser.showSaveDialog(stage);
+                if (exportLocationFile != null)
                 {
                     requestQueue.addIBRRequest(new ObservableIBRRequest()
                     {
                         @Override
                         public <ContextType extends Context<ContextType>> void executeRequest(
-                            IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
+                        IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
                         {
                             if (settings.isGlTFEnabled())
                             {
-                                    renderable.saveGlTF(ExportLocationFile.getParentFile(), ExportLocationFile.getName(), settings);
-                                    modelAccess.getLoadingModel().saveMaterialFiles(ExportLocationFile.getParentFile(), null);
+                                    renderable.saveGlTF(exportLocationFile.getParentFile(), exportLocationFile.getName(), settings);
+                            modelAccess.getIOModel().saveMaterialFiles(exportLocationFile.getParentFile(), null);
                                 }
 
                             if (settings.isOpenViewerOnceComplete())
                             {
-                                    Kintsugi3DViewerLauncher.launchViewer(ExportLocationFile);
+                                    Kintsugi3DViewerLauncher.launchViewer(exportLocationFile);
                                 }
                             }
                     });

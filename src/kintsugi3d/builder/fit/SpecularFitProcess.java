@@ -11,8 +11,20 @@
 
 package kintsugi3d.builder.fit;
 
-import kintsugi3d.builder.core.LoadingMonitor;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
+import java.text.MessageFormat;
+import java.time.Duration;
+import java.time.Instant;
+
+import kintsugi3d.builder.core.DefaultProgressMonitor;
+import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.export.specular.SpecularFitTextureRescaler;
 import kintsugi3d.builder.fit.debug.BasisImageCreator;
 import kintsugi3d.builder.fit.decomposition.SpecularDecomposition;
@@ -30,15 +42,6 @@ import kintsugi3d.optimization.ShaderBasedErrorCalculator;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.function.BiConsumer;
 
 /**
  * Implement specular fit using algorithm described by Nam et al., 2018
@@ -63,25 +66,25 @@ public class SpecularFitProcess
     }
 
     public <ContextType extends Context<ContextType>> void optimizeFit(
-        IBRResourcesImageSpace<ContextType> resources, LoadingMonitor callback)
-        throws IOException
+        IBRResourcesImageSpace<ContextType> resources, ProgressMonitor monitor)
+        throws IOException, UserCancellationException
     {
         Instant start = Instant.now();
 
-        // Generate cache
-        ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings(), callback);
-
-        if (callback != null)
+        if (monitor != null)
         {
-            // Make indeterminate as building cache is really just the first step.
-            callback.setMaximum(0.0);
+            monitor.setStageCount(3);
+            monitor.setStage(0, "Building cache...");
         }
+
+        // Generate cache
+        ImageCache<ContextType> cache = resources.cache(settings.getImageCacheSettings(), monitor);
 
         Duration duration = Duration.between(start, Instant.now());
         log.info("Cache found / generated in: " + duration);
 
         // Runs the fit (long process) and then replaces the old material resources / textures
-        resources.replaceSpecularMaterialResources(optimizeFit(cache, resources.getSpecularMaterialResources(), callback));
+        resources.replaceSpecularMaterialResources(optimizeFit(cache, resources.getSpecularMaterialResources(), monitor));
 
 //        // Save basis image visualization for reference and debugging
 //        try (BasisImageCreator<ContextType> basisImageCreator = new BasisImageCreator<>(cache.getContext(), settings.getSpecularBasisSettings()))
@@ -120,10 +123,15 @@ public class SpecularFitProcess
     }
 
     private <ContextType extends Context<ContextType>> SpecularMaterialResources<ContextType> optimizeFit(
-        ImageCache<ContextType> cache, SpecularMaterialResources<ContextType> original, LoadingMonitor callback)
-        throws IOException
+        ImageCache<ContextType> cache, SpecularMaterialResources<ContextType> original, ProgressMonitor monitor)
+        throws IOException, UserCancellationException
     {
         Instant start = Instant.now();
+
+        if (monitor != null)
+        {
+            monitor.setStage(1, "Performing low-res fit...");
+        }
 
         SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
 
@@ -132,7 +140,32 @@ public class SpecularFitProcess
         SpecularFitFinal<ContextType> fullResolution = SpecularFitFinal.createEmpty(original,
             settings.getTextureResolution(), settings.getSpecularBasisSettings(), settings.shouldIncludeConstantTerm());
 
-        try (IBRResourcesTextureSpace<ContextType> sampled = cache.createSampledResources())
+        try (IBRResourcesTextureSpace<ContextType> sampled = cache.createSampledResources(
+                new DefaultProgressMonitor() // simple progress monitor for logging; will not be shown in the UI
+                {
+                    private double maxProgress = 0.0;
+
+                    @Override
+                    public void allowUserCancellation() throws UserCancellationException
+                    {
+                        if (monitor != null)
+                        {
+                            monitor.allowUserCancellation();
+                        }
+                    }
+
+                    @Override
+                    public void setMaxProgress(double maxProgress)
+                    {
+                        this.maxProgress = maxProgress;
+                    }
+
+                    @Override
+                    public void setProgress(double progress, String message)
+                    {
+                        log.info("[{}%] {}", new DecimalFormat("#.##").format(progress / maxProgress * 100), message);
+                    }
+                }))
         {
             ContextType context = sampled.getContext();
             // Disable back face culling since we're rendering in texture space
@@ -159,9 +192,10 @@ public class SpecularFitProcess
             )
             {
                 // Preliminary optimization at low resolution to determine basis functions
-                optimizeTexSpaceFit(sampled, (stream, errorCalculator) -> sampledFit.optimizeFromScratch(
+                optimizeTexSpaceFit(sampled, (stream, errorCalculator, monitorLocal) -> sampledFit.optimizeFromScratch(
                     sampledDecomposition, stream, settings.getPreliminaryConvergenceTolerance(),
-                    errorCalculator, TRACE_IMAGES && settings.getOutputDirectory() != null ? settings.getOutputDirectory() : null), sampledFit
+                    errorCalculator, monitorLocal, TRACE_IMAGES && settings.getOutputDirectory() != null ? settings.getOutputDirectory() : null),
+                    sampledFit, monitor
                 );
 
 //                if (settings.getOutputDirectory() != null)
@@ -182,6 +216,11 @@ public class SpecularFitProcess
                     }
                 }
 
+                if (monitor != null)
+                {
+                    monitor.setStage(2, "Performing high-res fit...");
+                }
+
                 // Basis functions are not spatial, so we want to just copy for future use
                 // Copy from CPU since 1D texture arrays can't apparently be attached to an FBO (as necessary for blitting)
                 fullResolution.getBasisResources().updateFromSolution(sampledDecomposition);
@@ -193,13 +232,13 @@ public class SpecularFitProcess
                     ImageFinder.getInstance().tryFindImageFile(new File(geometryFile.getParentFile(), normalMap.getMapName()));
 
                 // Optimize weight maps and normal maps by blocks to fill the full resolution textures
-                optimizeBlocks(fullResolution, cache, sampledDecomposition, inputNormalMap, callback);
+                optimizeBlocks(fullResolution, cache, sampledDecomposition, inputNormalMap, monitor);
             }
 
-            if (callback != null)
+            if (monitor != null)
             {
                 // Go back to indeterminate for wrap-up stuff
-                callback.setMaximum(0.0);
+                monitor.setStage(3, "Texture processing complete.");
             }
 
             // Generate albedo / ORM maps at full resolution (does not require loaded source images)
@@ -227,7 +266,7 @@ public class SpecularFitProcess
 
             return fullResolution;
         }
-        catch (Exception e)
+        catch (IOException|RuntimeException e)
         {
             // Prevent memory leak when an exception occurs
             fullResolution.close();
@@ -241,8 +280,8 @@ public class SpecularFitProcess
         ImageCache<ContextType> cache,
         SpecularDecompositionFromScratch sampledDecomposition,
         File inputNormalMapFile,
-        LoadingMonitor callback)
-        throws IOException
+        ProgressMonitor monitor)
+        throws IOException, UserCancellationException
     {
         SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
 
@@ -269,10 +308,9 @@ public class SpecularFitProcess
                 }
             }
 
-            if (callback != null)
+            if (monitor != null)
             {
-                callback.setMaximum(cache.getSettings().getTextureSubdiv() * cache.getSettings().getTextureSubdiv());
-                callback.setProgress(0.0);
+                monitor.setMaxProgress(cache.getSettings().getTextureSubdiv() * cache.getSettings().getTextureSubdiv());
             }
 
             // Optimize each block of the texture map at full resolution.
@@ -280,14 +318,40 @@ public class SpecularFitProcess
             {
                 for (int j = 0; j < cache.getSettings().getTextureSubdiv(); j++)
                 {
-                    if (callback != null)
+                    int blockProgress = i * cache.getSettings().getTextureSubdiv() + j;
+
+                    if (monitor != null)
                     {
-                        callback.setProgress(i * cache.getSettings().getTextureSubdiv() + j);
+                        monitor.setProgress(blockProgress, MessageFormat.format("Block ({0}, {1})", i, j));
+                        monitor.allowUserCancellation();
                     }
 
-                    log.info("Starting block (" + i + ", " + j + ")...");
+                    try (IBRResourcesTextureSpace<ContextType> blockResources = blockResourceFactory.createBlockResources(i, j,
+                            new DefaultProgressMonitor() // simple progress monitor for logging; will not be shown in the UI
+                            {
+                                private double maxProgress = 0.0;
 
-                    try (IBRResourcesTextureSpace<ContextType> blockResources = blockResourceFactory.createBlockResources(i, j))
+                                @Override
+                                public void allowUserCancellation() throws UserCancellationException
+                                {
+                                    if (monitor != null)
+                                    {
+                                        monitor.allowUserCancellation();
+                                    }
+                                }
+
+                                @Override
+                                public void setMaxProgress(double maxProgress)
+                                {
+                                    this.maxProgress = maxProgress;
+                                }
+
+                                @Override
+                                public void setProgress(double progress, String message)
+                                {
+                                    log.info("[{}%] {}", new DecimalFormat("#.##").format(progress / maxProgress * 100), message);
+                                }
+                            }))
                     {
                         TextureResolution blockSettings = blockResources.getTextureResolution();
                         try (SpecularFitOptimizable<ContextType> blockOptimization = SpecularFitOptimizable.createNew(
@@ -310,9 +374,58 @@ public class SpecularFitProcess
                                 new SpecularDecompositionFromExistingBasis(blockSettings, sampledDecomposition);
 
                             // Optimize weights and normals
-                            optimizeTexSpaceFit(blockResources, (stream, errorCalculator) -> blockOptimization.optimizeFromExistingBasis(
-                                blockDecomposition, stream, settings.getConvergenceTolerance(),
-                                errorCalculator, TRACE_IMAGES && settings.getOutputDirectory() != null ? settings.getOutputDirectory() : null), blockOptimization
+                            optimizeTexSpaceFit(blockResources,
+                                (stream, errorCalculator, monitorLocal) -> blockOptimization.optimizeFromExistingBasis(
+                                    blockDecomposition, stream, settings.getConvergenceTolerance(),
+                                    errorCalculator, monitorLocal,
+                                    TRACE_IMAGES && settings.getOutputDirectory() != null ? settings.getOutputDirectory() : null),
+                                blockOptimization,
+                                new DefaultProgressMonitor() // wrap progress monitor with logic to account for it being just one block out of the whole.
+                                {
+                                    private double maxProgress = 0.0;
+
+                                    @Override
+                                    public void allowUserCancellation() throws UserCancellationException
+                                    {
+                                        if (monitor != null)
+                                        {
+                                            monitor.allowUserCancellation();
+                                        }
+                                    }
+
+                                    @Override
+                                    public void setMaxProgress(double maxProgress)
+                                    {
+                                        this.maxProgress = maxProgress;
+                                    }
+
+                                    @Override
+                                    public void setProgress(double progress, String message)
+                                    {
+                                        if (monitor != null)
+                                        {
+                                            monitor.setProgress(blockProgress + progress / maxProgress, message);
+                                        }
+                                    }
+
+                                    @Override
+                                    public void complete()
+                                    {
+                                        if (monitor != null)
+                                        {
+                                            monitor.setProgress(blockProgress + 1, "Block complete.");
+                                        }
+                                    }
+
+                                    @Override
+                                    public void fail(Throwable e)
+                                    {
+                                        if (monitor != null)
+                                        {
+                                            monitor.fail(e);
+                                        }
+                                    }
+                                }
                             );
 
                             // Fill holes in the weight map
@@ -338,8 +451,8 @@ public class SpecularFitProcess
 
     private <ContextType extends Context<ContextType>> void optimizeTexSpaceFit(
         IBRResourcesTextureSpace<ContextType> resources,
-        BiConsumer<GraphicsStreamResource<ContextType>, ShaderBasedErrorCalculator<ContextType>> optimizeFunc,
-        SpecularMaterialResources<ContextType> resultsForErrorCalc) throws IOException
+        OptimizationMethod<ContextType> optimizationMethod,
+        SpecularMaterialResources<ContextType> resultsForErrorCalc, ProgressMonitor monitor) throws IOException, UserCancellationException
     {
         SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
 
@@ -361,7 +474,7 @@ public class SpecularFitProcess
                 texFitSettings.width, texFitSettings.height)
         )
         {
-            optimizeFunc.accept(stream, errorCalculator);
+            optimizationMethod.optimize(stream, errorCalculator, monitor);
         }
     }
 

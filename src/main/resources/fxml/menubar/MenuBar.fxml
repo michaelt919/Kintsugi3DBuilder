@@ -12,6 +12,7 @@
   -->
 
 <?import javafx.geometry.*?>
+<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
@@ -70,7 +71,8 @@
                      <MenuItem mnemonicParsing="false" onAction="#openAboutModal" text="About Kintsugi 3D Builder..." />
                             <SeparatorMenuItem />
                      <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
-                     <MenuItem mnemonicParsing="false" onAction="#showWelcomeWindow" text="SHOW WELCOME WINDOW TEST" visible="false"/>
+                     <MenuItem mnemonicParsing="false" onAction="#showProgressBars" text="PROGRESS BARS TEST" visible="false" />
+                     <MenuItem mnemonicParsing="false" onAction="#showWelcomeWindow" text="SHOW WELCOME WINDOW TEST" visible="false" />
                         </Menu>
                         <Menu mnemonicParsing="false" text="View" visible="false">
                             <CheckMenuItem fx:id="is3DGridCheckMenuItem" mnemonicParsing="false" text="3D grid" visible="false" />
@@ -392,23 +394,16 @@
                     </MenuBar>
                     <HBox alignment="CENTER_LEFT" spacing="10.0" visible="false" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
                         <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" visible="false" />
-                    <Button fx:id="settingsButton" contentDisplay="CENTER" mnemonicParsing="false" onAction="#openSystemSettingsModal" prefHeight="25.0" prefWidth="80.0" styleClass="menubarbuttons" text="Settings">
+                        <Button fx:id="settingsButton" contentDisplay="CENTER" mnemonicParsing="false" onAction="#openSystemSettingsModal" prefHeight="25.0" prefWidth="80.0" styleClass="menubarbuttons" text="Settings">
                             <HBox.margin>
                                 <Insets />
-                            </HBox.margin></Button>
+                            </HBox.margin>
+                        </Button>
                         <Button mnemonicParsing="false" onAction="#openAboutModal" text="About" />
                     </HBox>
                 </children>
             </AnchorPane>
-            <AnchorPane>
-                <children>
-                    <ProgressBar fx:id="progressBar" prefHeight="17.0" prefWidth="1090.0" progress="0.0" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                </children>
-                <VBox.margin>
-                    <Insets />
-                </VBox.margin>
-            </AnchorPane>
-            <HBox VBox.vgrow="ALWAYS">
+            <HBox prefHeight="675.0" prefWidth="3046.0" VBox.vgrow="ALWAYS">
                 <children>
                     <fx:include fx:id="cameraViewList" source="CameraViewList.fxml" VBox.vgrow="ALWAYS" />
 <!--                <fx:include fx:id="Eyedropper" source="EyedropperColorChecker.fxml" VBox.vgrow="ALWAYS" />-->
@@ -420,4 +415,32 @@
             </HBox>
         </children>
     </VBox>
+   <AnchorPane fx:id="miniProgressPane" layoutY="688.6666870117188" prefHeight="24.0" style="-fx-background-color: #202020;" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+      <children>
+         <HBox fx:id="miniProgBarBoundingHBox" alignment="CENTER_RIGHT" onMouseClicked="#handleMiniProgressBar" onMouseEntered="#mouseEnterMiniBar" onMouseExited="#mouseExitMiniBar" onMouseMoved="#mouseEnterMiniBar" spacing="8.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="24.0">
+            <children>
+               <Label fx:id="miniProgressLabel" styleClass="wireframeBodyStrong" text="Loading...">
+                  <padding>
+                     <Insets bottom="8.0" left="8.0" top="8.0" />
+                  </padding>
+                  <HBox.margin>
+                     <Insets />
+                  </HBox.margin>
+               </Label>
+               <StackPane fx:id="swapControlsStackPane">
+                  <children>
+                     <Button fx:id="dismissButton" mnemonicParsing="false" onAction="#dismissMiniProgressBar" style="-fx-background-color: #262626; -fx-text-fill: #CECECE;" text="Dismiss" visible="false" />
+                     <ProgressBar fx:id="miniProgressBar" onMouseClicked="#handleMiniProgressBar" prefHeight="16.0" prefWidth="60.0" progress="0.0" />
+                  </children>
+                  <padding>
+                     <Insets left="8.0" right="8.0" />
+                  </padding>
+               </StackPane>
+            </children>
+            <cursor>
+               <Cursor fx:constant="HAND" />
+            </cursor>
+         </HBox>
+      </children>
+   </AnchorPane>
 </AnchorPane>

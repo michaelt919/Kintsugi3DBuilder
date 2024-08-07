@@ -12,13 +12,17 @@
 package kintsugi3d.builder.export.general;
 
 import java.io.File;
+import java.text.MessageFormat;
 import java.util.function.Consumer;
 
-import kintsugi3d.gl.core.*;
-import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.core.IBRInstance;
+import kintsugi3d.builder.core.ObservableIBRRequest;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
+import kintsugi3d.gl.core.*;
 
 class MultiviewRetargetRenderRequest extends RenderRequestBase
 {
@@ -52,7 +56,7 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
 
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(
-        IBRInstance<ContextType> renderable, LoadingMonitor callback) throws Exception
+        IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws Exception
     {
         ReadonlyViewSet targetViewSet = ViewSetReaderFromVSET.getInstance().readFromFile(targetViewSetFile);
 
@@ -67,6 +71,11 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
         {
             for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
             {
+                if (monitor != null)
+                {
+                    monitor.allowUserCancellation();
+                }
+
                 program.setUniform("viewIndex", i);
                 program.setUniform("model_view", targetViewSet.getCameraPose(i));
                 program.setUniform("projection",
@@ -80,17 +89,23 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
                 if (!fileName.endsWith(".png"))
                 {
                     String[] parts = fileName.split("\\.");
-                    parts[parts.length - 1] = "png";
-                    fileName = String.join(".", parts);
+                    if (parts.length == 1){
+                        fileName = fileName + ".png";
+                    }
+                    else{
+                        parts[parts.length - 1] = "png";
+                        fileName = String.join(".", parts);
+                    }
                 }
 
                 File exportFile = new File(getOutputDirectory(), fileName);
                 getOutputDirectory().mkdirs();
                 framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", exportFile);
 
-                if (callback != null)
+                if (monitor != null)
                 {
-                    callback.setProgress((double) i / (double) resources.getViewSet().getCameraPoseCount());
+                    monitor.setProgress((double) i / (double) resources.getViewSet().getCameraPoseCount(),
+                        MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(i), i+1, resources.getViewSet().getCameraPoseCount()));
                 }
             }
         }

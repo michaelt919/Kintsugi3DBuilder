@@ -48,7 +48,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
     private final ContextType context;
 
-    private volatile LoadingMonitor loadingMonitor;
+    private volatile ProgressMonitor progressMonitor;
     private boolean suppressErrors = false;
 
     private final Builder<ContextType> resourceBuilder;
@@ -113,15 +113,11 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             this.rectangleVertices = context.createRectangle();
 
             this.resources = resourceBuilder
+                .setProgressMonitor(this.progressMonitor) // Use the progress monitor that offsets the stage count if generating preview images
 //                .generateUndistortedPreviewImages()
                 .create();
 
             context.flush();
-
-            if (this.loadingMonitor != null)
-            {
-                this.loadingMonitor.setMaximum(0.0); // make indeterminate
-            }
 
             this.simpleTexDrawable = context.createDrawable(simpleTexProgram);
             this.simpleTexDrawable.addVertexBuffer("position", this.rectangleVertices);
@@ -148,7 +144,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             lightCalibrationSplitScreen = new SplitScreenComponent<>(lightCalibration, lightCalibration3DRoot);
 
             IBRSubject<ContextType> subject = scene.getSubject();
-            this.dynamicResourceLoader = new DynamicResourceLoader<>(loadingMonitor,
+            this.dynamicResourceLoader = new DynamicResourceLoader<>(progressMonitor,
                 resources, subject, litRoot.getLightingResources());
 
             this.updateWorldSpaceDefinition();
@@ -171,13 +167,23 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 //            // Flush to prevent timeout
 //            context.flush();
         }
+        catch (UserCancellationException e)
+        {
+            log.error("User cancelled operation while initializing IBREngine:", e);
+            this.close();
+            if (this.progressMonitor != null)
+            {
+                this.progressMonitor.cancelComplete(e);
+        }
+            throw new InitializationException(e);
+        }
         catch (RuntimeException|IOException e)
         {
             log.error("Error occurred initializing IBREngine:", e);
             this.close();
-            if (this.loadingMonitor != null)
+            if (this.progressMonitor != null)
             {
-                this.loadingMonitor.loadingFailed(e);
+                this.progressMonitor.fail(e);
             }
             throw new InitializationException(e);
         }
@@ -306,9 +312,9 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
                     // First frame drawn successfully.
                     loaded = true;
 
-                    if (this.loadingMonitor != null)
+                    if (this.progressMonitor != null)
                     {
-                        this.loadingMonitor.loadingComplete();
+                        this.progressMonitor.complete();
                     }
                 }
             }
@@ -390,9 +396,9 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     }
 
     @Override
-    public void setLoadingMonitor(LoadingMonitor loadingMonitor)
+    public void setProgressMonitor(ProgressMonitor progressMonitor)
     {
-        this.loadingMonitor = loadingMonitor;
+        this.progressMonitor = progressMonitor;
     }
 
     @Override
@@ -462,6 +468,9 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             }
 
             log.info("Starting glTF export...");
+            if(progressMonitor != null){
+                progressMonitor.setProcessName("glTF Export");
+            }
 
             try
             {

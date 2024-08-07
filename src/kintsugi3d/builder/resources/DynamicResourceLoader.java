@@ -20,7 +20,7 @@ import java.util.Optional;
 import javax.imageio.ImageIO;
 
 import kintsugi3d.builder.core.DynamicResourceManager;
-import kintsugi3d.builder.core.LoadingMonitor;
+import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.rendering.components.IBRSubject;
 import kintsugi3d.builder.resources.ibr.IBRResources;
 import kintsugi3d.gl.core.*;
@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 public class DynamicResourceLoader<ContextType extends Context<ContextType>> implements DynamicResourceManager
 {
     private static final Logger log = LoggerFactory.getLogger(DynamicResourceLoader.class);
-    private final LoadingMonitor loadingMonitor;
+    private final ProgressMonitor progressMonitor;
     private final ContextType context;
     private final IBRResources<ContextType> resources;
     private final LightingResources<ContextType> lightingResources;
@@ -70,10 +70,10 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
 
     private EncodableColorImage currentEnvironmentMap;
 
-    public DynamicResourceLoader(LoadingMonitor loadingMonitor, IBRResources<ContextType> resources,
+    public DynamicResourceLoader(ProgressMonitor progressMonitor, IBRResources<ContextType> resources,
         IBRSubject<ContextType> subject, LightingResources<ContextType> lightingResources)
     {
-        this.loadingMonitor = loadingMonitor;
+        this.progressMonitor = progressMonitor;
         this.context = resources.getContext();
         this.resources = resources;
         this.lightingResources = lightingResources;
@@ -157,7 +157,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
             finally
             {
                 this.newEnvironmentDataAvailable = false;
-                this.loadingMonitor.loadingComplete();
+                this.progressMonitor.complete();
             }
         }
 
@@ -252,8 +252,13 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
                 if (Objects.equals(environmentFile, desiredEnvironmentFile) &&
                         (!Objects.equals(environmentFile, currentEnvironmentFile) || lastModified != environmentLastModified))
                 {
-                    this.loadingMonitor.startLoading();
-                    this.loadingMonitor.setMaximum(0.0);
+                    if(this.progressMonitor.isConflictingProcess()){
+                        return Optional.empty();
+                    }
+
+                    this.progressMonitor.start();
+                    this.progressMonitor.setMaxProgress(0.0);
+                    this.progressMonitor.setProcessName("Load Environment Map");
 
                     try
                     {

@@ -13,13 +13,15 @@ package kintsugi3d.builder.export.simpleanimation;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.MessageFormat;
 
+import kintsugi3d.builder.core.IBRInstance;
+import kintsugi3d.builder.core.ObservableIBRRequest;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.builder.core.IBRInstance;
-import kintsugi3d.builder.core.ObservableIBRRequest;
-import kintsugi3d.builder.core.LoadingMonitor;
 
 public abstract class SimpleAnimationRequestBase implements ObservableIBRRequest
 {
@@ -109,7 +111,8 @@ public abstract class SimpleAnimationRequestBase implements ObservableIBRRequest
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
+    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, ProgressMonitor monitor)
+        throws IOException, UserCancellationException
     {
         try
         (
@@ -119,9 +122,19 @@ public abstract class SimpleAnimationRequestBase implements ObservableIBRRequest
                 .createFramebufferObject()
         )
         {
-
+            if(monitor!=null){
+                monitor.setProcessName("Orbit Animation");
+                monitor.setMaxProgress(frameCount);
+                monitor.setStageCount(1);
+                monitor.setStage(0, "Processing orbit images...");
+            }
             for (int i = 0; i < frameCount; i++)
             {
+                if (monitor != null)
+                {
+                    monitor.allowUserCancellation();
+                }
+
                 framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, /*1.0f*/0.0f);
                 framebuffer.clearDepthBuffer();
 
@@ -134,10 +147,13 @@ public abstract class SimpleAnimationRequestBase implements ObservableIBRRequest
                 exportFile.getParentFile().mkdirs();
                 framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", exportFile);
 
-                if (callback != null)
+                if (monitor != null)
                 {
-                    callback.setProgress((double) i / (double) frameCount);
+                    monitor.setProgress(i, MessageFormat.format("Frame {0}/{1}", i+1, frameCount));
                 }
+            }
+            if(monitor != null){
+                monitor.setStage(1, "Finished orbit animation.");
             }
         }
     }

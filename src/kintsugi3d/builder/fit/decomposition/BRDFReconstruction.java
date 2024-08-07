@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
+import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.fit.ReflectanceData;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.builder.resources.ibr.stream.GraphicsStream;
@@ -38,10 +39,10 @@ public class BRDFReconstruction
         matrixSize = this.settings.getBasisCount() * (this.settings.getBasisResolution() + 1);
     }
 
-    public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularDecompositionFromScratch solution)
+    public void execute(GraphicsStream<ReflectanceData> viewStream, SpecularDecompositionFromScratch solution, ProgressMonitor monitor)
     {
         log.info("Building reflectance fitting matrix...");
-        MatrixSystem system = buildReflectanceMatrix(viewStream, solution);
+        MatrixSystem system = buildReflectanceMatrix(viewStream, solution, monitor);
 
         log.info("Finished building matrix; solving now...");
 
@@ -122,8 +123,9 @@ public class BRDFReconstruction
 //        }
     }
 
-    private MatrixSystem buildReflectanceMatrix(GraphicsStream<ReflectanceData> viewStream, SpecularDecomposition solution)
+    private MatrixSystem buildReflectanceMatrix(GraphicsStream<ReflectanceData> viewStream, SpecularDecomposition solution, ProgressMonitor monitor)
     {
+        // TODO add ProgressMonitor support to GraphicsStream.
         Counter counter = new Counter();
         MatrixSystem system =
             viewStream.map(reflectanceData ->

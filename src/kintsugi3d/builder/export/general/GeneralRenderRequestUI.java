@@ -30,6 +30,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,6 +136,10 @@ public class GeneralRenderRequestUI implements IBRRequestUI
         runButton.setOnAction(event ->
         {
 //            stage.close();
+
+            if(MultithreadModels.getInstance().getIOModel().getProgressMonitor().isConflictingProcess()){
+                return;
+            }
 
             File fragmentShader = new File(fragmentShaderField.getText());
             File outputDirectory = new File(exportDirectoryField.getText());

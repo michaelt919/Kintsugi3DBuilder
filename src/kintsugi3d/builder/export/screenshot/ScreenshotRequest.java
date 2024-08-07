@@ -14,11 +14,11 @@ package kintsugi3d.builder.export.screenshot;
 import java.io.File;
 import java.io.IOException;
 
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.core.FramebufferObject;
 import kintsugi3d.builder.core.IBRInstance;
 import kintsugi3d.builder.core.ObservableIBRRequest;
-import kintsugi3d.builder.core.LoadingMonitor;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.FramebufferObject;
 
 public class ScreenshotRequest implements ObservableIBRRequest
 {
@@ -94,7 +94,7 @@ public class ScreenshotRequest implements ObservableIBRRequest
 
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(
-        IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
+        IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
     {
         try
         (
@@ -104,6 +104,9 @@ public class ScreenshotRequest implements ObservableIBRRequest
                 .createFramebufferObject()
         )
         {
+            if(monitor != null){
+                monitor.setProcessName("Screenshot");
+            }
             framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, /*1.0f*/0.0f);
             framebuffer.clearDepthBuffer();
 
@@ -120,9 +123,9 @@ public class ScreenshotRequest implements ObservableIBRRequest
                 framebuffer.getTextureReaderForColorAttachment(0).saveToFile("JPEG", exportFile);
             }
 
-            if (callback != null)
+            if (monitor != null)
             {
-                callback.setProgress(1.0);
+                monitor.setProgress(1.0, "Screenshot complete.");
             }
         }
     }

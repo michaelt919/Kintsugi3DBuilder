@@ -56,6 +56,40 @@
     -fx-font-size: 68px;
 }
 
+.kintsugi-3D-1{
+    -fx-fill: #FFE790; /* light yellow */
+}
+.kintsugi-3D-2{
+    -fx-fill: #EFCB5C; /* kintsugi yellow */
+}
+.kintsugi-3D-3{
+    -fx-fill: #383838; /* med gray */
+}
+.kintsugi-3D-4{
+    -fx-fill: #202020; /* dark gray */
+}
+.kintsugi-3D-5{
+    -fx-fill: #030305; /* off-black.*/
+}
+
+
+.kintsugi-3D-Wireframe-1{
+    fx-fill: #CECECE; /* off-white */
+}
+.kintsugi-3D-Wireframe-2{
+    fx-fill: #ADADAD; /* light gray */
+}
+.kintsugi-3D-Wireframe-3{
+    fx-fill: #383838; /* med gray */
+}
+.kintsugi-3D-Wireframe-4{
+    fx-fill: #202020; /* dark gray */
+}
+.kintsugi-3D-Wireframe-5{
+    fx-fill: #030303; /* off-black */
+}
+
+
 
 /********************************************************************************/
 .accordion{
@@ -71,9 +105,11 @@
 }
 
 .button {
-    -fx-background-color: #383838;
-    -fx-text-fill: #FFFFFF;
-    -fx-background-radius: 30 30 30 30;
+    -fx-background-color: #CECECE;
+}
+
+.button .text{
+    -fx-fill:#030303;
 }
 
 .button:hover{
@@ -82,6 +118,10 @@
 
 .button:pressed {
     -fx-background-color: #262626;
+}
+
+.button:pressed .text{
+    -fx-fill: #CECECE;
 }
 
 .button-selected{
@@ -109,10 +149,9 @@
 .color-picker{
     -fx-background-color: #383838;
     -fx-border-color: #383838;
-    -fx-text-fill:#000000;
 }
 
-.accordion .combo-box-base .text{ /*text within the dropdown for the color picker label in lighting settings*/
+.color-picker .text{
     -fx-fill: #000000;
 }
 
@@ -213,32 +252,36 @@ dialog-pane{
      -fx-background-color: #383838;
  }
 
-.overall-progress-bar{
-    -fx-accent: #D4AA00; /*color of completed portion (Kintsugi yellow)*/
-}
-
-.overall-progress-bar .track{
-    -fx-background-color: #444444; /*color of incomplete portion*/
-}
-
 .progress-bar{
     -fx-accent: #D4AA00; /*color of completed portion (Kintsugi yellow)*/
 }
 
 .progress-bar .track{
-    -fx-background-color: #444444; /*color of incomplete portion*/
+    -fx-background-color: #CECECE; /*color of incomplete portion*/
 }
 
-.split-menu-button {
-    -fx-base: #383838;
-    -fx-text-fill: #FFFFFF;
-}
-.split-menu-button:hover{
-    -fx-background-color: #D4AA00;
+.desaturated-progress-bar{
+    -fx-accent: #383838; /*color of completed portion*/
 }
 
 .split-button:hover{
     -fx-background-color: #D4AA00;
+}
+
+.split-menu-button {
+    -fx-background-color: #CECECE;
+}
+
+.split-menu-button .text{
+    -fx-fill:#030303;
+}
+
+.split-menu-button:hover{
+    -fx-base: #D4AA00;
+}
+
+.split-menu-button .menu-item .text{
+    -fx-fill:#CECECE;
 }
 
 .scroll-pane{
@@ -345,6 +388,10 @@ dialog-pane{
 
 .tooltip {
     -fx-show-duration: indefinite; /* tooltips don't disappear until the user's mouse leaves the node*/
+}
+
+.tooltip .text{
+    -fx-fill: #CECECE;
 }
 
 .vbox{

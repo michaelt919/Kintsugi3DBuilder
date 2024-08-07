@@ -185,7 +185,9 @@ abstract class RenderRequestBase implements ObservableIBRRequest
         drawable.getContext().getState().disableBackFaceCulling();
         framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
         framebuffer.clearDepthBuffer();
-        shaderSetupCallback.accept(drawable.program());
+        if(shaderSetupCallback != null){
+            shaderSetupCallback.accept(drawable.program());
+        }
         drawable.draw(framebuffer);
     }
 

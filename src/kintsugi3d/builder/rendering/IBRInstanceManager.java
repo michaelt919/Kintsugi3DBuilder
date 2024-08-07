@@ -11,7 +11,6 @@
 
 package kintsugi3d.builder.rendering;
 
-import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -23,13 +22,7 @@ import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.event.Event;
-import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.control.Button;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.stage.DirectoryChooser;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
@@ -38,6 +31,7 @@ import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
@@ -64,7 +58,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     private ViewSet loadedViewSet;
     private IBRInstance<ContextType> ibrInstance = null;
     private IBRInstance<ContextType> newInstance = null;
-    private LoadingMonitor loadingMonitor;
+    private ProgressMonitor progressMonitor;
 
     private ReadonlyObjectModel objectModel;
     private ReadonlyCameraModel cameraModel;
@@ -116,10 +110,19 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
     private void handleMissingFiles(Exception e)
     {
-        log.error("An error occurred loading project:", e);
-        if (loadingMonitor != null)
+        log.error("An error occurred loading project: ", e);
+        if (progressMonitor != null)
         {
-            loadingMonitor.loadingFailed(e);
+            progressMonitor.fail(e);
+        }
+    }
+
+    private void handleUserCancellation(UserCancellationException e)
+    {
+        log.info("Loading project was cancelled by user: ", e);
+        if (progressMonitor != null)
+        {
+            progressMonitor.cancelComplete(e);
         }
     }
 
@@ -162,7 +165,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         }
     }
 
-    private void loadInstance(String id, Builder<ContextType> builder)
+    private void loadInstance(String id, Builder<ContextType> builder) throws UserCancellationException
     {
         loadedViewSet = builder.getViewSet();
 
@@ -175,6 +178,12 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
         // Invoke callbacks now that view set is loaded
         invokeViewSetLoadCallbacks(loadedViewSet);
+
+        if(progressMonitor != null)
+        {
+            progressMonitor.setStageCount(2);
+            progressMonitor.setStage(0, "Generating preview-resolution images...");
+        }
 
         try
         {
@@ -195,37 +204,83 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         newItem.getSceneModel().setSettingsModel(this.settingsModel);
         newItem.getSceneModel().setCameraViewListModel(this.cameraViewListModel);
 
-        newItem.setLoadingMonitor(new LoadingMonitor()
+        newItem.setProgressMonitor(new ProgressMonitor()
         {
             @Override
-            public void startLoading()
+            public void allowUserCancellation() throws UserCancellationException
             {
-                if (loadingMonitor != null)
+                if (progressMonitor != null)
                 {
-                    loadingMonitor.startLoading();
+                    progressMonitor.allowUserCancellation();
                 }
             }
 
             @Override
-            public void setMaximum(double maximum)
+            public void cancelComplete(UserCancellationException e)
             {
-                if (loadingMonitor != null)
+                if (progressMonitor != null)
                 {
-                    loadingMonitor.setMaximum(maximum);
+                    progressMonitor.cancelComplete(e);
                 }
             }
 
             @Override
-            public void setProgress(double progress)
+            public void start()
             {
-                if (loadingMonitor != null)
+                if (progressMonitor != null)
                 {
-                    loadingMonitor.setProgress(progress);
+                    progressMonitor.start();
                 }
             }
 
             @Override
-            public void loadingComplete()
+            public void setProcessName(String processName) {
+                if (progressMonitor != null)
+                {
+                    progressMonitor.setProcessName(processName);
+                }
+            }
+
+            @Override
+            public void setStageCount(int count)
+            {
+                if (progressMonitor != null)
+                {
+                    // Add one for the preview image generation step already completed.
+                    progressMonitor.setStageCount(count + 1);
+                }
+            }
+
+            @Override
+            public void setStage(int stage, String message)
+            {
+                if (progressMonitor != null)
+                {
+                    // Add one for the preview image generation step already completed.
+                    progressMonitor.setStage(stage + 1, message);
+                }
+            }
+
+            @Override
+            public void setMaxProgress(double maxProgress)
+            {
+                if (progressMonitor != null)
+                {
+                    progressMonitor.setMaxProgress(maxProgress);
+                }
+            }
+
+            @Override
+            public void setProgress(double progress, String message)
+            {
+                if (progressMonitor != null)
+                {
+                    progressMonitor.setProgress(progress, message);
+                }
+            }
+
+            @Override
+            public void complete()
             {
                 double primaryViewDistance = newItem.getIBRResources().getPrimaryViewDistance();
                 Vector3 lightIntensity = new Vector3((float)(primaryViewDistance * primaryViewDistance));
@@ -233,28 +288,33 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                 newItem.getIBRResources().initializeLightIntensities(lightIntensity, false);
                 newItem.reloadShaders();
 
-                if (loadingMonitor != null)
+                if (progressMonitor != null)
                 {
-                    loadingMonitor.loadingComplete();
+                    progressMonitor.complete();
                 }
             }
 
             @Override
-            public void loadingFailed(Throwable e)
+            public void fail(Throwable e)
             {
-                if (loadingMonitor != null)
+                if (progressMonitor != null)
                 {
-                    loadingMonitor.loadingFailed(e);
+                    progressMonitor.fail(e);
                 }
             }
 
             @Override
-            public void loadingWarning(Throwable e)
+            public void warn(Throwable e)
             {
-                if (loadingMonitor != null)
+                if (progressMonitor != null)
                 {
-                    loadingMonitor.loadingWarning(e);
+                    progressMonitor.warn(e);
                 }
+            }
+
+            @Override
+            public boolean isConflictingProcess() {
+                return progressMonitor.isConflictingProcess();
             }
         });
         newInstance = newItem;
@@ -263,16 +323,25 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     @Override
     public void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions)
     {
-        this.loadingMonitor.startLoading();
+        if(this.progressMonitor.isConflictingProcess()){
+            return;
+        }
+
+        this.progressMonitor.start();
+        this.progressMonitor.setProcessName("Load from File");
 
         try
         {
             Builder<ContextType> contextTypeBuilder = IBRResourcesImageSpace.getBuilderForContext(this.context)
-                .setLoadingMonitor(this.loadingMonitor)
+                .setProgressMonitor(this.progressMonitor)
                 .setLoadOptions(loadOptions)
                 .loadVSETFile(vsetFile, supportingFilesDirectory);
 
             loadInstance(id, contextTypeBuilder);
+        }
+        catch(UserCancellationException e)
+        {
+            handleUserCancellation(e);
         }
         catch (Exception e)
         {
@@ -286,7 +355,12 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         // TODO There currently isn't functionality for a supportingFilesDirectory at this early in the process
         //  Restructuring required from Tetzlaff.
 
-        this.loadingMonitor.startLoading();
+        if(this.progressMonitor.isConflictingProcess()){
+            return;
+        }
+
+        this.progressMonitor.start();
+        this.progressMonitor.setProcessName("Load from Agisoft Project");
 
         loadAgisoftFromZipRec(id, metashapeObjectChunk, loadOptions, primaryViewName);
     }
@@ -296,7 +370,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         Builder<ContextType>builder = null;
         try {
             builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
-                    .setLoadingMonitor(this.loadingMonitor)
+                    .setProgressMonitor(this.progressMonitor)
                     .setLoadOptions(loadOptions)
                     .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, null, false)
                     .setPrimaryView(primaryViewName);
@@ -306,6 +380,10 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         catch (MissingImagesException mie){
             Platform.runLater(() -> showMissingImgsAlert(
                     metashapeObjectChunk, primaryViewName, supportingFilesDirectory, loadOptions, id, mie));
+        }
+        catch(UserCancellationException e)
+        {
+            handleUserCancellation(e);
         }
         catch (Exception e) {
             handleMissingFiles(e);
@@ -328,8 +406,9 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         Builder<ContextType> finalBuilder = IBRResourcesImageSpace.getBuilderForContext(this.context);
 
         ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(event -> {
-            //TODO: cancel task
-            WelcomeWindowController.getInstance().show();
+            //nothing has really started loading yet, so just reset the progress bars and close
+            ProgressBarsController.getInstance().stopAndClose();
+            WelcomeWindowController.getInstance().showIfNoModelLoaded();
         });
 
         ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event -> {
@@ -344,7 +423,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             new Thread(()->{
                 try {
                     finalBuilder
-                            .setLoadingMonitor(this.loadingMonitor)
+                            .setProgressMonitor(this.progressMonitor)
                             .setLoadOptions(loadOptions)
                             .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, newCamsFile, false)
                             .setPrimaryView(primaryViewName);
@@ -353,6 +432,10 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                 } catch (MissingImagesException mie2){
                     Platform.runLater(() ->
                             showMissingImgsAlert(metashapeObjectChunk, primaryViewName, supportingFilesDirectory, loadOptions, id, mie2));
+                }
+                catch(UserCancellationException e)
+                {
+                    handleUserCancellation(e);
                 }
                 catch (Exception e) {
                     handleMissingFiles(e);
@@ -364,13 +447,18 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             new Thread(()->{
                 try {
                     finalBuilder
-                            .setLoadingMonitor(this.loadingMonitor)
+                            .setProgressMonitor(this.progressMonitor)
                             .setLoadOptions(loadOptions)
                             //skip broken cams on the most recent attempt at processing
                             .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, fullResImgDirAttempt, true)
                             .setPrimaryView(primaryViewName);
 
                     loadInstance(id, finalBuilder);
+                }
+                //shouldn't need to handle MissingImagesException because we're ignoring missing cameras/images
+                catch(UserCancellationException e)
+                {
+                    handleUserCancellation(e);
                 }
                 catch (Exception e) {
                     handleMissingFiles(e);
@@ -416,18 +504,26 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory, String primaryViewName,
         ReadonlyLoadOptionsModel loadOptions)
     {
-        this.loadingMonitor.startLoading();
+        if(this.progressMonitor.isConflictingProcess()){
+            return;
+        }
+        this.progressMonitor.start();
+        this.progressMonitor.setProcessName("Load from Agisoft Files");
 
         try
         {
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
-                .setLoadingMonitor(this.loadingMonitor)
+                .setProgressMonitor(this.progressMonitor)
                 .setLoadOptions(loadOptions)
                 .loadAgisoftFiles(xmlFile, meshFile, imageDirectory)
                 .setPrimaryView(primaryViewName);
 
             // Invoke callbacks now that view set is loaded
             loadInstance(id, builder);
+        }
+        catch(UserCancellationException e)
+        {
+            handleUserCancellation(e);
         }
         catch(Exception e)
         {
@@ -450,9 +546,9 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void setLoadingMonitor(LoadingMonitor loadingMonitor)
+    public void setProgressMonitor(ProgressMonitor progressMonitor)
     {
-        this.loadingMonitor = loadingMonitor;
+        this.progressMonitor = progressMonitor;
     }
 
     @Override

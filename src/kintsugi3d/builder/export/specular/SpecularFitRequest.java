@@ -24,6 +24,7 @@ import kintsugi3d.builder.fit.ReconstructionShaders;
 import kintsugi3d.builder.fit.SpecularFitProcess;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
+import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
@@ -67,19 +68,24 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
      * @param renderable The implementation of the Kintsugi 3D Builder renderer.
      *                   This can be used to dynamically generate renders of the current view,
      *                   or just to access the IBRResources and the graphics Context.
-     * @param callback A callback that can be fired to update the loading bar.
+     * @param monitor A callback that can be fired to update the loading bar.
      *                 If this is unused, an "infinite loading" indicator will be displayed instead.
      */
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback)
+    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, ProgressMonitor monitor)
+        throws UserCancellationException
     {
         try
         {
             // Set the output directory based on the view set's texture fit file path
             settings.setOutputDirectory(renderable.getActiveViewSet().getSupportingFilesFilePath());
 
+            if(monitor !=null){
+                monitor.setProcessName("Process Textures");
+            }
+
             // Perform the specular fit
-            new SpecularFitProcess(settings).optimizeFit(renderable.getIBRResources(), callback);
+            new SpecularFitProcess(settings).optimizeFit(renderable.getIBRResources(), monitor);
 
             // Perform reconstruction
             //performReconstruction(renderable.getIBRResources(), renderable.getIBRResources().getSpecularMaterialResources());
@@ -100,7 +106,7 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
         }
         catch(IOException e) // thrown by createReflectanceProgram
         {
-            log.error("Error executing specular fit request:", e);
+            ProjectIO.handleException("Error executing specular fit request:", e);
         }
     }
 

@@ -29,14 +29,16 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
+import kintsugi3d.builder.core.DefaultProgressMonitor;
 import kintsugi3d.builder.core.IOModel;
-import kintsugi3d.builder.core.LoadingMonitor;
+import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.controllers.menubar.AboutController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
@@ -45,6 +47,7 @@ import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
+import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.resources.ibr.MeshImportException;
 import kintsugi3d.util.Flag;
@@ -69,6 +72,7 @@ public final class ProjectIO
 
     private final Flag loaderWindowOpen = new Flag(false);
     private Flag systemSettingsModalOpen = new Flag(false);
+    private Flag progressBarsModalOpen = new Flag(false);
     private Flag aboutWindowOpen = new Flag(false);
 
 
@@ -92,41 +96,37 @@ public final class ProjectIO
         // Try to initialize file chooser in advance of when it will be needed.
         Platform.runLater(this::getProjectFileChooserSafe);
 
-        MultithreadModels.getInstance().getLoadingModel().addLoadingMonitor(new LoadingMonitor()
+        MultithreadModels.getInstance().getIOModel().addProgressMonitor(new DefaultProgressMonitor()
         {
             @Override
-            public void startLoading()
-            {
-            }
-
-            @Override
-            public void setMaximum(double maximum)
-            {
-            }
-
-            @Override
-            public void setProgress(double progress)
-            {
-            }
-
-            @Override
-            public void loadingComplete()
-            {
-            }
-
-            @Override
-            public void loadingFailed(Throwable e)
+            public void cancelComplete(UserCancellationException e)
             {
                 projectLoaded = false;
-                if(e instanceof MeshImportException){
-                    handleException("Imported object is missing texture coordinates", e);
-                } else {
+                Platform.runLater(() ->
+                {
+                    Alert alert = new Alert(AlertType.INFORMATION, "The operation was cancelled. Loading has stopped.");
+                    alert.setTitle("Cancelled");
+                    alert.setHeaderText("Cancelled");
+                    alert.show();
+                });
+            }
+
+            @Override
+            public void fail(Throwable e)
+            {
+                projectLoaded = false;
+                if (e instanceof MeshImportException)
+                {
+                    handleException(e.getMessage(), e);
+                }
+                else
+                {
                     handleException("An error occurred while loading project", e);
                 }
             }
 
             @Override
-            public void loadingWarning(Throwable e)
+            public void warn(Throwable e)
             {
                 handleException("An error occurred while loading project", e);
             }
@@ -148,12 +148,12 @@ public final class ProjectIO
         return projectLoaded;
     }
 
-    private static void handleException(String message, Throwable e)
+    public static void handleException(String message, Throwable e)
     {
         log.error("{}:", message, e);
         Platform.runLater(() ->
         {
-            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
             ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
             Alert alert = new Alert(Alert.AlertType.NONE, message + "\nSee the log for more info.", ok, showLog);
             ((ButtonBase) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
@@ -210,40 +210,9 @@ public final class ProjectIO
         return fxmlLoader.getController();
     }
 
-    private <ControllerType> ControllerType makeWindow(String title, Flag flag, Window window, String urlString) throws IOException
-    {
-        URL url = MenubarController.class.getClassLoader().getResource(urlString);
-        if (url == null)
-        {
-            throw new FileNotFoundException(urlString);
-        }
-        FXMLLoader fxmlLoader = new FXMLLoader(url);
-        Parent root = fxmlLoader.load();
-        Stage stage = new Stage();
-        stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-        stage.setTitle(title);
-        stage.setScene(new Scene(root));
-        stage.initOwner(window);
-
-        stage.setResizable(false);
-
-        flag.set(true);
-        stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
-
-        stage.show();
-
-        return fxmlLoader.getController();
-    }
-
     private static <ControllerType> ControllerType makeWindow(Window parentWindow, String title, Flag flag, String urlString) throws IOException
     {
         return makeWindow(parentWindow, title, flag, Scene::new, urlString);
-    }
-
-    private static <ControllerType> ControllerType makeWindow(
-        Window parentWindow, String title, Flag flag, int width, int height, String urlString) throws IOException
-    {
-        return makeWindow(parentWindow, title, flag, root -> new Scene(root, width, height), urlString);
     }
 
     public boolean isCreateProjectWindowOpen()
@@ -256,7 +225,7 @@ public final class ProjectIO
         projectFile = null;
         vsetFile = null;
 
-        MultithreadModels.getInstance().getLoadingModel().unload();
+        MultithreadModels.getInstance().getIOModel().unload();
         projectLoaded = true;
         MenubarController.getInstance().setToggleableShaderDisable(true);
     }
@@ -276,7 +245,7 @@ public final class ProjectIO
         if (Objects.equals(vsetFile, projectFile)) // Saved as a VSET
         {
             // Set the root directory first, then the supporting files directory
-            MultithreadModels.getInstance().getLoadingModel()
+                MultithreadModels.getInstance().getIOModel()
                     .getLoadedViewSet().setRootDirectory(projectFile.getParentFile());
 
             viewSet.setSupportingFilesDirectory(filesDirectory);
@@ -310,14 +279,6 @@ public final class ProjectIO
             while (scanner.hasNext())
             {
                 String fileName = scanner.next();
-
-//                URL url = MenubarController.class.getClassLoader().getResource(fileName);
-//                if (url == null)
-//                {
-//                    throw new FileNotFoundException(fileName);
-//                }
-//                FXMLLoader loader = new FXMLLoader(url);
-
                 FXMLLoader loader = new FXMLLoader(getClass().getResource(fileName));
                 loader.load();
 
@@ -344,62 +305,15 @@ public final class ProjectIO
             String firstPageFXMLPath = "/fxml/menubar/createnewproject/ImportOrCustomProject.fxml";
             scrollerController.setPages(pages, firstPageFXMLPath);
             scrollerController.init();
+            WelcomeWindowController.getInstance().hide();
         } catch (IOException e) {
             log.error("Could not find fxml files for \"Create New Project\" process.", e);
         }
-
-
-        //String[] fxmlFiles = fxmlFilesDirectory.list();
-
-//        if (fxmlFiles == null || fxmlFiles.length == 0) {
-//            log.error("Could not find fxml files for \"Create New Project\" process.");
-//                return;
-//        }
-//
-//        try{
-//            ArrayList<FXMLPage> pages = new ArrayList<>();
-//            for (String fileName : fxmlFiles)
-//            {
-//                String pathPrefix = "fxml/menubar/createnewproject/";
-//                String fullFileName = pathPrefix + fileName;
-//
-//                URL url = MenubarController.class.getClassLoader().getResource(fullFileName);
-//                if (url == null)
-//                {
-//                    throw new FileNotFoundException(fullFileName);
-//                }
-//                FXMLLoader loader = new FXMLLoader(url);
-//                loader.load();
-//
-//                pages.add(new FXMLPage(fullFileName, loader));
-//
-//                FXMLPageController controller = loader.getController();
-//
-//                if (controller instanceof CanConfirm){
-//                    controller.setLoadStartCallback(this::onLoadStart);
-//                    controller.setViewSetCallback(
-//                                (viewSet) ->onViewSetCreated(viewSet, parentWindow));
-//                }
-//            }
-//
-//
-//            String hostFXMLPath = "fxml/menubar/FXMLPageScroller.fxml";
-//            FXMLPageScrollerController scrollerController =
-//                    makeWindow(parentWindow, "Load Files", loaderWindowOpen, hostFXMLPath);
-//
-//            String firstPageFXMLPath = "fxml/menubar/createnewproject/ImportOrCustomProject.fxml";
-//            scrollerController.setPages(pages, firstPageFXMLPath);
-//            scrollerController.init();
-//
-//        } catch (Exception e) {
-//            handleException("An error occurred creating a new project", e);
-//        }
-
     }
 
     private static void startLoad(File projectFile, File vsetFile)
     {
-        MultithreadModels.getInstance().getLoadingModel().unload();
+        MultithreadModels.getInstance().getIOModel().unload();
 
         RecentProjects.updateRecentFiles(projectFile.getAbsolutePath());
 
@@ -411,7 +325,7 @@ public final class ProjectIO
             {
                 try
                 {
-                    MultithreadModels.getInstance().getLoadingModel()
+                    MultithreadModels.getInstance().getIOModel()
                         .loadFromVSETFile(vsetFile.getPath(), vsetFile, ViewSet.getDefaultSupportingFilesDirectory(projectFile));
                 }
                 catch (RuntimeException e)
@@ -434,7 +348,7 @@ public final class ProjectIO
             {
                 try
                 {
-                    MultithreadModels.getInstance().getLoadingModel()
+                    MultithreadModels.getInstance().getIOModel()
                         .loadFromVSETFile(vsetFile.getPath(), vsetFile);
                 }
                 catch (RuntimeException e)
@@ -458,6 +372,11 @@ public final class ProjectIO
 
     public void openProjectFromFile(File selectedFile)
     {
+        //need to check for conflicting process early so crucial info isn't unloaded
+        if(MultithreadModels.getInstance().getIOModel().getProgressMonitor().isConflictingProcess()){
+            return;
+        }
+
         //open the project, update the recent files list & recentDirectory, disable shaders which aren't useful until processing textures
         this.projectFile = selectedFile;
         RecentProjects.setMostRecentDirectory(this.projectFile.getParentFile());
@@ -488,7 +407,7 @@ public final class ProjectIO
             startLoad(projectFile, vsetFile);
 
             // Have to set loaded project file after startLoad since startLoad resets everything in order to unload a previously loaded project.
-            MultithreadModels.getInstance().getLoadingModel().setLoadedProjectFile(projectFile);
+            MultithreadModels.getInstance().getIOModel().setLoadedProjectFile(projectFile);
 
             WelcomeWindowController.getInstance().hide();
             RecentProjects.updateAllControlStructures();
@@ -535,7 +454,7 @@ public final class ProjectIO
             RecentProjects.setMostRecentDirectory(projectFile.getParentFile());
             try
             {
-                IOModel ioModel = MultithreadModels.getInstance().getLoadingModel();
+                IOModel ioModel = MultithreadModels.getInstance().getIOModel();
 
                 File filesDirectory = ViewSet.getDefaultSupportingFilesDirectory(projectFile);
                 if (projectFile.getName().endsWith(".vset"))
@@ -545,7 +464,7 @@ public final class ProjectIO
                     ioModel.saveToVSETFile(projectFile);
                     this.vsetFile = projectFile;
                     this.projectFile = null;
-                    MultithreadModels.getInstance().getLoadingModel().setLoadedProjectFile(vsetFile);
+                    MultithreadModels.getInstance().getIOModel().setLoadedProjectFile(vsetFile);
                 }
                 else
                 {
@@ -555,7 +474,7 @@ public final class ProjectIO
                     this.vsetFile = new File(filesDirectory, projectFile.getName() + ".vset");
                     ioModel.saveToVSETFile(vsetFile);
                     InternalModels.getInstance().getProjectModel().saveProjectFile(projectFile, vsetFile);
-                    MultithreadModels.getInstance().getLoadingModel().setLoadedProjectFile(projectFile);
+                    MultithreadModels.getInstance().getIOModel().setLoadedProjectFile(projectFile);
                 }
 
                 ioModel.saveGlTF(filesDirectory);
@@ -671,7 +590,7 @@ public final class ProjectIO
         projectFile = null;
         vsetFile = null;
 
-        MultithreadModels.getInstance().getLoadingModel().unload();
+        MultithreadModels.getInstance().getIOModel().unload();
         projectLoaded = false;
 
         MenubarController.getInstance().setToggleableShaderDisable(true);
@@ -683,7 +602,17 @@ public final class ProjectIO
         {
             closeProject();
             WelcomeWindowController.getInstance().show();
+            //TODO: do we want this here?
+            MenubarController.getInstance().dismissMiniProgressBar();
         }
+    }
+
+    public void openProgressBars(){
+        if(progressBarsModalOpen.get()){
+            return;
+        }
+
+        ProgressBarsController.getInstance().showStage();
     }
 
     public void openSystemSettingsModal(InternalModels internalModels, Window window) {
@@ -694,8 +623,10 @@ public final class ProjectIO
 
         try
         {
-            SystemSettingsController systemSettingsController = makeWindow("System Settings", systemSettingsModalOpen, window, "fxml/menubar/systemsettings/SystemSettings.fxml");
+            SystemSettingsController systemSettingsController = makeWindow(window, "System Settings", systemSettingsModalOpen, "fxml/menubar/systemsettings/SystemSettings.fxml");
             systemSettingsController.init(internalModels, window);
+            WelcomeWindowController.getInstance().hide();
+            systemSettingsController.getHostWindow().setOnCloseRequest(e->WelcomeWindowController.getInstance().showIfNoModelLoaded());
         }
         catch (IOException e)
         {
@@ -707,10 +638,10 @@ public final class ProjectIO
         try
         {
 
-            AboutController aboutController = makeWindow(
-                    "About Kintsugi 3D Builder", aboutWindowOpen, window, "fxml/menubar/About.fxml");
+            AboutController aboutController = makeWindow(window,
+                    "About Kintsugi 3D Builder", aboutWindowOpen, "fxml/menubar/About.fxml");
             aboutController.init();
-
+            WelcomeWindowController.getInstance().hide();
         }
         catch (Exception e)
         {

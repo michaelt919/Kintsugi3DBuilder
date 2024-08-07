@@ -42,7 +42,6 @@ import kintsugi3d.gl.glfw.CanvasWindow;
 import kintsugi3d.gl.interactive.*;
 import kintsugi3d.gl.opengl.OpenGLContext;
 import kintsugi3d.gl.opengl.OpenGLContextFactory;
-import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.window.*;
@@ -185,7 +184,7 @@ public final class Rendering
         ExtendedObjectModel objectModel = MultithreadModels.getInstance().getObjectModel();
         SettingsModel settingsModel = MultithreadModels.getInstance().getSettingsModel();
         CameraViewListModel cameraViewListModel = MultithreadModels.getInstance().getCameraViewListModel();
-        IOModel ioModel = MultithreadModels.getInstance().getLoadingModel();
+        IOModel ioModel = MultithreadModels.getInstance().getIOModel();
 
         // Bind tools
         ToolBindingModel toolBindingModel = new ToolBindingModelImpl();
@@ -352,42 +351,76 @@ public final class Rendering
         app.setFPSCap(60.0); // TODO make this configurable
 
         requestQueue.setInstanceManager(instanceManager);
-        requestQueue.setLoadingMonitor(new LoadingMonitor()
+        requestQueue.setProgressMonitor(new ProgressMonitor()
         {
             @Override
-            public void startLoading()
+            public void allowUserCancellation() throws UserCancellationException
             {
-                ioModel.getLoadingMonitor().startLoading();
+                ioModel.getProgressMonitor().allowUserCancellation();
             }
 
             @Override
-            public void setMaximum(double maximum)
+            public void cancelComplete(UserCancellationException e)
             {
-                ioModel.getLoadingMonitor().setMaximum(maximum);
+                ioModel.getProgressMonitor().cancelComplete(e);
             }
 
             @Override
-            public void setProgress(double progress)
+            public void start()
             {
-                ioModel.getLoadingMonitor().setProgress(progress);
+                ioModel.getProgressMonitor().start();
             }
 
             @Override
-            public void loadingComplete()
-            {
-                ioModel.getLoadingMonitor().loadingComplete();
+            public void setProcessName(String processName) {
+                ioModel.getProgressMonitor().setProcessName(processName);
             }
 
             @Override
-            public void loadingFailed(Throwable e)
+            public void setStageCount(int count)
             {
-                ioModel.getLoadingMonitor().loadingFailed(e);
+                ioModel.getProgressMonitor().setStageCount(count);
             }
 
             @Override
-            public void loadingWarning(Throwable e)
+            public void setStage(int stage, String message)
             {
-                ioModel.getLoadingMonitor().loadingWarning(e);
+                ioModel.getProgressMonitor().setStage(stage, message);
+            }
+
+            @Override
+            public void setMaxProgress(double maxProgress)
+            {
+                ioModel.getProgressMonitor().setMaxProgress(maxProgress);
+            }
+
+            @Override
+            public void setProgress(double progress, String message)
+            {
+                ioModel.getProgressMonitor().setProgress(progress, message);
+            }
+
+            @Override
+            public void complete()
+            {
+                ioModel.getProgressMonitor().complete();
+            }
+
+            @Override
+            public void fail(Throwable e)
+            {
+                ioModel.getProgressMonitor().fail(e);
+            }
+
+            @Override
+            public void warn(Throwable e)
+            {
+                ioModel.getProgressMonitor().warn(e);
+            }
+
+            @Override
+            public boolean isConflictingProcess() {
+                return ioModel.getProgressMonitor().isConflictingProcess();
             }
         });
 
@@ -455,7 +488,7 @@ public final class Rendering
         }
         catch(RuntimeException|InitializationException|Error e)
         {
-            Optional.ofNullable(ioModel.getLoadingMonitor()).ifPresent(loadingMonitor -> loadingMonitor.loadingFailed(e));
+            Optional.ofNullable(ioModel.getProgressMonitor()).ifPresent(monitor -> monitor.fail(e));
             throw e;
         }
     }
@@ -468,7 +501,7 @@ public final class Rendering
             if (args[0].endsWith(".vset"))
             {
                 File vsetFile = new File(args[0]);
-                new Thread(() -> MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).start();
+                new Thread(() -> MultithreadModels.getInstance().getIOModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).start();
             }
             else
             {
@@ -478,7 +511,7 @@ public final class Rendering
                     try
                     {
                         File vsetFile = MultithreadModels.getInstance().getProjectModel().openProjectFile(new File(args[0]));
-                        new Thread(() -> MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).start();
+                        new Thread(() -> MultithreadModels.getInstance().getIOModel().loadFromVSETFile(vsetFile.getPath(), vsetFile)).start();
                     }
                     catch (IOException | ParserConfigurationException | SAXException e)
                     {

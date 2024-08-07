@@ -31,7 +31,7 @@ public interface Kintsugi3DBuilderState
 
     SceneViewportModel getSceneViewportModel();
     LoadOptionsModel getLoadOptionsModel();
-    IOModel getLoadingModel();
+    IOModel getIOModel();
 
     ProjectModel getProjectModel();
 }

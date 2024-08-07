@@ -17,7 +17,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<VBox fx:id="root" alignment="CENTER" prefHeight="310.0" prefWidth="730.0" style="-fx-background-color: #000000;" styleClass="vbox" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.createnewproject.CustomImportController">
+<VBox fx:id="root" alignment="CENTER" prefHeight="310.0" prefWidth="730.0" styleClass="vbox" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.createnewproject.CustomImportController">
    <GridPane alignment="CENTER" hgap="10.0" styleClass="grid-pane" vgap="10.0" VBox.vgrow="ALWAYS">
       <columnConstraints>
          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -40,7 +40,7 @@
             <Insets />
          </GridPane.margin>
       </Text>
-      <Text layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text" text="Mesh&#10;(Wavefront OBJ file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+      <Text layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text" text="Mesh&#10;(Wavefront OBJ or PLY file)&#10;" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
          <font>
             <Font name="Monospaced Regular" size="14.0" />
          </font>

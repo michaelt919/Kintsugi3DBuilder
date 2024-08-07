@@ -11,17 +11,19 @@
 
 package kintsugi3d.builder.core;
 
-import java.util.LinkedList;
-import java.util.Queue;
-
-import kintsugi3d.gl.interactive.GraphicsRequest;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import kintsugi3d.builder.javafx.ProjectIO;
+import kintsugi3d.builder.rendering.IBRInstanceManager;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.interactive.GraphicsRequest;
+import kintsugi3d.gl.interactive.ObservableGraphicsRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.builder.rendering.IBRInstanceManager;
-import kintsugi3d.gl.interactive.ObservableGraphicsRequest;
+
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class IBRRequestManager<ContextType extends Context<ContextType>> implements IBRRequestQueue<ContextType>
 {
@@ -29,7 +31,7 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
     private final ContextType context;
     private final Queue<Runnable> requestList;
     private IBRInstanceManager<ContextType> instanceManager;
-    private LoadingMonitor loadingMonitor;
+    private ProgressMonitor progressMonitor;
 
     public IBRRequestManager(ContextType context)
     {
@@ -47,9 +49,20 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
         this.instanceManager = instanceManager;
     }
 
-    public void setLoadingMonitor(LoadingMonitor loadingMonitor)
+    public void setProgressMonitor(ProgressMonitor progressMonitor)
     {
-        this.loadingMonitor = loadingMonitor;
+        this.progressMonitor = progressMonitor;
+    }
+
+    private void handleCancellation()
+    {
+        Platform.runLater(() ->
+        {
+            Alert alert = new Alert(AlertType.INFORMATION, "The operation was cancelled. Processing has stopped.");
+            alert.setTitle("Cancelled");
+            alert.setHeaderText("Cancelled");
+            alert.show();
+        });
     }
 
     @Override
@@ -79,6 +92,10 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
                     {
                         request.executeRequest(instanceManager.getLoadedInstance());
                     }
+                    catch (UserCancellationException e)
+                    {
+                        log.error("Operation was cancelled while executing request:", e);
+                    }
                     catch (Exception | AssertionError e)
                     {
                         log.error("Error occurred while executing request:", e);
@@ -91,6 +108,10 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
     @Override
     public synchronized void addIBRRequest(ObservableIBRRequest request)
     {
+        if(this.progressMonitor.isConflictingProcess()){
+            return;
+        }
+
         if (instanceManager.getLoadedInstance() == null)
         {
             // Instance is currently null, wait for a load and then call this function again (recursive-ish)
@@ -100,9 +121,9 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
         {
             this.requestList.add(() ->
             {
-                if (loadingMonitor != null)
+                if (progressMonitor != null)
                 {
-                    loadingMonitor.startLoading();
+                    progressMonitor.start();
                 }
 
                 // Check again for null, just in case
@@ -118,21 +139,22 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
                     //noinspection ErrorNotRethrown
                     try
                     {
-                        request.executeRequest(instanceManager.getLoadedInstance(), loadingMonitor);
+                        request.executeRequest(instanceManager.getLoadedInstance(), progressMonitor);
+                    }
+                    catch (UserCancellationException e)
+                    {
+                        log.error("Operation was cancelled while executing request:", e);
+                        handleCancellation();
                     }
                     catch (Exception | AssertionError e)
                     {
-                        log.error("Error occurred while executing request:", e);
-                        Platform.runLater(() ->
-                        {
-                            new Alert(Alert.AlertType.NONE, "An error occurred processing request. Processing has stopped.\nCheck the log for more info.").show();
-                        });
+                        ProjectIO.handleException("Error occured while excecuting request", e);
                     }
                 }
 
-                if (loadingMonitor != null)
+                if (progressMonitor != null)
                 {
-                    loadingMonitor.loadingComplete();
+                    progressMonitor.complete();
                 }
             });
         }
@@ -155,6 +177,10 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
             {
                 request.executeRequest(context);
             }
+            catch (UserCancellationException e)
+            {
+                log.error("Operation was cancelled while executing request:", e);
+            }
             catch(Exception | AssertionError e)
             {
                 log.error("Error occurred while executing request:", e);
@@ -167,9 +193,12 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
     {
         this.requestList.add(() ->
         {
-            if (loadingMonitor != null)
+            if (progressMonitor != null)
             {
-                loadingMonitor.startLoading();
+                if(this.progressMonitor.isConflictingProcess()){
+                    return;
+                }
+                progressMonitor.start();
             }
 
             // Suppress warning about catching and not rethrowing AssertionError.
@@ -177,16 +206,23 @@ public class IBRRequestManager<ContextType extends Context<ContextType>> impleme
             // noinspection ErrorNotRethrown
             try
             {
-                request.executeRequest(context, loadingMonitor);
+                request.executeRequest(context, progressMonitor);
+            }
+            catch (UserCancellationException e)
+            {
+                log.error("Operation was cancelled while executing request:", e);
+                handleCancellation();
             }
             catch(Exception | AssertionError e)
             {
                 log.error("Error occurred while executing request:", e);
+                Platform.runLater(() ->
+                    new Alert(AlertType.ERROR, "An error occurred processing request. Processing has stopped.\nCheck the log for more info.").show());
             }
 
-            if (loadingMonitor != null)
+            if (progressMonitor != null)
             {
-                loadingMonitor.loadingComplete();
+                progressMonitor.complete();
             }
         });
     }

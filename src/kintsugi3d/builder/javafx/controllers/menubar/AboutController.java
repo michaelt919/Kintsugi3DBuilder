@@ -15,6 +15,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
+import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +43,7 @@ public class AboutController {
             backgroundRectangle.setWidth(scrollPane.getWidth());
             backgroundRectangle.setHeight(aboutText.getLayoutBounds().getHeight() + 20); // +20 to account for margins
 
+            aboutText.getScene().getWindow().setOnCloseRequest(e->WelcomeWindowController.getInstance().showIfNoModelLoaded());
         }
         catch (IOException e)
         {

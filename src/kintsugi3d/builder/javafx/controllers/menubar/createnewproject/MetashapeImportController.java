@@ -1,5 +1,6 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
+
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -247,7 +248,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         alertShown = true;
         Platform.runLater(() ->
         {
-            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
             ButtonType openCustomProj = new ButtonType("Create Custom Project", ButtonBar.ButtonData.YES);
 
             Alert alert = new Alert(Alert.AlertType.NONE,"Please select another chunk or create a custom project.", ok, openCustomProj);
@@ -337,12 +338,12 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
         if (viewSetCallback != null) {
             //"force" the user to save their project (user can still cancel saving)
-            MultithreadModels.getInstance().getLoadingModel().addViewSetLoadCallback(
+            MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
                     viewSet ->viewSetCallback.accept(viewSet));
         }
 
         new Thread(() ->
-                MultithreadModels.getInstance().getLoadingModel()
+                MultithreadModels.getInstance().getIOModel()
                         .loadAgisoftFromZIP(
                                 metashapeObjectChunk.getFramePath(),
                                 metashapeObjectChunk,

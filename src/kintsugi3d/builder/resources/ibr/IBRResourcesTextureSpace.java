@@ -14,14 +14,12 @@ package kintsugi3d.builder.resources.ibr;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.Date;
 import java.util.function.Supplier;
 import javax.imageio.ImageIO;
 
-import kintsugi3d.builder.core.ColorAppearanceMode;
-import kintsugi3d.builder.core.LoadingMonitor;
-import kintsugi3d.builder.core.TextureResolution;
-import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
@@ -58,7 +56,7 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
 
     IBRResourcesTextureSpace(
         ContextType context, ViewSet viewSet, VertexGeometry geometry, TextureLoadOptions loadOptions,
-        int texWidth, int texHeight, LoadingMonitor loadingMonitor) throws IOException
+        int texWidth, int texHeight, ProgressMonitor progressMonitor) throws IOException
     {
         super(new IBRSharedResources<>(context, viewSet, geometry, loadOptions), true);
 
@@ -83,11 +81,12 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
      * @param loadOptions
      * @param texWidth
      * @param texHeight
-     * @param loadingMonitor
+     * @param progressMonitor
      * @throws IOException
      */
     IBRResourcesTextureSpace(IBRSharedResources<ContextType> sharedResources, Supplier<GeometryTextures<ContextType>> geometryTextureFactory,
-         File textureDirectory, TextureLoadOptions loadOptions, int texWidth, int texHeight, LoadingMonitor loadingMonitor) throws IOException
+         File textureDirectory, TextureLoadOptions loadOptions, int texWidth, int texHeight, ProgressMonitor progressMonitor)
+             throws IOException, UserCancellationException
     {
         super(sharedResources, false);
 
@@ -114,9 +113,10 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
                 .createTexture();
         }
 
-        if(loadingMonitor != null)
+        if(progressMonitor != null)
         {
-            loadingMonitor.setMaximum(getViewSet().getCameraPoseCount());
+            progressMonitor.setMaxProgress(getViewSet().getCameraPoseCount());
+            progressMonitor.setStage(0, "Loading textures...");
         }
 
         try
@@ -124,16 +124,20 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
             // Iterate over the layers to load in the texture array
             for (int k = 0; k < getViewSet().getCameraPoseCount(); k++)
             {
-                log.info("Loading camera pose {}/{}", k, getViewSet().getCameraPoseCount());
+                if (progressMonitor != null)
+                {
+                    progressMonitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", getViewSet().getImageFileName(k), k+1, getViewSet().getCameraPoseCount()));
+                    progressMonitor.allowUserCancellation();
+                }
 
                 textureArray.loadLayer(k,
                     ImageFinder.getInstance().findImageFile(new File(textureDirectory, getViewSet().getImageFileName(k))),
                     true);
+            }
 
-                if (loadingMonitor != null)
-                {
-                    loadingMonitor.setProgress(k + 1);
-                }
+            if (progressMonitor != null)
+            {
+                progressMonitor.setProgress(getViewSet().getCameraPoseCount(), "All images loaded.");
             }
         }
         catch (IOException e)
@@ -146,9 +150,9 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
 
         log.info("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
-        if (loadingMonitor != null)
+        if (progressMonitor != null)
         {
-            loadingMonitor.setMaximum(0.0);
+            progressMonitor.setStage(1, "Finished loading textures.");
         }
 
         this.geometryTextures = geometryTextureFactory.get();
@@ -162,20 +166,20 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
      * @param loadOptions
      * @param texWidth
      * @param texHeight
-     * @param loadingMonitor
+     * @param progressMonitor
      * @throws IOException
      */
     IBRResourcesTextureSpace(IBRSharedResources<ContextType> sharedResources, File textureDirectory,
-         TextureLoadOptions loadOptions, int texWidth, int texHeight, LoadingMonitor loadingMonitor) throws IOException
+         TextureLoadOptions loadOptions, int texWidth, int texHeight, ProgressMonitor progressMonitor) throws IOException, UserCancellationException
     {
         this(sharedResources, () -> sharedResources.getGeometryResources().createGeometryFramebuffer(texWidth, texHeight),
-            textureDirectory, loadOptions, texWidth, texHeight, loadingMonitor);
+            textureDirectory, loadOptions, texWidth, texHeight, progressMonitor);
     }
 
     IBRResourcesTextureSpace(IBRSharedResources<ContextType> sharedResources, File textureDirectory,
-         TextureLoadOptions loadOptions, IntVector2 dimensions, LoadingMonitor loadingMonitor) throws IOException
+         TextureLoadOptions loadOptions, IntVector2 dimensions, ProgressMonitor progressMonitor) throws IOException, UserCancellationException
     {
-        this(sharedResources, textureDirectory, loadOptions, dimensions.x, dimensions.y, loadingMonitor);
+        this(sharedResources, textureDirectory, loadOptions, dimensions.x, dimensions.y, progressMonitor);
     }
 
     private static IntVector2 readDimensionsFromFile(File imageFile) throws IOException
@@ -192,12 +196,12 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
      * @throws IOException
      */
     IBRResourcesTextureSpace(IBRSharedResources<ContextType> sharedResources, File textureDirectory,
-         TextureLoadOptions loadOptions, LoadingMonitor loadingMonitor) throws IOException
+         TextureLoadOptions loadOptions, ProgressMonitor progressMonitor) throws IOException, UserCancellationException
     {
         this(sharedResources, textureDirectory, loadOptions,
             readDimensionsFromFile(ImageFinder.getInstance().findImageFile(new File(textureDirectory,
                 sharedResources.getViewSet().getImageFileName(sharedResources.getViewSet().getPrimaryViewIndex())))),
-            loadingMonitor);
+            progressMonitor);
     }
 
     @Override

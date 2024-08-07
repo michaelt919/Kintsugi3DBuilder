@@ -13,14 +13,16 @@ package kintsugi3d.builder.export.general;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.function.Consumer;
 
-import kintsugi3d.gl.core.*;
 import kintsugi3d.builder.core.IBRInstance;
 import kintsugi3d.builder.core.ObservableIBRRequest;
-import kintsugi3d.builder.core.LoadingMonitor;
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
+import kintsugi3d.gl.core.*;
 
 class MultiframeRenderRequest extends RenderRequestBase
 {
@@ -52,7 +54,8 @@ class MultiframeRenderRequest extends RenderRequestBase
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
+    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, ProgressMonitor monitor)
+        throws IOException, UserCancellationException
     {
         IBRResourcesImageSpace<ContextType> resources = renderable.getIBRResources();
 
@@ -63,9 +66,16 @@ class MultiframeRenderRequest extends RenderRequestBase
             Drawable<ContextType> drawable = createDrawable(program, resources)
         )
         {
-
+            if(monitor != null){
+                monitor.setProcessName("Generic Export");
+            }
             for (int i = 0; i < frameCount; i++)
             {
+                if (monitor != null)
+                {
+                    monitor.allowUserCancellation();
+                }
+
                 program.setUniform("frame", i);
                 program.setUniform("frameCount", frameCount);
                 program.setUniform("model_view", renderable.getActiveViewSet().getCameraPose(0));
@@ -81,9 +91,10 @@ class MultiframeRenderRequest extends RenderRequestBase
                 getOutputDirectory().mkdirs();
                 framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", exportFile);
 
-                if (callback != null)
+                if (monitor != null)
                 {
-                    callback.setProgress((double) i / (double) frameCount);
+                    monitor.setProgress((double) i / (double) frameCount,
+                        MessageFormat.format("Frame {0}/{1}", i+1, frameCount));
                 }
             }
         }

@@ -15,12 +15,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-import kintsugi3d.gl.core.*;
 import kintsugi3d.builder.core.IBRInstance;
 import kintsugi3d.builder.core.ObservableIBRRequest;
-import kintsugi3d.builder.core.LoadingMonitor;
+import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
+import kintsugi3d.gl.core.*;
 
 class SingleFrameRenderRequest extends RenderRequestBase
 {
@@ -52,7 +52,7 @@ class SingleFrameRenderRequest extends RenderRequestBase
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, LoadingMonitor callback) throws IOException
+    public <ContextType extends Context<ContextType>> void executeRequest(IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
     {
         IBRResourcesImageSpace<ContextType> resources = renderable.getIBRResources();
 
@@ -63,6 +63,9 @@ class SingleFrameRenderRequest extends RenderRequestBase
             Drawable<ContextType> drawable = createDrawable(program, resources)
         )
         {
+            if(monitor != null){
+                monitor.setProcessName("Generic Export");
+            }
 
             program.setUniform("model_view", renderable.getActiveViewSet().getCameraPose(0));
             program.setUniform("projection",

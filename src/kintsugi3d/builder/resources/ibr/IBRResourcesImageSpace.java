@@ -13,14 +13,17 @@ package kintsugi3d.builder.resources.ibr;
 
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import javax.imageio.ImageIO;
 import javax.xml.stream.XMLStreamException;
+
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
@@ -97,7 +100,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         private VertexGeometry geometry;
         private File imageDirectoryOverride;
         private ReadonlyLoadOptionsModel loadOptions;
-        private LoadingMonitor loadingMonitor;
+        private ProgressMonitor progressMonitor;
 
         private float gamma;
         private double[] linearLuminanceValues;
@@ -135,9 +138,9 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
-        public Builder<ContextType> setLoadingMonitor(LoadingMonitor loadingMonitor)
+        public Builder<ContextType> setProgressMonitor(ProgressMonitor progressMonitor)
         {
-            this.loadingMonitor = loadingMonitor;
+            this.progressMonitor = progressMonitor;
             return this;
         }
 
@@ -148,7 +151,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             this.encodedLuminanceValues = Arrays.copyOf(encodedLuminanceValues, encodedLuminanceValues.length);
             return this;
         }
-
 
         public Builder<ContextType> loadVSETFile(File vsetFile, File supportingFilesDirectory) throws Exception
         {
@@ -399,18 +401,18 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
-        public Builder<ContextType> generateUndistortedPreviewImages() throws IOException
+        public Builder<ContextType> generateUndistortedPreviewImages() throws IOException, UserCancellationException
         {
             if (this.viewSet != null)
             {
                 IBRResourcesImageSpace.generateUndistortedPreviewImages(
-                    this.viewSet, this.loadOptions.getMaxLoadingThreads(), this.loadingMonitor);
+                    this.viewSet, this.loadOptions.getMaxLoadingThreads(), this.progressMonitor);
             }
 
             return this;
         }
 
-        public IBRResourcesImageSpace<ContextType> create() throws IOException
+        public IBRResourcesImageSpace<ContextType> create() throws IOException, UserCancellationException
         {
             if (linearLuminanceValues != null && encodedLuminanceValues != null)
             {
@@ -432,7 +434,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 // Load geometry if it wasn't specified but a view set was.
                 geometry = VertexGeometry.createFromGeometryFile(viewSet.getGeometryFile());
             }
-            return new IBRResourcesImageSpace<>(context, viewSet, geometry, loadOptions, loadingMonitor);
+
+            return new IBRResourcesImageSpace<>(context, viewSet, geometry, loadOptions, progressMonitor);
         }
     }
 
@@ -442,7 +445,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     }
 
     private IBRResourcesImageSpace(ContextType context, ViewSet viewSet, VertexGeometry geometry,
-        ReadonlyLoadOptionsModel loadOptions, LoadingMonitor loadingMonitor) throws IOException
+        ReadonlyLoadOptionsModel loadOptions, ProgressMonitor progressMonitor) throws IOException, UserCancellationException
     {
         // IAN: This super call should be creating the geometry
         super(new IBRSharedResources<>(context, viewSet, geometry,
@@ -490,15 +493,20 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             loadOptions.configureColorTextureBuilder(textureArrayBuilder);
             colorTextures = textureArrayBuilder.createTexture();
 
-            if(loadingMonitor != null)
+            if(progressMonitor != null)
             {
-                loadingMonitor.setMaximum(viewSet.getCameraPoseCount());
+                progressMonitor.setStage(0, "Loading preview-resolution images...");
+                progressMonitor.setMaxProgress(viewSet.getCameraPoseCount());
             }
 
             int m = viewSet.getCameraPoseCount();
             for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
             {
-                log.info("Loading camera pose {}/{}", i, m);
+                if (progressMonitor != null)
+                {
+                    progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i + 1, viewSet.getCameraPoseCount()));
+                    progressMonitor.allowUserCancellation();
+                }
 
                 try
                 {
@@ -511,11 +519,11 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                     // If the file is not found, continue and try to load other images.
                     log.error("Failed to load image.", e);
                 }
+            }
 
-                if(loadingMonitor != null)
-                {
-                    loadingMonitor.setProgress(i+1);
-                }
+            if (progressMonitor != null)
+            {
+                progressMonitor.setProgress(viewSet.getCameraPoseCount(), "All images loaded.");
             }
 
             log.info("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
@@ -525,9 +533,9 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             this.colorTextures = null;
         }
 
-        if (loadingMonitor != null)
+        if (progressMonitor != null)
         {
-            loadingMonitor.setMaximum(0.0);
+            progressMonitor.setStage(1, "Finished loading images.");
         }
 
         // Store the camera projections in a uniform buffer
@@ -836,7 +844,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         return new SingleCalibratedImageResource<>(getContext(), getViewSet(), viewIndex, imageFile, getGeometry(), loadOptions);
     }
 
-    public ImageCache<ContextType> cache(ImageCacheSettings settings, LoadingMonitor callback) throws IOException
+    public ImageCache<ContextType> cache(ImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException
     {
         settings.setCacheFolderName(getViewSet().getUuid().toString());
 
@@ -844,7 +852,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         if (!cache.isInitialized())
         {
-            cache.initialize(callback);
+            cache.initialize(monitor);
         }
 
         return cache;
@@ -872,14 +880,14 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         }
     }
 
-    private static void throwUndistortFailed(LoadingMonitor loadingMonitor, AtomicInteger failedCount) throws IOException
+    private static void throwUndistortFailed(ProgressMonitor progressMonitor, AtomicInteger failedCount) throws IOException
     {
         IOException e = new IOException("Failed to undistort " + failedCount.get() + " images");
-        loadingMonitor.loadingWarning(e);
+        progressMonitor.warn(e);
 
         // Generating preview images partially failed, but we'll try to load the rest of the project.
         // Go back to indeterminate progress until it starts to actually load for rendering
-        loadingMonitor.setMaximum(0.0);
+        progressMonitor.setMaxProgress(0.0);
 
         throw e;
     }
@@ -900,7 +908,6 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     private static void markFinished(ViewSet viewSet, AtomicInteger finishedCount)
     {
         finishedCount.getAndAdd(1);
-        log.info("Finished image {}/{}", finishedCount, viewSet.getCameraPoseCount());
     }
 
     private static void logExists(File previewImageFile)
@@ -913,8 +920,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
      * @param viewSet
      * @throws IOException
      */
-    private static void generateUndistortedPreviewImages(ViewSet viewSet, int maxLoadingThreads, LoadingMonitor loadingMonitor)
-        throws IOException
+    private static void generateUndistortedPreviewImages(ViewSet viewSet, int maxLoadingThreads, ProgressMonitor progressMonitor)
+        throws IOException, UserCancellationException
     {
         if (Objects.equals(viewSet.getRelativePreviewImagePathName(), viewSet.getRelativeFullResImagePathName()))
         {
@@ -932,97 +939,117 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
             viewSet.getPreviewImageFilePath().mkdirs();
 
-            loadingMonitor.setMaximum(viewSet.getCameraPoseCount());
-            loadingMonitor.setProgress(0);
+            progressMonitor.setMaxProgress(viewSet.getCameraPoseCount());
 
             AtomicInteger finishedCount = new AtomicInteger(0);
             AtomicInteger failedCount = new AtomicInteger(0);
+            AtomicReference<UserCancellationException> cancelled = new AtomicReference<>(null);
 
             if (MULTITHREAD_PREVIEW_IMAGE_GENERATION)
             {
-                multithreadPreviewImgGeneration(viewSet, maxLoadingThreads, loadingMonitor, finishedCount, failedCount);
+                multithreadPreviewImgGeneration(viewSet, maxLoadingThreads, progressMonitor, finishedCount, failedCount);
             }
-            else
+            else // sequential mode
             {
-                sequentialPreviewImgGeneration(viewSet, loadingMonitor, finishedCount, failedCount);
+                sequentialPreviewImgGeneration(viewSet, progressMonitor, cancelled, finishedCount, failedCount);
             }
 
             // Wait for all threads to finish
-            while (failedCount.get() + finishedCount.get() < viewSet.getCameraPoseCount())
+            while (cancelled.get() == null && failedCount.get() + finishedCount.get() < viewSet.getCameraPoseCount())
             {
                 Thread.onSpinWait();
             }
 
-            if (failedCount.get() > 0)
+            if (cancelled.get() != null)
             {
-                throwUndistortFailed(loadingMonitor, failedCount);
+                throw cancelled.get();
+            }
+            else if (failedCount.get() > 0)
+            {
+                throwUndistortFailed(progressMonitor, failedCount);
             }
             else
             {
                 // Generating preview images is now complete.
                 // Go back to indeterminate progress until it starts to actually load for rendering
-                loadingMonitor.setMaximum(0.0);
+                progressMonitor.setMaxProgress(0.0);
                 log.info("Undistorted preview images generated in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
             }
         }
     }
 
-    private static void sequentialPreviewImgGeneration(ViewSet viewSet, LoadingMonitor loadingMonitor, AtomicInteger finishedCount, AtomicInteger failedCount) {
+    private static void sequentialPreviewImgGeneration(ViewSet viewSet, ProgressMonitor progressMonitor,
+        AtomicReference<UserCancellationException> cancelled, AtomicInteger finishedCount, AtomicInteger failedCount)
+    {
         // Do the undistortion on the rendering thread
         Rendering.runLater(new GraphicsRequest()
         {
             @Override
-            public <ContextType extends Context<ContextType>> void executeRequest(ContextType context)
+            public <ContextType extends Context<ContextType>> void executeRequest(ContextType context) throws UserCancellationException
             {
-               for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
-               {
-                   loadingMonitor.setProgress(i);
+                for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+                {
+                    progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i+1, viewSet.getCameraPoseCount()));
 
-                   try
-                   {
-                       // Check if the image is there first
-                       File previewImageFile = viewSet.findPreviewImageFile(i);
-                       logExists(previewImageFile);
-                       markFinished(viewSet, finishedCount);
-                   }
-                   catch (FileNotFoundException e)
-                   {
-                       try
-                       {
-                           // Only generate the image if it wasn't found
-                           int projectionIndex = viewSet.getCameraProjectionIndex(i);
-                           if (viewSet.getCameraProjection(projectionIndex) instanceof DistortionProjection)
-                           {
-                               BufferedImage decodedImage = getDecodedImage(viewSet, i);
-                               log.info("Undistorting image {}", i);
-                               BufferedImage imageOut = undistortImage(decodedImage, viewSet, projectionIndex, context);
-                               log.info("Saving image {}", i);
-                               ImageIO.write(imageOut, "PNG", viewSet.getPreviewImageFile(i));
-                               logFinished(viewSet.getPreviewImageFile(i));
-                           }
-                           else
-                           {
-                               // Fallback to simply resizing without undistorting
-                               File fullResImageFile = viewSet.findFullResImageFile(i);
-                               resizeImage(fullResImageFile, viewSet, i);
-                           }
+                    try
+                    {
+                        progressMonitor.allowUserCancellation();
+                    }
+                    catch (UserCancellationException e)
+                    {
+                        cancelled.set(e); // forward exception to another thread
+                        throw e;
+                    }
 
-                           markFinished(viewSet, finishedCount);
-                       }
-                       catch (RuntimeException | IOException ex)
-                       {
-                           log.error(ex.getMessage(), ex);
-                           failedCount.getAndAdd(1);
-                       }
-                   }
-               }
+                    try
+                    {
+                        // Check if the image is there first
+                        File previewImageFile = viewSet.findPreviewImageFile(i);
+                        logExists(previewImageFile);
+                        markFinished(viewSet, finishedCount);
+                    }
+                    catch (FileNotFoundException e)
+                    {
+                        try
+                        {
+                            // Only generate the image if it wasn't found
+                            int projectionIndex = viewSet.getCameraProjectionIndex(i);
+                            if (viewSet.getCameraProjection(projectionIndex) instanceof DistortionProjection)
+                            {
+                                BufferedImage decodedImage = getDecodedImage(viewSet, i);
+                                log.info("Undistorting image {}", i);
+                                BufferedImage imageOut = undistortImage(decodedImage, viewSet, projectionIndex, context);
+                                log.info("Saving image {}", i);
+                                ImageIO.write(imageOut, "PNG", viewSet.getPreviewImageFile(i));
+                                logFinished(viewSet.getPreviewImageFile(i));
+                            }
+                            else
+                            {
+                                // Fallback to simply resizing without undistorting
+                                File fullResImageFile = viewSet.findFullResImageFile(i);
+                                resizeImage(fullResImageFile, viewSet, i);
+                            }
+
+                            markFinished(viewSet, finishedCount);
+                        }
+                        catch (RuntimeException | IOException ex)
+                        {
+                            log.error(ex.getMessage(), ex);
+                            failedCount.getAndAdd(1);
+                        }
+                    }
+                }
             }
         });
 
         log.info("Waiting for undistortion to finish on rendering thread");
     }
 
-    private static void multithreadPreviewImgGeneration(ViewSet viewSet, int maxLoadingThreads, LoadingMonitor loadingMonitor, AtomicInteger finishedCount, AtomicInteger failedCount) {
+    private static void multithreadPreviewImgGeneration(ViewSet viewSet, int maxLoadingThreads, ProgressMonitor progressMonitor,
+        AtomicInteger finishedCount, AtomicInteger failedCount)
+    {
+        progressMonitor.setProgress(0, "Importing and downsizing images (multithread)...");
+
         // Need to use custom ForkJoinPool so that number of threads doesn't go out of control and use up the Java heap space
         ForkJoinPool customThreadPool = new ForkJoinPool(maxLoadingThreads);
 
@@ -1036,7 +1063,9 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                     File previewImageFile = viewSet.findPreviewImageFile(i);
                     logExists(previewImageFile);
                     markFinished(viewSet, finishedCount);
-                    loadingMonitor.setProgress(finishedCount.get() + failedCount.get());
+                    progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
+                        MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(i),
+                            finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
                 }
                 catch (FileNotFoundException e)
                 {
@@ -1066,7 +1095,9 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                                                 ImageIO.write(imageOut, "PNG", viewSet.getPreviewImageFile(i));
                                                 logFinished(viewSet.getPreviewImageFile(i));
                                                 markFinished(viewSet, finishedCount);
-                                                loadingMonitor.setProgress(finishedCount.get() + failedCount.get());
+                                                progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
+                                                    MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(i),
+                                                        finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
                                             }
                                             catch (IOException|RuntimeException ex)
                                             {
@@ -1102,7 +1133,9 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                             File fullResImageFile = viewSet.findFullResImageFile(i);
                             resizeImage(fullResImageFile, viewSet, i);
                             markFinished(viewSet, finishedCount);
-                            loadingMonitor.setProgress(finishedCount.get() + failedCount.get());
+                            progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
+                                MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(i),
+                                    finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
                         }
                         catch (IOException|RuntimeException ex)
                         {

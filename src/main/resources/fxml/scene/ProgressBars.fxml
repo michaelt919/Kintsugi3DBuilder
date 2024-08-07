@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.text.*?>
+
+<!--
+  ~ Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<GridPane prefWidth="924.0" styleClass="grid-pane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController">
+   <columnConstraints>
+      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+   </columnConstraints>
+   <rowConstraints>
+      <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+   </rowConstraints>
+   <children>
+      <VBox>
+         <children>
+            <Label fx:id="overallTextLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeTitle" text="Loading..." wrapText="true">
+               <font>
+                  <Font name="Segoe UI" size="28.0" />
+               </font>
+               <padding>
+                  <Insets right="20.0" />
+               </padding>
+            </Label>
+            <VBox maxWidth="1.7976931348623157E308">
+               <children>
+                  <Label alignment="TOP_LEFT" style="-fx-text-fill: #CECECE;" styleClass="wireframeSubtitle" text="Overall Progress">
+                     <font>
+                        <Font size="20.0" />
+                     </font>
+                  </Label>
+                  <ProgressBar fx:id="overallProgressBar" maxWidth="1.7976931348623157E308" prefHeight="40.0" prefWidth="582.0" progress="0.0">
+                     <VBox.margin>
+                        <Insets left="12.0" top="16.0" />
+                     </VBox.margin>
+                     <padding>
+                        <Insets right="52.0" />
+                     </padding>
+                  </ProgressBar>
+                  <HBox spacing="4.0">
+                     <children>
+                        <Label fx:id="totalEstimTimeRemainingLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="Calculating remaining time... ">
+                           </Label>
+                        <Label fx:id="totalElapsedTimeLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="(--:--:-- Lapsed)">
+                           </Label>
+                     </children>
+                     <VBox.margin>
+                        <Insets left="20.0" top="8.0" />
+                     </VBox.margin>
+                  </HBox>
+               </children>
+               <VBox.margin>
+                  <Insets left="16.0" top="16.0" />
+               </VBox.margin>
+            </VBox>
+            <VBox maxWidth="1.7976931348623157E308">
+               <children>
+                  <Label fx:id="localTextLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeBodyLarge" text="...">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                     <VBox.margin>
+                        <Insets />
+                     </VBox.margin>
+                  </Label>
+                  <ProgressBar fx:id="localProgressBar" maxWidth="1.7976931348623157E308" prefHeight="24.0" prefWidth="582.0" progress="0.0">
+                     <VBox.margin>
+                        <Insets left="20.0" top="16.0" />
+                     </VBox.margin>
+                     <padding>
+                        <Insets right="72.0" />
+                     </padding>
+                  </ProgressBar>
+                  <HBox spacing="2.0">
+                     <children>
+                        <Label fx:id="localEstimTimeRemainingLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeCaption" text="Calculating remaining time... " />
+                        <Label fx:id="localElapsedTimeLabel" style="-fx-text-fill: #CECECE;" styleClass="wireframeCaption" text="(--:--:-- Lapsed)" />
+                     </children>
+                     <padding>
+                        <Insets left="32.0" />
+                     </padding>
+                     <VBox.margin>
+                        <Insets top="8.0" />
+                     </VBox.margin>
+                  </HBox>
+               </children>
+               <VBox.margin>
+                  <Insets left="28.0" top="48.0" />
+               </VBox.margin>
+            </VBox>
+            <HBox alignment="CENTER_LEFT">
+               <children>
+                  <Line endX="876.0" fill="#cecece" stroke="#cecece" strokeWidth="2.0">
+                     <HBox.margin>
+                        <Insets top="80.0" />
+                     </HBox.margin></Line>
+               </children>
+            </HBox>
+            <GridPane>
+               <VBox.margin>
+                  <Insets bottom="52.0" right="24.0" top="36.0" />
+               </VBox.margin>
+               <columnConstraints>
+                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="458.0" minWidth="10.0" />
+                  <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="751.0" minWidth="10.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="751.0" minWidth="10.0" />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+               </rowConstraints>
+               <children>
+                  <Button fx:id="cancelButton" alignment="CENTER" mnemonicParsing="false" prefHeight="40.0" styleClass="wireframeBodyLarge" text="Cancel">
+                     <padding>
+                        <Insets left="30.0" right="30.0" />
+                     </padding></Button>
+                  <Label fx:id="pageCountLabel" alignment="CENTER" text="4/5" visible="false" GridPane.columnIndex="1" />
+                  <Button fx:id="doneButton" alignment="CENTER" mnemonicParsing="false" prefHeight="40.0" prefWidth="112.0" styleClass="wireframeBodyLarge" text="Done" GridPane.columnIndex="2" GridPane.halignment="RIGHT" />
+               </children>
+            </GridPane>
+         </children>
+         <GridPane.margin>
+            <Insets left="24.0" top="48.0" />
+         </GridPane.margin>
+      </VBox>
+   </children>
+</GridPane>

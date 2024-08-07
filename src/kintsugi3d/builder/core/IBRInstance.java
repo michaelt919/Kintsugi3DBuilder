@@ -11,6 +11,8 @@
 
 package kintsugi3d.builder.core;
 
+import java.io.File;
+
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.state.SceneViewport;
@@ -20,8 +22,6 @@ import kintsugi3d.gl.core.FramebufferSize;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.interactive.InteractiveRenderable;
 import kintsugi3d.gl.vecmath.Matrix4;
-
-import java.io.File;
 
 /**
  * Interface for the implementation of the actual image-based rendering / relighting technique.
@@ -69,9 +69,9 @@ public interface IBRInstance<ContextType extends Context<ContextType>> extends I
     /**
      * Sets the loading monitor for this implementation.
      * The implementation may use this as a callback to update a loading bar as the object is being loaded.
-     * @param loadingMonitor
+     * @param progressMonitor
      */
-    void setLoadingMonitor(LoadingMonitor loadingMonitor);
+    void setProgressMonitor(ProgressMonitor progressMonitor);
 
     /**
      * Gets the view set for the currently loaded object.

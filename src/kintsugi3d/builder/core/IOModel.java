@@ -11,115 +11,165 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.util.EncodableColorImage;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
-import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
-import kintsugi3d.util.AbstractImage;
-import kintsugi3d.util.EncodableColorImage;
-
 public class IOModel
 {
-    private static class AggregateLoadingMonitor implements LoadingMonitor
+    private static class AggregateProgressMonitor implements ProgressMonitor
     {
-        private final Collection<LoadingMonitor> subMonitors = new ArrayList<>();
+        private final Collection<ProgressMonitor> subMonitors = new ArrayList<>();
 
-        void addSubMonitor(LoadingMonitor monitor)
+        void addSubMonitor(ProgressMonitor monitor)
         {
             subMonitors.add(monitor);
         }
 
         @Override
-        public void startLoading()
+        public void allowUserCancellation() throws UserCancellationException
         {
-            for (LoadingMonitor monitor : subMonitors)
+            for (ProgressMonitor monitor : subMonitors)
             {
-                monitor.startLoading();
+                monitor.allowUserCancellation();
             }
         }
 
         @Override
-        public void setMaximum(double maximum)
+        public void cancelComplete(UserCancellationException e)
         {
-            for (LoadingMonitor monitor : subMonitors)
+            for (ProgressMonitor monitor : subMonitors)
             {
-                monitor.setMaximum(maximum);
+                monitor.cancelComplete(e);
             }
         }
 
         @Override
-        public void setProgress(double progress)
+        public void start()
         {
-            for (LoadingMonitor monitor : subMonitors)
+            for (ProgressMonitor monitor : subMonitors)
             {
-                monitor.setProgress(progress);
+                monitor.start();
             }
         }
 
         @Override
-        public void loadingComplete()
-        {
-            for (LoadingMonitor monitor : subMonitors)
+        public void setProcessName(String processName) {
+            for (ProgressMonitor monitor : subMonitors)
             {
-                monitor.loadingComplete();
+                monitor.setProcessName(processName);
             }
         }
 
         @Override
-        public void loadingFailed(Throwable e)
+        public void setStageCount(int count)
         {
-            for (LoadingMonitor monitor : subMonitors)
+            for (ProgressMonitor monitor : subMonitors)
             {
-                monitor.loadingFailed(e);
+                monitor.setStageCount(count);
             }
         }
 
         @Override
-        public void loadingWarning(Throwable e)
+        public void setStage(int stage, String message)
         {
-            for (LoadingMonitor monitor : subMonitors)
+            for (ProgressMonitor monitor : subMonitors)
             {
-                monitor.loadingWarning(e);
+                monitor.setStage(stage, message);
             }
+        }
+
+        @Override
+        public void setMaxProgress(double maxProgress)
+        {
+            for (ProgressMonitor monitor : subMonitors)
+            {
+                monitor.setMaxProgress(maxProgress);
+            }
+        }
+
+        @Override
+        public void setProgress(double progress, String message)
+        {
+            for (ProgressMonitor monitor : subMonitors)
+            {
+                monitor.setProgress(progress, message);
+            }
+        }
+
+        @Override
+        public void complete()
+        {
+            for (ProgressMonitor monitor : subMonitors)
+            {
+                monitor.complete();
+            }
+        }
+
+        @Override
+        public void fail(Throwable e)
+        {
+            for (ProgressMonitor monitor : subMonitors)
+            {
+                monitor.fail(e);
+            }
+        }
+
+        @Override
+        public void warn(Throwable e)
+        {
+            for (ProgressMonitor monitor : subMonitors)
+            {
+                monitor.warn(e);
+            }
+        }
+
+        @Override
+        public boolean isConflictingProcess() {
+            boolean processing = false;
+            for (ProgressMonitor monitor : subMonitors)
+            {
+                if(monitor.isConflictingProcess()){
+                    processing = true;
+                }
+            }
+
+            return processing;
         }
     }
 
     private IOHandler handler;
-    private final AggregateLoadingMonitor loadingMonitor = new AggregateLoadingMonitor();
+    private final AggregateProgressMonitor progressMonitor = new AggregateProgressMonitor();
     private ReadonlyLoadOptionsModel loadOptionsModel;
 
-    public LoadingMonitor getLoadingMonitor()
+    public ProgressMonitor getProgressMonitor()
     {
-        return loadingMonitor;
+        return progressMonitor;
     }
 
     public void setLoadingHandler(IOHandler handler)
     {
         this.handler = handler;
-        this.handler.setLoadingMonitor(loadingMonitor);
+        this.handler.setProgressMonitor(progressMonitor);
     }
 
-    public void addLoadingMonitor(LoadingMonitor monitor)
+    public void addProgressMonitor(ProgressMonitor monitor)
     {
-        this.loadingMonitor.addSubMonitor(monitor);
+        this.progressMonitor.addSubMonitor(monitor);
     }
 
     public void setLoadOptionsModel(ReadonlyLoadOptionsModel loadOptionsModel)
     {
         this.loadOptionsModel = loadOptionsModel;
-    }
-
-    public boolean isInstanceLoaded()
-    {
-        return this.handler != null && this.handler.isInstanceLoaded();
     }
 
     public void addViewSetLoadCallback(Consumer<ViewSet> callback)

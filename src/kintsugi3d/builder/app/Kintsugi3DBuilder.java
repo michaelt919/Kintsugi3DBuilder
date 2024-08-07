@@ -80,6 +80,8 @@ public final class Kintsugi3DBuilder
             Configuration.GLFW_LIBRARY_NAME.set("glfw_async");
         }
 
+        MainApplication.setArgs(args);
+
         if (GRAPHICS_WINDOW_ENABLED)
         {
             try (FileOutputStream standardErr = new FileOutputStream(
