@@ -40,7 +40,9 @@ public class ProgressBarsController {
 
     @FXML private ProgressBar overallProgressBar;
     @FXML private ProgressBar localProgressBar;
+
     @FXML private Button cancelButton;
+    @FXML private Label pageCountLabel; //TODO: imp this, currently invisible
     @FXML private Button doneButton;
 
     private Stopwatch overallStopwatch;

@@ -1147,21 +1147,27 @@ public class MenubarController
         miniProgBarBoundingHBox.setStyle("-fx-background-color: #ADADAD;");
         miniProgressLabel.setStyle("-fx-text-fill: #202020;");
         swapControlsStackPane.setStyle("fx-fill: #ADADAD");
+
+        miniProgressBar.lookup(".track").setStyle("-fx-background-color: #383838");
     }
     private void setLightestMiniBar(){
         miniProgBarBoundingHBox.setStyle("-fx-background-color: #CECECE");
         miniProgressLabel.setStyle("-fx-text-fill: #202020;");
         swapControlsStackPane.setStyle("-fx-background-color: #CECECE;");
 
+        miniProgressBar.lookup(".track").setStyle("-fx-background-color: #383838");
     }
 
     public void setDarkestMiniBar() {
         miniProgBarBoundingHBox.setStyle("-fx-background-color: none;");
         miniProgressLabel.setStyle("-fx-text-fill: #CECECE;");
         swapControlsStackPane.setStyle("fx-fill: none");
+
+        miniProgressBar.lookup(".track").setStyle("-fx-background-color: #CECECE");
     }
 
     public void dismissMiniProgressBar() {
         Platform.runLater(()->miniProgressPane.setVisible(false));
+        WelcomeWindowController.getInstance().showIfNoModelLoaded();
     }
 }
