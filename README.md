@@ -76,9 +76,10 @@ Kintsugi 3D Builder is distributed in the hope that it will be useful, but WITHO
 ### Package
 Kintsugi 3D builder can be compiled using the maven build system with no external requirements,
 however in order to use the `package` maven lifecycle to build the app to a executable jar, exe and distributable zip folder,
-a redistributable Java runtime should be located in the `jre` folder at the repository root. The `package` lifecycle will not fail without this,
+a redistributable Java 11 runtime should be located in the `jre` folder at the repository root. The `package` lifecycle will not fail without this,
 but no JRE will be bundled in the distribution zip file.
-For MacOS builds, a MacOS Java (x64) runtime should be located in the `jre-macos-x64` at the repository root.  
+For MacOS builds, a MacOS Java (x64) runtime should be located in the `jre-macos-x64` at the repository root.
+[Note: There is a known issue with OpenJDK 11.0.22+ on MacOS; for the time being, use 11.0.21. ]
 
 ### Install
 There are additional requirements for building the installer executable using the `install` maven lifecycle:
