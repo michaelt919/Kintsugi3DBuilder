@@ -81,6 +81,7 @@ public class ImgSelectionThread implements Runnable{
                 //camera not found in xml document
                 imgViewLabel.setText(imgViewLabel.getText() +
                         " (full res image not found)");
+                return;
             }
 
             if (!imgFile.getAbsolutePath().toLowerCase().matches(".*\\.tiff?")) {

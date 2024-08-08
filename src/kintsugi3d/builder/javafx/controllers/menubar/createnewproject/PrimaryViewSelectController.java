@@ -96,12 +96,12 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         TreeItem<String> rootItem = new TreeItem<>(chunkName);
         chunkTreeView.setRoot(rootItem);
 
-        //initialize options in new chunk selection choice box (cannot be done before chunkName is set)
-        initializeChoiceBox();
-        this.newChunkSelectionChoiceBox.setOnAction(this::updateSelectChunkButton);
-
-        //disable select chunk button if selected chunk (in choice box) matches the current chunk
-        updateSelectChunkButton();
+//        //initialize options in new chunk selection choice box (cannot be done before chunkName is set)
+//        initializeChoiceBox();
+//        this.newChunkSelectionChoiceBox.setOnAction(this::updateSelectChunkButton);
+//
+//        //disable select chunk button if selected chunk (in choice box) matches the current chunk
+//        updateSelectChunkButton();
 
         //fill thumbnail list
         ArrayList <Image> thumbnailImageList = (ArrayList<Image>) metashapeObjectChunk.loadThumbnailImageList();
@@ -275,26 +275,24 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         return false;
     }
 
-    public void updateSelectChunkButton(ActionEvent actionEvent) {
-        //need to keep the unused ActionEvent so we can link this method to the choice box
-        String selectedChunk = this.newChunkSelectionChoiceBox.getValue();
-        String currentChunkName = this.metashapeObjectChunk.getChunkName();
-
-        if (selectedChunk == null){
-            return;
-        }
-
-        if (selectedChunk.equals(currentChunkName)) {
-            selectChunkButton.setDisable(true);
-            selectChunkButton.setText("Chunk already selected");
-        } else {
-            selectChunkButton.setDisable(false);
-            selectChunkButton.setText("Select Chunk");
-        }
-    }
-    public void updateSelectChunkButton() {
-        updateSelectChunkButton(new ActionEvent());
-    }
+    //TODO: bring back chunk selection within this modal if we decide we want that
+//    public void updateSelectChunkButton() {
+//        //need to keep the unused ActionEvent so we can link this method to the choice box
+//        String selectedChunk = this.newChunkSelectionChoiceBox.getValue();
+//        String currentChunkName = this.metashapeObjectChunk.getChunkName();
+//
+//        if (selectedChunk == null){
+//            return;
+//        }
+//
+//        if (selectedChunk.equals(currentChunkName)) {
+//            selectChunkButton.setDisable(true);
+//            selectChunkButton.setText("Chunk already selected");
+//        } else {
+//            selectChunkButton.setDisable(false);
+//            selectChunkButton.setText("Select Chunk");
+//        }
+//    }
 
     @Override
     public void confirmButtonPress() {
