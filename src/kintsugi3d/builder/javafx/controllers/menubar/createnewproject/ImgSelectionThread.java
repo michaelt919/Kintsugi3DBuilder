@@ -32,8 +32,7 @@ public class ImgSelectionThread implements Runnable{
 
     private final String imageName;
     private final ImageView chunkViewerImgView;
-    private final Text imgViewLabel;
-
+    private final Text imgViewText;
     private final MetashapeObjectChunk metashapeObjectChunk;
     private final PrimaryViewSelectController controller;
     private volatile boolean stopRequested = false;
@@ -44,7 +43,7 @@ public class ImgSelectionThread implements Runnable{
         this.imageName = imageName;
 
         this.chunkViewerImgView = primaryViewSelectController.chunkViewerImgView;
-        this.imgViewLabel = primaryViewSelectController.imgViewLabel;
+        this.imgViewText = primaryViewSelectController.imgViewText;
         this.metashapeObjectChunk = primaryViewSelectController.metashapeObjectChunk;
         this.controller = primaryViewSelectController;
     }
@@ -69,7 +68,7 @@ public class ImgSelectionThread implements Runnable{
             Element selectedItemCam = metashapeObjectChunk.matchImageToCam(imageName);
 
             if (selectedItemCam == null) {
-                imgViewLabel.setText(imgViewLabel.getText() +
+                imgViewText.setText(imgViewText.getText() +
                         " (matching camera not found)");
                 return;
             }
@@ -79,7 +78,7 @@ public class ImgSelectionThread implements Runnable{
             //set imageview to selected image
             if (!imgFile.exists()) {
                 //camera not found in xml document
-                imgViewLabel.setText(imgViewLabel.getText() +
+                imgViewText.setText(imgViewText.getText() +
                         " (full res image not found)");
                 return;
             }
@@ -96,7 +95,7 @@ public class ImgSelectionThread implements Runnable{
             }
 
         } catch (IllegalArgumentException e) {//could not find image
-            imgViewLabel.setText(imgViewLabel.getText() + " (full res image not found)");
+            imgViewText.setText(imgViewText.getText() + " (full res image not found)");
             log.warn("Could not find full res image", e);
         } catch (IOException e) {
             log.warn("Failed to read image", e);

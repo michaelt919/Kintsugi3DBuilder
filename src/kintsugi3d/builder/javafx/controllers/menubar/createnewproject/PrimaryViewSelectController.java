@@ -23,6 +23,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
+import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
@@ -42,7 +43,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 
 public class PrimaryViewSelectController extends FXMLPageController implements CanConfirm {
@@ -55,7 +55,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
     @FXML
     public ImageView chunkViewerImgView;
-    public Text imgViewLabel;
+    public Text imgViewText;
     static final String[] VALID_EXTENSIONS = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
 
     static final int THUMBNAIL_SIZE = 30;
@@ -74,6 +74,8 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
     @Override
     public void init() {
+        //TODO: temp hack to make text visible
+        imgViewText.setFill(Paint.valueOf("white"));
     }
 
     @Override
@@ -206,7 +208,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
             String imageName = selectedItem.getValue();
             updateImageText(imageName);
-            imgViewLabel.setText(imgViewLabel.getText() + " (preview)");
+            imgViewText.setText(imgViewText.getText() + " (preview)");
 
 
             //set thumbnail as main image, then update to full resolution later
@@ -230,7 +232,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 //                      set label to: psx name + chunk name + cameraID
         File psxFile = new File(psxFilePath);
 
-        imgViewLabel.setText("File: " + psxFile.getName() +
+        imgViewText.setText("File: " + psxFile.getName() +
                             "\nChunk: " + chunkName +
                             "\nImage: " + imageName);
 
