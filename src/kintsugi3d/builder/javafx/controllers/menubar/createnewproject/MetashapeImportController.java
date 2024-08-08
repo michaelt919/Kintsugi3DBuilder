@@ -17,7 +17,6 @@ import javafx.stage.WindowEvent;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObject;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
@@ -33,7 +32,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
-public class MetashapeImportController extends FXMLPageController implements ShareInfo, CanConfirm {
+public class MetashapeImportController extends FXMLPageController implements ShareInfo {
     private static final Logger log = LoggerFactory.getLogger(MetashapeImportController.class);
 
     @FXML private Text fileNameTxtField;
@@ -66,6 +65,8 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         fileChooser.setTitle("Choose .psx file");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Metashape files", "*.psx"));
         fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
+
+        hostPage.setNextPage(hostScrollerController.getPage("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml"));
     }
 
     @Override
@@ -329,7 +330,8 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         return metashapePsxFile != null;
     }
 
-    @Override
+    //TODO: rename, do refactorings here for input validation, just send data to next page?
+
     public void confirmButtonPress() {
         updateMetashapeChunk();
         if (loadStartCallback != null) {

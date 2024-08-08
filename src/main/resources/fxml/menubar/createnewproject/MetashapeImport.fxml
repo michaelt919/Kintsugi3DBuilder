@@ -49,12 +49,12 @@
                   </Text>
                   <ChoiceBox fx:id="chunkSelectionChoiceBox" disable="true" prefHeight="25.0" prefWidth="223.0" styleClass="choicebox" GridPane.columnIndex="1" />
                   <ChoiceBox fx:id="modelSelectionChoiceBox" disable="true" prefHeight="25.0" prefWidth="223.0" styleClass="choicebox" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                  <Text layoutX="10.0" layoutY="27.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text" text="Primary View: " textAlignment="RIGHT" wrappingWidth="236.0" GridPane.halignment="RIGHT" GridPane.rowIndex="2">
+                  <Text layoutX="10.0" layoutY="27.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text" text="Primary View: " textAlignment="RIGHT" visible="false" wrappingWidth="236.0" GridPane.halignment="RIGHT" GridPane.rowIndex="2">
                      <font>
                         <Font name="Monospaced Regular" size="14.0" />
                      </font>
                   </Text>
-                  <ChoiceBox fx:id="primaryViewChoiceBox" disable="true" prefWidth="400.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                  <ChoiceBox fx:id="primaryViewChoiceBox" disable="true" prefWidth="400.0" visible="false" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                </children>
                <VBox.margin>
                   <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />

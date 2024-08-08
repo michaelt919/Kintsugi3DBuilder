@@ -32,7 +32,6 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
@@ -40,7 +39,7 @@ import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CustomImportController extends FXMLPageController implements ShareInfo, CanConfirm
+public class CustomImportController extends FXMLPageController implements ShareInfo
 {
     private static final Logger log = LoggerFactory.getLogger(CustomImportController.class);
     @FXML private ChoiceBox<String> primaryViewChoiceBox;
@@ -76,6 +75,8 @@ public class CustomImportController extends FXMLPageController implements ShareI
         objFileChooser.setTitle("Select object file");
 
         photoDirectoryChooser.setTitle("Select photo directory");
+
+        hostPage.setNextPage(hostScrollerController.getPage("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml"));
     }
 
     @Override
@@ -232,7 +233,7 @@ public class CustomImportController extends FXMLPageController implements ShareI
         hostScrollerController.addInfo(Info.PRIMARY_VIEW, primaryViewChoiceBox.getSelectionModel().getSelectedItem());
     }
 
-    @Override
+    //TODO: rename, do refactorings here for input validation, just send data to next page?
     public void confirmButtonPress() {
         if (!areAllFilesLoaded()){
             Toolkit.getDefaultToolkit().beep();

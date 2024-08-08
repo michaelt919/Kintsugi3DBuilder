@@ -102,7 +102,7 @@
          </GridPane.margin>
       </Text>
    </GridPane>
-   <HBox alignment="CENTER" GridPane.columnSpan="3" GridPane.rowIndex="3">
+   <HBox alignment="CENTER" visible="false" GridPane.columnSpan="3" GridPane.rowIndex="3">
       <padding>
          <Insets bottom="6.0" left="6.0" right="6.0" top="6.0" />
       </padding>

@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.menubar;
+package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
@@ -21,7 +21,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-public class ImgSelectionThread extends ChunkViewerController implements Runnable{
+public class ImgSelectionThread extends PrimaryViewSelectController implements Runnable{
 
     //want to pass a function (loadFullResImg) into this thread
     // then run that function in run()
@@ -29,13 +29,14 @@ public class ImgSelectionThread extends ChunkViewerController implements Runnabl
     private volatile boolean stopRequested = false;
     private volatile boolean isRunning = false;
 
-    public ImgSelectionThread(String imageName, ChunkViewerController chunkViewerController) {
+    //TODO: look at this again
+    public ImgSelectionThread(String imageName, PrimaryViewSelectController primaryViewSelectController) {
         this.imageName = imageName;
 
-        this.chunkViewerImgView = chunkViewerController.chunkViewerImgView;
-        this.imgViewLabel = chunkViewerController.imgViewLabel;
-        this.metashapeObjectChunk = chunkViewerController.metashapeObjectChunk;
-        this.textFlow = chunkViewerController.textFlow;
+        this.chunkViewerImgView = primaryViewSelectController.chunkViewerImgView;
+        this.imgViewLabel = primaryViewSelectController.imgViewLabel;
+        this.metashapeObjectChunk = primaryViewSelectController.metashapeObjectChunk;
+        this.textFlow = primaryViewSelectController.textFlow;
     }
 
     @Override
