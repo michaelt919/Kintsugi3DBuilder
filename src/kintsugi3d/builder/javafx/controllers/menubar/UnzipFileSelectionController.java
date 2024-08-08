@@ -158,12 +158,6 @@ public class UnzipFileSelectionController {
 
             primaryViewSelectController.initializeChunkSelectionAndTreeView(metashapeObjectChunk);
 
-            // Pass a reference of the LoaderController to callback in the chunk viewer controller.
-            // This is how the chosen chunk will be passed to the LoaderController
-            if(loaderControllerCallback != null){
-                primaryViewSelectController.loaderControllerCallback = loaderControllerCallback;
-            }
-
         }
         catch (Exception e){
             unzipPSXButton.fire();//selected .psx file and list of chunks may be referring to different objects

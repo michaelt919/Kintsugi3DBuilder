@@ -44,6 +44,7 @@ public class ImportOrCustomProjectController extends FXMLPageController {
 
         KeyCombination chooseCustomCode = new KeyCodeCombination(KeyCode.S);
 
+        //TODO: fix W and S accelerators being applied in pages where they shouldn't
         Scene scene = getHostRegion().getScene();
         scene.getAccelerators().put(chooseMetashapeCode, this::metashapeImportSelect);
         scene.getAccelerators().put(chooseCustomCode, this::customImportSelect);

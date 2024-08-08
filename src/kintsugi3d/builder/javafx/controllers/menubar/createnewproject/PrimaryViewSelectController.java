@@ -32,6 +32,7 @@ import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObject;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -69,24 +70,22 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     @FXML private AnchorPane hostAnchorPane;
     MetashapeObjectChunk metashapeObjectChunk;
 
-    public Consumer<MetashapeObjectChunk> loaderControllerCallback;
     private ImgSelectionThread loadImgThread;
-
-
 
     @Override
     public void init() {
-
-    }
-
-    @Override
-    public Region getHostRegion() {
-        return hostAnchorPane;
     }
 
     @Override
     public void refresh() {
-        //nothing needed here yet
+        if(this.metashapeObjectChunk == null ||
+        this.metashapeObjectChunk != hostScrollerController.getInfo(ShareInfo.Info.METASHAPE_OBJ_CHUNK)) {
+            initializeChunkSelectionAndTreeView(hostScrollerController.getInfo(ShareInfo.Info.METASHAPE_OBJ_CHUNK));
+        }
+    }
+    @Override
+    public Region getHostRegion() {
+        return hostAnchorPane;
     }
 
     public void initializeChunkSelectionAndTreeView(MetashapeObjectChunk metashapeObjectChunk) {
@@ -297,34 +296,14 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         updateSelectChunkButton(new ActionEvent());
     }
 
-    /**
-     * Submit the chunk object and Metashape to be used in creating a Kintsugi project
-     */
-    public void submitChunk(){
-        // If no chunk is chosen somehow, prompt user to select a chunk.
-        if (metashapeObjectChunk == null) {
-            // Create a popup telling user to choose a chunk.
-            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
-
-            Alert alert = new Alert(Alert.AlertType.NONE, "", ok);
-            alert.setTitle("Error");
-            alert.setHeaderText("No chunk selected");
-            alert.setContentText("Please choose a chunk to continue.");
-            alert.showAndWait();
-            return;
-        }
-
-        // Close window.
-        Stage stage = (Stage) selectChunkButton.getScene().getWindow();
-        stage.close();
-
-        // Submit the chunk to the loader controller.
-        loaderControllerCallback.accept(metashapeObjectChunk);
-        System.out.println("Submitted chunk successfully");
-    }
-
     @Override
     public void confirmButtonPress() {
         ProjectIO.handleException("Congration you done it", new Exception("nothing to show"));
+    }
+
+    @Override
+    public boolean isNextButtonValid(){
+        return true;
+        //TODO: change this if necessary
     }
 }
