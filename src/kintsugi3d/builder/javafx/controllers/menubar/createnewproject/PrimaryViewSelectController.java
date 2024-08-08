@@ -107,7 +107,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         ArrayList <Image> thumbnailImageList = (ArrayList<Image>) metashapeObjectChunk.loadThumbnailImageList();
 
         //add full-res images as children to the chunk name in treeview
-        ArrayList<Element> cameras = (ArrayList<Element>) metashapeObjectChunk.findAllCameras();
+        ArrayList<Element> cameras = (ArrayList<Element>) metashapeObjectChunk.findEnabledCameras();
 
         for (int i = 0; i < cameras.size(); ++i) {
             Element camera = cameras.get(i);
@@ -223,7 +223,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         }
     }
 
-    void updateImageText(String imageName) {
+    public void updateImageText(String imageName) {
         String psxFilePath = this.metashapeObjectChunk.getPsxFilePath();
         String chunkName = this.metashapeObjectChunk.getChunkName();
 
