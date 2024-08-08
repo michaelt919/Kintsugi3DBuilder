@@ -230,7 +230,6 @@ public class CustomImportController extends FXMLPageController implements ShareI
         hostScrollerController.addInfo(Info.CAM_FILE, cameraFile);
         hostScrollerController.addInfo(Info.PHOTO_DIR, photoDir);
         hostScrollerController.addInfo(Info.OBJ_FILE, objFile);
-        hostScrollerController.addInfo(Info.PRIMARY_VIEW, primaryViewChoiceBox.getSelectionModel().getSelectedItem());
     }
 
     //TODO: rename, do refactorings here for input validation, just send data to next page?

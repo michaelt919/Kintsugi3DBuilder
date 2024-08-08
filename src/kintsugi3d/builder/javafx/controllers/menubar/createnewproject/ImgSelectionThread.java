@@ -42,9 +42,9 @@ public class ImgSelectionThread implements Runnable{
     public ImgSelectionThread(String imageName, PrimaryViewSelectController primaryViewSelectController) {
         this.imageName = imageName;
 
-        this.chunkViewerImgView = primaryViewSelectController.chunkViewerImgView;
-        this.imgViewText = primaryViewSelectController.imgViewText;
-        this.metashapeObjectChunk = primaryViewSelectController.metashapeObjectChunk;
+        this.chunkViewerImgView = primaryViewSelectController.getChunkViewerImgView();
+        this.imgViewText = primaryViewSelectController.getImgViewText();
+        this.metashapeObjectChunk = primaryViewSelectController.getMetashapeObjectChunk();
         this.controller = primaryViewSelectController;
     }
 

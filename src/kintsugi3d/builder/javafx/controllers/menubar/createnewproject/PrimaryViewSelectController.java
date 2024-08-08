@@ -18,7 +18,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Button;
-import javafx.scene.control.*;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
@@ -36,6 +38,7 @@ import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageContr
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.awt.*;
@@ -50,27 +53,22 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     //suppress warning?
 
     private static final Logger log = LoggerFactory.getLogger(PrimaryViewSelectController.class);
-    @FXML
-    public TreeView<String> chunkTreeView;
 
-    @FXML
-    public ImageView chunkViewerImgView;
-    public Text imgViewText;
-    static final String[] VALID_EXTENSIONS = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
-
-    static final int THUMBNAIL_SIZE = 30;
-    @FXML
-    public ChoiceBox<String> newChunkSelectionChoiceBox;//allows the user to select a new chunk to view
-
-    @FXML
-    public Button selectChunkButton;
-
-    @FXML
-    public TextFlow textFlow;
     @FXML private AnchorPane hostAnchorPane;
-    MetashapeObjectChunk metashapeObjectChunk;
 
+    @FXML private TreeView<String> chunkTreeView;
+    @FXML private ImageView chunkViewerImgView;
+    @FXML private Text imgViewText;
+    @FXML public TextFlow textFlow;
+
+    @FXML private Button selectChunkButton;
+    @FXML private ChoiceBox<String> newChunkSelectionChoiceBox;//allows the user to select a new chunk to view
+    private MetashapeObjectChunk metashapeObjectChunk;
+    private File cameraFile;
+    private Document cameraDocument;
     private ImgSelectionThread loadImgThread;
+    static final String[] VALID_EXTENSIONS = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
+    static final int THUMBNAIL_SIZE = 30;
 
     @Override
     public void init() {
@@ -80,14 +78,22 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
     @Override
     public void refresh() {
-        if(this.metashapeObjectChunk == null ||
-        this.metashapeObjectChunk != hostScrollerController.getInfo(ShareInfo.Info.METASHAPE_OBJ_CHUNK)) {
-            initializeChunkSelectionAndTreeView(hostScrollerController.getInfo(ShareInfo.Info.METASHAPE_OBJ_CHUNK));
+        //metashape import path loads from metashape project
+        MetashapeObjectChunk sharedChunk = hostScrollerController.getInfo(ShareInfo.Info.METASHAPE_OBJ_CHUNK);
+        File sharedCamFile = hostScrollerController.getInfo(ShareInfo.Info.CAM_FILE);
+        if(hostPage.getPrevPage() == hostScrollerController.getPage("/fxml/menubar/createnewproject/MetashapeImport.fxml")){
+            if(this.metashapeObjectChunk == null ||
+                    this.metashapeObjectChunk != sharedChunk) {
+                initializeChunkSelectionAndTreeView(sharedChunk);
+            }
         }
-    }
-    @Override
-    public Region getHostRegion() {
-        return hostAnchorPane;
+
+        //custom import path loads from cameras xml file
+        else{
+            if(cameraFile == null || cameraFile != sharedCamFile){
+                //TODO: figure this out later
+            }
+        }
     }
 
     public void initializeChunkSelectionAndTreeView(MetashapeObjectChunk metashapeObjectChunk) {
@@ -199,6 +205,11 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         }
     }
 
+    @Override
+    public Region getHostRegion() {
+        return hostAnchorPane;
+    }
+
     public void selectImageInTreeView() {
         //selectedItem holds the cameraID associated with the image
         TreeItem<String> selectedItem = chunkTreeView.getSelectionModel().getSelectedItem();
@@ -305,5 +316,17 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     public boolean isNextButtonValid(){
         return true;
         //TODO: change this if necessary
+    }
+
+    public ImageView getChunkViewerImgView() {
+        return chunkViewerImgView;
+    }
+
+    public Text getImgViewText() {
+        return imgViewText;
+    }
+
+    public MetashapeObjectChunk getMetashapeObjectChunk() {
+        return metashapeObjectChunk;
     }
 }
