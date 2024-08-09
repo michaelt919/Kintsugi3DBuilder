@@ -12,14 +12,9 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
-import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
@@ -29,7 +24,9 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.Stage;
+import javafx.stage.Window;
+import javafx.stage.WindowEvent;
+import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObject;
@@ -37,7 +34,6 @@ import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
-import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.resources.ibr.MissingImagesException;
 import org.slf4j.Logger;
@@ -49,9 +45,7 @@ import org.w3c.dom.NodeList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.awt.*;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -75,11 +69,14 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     @FXML private ChoiceBox<String> newChunkSelectionChoiceBox;//allows the user to select a new chunk to view
     private MetashapeObjectChunk metashapeObjectChunk;
     private File cameraFile;
+    private File objFile;
+    private File photosDir;
+    private File fullResOverride;
+    private boolean doSkipMissingCams;
     private Document cameraDocument;
     private ImgSelectionThread loadImgThread;
     static final String[] VALID_EXTENSIONS = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
     static final int THUMBNAIL_SIZE = 30;
-
     @Override
     public void init() {
         //TODO: temp hack to make text visible, need to change textflow css?
@@ -93,15 +90,19 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     public void refresh() {
         MetashapeObjectChunk sharedChunk = hostScrollerController.getInfo(ShareInfo.Info.METASHAPE_OBJ_CHUNK);
         File sharedCamFile = hostScrollerController.getInfo(ShareInfo.Info.CAM_FILE);
+        doSkipMissingCams = false;
+
+        boolean isMetashapeImport =
+                hostPage.getPrevPage() == hostScrollerController.getPage("/fxml/menubar/createnewproject/MetashapeImport.fxml");
 
         //metashape import path loads from metashape project
-        if(hostPage.getPrevPage() == hostScrollerController.getPage("/fxml/menubar/createnewproject/MetashapeImport.fxml")){
+        if(isMetashapeImport){
             if(this.metashapeObjectChunk == null ||
                     this.metashapeObjectChunk != sharedChunk) {
 
                 try{
                     this.metashapeObjectChunk = sharedChunk;
-                    verifyInfo(false, null);
+                    verifyInfo(null);
                     initTreeView(sharedChunk);
                 }
                 catch(MissingImagesException mie){
@@ -114,6 +115,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         //custom import path loads from cameras xml file
         else{
             if(cameraFile == null || cameraFile != sharedCamFile){
+                photosDir = hostScrollerController.getInfo(ShareInfo.Info.PHOTO_DIR);
                 initTreeView(sharedCamFile);
             }
         }
@@ -241,34 +243,6 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         return new TreeItem<>(imageName, thumbnailImgView);
     }
 
-    public void selectChunk(ActionEvent actionEvent) throws IOException {
-        Scene scene;
-        Parent root;
-        Stage stage;
-
-        String currentChunkName = this.metashapeObjectChunk.getChunkName();
-        String selectedChunkName = this.newChunkSelectionChoiceBox.getValue();
-
-        MetashapeObject metashapeObject = this.metashapeObjectChunk.getMetashapeObject();
-
-        if (!selectedChunkName.equals(currentChunkName)) {//only change scene if switching to new chunk
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/menubar/PrimaryViewSelect.fxml"));
-            root = fxmlLoader.load();
-            PrimaryViewSelectController primaryViewSelectController = fxmlLoader.getController();
-
-            //TODO: actually retrieve model id instead of defaulting to 0
-            MetashapeObjectChunk newMetashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, selectedChunkName, 0);
-            primaryViewSelectController.initTreeView(newMetashapeObjectChunk);
-
-            stage = (Stage) ((javafx.scene.Node) actionEvent.getSource()).getScene().getWindow();
-            scene = new Scene(root);
-            stage.setScene(scene);
-            stage.show();
-        } else {
-            Toolkit.getDefaultToolkit().beep();
-        }
-    }
-
     @Override
     public Region getHostRegion() {
         return hostAnchorPane;
@@ -344,25 +318,6 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         return false;
     }
 
-    //TODO: bring back chunk selection within this modal if we decide we want that
-//    public void updateSelectChunkButton() {
-//        //need to keep the unused ActionEvent so we can link this method to the choice box
-//        String selectedChunk = this.newChunkSelectionChoiceBox.getValue();
-//        String currentChunkName = this.metashapeObjectChunk.getChunkName();
-//
-//        if (selectedChunk == null){
-//            return;
-//        }
-//
-//        if (selectedChunk.equals(currentChunkName)) {
-//            selectChunkButton.setDisable(true);
-//            selectChunkButton.setText("Chunk already selected");
-//        } else {
-//            selectChunkButton.setDisable(false);
-//            selectChunkButton.setText("Select Chunk");
-//        }
-//    }
-
     private void showMissingImgsAlert(MetashapeObjectChunk metashapeObjectChunk, MissingImagesException mie) {
         int numMissingImgs = mie.getNumMissingImgs();
         File prevTriedDirectory = mie.getImgDirectory();
@@ -376,9 +331,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                 cancel, newDirectory, skipMissingCams/*, openDirectory*/);
 
         ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(event -> {
-            //nothing has really started loading yet, so just reset the progress bars and close
-            ProgressBarsController.getInstance().stopAndClose();
-            WelcomeWindowController.getInstance().showIfNoModelLoaded();
+            getHostScrollerController().prevPage();
         });
 
         ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event -> {
@@ -389,30 +342,27 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             File newCamsFile = directoryChooser.showDialog(MenubarController.getInstance().getWindow());
 
             try {
-                verifyInfo(false, newCamsFile);
+                verifyInfo(newCamsFile);
                 initTreeView(metashapeObjectChunk);
             } catch (MissingImagesException mie2){
                 Platform.runLater(() ->
                         showMissingImgsAlert(metashapeObjectChunk, mie2));
             }
-
         });
 
         ((ButtonBase) alert.getDialogPane().lookupButton(skipMissingCams)).setOnAction(event -> {
-            try {
-                verifyInfo(true, prevTriedDirectory);
-                initTreeView(metashapeObjectChunk);
-            } catch (MissingImagesException mie2){
-                Platform.runLater(() ->
-                        showMissingImgsAlert(metashapeObjectChunk, mie2));
-            }
+            this.fullResOverride = prevTriedDirectory;
+            doSkipMissingCams = true;
+            initTreeView(metashapeObjectChunk);
         });
 
         alert.setTitle("Project is Missing Images");
         alert.show();
     }
 
-    private void verifyInfo(boolean ignoreMissingCams, File fullResDirectoryOverride) throws MissingImagesException {
+    private void verifyInfo(File fullResDirectoryOverride) throws MissingImagesException {
+        this.fullResOverride = fullResDirectoryOverride;
+
         // Get reference to the chunk directory
         File chunkDirectory = new File(metashapeObjectChunk.getChunkDirectoryPath());
         if (!chunkDirectory.exists()) {
@@ -478,20 +428,60 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             }
         }
 
-        if (!ignoreMissingCams && numMissingFiles > 0) {
+        if (numMissingFiles > 0) {
             throw new MissingImagesException("Project is missing images.", numMissingFiles, exceptionFolder);
         }
     }
 
     @Override
     public void confirmButtonPress() {
-        ProjectIO.handleException("Congration you done it", new Exception("nothing to show"));
+        updateSharedInfo();
+        if (loadStartCallback != null) {
+            loadStartCallback.run();
+        }
+
+        if (viewSetCallback != null) {
+            //"force" the user to save their project (user can still cancel saving)
+            MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
+                    viewSet ->viewSetCallback.accept(viewSet));
+        }
+
+        boolean importFromMetashape =
+                hostPage.getPrevPage() == hostScrollerController.getPage(
+                        "/fxml/menubar/createnewproject/MetashapeImport.fxml");
+
+        String primaryView = chunkTreeView.getSelectionModel().getSelectedItem().getValue();
+        if(importFromMetashape){
+            new Thread(() ->
+                    MultithreadModels.getInstance().getIOModel()
+                            .loadAgisoftFromZIP(
+                                    metashapeObjectChunk.getFramePath(),
+                                    metashapeObjectChunk, primaryView, fullResOverride, doSkipMissingCams))
+                    .start();
+        }
+        else{
+            new Thread(() ->
+                    MultithreadModels.getInstance().getIOModel().loadFromAgisoftFiles(
+                            cameraFile.getPath(), cameraFile, objFile, photosDir, primaryView))
+                    .start();
+        }
+
+        WelcomeWindowController.getInstance().hide();
+
+        Window window = hostAnchorPane.getScene().getWindow();
+        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
+    }
+
+    private void updateSharedInfo() {
+        metashapeObjectChunk = hostScrollerController.getInfo(ShareInfo.Info.METASHAPE_OBJ_CHUNK);
+        cameraFile = hostScrollerController.getInfo(ShareInfo.Info.CAM_FILE);
+        objFile = hostScrollerController.getInfo(ShareInfo.Info.OBJ_FILE);
+        photosDir = hostScrollerController.getInfo(ShareInfo.Info.PHOTO_DIR);
     }
 
     @Override
     public boolean isNextButtonValid(){
         return true;
-        //TODO: change this if necessary
     }
 
     public ImageView getChunkViewerImgView() {
@@ -510,7 +500,11 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         return cameraDocument;
     }
 
-    public File getCameraFile() {
-        return cameraFile;
+    public File getPhotosDir() {
+        return photosDir;
+    }
+
+    public File getFullResOverride() {
+        return fullResOverride;
     }
 }

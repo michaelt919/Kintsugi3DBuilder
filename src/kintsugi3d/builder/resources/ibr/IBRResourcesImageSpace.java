@@ -245,13 +245,10 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                     .getElementsByTagName("camera");
 
             int numMissingFiles = 0;
-            File fullResSearchDirectory;
-            if (fullResDirectoryOverride == null){
-                fullResSearchDirectory = new File(metashapeObjectChunk.getFramePath()).getParentFile();
-            }
-            else{
-                fullResSearchDirectory = fullResDirectoryOverride;
-            }
+            File fullResSearchDirectory = fullResDirectoryOverride == null ?
+                    new File(metashapeObjectChunk.getFramePath()).getParentFile() :
+                    fullResDirectoryOverride;
+
 
             File exceptionFolder = null;
 

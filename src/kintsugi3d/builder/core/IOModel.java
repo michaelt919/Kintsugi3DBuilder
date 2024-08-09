@@ -212,9 +212,9 @@ public class IOModel
         this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, primaryViewName, loadOptionsModel);
     }
 
-    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, String primaryViewName)
+    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, String primaryViewName, File fullResOverride, boolean doSkipMissingCams)
     {
-        this.handler.loadAgisoftFromZIP(id, metashapeObjectChunk, loadOptionsModel, primaryViewName);
+        this.handler.loadAgisoftFromZIP(id, metashapeObjectChunk, loadOptionsModel, primaryViewName, fullResOverride, doSkipMissingCams);
     }
     public void requestFragmentShader(File shaderFile)
     {

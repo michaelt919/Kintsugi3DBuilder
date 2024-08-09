@@ -11,12 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
-import java.awt.*;
-import java.io.File;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.stream.IntStream;
-
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -26,18 +20,22 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
-import javafx.stage.*;
-import javafx.stage.Window;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.stage.Stage;
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
-import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
-import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.stream.IntStream;
 
 public class CustomImportController extends FXMLPageController implements ShareInfo
 {
@@ -195,12 +193,6 @@ public class CustomImportController extends FXMLPageController implements ShareI
     }
 
 
-    private void close()
-    {
-        Window window = root.getScene().getWindow();
-        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
-    }
-
     private void setHomeDir(File home)
     {
         File parentDir = home.getParentFile();
@@ -230,33 +222,5 @@ public class CustomImportController extends FXMLPageController implements ShareI
         hostScrollerController.addInfo(Info.CAM_FILE, cameraFile);
         hostScrollerController.addInfo(Info.PHOTO_DIR, photoDir);
         hostScrollerController.addInfo(Info.OBJ_FILE, objFile);
-    }
-
-    //TODO: rename, do refactorings here for input validation, just send data to next page?
-    public void confirmButtonPress() {
-        if (!areAllFilesLoaded()){
-            Toolkit.getDefaultToolkit().beep();
-            return;
-        }
-
-        if (loadStartCallback != null)
-        {
-            loadStartCallback.run();
-        }
-
-        if (viewSetCallback != null)
-        {
-            MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
-                    viewSet -> viewSetCallback.accept(viewSet));
-        }
-
-        new Thread(() ->
-                MultithreadModels.getInstance().getIOModel().loadFromAgisoftFiles(
-                        cameraFile.getPath(), cameraFile, objFile, photoDir,
-                        primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
-                .start();
-
-        WelcomeWindowController.getInstance().hide();
-        close();
     }
 }

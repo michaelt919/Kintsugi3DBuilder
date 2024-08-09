@@ -17,6 +17,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.text.Text;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -27,6 +28,7 @@ import org.w3c.dom.NodeList;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class ImgSelectionThread implements Runnable{
@@ -38,8 +40,10 @@ public class ImgSelectionThread implements Runnable{
     private final Text imgViewText;
     private final MetashapeObjectChunk metashapeObjectChunk;
     private final Document cameraDocument;
-    private final File cameraFile;
+    private final File photosDir;
+
     private final PrimaryViewSelectController controller;
+    private final File fullResOverride;
     private volatile boolean stopRequested = false;
     private volatile boolean isRunning = false;
 
@@ -51,7 +55,8 @@ public class ImgSelectionThread implements Runnable{
         this.imgViewText = primaryViewSelectController.getImgViewText();
         this.metashapeObjectChunk = primaryViewSelectController.getMetashapeObjectChunk();
         this.cameraDocument = primaryViewSelectController.getCameraDocument();
-        this.cameraFile = primaryViewSelectController.getCameraFile();
+        this.photosDir = primaryViewSelectController.getPhotosDir();
+        this.fullResOverride = primaryViewSelectController.getFullResOverride();
         this.controller = primaryViewSelectController;
     }
 
@@ -108,39 +113,26 @@ public class ImgSelectionThread implements Runnable{
                 }
             }
 
-            //no matching camera found
-
             if (selectedItemCam == null) {
                 imgViewText.setText(imgViewText.getText() +
                         " (matching camera not found)");
                 return;
             }
 
-            String path;
-            if(isMetashapeImport){
-                Element photo = (Element) selectedItemCam.getElementsByTagName("photo").item(0);
-                path = photo.getAttribute("path");
+            String path = findFullResPath(isMetashapeImport, selectedItemCam, fullResOverride);
 
-                String parentPath = metashapeObjectChunk.getPsxFile().getParent();
-                path = new File(new File(parentPath), path.substring(9)).getPath();
+            File imgFile;
+            try{
+                imgFile = ImageFinder.getInstance().findImageFile(new File(path));
             }
-            else{
-                path = selectedItemCam.getAttribute("label");
-                String parentPath = cameraFile.getParent();
-                path = new File(new File(parentPath), path).getPath();
-            }
-
-            //String path now holds the full path to the selected thumbnail's full-res image
-            File imgFile = new File(path);
-
-            //set imageview to selected image
-            if (!imgFile.exists()) {
+            catch(FileNotFoundException ignored){
                 //camera not found in xml document
                 imgViewText.setText(imgViewText.getText() +
                         " (full res image not found)");
                 return;
             }
 
+            //set imageview to selected image
             if (!imgFile.getAbsolutePath().toLowerCase().matches(".*\\.tiff?")) {
                 image = new Image(imgFile.toURI().toString());
             } else {
@@ -167,5 +159,36 @@ public class ImgSelectionThread implements Runnable{
                 controller.updateImageText(imageName);
             });
         }
+    }
+
+    private String findFullResPath(boolean isMetashapeImport, Element selectedItemCam, File fullResOverride) {
+        String path;
+        if(isMetashapeImport){
+            String pathAttribute = ((Element) selectedItemCam.getElementsByTagName("photo").item(0)).getAttribute("path");
+
+            File imageFile;
+            File rootDirectory = metashapeObjectChunk.getPsxFile().getParentFile();
+            File fullResSearchDirectory = fullResOverride == null ?
+                    new File(metashapeObjectChunk.getFramePath()).getParentFile() :
+                    fullResOverride;
+
+            if (fullResOverride == null){
+                imageFile = new File(fullResSearchDirectory, pathAttribute);
+                path = rootDirectory.toPath().relativize(imageFile.toPath()).toString();
+            }
+            else{
+                //if this doesn't work, then replace metashapeObjectChunk.getFramePath()).getParentFile()
+                //    and the first part of path with the file that the user selected
+                String pathAttributeName = new File(pathAttribute).getName();
+                imageFile = new File(fullResOverride, pathAttributeName);
+                path = imageFile.getPath();
+            }
+        }
+        else{
+            path = selectedItemCam.getAttribute("label");
+            String parentPath = photosDir.getPath();
+            path = new File(new File(parentPath), path).getPath();
+        }
+        return path;
     }
 }

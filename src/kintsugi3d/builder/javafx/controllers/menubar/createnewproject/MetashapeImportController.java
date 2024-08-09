@@ -12,14 +12,10 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.stage.Window;
-import javafx.stage.WindowEvent;
-import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObject;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
-import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.util.RecentProjects;
 import kintsugi3d.util.Triplet;
 import org.slf4j.Logger;
@@ -328,32 +324,5 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
     private boolean isMetashapeObjectLoaded() {
         return metashapePsxFile != null;
-    }
-
-    //TODO: rename, do refactorings here for input validation, just send data to next page?
-
-    public void confirmButtonPress() {
-        updateMetashapeChunk();
-        if (loadStartCallback != null) {
-            loadStartCallback.run();
-        }
-
-        if (viewSetCallback != null) {
-            //"force" the user to save their project (user can still cancel saving)
-            MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
-                    viewSet ->viewSetCallback.accept(viewSet));
-        }
-
-        new Thread(() ->
-                MultithreadModels.getInstance().getIOModel()
-                        .loadAgisoftFromZIP(
-                                metashapeObjectChunk.getFramePath(),
-                                metashapeObjectChunk,
-                                primaryViewChoiceBox.getSelectionModel().getSelectedItem().toString()))
-                .start();
-        WelcomeWindowController.getInstance().hide();
-
-        Window window = anchorPane.getScene().getWindow();
-        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
     }
 }

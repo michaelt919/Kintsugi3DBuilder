@@ -350,7 +350,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions, String primaryViewName) {
+    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions, String primaryViewName, File fullResOverride, boolean doSkipMissingCams) {
 
         // TODO There currently isn't functionality for a supportingFilesDirectory at this early in the process
         //  Restructuring required from Tetzlaff.
@@ -362,17 +362,17 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         this.progressMonitor.start();
         this.progressMonitor.setProcessName("Load from Agisoft Project");
 
-        loadAgisoftFromZipRec(id, metashapeObjectChunk, loadOptions, primaryViewName);
+        loadAgisoftFromZipRec(id, metashapeObjectChunk, loadOptions, primaryViewName, fullResOverride, doSkipMissingCams);
     }
 
-    private void loadAgisoftFromZipRec(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions, String primaryViewName) {
+    private void loadAgisoftFromZipRec(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions, String primaryViewName, File fullResOverride, boolean doSkipMissingCams) {
         File supportingFilesDirectory = null;
         Builder<ContextType>builder = null;
         try {
             builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                     .setProgressMonitor(this.progressMonitor)
                     .setLoadOptions(loadOptions)
-                    .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, null, false)
+                    .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, fullResOverride, doSkipMissingCams)
                     .setPrimaryView(primaryViewName);
 
             loadInstance(id, builder);
@@ -412,13 +412,11 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         });
 
         ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event -> {
-            //TODO: implement checks to prevent recursive calls from consuming memory? Might be overkill
             DirectoryChooser directoryChooser = new DirectoryChooser();
             directoryChooser.setInitialDirectory(new File(metashapeObjectChunk.getPsxFilePath()).getParentFile());
 
             directoryChooser.setTitle("Choose New Image Directory");
             File newCamsFile = directoryChooser.showDialog(MenubarController.getInstance().getWindow());
-            //TODO: update recent project directory here?
 
             new Thread(()->{
                 try {
