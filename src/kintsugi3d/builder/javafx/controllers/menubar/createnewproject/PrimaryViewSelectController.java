@@ -11,16 +11,15 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
+import javafx.scene.control.*;
 import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
@@ -29,13 +28,18 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.ProjectIO;
+import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObject;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
+import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
+import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
+import kintsugi3d.builder.resources.ibr.MissingImagesException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -49,7 +53,9 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class PrimaryViewSelectController extends FXMLPageController implements CanConfirm {
@@ -92,7 +98,16 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         if(hostPage.getPrevPage() == hostScrollerController.getPage("/fxml/menubar/createnewproject/MetashapeImport.fxml")){
             if(this.metashapeObjectChunk == null ||
                     this.metashapeObjectChunk != sharedChunk) {
-                initTreeView(sharedChunk);
+
+                try{
+                    this.metashapeObjectChunk = sharedChunk;
+                    verifyInfo(false, null);
+                    initTreeView(sharedChunk);
+                }
+                catch(MissingImagesException mie){
+                    Platform.runLater(() ->
+                            showMissingImgsAlert(metashapeObjectChunk, mie));
+                }
             }
         }
 
@@ -147,9 +162,8 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
     }
 
+    //TODO: either refactor this so that this function relies on this.metashapeObjectChunk or remove UnzipFileSelectionController as it is no longer needed
     public void initTreeView(MetashapeObjectChunk metashapeObjectChunk) {
-        this.metashapeObjectChunk = metashapeObjectChunk;
-
         String chunkName = metashapeObjectChunk.getChunkName();
 
         ArrayList <Image> thumbnailImageList = (ArrayList<Image>) metashapeObjectChunk.loadThumbnailImageList();
@@ -348,6 +362,126 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 //            selectChunkButton.setText("Select Chunk");
 //        }
 //    }
+
+    private void showMissingImgsAlert(MetashapeObjectChunk metashapeObjectChunk, MissingImagesException mie) {
+        int numMissingImgs = mie.getNumMissingImgs();
+        File prevTriedDirectory = mie.getImgDirectory();
+
+        ButtonType cancel = new ButtonType("Cancel", ButtonBar.ButtonData.OTHER);
+        ButtonType newDirectory = new ButtonType("Choose Different Image Directory", ButtonBar.ButtonData.YES);
+        ButtonType skipMissingCams = new ButtonType("Skip Missing Cameras", ButtonBar.ButtonData.NO);
+
+        Alert alert = new Alert(Alert.AlertType.NONE,
+                "Imported object is missing " + numMissingImgs + " images.",
+                cancel, newDirectory, skipMissingCams/*, openDirectory*/);
+
+        ((ButtonBase) alert.getDialogPane().lookupButton(cancel)).setOnAction(event -> {
+            //nothing has really started loading yet, so just reset the progress bars and close
+            ProgressBarsController.getInstance().stopAndClose();
+            WelcomeWindowController.getInstance().showIfNoModelLoaded();
+        });
+
+        ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event -> {
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setInitialDirectory(new File(metashapeObjectChunk.getPsxFilePath()).getParentFile());
+
+            directoryChooser.setTitle("Choose New Image Directory");
+            File newCamsFile = directoryChooser.showDialog(MenubarController.getInstance().getWindow());
+
+            try {
+                verifyInfo(false, newCamsFile);
+                initTreeView(metashapeObjectChunk);
+            } catch (MissingImagesException mie2){
+                Platform.runLater(() ->
+                        showMissingImgsAlert(metashapeObjectChunk, mie2));
+            }
+
+        });
+
+        ((ButtonBase) alert.getDialogPane().lookupButton(skipMissingCams)).setOnAction(event -> {
+            try {
+                verifyInfo(true, prevTriedDirectory);
+                initTreeView(metashapeObjectChunk);
+            } catch (MissingImagesException mie2){
+                Platform.runLater(() ->
+                        showMissingImgsAlert(metashapeObjectChunk, mie2));
+            }
+        });
+
+        alert.setTitle("Project is Missing Images");
+        alert.show();
+    }
+
+    private void verifyInfo(boolean ignoreMissingCams, File fullResDirectoryOverride) throws MissingImagesException {
+        // Get reference to the chunk directory
+        File chunkDirectory = new File(metashapeObjectChunk.getChunkDirectoryPath());
+        if (!chunkDirectory.exists()) {
+            log.error("Chunk directory does not exist: " + chunkDirectory);
+        }
+        File rootDirectory = new File(metashapeObjectChunk.getPsxFilePath()).getParentFile();
+        if (!rootDirectory.exists()) {
+            log.error("Root directory does not exist: " + rootDirectory);
+        }
+
+        // 1) Construct camera ID to filename map from frame's ZIP
+        Map<Integer, String> cameraPathsMap = new HashMap<>();
+        // Open the xml files that contains all the cameras' ids and file paths
+        Document frame = metashapeObjectChunk.getFrameZip();
+        if (frame == null || frame.getDocumentElement() == null) {
+            ProjectIO.handleException("Error reading Metashape frame.zip document.", new NullPointerException("No frame document found"));
+            return;
+        }
+
+        // Loop through the cameras and store each pair of id and path in the map
+        NodeList cameraList = ((Element) frame.getElementsByTagName("frame").item(0))
+                .getElementsByTagName("camera");
+
+        int numMissingFiles = 0;
+        File fullResSearchDirectory;
+        if (fullResDirectoryOverride == null) {
+            fullResSearchDirectory = new File(metashapeObjectChunk.getFramePath()).getParentFile();
+        } else {
+            fullResSearchDirectory = fullResDirectoryOverride;
+        }
+
+        File exceptionFolder = null;
+
+        for (int i = 0; i < cameraList.getLength(); i++) {
+
+            Element cameraElement = (Element) cameraList.item(i);
+            int cameraId = Integer.parseInt(cameraElement.getAttribute("camera_id"));
+
+            String pathAttribute = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
+
+            File imageFile;
+            String finalPath = "";
+            if (fullResDirectoryOverride == null) {
+                imageFile = new File(fullResSearchDirectory, pathAttribute);
+                finalPath = rootDirectory.toPath().relativize(imageFile.toPath()).toString();
+            } else {
+                //if this doesn't work, then replace metashapeObjectChunk.getFramePath()).getParentFile()
+                //    and the first part of path with the file that the user selected
+                String pathAttributeName = new File(pathAttribute).getName();
+                imageFile = new File(fullResDirectoryOverride, pathAttributeName);
+                finalPath = imageFile.getName();
+            }
+
+            if (imageFile.exists() && !finalPath.isBlank()) {
+                // Add pair to the map
+                cameraPathsMap.put(cameraId, finalPath);
+            } else {
+                numMissingFiles++;
+
+                if (exceptionFolder == null) {
+                    exceptionFolder = imageFile.getParentFile();
+                }
+            }
+        }
+
+        if (!ignoreMissingCams && numMissingFiles > 0) {
+            throw new MissingImagesException("Project is missing images.", numMissingFiles, exceptionFolder);
+        }
+    }
 
     @Override
     public void confirmButtonPress() {
