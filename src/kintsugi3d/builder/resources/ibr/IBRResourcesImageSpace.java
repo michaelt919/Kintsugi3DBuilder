@@ -11,19 +11,6 @@
 
 package kintsugi3d.builder.resources.ibr;
 
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.text.MessageFormat;
-import java.util.*;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.IntStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import javax.imageio.ImageIO;
-import javax.xml.stream.XMLStreamException;
-
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
@@ -50,6 +37,19 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+
+import javax.imageio.ImageIO;
+import javax.xml.stream.XMLStreamException;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.text.MessageFormat;
+import java.util.*;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * A class that encapsulates all of the GPU resources like vertex buffers, uniform buffers, and textures for a given
@@ -231,66 +231,10 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 log.error("Root directory does not exist: " + rootDirectory);
             }
 
-        // 1) Construct camera ID to filename map from frame's ZIP
-            Map<Integer, String> cameraPathsMap = new HashMap<>();
-            // Open the xml files that contains all the cameras' ids and file paths
-            Document frame = metashapeObjectChunk.getFrameZip();
-            if (frame == null || frame.getDocumentElement() == null){
-                log.error("Frame document is null");
-                return null;
-            }
+            // 1) Construct camera ID to filename map from frame's ZIP
+            Map<Integer, String> cameraPathsMap = buildCameraPathsMap(metashapeObjectChunk, fullResDirectoryOverride, ignoreMissingCams, rootDirectory);
 
-            // Loop through the cameras and store each pair of id and path in the map
-            NodeList cameraList = ((Element) frame.getElementsByTagName("frame").item(0))
-                    .getElementsByTagName("camera");
-
-            int numMissingFiles = 0;
-            File fullResSearchDirectory = fullResDirectoryOverride == null ?
-                    new File(metashapeObjectChunk.getFramePath()).getParentFile() :
-                    fullResDirectoryOverride;
-
-
-            File exceptionFolder = null;
-
-            for (int i = 0; i < cameraList.getLength(); i++) {
-                Element cameraElement = (Element) cameraList.item(i);
-                int cameraId = Integer.parseInt(cameraElement.getAttribute("camera_id"));
-
-                String pathAttribute = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
-
-                File imageFile;
-                String finalPath = "";
-                if (fullResDirectoryOverride == null){
-                    imageFile = new File(fullResSearchDirectory, pathAttribute);
-                    finalPath = rootDirectory.toPath().relativize(imageFile.toPath()).toString();
-                }
-                else{
-                    //if this doesn't work, then replace metashapeObjectChunk.getFramePath()).getParentFile()
-                    //    and the first part of path with the file that the user selected
-                    String pathAttributeName = new File(pathAttribute).getName();
-                    imageFile = new File(fullResDirectoryOverride, pathAttributeName);
-                    finalPath = imageFile.getName();
-                }
-
-                if (imageFile.exists() && !finalPath.isBlank()) {
-                    // Add pair to the map
-                    cameraPathsMap.put(cameraId, finalPath);
-                }
-                else{
-                    numMissingFiles++;
-
-                    if (exceptionFolder == null)
-                    {
-                        exceptionFolder = imageFile.getParentFile();
-                    }
-                }
-            }
-
-            if (!ignoreMissingCams && numMissingFiles > 0){
-                throw new MissingImagesException("Project is missing images.", numMissingFiles, exceptionFolder);
-            }
-
-        // 2) Load ViewSet from ZipInputStream from chunk's ZIP (eventually will accept the filename map as a parameter)
+            // 2) Load ViewSet from ZipInputStream from chunk's ZIP (eventually will accept the filename map as a parameter)
             InputStream fileStream = null;
             String targetFileName = "doc.xml"; // Specify the desired file name
             try {
@@ -302,7 +246,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                     if (entry.getName().equals(targetFileName)) {
                         // Found the desired file inside the zip
                         fileStream = new BufferedInputStream(zis);
-                        // Create and store ViewSet TODO: USING A HARD CODED VERSION VALUE (200)
+                        // Create and store ViewSet
+                        // TODO: USING A HARD CODED VERSION VALUE (200)
                         this.viewSet = ((ViewSetReaderFromAgisoftXML) ViewSetReaderFromAgisoftXML.getInstance())
                                 .readFromStream(fileStream, rootDirectory, supportingFilesDirectory, cameraPathsMap, 200, true);
                         break;
@@ -358,9 +303,63 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
-        public static String removeExt(String fileName) {
-            int dotIndex = fileName.lastIndexOf('.');
-            return (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
+        private static Map<Integer, String> buildCameraPathsMap(MetashapeObjectChunk metashapeObjectChunk, File fullResDirectoryOverride, boolean ignoreMissingCams, File rootDirectory)
+                throws FileNotFoundException, MissingImagesException {
+            Map<Integer, String> cameraPathsMap = new HashMap<>();
+
+            // Open the xml files that contains all the cameras' ids and file paths
+            Document frame = metashapeObjectChunk.getFrameZip();
+            if (frame == null || frame.getDocumentElement() == null){
+                throw new FileNotFoundException("No frame document found");
+            }
+
+            // Loop through the cameras and store each pair of id and path in the map
+            NodeList cameraList = ((Element) frame.getElementsByTagName("frame").item(0))
+                    .getElementsByTagName("camera");
+
+            int numMissingFiles = 0;
+            File fullResSearchDirectory = fullResDirectoryOverride == null ?
+                    new File(metashapeObjectChunk.getFramePath()).getParentFile() :
+                    fullResDirectoryOverride;
+
+
+            File exceptionFolder = null;
+
+            for (int i = 0; i < cameraList.getLength(); i++) {
+                Element cameraElement = (Element) cameraList.item(i);
+                int cameraId = Integer.parseInt(cameraElement.getAttribute("camera_id"));
+
+                String pathAttribute = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
+
+                File imageFile;
+                String finalPath = "";
+                if (fullResDirectoryOverride == null){
+                    imageFile = new File(fullResSearchDirectory, pathAttribute);
+                    finalPath = rootDirectory.toPath().relativize(imageFile.toPath()).toString();
+                }
+                else{
+                    //if this doesn't work, then replace metashapeObjectChunk.getFramePath()).getParentFile()
+                    //    and the first part of path with the file that the user selected
+                    String pathAttributeName = new File(pathAttribute).getName();
+                    imageFile = new File(fullResDirectoryOverride, pathAttributeName);
+                    finalPath = imageFile.getName();
+                }
+
+                if (imageFile.exists() && !finalPath.isBlank()) {
+                    // Add pair to the map
+                    cameraPathsMap.put(cameraId, finalPath);
+                }
+                else{
+                    numMissingFiles++;
+                    exceptionFolder = imageFile.getParentFile();
+                }
+            }
+
+            if (!ignoreMissingCams && numMissingFiles > 0){
+                throw new MissingImagesException("Project is missing images.", numMissingFiles, exceptionFolder);
+            }
+
+            return cameraPathsMap;
         }
 
         public ViewSet getViewSet()
