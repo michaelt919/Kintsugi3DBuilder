@@ -30,6 +30,8 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
+import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObject;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
@@ -40,7 +42,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -72,8 +78,11 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
     @Override
     public void init() {
-        //TODO: temp hack to make text visible
+        //TODO: temp hack to make text visible, need to change textflow css?
         imgViewText.setFill(Paint.valueOf("white"));
+        this.metashapeObjectChunk = null;
+        this.cameraDocument = null;
+        this.cameraFile = null;
     }
 
     @Override
@@ -91,18 +100,61 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         //custom import path loads from cameras xml file
         else{
             if(cameraFile == null || cameraFile != sharedCamFile){
-                //TODO: figure this out later
+                initializeChunkSelectionAndTreeView(sharedCamFile);
             }
         }
+    }
+    public void initializeChunkSelectionAndTreeView(File camFile) {
+        cameraFile = camFile;
+
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder;
+            builder = factory.newDocumentBuilder();
+            cameraDocument = builder.parse(cameraFile);
+
+            //get chunk name
+            Element chunkElem = (Element) cameraDocument.getElementsByTagName("chunk").item(0);
+            String chunkName = chunkElem.getAttribute("label");
+
+            ReadonlyViewSet newViewSet = ViewSetReaderFromAgisoftXML.getInstance().readFromFile(cameraFile);
+
+            //get enabled cameras
+            NodeList cams = cameraDocument.getElementsByTagName("camera");
+            ArrayList<Element> cameras = new ArrayList<>();
+            for (int i = 0; i < cams.getLength(); ++i) {
+                Node cameraNode = cams.item(i);
+
+                if (cameraNode.getNodeType() != Node.ELEMENT_NODE ) {
+                    return;
+                }
+
+                Element camera = (Element) cameraNode;
+
+                String enabled = camera.getAttribute("enabled");
+                if (enabled.equals("true") ||
+                        enabled.equals("1") ||
+                        enabled.isEmpty() /*cam is enabled by default*/) {
+                    cameras.add(camera);
+                }
+            }
+            List<Image> thumbnails = new ArrayList<>();
+            for(int i = 0; i < newViewSet.getCameraPoseCount(); ++i){
+                thumbnails.add(new Image(newViewSet.getPreviewImageFile(i).toURI().toString()));
+            }
+
+            nameThisFuncLater(chunkName, thumbnails, cameras);
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     public void initializeChunkSelectionAndTreeView(MetashapeObjectChunk metashapeObjectChunk) {
         this.metashapeObjectChunk = metashapeObjectChunk;
 
-        //add chunk name to tree
         String chunkName = metashapeObjectChunk.getChunkName();
-        TreeItem<String> rootItem = new TreeItem<>(chunkName);
-        chunkTreeView.setRoot(rootItem);
 
 //        //initialize options in new chunk selection choice box (cannot be done before chunkName is set)
 //        initializeChoiceBox();
@@ -111,11 +163,16 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 //        //disable select chunk button if selected chunk (in choice box) matches the current chunk
 //        updateSelectChunkButton();
 
-        //fill thumbnail list
         ArrayList <Image> thumbnailImageList = (ArrayList<Image>) metashapeObjectChunk.loadThumbnailImageList();
 
-        //add full-res images as children to the chunk name in treeview
         ArrayList<Element> cameras = (ArrayList<Element>) metashapeObjectChunk.findEnabledCameras();
+
+        nameThisFuncLater(chunkName, thumbnailImageList, cameras);
+    }
+
+    private void nameThisFuncLater(String chunkName, List<Image> thumbnailImgList, List<Element> cameras){
+        TreeItem<String> rootItem = new TreeItem<>(chunkName);
+        chunkTreeView.setRoot(rootItem);
 
         for (int i = 0; i < cameras.size(); ++i) {
             Element camera = cameras.get(i);
@@ -127,7 +184,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
             Element parent = (Element) camera.getParentNode();
             TreeItem<String> destinationItem; //stores the node which the image will be added to
-                                                // (either a group or the root node)
+            // (either a group or the root node)
             if(parent.getTagName().equals("group")){
                 String groupName = parent.getAttribute("label");//TODO: CURRENTLY ONLY CHECKS TO SEE IF NAMES MATCH
 
@@ -161,9 +218,9 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             //set image and thumbnail
             ImageView thumbnailImgView;
             try {
-                thumbnailImgView = new ImageView(thumbnailImageList.get(i));
+                thumbnailImgView = new ImageView(thumbnailImgList.get(i));
             } catch (IndexOutOfBoundsException e) {
-                //thumbnail not found in thumbnailImageList
+                //thumbnail not found in thumbnailImgList
                 thumbnailImgView = new ImageView(new Image(new File("question-mark.png").toURI().toString()));
             }
             thumbnailImgView.setFitWidth(THUMBNAIL_SIZE);
@@ -237,15 +294,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     }
 
     public void updateImageText(String imageName) {
-        String psxFilePath = this.metashapeObjectChunk.getPsxFilePath();
-        String chunkName = this.metashapeObjectChunk.getChunkName();
-
-//                      set label to: psx name + chunk name + cameraID
-        File psxFile = new File(psxFilePath);
-
-        imgViewText.setText("File: " + psxFile.getName() +
-                            "\nChunk: " + chunkName +
-                            "\nImage: " + imageName);
+        imgViewText.setText(imageName);
 
         textFlow.setTextAlignment(TextAlignment.LEFT);
     }
@@ -328,5 +377,13 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
     public MetashapeObjectChunk getMetashapeObjectChunk() {
         return metashapeObjectChunk;
+    }
+
+    public Document getCameraDocument(){
+        return cameraDocument;
+    }
+
+    public File getCameraFile() {
+        return cameraFile;
     }
 }

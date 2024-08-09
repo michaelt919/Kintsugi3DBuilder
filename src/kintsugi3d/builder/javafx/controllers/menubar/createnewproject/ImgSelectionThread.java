@@ -19,7 +19,10 @@ import javafx.scene.text.Text;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -34,6 +37,8 @@ public class ImgSelectionThread implements Runnable{
     private final ImageView chunkViewerImgView;
     private final Text imgViewText;
     private final MetashapeObjectChunk metashapeObjectChunk;
+    private final Document cameraDocument;
+    private final File cameraFile;
     private final PrimaryViewSelectController controller;
     private volatile boolean stopRequested = false;
     private volatile boolean isRunning = false;
@@ -45,6 +50,8 @@ public class ImgSelectionThread implements Runnable{
         this.chunkViewerImgView = primaryViewSelectController.getChunkViewerImgView();
         this.imgViewText = primaryViewSelectController.getImgViewText();
         this.metashapeObjectChunk = primaryViewSelectController.getMetashapeObjectChunk();
+        this.cameraDocument = primaryViewSelectController.getCameraDocument();
+        this.cameraFile = primaryViewSelectController.getCameraFile();
         this.controller = primaryViewSelectController;
     }
 
@@ -65,7 +72,43 @@ public class ImgSelectionThread implements Runnable{
         try {
             //goal of this try block is to find the camera which is associated with the image name in selectedItem
             //then take that camera's image and put it into the imageview to show to the user
-            Element selectedItemCam = metashapeObjectChunk.matchImageToCam(imageName);
+            Document document = metashapeObjectChunk == null ? cameraDocument : metashapeObjectChunk.getFrameZip();
+            boolean isMetashapeImport = document.getElementsByTagName("frame").getLength() != 0;
+
+            Element selectedItemCam = null;
+
+            NodeList cameras = document.getElementsByTagName("camera");
+
+            for (int i = 0; i < cameras.getLength(); ++i) {
+                Element camera = (Element) cameras.item(i);
+
+                //(metashape import) --> if in frame.zip, each camera has an id and
+                //      the photo path is inside a photo node within the camera node
+
+                //(custom import) --> if in cameras.xml, img name is in camera node attribute "label"
+
+                //metashape import
+                if(isMetashapeImport){
+                    Node photoNode = camera.getElementsByTagName("photo").item(0);
+                    Element photoElement = (Element) photoNode;
+
+                    //path in photo element contains "../../.." before the name of the image,
+                    // so we cannot test for an exact match
+                    //using regex to see if the image names are the same regardless of their paths
+                    //ex. "folder/anotherFolder/asdfghjk/imageName.png" matches with "imageName.png"
+                    if (photoElement.getAttribute("path").matches(".*" + imageName + ".*")) {
+                        selectedItemCam = camera;
+                        break;
+                    }
+                }
+                //custom import
+                else if (camera.getAttribute("label").matches(".*" + imageName + ".*")) {
+                    selectedItemCam = camera;
+                    break;
+                }
+            }
+
+            //no matching camera found
 
             if (selectedItemCam == null) {
                 imgViewText.setText(imgViewText.getText() +
@@ -73,7 +116,22 @@ public class ImgSelectionThread implements Runnable{
                 return;
             }
 
-            File imgFile = metashapeObjectChunk.getImgFileFromCam(selectedItemCam);
+            String path;
+            if(isMetashapeImport){
+                Element photo = (Element) selectedItemCam.getElementsByTagName("photo").item(0);
+                path = photo.getAttribute("path");
+
+                String parentPath = metashapeObjectChunk.getPsxFile().getParent();
+                path = new File(new File(parentPath), path.substring(9)).getPath();
+            }
+            else{
+                path = selectedItemCam.getAttribute("label");
+                String parentPath = cameraFile.getParent();
+                path = new File(new File(parentPath), path).getPath();
+            }
+
+            //String path now holds the full path to the selected thumbnail's full-res image
+            File imgFile = new File(path);
 
             //set imageview to selected image
             if (!imgFile.exists()) {

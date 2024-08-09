@@ -226,48 +226,6 @@ public class MetashapeObjectChunk {
         return enabledCams;
     }
 
-    public Element matchImageToCam(String imageName) {
-        //takes in an image name, outputs the camera in frame.zip which took that image
-
-        NodeList cameras = frameZip.getElementsByTagName("frame").
-                item(0).getChildNodes().
-                item(1).getChildNodes();
-
-        for (int i = 0; i < cameras.getLength(); ++i) {
-            //cameras also holds text fields associated with the cameras, so filter them out
-            if (cameras.item(i).getNodeName().equals("camera")) {
-                Element camera = (Element) cameras.item(i);
-
-                Node photoNode = camera.getElementsByTagName("photo").item(0);
-                Element photoElement = (Element) photoNode;
-
-                //path in photo element contains "../../.." before the name of the image,
-                // so we cannot test for an exact match
-                //using regex to see if the image names are the same regardless of their paths
-                //ex. "folder/anotherFolder/asdfghjk/imageName.png" matches with "imageName.png"
-                if (photoElement.getAttribute("path").matches(".*" + imageName + ".*")) {
-                    return camera;
-                }
-            }
-        }
-
-        return null;//no matching camera found
-    }
-
-    public File getImgFileFromCam(Element selectedItemCam) {
-        Element photo = (Element) selectedItemCam.getElementsByTagName("photo").item(0);
-        String path = photo.getAttribute("path");
-        //example path: "../../../160518_mia337_114828_a_ding/160517_mia337_2013_9_7a_ding_nearFocus_R1_C4_0_30.jpg"
-
-        //need to replace ../../../ with the parent of the .psx file
-        File psxFile = new File(this.metashapeObject.getPsxFilePath());
-        String parentPath = psxFile.getParentFile().getAbsolutePath();
-        path = new File(new File(parentPath), path.substring(9)).getPath();
-
-        //String path now holds the full path to the selected thumbnail's full-res image
-        return new File(path);
-    }
-
     public String getCurrentModelPath() {
         return getModelPathFromXML(modelID);
     }
@@ -306,4 +264,8 @@ public class MetashapeObjectChunk {
     }
 
     public Integer getActiveModelID(){return activeModelID;}
+
+    public File getPsxFile() {
+        return metashapeObject.getPsxFile();
+    }
 }
