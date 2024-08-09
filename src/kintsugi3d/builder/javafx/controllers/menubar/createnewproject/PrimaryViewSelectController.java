@@ -30,8 +30,6 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObject;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
@@ -87,24 +85,25 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
     @Override
     public void refresh() {
-        //metashape import path loads from metashape project
         MetashapeObjectChunk sharedChunk = hostScrollerController.getInfo(ShareInfo.Info.METASHAPE_OBJ_CHUNK);
         File sharedCamFile = hostScrollerController.getInfo(ShareInfo.Info.CAM_FILE);
+
+        //metashape import path loads from metashape project
         if(hostPage.getPrevPage() == hostScrollerController.getPage("/fxml/menubar/createnewproject/MetashapeImport.fxml")){
             if(this.metashapeObjectChunk == null ||
                     this.metashapeObjectChunk != sharedChunk) {
-                initializeChunkSelectionAndTreeView(sharedChunk);
+                initTreeView(sharedChunk);
             }
         }
 
         //custom import path loads from cameras xml file
         else{
             if(cameraFile == null || cameraFile != sharedCamFile){
-                initializeChunkSelectionAndTreeView(sharedCamFile);
+                initTreeView(sharedCamFile);
             }
         }
     }
-    public void initializeChunkSelectionAndTreeView(File camFile) {
+    public void initTreeView(File camFile) {
         cameraFile = camFile;
 
         try {
@@ -116,9 +115,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             //get chunk name
             Element chunkElem = (Element) cameraDocument.getElementsByTagName("chunk").item(0);
             String chunkName = chunkElem.getAttribute("label");
-
-            ReadonlyViewSet newViewSet = ViewSetReaderFromAgisoftXML.getInstance().readFromFile(cameraFile);
-
+            
             //get enabled cameras
             NodeList cams = cameraDocument.getElementsByTagName("camera");
             ArrayList<Element> cameras = new ArrayList<>();
@@ -138,39 +135,31 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                     cameras.add(camera);
                 }
             }
+            //prev-res images haven't been generated and no thumbnails are present, 
+            //so leave thumbnails list empty
             List<Image> thumbnails = new ArrayList<>();
-            for(int i = 0; i < newViewSet.getCameraPoseCount(); ++i){
-                thumbnails.add(new Image(newViewSet.getPreviewImageFile(i).toURI().toString()));
-            }
 
-            nameThisFuncLater(chunkName, thumbnails, cameras);
+            addTreeElems(chunkName, thumbnails, cameras);
 
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            ProjectIO.handleException("Error initializing primary view selection.", e);
         }
 
     }
 
-    public void initializeChunkSelectionAndTreeView(MetashapeObjectChunk metashapeObjectChunk) {
+    public void initTreeView(MetashapeObjectChunk metashapeObjectChunk) {
         this.metashapeObjectChunk = metashapeObjectChunk;
 
         String chunkName = metashapeObjectChunk.getChunkName();
-
-//        //initialize options in new chunk selection choice box (cannot be done before chunkName is set)
-//        initializeChoiceBox();
-//        this.newChunkSelectionChoiceBox.setOnAction(this::updateSelectChunkButton);
-//
-//        //disable select chunk button if selected chunk (in choice box) matches the current chunk
-//        updateSelectChunkButton();
 
         ArrayList <Image> thumbnailImageList = (ArrayList<Image>) metashapeObjectChunk.loadThumbnailImageList();
 
         ArrayList<Element> cameras = (ArrayList<Element>) metashapeObjectChunk.findEnabledCameras();
 
-        nameThisFuncLater(chunkName, thumbnailImageList, cameras);
+        addTreeElems(chunkName, thumbnailImageList, cameras);
     }
 
-    private void nameThisFuncLater(String chunkName, List<Image> thumbnailImgList, List<Element> cameras){
+    private void addTreeElems(String chunkName, List<Image> thumbnailImgList, List<Element> cameras){
         TreeItem<String> rootItem = new TreeItem<>(chunkName);
         chunkTreeView.setRoot(rootItem);
 
@@ -200,7 +189,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                 }
 
                 if (groupAlreadyCreated){
-                    //add camera to this group
+                    //add camera to existing group
                     destinationItem = matchingItem;
                 }
                 else{//group has not been created yet
@@ -216,22 +205,26 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             }
 
             //set image and thumbnail
-            ImageView thumbnailImgView;
-            try {
-                thumbnailImgView = new ImageView(thumbnailImgList.get(i));
-            } catch (IndexOutOfBoundsException e) {
-                //thumbnail not found in thumbnailImgList
-                thumbnailImgView = new ImageView(new Image(new File("question-mark.png").toURI().toString()));
-            }
-            thumbnailImgView.setFitWidth(THUMBNAIL_SIZE);
-            thumbnailImgView.setFitHeight(THUMBNAIL_SIZE);
-
-            TreeItem<String> imageTreeItem = new TreeItem<>(imageName, thumbnailImgView);
+            TreeItem<String> imageTreeItem = getStringTreeItem(thumbnailImgList, i, imageName);
             destinationItem.getChildren().add(imageTreeItem);
         }
 
         //unroll treeview
         chunkTreeView.getRoot().setExpanded(true);
+    }
+
+    private static TreeItem<String> getStringTreeItem(List<Image> thumbnailImgList, int i, String imageName) {
+        ImageView thumbnailImgView;
+        try {
+            thumbnailImgView = new ImageView(thumbnailImgList.get(i));
+        } catch (IndexOutOfBoundsException e) {
+            //thumbnail not found in thumbnailImgList
+            thumbnailImgView = new ImageView(new Image(new File("question-mark.png").toURI().toString()));
+        }
+        thumbnailImgView.setFitWidth(THUMBNAIL_SIZE);
+        thumbnailImgView.setFitHeight(THUMBNAIL_SIZE);
+
+        return new TreeItem<>(imageName, thumbnailImgView);
     }
 
     public void selectChunk(ActionEvent actionEvent) throws IOException {
@@ -251,7 +244,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
             //TODO: actually retrieve model id instead of defaulting to 0
             MetashapeObjectChunk newMetashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, selectedChunkName, 0);
-            primaryViewSelectController.initializeChunkSelectionAndTreeView(newMetashapeObjectChunk);
+            primaryViewSelectController.initTreeView(newMetashapeObjectChunk);
 
             stage = (Stage) ((javafx.scene.Node) actionEvent.getSource()).getScene().getWindow();
             scene = new Scene(root);

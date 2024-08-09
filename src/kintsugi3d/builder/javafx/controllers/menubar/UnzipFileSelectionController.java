@@ -156,7 +156,7 @@ public class UnzipFileSelectionController {
             //TODO: actually find model id instead of defaulting to 0
             MetashapeObjectChunk metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, selectedChunkName, 0);
 
-            primaryViewSelectController.initializeChunkSelectionAndTreeView(metashapeObjectChunk);
+            primaryViewSelectController.initTreeView(metashapeObjectChunk);
 
         }
         catch (Exception e){
