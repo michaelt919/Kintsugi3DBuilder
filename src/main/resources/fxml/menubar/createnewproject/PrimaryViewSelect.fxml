@@ -21,7 +21,7 @@
    <children>
       <HBox spacing="10.0">
          <children>
-            <TreeView fx:id="chunkTreeView" onContextMenuRequested="#selectImageInTreeView" onMouseClicked="#selectImageInTreeView" prefHeight="400.0" prefWidth="450.0" />
+            <TreeView fx:id="chunkTreeView" onContextMenuRequested="#selectImageInTreeView" onKeyTyped="#selectImageInTreeView" onMouseClicked="#selectImageInTreeView" prefHeight="400.0" prefWidth="450.0" />
             <VBox alignment="TOP_CENTER" prefHeight="400.0" prefWidth="326.0">
                <children>
                   <TextFlow fx:id="textFlow" lineSpacing="5.0" maxHeight="90.0" minHeight="20.0" prefHeight="20.0" prefWidth="326.0" textAlignment="CENTER" VBox.vgrow="ALWAYS">

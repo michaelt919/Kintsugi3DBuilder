@@ -74,9 +74,11 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     private File fullResOverride;
     private boolean doSkipMissingCams;
     private Document cameraDocument;
+    private HashMap<String, Image> imgCache;
     private ImgSelectionThread loadImgThread;
     static final String[] VALID_EXTENSIONS = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
     static final int THUMBNAIL_SIZE = 30;
+
     @Override
     public void init() {
         //TODO: temp hack to make text visible, need to change textflow css?
@@ -84,6 +86,8 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         this.metashapeObjectChunk = null;
         this.cameraDocument = null;
         this.cameraFile = null;
+
+        imgCache = new HashMap<>();
     }
 
     @Override
@@ -259,9 +263,11 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             updateImageText(imageName);
             imgViewText.setText(imgViewText.getText() + " (preview)");
 
-
             //set thumbnail as main image, then update to full resolution later
-            setThumbnailAsFullImage(selectedItem);
+            //don't set thumbnail if img is cached, otherwise would cause a flash
+            if(!imgCache.containsKey(imageName)){
+                setThumbnailAsFullImage(selectedItem);
+            }
 
             //if loadImgThread is running, kill it and start a new one
             if(loadImgThread != null && loadImgThread.isActive()){
@@ -506,5 +512,9 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
     public File getFullResOverride() {
         return fullResOverride;
+    }
+
+    public HashMap<String, Image> getImgCache() {
+        return imgCache;
     }
 }

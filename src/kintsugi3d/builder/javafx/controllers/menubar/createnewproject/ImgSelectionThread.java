@@ -30,6 +30,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashMap;
 
 public class ImgSelectionThread implements Runnable{
 
@@ -44,6 +45,7 @@ public class ImgSelectionThread implements Runnable{
 
     private final PrimaryViewSelectController controller;
     private final File fullResOverride;
+    private HashMap<String, Image> imgCache;
     private volatile boolean stopRequested = false;
     private volatile boolean isRunning = false;
 
@@ -57,6 +59,7 @@ public class ImgSelectionThread implements Runnable{
         this.cameraDocument = primaryViewSelectController.getCameraDocument();
         this.photosDir = primaryViewSelectController.getPhotosDir();
         this.fullResOverride = primaryViewSelectController.getFullResOverride();
+        this.imgCache = primaryViewSelectController.getImgCache();
         this.controller = primaryViewSelectController;
     }
 
@@ -73,86 +76,98 @@ public class ImgSelectionThread implements Runnable{
     }
 
     private void loadFullResImg(String imageName) {
-        Image image = null;
-        try {
-            //goal of this try block is to find the camera which is associated with the image name in selectedItem
-            //then take that camera's image and put it into the imageview to show to the user
-            Document document = metashapeObjectChunk == null ? cameraDocument : metashapeObjectChunk.getFrameZip();
-            boolean isMetashapeImport = document.getElementsByTagName("frame").getLength() != 0;
+        Image image = null;//use cached img if possible
+        if(imgCache.containsKey(imageName)){
+            image = imgCache.get(imageName);
+        }
+        else{
+            try {
+                //goal of this try block is to find the camera which is associated with the image name in selectedItem
+                //then take that camera's image and put it into the imageview to show to the user
+                Document document = metashapeObjectChunk == null ? cameraDocument : metashapeObjectChunk.getFrameZip();
+                boolean isMetashapeImport = document.getElementsByTagName("frame").getLength() != 0;
 
-            Element selectedItemCam = null;
+                Element selectedItemCam = null;
 
-            NodeList cameras = document.getElementsByTagName("camera");
+                NodeList cameras = document.getElementsByTagName("camera");
 
-            for (int i = 0; i < cameras.getLength(); ++i) {
-                Element camera = (Element) cameras.item(i);
+                for (int i = 0; i < cameras.getLength(); ++i) {
+                    Element camera = (Element) cameras.item(i);
 
-                //(metashape import) --> if in frame.zip, each camera has an id and
-                //      the photo path is inside a photo node within the camera node
+                    //(metashape import) --> if in frame.zip, each camera has an id and
+                    //      the photo path is inside a photo node within the camera node
 
-                //(custom import) --> if in cameras.xml, img name is in camera node attribute "label"
+                    //(custom import) --> if in cameras.xml, img name is in camera node attribute "label"
 
-                //metashape import
-                if(isMetashapeImport){
-                    Node photoNode = camera.getElementsByTagName("photo").item(0);
-                    Element photoElement = (Element) photoNode;
+                    //metashape import
+                    if(isMetashapeImport){
+                        Node photoNode = camera.getElementsByTagName("photo").item(0);
+                        Element photoElement = (Element) photoNode;
 
-                    //path in photo element contains "../../.." before the name of the image,
-                    // so we cannot test for an exact match
-                    //using regex to see if the image names are the same regardless of their paths
-                    //ex. "folder/anotherFolder/asdfghjk/imageName.png" matches with "imageName.png"
-                    if (photoElement.getAttribute("path").matches(".*" + imageName + ".*")) {
+                        //path in photo element contains "../../.." before the name of the image,
+                        // so we cannot test for an exact match
+                        //using regex to see if the image names are the same regardless of their paths
+                        //ex. "folder/anotherFolder/asdfghjk/imageName.png" matches with "imageName.png"
+                        if (photoElement.getAttribute("path").matches(".*" + imageName + ".*")) {
+                            selectedItemCam = camera;
+                            break;
+                        }
+                    }
+                    //custom import
+                    else if (camera.getAttribute("label").matches(".*" + imageName + ".*")) {
                         selectedItemCam = camera;
                         break;
                     }
                 }
-                //custom import
-                else if (camera.getAttribute("label").matches(".*" + imageName + ".*")) {
-                    selectedItemCam = camera;
-                    break;
+
+                if (selectedItemCam == null) {
+                    imgViewText.setText(imgViewText.getText() +
+                            " (matching camera not found)");
+                    return;
                 }
-            }
 
-            if (selectedItemCam == null) {
-                imgViewText.setText(imgViewText.getText() +
-                        " (matching camera not found)");
-                return;
-            }
+                String path = findFullResPath(isMetashapeImport, selectedItemCam, fullResOverride);
 
-            String path = findFullResPath(isMetashapeImport, selectedItemCam, fullResOverride);
+                File imgFile;
+                try{
+                    imgFile = ImageFinder.getInstance().findImageFile(new File(path));
+                }
+                catch(FileNotFoundException ignored){
+                    //camera not found in xml document
+                    imgViewText.setText(imgViewText.getText() +
+                            " (full res image not found)");
+                    return;
+                }
 
-            File imgFile;
-            try{
-                imgFile = ImageFinder.getInstance().findImageFile(new File(path));
-            }
-            catch(FileNotFoundException ignored){
-                //camera not found in xml document
-                imgViewText.setText(imgViewText.getText() +
-                        " (full res image not found)");
-                return;
-            }
+                //set imageview to selected image
+                if (!imgFile.getAbsolutePath().toLowerCase().matches(".*\\.tiff?")) {
+                    int requestedWidth = (int) chunkViewerImgView.getFitWidth();
+                    int requestedHeight = (int) chunkViewerImgView.getFitHeight();
+                    boolean preserveRatio = true;
+                    boolean smooth = true;        // Use a smoother resampling algorithm
 
-            //set imageview to selected image
-            if (!imgFile.getAbsolutePath().toLowerCase().matches(".*\\.tiff?")) {
-                image = new Image(imgFile.toURI().toString());
-            } else {
-                //convert image if it is a .tif or .tiff
-                if(stopRequested){return;}
-                BufferedImage bufferedImage = ImageIO.read(imgFile);
-                if(stopRequested){return;}
-                image = SwingFXUtils.toFXImage(bufferedImage, null);
-                if(stopRequested){return;}
-            }
+                    image = new Image(imgFile.toURI().toString(), requestedWidth, requestedHeight, preserveRatio, smooth);
+                } else {
+                    //convert image if it is a .tif or .tiff
+                    if(stopRequested){return;}
+                    BufferedImage bufferedImage = ImageIO.read(imgFile);
+                    if(stopRequested){return;}
+                    image = SwingFXUtils.toFXImage(bufferedImage, null);
+                    if(stopRequested){return;}
+                }
 
-        } catch (IllegalArgumentException e) {//could not find image
-            imgViewText.setText(imgViewText.getText() + " (full res image not found)");
-            log.warn("Could not find full res image", e);
-        } catch (IOException e) {
-            log.warn("Failed to read image", e);
+                imgCache.put(imageName, image);
+
+            } catch (IllegalArgumentException e) {//could not find image
+                imgViewText.setText(imgViewText.getText() + " (full res image not found)");
+                log.warn("Could not find full res image", e);
+            } catch (IOException e) {
+                log.warn("Failed to read image", e);
+            }
         }
 
         Image finalImage = image;//copy here so a final version of image can be passed to lambda expression
-        if (finalImage != null) {
+        if (finalImage != null && !stopRequested) {
             Platform.runLater(() -> {
                 //TODO: WITH LARGER IMAGES, FORMATTING IS BROKEN
                 chunkViewerImgView.setImage(finalImage);
