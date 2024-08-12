@@ -11,10 +11,7 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
-import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -24,8 +21,6 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.util.RecentProjects;
@@ -33,14 +28,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.stream.IntStream;
 
 public class CustomImportController extends FXMLPageController implements ShareInfo
 {
     private static final Logger log = LoggerFactory.getLogger(CustomImportController.class);
-    @FXML private ChoiceBox<String> primaryViewChoiceBox;
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
     @FXML private Text loadCheckImages;
@@ -88,27 +79,6 @@ public class CustomImportController extends FXMLPageController implements ShareI
         return areAllFilesLoaded();
     }
 
-    /**
-     * Recursively chains together add calls to the dropdown, using Platform.runLater between each one
-     * to avoid locking up the JavaFX Application thread
-     * @param iterator
-     */
-    private void addToViewListRecursive(Iterator<String> iterator)
-    {
-        primaryViewChoiceBox.getItems().add(iterator.next());
-
-        if (iterator.hasNext())
-        {
-            Platform.runLater(() -> addToViewListRecursive(iterator));
-        }
-        else
-        {
-            // Finished adding all the choices; select the first one by default and re-enable
-            primaryViewChoiceBox.getSelectionModel().select(0);
-            primaryViewChoiceBox.setDisable(false);
-        }
-    }
-
     @FXML
     private void camFileSelect()
     {
@@ -119,35 +89,8 @@ public class CustomImportController extends FXMLPageController implements ShareI
         {
             cameraFile = temp;
             setHomeDir(temp);
-
-            try
-            {
-                ReadonlyViewSet newViewSet = ViewSetReaderFromAgisoftXML.getInstance().readFromFile(cameraFile);
-
-                loadCheckCameras.setText("Loaded");
-                loadCheckCameras.setFill(Paint.valueOf("Green"));
-
-                primaryViewChoiceBox.getItems().clear();
-
-                if (newViewSet.getCameraPoseCount() > 0)
-                {
-                    // Disable while updating the choices as it won't be responsive until it's done adding all the options
-                    primaryViewChoiceBox.setDisable(true);
-                    Iterator<String> imageIterator = IntStream.range(0, newViewSet.getCameraPoseCount())
-                        .mapToObj(newViewSet::getImageFileName)
-                        .sorted(Comparator.naturalOrder())
-                        .iterator();
-
-                    // Use individual Platform.runLater calls, chained together recursively
-                    // to prevent locking up the JavaFX Application thread
-                    Platform.runLater(() -> addToViewListRecursive(imageIterator));
-                }
-            }
-            catch (Exception e)
-            {
-                log.error("An error occurred reading camera file:", e);
-                new Alert(AlertType.ERROR, e.toString()).show();
-            }
+            loadCheckCameras.setText("Loaded");
+            loadCheckCameras.setFill(Paint.valueOf("Green"));
         }
 
         hostScrollerController.updatePrevAndNextButtons();

@@ -37,8 +37,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
     @FXML private ChoiceBox chunkSelectionChoiceBox;
     @FXML private ChoiceBox modelSelectionChoiceBox;
-    @FXML private ChoiceBox primaryViewChoiceBox;
-
 
     private File metashapePsxFile;
     private MetashapeObjectChunk metashapeObjectChunk;
@@ -48,8 +46,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     private volatile boolean alertShown = false;
 
     FileChooser fileChooser;
-    private volatile boolean updatingPrimaryView;
-
     @Override
     public Region getHostRegion() {
         return anchorPane;
@@ -71,10 +67,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         //need to do Platform.runLater so updateModelSelectionChoiceBox can pull info from chunkSelectionChoiceBox
         chunkSelectionChoiceBox.setOnAction(event -> Platform.runLater(()->{
                 updateModelSelectionChoiceBox();
-
-                if (!updatingPrimaryView){
-                    updatePrimaryViewChoiceBox();
-                }
                 updateLoadedIndicators();
 
         }));
@@ -132,51 +124,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
             RecentProjects.setMostRecentDirectory(metashapePsxFile.getParentFile());
             fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
-        }
-    }
-
-    private synchronized void updatePrimaryViewChoiceBox()
-    {
-        updatingPrimaryView = true;
-
-        // Disable while updating the choices as it won't be responsive until it's done adding all the options
-        primaryViewChoiceBox.setValue("Loading Views...");
-        primaryViewChoiceBox.setDisable(true);
-        primaryViewChoiceBox.getItems().clear();
-
-
-        List<Element> cameras = metashapeObjectChunk.findEnabledCameras();
-        if (!cameras.isEmpty())
-        {
-            Iterator<String> imageIterator = cameras.stream().map(camera -> camera.getAttribute("label"))
-                    .sorted(Comparator.naturalOrder())
-                    .iterator();
-
-
-            // Use individual Platform.runLater calls, chained together recursively
-            // to prevent locking up the JavaFX Application thread
-            addToViewListRecursive(imageIterator);
-        }
-        else{
-            //TODO: create warning alert because no enabled cameras were found
-            primaryViewChoiceBox.setValue("No Enabled Cameras Found");
-        }
-
-    }
-
-    private void addToViewListRecursive(Iterator<String> iterator)
-    {
-        primaryViewChoiceBox.getItems().add(iterator.next());
-
-        if (iterator.hasNext())
-        {
-            Platform.runLater(() -> addToViewListRecursive(iterator));
-        }
-        else
-        {
-            primaryViewChoiceBox.getSelectionModel().select(0);
-            primaryViewChoiceBox.setDisable(false);
-            updatingPrimaryView = false;
         }
     }
 
