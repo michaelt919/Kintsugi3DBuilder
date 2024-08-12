@@ -399,7 +399,7 @@ public class MenubarController
 
                 Platform.runLater(()-> localTextLabel.setText(revertText));
 
-                ProgressBarsController.getInstance().clickStopwatches(progress, maximum, overallProgress);
+                ProgressBarsController.getInstance().clickStopwatches(progress, maximum);
             }
 
             @Override
