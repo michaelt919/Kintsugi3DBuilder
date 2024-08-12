@@ -4,6 +4,8 @@
 ### [Documentation](https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf)
 ### [CHI forums](https://forums.culturalheritageimaging.org/forum/48-kintsugi-3d/)
 
+!["Loie Fuller," by Joseph Kratina, from the Minneapolis Institute of Art (2016.33.14), processed in Kintsugi 3D Builder from 168 photographs and rendered in Kintsugi 3D Viewer.](docs/loie-fuller.png)
+
 ## Install instructions:
 
 On Windows, download and run "Kintsugi3DBuilder-\<version\>-setup.exe" to install Kintsugi 3D.
