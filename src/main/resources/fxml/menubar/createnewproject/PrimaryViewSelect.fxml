@@ -17,20 +17,31 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<AnchorPane fx:id="hostAnchorPane" prefHeight="420.0" prefWidth="814.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.createnewproject.PrimaryViewSelectController">
+<AnchorPane fx:id="hostAnchorPane" prefHeight="464.0" prefWidth="920.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.createnewproject.PrimaryViewSelectController">
    <children>
       <HBox spacing="10.0">
          <children>
             <TreeView fx:id="chunkTreeView" onContextMenuRequested="#selectImageInTreeView" onKeyTyped="#selectImageInTreeView" onMouseClicked="#selectImageInTreeView" prefHeight="400.0" prefWidth="450.0" />
             <VBox alignment="TOP_CENTER" prefHeight="400.0" prefWidth="326.0">
                <children>
-                  <TextFlow fx:id="textFlow" lineSpacing="5.0" maxHeight="90.0" minHeight="20.0" prefHeight="20.0" prefWidth="326.0" textAlignment="CENTER" VBox.vgrow="ALWAYS">
-                     <Text fx:id="imgViewText" fontSmoothingType="LCD" text="No Image Selected" textOrigin="TOP" wrappingWidth="200" />
-                     <ImageView fx:id="chunkViewerImgView" fitHeight="309.0" fitWidth="299.0" pickOnBounds="true" preserveRatio="true" />
+                  <VBox alignment="CENTER" VBox.vgrow="ALWAYS">
                      <VBox.margin>
                         <Insets bottom="15.0" left="5.0" right="5.0" top="5.0" />
                      </VBox.margin>
-                  </TextFlow>
+                     <children>
+                        <Text fx:id="imgViewText" fontSmoothingType="LCD" text="No Image Selected" textAlignment="CENTER" textOrigin="TOP" wrappingWidth="200" />
+                        <ImageView fx:id="chunkViewerImgView" fitHeight="251.0" fitWidth="299.0" pickOnBounds="true">
+                           <VBox.margin>
+                              <Insets bottom="60.0" left="60.0" right="60.0" top="60.0" />
+                           </VBox.margin></ImageView>
+                        <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="80.0">
+                           <children>
+                              <Button mnemonicParsing="false" onAction="#rotateLeft" prefHeight="40.0" prefWidth="80.0" text="&lt;--" />
+                              <Button mnemonicParsing="false" onAction="#rotateRight" prefHeight="40.0" prefWidth="80.0" text="--&gt;" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
                </children>
                <padding>
                   <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

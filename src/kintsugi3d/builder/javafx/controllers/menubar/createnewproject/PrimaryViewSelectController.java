@@ -21,15 +21,12 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
-import javafx.scene.text.TextFlow;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
-import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObject;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
@@ -63,10 +60,6 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     @FXML private TreeView<String> chunkTreeView;
     @FXML private ImageView chunkViewerImgView;
     @FXML private Text imgViewText;
-    @FXML public TextFlow textFlow;
-
-    @FXML private Button selectChunkButton;
-    @FXML private ChoiceBox<String> newChunkSelectionChoiceBox;//allows the user to select a new chunk to view
     private MetashapeObjectChunk metashapeObjectChunk;
     private File cameraFile;
     private File objFile;
@@ -282,8 +275,6 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
     public void updateImageText(String imageName) {
         imgViewText.setText(imageName);
-
-        textFlow.setTextAlignment(TextAlignment.LEFT);
     }
 
     private void setThumbnailAsFullImage(TreeItem<String> selectedItem) {
@@ -293,35 +284,16 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                 snapshot(new SnapshotParameters(), null));
     }
 
-    private void initializeChoiceBox() {
-        MetashapeObject metashapeObject = this.metashapeObjectChunk.getMetashapeObject();
-        String chunkName = this.metashapeObjectChunk.getChunkName();
-
-        //add all items from old checkbox to new checkbox
-        this.newChunkSelectionChoiceBox.getItems().addAll(metashapeObject.getChunkNames());
-
-        //initialize checkbox to selected chunk (instead of blank) if possible
-        //otherwise, set to first item in list
-        try {
-            this.newChunkSelectionChoiceBox.setValue(chunkName);
-        } catch (Exception e) {
-            if (this.newChunkSelectionChoiceBox.getItems() != null) {
-                this.newChunkSelectionChoiceBox.setValue(this.newChunkSelectionChoiceBox.getItems().get(0));
-            }
-        }
-
-        if (this.newChunkSelectionChoiceBox.getItems().size() <= 1) {
-            selectChunkButton.setDisable(true);
-        }
+    @FXML
+    private void rotateRight() {
+        //rotate in 90 degree increments
+        chunkViewerImgView.setRotate((chunkViewerImgView.getRotate() + 90) % 360);
     }
 
-    private boolean isValidImageType(String path) {
-        for (String extension : VALID_EXTENSIONS) {
-            if (path.matches("." + extension)) {
-                return true;
-            }
-        }
-        return false;
+    @FXML
+    private void rotateLeft() {
+        //rotate in 90 degree increments
+        chunkViewerImgView.setRotate((chunkViewerImgView.getRotate() - 90) % 360);
     }
 
     private void showMissingImgsAlert(MetashapeObjectChunk metashapeObjectChunk, MissingImagesException mie) {
