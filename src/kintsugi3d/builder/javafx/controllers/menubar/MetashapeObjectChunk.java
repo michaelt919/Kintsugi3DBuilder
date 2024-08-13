@@ -30,7 +30,6 @@ import java.util.Objects;
 
 public class MetashapeObjectChunk {
     private static final Logger log = LoggerFactory.getLogger(MetashapeObjectChunk.class);
-    private Integer modelID;
 
     //contains a metashape object and a specific chunk
     private MetashapeObject metashapeObject;
@@ -42,7 +41,8 @@ public class MetashapeObjectChunk {
     private Document frameZip;
 
     private ArrayList<Triplet<Integer, String, String>> modelInfo = new ArrayList<>(); //model id, name/label, and path
-    private Integer activeModelID;
+    private Integer defaultModelID;
+    private Integer currModelID;
 
     public String getChunkZipPath() { return chunkZipPath; }
     public Document getChunkXML() { return chunkXML; }
@@ -63,12 +63,12 @@ public class MetashapeObjectChunk {
         chunkID = -1;//TODO: GOOD NULL CHUNK ID?
         chunkXML = null;
         frameZip = null;
-        modelID = -1;
+        currModelID = -1;
     }
 
-    public MetashapeObjectChunk(MetashapeObject metashapeObject, String chunkName, Integer modelID) {
+    public MetashapeObjectChunk(MetashapeObject metashapeObject, String chunkName, Integer currModelID) {
         this.metashapeObject = metashapeObject;
-        this.modelID = modelID;
+        this.currModelID = currModelID;
 
         updateChunk(chunkName);
     }
@@ -112,7 +112,7 @@ public class MetashapeObjectChunk {
         //get active id
         try {
             Element elem = (Element) chunkXML.getElementsByTagName("models").item(0);
-            this.activeModelID = Integer.parseInt(elem.getAttribute("active_id"));
+            this.defaultModelID = Integer.parseInt(elem.getAttribute("active_id"));
         }
         catch(NumberFormatException | NullPointerException e){
             log.warn("Could not find active id for " + this.getPsxFilePath(), e);
@@ -228,7 +228,7 @@ public class MetashapeObjectChunk {
     }
 
     public String getCurrentModelPath() {
-        return getModelPathFromXML(modelID);
+        return getModelPathFromXML(currModelID);
     }
 
     private String getModelPathFromXML(Integer mID) {
@@ -264,7 +264,9 @@ public class MetashapeObjectChunk {
         return modelInfo;
     }
 
-    public Integer getActiveModelID(){return activeModelID;}
+    public Integer getDefaultModelID(){return defaultModelID;}
+
+    public Integer getCurrModelID(){return currModelID;}
 
     public File getPsxFile() {
         return metashapeObject.getPsxFile();
@@ -283,7 +285,7 @@ public class MetashapeObjectChunk {
         //TODO: may need to revisit this method if more precise criteria are needed
 
         return Objects.equals(this.chunkName, moc.getChunkName()) &&
-                Objects.equals(this.modelID, moc.getActiveModelID()) &&
+                Objects.equals(this.currModelID, moc.getCurrModelID()) &&
                 this.getPsxFilePath().equals(moc.getPsxFilePath());
     }
 }

@@ -169,14 +169,14 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         modelSelectionChoiceBox.setValue(modelSelectionChoiceBox.getItems().get(0));
         modelSelectionChoiceBox.setDisable(false);
 
-        if (metashapeObjectChunk.getActiveModelID() == null){return;}
+        if (metashapeObjectChunk.getDefaultModelID() == null){return;}
 
         for (int i = 0; i < modelSelectionChoiceBox.getItems().size(); ++i){
             Object obj = modelSelectionChoiceBox.getItems().get(i);
             Integer modelID = getModelIDFromSelection((String) obj);
             if (modelID == null){continue;}
 
-            if (modelID.equals(metashapeObjectChunk.getActiveModelID())){
+            if (modelID.equals(metashapeObjectChunk.getDefaultModelID())){
                 modelSelectionChoiceBox.setValue(obj);
                 break;
             }
