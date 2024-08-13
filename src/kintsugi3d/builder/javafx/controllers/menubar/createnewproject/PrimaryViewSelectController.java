@@ -43,10 +43,7 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 public class PrimaryViewSelectController extends FXMLPageController implements CanConfirm {
@@ -94,7 +91,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         //metashape import path loads from metashape project
         if(isMetashapeImport){
             if(this.metashapeObjectChunk == null ||
-                this.metashapeObjectChunk != sharedChunk) {
+                    !Objects.equals(this.metashapeObjectChunk, sharedChunk)) {
 
                 updateSharedInfo();
                 try{
@@ -223,6 +220,9 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
         //unroll treeview
         chunkTreeView.getRoot().setExpanded(true);
+
+        chunkTreeView.getSelectionModel().select(1);
+        selectImageInTreeView();
     }
 
     private static TreeItem<String> getStringTreeItem(List<Image> thumbnailImgList, int i, String imageName) {

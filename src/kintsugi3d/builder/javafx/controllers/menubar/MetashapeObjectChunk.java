@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 
 public class MetashapeObjectChunk {
@@ -267,5 +268,22 @@ public class MetashapeObjectChunk {
 
     public File getPsxFile() {
         return metashapeObject.getPsxFile();
+    }
+
+    public boolean equals(Object rhs){
+        if (!(rhs instanceof MetashapeObjectChunk)){
+            return false;
+        }
+
+        MetashapeObjectChunk moc = (MetashapeObjectChunk) rhs;
+        //chunk name is the same
+        //active model id is the same
+        //psx path is the same
+
+        //TODO: may need to revisit this method if more precise criteria are needed
+
+        return Objects.equals(this.chunkName, moc.getChunkName()) &&
+                Objects.equals(this.modelID, moc.getActiveModelID()) &&
+                this.getPsxFilePath().equals(moc.getPsxFilePath());
     }
 }
