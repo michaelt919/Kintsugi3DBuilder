@@ -20,13 +20,9 @@ import kintsugi3d.util.RecentProjects;
 import kintsugi3d.util.Triplet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Element;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
 
 public class MetashapeImportController extends FXMLPageController implements ShareInfo {
     private static final Logger log = LoggerFactory.getLogger(MetashapeImportController.class);
@@ -85,6 +81,10 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         updateMetashapeChunk();
 
         hostScrollerController.addInfo(Info.METASHAPE_OBJ_CHUNK, metashapeObjectChunk);
+
+        hostScrollerController.addInfo(Info.CAM_FILE, null);
+        hostScrollerController.addInfo(Info.PHOTO_DIR, null);
+        hostScrollerController.addInfo(Info.OBJ_FILE, null);
     }
 
     private void updateMetashapeChunk() {

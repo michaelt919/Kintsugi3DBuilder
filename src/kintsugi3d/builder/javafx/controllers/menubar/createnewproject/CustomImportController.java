@@ -12,7 +12,6 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
@@ -165,5 +164,7 @@ public class CustomImportController extends FXMLPageController implements ShareI
         hostScrollerController.addInfo(Info.CAM_FILE, cameraFile);
         hostScrollerController.addInfo(Info.PHOTO_DIR, photoDir);
         hostScrollerController.addInfo(Info.OBJ_FILE, objFile);
+
+        hostScrollerController.addInfo(Info.METASHAPE_OBJ_CHUNK, null);
     }
 }

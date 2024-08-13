@@ -189,15 +189,14 @@ public class ImgSelectionThread implements Runnable{
 
             if (fullResOverride == null){
                 imageFile = new File(fullResSearchDirectory, pathAttribute);
-                path = rootDirectory.toPath().relativize(imageFile.toPath()).toString();
             }
             else{
                 //if this doesn't work, then replace metashapeObjectChunk.getFramePath()).getParentFile()
                 //    and the first part of path with the file that the user selected
                 String pathAttributeName = new File(pathAttribute).getName();
                 imageFile = new File(fullResOverride, pathAttributeName);
-                path = imageFile.getPath();
             }
+            path = imageFile.getPath();
         }
         else{
             path = selectedItemCam.getAttribute("label");

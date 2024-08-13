@@ -69,7 +69,6 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     private Document cameraDocument;
     private HashMap<String, Image> imgCache;
     private ImgSelectionThread loadImgThread;
-    static final String[] VALID_EXTENSIONS = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
     static final int THUMBNAIL_SIZE = 30;
 
     @Override
@@ -95,10 +94,10 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         //metashape import path loads from metashape project
         if(isMetashapeImport){
             if(this.metashapeObjectChunk == null ||
-                    this.metashapeObjectChunk != sharedChunk) {
+                this.metashapeObjectChunk != sharedChunk) {
 
+                updateSharedInfo();
                 try{
-                    this.metashapeObjectChunk = sharedChunk;
                     verifyInfo(null);
                     initTreeView(sharedChunk);
                 }
@@ -112,7 +111,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         //custom import path loads from cameras xml file
         else{
             if(cameraFile == null || cameraFile != sharedCamFile){
-                photosDir = hostScrollerController.getInfo(ShareInfo.Info.PHOTO_DIR);
+                updateSharedInfo();
                 initTreeView(sharedCamFile);
             }
         }

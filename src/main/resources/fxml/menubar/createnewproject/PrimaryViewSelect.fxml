@@ -22,30 +22,21 @@
       <HBox spacing="10.0">
          <children>
             <TreeView fx:id="chunkTreeView" onContextMenuRequested="#selectImageInTreeView" onKeyTyped="#selectImageInTreeView" onMouseClicked="#selectImageInTreeView" prefHeight="400.0" prefWidth="450.0" />
-            <VBox alignment="TOP_CENTER" prefHeight="400.0" prefWidth="326.0">
+            <VBox alignment="CENTER">
                <children>
-                  <VBox alignment="CENTER" VBox.vgrow="ALWAYS">
+                  <Text fx:id="imgViewText" fontSmoothingType="LCD" text="No Image Selected" textAlignment="CENTER" textOrigin="TOP" wrappingWidth="200" />
+                  <ImageView fx:id="chunkViewerImgView" fitHeight="251.0" fitWidth="299.0" pickOnBounds="true" preserveRatio="true">
                      <VBox.margin>
-                        <Insets bottom="15.0" left="5.0" right="5.0" top="5.0" />
+                        <Insets bottom="60.0" left="60.0" right="60.0" top="60.0" />
                      </VBox.margin>
+                  </ImageView>
+                  <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="80.0">
                      <children>
-                        <Text fx:id="imgViewText" fontSmoothingType="LCD" text="No Image Selected" textAlignment="CENTER" textOrigin="TOP" wrappingWidth="200" />
-                        <ImageView fx:id="chunkViewerImgView" fitHeight="251.0" fitWidth="299.0" pickOnBounds="true">
-                           <VBox.margin>
-                              <Insets bottom="60.0" left="60.0" right="60.0" top="60.0" />
-                           </VBox.margin></ImageView>
-                        <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="80.0">
-                           <children>
-                              <Button mnemonicParsing="false" onAction="#rotateLeft" prefHeight="40.0" prefWidth="80.0" text="&lt;--" />
-                              <Button mnemonicParsing="false" onAction="#rotateRight" prefHeight="40.0" prefWidth="80.0" text="--&gt;" />
-                           </children>
-                        </HBox>
+                        <Button mnemonicParsing="false" onAction="#rotateLeft" prefHeight="40.0" prefWidth="80.0" text="&lt;--" />
+                        <Button mnemonicParsing="false" onAction="#rotateRight" prefHeight="40.0" prefWidth="80.0" text="--&gt;" />
                      </children>
-                  </VBox>
+                  </HBox>
                </children>
-               <padding>
-                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-               </padding>
             </VBox>
 <!--            <VBox alignment="CENTER" prefHeight="400.0" prefWidth="279.0">-->
 <!--               <children>-->
