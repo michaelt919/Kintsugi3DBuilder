@@ -44,6 +44,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 public class PrimaryViewSelectController extends FXMLPageController implements CanConfirm {
@@ -184,22 +186,22 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             TreeItem<String> destinationItem; //stores the node which the image will be added to
             // (either a group or the root node)
             if(parent.getTagName().equals("group")){
-                String groupName = parent.getAttribute("label");//TODO: CURRENTLY ONLY CHECKS TO SEE IF NAMES MATCH
+                String groupName = parent.getAttribute("label");
 
                 List<TreeItem<String>> rootChildren = rootItem.getChildren();
-                boolean groupAlreadyCreated = false;//boolean to track if group is already present in treeview
-                TreeItem<String> matchingItem = null;
-                for (TreeItem<String> item : rootChildren){
-                    if (item.getValue().equals(groupName)){
-                        groupAlreadyCreated = true;
-                        matchingItem = item;
-                        break;
-                    }
-                }
+                AtomicBoolean groupAlreadyCreated = new AtomicBoolean(false);
+                AtomicReference<TreeItem<String>> matchingItem = new AtomicReference<>();
 
-                if (groupAlreadyCreated){
+                rootChildren.forEach(item -> {
+                    if (item.getValue().equals(groupName)){
+                        groupAlreadyCreated.set(true);
+                        matchingItem.set(item);
+                    }
+                });
+
+                if (groupAlreadyCreated.get()){
                     //add camera to existing group
-                    destinationItem = matchingItem;
+                    destinationItem = matchingItem.get();
                 }
                 else{//group has not been created yet
                     TreeItem<String> newGroup = new TreeItem<>(groupName);

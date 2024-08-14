@@ -35,14 +35,12 @@ import java.util.HashMap;
 public class ImgSelectionThread implements Runnable{
 
     private static final Logger log = LoggerFactory.getLogger(ImgSelectionThread.class);
-
     private final String imageName;
     private final ImageView chunkViewerImgView;
     private final Text imgViewText;
     private final MetashapeObjectChunk metashapeObjectChunk;
     private final Document cameraDocument;
     private final File photosDir;
-
     private final PrimaryViewSelectController controller;
     private final File fullResOverride;
     private HashMap<String, Image> imgCache;
@@ -182,7 +180,6 @@ public class ImgSelectionThread implements Runnable{
             String pathAttribute = ((Element) selectedItemCam.getElementsByTagName("photo").item(0)).getAttribute("path");
 
             File imageFile;
-            File rootDirectory = metashapeObjectChunk.getPsxFile().getParentFile();
             File fullResSearchDirectory = fullResOverride == null ?
                     new File(metashapeObjectChunk.getFramePath()).getParentFile() :
                     fullResOverride;
