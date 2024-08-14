@@ -174,9 +174,9 @@ public class ProgressBarsController {
     }
 
     private void updateTimeEstimationLabel(long estimatedRemaining) {
-        long minutesRemaining = TimeUnit.NANOSECONDS.toMinutes(estimatedRemaining);
+        long secondsRemaining = TimeUnit.NANOSECONDS.toSeconds(estimatedRemaining);
 
-        if (minutesRemaining >= 1){
+        if (secondsRemaining > 0){
             String timeTxt = nanosecToFormatTime(estimatedRemaining, true);
             Platform.runLater(()-> localEstimTimeRemainingLabel.setText(timeTxt + " Remaining"));
         }
