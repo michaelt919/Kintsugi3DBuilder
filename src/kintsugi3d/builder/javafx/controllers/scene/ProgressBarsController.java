@@ -140,6 +140,10 @@ public class ProgressBarsController {
                     if(isProcessing()){
                         updateElapsedTime();
                     }
+
+                    Thread.sleep(800);
+
+                    tickDownRemainingTime();
                 } catch (InterruptedException e) {
                     break;
                 }
@@ -147,6 +151,38 @@ public class ProgressBarsController {
         }).start();
 
         saturateProgressBars();
+    }
+
+    private void tickDownRemainingTime() {
+        String remainingTimeStr = localEstimTimeRemainingLabel.getText();
+        if (remainingTimeStr.matches("[A-Za-z].*")){
+            //text is "Almost done..." or some other manually entered message
+            return;
+        }
+
+        int hours = Integer.parseInt(remainingTimeStr.substring(0, 2));
+        int minutes = Integer.parseInt(remainingTimeStr.substring(3, 5));
+        int seconds = Integer.parseInt(remainingTimeStr.substring(6, 8));
+
+        long estimatedRemaining = TimeUnit.HOURS.toNanos(hours) +
+                                    TimeUnit.MINUTES.toNanos(minutes) +
+                                    TimeUnit.SECONDS.toNanos(seconds);
+
+        estimatedRemaining -= TimeUnit.SECONDS.toNanos(1);
+
+        updateTimeEstimationLabel(estimatedRemaining);
+    }
+
+    private void updateTimeEstimationLabel(long estimatedRemaining) {
+        long minutesRemaining = TimeUnit.NANOSECONDS.toMinutes(estimatedRemaining);
+
+        if (minutesRemaining >= 1){
+            String timeTxt = nanosecToFormatTime(estimatedRemaining, true);
+            Platform.runLater(()-> localEstimTimeRemainingLabel.setText(timeTxt + " Remaining"));
+        }
+        else{
+            Platform.runLater(()-> localEstimTimeRemainingLabel.setText("Almost done..."));
+        }
     }
 
     public void clickStopwatches(double progress, double maximum){
@@ -162,16 +198,7 @@ public class ProgressBarsController {
 
         long estimatedRemaining = Math.max(0, (long) (avgDif * remainingProcesses));
 
-        long minutesRemaining = TimeUnit.NANOSECONDS.toMinutes(estimatedRemaining);
-
-        if (minutesRemaining >= 1){
-            String timeTxt = nanosecToFormatTime(estimatedRemaining, false);
-            Platform.runLater(()-> localEstimTimeRemainingLabel.setText(timeTxt + " Remaining"));
-        }
-        else{
-            Platform.runLater(()-> localEstimTimeRemainingLabel.setText("Almost done..."));
-        }
-
+        updateTimeEstimationLabel(estimatedRemaining);
     }
 
 
