@@ -410,7 +410,6 @@ public final class ProjectIO
             MultithreadModels.getInstance().getIOModel().setLoadedProjectFile(projectFile);
 
             WelcomeWindowController.getInstance().hide();
-            RecentProjects.updateAllControlStructures();
 
             //disable some shaders because they only function properly after processing textures
             MenubarController.getInstance().setToggleableShaderDisable(true);
