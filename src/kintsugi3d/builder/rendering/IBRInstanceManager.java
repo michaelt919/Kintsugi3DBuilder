@@ -350,7 +350,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions, String primaryViewName, File fullResOverride, boolean doSkipMissingCams) {
+    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions, File fullResOverride,
+                                   boolean doSkipMissingCams, String primaryViewName, double rotation) {
 
         // TODO There currently isn't functionality for a supportingFilesDirectory at this early in the process
         //  Restructuring required from Tetzlaff.
@@ -368,7 +369,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                     .setProgressMonitor(this.progressMonitor)
                     .setLoadOptions(loadOptions)
                     .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, fullResOverride, doSkipMissingCams)
-                    .setPrimaryView(primaryViewName);
+                    .setPrimaryView(primaryViewName, rotation);
 
             loadInstance(id, builder);
         }
@@ -382,7 +383,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory, String primaryViewName,
+    public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory, String primaryViewName, double rotation,
         ReadonlyLoadOptionsModel loadOptions)
     {
         if(this.progressMonitor.isConflictingProcess()){
@@ -397,7 +398,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                 .setProgressMonitor(this.progressMonitor)
                 .setLoadOptions(loadOptions)
                 .loadAgisoftFiles(xmlFile, meshFile, imageDirectory)
-                .setPrimaryView(primaryViewName);
+                .setPrimaryView(primaryViewName, rotation);
 
             // Invoke callbacks now that view set is loaded
             loadInstance(id, builder);

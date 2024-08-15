@@ -120,9 +120,10 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             this.viewSet.setRelativePreviewImagePathName(new File(ApplicationFolders.getPreviewImagesRootDirectory().toFile(), directoryName).toString());
         }
 
-        public Builder<ContextType> setPrimaryView(String primaryViewName)
+        public Builder<ContextType> setPrimaryView(String primaryViewName, double rotation)
         {
             this.primaryViewName = primaryViewName;
+            this.viewSet.setPrimaryViewRotation(rotation);
             return this;
         }
 

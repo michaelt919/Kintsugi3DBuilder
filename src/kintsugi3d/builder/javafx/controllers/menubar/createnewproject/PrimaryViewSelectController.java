@@ -435,13 +435,14 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                     MultithreadModels.getInstance().getIOModel()
                             .loadAgisoftFromZIP(
                                     metashapeObjectChunk.getFramePath(),
-                                    metashapeObjectChunk, primaryView, fullResOverride, doSkipMissingCams))
+                                    metashapeObjectChunk, fullResOverride, doSkipMissingCams,
+                                    primaryView, chunkViewerImgView.getRotate()))
                     .start();
         }
         else{
             new Thread(() ->
                     MultithreadModels.getInstance().getIOModel().loadFromAgisoftFiles(
-                            cameraFile.getPath(), cameraFile, objFile, photosDir, primaryView))
+                            cameraFile.getPath(), cameraFile, objFile, photosDir, primaryView, chunkViewerImgView.getRotate()))
                     .start();
         }
 

@@ -32,8 +32,8 @@ public interface IOHandler
     void setLoadedProjectFile(File loadedProjectFile);
     void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions);
     void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory,
-        String primaryViewName, ReadonlyLoadOptionsModel loadOptions);
-    void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptionsModel, String primaryViewName, File fullResOverride, boolean doSkipMissingCams);
+                                String primaryViewName, double rotation, ReadonlyLoadOptionsModel loadOptions);
+    void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptionsModel, File fullResOverride, boolean doSkipMissingCams, String primaryViewName, double rotation);
 
     void requestFragmentShader(File shaderFile);
 

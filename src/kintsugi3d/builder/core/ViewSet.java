@@ -150,6 +150,7 @@ public final class ViewSet implements ReadonlyViewSet
      * The index of the view that sets the initial orientation when viewing, is used for color calibration, etc.
      */
     private int primaryViewIndex = 0;
+    private double primaryViewRotation = 0;
     private int previewWidth = 0;
     private int previewHeight = 0;
 
@@ -712,6 +713,11 @@ public final class ViewSet implements ReadonlyViewSet
         return this.primaryViewIndex;
     }
 
+    @Override
+    public double getPrimaryViewRotation() {
+        return primaryViewRotation;
+    }
+
     public void setPrimaryViewIndex(int poseIndex)
     {
         this.primaryViewIndex = poseIndex;
@@ -925,5 +931,9 @@ public final class ViewSet implements ReadonlyViewSet
     public void setUuid(UUID viewSetUid)
     {
         this.viewSetUid = viewSetUid;
+    }
+
+    public void setPrimaryViewRotation(double rotation) {
+        primaryViewRotation = rotation;
     }
 }

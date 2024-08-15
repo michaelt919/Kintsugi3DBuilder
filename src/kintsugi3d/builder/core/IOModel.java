@@ -207,14 +207,14 @@ public class IOModel
         this.handler.loadFromVSETFile(id, vsetFile, supportingFilesDirectory, loadOptionsModel);
     }
 
-    public void loadFromAgisoftFiles(String id, File xmlFile, File meshFile, File undistortedImageDirectory, String primaryViewName)
+    public void loadFromAgisoftFiles(String id, File xmlFile, File meshFile, File undistortedImageDirectory, String primaryViewName, double rotation)
     {
-        this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, primaryViewName, loadOptionsModel);
+        this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, primaryViewName, rotation, loadOptionsModel);
     }
 
-    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, String primaryViewName, File fullResOverride, boolean doSkipMissingCams)
+    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, File fullResOverride, boolean doSkipMissingCams, String primaryViewName, double rotation)
     {
-        this.handler.loadAgisoftFromZIP(id, metashapeObjectChunk, loadOptionsModel, primaryViewName, fullResOverride, doSkipMissingCams);
+        this.handler.loadAgisoftFromZIP(id, metashapeObjectChunk, loadOptionsModel, fullResOverride, doSkipMissingCams, primaryViewName, rotation);
     }
     public void requestFragmentShader(File shaderFile)
     {
