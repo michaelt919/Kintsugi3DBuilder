@@ -32,7 +32,7 @@ public class ProgressBarsController {
 
     @FXML private Label localElapsedTimeLabel;
     @FXML private Label localEstimTimeRemainingLabel;
-    @FXML private Label totalEstimTimeRemainingLabel;
+
     @FXML private Label totalElapsedTimeLabel;
 
     @FXML private Label localTextLabel;
@@ -51,7 +51,6 @@ public class ProgressBarsController {
     private String defaultLocalText;
     private String defaultOverallText;
     private String defaultTotalTimeElapsedText;
-    private String defaultEstimTimeRemainingTxt;
     private String defaultEstimLocalTimeRemainingTxt;
     private String defaultTitle;
 
@@ -70,16 +69,12 @@ public class ProgressBarsController {
         defaultLocalText = localTextLabel.getText();
 
         defaultTotalTimeElapsedText = totalElapsedTimeLabel.getText();
-        defaultEstimTimeRemainingTxt = totalEstimTimeRemainingLabel.getText();
         defaultEstimLocalTimeRemainingTxt = localEstimTimeRemainingLabel.getText();
         defaultOverallElapsedTimeTxt = localElapsedTimeLabel.getText();
 
         defaultTitle = stage.getTitle();
 
         //remove estimated times from view if not processing (would just be 00:00:00/otherwise useless anyway)
-        totalEstimTimeRemainingLabel.managedProperty().bind(processingProperty);
-        totalEstimTimeRemainingLabel.visibleProperty().bind(processingProperty);
-
         localEstimTimeRemainingLabel.managedProperty().bind(processingProperty);
         localEstimTimeRemainingLabel.visibleProperty().bind(processingProperty);
 
@@ -105,7 +100,6 @@ public class ProgressBarsController {
             totalElapsedTimeLabel.setText(defaultTotalTimeElapsedText);
             localElapsedTimeLabel.setText(defaultOverallElapsedTimeTxt);
 
-            totalEstimTimeRemainingLabel.setText(defaultEstimTimeRemainingTxt);
             localEstimTimeRemainingLabel.setText(defaultEstimLocalTimeRemainingTxt);
 
             stage.setTitle(defaultTitle);
@@ -146,6 +140,10 @@ public class ProgressBarsController {
                     if(isProcessing()){
                         updateElapsedTime();
                     }
+
+                    Thread.sleep(800);
+
+                    tickDownRemainingTime();
                 } catch (InterruptedException e) {
                     break;
                 }
@@ -155,22 +153,42 @@ public class ProgressBarsController {
         saturateProgressBars();
     }
 
-    public void clickStopwatches(double progress, double maximum, double overallProgress){
-        overallStopwatch.click();
-        localStopwatch.click();
-        updateTotalRemainingTime(overallProgress);
-        updateLocalRemainingTime(progress, maximum);
+    private void tickDownRemainingTime() {
+        String remainingTimeStr = localEstimTimeRemainingLabel.getText();
+        if (remainingTimeStr.matches("[A-Za-z].*")){
+            //text is "Almost done..." or some other manually entered message
+            return;
+        }
+
+        int hours = Integer.parseInt(remainingTimeStr.substring(0, 2));
+        int minutes = Integer.parseInt(remainingTimeStr.substring(3, 5));
+        int seconds = Integer.parseInt(remainingTimeStr.substring(6, 8));
+
+        long estimatedRemaining = TimeUnit.HOURS.toNanos(hours) +
+                                    TimeUnit.MINUTES.toNanos(minutes) +
+                                    TimeUnit.SECONDS.toNanos(seconds);
+
+        estimatedRemaining -= TimeUnit.SECONDS.toNanos(1);
+
+        updateTimeEstimationLabel(estimatedRemaining);
     }
 
-    private void updateTotalRemainingTime(double progress) {
-        long elapsedTime = overallStopwatch.getElapsedTime();
+    private void updateTimeEstimationLabel(long estimatedRemaining) {
+        long secondsRemaining = TimeUnit.NANOSECONDS.toSeconds(estimatedRemaining);
 
-        double remainingProgress = progress == 0 ? 1.0 : 1.0 / progress - 1;
+        if (secondsRemaining > 0){
+            String timeTxt = nanosecToFormatTime(estimatedRemaining, true);
+            Platform.runLater(()-> localEstimTimeRemainingLabel.setText(timeTxt + " Remaining"));
+        }
+        else{
+            Platform.runLater(()-> localEstimTimeRemainingLabel.setText("Almost done..."));
+        }
+    }
 
-        long estimatedRemaining = (long) Math.max(0L, elapsedTime * remainingProgress);
-
-        String timeTxt = nanosecToFormatTime(estimatedRemaining);
-        Platform.runLater(()-> totalEstimTimeRemainingLabel.setText(timeTxt + " Remaining"));
+    public void clickStopwatches(double progress, double maximum){
+        overallStopwatch.click();
+        localStopwatch.click();
+        updateLocalRemainingTime(progress, maximum);
     }
 
     private void updateLocalRemainingTime(double progress, double maximum) {
@@ -180,8 +198,7 @@ public class ProgressBarsController {
 
         long estimatedRemaining = Math.max(0, (long) (avgDif * remainingProcesses));
 
-        String timeTxt = nanosecToFormatTime(estimatedRemaining);
-        Platform.runLater(()-> localEstimTimeRemainingLabel.setText(timeTxt + " Remaining"));
+        updateTimeEstimationLabel(estimatedRemaining);
     }
 
 
@@ -189,16 +206,16 @@ public class ProgressBarsController {
         long totalElapsedTime = overallStopwatch.getElapsedTime();
         long localElapsedTime = localStopwatch.getElapsedTime();
 
-        String totalTimeTxt = nanosecToFormatTime(totalElapsedTime);
-        String localTimeTxt = nanosecToFormatTime(localElapsedTime);
+        String totalTimeTxt = nanosecToFormatTime(totalElapsedTime, true);
+        String localTimeTxt = nanosecToFormatTime(localElapsedTime, true);
 
         if(isProcessing()){
-            Platform.runLater(()-> totalElapsedTimeLabel.setText("(" + totalTimeTxt + " Lapsed)"));
+            Platform.runLater(()-> totalElapsedTimeLabel.setText(totalTimeTxt + " Lapsed"));
             Platform.runLater(()->localElapsedTimeLabel.setText("(" + localTimeTxt + " Lapsed)"));
         }
     }
 
-    private static String nanosecToFormatTime(long nanoTime){
+    private static String nanosecToFormatTime(long nanoTime, boolean useSeconds){
         long hours = TimeUnit.NANOSECONDS.toHours(nanoTime);
 
         long minutes = TimeUnit.NANOSECONDS.toMinutes(nanoTime) -
@@ -208,7 +225,8 @@ public class ProgressBarsController {
                 TimeUnit.HOURS.toSeconds(hours) -
                 TimeUnit.MINUTES.toSeconds(minutes);
 
-        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+        return useSeconds ? String.format("%02d:%02d:%02d", hours, minutes, seconds) :
+                String.format("%02d:%02d", hours, minutes);
     }
 
 
