@@ -249,9 +249,20 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     public void selectImageInTreeView() {
         //selectedItem holds the cameraID associated with the image
         TreeItem<String> selectedItem = chunkTreeView.getSelectionModel().getSelectedItem();
-        if (selectedItem != null &&
-                selectedItem.getValue() != null &&
-                selectedItem.isLeaf()) {
+        if(selectedItem == null){
+            return;
+        }
+        if (selectedItem == chunkTreeView.getRoot()){
+            selectedItem.setExpanded(true);
+            return;
+        }
+
+        if (!selectedItem.isLeaf()){
+            selectedItem.setExpanded(!selectedItem.isExpanded());
+            return;
+        }
+
+        if (selectedItem.getValue() != null) {
 
             String imageName = selectedItem.getValue();
             updateImageText(imageName);

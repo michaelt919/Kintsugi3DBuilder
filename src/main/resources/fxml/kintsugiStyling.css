@@ -412,6 +412,13 @@ dialog-pane{
     -fx-padding: 0.25em ;
 }
 
+.tree-cell > .tree-disclosure-node > .arrow  {
+    -fx-background-color: none;
+}
+.tree-cell:expanded > .tree-disclosure-node > .arrow {
+    -fx-background-color: none;
+}
+
 .vbox{
     -fx-background-color: #262626;
 }
