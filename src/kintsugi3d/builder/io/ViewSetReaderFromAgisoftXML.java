@@ -24,6 +24,7 @@ import javax.xml.stream.XMLStreamReader;
 
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.ViewSet.Builder;
 import kintsugi3d.builder.metrics.ViewRMSE;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -124,40 +125,11 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         }
     }
 
-    /**
-     * A subroutine for guessing an appropriate far plane from an Agisoft PhotoScan/Metashape XML file.
-     * Assumes that the object must lie between all of the cameras in the file.
-     * @param cameraPoseInvList The list of camera poses.
-     * @return A far plane estimate.
-     */
-    private static float findFarPlane(Iterable<Matrix4> cameraPoseInvList)
+    @Override
+    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory) throws XMLStreamException
     {
-        float minX = Float.POSITIVE_INFINITY;
-        float minY = Float.POSITIVE_INFINITY;
-        float minZ = Float.POSITIVE_INFINITY;
-        float maxX = Float.NEGATIVE_INFINITY;
-        float maxY = Float.NEGATIVE_INFINITY;
-        float maxZ = Float.NEGATIVE_INFINITY;
-
-        for (Matrix4 aCameraPoseInvList : cameraPoseInvList)
-        {
-            Vector4 position = aCameraPoseInvList.getColumn(3);
-            minX = Math.min(minX, position.x);
-            minY = Math.min(minY, position.y);
-            minZ = Math.min(minZ, position.z);
-            maxX = Math.max(maxX, position.x);
-            maxY = Math.max(maxY, position.y);
-            maxZ = Math.max(maxZ, position.z);
-        }
-
-        // Corner-to-corner
-        float dX = maxX-minX;
-        float dY = maxY-minY;
-        float dZ = maxZ-minZ;
-        return (float)Math.sqrt(dX*dX + dY*dY + dZ*dZ);
-
-        // Longest Side approach
-//        return Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
+        // Use root directory as supporting files directory
+        return readFromStream(stream, root, supportingFilesDirectory, null);
     }
 
 
@@ -172,7 +144,6 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * @return
      * @throws XMLStreamException
      */
-    @Override
     public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, Map<Integer, String> imagePathMap) throws XMLStreamException
     {
         return readFromStream(stream, root, supportingFilesDirectory, imagePathMap, -1, false);
@@ -643,9 +614,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             }
         }
 
-        ViewSet result = new ViewSet(cameraSet.size());
-        result.setRootDirectory(root);
-        result.setSupportingFilesDirectory(supportingFilesDirectory);
+        Builder builder = ViewSet.getBuilder(root, supportingFilesDirectory, cameraSet.size());
 
         Sensor[] sensors = sensorSet.values().toArray(new Sensor[0]);
 
@@ -663,7 +632,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         for (int i = 0; i < sensors.length; i++)
         {
             sensors[i].index = i;
-            result.getCameraProjectionList().add(new DistortionProjection(
+            builder.addCameraProjection(new DistortionProjection(
                 sensors[i].width,
                 sensors[i].height,
                 sensors[i].fx,
@@ -695,95 +664,29 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                 .times(Matrix4.translate(globalTranslate))
             ;//     .times(Matrix4.scale(globalScale));
 
-            result.getCameraPoseList().add(cam.transform);
+            builder.setCurrentCameraPose(cam.transform);
 
-            // Compute inverse by just reversing steps to build transformation
-            Matrix4 cameraPoseInv = //Matrix4.scale(1.0f / globalScale)
-                /*       .times*/Matrix4.translate(globalTranslate.negated())
-                .times(globalRotation.transpose())
-                .times(m1.getUpperLeft3x3().transpose().asMatrix4())
-                .times(Matrix4.translate(m1.getColumn(3).getXYZ().negated()));
-            result.getCameraPoseInvList().add(cameraPoseInv);
-
-            Matrix4 expectedIdentity = cameraPoseInv.times(cam.transform);
-            boolean error = false;
-            for (int r = 0; r < 4; r++)
-            {
-                for (int c = 0; c < 4; c++)
-                {
-                    float expectedValue;
-                    if (r == c)
-                    {
-                        expectedValue = 1.0f;
-                    }
-                    else
-                    {
-                        expectedValue = 0.0f;
-                    }
-
-                    if (Math.abs(expectedIdentity.get(r, c) - expectedValue) > 0.001f)
-                    {
-                        error = true;
-                        break;
-                    }
-                }
-                if (error)
-                {
-                    break;
-                }
-            }
-
-            if (error)
-            {
-                System.err.println("Warning: matrix inverse could not be computed correctly - transformation is not affine.");
-                for (int r = 0; r < 4; r++)
-                {
-                    for (int c = 0; c < 4; c++)
-                    {
-                        System.err.print('\t' + String.format("%.3f", expectedIdentity.get(r, c)));
-                    }
-                    System.err.println();
-                }
-            }
-
-            result.getCameraProjectionIndexList().add(cam.sensor.index);
-            result.getLightIndexList().add(cam.lightIndex);
+            builder.setCurrentCameraProjectionIndex(cam.sensor.index);
+            builder.setCurrentLightIndex(cam.lightIndex);
 
             if (imagePathMap != null && imagePathMap.containsKey(Integer.parseInt(cam.id))) {
-                result.getImageFiles().add(new File(imagePathMap.get(Integer.parseInt(cam.id))));
+                builder.setCurrentImageFile(new File(imagePathMap.get(Integer.parseInt(cam.id))));
             }else{
-                result.getImageFiles().add(new File(cam.filename));
+                builder.setCurrentImageFile(new File(cam.filename));
                 if (imagePathMap != null) {
                     log.error("Camera path override not found for camera: " + cam.id);
                 }
             }
 
-            result.getViewErrorMetrics().add(new ViewRMSE());
+            builder.commitCurrentCameraPose();
         }
 
         for (int i = 0; i < nextLightIndex; i++)
         {
-            result.getLightPositionList().add(Vector3.ZERO);
-            result.getLightIntensityList().add(Vector3.ZERO);
+            // Setup default light calibration (setting to zero is OK; will be overridden at a later stage)
+            builder.addLight(Vector3.ZERO, Vector3.ZERO);
         }
 
-        result.setRecommendedFarPlane(findFarPlane(result.getCameraPoseInvList()));
-        result.setRecommendedNearPlane(result.getRecommendedFarPlane() / 32.0f);
-        log.debug("Near and far planes: " + result.getRecommendedNearPlane() + ", " + result.getRecommendedFarPlane());
-
-        int primaryViewIndex = 0;
-        String primaryViewName = cameras[0].filename;
-        for (int i = 1; i < cameras.length; i++)
-        {
-            if (cameras[i].filename.compareTo(primaryViewName) < 0)
-            {
-                primaryViewName = cameras[i].filename;
-                primaryViewIndex = i;
-            }
-        }
-
-        result.setPrimaryViewIndex(primaryViewIndex);
-
-        return result;
+        return builder.finish();
     }
 }

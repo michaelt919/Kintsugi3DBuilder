@@ -242,5 +242,5 @@ public interface ReadonlyViewSet
     File findPreviewImageFile(int index) throws FileNotFoundException;
     File findPreviewPrimaryImageFile() throws FileNotFoundException;
 
-    UUID getUuid();
+    UUID getUUID();
 }

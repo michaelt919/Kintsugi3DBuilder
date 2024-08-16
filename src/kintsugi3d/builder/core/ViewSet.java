@@ -18,6 +18,7 @@ import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.gl.vecmath.Vector4;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +33,6 @@ import java.util.stream.Stream;
  * A class representing a collection of photographs, or views.
  * @author Michael Tetzlaff
  */
-@SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
 public final class ViewSet implements ReadonlyViewSet
 {
     private static final Logger log = LoggerFactory.getLogger(ViewSet.class);
@@ -40,7 +40,7 @@ public final class ViewSet implements ReadonlyViewSet
     /**
      * A unique id given to each view set that can be used to prevent cache collisions on disk.
      */
-    private UUID viewSetUid = UUID.randomUUID();
+    private UUID uuid = UUID.randomUUID();
 
     /**
      * A list of camera poses defining the transformation from object space to camera space for each view.
@@ -153,6 +153,194 @@ public final class ViewSet implements ReadonlyViewSet
     private int previewWidth = 0;
     private int previewHeight = 0;
 
+    public static final class Builder
+    {
+        private final ViewSet result;
+        private boolean needsClipPlanes = true;
+
+        private Matrix4 cameraPose = null;
+        private int cameraProjectionIndex = 0;
+        private int lightIndex = 0;
+        private File imageFile;
+
+        Builder(File rootDirectory, File supportingFilesDirectory, int initialCapacity)
+        {
+            result = new ViewSet(initialCapacity);
+            result.setRootDirectory(rootDirectory);
+            result.setSupportingFilesDirectory(supportingFilesDirectory);
+        }
+
+        public Builder setCurrentCameraPose(Matrix4 cameraPose)
+        {
+            this.cameraPose = cameraPose;
+            return this;
+        }
+
+        public Builder setCurrentCameraProjectionIndex(int cameraProjectionIndex)
+        {
+            this.cameraProjectionIndex = cameraProjectionIndex;
+            return this;
+        }
+
+        public Builder setCurrentLightIndex(int lightIndex)
+        {
+            this.lightIndex = lightIndex;
+            return this;
+        }
+
+        public Builder setCurrentImageFile(File imageFile)
+        {
+            this.imageFile = imageFile;
+            return this;
+        }
+
+        public Builder commitCurrentCameraPose()
+        {
+            result.cameraPoseList.add(cameraPose);
+            result.cameraPoseInvList.add(cameraPose.quickInverse(0.002f));
+            result.cameraProjectionIndexList.add(cameraProjectionIndex);
+            result.lightIndexList.add(lightIndex);
+            result.imageFiles.add(imageFile);
+            result.viewErrorMetrics.add(new ViewRMSE());
+            return this;
+        }
+
+        public Builder addCameraProjection(Projection projection)
+        {
+            result.cameraProjectionList.add(projection);
+            return this;
+        }
+
+        public int getNextCameraProjectionIndex()
+        {
+            return result.cameraProjectionList.size();
+        }
+
+        public Builder addLight(Vector3 position, Vector3 intensity)
+        {
+            result.lightPositionList.add(position);
+            result.lightIntensityList.add(intensity);
+            return this;
+        }
+
+        public int getNextLightIndex()
+        {
+            return result.lightPositionList.size();
+        }
+
+        public Builder setUUID(UUID uuid)
+        {
+            result.uuid = uuid;
+            return this;
+        }
+
+        public Builder setRecommendedClipPlanes(float near, float far)
+        {
+            result.recommendedNearPlane = near;
+            result.recommendedFarPlane = far;
+            needsClipPlanes = false;
+            return this;
+        }
+
+        /**
+         * Sets the name of the geometry file associated with this view set.
+         * @param geometryFileName The name of the geometry file.
+         */
+        public Builder setGeometryFileName(String geometryFileName)
+        {
+            result.geometryFile = geometryFileName == null ? null : result.rootDirectory.toPath().resolve(geometryFileName).toFile();
+            return this;
+        }
+
+        /**
+         * Sets the relative file path of the supporting files (i.e. texture fit results) associated with this view set.
+         * @param relativePath The file path of the supporting files directory.
+         */
+        public Builder setRelativeSupportingFilesPathName(String relativePath)
+        {
+            result.supportingFilesDirectory = result.rootDirectory.toPath().resolve(relativePath).toFile();
+            return this;
+        }
+
+        public Builder setRelativeFullResImagePathName(String relativePath)
+        {
+            result.setRelativeFullResImagePathName(relativePath);
+            return this;
+        }
+
+        public Builder setRelativePreviewImagePathName(String relativePath)
+        {
+            result.setRelativePreviewImagePathName(relativePath);
+            return this;
+        }
+
+        public ViewSet finish()
+        {
+            if (needsClipPlanes)
+            {
+                result.recommendedFarPlane = findFarPlane(result.cameraPoseInvList);
+                result.recommendedNearPlane = result.getRecommendedFarPlane() / 32.0f;
+                log.debug("Near and far planes: {}, {}", result.getRecommendedNearPlane(), result.getRecommendedFarPlane());
+            }
+
+            // Fill with default lights if not specified
+            int maxLightIndex = result.lightIndexList.stream().max(Comparator.naturalOrder()).orElse(-1);
+            for (int i = getNextLightIndex(); i <= maxLightIndex; i = getNextLightIndex())
+            {
+                result.lightPositionList.add(Vector3.ZERO);
+                result.lightIntensityList.add(Vector3.ZERO);
+            }
+
+            if (result.geometryFile == null && result.rootDirectory != null)
+            {
+                setGeometryFileName("manifold.obj"); // Used by some really old datasets
+            }
+
+            return result;
+        }
+
+        /**
+         * A subroutine for guessing an appropriate far plane from an Agisoft PhotoScan/Metashape XML file.
+         * Assumes that the object must lie between all of the cameras in the file.
+         * @param cameraPoseInvList The list of camera poses.
+         * @return A far plane estimate.
+         */
+        private static float findFarPlane(Iterable<Matrix4> cameraPoseInvList)
+        {
+            float minX = Float.POSITIVE_INFINITY;
+            float minY = Float.POSITIVE_INFINITY;
+            float minZ = Float.POSITIVE_INFINITY;
+            float maxX = Float.NEGATIVE_INFINITY;
+            float maxY = Float.NEGATIVE_INFINITY;
+            float maxZ = Float.NEGATIVE_INFINITY;
+
+            for (Matrix4 aCameraPoseInvList : cameraPoseInvList)
+            {
+                Vector4 position = aCameraPoseInvList.getColumn(3);
+                minX = Math.min(minX, position.x);
+                minY = Math.min(minY, position.y);
+                minZ = Math.min(minZ, position.z);
+                maxX = Math.max(maxX, position.x);
+                maxY = Math.max(maxY, position.y);
+                maxZ = Math.max(maxZ, position.z);
+            }
+
+            // Corner-to-corner
+            float dX = maxX-minX;
+            float dY = maxY-minY;
+            float dZ = maxZ-minZ;
+            return (float)Math.sqrt(dX*dX + dY*dY + dZ*dZ);
+
+            // Longest Side approach
+//        return Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
+        }
+    }
+
+    public static Builder getBuilder(File rootDirectory, File supportingFilesDirectory, int initialCapacity)
+    {
+        return new Builder(rootDirectory, supportingFilesDirectory, initialCapacity);
+    }
+
     /**
      * Creates a new view set object.
      * @param initialCapacity The capacity to use for initializing array-based lists that scale with the number of views
@@ -172,53 +360,13 @@ public final class ViewSet implements ReadonlyViewSet
         this.lightPositionList = new ArrayList<>(1);
     }
 
-    public List<Matrix4> getCameraPoseList()
-    {
-        return cameraPoseList;
-    }
-
-    public List<Matrix4> getCameraPoseInvList()
-    {
-        return cameraPoseInvList;
-    }
-
-    public List<Projection> getCameraProjectionList()
-    {
-        return cameraProjectionList;
-    }
-
-    public List<Integer> getCameraProjectionIndexList()
-    {
-        return cameraProjectionIndexList;
-    }
-
-    public List<Vector3> getLightPositionList()
-    {
-        return lightPositionList;
-    }
-
-    public List<Vector3> getLightIntensityList()
-    {
-        return lightIntensityList;
-    }
-
-    public List<Integer> getLightIndexList()
-    {
-        return lightIndexList;
-    }
-
     /**
      * Relative paths from full res image directory
      * @return List of relative paths from full res image directory
      */
     public List<File> getImageFiles()
     {
-        return imageFiles;
-    }
-
-    public List<ViewRMSE> getViewErrorMetrics()
-    {
-        return viewErrorMetrics;
+        return Collections.unmodifiableList(imageFiles);
     }
 
     @Override
@@ -331,7 +479,7 @@ public final class ViewSet implements ReadonlyViewSet
         else
         {
             NativeVectorBuffer lightIntensityData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, lightIntensityList.size());
-            for (int k = 0; k < lightPositionList.size(); k++)
+            for (int k = 0; k < lightIntensityList.size(); k++)
             {
                 lightIntensityData.set(k, 0, lightIntensityList.get(k).x);
                 lightIntensityData.set(k, 1, lightIntensityList.get(k).y);
@@ -402,7 +550,7 @@ public final class ViewSet implements ReadonlyViewSet
     {
         ViewSet result = new ViewSet(this.getCameraPoseCount());
 
-        result.viewSetUid = this.viewSetUid;
+        result.uuid = this.uuid;
         result.cameraPoseList.addAll(this.cameraPoseList);
         result.cameraPoseInvList.addAll(this.cameraPoseInvList);
         result.cameraProjectionList.addAll(this.cameraProjectionList);
@@ -503,15 +651,6 @@ public final class ViewSet implements ReadonlyViewSet
         }
     }
 
-    /**
-     * Sets the name of the geometry file associated with this view set.
-     * @param fileName The name of the geometry file.
-     */
-    public void setGeometryFileName(String fileName)
-    {
-        this.geometryFile = fileName == null ? null : this.rootDirectory.toPath().resolve(fileName).toFile();
-    }
-
     @Override
     public File getGeometryFile()
     {
@@ -525,11 +664,6 @@ public final class ViewSet implements ReadonlyViewSet
     public void setGeometryFile(File geometryFile)
     {
         this.geometryFile = geometryFile;
-    }
-
-    public static File getDefaultSupportingFilesDirectory(File projectFile)
-    {
-        return new File(projectFile.getParentFile(), projectFile.getName() + ".files");
     }
 
     @Override
@@ -560,15 +694,6 @@ public final class ViewSet implements ReadonlyViewSet
     public void setSupportingFilesDirectory(File supportingFilesDirectory)
     {
         this.supportingFilesDirectory = supportingFilesDirectory;
-    }
-
-    /**
-     * Sets the relative file path of the supporting files (i.e. texture fit results) associated with this view set.
-     * @param relativeSupportingFilesPathName The file path of the supporting files directory.
-     */
-    public void setRelativeSupportingFilesPathName(String relativeSupportingFilesPathName)
-    {
-        this.supportingFilesDirectory = this.rootDirectory.toPath().resolve(relativeSupportingFilesPathName).toFile();
     }
 
     @Override
@@ -820,20 +945,10 @@ public final class ViewSet implements ReadonlyViewSet
         return this.recommendedNearPlane;
     }
 
-    public void setRecommendedNearPlane(float recommendedNearPlane)
-    {
-        this.recommendedNearPlane = recommendedNearPlane;
-    }
-
     @Override
     public float getRecommendedFarPlane()
     {
         return this.recommendedFarPlane;
-    }
-
-    public void setRecommendedFarPlane(float recommendedFarPlane)
-    {
-        this.recommendedFarPlane = recommendedFarPlane;
     }
 
     @Override
@@ -877,8 +992,8 @@ public final class ViewSet implements ReadonlyViewSet
     public void setTonemapping(float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues)
     {
         this.gamma = gamma;
-        this.linearLuminanceValues = linearLuminanceValues;
-        this.encodedLuminanceValues = encodedLuminanceValues;
+        this.linearLuminanceValues = linearLuminanceValues.clone();
+        this.encodedLuminanceValues = encodedLuminanceValues.clone();
     }
 
     @Override
@@ -917,13 +1032,8 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public UUID getUuid()
+    public UUID getUUID()
     {
-        return viewSetUid;
-    }
-
-    public void setUuid(UUID viewSetUid)
-    {
-        this.viewSetUid = viewSetUid;
+        return uuid;
     }
 }

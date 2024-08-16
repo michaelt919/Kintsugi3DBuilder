@@ -14,6 +14,7 @@ package kintsugi3d.builder.io;
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
+import kintsugi3d.builder.core.ViewSet.Builder;
 import kintsugi3d.builder.metrics.ViewRMSE;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
@@ -47,13 +48,11 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
     }
 
     @Override
-    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, Map<Integer, String> imagePathMap)
+    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory)
     {
         Date timestamp = new Date();
 
-        ViewSet result = new ViewSet(128);
-        result.setRootDirectory(root);
-        result.setSupportingFilesDirectory(supportingFilesDirectory);
+        Builder builder = ViewSet.getBuilder(root, supportingFilesDirectory, 128);
 
         float gamma = 2.2f;
 
@@ -65,7 +64,6 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
             scanner.useLocale(Locale.US);
             
             List<Matrix4> unorderedCameraPoseList = new ArrayList<>(128);
-            List<Matrix4> unorderedCameraPoseInvList = new ArrayList<>(128);
 
             while (scanner.hasNext())
             {
@@ -73,33 +71,32 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                 switch(id)
                 {
                     case "U":
-                        result.setUuid(UUID.fromString(scanner.nextLine().trim()));
+                        builder.setUUID(UUID.fromString(scanner.nextLine().trim()));
                         break;
                     case "c":
                     {
-                        result.setRecommendedNearPlane(scanner.nextFloat());
-                        result.setRecommendedFarPlane(scanner.nextFloat());
+                        builder.setRecommendedClipPlanes(scanner.nextFloat(), scanner.nextFloat());
                         scanner.nextLine();
                         break;
                     }
                     case "m":
                     {
-                        result.setGeometryFileName(scanner.nextLine().trim());
+                        builder.setGeometryFileName(scanner.nextLine().trim());
                         break;
                     }
                     case "I":
                     {
-                        result.setRelativeFullResImagePathName(scanner.nextLine().trim());
+                        builder.setRelativeFullResImagePathName(scanner.nextLine().trim());
                         break;
                     }
                     case "i":
                     {
-                        result.setRelativePreviewImagePathName(scanner.nextLine().trim());
+                        builder.setRelativePreviewImagePathName(scanner.nextLine().trim());
                         break;
                     }
                     case "t":
                     {
-                        result.setRelativeSupportingFilesPathName(scanner.nextLine().trim());
+                        builder.setRelativeSupportingFilesPathName(scanner.nextLine().trim());
                         break;
                     }
                     case "p":
@@ -116,9 +113,6 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         unorderedCameraPoseList.add(Matrix4.fromQuaternion(i, j, k, qr)
                             .times(Matrix4.translate(-x, -y, -z)));
 
-                        unorderedCameraPoseInvList.add(Matrix4.translate(x, y, z)
-                            .times(Matrix3.fromQuaternion(i, j, k, qr).transpose().asMatrix4()));
-
                         scanner.nextLine();
                         break;
                     }
@@ -132,7 +126,6 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                             new Vector4(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()));
 
                         unorderedCameraPoseList.add(newPose);
-                        unorderedCameraPoseInvList.add(newPose.quickInverse(0.002f));
                         break;
                     }
                     case "d": // Legacy format; generally used with synthetic data
@@ -149,7 +142,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         float sensorWidth = "D".equals(id) ? scanner.nextFloat() : 32.0f;
                         float sensorHeight = sensorWidth / aspect;
 
-                        result.getCameraProjectionList().add(new SimpleProjection(
+                        builder.addCameraProjection(new SimpleProjection(
                             aspect, 2.0f * (float) Math.atan2(sensorHeight, 2 * focalLength)));
 
                         // Skip any distortion parameters as they aren't used consistently
@@ -175,7 +168,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         float b1 = scanner.nextFloat(); // fx - fy
                         float b2 = scanner.nextFloat(); // a.k.a. skew
 
-                        result.getCameraProjectionList().add(new DistortionProjection(
+                        builder.addCameraProjection(new DistortionProjection(
                             sensorWidth, sensorHeight,
                             focalLength + b1, focalLength,
                             cx, cy, k1, k2, k3, k4, p1, p2, b2
@@ -208,7 +201,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         float aspect = scanner.nextFloat();
                         float fovy = (float)(scanner.nextFloat() * Math.PI / 180.0);
 
-                        result.getCameraProjectionList().add(new SimpleProjection(aspect, fovy));
+                        builder.addCameraProjection(new SimpleProjection(aspect, fovy));
 
                         scanner.nextLine();
                         break;
@@ -218,12 +211,12 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         float x = scanner.nextFloat();
                         float y = scanner.nextFloat();
                         float z = scanner.nextFloat();
-                        result.getLightPositionList().add(new Vector3(x, y, z));
 
                         float r = scanner.nextFloat();
                         float g = scanner.nextFloat();
                         float b = scanner.nextFloat();
-                        result.getLightIntensityList().add(new Vector3(r, g, b));
+
+                        builder.addLight(new Vector3(x, y, z), new Vector3(r, g, b));
 
                         // Skip the rest of the line
                         scanner.nextLine();
@@ -238,11 +231,11 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
 
                         String imgFilename = scanner.nextLine().trim();
 
-                        result.getCameraPoseList().add(unorderedCameraPoseList.get(poseId));
-                        result.getCameraPoseInvList().add(unorderedCameraPoseInvList.get(poseId));
-                        result.getCameraProjectionIndexList().add(projectionId);
-                        result.getLightIndexList().add(lightId);
-                        result.getImageFiles().add(new File(imgFilename));
+                        builder.setCurrentCameraPose(unorderedCameraPoseList.get(poseId))
+                            .setCurrentCameraProjectionIndex(projectionId)
+                            .setCurrentLightIndex(lightId)
+                            .setCurrentImageFile(new File(imgFilename))
+                            .finish();
                         break;
                     }
                     default:
@@ -252,10 +245,9 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
             }
         }
 
-        // Add default-initialized error metrics for each view
-        IntStream.range(0, result.getCameraPoseCount()).mapToObj(i -> new ViewRMSE())
-            .forEach(result.getViewErrorMetrics()::add);
+        ViewSet result = builder.finish();
 
+        // Tonemapping
         double[] linearLuminanceValues = new double[linearLuminanceList.size()];
         Arrays.setAll(linearLuminanceValues, linearLuminanceList::get);
 
@@ -266,19 +258,6 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         }
 
         result.setTonemapping(gamma, linearLuminanceValues, encodedLuminanceValues);
-
-        int maxLightIndex = result.getLightIndexList().stream().max(Comparator.naturalOrder()).orElse(-1);
-
-        for (int i = result.getLightIntensityList().size(); i <= maxLightIndex; i++)
-        {
-            result.getLightPositionList().add(Vector3.ZERO);
-            result.getLightIntensityList().add(Vector3.ZERO);
-        }
-
-        if (result.getGeometryFile() == null && result.getRootDirectory() != null)
-        {
-            result.setGeometryFileName("manifold.obj"); // Used by some really old datasets
-        }
 
         if (result.getSupportingFilesFilePath() != null)
         {

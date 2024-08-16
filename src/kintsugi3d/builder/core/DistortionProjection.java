@@ -14,6 +14,8 @@ package kintsugi3d.builder.core;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector2;
 
+import java.util.Objects;
+
 /**
  * Creates a perspective projection that also maintains camera distortion parameters (for Brown's distortion model).
  * These parameters are maintained for reference only; they do not actually affect the projection matrix.
@@ -188,6 +190,28 @@ public class DistortionProjection implements Projection
     {
         return String.format("s\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
                                 cx, cy, width/height, fy, width, k1, k2, k3, k4, p1, p2, fx - fy, skew);
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof DistortionProjection)
+        {
+            DistortionProjection p = (DistortionProjection) obj;
+            //noinspection FloatingPointEquality
+            return width == p.width && height == p.height && fx == p.fx && fy == p.fy && cx == p.cx && cy == p.cy
+                && k1 == p.k1 && k2 == p.k2 && k3 == p.k3 && k4 == p.k4 && p1 == p.p1 && p2 == p.p2 && skew == p.skew;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(width, height, fx, fy, cx, cy, k1, k2, k3, k4, p1, p2, skew);
     }
 
     public DistortionProjection scaledTo(int newWidth, int newHeight)

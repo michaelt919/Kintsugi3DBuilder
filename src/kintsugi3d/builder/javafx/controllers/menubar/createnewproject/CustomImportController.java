@@ -31,6 +31,7 @@ import javafx.stage.Window;
 import javafx.stage.FileChooser.ExtensionFilter;
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
+import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
@@ -69,8 +70,10 @@ public class CustomImportController extends FXMLPageController implements ShareI
         File recentFile = RecentProjects.getMostRecentDirectory();
         setInitDirectories(recentFile);
 
+        camFileChooser.getExtensionFilters().add(new ExtensionFilter("Reality Capture CSV file", "*.csv"));
         camFileChooser.getExtensionFilters().add(new ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
-        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ or PLY file", "*.obj", "*.ply"));
+        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ file", "*.obj", "*.ply"));
+        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Stanford PLY file", "*.obj", "*.ply"));
 
         camFileChooser.setTitle("Select camera positions file");
         objFileChooser.setTitle("Select object file");
@@ -113,7 +116,6 @@ public class CustomImportController extends FXMLPageController implements ShareI
     @FXML
     private void camFileSelect()
     {
-
         File temp = camFileChooser.showOpenDialog(getStage());
 
         if (temp != null)
@@ -123,7 +125,15 @@ public class CustomImportController extends FXMLPageController implements ShareI
 
             try
             {
-                ReadonlyViewSet newViewSet = ViewSetReaderFromAgisoftXML.getInstance().readFromFile(cameraFile);
+                ReadonlyViewSet newViewSet;
+                if (cameraFile.getName().endsWith(".xml"))
+                {
+                    newViewSet = ViewSetReaderFromAgisoftXML.getInstance().readFromFile(cameraFile);
+                }
+                else
+                {
+                    newViewSet = ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile);
+                }
 
                 loadCheckCameras.setText("Loaded");
                 loadCheckCameras.setFill(Paint.valueOf("Green"));

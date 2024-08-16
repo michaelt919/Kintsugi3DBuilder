@@ -115,7 +115,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         private void updateViewSetFromLoadOptions()
         {
             this.viewSet.setPreviewImageResolution(loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
-            String directoryName = String.format("%s/_%dx%d", viewSet.getUuid().toString(), loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
+            String directoryName = String.format("%s/_%dx%d", viewSet.getUUID().toString(), loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
 
             this.viewSet.setRelativePreviewImagePathName(new File(ApplicationFolders.getPreviewImagesRootDirectory().toFile(), directoryName).toString());
         }
@@ -846,7 +846,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
     public ImageCache<ContextType> cache(ImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException
     {
-        settings.setCacheFolderName(getViewSet().getUuid().toString());
+        settings.setCacheFolderName(getViewSet().getUUID().toString());
 
         ImageCache<ContextType> cache = new ImageCache<>(this, settings);
 
