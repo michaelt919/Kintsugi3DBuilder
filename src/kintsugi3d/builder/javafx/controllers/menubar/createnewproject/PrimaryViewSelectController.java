@@ -24,6 +24,9 @@ import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
+import kintsugi3d.builder.io.primaryview.AgisoftPrimaryViewSelectionModel;
+import kintsugi3d.builder.io.primaryview.PrimaryViewSelectionModel;
+import kintsugi3d.builder.io.primaryview.View;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
@@ -39,16 +42,19 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-
-public class PrimaryViewSelectController extends FXMLPageController implements CanConfirm {
+public class PrimaryViewSelectController extends FXMLPageController implements CanConfirm
+{
     //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"
     //suppress warning?
 
@@ -66,55 +72,62 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     private File fullResOverride;
     private boolean doSkipMissingCams;
     private Document cameraDocument;
+    PrimaryViewSelectionModel primaryViewSelectionModel;
     private HashMap<String, Image> imgCache;
     private ImgSelectionThread loadImgThread;
     static final int THUMBNAIL_SIZE = 30;
 
     @Override
-    public void init() {
+    public void init()
+    {
         //TODO: temp hack to make text visible, need to change textflow css?
         imgViewText.setFill(Paint.valueOf("white"));
-        this.metashapeObjectChunk = null;
-        this.cameraDocument = null;
+        this.primaryViewSelectionModel = null;
         this.cameraFile = null;
 
         imgCache = new HashMap<>();
     }
 
     @Override
-    public void refresh() {
+    public void refresh()
+    {
         MetashapeObjectChunk sharedChunk = hostScrollerController.getInfo(ShareInfo.Info.METASHAPE_OBJ_CHUNK);
         File sharedCamFile = hostScrollerController.getInfo(ShareInfo.Info.CAM_FILE);
         doSkipMissingCams = false;
 
         boolean isMetashapeImport =
-                hostPage.getPrevPage() == hostScrollerController.getPage("/fxml/menubar/createnewproject/MetashapeImport.fxml");
+            hostPage.getPrevPage() == hostScrollerController.getPage("/fxml/menubar/createnewproject/MetashapeImport.fxml");
+
+        updateSharedInfo();
 
         //metashape import path loads from metashape project
-        if(isMetashapeImport){
-            if(this.metashapeObjectChunk == null ||
-                    !Objects.equals(this.metashapeObjectChunk, sharedChunk)) {
-
-                updateSharedInfo();
-                try{
+        if(isMetashapeImport)
+        {
+            if(this.metashapeObjectChunk == null || !Objects.equals(this.metashapeObjectChunk, sharedChunk))
+            {
+                try
+                {
                     verifyInfo(null);
                     initTreeView(sharedChunk);
                 }
-                catch(MissingImagesException mie){
+                catch(MissingImagesException mie)
+                {
                     Platform.runLater(() ->
-                            showMissingImgsAlert(metashapeObjectChunk, mie));
+                        showMissingImgsAlert(metashapeObjectChunk, mie));
                 }
             }
         }
-
         //custom import path loads from cameras xml file
-        else{
-            if(cameraFile == null || cameraFile != sharedCamFile){
+        else
+        {
+            if(cameraFile == null || !cameraFile.equals(sharedCamFile))
+            {
                 updateSharedInfo();
                 initTreeView(sharedCamFile);
             }
         }
     }
+
     public void initTreeView(File camFile) {
         cameraFile = camFile;
 
@@ -122,36 +135,13 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder;
             builder = factory.newDocumentBuilder();
-            cameraDocument = builder.parse(cameraFile);
 
-            //get chunk name
-            Element chunkElem = (Element) cameraDocument.getElementsByTagName("chunk").item(0);
-            String chunkName = chunkElem.getAttribute("label");
-            
-            //get enabled cameras
-            NodeList cams = cameraDocument.getElementsByTagName("camera");
-            ArrayList<Element> cameras = new ArrayList<>();
-            for (int i = 0; i < cams.getLength(); ++i) {
-                Node cameraNode = cams.item(i);
-
-                if (cameraNode.getNodeType() != Node.ELEMENT_NODE ) {
-                    return;
-                }
-
-                Element camera = (Element) cameraNode;
-
-                String enabled = camera.getAttribute("enabled");
-                if (enabled.equals("true") ||
-                        enabled.equals("1") ||
-                        enabled.isEmpty() /*cam is enabled by default*/) {
-                    cameras.add(camera);
-                }
+            if (camFile.getName().endsWith(".xml")) // Agisoft Metashape
+            {
+                primaryViewSelectionModel = AgisoftPrimaryViewSelectionModel.createInstance(camFile);
             }
-            //prev-res images haven't been generated and no thumbnails are present, 
-            //so leave thumbnails list empty
-            List<Image> thumbnails = new ArrayList<>();
 
-            addTreeElems(chunkName, thumbnails, cameras);
+            addTreeElems(primaryViewSelectionModel);
 
         } catch (Exception e) {
             ProjectIO.handleException("Error initializing primary view selection.", e);
@@ -160,40 +150,41 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     }
 
     //TODO: either refactor this so that this function relies on this.metashapeObjectChunk or remove UnzipFileSelectionController as it is no longer needed
-    public void initTreeView(MetashapeObjectChunk metashapeObjectChunk) {
+    public void initTreeView(MetashapeObjectChunk metashapeObjectChunk)
+    {
         String chunkName = metashapeObjectChunk.getChunkName();
 
         ArrayList <Image> thumbnailImageList = (ArrayList<Image>) metashapeObjectChunk.loadThumbnailImageList();
-
         ArrayList<Element> cameras = (ArrayList<Element>) metashapeObjectChunk.findEnabledCameras();
 
-        addTreeElems(chunkName, thumbnailImageList, cameras);
+        primaryViewSelectionModel = AgisoftPrimaryViewSelectionModel.createInstance(chunkName, cameras, thumbnailImageList);
+
+        addTreeElems(primaryViewSelectionModel);
     }
 
-    private void addTreeElems(String chunkName, List<Image> thumbnailImgList, List<Element> cameras){
-        TreeItem<String> rootItem = new TreeItem<>(chunkName);
+    private void addTreeElems(PrimaryViewSelectionModel primaryViewSelectionModel){
+        TreeItem<String> rootItem = new TreeItem<>(primaryViewSelectionModel.getName());
         chunkTreeView.setRoot(rootItem);
 
-        for (int i = 0; i < cameras.size(); ++i) {
-            Element camera = cameras.get(i);
-            String imageName = camera.getAttribute("label");
+        List<View> views = primaryViewSelectionModel.getViews();
+
+        for (int i = 0; i < views.size(); i++)
+        {
+            View view = views.get(i);
 
             //get parent of camera
             //if parent of camera is a group, create a group node and put it under the root, then add camera to it
             //unless that group already exists, then add the camera to the already created group
 
-            Element parent = (Element) camera.getParentNode();
             TreeItem<String> destinationItem; //stores the node which the image will be added to
-            // (either a group or the root node)
-            if(parent.getTagName().equals("group")){
-                String groupName = parent.getAttribute("label");
-
+            if(view.group != null)
+            {
                 List<TreeItem<String>> rootChildren = rootItem.getChildren();
                 AtomicBoolean groupAlreadyCreated = new AtomicBoolean(false);
                 AtomicReference<TreeItem<String>> matchingItem = new AtomicReference<>();
 
                 rootChildren.forEach(item -> {
-                    if (item.getValue().equals(groupName)){
+                    if (item.getValue().equals(view.group)){
                         groupAlreadyCreated.set(true);
                         matchingItem.set(item);
                     }
@@ -204,7 +195,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                     destinationItem = matchingItem.get();
                 }
                 else{//group has not been created yet
-                    TreeItem<String> newGroup = new TreeItem<>(groupName);
+                    TreeItem<String> newGroup = new TreeItem<>(view.group);
                     rootItem.getChildren().add(newGroup);
                     destinationItem = newGroup;
                 }
@@ -216,7 +207,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             }
 
             //set image and thumbnail
-            TreeItem<String> imageTreeItem = getStringTreeItem(thumbnailImgList, i, imageName);
+            TreeItem<String> imageTreeItem = getStringTreeItem(primaryViewSelectionModel.getThumbnails(), i, view.name);
             destinationItem.getChildren().add(imageTreeItem);
         }
 
@@ -489,6 +480,10 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
     public Document getCameraDocument(){
         return cameraDocument;
+    }
+
+    public PrimaryViewSelectionModel getPrimaryViewSelectionModel() {
+        return primaryViewSelectionModel;
     }
 
     public File getPhotosDir() {

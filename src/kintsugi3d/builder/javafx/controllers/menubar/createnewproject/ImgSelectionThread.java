@@ -16,6 +16,7 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.text.Text;
+import kintsugi3d.builder.io.primaryview.PrimaryViewSelectionModel;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
