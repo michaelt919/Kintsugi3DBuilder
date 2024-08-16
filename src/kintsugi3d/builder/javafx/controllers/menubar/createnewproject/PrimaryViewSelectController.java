@@ -83,6 +83,8 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         //TODO: temp hack to make text visible, need to change textflow css?
         imgViewText.setFill(Paint.valueOf("white"));
         this.primaryViewSelectionModel = null;
+        this.metashapeObjectChunk = null;
+        this.cameraDocument = null;
         this.cameraFile = null;
 
         imgCache = new HashMap<>();
