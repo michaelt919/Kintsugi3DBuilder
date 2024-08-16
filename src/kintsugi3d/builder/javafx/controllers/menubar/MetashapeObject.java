@@ -218,4 +218,8 @@ public class MetashapeObject {
         File file = new File(path);
         return file.exists() && file.getAbsolutePath().endsWith(".psx");
     }
+
+    public File getPsxFile() {
+        return new File(psxFilePath);
+    }
 }

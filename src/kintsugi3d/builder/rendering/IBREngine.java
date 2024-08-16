@@ -212,7 +212,12 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         if (resources.getGeometry() != null)
         {
             sceneModel.setScale(resources.getGeometry().getBoundingRadius() * 2);
-            sceneModel.setOrientation(resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex()).getUpperLeft3x3());
+
+            Matrix4 primaryCameraPose = resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex());
+
+            sceneModel.setOrientation(Matrix4.rotateZ(-resources.getViewSet().getPrimaryViewRotation())
+                            .times(primaryCameraPose).getUpperLeft3x3());
+
             sceneModel.setCentroid(resources.getGeometry().getCentroid());
         }
     }

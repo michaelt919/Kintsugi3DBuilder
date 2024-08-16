@@ -265,7 +265,6 @@ public final class ProjectIO
 
         if (!confirmClose("Are you sure you want to create a new project?")) {return;}
 
-        //File fxmlFilesDirectory = new File("src/main/resources/fxml/menubar/createnewproject");
         File fxmlFilesDirectory = new File("create-new-project-fxmls.txt");
 
         if (!fxmlFilesDirectory.exists()){
