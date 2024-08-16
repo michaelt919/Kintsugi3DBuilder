@@ -16,7 +16,6 @@ import com.opencsv.bean.CsvToBeanBuilder;
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
-import kintsugi3d.builder.metrics.ViewRMSE;
 import kintsugi3d.gl.vecmath.DoubleMatrix4;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -28,11 +27,11 @@ import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.*;
 
-public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
+public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReaderFromLooseFiles
 {
-    private static final ViewSetReader INSTANCE = new ViewSetReaderFromRealityCaptureCSV();
+    private static final ViewSetReaderFromLooseFiles INSTANCE = new ViewSetReaderFromRealityCaptureCSV();
 
-    public static ViewSetReader getInstance()
+    public static ViewSetReaderFromLooseFiles getInstance()
     {
         return INSTANCE;
     }
@@ -93,13 +92,7 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
     }
 
     @Override
-    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory) throws IOException
-    {
-        // Assume images are in root directory
-        return readFromStream(stream, root, supportingFilesDirectory, root);
-    }
-
-    public static ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, File fullResImageDirectory) throws IOException
+    public ViewSet readFromStream(InputStream stream, File root, File geometryFile, File fullResImageDirectory) throws IOException
     {
         List<Camera> cameras = new CsvToBeanBuilder<Camera>(new InputStreamReader(stream, StandardCharsets.UTF_8))
             .withType(Camera.class).build().parse();
@@ -113,7 +106,7 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
         }
 
         // Start building the view set
-        Builder builder = ViewSet.getBuilder(root, supportingFilesDirectory, cameras.size());
+        Builder builder = ViewSet.getBuilder(root, cameras.size());
 
         // Invert the mapping so that we can retrieve the distortion by camera
         Map<String, Integer> cameraMapInverted = new HashMap<>(cameras.size());
@@ -145,6 +138,9 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
         // Setup default light calibration (setting to zero is OK; will be overridden at a later stage)
         builder.addLight(Vector3.ZERO, Vector3.ZERO);
 
-        return builder.finish();
+        ViewSet result = builder.finish();
+        result.setGeometryFile(geometryFile);
+        result.setFullResImageDirectory(fullResImageDirectory);
+        return result;
     }
 }

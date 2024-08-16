@@ -164,6 +164,16 @@ public final class ViewSet implements ReadonlyViewSet
         private int lightIndex = 0;
         private File imageFile;
 
+        /**
+         * Uses root directory as supporting files directory by default
+         * @param rootDirectory
+         * @param initialCapacity
+         */
+        Builder(File rootDirectory, int initialCapacity)
+        {
+            this(rootDirectory, rootDirectory, initialCapacity);
+        }
+
         Builder(File rootDirectory, File supportingFilesDirectory, int initialCapacity)
         {
             result = new ViewSet(initialCapacity);
@@ -253,6 +263,12 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
+        public Builder setRelativeFullResImagePathName(String relativePath)
+        {
+            result.setRelativeFullResImagePathName(relativePath);
+            return this;
+        }
+
         /**
          * Sets the relative file path of the supporting files (i.e. texture fit results) associated with this view set.
          * @param relativePath The file path of the supporting files directory.
@@ -260,12 +276,6 @@ public final class ViewSet implements ReadonlyViewSet
         public Builder setRelativeSupportingFilesPathName(String relativePath)
         {
             result.supportingFilesDirectory = result.rootDirectory.toPath().resolve(relativePath).toFile();
-            return this;
-        }
-
-        public Builder setRelativeFullResImagePathName(String relativePath)
-        {
-            result.setRelativeFullResImagePathName(relativePath);
             return this;
         }
 
@@ -337,10 +347,16 @@ public final class ViewSet implements ReadonlyViewSet
         }
     }
 
+    public static Builder getBuilder(File rootDirectory, int initialCapacity)
+    {
+        return new Builder(rootDirectory, initialCapacity);
+    }
+
     public static Builder getBuilder(File rootDirectory, File supportingFilesDirectory, int initialCapacity)
     {
         return new Builder(rootDirectory, supportingFilesDirectory, initialCapacity);
     }
+
 
     /**
      * Creates a new view set object.

@@ -36,13 +36,13 @@ import org.slf4j.LoggerFactory;
 /**
  * Handles loading view sets from a camera definition file exported in XML format from Agisoft PhotoScan/Metashape.
  */
-public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
+public final class ViewSetReaderFromAgisoftXML implements ViewSetReaderFromLooseFiles
 {
     private static final Logger log = LoggerFactory.getLogger(ViewSetReaderFromAgisoftXML.class);
 
-    private static final ViewSetReader INSTANCE = new ViewSetReaderFromAgisoftXML();
+    private static final ViewSetReaderFromLooseFiles INSTANCE = new ViewSetReaderFromAgisoftXML();
 
-    public static ViewSetReader getInstance()
+    public static ViewSetReaderFromLooseFiles getInstance()
     {
         return INSTANCE;
     }
@@ -125,28 +125,23 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         }
     }
 
-    @Override
-    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory) throws XMLStreamException
-    {
-        // Use root directory as supporting files directory
-        return readFromStream(stream, root, supportingFilesDirectory, null);
-    }
-
-
     /**
      * Loads a view set from an input file.
-     * The root directory and the supporting files directory will be set as specified.
-     * The supporting files directory may be overridden by a directory specified in the file.
-     * * @param stream The file to load
+     * The root directory will be set as specified.
+     * The supporting files directory will default to the root directory.
+     * @param stream The file to load
      * @param root
-     * @param supportingFilesDirectory
-     * @param imagePathMap A map of image IDs to paths, if passed this will override the paths being assigned to the images.
      * @return
      * @throws XMLStreamException
      */
-    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, Map<Integer, String> imagePathMap) throws XMLStreamException
+    @Override
+    public ViewSet readFromStream(InputStream stream, File root, File geometryFile, File fullResImageDirectory) throws XMLStreamException
     {
-        return readFromStream(stream, root, supportingFilesDirectory, imagePathMap, -1, false);
+        // Use root directory as supporting files directory
+        ViewSet viewSet = readFromStream(stream, root, root, null, -1, false);
+        viewSet.setGeometryFile(geometryFile);
+        viewSet.setFullResImageDirectory(fullResImageDirectory);
+        return viewSet;
     }
 
     /**
@@ -162,7 +157,9 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * @return
      * @throws XMLStreamException
      */
-    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, Map<Integer, String> imagePathMap, int metashapeVersionOverride, boolean directAgisoftImport) throws XMLStreamException
+    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory,
+        Map<Integer, String> imagePathMap, int metashapeVersionOverride, boolean directAgisoftImport)
+        throws XMLStreamException
     {
         Map<String, Sensor> sensorSet = new Hashtable<>();
         TreeSet<Camera> cameraSet = new TreeSet<>((c1, c2) ->

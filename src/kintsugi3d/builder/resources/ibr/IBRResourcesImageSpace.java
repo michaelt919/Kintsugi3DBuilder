@@ -14,8 +14,7 @@ package kintsugi3d.builder.resources.ibr;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
-import kintsugi3d.builder.io.ViewSetReaderFromVSET;
+import kintsugi3d.builder.io.*;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -173,42 +172,62 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         }
 
         // images are defined in the load options
-        public Builder<ContextType> loadAgisoftFiles(File cameraFile, File geometryFile, File undistortedImageDirectory) throws Exception
+        public Builder<ContextType> loadAgisoftFiles(File cameraFile, File geometryFile, File fullResImageDirectory) throws Exception
         {
-            this.viewSet = ViewSetReaderFromAgisoftXML.getInstance().readFromFile(cameraFile);
+            return loadLooseFiles(ViewSetReaderFromAgisoftXML.getInstance(), cameraFile, geometryFile, fullResImageDirectory);
+        }
+
+        // images are defined in the load options
+        public Builder<ContextType> loadRealityCaptureFiles(File cameraFile, File geometryFile, File fullResImageDirectory) throws Exception
+        {
+            return loadLooseFiles(ViewSetReaderFromRealityCaptureCSV.getInstance(), cameraFile, geometryFile, fullResImageDirectory);
+        }
+
+        // images are defined in the load options
+        public Builder<ContextType> loadLooseFiles(ViewSetReaderFromLooseFiles reader, File cameraFile, File geometryFile, File fullResImageDirectory) throws Exception
+        {
+            // Load view set
+            this.viewSet = reader.readFromFile(cameraFile, geometryFile, fullResImageDirectory);
+
+            // Pass load options to view set
+            if (this.loadOptions != null)
+            {
+                updateViewSetFromLoadOptions();
+            }
+
+            // Load and validate geometry
             if (geometryFile != null)
             {
                 if (geometryFile.getName().contains(".obj"))
                 {
                     this.geometry = VertexGeometry.createFromOBJFile(geometryFile);
                 }
-                else if (geometryFile.getName().contains(".ply")) {
+                else if (geometryFile.getName().contains(".ply"))
+                {
                     this.geometry = VertexGeometry.createFromPLYFile(geometryFile);
                 }
-                else if (geometryFile.getName().contains(".zip")){
+                else if (geometryFile.getName().contains(".zip"))
+                {
                     this.geometry = VertexGeometry.createFromGeometryFile(geometryFile);
                 }
-            }
-            if (!this.geometry.hasNormals()) {
-                throw new MeshImportException("Imported Object has no Normals");
-            }
-            if (!this.geometry.hasTexCoords()) {
-                throw new MeshImportException("Imported Object has no Texture Coordinates");
-            }
-            if (undistortedImageDirectory != null)
-            {
-                this.imageDirectoryOverride = undistortedImageDirectory;
-                this.viewSet.setRelativeFullResImagePathName(cameraFile.getParentFile().toPath().relativize(undistortedImageDirectory.toPath()).toString());
-            }
+                else
+                {
+                    throw new IllegalArgumentException(MessageFormat.format("Unsupported geometry file: {0}", geometryFile));
+                }
 
-            if (geometry != null)
-            {
-                viewSet.setGeometryFile(geometry.getFilename());
-            }
+                if (!this.geometry.hasNormals())
+                {
+                    throw new MeshImportException("Imported Object has no Normals");
+                }
 
-            if (this.loadOptions != null)
+                if (!this.geometry.hasTexCoords())
+                {
+                    throw new MeshImportException("Imported Object has no Texture Coordinates");
+                }
+            }
+            else
             {
-                updateViewSetFromLoadOptions();
+                throw new IllegalArgumentException("Geometry file may not be null.");
             }
 
             return this;
@@ -221,7 +240,10 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
          * @return
          * @throws IOException
          */
-        public Builder<ContextType> loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, File supportingFilesDirectory, File fullResDirectoryOverride, boolean ignoreMissingCams) throws IOException {
+        public Builder<ContextType> loadAgisoftFromZIP(
+            MetashapeObjectChunk metashapeObjectChunk, File supportingFilesDirectory, File fullResDirectoryOverride, boolean ignoreMissingCams)
+            throws IOException
+        {
             // Get reference to the chunk directory
             File chunkDirectory = new File(metashapeObjectChunk.getChunkDirectoryPath());
             if (!chunkDirectory.exists()){
@@ -250,7 +272,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                         // Create and store ViewSet
                         // TODO: USING A HARD CODED VERSION VALUE (200)
                         this.viewSet = ((ViewSetReaderFromAgisoftXML) ViewSetReaderFromAgisoftXML.getInstance())
-                                .readFromStream(fileStream, rootDirectory, supportingFilesDirectory, cameraPathsMap, 200, true);
+                            .readFromStream(fileStream, rootDirectory, supportingFilesDirectory, cameraPathsMap, 200, true);
                         break;
                     }
                 }
@@ -278,10 +300,10 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         // 4) Set image directory to be parent directory of MetaShape project (and add to the photos' paths)
             File psxFile = new File(metashapeObjectChunk.getMetashapeObject().getPsxFilePath());
-            File undistortedImageDirectory = new File(psxFile.getParent()); // The directory of undistorted photos //TODO: verify this
-            // Print error to log if unable to find undistortedImageDirectory
-            if (!undistortedImageDirectory.exists()) {
-                log.error("Unable to find undistortedImageDirectory: " + undistortedImageDirectory);
+            File fullResImageDirectory = new File(psxFile.getParent()); // The directory of full res photos
+            // Print error to log if unable to find fullResImageDirectory
+            if (!fullResImageDirectory.exists()) {
+                log.error("Unable to find fullResImageDirectory: " + fullResImageDirectory);
             }
 
             if (fullResDirectoryOverride != null){

@@ -23,7 +23,7 @@ import java.io.InputStream;
  * Typically, an implementation would support just one file format, but that format is not specified by this interface.
  */
 @FunctionalInterface
-public interface ViewSetReader
+public interface ViewSetReader extends ViewSetReaderFromLooseFiles
 {
     /**
      * Loads a view set from an input file.
@@ -37,6 +37,10 @@ public interface ViewSetReader
      */
     ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory) throws Exception;
 
+    default ViewSet readFromStream(InputStream stream, File root, File geometryFile, File fullResImageDirectory) throws Exception
+    {
+        return readFromStream(stream, root, root);
+    }
 
     /**
      * Loads a view set from an input file.
