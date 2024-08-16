@@ -45,7 +45,6 @@ public class Stopwatch {
         initTime = System.nanoTime();
         Arrays.fill(rollingAverageStorage, initTime);
 
-        click();
         return initTime;
     }
 
