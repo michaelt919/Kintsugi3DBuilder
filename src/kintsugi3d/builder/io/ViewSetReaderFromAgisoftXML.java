@@ -11,12 +11,11 @@
 
 package kintsugi3d.builder.io;
 
-import java.io.File;
-import java.io.InputStream;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Objects;
-import java.util.TreeSet;
+import java.io.*;
+import java.text.MessageFormat;
+import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -25,13 +24,18 @@ import javax.xml.stream.XMLStreamReader;
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.metrics.ViewRMSE;
+import kintsugi3d.builder.resources.ibr.MissingImagesException;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 /**
  * Handles loading view sets from a camera definition file exported in XML format from Agisoft PhotoScan/Metashape.
@@ -685,5 +689,139 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReaderFromLoose
         }
 
         return builder.finish();
+    }
+
+    private static Map<Integer, String> buildCameraPathsMap(
+        MetashapeObjectChunk metashapeObjectChunk, File fullResDirectoryOverride, boolean ignoreMissingCams, File rootDirectory)
+        throws FileNotFoundException
+    {
+        Map<Integer, String> cameraPathsMap = new HashMap<>(128);
+
+        // Open the xml files that contains all the cameras' ids and file paths
+        Document frame = metashapeObjectChunk.getFrameZip();
+        if (frame == null || frame.getDocumentElement() == null){
+            throw new FileNotFoundException("No frame document found");
+        }
+
+        // Loop through the cameras and store each pair of id and path in the map
+        NodeList cameraList = ((Element) frame.getElementsByTagName("frame").item(0))
+            .getElementsByTagName("camera");
+
+        int numMissingFiles = 0;
+        File fullResSearchDirectory = fullResDirectoryOverride == null ?
+            new File(metashapeObjectChunk.getFramePath()).getParentFile() :
+            fullResDirectoryOverride;
+
+
+        File exceptionFolder = null;
+
+        for (int i = 0; i < cameraList.getLength(); i++) {
+            Element cameraElement = (Element) cameraList.item(i);
+            int cameraId = Integer.parseInt(cameraElement.getAttribute("camera_id"));
+
+            String pathAttribute = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
+
+            File imageFile;
+            String finalPath = "";
+            if (fullResDirectoryOverride == null){
+                imageFile = new File(fullResSearchDirectory, pathAttribute);
+                finalPath = rootDirectory.toPath().relativize(imageFile.toPath()).toString();
+            }
+            else{
+                //if this doesn't work, then replace metashapeObjectChunk.getFramePath()).getParentFile()
+                //    and the first part of path with the file that the user selected
+                String pathAttributeName = new File(pathAttribute).getName();
+                imageFile = new File(fullResDirectoryOverride, pathAttributeName);
+                finalPath = imageFile.getName();
+            }
+
+            if (imageFile.exists() && !finalPath.isBlank()) {
+                // Add pair to the map
+                cameraPathsMap.put(cameraId, finalPath);
+            }
+            else{
+                numMissingFiles++;
+                exceptionFolder = imageFile.getParentFile();
+            }
+        }
+
+        if (!ignoreMissingCams && numMissingFiles > 0){
+            throw new MissingImagesException("Project is missing images.", numMissingFiles, exceptionFolder);
+        }
+
+        return cameraPathsMap;
+    }
+
+    public static ViewSet readChunkFromZip(
+        MetashapeObjectChunk metashapeObjectChunk, File supportingFilesDirectory, File fullResDirectoryOverride, boolean ignoreMissingCams)
+        throws IOException, XMLStreamException
+    {
+        // Get reference to the chunk directory
+        File chunkDirectory = new File(metashapeObjectChunk.getChunkDirectoryPath());
+        if (!chunkDirectory.exists())
+        {
+            throw new FileNotFoundException(MessageFormat.format("Chunk directory does not exist: {0}", chunkDirectory));
+        }
+
+        File rootDirectory = new File(metashapeObjectChunk.getPsxFilePath()).getParentFile();
+        if (!rootDirectory.exists())
+        {
+            throw new FileNotFoundException(MessageFormat.format("Root directory does not exist: {0}", rootDirectory));
+        }
+
+        // 1) Construct camera ID to filename map from frame's ZIP
+        Map<Integer, String> cameraPathsMap = buildCameraPathsMap(metashapeObjectChunk, fullResDirectoryOverride, ignoreMissingCams, rootDirectory);
+
+        // 2) Load ViewSet from ZipInputStream from chunk's ZIP (eventually will accept the filename map as a parameter)
+        File zipFile = new File(chunkDirectory, "chunk.zip");
+        try (FileInputStream fis = new FileInputStream(zipFile);
+             ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis)))
+        {
+            ZipEntry entry;
+
+            // Specify the desired file name
+            String targetFileName = "doc.xml";
+
+            while ((entry = zis.getNextEntry()) != null)
+            {
+                if (entry.getName().equals(targetFileName))
+                {
+                    // Found the desired file inside the zip
+                    InputStream fileStream = new BufferedInputStream(zis);
+                    // Create and store ViewSet
+                    // TODO: USING A HARD CODED VERSION VALUE (200)
+                    ViewSet viewSet = ((ViewSetReaderFromAgisoftXML) ViewSetReaderFromAgisoftXML.getInstance())
+                        .readFromStream(fileStream, rootDirectory, supportingFilesDirectory, cameraPathsMap, 200, true);
+
+                    // 3) load geometry from ZipInputStream from model's ZIP
+                    String modelPath = metashapeObjectChunk.getCurrentModelPath();
+                    viewSet.setGeometryFile(new File(chunkDirectory, "0/" + modelPath));
+                    if (modelPath.isEmpty()){throw new FileNotFoundException("Could not find model path");}
+
+                    // 4) Set image directory to be parent directory of MetaShape project (and add to the photos' paths)
+                    File psxFile = new File(metashapeObjectChunk.getMetashapeObject().getPsxFilePath());
+                    File fullResImageDirectory = new File(psxFile.getParent()); // The directory of full res photos
+                    // Print error to log if unable to find fullResImageDirectory
+                    if (!fullResImageDirectory.exists())
+                    {
+                        throw new FileNotFoundException(MessageFormat.format("Unable to find fullResImageDirectory: {0}", fullResImageDirectory));
+                    }
+
+                    if (fullResDirectoryOverride != null)
+                    {
+                        viewSet.setFullResImageDirectory(fullResDirectoryOverride);
+                    }
+                    else
+                    {
+                        // Set the fullResImage Directory to be the root directory
+                        viewSet.setFullResImageDirectory(chunkDirectory.getParentFile().getParentFile());
+                    }
+
+                    return viewSet;
+                }
+            }
+
+            throw new FileNotFoundException(MessageFormat.format("Could not find file {0} in zip {1}", targetFileName, zipFile));
+        }
     }
 }
