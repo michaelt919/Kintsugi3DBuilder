@@ -25,12 +25,10 @@ import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
-import kintsugi3d.builder.metrics.ViewRMSE;
 import kintsugi3d.builder.resources.ibr.MissingImagesException;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
-import kintsugi3d.gl.vecmath.Vector4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -40,13 +38,13 @@ import org.w3c.dom.NodeList;
 /**
  * Handles loading view sets from a camera definition file exported in XML format from Agisoft PhotoScan/Metashape.
  */
-public final class ViewSetReaderFromAgisoftXML implements ViewSetReaderFromLooseFiles
+public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 {
     private static final Logger log = LoggerFactory.getLogger(ViewSetReaderFromAgisoftXML.class);
 
-    private static final ViewSetReaderFromLooseFiles INSTANCE = new ViewSetReaderFromAgisoftXML();
+    private static final ViewSetReader INSTANCE = new ViewSetReaderFromAgisoftXML();
 
-    public static ViewSetReaderFromLooseFiles getInstance()
+    public static ViewSetReader getInstance()
     {
         return INSTANCE;
     }

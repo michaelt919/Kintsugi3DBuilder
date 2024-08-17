@@ -33,11 +33,11 @@ import kintsugi3d.gl.vecmath.DoubleMatrix4;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 
-public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReaderFromLooseFiles
+public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
 {
-    private static final ViewSetReaderFromLooseFiles INSTANCE = new ViewSetReaderFromRealityCaptureCSV();
+    private static final ViewSetReader INSTANCE = new ViewSetReaderFromRealityCaptureCSV();
 
-    public static ViewSetReaderFromLooseFiles getInstance()
+    public static ViewSetReader getInstance()
     {
         return INSTANCE;
     }

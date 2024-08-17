@@ -27,8 +27,8 @@ import javax.xml.stream.XMLStreamException;
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.io.ViewSetReader;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
-import kintsugi3d.builder.io.ViewSetReaderFromLooseFiles;
 import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
@@ -163,7 +163,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
-        private static ViewSetReaderFromLooseFiles getReaderForFile(File cameraFile)
+        private static ViewSetReader getReaderForFile(File cameraFile)
         {
             if (cameraFile.getName().endsWith(".xml")) // Agisoft Metashape
             {
@@ -186,7 +186,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         }
 
         // images are defined in the load options
-        public Builder<ContextType> loadLooseFiles(ViewSetReaderFromLooseFiles reader, File cameraFile, File geometryFile, File fullResImageDirectory) throws Exception
+        public Builder<ContextType> loadLooseFiles(ViewSetReader reader, File cameraFile, File geometryFile, File fullResImageDirectory) throws Exception
         {
             // Load view set
             this.viewSet = reader.readFromFile(cameraFile, geometryFile, fullResImageDirectory);
