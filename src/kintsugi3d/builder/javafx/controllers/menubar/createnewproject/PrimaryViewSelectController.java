@@ -11,6 +11,13 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.SnapshotParameters;
@@ -40,18 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class PrimaryViewSelectController extends FXMLPageController implements CanConfirm
 {
@@ -100,13 +96,13 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         boolean isMetashapeImport =
             hostPage.getPrevPage() == hostScrollerController.getPage("/fxml/menubar/createnewproject/MetashapeImport.fxml");
 
-        updateSharedInfo();
-
         //metashape import path loads from metashape project
         if(isMetashapeImport)
         {
             if(this.metashapeObjectChunk == null || !Objects.equals(this.metashapeObjectChunk, sharedChunk))
             {
+                updateSharedInfo();
+
                 try
                 {
                     verifyInfo(null);

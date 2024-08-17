@@ -11,6 +11,8 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
+import java.io.File;
+
 import javafx.fxml.FXML;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -19,19 +21,12 @@ import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
-import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
-import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
 import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
 
 public class CustomImportController extends FXMLPageController implements ShareInfo
 {
@@ -63,8 +58,8 @@ public class CustomImportController extends FXMLPageController implements ShareI
 
         camFileChooser.getExtensionFilters().add(new ExtensionFilter("Reality Capture CSV file", "*.csv"));
         camFileChooser.getExtensionFilters().add(new ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
-        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ file", "*.obj", "*.ply"));
-        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Stanford PLY file", "*.obj", "*.ply"));
+        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ file", "*.obj"));
+        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Stanford PLY file", "*.ply"));
 
         camFileChooser.setTitle("Select camera positions file");
         objFileChooser.setTitle("Select object file");
