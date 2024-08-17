@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
 import java.io.File;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -31,7 +32,9 @@ import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
+import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
 import kintsugi3d.builder.io.primaryview.AgisoftPrimaryViewSelectionModel;
+import kintsugi3d.builder.io.primaryview.GenericPrimaryViewSelectionModel;
 import kintsugi3d.builder.io.primaryview.PrimaryViewSelectionModel;
 import kintsugi3d.builder.io.primaryview.View;
 import kintsugi3d.builder.javafx.MultithreadModels;
@@ -134,9 +137,20 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             DocumentBuilder builder;
             builder = factory.newDocumentBuilder();
 
-            if (camFile.getName().endsWith(".xml")) // Agisoft Metashape
+            if (cameraFile.getName().endsWith(".xml")) // Agisoft Metashape
             {
                 primaryViewSelectionModel = AgisoftPrimaryViewSelectionModel.createInstance(camFile);
+            }
+            else if (cameraFile.getName().endsWith(".csv")) // RealityCapture
+            {
+                primaryViewSelectionModel = GenericPrimaryViewSelectionModel.createInstance(cameraFile.getName(),
+                    ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile, objFile, photosDir));
+            }
+            else
+            {
+                ProjectIO.handleException("Error initializing primary view selection.",
+                    new IllegalArgumentException(MessageFormat.format("File extension not recognized for {0}", cameraFile.getName())));
+                return;
             }
 
             addTreeElems(primaryViewSelectionModel);
@@ -422,28 +436,28 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         if (viewSetCallback != null) {
             //"force" the user to save their project (user can still cancel saving)
             MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
-                    viewSet ->viewSetCallback.accept(viewSet));
+                viewSet ->viewSetCallback.accept(viewSet));
         }
 
         boolean importFromMetashape =
-                hostPage.getPrevPage() == hostScrollerController.getPage(
-                        "/fxml/menubar/createnewproject/MetashapeImport.fxml");
+            hostPage.getPrevPage() == hostScrollerController.getPage(
+                "/fxml/menubar/createnewproject/MetashapeImport.fxml");
 
         String primaryView = chunkTreeView.getSelectionModel().getSelectedItem().getValue();
         if(importFromMetashape){
             new Thread(() ->
-                    MultithreadModels.getInstance().getIOModel()
-                            .loadAgisoftFromZIP(
-                                    metashapeObjectChunk.getFramePath(),
-                                    metashapeObjectChunk, fullResOverride, doSkipMissingCams,
-                                    primaryView, chunkViewerImgView.getRotate()))
-                    .start();
+                MultithreadModels.getInstance().getIOModel()
+                    .loadAgisoftFromZIP(
+                        metashapeObjectChunk.getFramePath(),
+                        metashapeObjectChunk, fullResOverride, doSkipMissingCams,
+                        primaryView, chunkViewerImgView.getRotate()))
+                .start();
         }
         else{
             new Thread(() ->
-                    MultithreadModels.getInstance().getIOModel().loadFromAgisoftFiles(
-                            cameraFile.getPath(), cameraFile, objFile, photosDir, primaryView, chunkViewerImgView.getRotate()))
-                    .start();
+                MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(
+                    cameraFile.getPath(), cameraFile, objFile, photosDir, primaryView, chunkViewerImgView.getRotate()))
+                .start();
         }
 
         WelcomeWindowController.getInstance().hide();

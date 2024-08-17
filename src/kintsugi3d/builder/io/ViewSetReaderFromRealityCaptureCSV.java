@@ -11,6 +11,19 @@
 
 package kintsugi3d.builder.io;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvToBeanBuilder;
 import kintsugi3d.builder.core.DistortionProjection;
@@ -19,13 +32,6 @@ import kintsugi3d.builder.core.ViewSet.Builder;
 import kintsugi3d.gl.vecmath.DoubleMatrix4;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
-
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.text.MessageFormat;
-import java.util.*;
 
 public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReaderFromLooseFiles
 {
@@ -44,29 +50,30 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReaderFr
     public static final class Camera
     {
         @CsvBindByName(column = "#name", required = true) String name;
-        @CsvBindByName(locale = "en-US", required = true) double x;
-        @CsvBindByName(locale = "en-US", required = true) double y;
-        @CsvBindByName(locale = "en-US", required = true) double alt;
-        @CsvBindByName(locale = "en-US", required = true) double heading;
-        @CsvBindByName(locale = "en-US", required = true) double pitch;
-        @CsvBindByName(locale = "en-US", required = true) double roll;
-        @CsvBindByName(locale = "en-US", required = true) float f;
-        @CsvBindByName(locale = "en-US") float px;
-        @CsvBindByName(locale = "en-US") float py;
-        @CsvBindByName(locale = "en-US") float k1;
-        @CsvBindByName(locale = "en-US") float k2;
-        @CsvBindByName(locale = "en-US") float k3;
-        @CsvBindByName(locale = "en-US") float k4;
-        @CsvBindByName(locale = "en-US") float t1;
-        @CsvBindByName(locale = "en-US") float t2;
+
+        @CsvBindByName(required = true) double x;
+        @CsvBindByName(required = true) double y;
+        @CsvBindByName(required = true) double alt;
+        @CsvBindByName(required = true) double heading;
+        @CsvBindByName(required = true) double pitch;
+        @CsvBindByName(required = true) double roll;
+        @CsvBindByName(required = true) float f;
+        @CsvBindByName float px;
+        @CsvBindByName float py;
+        @CsvBindByName float k1;
+        @CsvBindByName float k2;
+        @CsvBindByName float k3;
+        @CsvBindByName float k4;
+        @CsvBindByName float t1;
+        @CsvBindByName float t2;
 
         public Matrix4 getPose()
         {
             // Expecting a world-to-camera space transformation, so we need to invert.
             return Matrix4.fromDoublePrecision(
-                DoubleMatrix4.rotateY(-roll)
-                    .times(DoubleMatrix4.rotateX(-pitch))
-                    .times(DoubleMatrix4.rotateZ(-heading))
+                DoubleMatrix4.rotateY(-roll * Math.PI / 90) // Reality capture specifies angles in degrees.
+                    .times(DoubleMatrix4.rotateX(-pitch * Math.PI / 90))
+                    .times(DoubleMatrix4.rotateZ(-heading * Math.PI / 90))
                     .times(DoubleMatrix4.translate(-x, -y, -alt)));
         }
 
@@ -79,9 +86,15 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReaderFr
                 {
                     ImageReader reader = ImageIO.getImageReaders(in).next();
                     reader.setInput(in);
-                    float aspect = reader.getAspectRatio(reader.getMinIndex());
-                    return new DistortionProjection(35.0f /* 35mm standard */, 35.0f / aspect,
-                        f, f, px, py, k1, k2, k3, k4, t1, t2, 0.0f /* skew not supported by RealityCapture export */);
+
+                    int width = reader.getWidth(reader.getMinIndex());
+                    int height = reader.getHeight(reader.getMinIndex());
+
+                    float fScaled = f * width / 35.0f; // 35 mm standard
+
+                    return new DistortionProjection(width, height,
+                        fScaled/*, fScaled, px * width / 35.0f, py * height / 35.0f,
+                        k1, k2, k3, k4, t1, t2, 0.0f /* skew not supported by RealityCapture export */);
                 }
                 else
                 {
