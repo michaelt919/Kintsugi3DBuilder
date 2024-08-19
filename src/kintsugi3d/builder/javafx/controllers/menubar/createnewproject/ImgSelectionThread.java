@@ -81,44 +81,7 @@ public class ImgSelectionThread implements Runnable{
         }
         else{
             try {
-                //goal of this try block is to find the camera which is associated with the image name in selectedItem
-                //then take that camera's image and put it into the imageview to show to the user
-                Document document = cameraDocument != null ? cameraDocument : metashapeObjectChunk.getFrameZip();
-                boolean isMetashapeImport = document.getElementsByTagName("frame").getLength() != 0;
-
-                Element selectedItemCam = null;
-
-                NodeList cameras = document.getElementsByTagName("camera");
-
-                for (int i = 0; i < cameras.getLength(); ++i) {
-                    Element camera = (Element) cameras.item(i);
-
-                    //(metashape import) --> if in frame.zip, each camera has an id and
-                    //      the photo path is inside a photo node within the camera node
-
-                    //(custom import) --> if in cameras.xml, img name is in camera node attribute "label"
-                    //TODO: need to account for reality capture import
-
-                    //metashape import
-                    if(isMetashapeImport){
-                        Node photoNode = camera.getElementsByTagName("photo").item(0);
-                        Element photoElement = (Element) photoNode;
-
-                        //path in photo element contains "../../.." before the name of the image,
-                        // so we cannot test for an exact match
-                        //using regex to see if the image names are the same regardless of their paths
-                        //ex. "folder/anotherFolder/asdfghjk/imageName.png" matches with "imageName.png"
-                        if (photoElement.getAttribute("path").matches(".*" + imageName + ".*")) {
-                            selectedItemCam = camera;
-                            break;
-                        }
-                    }
-                    //custom import
-                    else if (camera.getAttribute("label").matches(".*" + imageName + ".*")) {
-                        selectedItemCam = camera;
-                        break;
-                    }
-                }
+                Element selectedItemCam = findTargetCamera(imageName);
 
                 if (selectedItemCam == null) {
                     imgViewText.setText(imgViewText.getText() +
@@ -126,6 +89,7 @@ public class ImgSelectionThread implements Runnable{
                     return;
                 }
 
+                boolean isMetashapeImport = !selectedItemCam.hasAttribute("photo");
                 String path = findFullResPath(isMetashapeImport, selectedItemCam, fullResOverride);
 
                 File imgFile;
@@ -172,11 +136,50 @@ public class ImgSelectionThread implements Runnable{
         Image finalImage = image;//copy here so a final version of image can be passed to lambda expression
         if (finalImage != null && !stopRequested) {
             Platform.runLater(() -> {
-                //TODO: WITH LARGER IMAGES, FORMATTING IS BROKEN
                 chunkViewerImgView.setImage(finalImage);
                 controller.updateImageText(imageName);
             });
         }
+    }
+
+    private Element findTargetCamera(String imageName) {
+        Document document = cameraDocument != null ? cameraDocument : metashapeObjectChunk.getFrameZip();
+        boolean isMetashapeImport = document.getElementsByTagName("frame").getLength() != 0;
+
+        Element selectedItemCam = null;
+
+        NodeList cameras = document.getElementsByTagName("camera");
+
+        for (int i = 0; i < cameras.getLength(); ++i) {
+            Element camera = (Element) cameras.item(i);
+
+            //(metashape import) --> if in frame.zip, each camera has an id and
+            //      the photo path is inside a photo node within the camera node
+
+            //(custom import) --> if in cameras.xml, img name is in camera node attribute "label"
+            //TODO: need to account for reality capture import
+
+            //metashape import
+            if(isMetashapeImport){
+                Node photoNode = camera.getElementsByTagName("photo").item(0);
+                Element photoElement = (Element) photoNode;
+
+                //path in photo element contains "../../.." before the name of the image,
+                // so we cannot test for an exact match
+                //using regex to see if the image names are the same regardless of their paths
+                //ex. "folder/anotherFolder/asdfghjk/imageName.png" matches with "imageName.png"
+                if (photoElement.getAttribute("path").matches(".*" + imageName + ".*")) {
+                    selectedItemCam = camera;
+                    break;
+                }
+            }
+            //custom import
+            else if (camera.getAttribute("label").matches(".*" + imageName + ".*")) {
+                selectedItemCam = camera;
+                break;
+            }
+        }
+        return selectedItemCam;
     }
 
     private String findFullResPath(boolean isMetashapeImport, Element selectedItemCam, File fullResOverride) {

@@ -70,6 +70,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     private HashMap<String, Image> imgCache;
     private ImgSelectionThread loadImgThread;
     static final int THUMBNAIL_SIZE = 30;
+    private boolean isMetashapeImport;
 
     @Override
     public void init()
@@ -91,11 +92,11 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         File sharedCamFile = hostScrollerController.getInfo(ShareInfo.Info.CAM_FILE);
         doSkipMissingCams = false;
 
-        boolean isMetashapeImport =
+        boolean usingMetashapeImport =
             hostPage.getPrevPage() == hostScrollerController.getPage("/fxml/menubar/createnewproject/MetashapeImport.fxml");
 
         //metashape import path loads from metashape project
-        if(isMetashapeImport)
+        if(usingMetashapeImport)
         {
             if(this.metashapeObjectChunk == null || !Objects.equals(this.metashapeObjectChunk, sharedChunk))
             {
@@ -456,6 +457,8 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         cameraFile = hostScrollerController.getInfo(ShareInfo.Info.CAM_FILE);
         objFile = hostScrollerController.getInfo(ShareInfo.Info.OBJ_FILE);
         photosDir = hostScrollerController.getInfo(ShareInfo.Info.PHOTO_DIR);
+
+        isMetashapeImport = metashapeObjectChunk != null;
     }
 
     @Override
