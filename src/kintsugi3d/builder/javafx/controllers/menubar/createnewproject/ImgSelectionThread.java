@@ -16,7 +16,6 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.text.Text;
-import kintsugi3d.builder.io.primaryview.PrimaryViewSelectionModel;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
@@ -49,6 +48,7 @@ public class ImgSelectionThread implements Runnable{
     private volatile boolean isRunning = false;
 
     //TODO: look at this again
+    //pass in interface w/ updateImg(), updateLabel(), matchCam(), etc?
     public ImgSelectionThread(String imageName, PrimaryViewSelectController primaryViewSelectController) {
         this.imageName = imageName;
 
@@ -83,7 +83,7 @@ public class ImgSelectionThread implements Runnable{
             try {
                 //goal of this try block is to find the camera which is associated with the image name in selectedItem
                 //then take that camera's image and put it into the imageview to show to the user
-                Document document = metashapeObjectChunk == null ? cameraDocument : metashapeObjectChunk.getFrameZip();
+                Document document = cameraDocument != null ? cameraDocument : metashapeObjectChunk.getFrameZip();
                 boolean isMetashapeImport = document.getElementsByTagName("frame").getLength() != 0;
 
                 Element selectedItemCam = null;
@@ -97,6 +97,7 @@ public class ImgSelectionThread implements Runnable{
                     //      the photo path is inside a photo node within the camera node
 
                     //(custom import) --> if in cameras.xml, img name is in camera node attribute "label"
+                    //TODO: need to account for reality capture import
 
                     //metashape import
                     if(isMetashapeImport){
@@ -162,6 +163,9 @@ public class ImgSelectionThread implements Runnable{
                 log.warn("Could not find full res image", e);
             } catch (IOException e) {
                 log.warn("Failed to read image", e);
+            }
+            catch(Exception e){
+                log.warn("Image selection thread failed to find " + imageName, e);
             }
         }
 

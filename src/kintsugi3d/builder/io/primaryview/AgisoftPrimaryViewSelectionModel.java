@@ -12,7 +12,6 @@
 package kintsugi3d.builder.io.primaryview;
 
 import javafx.scene.image.Image;
-import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -26,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -35,6 +35,7 @@ public class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionMod
     private final String chunkName;
     private final List<View> views;
     private final List<Image> thumbnails;
+    private Document cameraDocument;
 
     private AgisoftPrimaryViewSelectionModel(File cameraFile) throws ParserConfigurationException, IOException, SAXException
     {
@@ -42,7 +43,7 @@ public class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionMod
         DocumentBuilder builder;
         builder = factory.newDocumentBuilder();
 
-        Document cameraDocument = builder.parse(cameraFile);
+        cameraDocument = builder.parse(cameraFile);
 
         //get chunk name
         Element chunkElem = (Element) cameraDocument.getElementsByTagName("chunk").item(0);
@@ -121,4 +122,6 @@ public class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionMod
     {
         return thumbnails;
     }
+
+    public Optional<Document> getCamDocument(){return Optional.ofNullable(cameraDocument);}
 }
