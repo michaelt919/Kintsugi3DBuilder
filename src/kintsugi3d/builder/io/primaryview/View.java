@@ -21,4 +21,9 @@ public class View
         this.name = name;
         this.group = group;
     }
+
+    public View(String name)
+    {
+        this(name, null);
+    }
 }

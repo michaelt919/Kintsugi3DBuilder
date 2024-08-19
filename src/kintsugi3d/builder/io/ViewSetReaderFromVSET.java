@@ -11,23 +11,22 @@
 
 package kintsugi3d.builder.io;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
-import kintsugi3d.builder.metrics.ViewRMSE;
-import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.stream.IntStream;
 
 /**
  * Handles loading view sets from the VSET text file format
@@ -36,9 +35,9 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
 {
     private static final Logger log = LoggerFactory.getLogger(ViewSetReaderFromVSET.class);
 
-    private static final ViewSetReader INSTANCE = new ViewSetReaderFromVSET();
+    private static final ViewSetReaderFromVSET INSTANCE = new ViewSetReaderFromVSET();
 
-    public static ViewSetReader getInstance()
+    public static ViewSetReaderFromVSET getInstance()
     {
         return INSTANCE;
     }
@@ -47,7 +46,16 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
     {
     }
 
-    @Override
+    /**
+     * Loads a view set from an input file.
+     * The root directory and the supporting files directory will be set as specified.
+     * The supporting files directory may be overridden by a directory specified in the file.
+     * @param stream The file to load
+     * @param root
+     * @param supportingFilesDirectory
+     * @return The view set
+     * @throws IOException If I/O errors occur while reading the file.
+     */
     public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory)
     {
         Date timestamp = new Date();
@@ -268,5 +276,58 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         log.info("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
         return result;
+    }
+
+    public ViewSet readFromStream(InputStream stream, File root, File geometryFile, File fullResImageDirectory)
+    {
+        return readFromStream(stream, root, root);
+    }
+
+    /**
+     * Loads a view set from an input file.
+     * By default, the view set's root directory as well as the supporting files directory will be set to the specified root.
+     * The supporting files directory may be overridden by a directory specified in the file.
+     * @param stream
+     * @param root
+     * @return The view set
+     * @throws Exception If errors occur while reading the file.
+     */
+    public ViewSet readFromStream(InputStream stream, File root)
+    {
+        // Use root directory as supporting files directory
+        return readFromStream(stream, root, root);
+    }
+
+    /**
+     * Loads a view set from an input file.
+     * By default, the view set's root directory will be set to the parent directory of the specified file.
+     * The supporting files directory will be set as specified by default but may be overridden by a directory specified in the file.
+     * @param file The file to load
+     * @param supportingFilesDirectory
+     * @return The view set
+     * @throws Exception If errors occur while reading the file.
+     */
+    public ViewSet readFromFile(File file, File supportingFilesDirectory) throws IOException
+    {
+        try (InputStream stream = new FileInputStream(file))
+        {
+            return readFromStream(stream, file.getParentFile(), supportingFilesDirectory);
+        }
+    }
+
+    /**
+     * Loads a view set from an input file.
+     * By default, the view set's root directory and supporting files directory will be set to the parent directory of the specified file.
+     * The supporting files directory may be overridden by a directory specified in the file.
+     * @param file The file to load
+     * @return The view set
+     * @throws IOException If I/O errors occur while reading the file.
+     */
+    public ViewSet readFromFile(File file) throws IOException
+    {
+        try (InputStream stream = new FileInputStream(file))
+        {
+            return readFromStream(stream, file.getParentFile());
+        }
     }
 }

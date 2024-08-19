@@ -11,10 +11,26 @@
 
 package kintsugi3d.builder.resources.ibr;
 
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Objects;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
+import javax.imageio.ImageIO;
+import javax.xml.stream.XMLStreamException;
+
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.io.*;
+import kintsugi3d.builder.io.ViewSetReader;
+import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
+import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
+import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -33,22 +49,6 @@ import kintsugi3d.util.ImageHelper;
 import kintsugi3d.util.ImageUndistorter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-
-import javax.imageio.ImageIO;
-import javax.xml.stream.XMLStreamException;
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.text.MessageFormat;
-import java.util.*;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.IntStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 /**
  * A class that encapsulates all of the GPU resources like vertex buffers, uniform buffers, and textures for a given
@@ -163,20 +163,30 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             return this;
         }
 
-        // images are defined in the load options
-        public Builder<ContextType> loadAgisoftFiles(File cameraFile, File geometryFile, File fullResImageDirectory) throws Exception
+        private static ViewSetReader getReaderForFile(File cameraFile)
         {
-            return loadLooseFiles(ViewSetReaderFromAgisoftXML.getInstance(), cameraFile, geometryFile, fullResImageDirectory);
+            if (cameraFile.getName().endsWith(".xml")) // Agisoft Metashape
+            {
+                return ViewSetReaderFromAgisoftXML.getInstance();
+            }
+            else if (cameraFile.getName().endsWith(".csv")) // RealityCapture
+            {
+                return ViewSetReaderFromRealityCaptureCSV.getInstance();
+            }
+            else
+            {
+                throw new IllegalArgumentException(MessageFormat.format("Unrecognized file extension for camera calibration: {0}", cameraFile));
+            }
         }
 
         // images are defined in the load options
-        public Builder<ContextType> loadRealityCaptureFiles(File cameraFile, File geometryFile, File fullResImageDirectory) throws Exception
+        public Builder<ContextType> loadLooseFiles(File cameraFile, File geometryFile, File fullResImageDirectory) throws Exception
         {
-            return loadLooseFiles(ViewSetReaderFromRealityCaptureCSV.getInstance(), cameraFile, geometryFile, fullResImageDirectory);
+            return loadLooseFiles(getReaderForFile(cameraFile), cameraFile, geometryFile, fullResImageDirectory);
         }
 
         // images are defined in the load options
-        public Builder<ContextType> loadLooseFiles(ViewSetReaderFromLooseFiles reader, File cameraFile, File geometryFile, File fullResImageDirectory) throws Exception
+        public Builder<ContextType> loadLooseFiles(ViewSetReader reader, File cameraFile, File geometryFile, File fullResImageDirectory) throws Exception
         {
             // Load view set
             this.viewSet = reader.readFromFile(cameraFile, geometryFile, fullResImageDirectory);

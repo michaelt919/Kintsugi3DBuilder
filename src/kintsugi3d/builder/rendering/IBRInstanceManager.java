@@ -21,21 +21,14 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
-import javafx.application.Platform;
-import javafx.scene.control.*;
-import javafx.stage.DirectoryChooser;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
-import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
-import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
-import kintsugi3d.builder.resources.ibr.MissingImagesException;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.builder.state.*;
 import kintsugi3d.gl.core.Context;
@@ -383,21 +376,21 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory, String primaryViewName, double rotation,
+    public void loadFromLooseFiles(String id, File xmlFile, File meshFile, File imageDirectory, String primaryViewName, double rotation,
         ReadonlyLoadOptionsModel loadOptions)
     {
         if(this.progressMonitor.isConflictingProcess()){
             return;
         }
         this.progressMonitor.start();
-        this.progressMonitor.setProcessName("Load from Agisoft Files");
+        this.progressMonitor.setProcessName("Load from loose files");
 
         try
         {
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                 .setProgressMonitor(this.progressMonitor)
                 .setLoadOptions(loadOptions)
-                .loadAgisoftFiles(xmlFile, meshFile, imageDirectory)
+                .loadLooseFiles(xmlFile, meshFile, imageDirectory)
                 .setPrimaryView(primaryViewName, rotation);
 
             // Invoke callbacks now that view set is loaded
