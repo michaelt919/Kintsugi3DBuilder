@@ -84,7 +84,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
         hostScrollerController.addInfo(Info.CAM_FILE, null);
         hostScrollerController.addInfo(Info.PHOTO_DIR, null);
-        hostScrollerController.addInfo(Info.OBJ_FILE, null);
+        hostScrollerController.addInfo(Info.MESH_FILE, null);
     }
 
     private void updateMetashapeChunk() {

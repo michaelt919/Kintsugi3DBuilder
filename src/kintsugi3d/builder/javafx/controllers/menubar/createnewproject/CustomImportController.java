@@ -11,8 +11,6 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
-import java.io.File;
-
 import javafx.fxml.FXML;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -27,6 +25,8 @@ import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
 
 public class CustomImportController extends FXMLPageController implements ShareInfo
 {
@@ -164,7 +164,7 @@ public class CustomImportController extends FXMLPageController implements ShareI
     public void shareInfo() {
         hostScrollerController.addInfo(Info.CAM_FILE, cameraFile);
         hostScrollerController.addInfo(Info.PHOTO_DIR, photoDir);
-        hostScrollerController.addInfo(Info.OBJ_FILE, objFile);
+        hostScrollerController.addInfo(Info.MESH_FILE, objFile);
 
         hostScrollerController.addInfo(Info.METASHAPE_OBJ_CHUNK, null);
     }

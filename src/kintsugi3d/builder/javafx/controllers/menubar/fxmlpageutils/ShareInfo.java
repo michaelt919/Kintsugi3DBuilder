@@ -2,10 +2,10 @@ package kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils;
 
 public interface ShareInfo {
     enum Info{
-        OBJ_FILE,
-        METASHAPE_OBJ_CHUNK,
         CAM_FILE,
+        MESH_FILE,
         PHOTO_DIR,
+        METASHAPE_OBJ_CHUNK,
         PRIMARY_VIEW
     }
 
