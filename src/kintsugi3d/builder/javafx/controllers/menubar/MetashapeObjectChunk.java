@@ -200,7 +200,7 @@ public class MetashapeObjectChunk {
     }
 
     public List<Element> findAllCameras() {
-        NodeList cams = this.chunkXML.getElementsByTagName("camera");
+        NodeList cams = this.frameZip.getElementsByTagName("camera");
         ArrayList<Element> cameras = new ArrayList<>();
         for (int i = 0; i < cams.getLength(); ++i) {
             Node camera = cams.item(i);
@@ -225,6 +225,30 @@ public class MetashapeObjectChunk {
             }
         }
         return enabledCams;
+    }
+
+    public File findFullResImgDirectory(){
+        //get first camera path from frame xml
+        //assume that path is relative to parent of .psx file path
+
+        try{
+            NodeList frameCams = frameZip.getElementsByTagName("camera");
+
+            //this will probably exit after the first camera
+            for(int i = 0; i < frameCams.getLength(); ++i){
+                Element cam = (Element) frameCams.item(i);
+
+                if(cam.getNodeType() != Node.ELEMENT_NODE){continue;}
+
+                String pathAttribute = ((Element) cam.getElementsByTagName("photo").item(0)).getAttribute("path");
+                return new File(getPsxFile().getParent(), pathAttribute).getParentFile();
+            }
+        }
+        catch(NumberFormatException nfe){
+            log.warn("Failed to find full res directory for Metashape Project.", nfe);
+        }
+
+        return null;
     }
 
     public String getCurrentModelPath() {

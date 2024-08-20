@@ -167,8 +167,8 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     {
         String chunkName = metashapeObjectChunk.getChunkName();
 
-        ArrayList <Image> thumbnailImageList = (ArrayList<Image>) metashapeObjectChunk.loadThumbnailImageList();
-        ArrayList<Element> cameras = (ArrayList<Element>) metashapeObjectChunk.findEnabledCameras();
+        List <Image> thumbnailImageList = metashapeObjectChunk.loadThumbnailImageList();
+        List<Element> cameras = metashapeObjectChunk.findEnabledCameras();
 
         File fullResDir = fullResOverride != null ? fullResOverride : metashapeObjectChunk.findFullResImgDirectory();
         primaryViewSelectionModel = AgisoftPrimaryViewSelectionModel.createInstance(chunkName, cameras, thumbnailImageList, fullResDir);

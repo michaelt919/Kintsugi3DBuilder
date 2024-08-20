@@ -12,6 +12,8 @@
 package kintsugi3d.builder.io.primaryview;
 
 import javafx.scene.image.Image;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -32,6 +34,7 @@ import java.util.stream.Stream;
 
 public class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionModel
 {
+    private static final Logger log = LoggerFactory.getLogger(AgisoftPrimaryViewSelectionModel.class);
     private final String chunkName;
     private final List<View> views;
     private final List<Image> thumbnails;
@@ -54,6 +57,13 @@ public class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionMod
         //get enabled cameras
         NodeList cameraNodes = cameraDocument.getElementsByTagName("camera");
 
+        //camera file is .xml, so img name is in camera node attribute "label"
+        cameras = IntStream.range(0, cameraNodes.getLength())
+                .mapToObj(cameraNodes::item)
+                .filter(camera -> camera.getNodeType() == Node.ELEMENT_NODE)
+                .map(camera -> (Element) camera)
+                .collect(Collectors.toUnmodifiableList());
+
         views = getViews(IntStream.range(0, cameraNodes.getLength())
             .mapToObj(cameraNodes::item)
             .filter(camera -> camera.getNodeType() == Node.ELEMENT_NODE)
@@ -64,7 +74,7 @@ public class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionMod
         thumbnails = new ArrayList<>(views.size());
     }
 
-    private AgisoftPrimaryViewSelectionModel(String chunkName, ArrayList<Element> cameras, ArrayList<Image> thumbnailImageList)
+    private AgisoftPrimaryViewSelectionModel(String chunkName, List<Element> cameras, List<Image> thumbnailImageList)
     {
         this.chunkName = chunkName;
         this.cameras = cameras;
