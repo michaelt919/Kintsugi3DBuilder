@@ -46,7 +46,10 @@ import org.w3c.dom.NodeList;
 
 import java.io.File;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -64,11 +67,10 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     @FXML private Text imgViewText;
     private MetashapeObjectChunk metashapeObjectChunk;
     private File cameraFile;
-    private File objFile;
+    private File meshFile;
     private File photosDir;
     private File fullResOverride;
     private boolean doSkipMissingCams;
-    private Document cameraDocument;
     PrimaryViewSelectionModel primaryViewSelectionModel;
     private HashMap<String, Image> imgCache;
     private ImgSelectionThread loadImgThread;
@@ -81,7 +83,6 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         imgViewText.setFill(Paint.valueOf("white"));
         this.primaryViewSelectionModel = null;
         this.metashapeObjectChunk = null;
-        this.cameraDocument = null;
         this.cameraFile = null;
         this.fullResOverride = null;
 
@@ -92,7 +93,11 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     public void refresh()
     {
         MetashapeObjectChunk sharedChunk = hostScrollerController.getInfo(ShareInfo.Info.METASHAPE_OBJ_CHUNK);
+
         File sharedCamFile = hostScrollerController.getInfo(ShareInfo.Info.CAM_FILE);
+        File sharedMeshFile = hostScrollerController.getInfo(ShareInfo.Info.MESH_FILE);
+        File sharedFullResDir = hostScrollerController.getInfo(ShareInfo.Info.PHOTO_DIR);
+
         doSkipMissingCams = false;
 
         boolean usingMetashapeImport =
@@ -120,17 +125,14 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         //custom import path loads from loose files
         else
         {
-            if(cameraFile == null || !cameraFile.equals(sharedCamFile))
+            if(cameraFile == null || !cameraFile.equals(sharedCamFile) ||
+                meshFile == null || !meshFile.equals(sharedMeshFile) ||
+                                    !fullResOverride.equals(sharedFullResDir))
             {
-                this.fullResOverride = null;
+                fullResOverride = sharedFullResDir;
                 updateSharedInfo();
                 initTreeView(sharedCamFile);
             }
-        }
-
-        if(primaryViewSelectionModel instanceof AgisoftPrimaryViewSelectionModel){
-            AgisoftPrimaryViewSelectionModel model = (AgisoftPrimaryViewSelectionModel) primaryViewSelectionModel;
-            cameraDocument = model.getCamDocument().orElse(null);
         }
     }
 
@@ -146,7 +148,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             else if (cameraFile.getName().endsWith(".csv")) // RealityCapture
             {
                 primaryViewSelectionModel = GenericPrimaryViewSelectionModel.createInstance(cameraFile.getName(),
-                    ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile, objFile, photosDir));
+                    ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile, meshFile, photosDir));
             }
             else
             {
@@ -453,7 +455,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         else{
             new Thread(() ->
                 MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(
-                    cameraFile.getPath(), cameraFile, objFile, photosDir, primaryView, chunkViewerImgView.getRotate()))
+                    cameraFile.getPath(), cameraFile, meshFile, photosDir, primaryView, chunkViewerImgView.getRotate()))
                 .start();
         }
 
@@ -466,7 +468,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     private void updateSharedInfo() {
         metashapeObjectChunk = hostScrollerController.getInfo(ShareInfo.Info.METASHAPE_OBJ_CHUNK);
         cameraFile = hostScrollerController.getInfo(ShareInfo.Info.CAM_FILE);
-        objFile = hostScrollerController.getInfo(ShareInfo.Info.OBJ_FILE);
+        meshFile = hostScrollerController.getInfo(ShareInfo.Info.MESH_FILE);
         photosDir = hostScrollerController.getInfo(ShareInfo.Info.PHOTO_DIR);
     }
 
@@ -483,27 +485,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         return imgViewText;
     }
 
-    public MetashapeObjectChunk getMetashapeObjectChunk() {
-        return metashapeObjectChunk;
-    }
-
-    public Document getCameraDocument(){
-        return cameraDocument;
-    }
-
-    public PrimaryViewSelectionModel getPrimaryViewSelectionModel() {
-        return primaryViewSelectionModel;
-    }
-
-    public File getPhotosDir() {
-        return photosDir;
-    }
-
-    public File getFullResOverride() {
-        return fullResOverride;
-    }
-
-    public HashMap<String, Image> getImgCache() {
+    public Map<String, Image> getImgCache() {
         return imgCache;
     }
 }

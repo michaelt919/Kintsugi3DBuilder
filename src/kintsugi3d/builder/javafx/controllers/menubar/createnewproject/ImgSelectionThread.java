@@ -17,21 +17,16 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.text.Text;
 import kintsugi3d.builder.io.primaryview.PrimaryViewSelectionModel;
-import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Map;
 
 public class ImgSelectionThread implements Runnable{
 
@@ -39,26 +34,17 @@ public class ImgSelectionThread implements Runnable{
     private final String imageName;
     private final ImageView chunkViewerImgView;
     private final Text imgViewText;
-    private final MetashapeObjectChunk metashapeObjectChunk;
-    private final Document cameraDocument;
-    private final File photosDir;
     private final PrimaryViewSelectController controller;
-    private final File fullResOverride;
     private final PrimaryViewSelectionModel model;
-    private HashMap<String, Image> imgCache;
+    private Map<String, Image> imgCache;
     private volatile boolean stopRequested = false;
     private volatile boolean isRunning = false;
 
-    //TODO: look at this again
     public ImgSelectionThread(String imageName, PrimaryViewSelectController primaryViewSelectController, PrimaryViewSelectionModel model) {
         this.imageName = imageName;
 
         this.chunkViewerImgView = primaryViewSelectController.getChunkViewerImgView();
         this.imgViewText = primaryViewSelectController.getImgViewText();
-        this.metashapeObjectChunk = primaryViewSelectController.getMetashapeObjectChunk();
-        this.cameraDocument = primaryViewSelectController.getCameraDocument();
-        this.photosDir = primaryViewSelectController.getPhotosDir();
-        this.fullResOverride = primaryViewSelectController.getFullResOverride();
         this.imgCache = primaryViewSelectController.getImgCache();
         this.controller = primaryViewSelectController;
         this.model = model;
@@ -120,8 +106,7 @@ public class ImgSelectionThread implements Runnable{
                 log.warn("Could not find full res image", e);
             } catch (IOException e) {
                 log.warn("Failed to read image", e);
-            }
-            catch(Exception e){
+            } catch(Exception e){
                 log.warn("Image selection thread failed to find " + imageName, e);
             }
         }
