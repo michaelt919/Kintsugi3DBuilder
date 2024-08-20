@@ -36,6 +36,8 @@ public class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionMod
     private final List<View> views;
     private final List<Image> thumbnails;
     private Document cameraDocument;
+    private final List<Element> cameras;
+    private File fullResSearchDir;
 
     private AgisoftPrimaryViewSelectionModel(File cameraFile) throws ParserConfigurationException, IOException, SAXException
     {
@@ -65,6 +67,7 @@ public class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionMod
     private AgisoftPrimaryViewSelectionModel(String chunkName, ArrayList<Element> cameras, ArrayList<Image> thumbnailImageList)
     {
         this.chunkName = chunkName;
+        this.cameras = cameras;
         this.views = getViews(cameras.stream());
         this.thumbnails = thumbnailImageList;
     }
@@ -95,14 +98,20 @@ public class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionMod
     }
 
 
-    public static PrimaryViewSelectionModel createInstance(File cameraFile) throws ParserConfigurationException, IOException, SAXException
+    public static PrimaryViewSelectionModel createInstance(File cameraFile, File fullResOverride) throws ParserConfigurationException, IOException, SAXException
     {
-        return new AgisoftPrimaryViewSelectionModel(cameraFile);
+        return new AgisoftPrimaryViewSelectionModel(cameraFile).setFullResSearchDir(fullResOverride);
     }
 
-    public static PrimaryViewSelectionModel createInstance(String chunkName, ArrayList<Element> cameras, ArrayList<Image> thumbnailImageList)
+    public static PrimaryViewSelectionModel createInstance(String chunkName, List<Element> cameras, List<Image> thumbnailImageList, File fullResOverride)
     {
-        return new AgisoftPrimaryViewSelectionModel(chunkName, cameras, thumbnailImageList);
+        return new AgisoftPrimaryViewSelectionModel(chunkName, cameras, thumbnailImageList)
+                .setFullResSearchDir(fullResOverride);
+    }
+
+    private PrimaryViewSelectionModel setFullResSearchDir(File fullResOverride) {
+        this.fullResSearchDir = fullResOverride;
+        return this;
     }
 
     @Override
@@ -121,6 +130,41 @@ public class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionMod
     public List<Image> getThumbnails()
     {
         return thumbnails;
+    }
+
+    @Override
+    public Optional<String> findFullResImagePath(String imageName) {
+        boolean isDirectMetashapeImport = cameraDocument == null;
+
+        //find the camera (in chunk.xml) which holds the desired image
+        Element selectedItemCam = findTargetCamera(imageName);
+        if(selectedItemCam == null){
+            return Optional.empty();
+        }
+
+        //find the corresponding camera in frame.xml which should have a fuller path
+        return Optional.of(findFullResPath(isDirectMetashapeImport, selectedItemCam));
+    }
+
+    private Element findTargetCamera(String imageName) {
+        Element selectedItemCam = null;
+        for(Element camera : cameras) {
+            if (camera.getAttribute("label").matches(".*" + imageName + ".*")) {
+                selectedItemCam = camera;
+                break;
+            }
+        }
+        return selectedItemCam;
+    }
+
+    private String findFullResPath(boolean isMetashapeImport, Element selectedItemCam) {
+        //TODO: verify that we don't need to check isMetashapeImport here
+        String pathAttribute = selectedItemCam.getAttribute("label");
+
+        String pathAttributeName = new File(pathAttribute).getName();
+        File imageFile = new File(fullResSearchDir, pathAttributeName);
+
+        return imageFile.getAbsolutePath().replace("..\\", "");
     }
 
     public Optional<Document> getCamDocument(){return Optional.ofNullable(cameraDocument);}

@@ -12,6 +12,7 @@
 package kintsugi3d.builder.io.primaryview;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -53,5 +54,11 @@ public class GenericPrimaryViewSelectionModel implements PrimaryViewSelectionMod
     {
         // TODO implement thumbnails for generic case
         return List.of();
+    }
+
+    @Override
+    public Optional<String> findFullResImagePath(String imageName) {
+        //TODO: imp this
+        return Optional.empty();
     }
 }

@@ -73,7 +73,6 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     private HashMap<String, Image> imgCache;
     private ImgSelectionThread loadImgThread;
     static final int THUMBNAIL_SIZE = 30;
-    private boolean isMetashapeImport;
 
     @Override
     public void init()
@@ -84,8 +83,9 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         this.metashapeObjectChunk = null;
         this.cameraDocument = null;
         this.cameraFile = null;
+        this.fullResOverride = null;
 
-        imgCache = new HashMap<>();
+        this.imgCache = new HashMap<>();
     }
 
     @Override
@@ -139,7 +139,8 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         try {
             if (camFile.getName().endsWith(".xml")) // Agisoft Metashape
             {
-                primaryViewSelectionModel = AgisoftPrimaryViewSelectionModel.createInstance(camFile);
+                File fullResDir = fullResOverride != null ? fullResOverride : photosDir;
+                primaryViewSelectionModel = AgisoftPrimaryViewSelectionModel.createInstance(camFile, fullResDir);
             }
             else if (cameraFile.getName().endsWith(".csv")) // RealityCapture
             {
@@ -169,7 +170,8 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         ArrayList <Image> thumbnailImageList = (ArrayList<Image>) metashapeObjectChunk.loadThumbnailImageList();
         ArrayList<Element> cameras = (ArrayList<Element>) metashapeObjectChunk.findEnabledCameras();
 
-        primaryViewSelectionModel = AgisoftPrimaryViewSelectionModel.createInstance(chunkName, cameras, thumbnailImageList);
+        File fullResDir = fullResOverride != null ? fullResOverride : metashapeObjectChunk.findFullResImgDirectory();
+        primaryViewSelectionModel = AgisoftPrimaryViewSelectionModel.createInstance(chunkName, cameras, thumbnailImageList, fullResDir);
 
         addTreeElems(primaryViewSelectionModel);
     }
@@ -282,7 +284,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                 loadImgThread.stopThread();
             }
 
-            loadImgThread = new ImgSelectionThread(imageName,this);
+            loadImgThread = new ImgSelectionThread(imageName,this, primaryViewSelectionModel);
             Thread myThread = new Thread(loadImgThread);
             myThread.start();
         }
@@ -366,8 +368,6 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             log.error("Root directory does not exist: " + rootDirectory);
         }
 
-        // 1) Construct camera ID to filename map from frame's ZIP
-        Map<Integer, String> cameraPathsMap = new HashMap<>();
         // Open the xml files that contains all the cameras' ids and file paths
         Document frame = metashapeObjectChunk.getFrameZip();
         if (frame == null || frame.getDocumentElement() == null) {
@@ -392,7 +392,6 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         for (int i = 0; i < cameraList.getLength(); i++) {
 
             Element cameraElement = (Element) cameraList.item(i);
-            int cameraId = Integer.parseInt(cameraElement.getAttribute("camera_id"));
 
             String pathAttribute = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
 
@@ -409,10 +408,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                 finalPath = imageFile.getName();
             }
 
-            if (imageFile.exists() && !finalPath.isBlank()) {
-                // Add pair to the map
-                cameraPathsMap.put(cameraId, finalPath);
-            } else {
+            if (!imageFile.exists() || finalPath.isBlank()) {
                 numMissingFiles++;
 
                 if (exceptionFolder == null) {
@@ -471,8 +467,6 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         cameraFile = hostScrollerController.getInfo(ShareInfo.Info.CAM_FILE);
         objFile = hostScrollerController.getInfo(ShareInfo.Info.OBJ_FILE);
         photosDir = hostScrollerController.getInfo(ShareInfo.Info.PHOTO_DIR);
-
-        isMetashapeImport = metashapeObjectChunk != null;
     }
 
     @Override

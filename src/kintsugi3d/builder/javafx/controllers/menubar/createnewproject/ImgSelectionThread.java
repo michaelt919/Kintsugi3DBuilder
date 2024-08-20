@@ -16,6 +16,7 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.text.Text;
+import kintsugi3d.builder.io.primaryview.PrimaryViewSelectionModel;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
@@ -43,13 +44,13 @@ public class ImgSelectionThread implements Runnable{
     private final File photosDir;
     private final PrimaryViewSelectController controller;
     private final File fullResOverride;
+    private final PrimaryViewSelectionModel model;
     private HashMap<String, Image> imgCache;
     private volatile boolean stopRequested = false;
     private volatile boolean isRunning = false;
 
     //TODO: look at this again
-    //pass in interface w/ updateImg(), updateLabel(), matchCam(), etc?
-    public ImgSelectionThread(String imageName, PrimaryViewSelectController primaryViewSelectController) {
+    public ImgSelectionThread(String imageName, PrimaryViewSelectController primaryViewSelectController, PrimaryViewSelectionModel model) {
         this.imageName = imageName;
 
         this.chunkViewerImgView = primaryViewSelectController.getChunkViewerImgView();
@@ -60,6 +61,7 @@ public class ImgSelectionThread implements Runnable{
         this.fullResOverride = primaryViewSelectController.getFullResOverride();
         this.imgCache = primaryViewSelectController.getImgCache();
         this.controller = primaryViewSelectController;
+        this.model = model;
     }
 
     @Override
@@ -81,16 +83,7 @@ public class ImgSelectionThread implements Runnable{
         }
         else{
             try {
-                Element selectedItemCam = findTargetCamera(imageName);
-
-                if (selectedItemCam == null) {
-                    imgViewText.setText(imgViewText.getText() +
-                            " (matching camera not found)");
-                    return;
-                }
-
-                boolean isMetashapeImport = !selectedItemCam.hasAttribute("photo");
-                String path = findFullResPath(isMetashapeImport, selectedItemCam, fullResOverride);
+                String path = model.findFullResImagePath(imageName).orElse("");
 
                 File imgFile;
                 try{
@@ -140,74 +133,5 @@ public class ImgSelectionThread implements Runnable{
                 controller.updateImageText(imageName);
             });
         }
-    }
-
-    private Element findTargetCamera(String imageName) {
-        Document document = cameraDocument != null ? cameraDocument : metashapeObjectChunk.getFrameZip();
-        boolean isMetashapeImport = document.getElementsByTagName("frame").getLength() != 0;
-
-        Element selectedItemCam = null;
-
-        NodeList cameras = document.getElementsByTagName("camera");
-
-        for (int i = 0; i < cameras.getLength(); ++i) {
-            Element camera = (Element) cameras.item(i);
-
-            //(metashape import) --> if in frame.zip, each camera has an id and
-            //      the photo path is inside a photo node within the camera node
-
-            //(custom import) --> if in cameras.xml, img name is in camera node attribute "label"
-            //TODO: need to account for reality capture import
-
-            //metashape import
-            if(isMetashapeImport){
-                Node photoNode = camera.getElementsByTagName("photo").item(0);
-                Element photoElement = (Element) photoNode;
-
-                //path in photo element contains "../../.." before the name of the image,
-                // so we cannot test for an exact match
-                //using regex to see if the image names are the same regardless of their paths
-                //ex. "folder/anotherFolder/asdfghjk/imageName.png" matches with "imageName.png"
-                if (photoElement.getAttribute("path").matches(".*" + imageName + ".*")) {
-                    selectedItemCam = camera;
-                    break;
-                }
-            }
-            //custom import
-            else if (camera.getAttribute("label").matches(".*" + imageName + ".*")) {
-                selectedItemCam = camera;
-                break;
-            }
-        }
-        return selectedItemCam;
-    }
-
-    private String findFullResPath(boolean isMetashapeImport, Element selectedItemCam, File fullResOverride) {
-        String path;
-        if(isMetashapeImport){
-            String pathAttribute = ((Element) selectedItemCam.getElementsByTagName("photo").item(0)).getAttribute("path");
-
-            File imageFile;
-            File fullResSearchDirectory = fullResOverride == null ?
-                    new File(metashapeObjectChunk.getFramePath()).getParentFile() :
-                    fullResOverride;
-
-            if (fullResOverride == null){
-                imageFile = new File(fullResSearchDirectory, pathAttribute);
-            }
-            else{
-                //if this doesn't work, then replace metashapeObjectChunk.getFramePath()).getParentFile()
-                //    and the first part of path with the file that the user selected
-                String pathAttributeName = new File(pathAttribute).getName();
-                imageFile = new File(fullResOverride, pathAttributeName);
-            }
-            path = imageFile.getPath();
-        }
-        else{
-            path = selectedItemCam.getAttribute("label");
-            String parentPath = photosDir.getPath();
-            path = new File(new File(parentPath), path).getPath();
-        }
-        return path;
     }
 }

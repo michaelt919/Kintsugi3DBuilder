@@ -13,10 +13,12 @@ package kintsugi3d.builder.io.primaryview;
 
 import javafx.scene.image.Image;
 import java.util.List;
+import java.util.Optional;
 
 public interface PrimaryViewSelectionModel
 {
     String getName();
     List<View> getViews();
     List<Image> getThumbnails();
+    Optional<String> findFullResImagePath(String imageName);
 }
