@@ -15,8 +15,8 @@ import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.text.Text;
 import kintsugi3d.builder.io.primaryview.PrimaryViewSelectionModel;
+import kintsugi3d.builder.javafx.controllers.menubar.ImageThreadable;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,21 +32,14 @@ public class ImgSelectionThread implements Runnable{
 
     private static final Logger log = LoggerFactory.getLogger(ImgSelectionThread.class);
     private final String imageName;
-    private final ImageView chunkViewerImgView;
-    private final Text imgViewText;
-    private final PrimaryViewSelectController controller;
     private final PrimaryViewSelectionModel model;
-    private Map<String, Image> imgCache;
+    private final ImageThreadable imageThreadable;
     private volatile boolean stopRequested = false;
     private volatile boolean isRunning = false;
 
-    public ImgSelectionThread(String imageName, PrimaryViewSelectController primaryViewSelectController, PrimaryViewSelectionModel model) {
+    public ImgSelectionThread(String imageName, ImageThreadable imgThreadable, PrimaryViewSelectionModel model) {
         this.imageName = imageName;
-
-        this.chunkViewerImgView = primaryViewSelectController.getChunkViewerImgView();
-        this.imgViewText = primaryViewSelectController.getImgViewText();
-        this.imgCache = primaryViewSelectController.getImgCache();
-        this.controller = primaryViewSelectController;
+        this.imageThreadable = imgThreadable;
         this.model = model;
     }
 
@@ -63,6 +56,9 @@ public class ImgSelectionThread implements Runnable{
     }
 
     private void loadFullResImg(String imageName) {
+        ImageView imgView = imageThreadable.getImageView();
+        Map<String, Image> imgCache = imageThreadable.getImageCache();
+
         Image image = null;//use cached img if possible
         if(imgCache.containsKey(imageName)){
             image = imgCache.get(imageName);
@@ -77,15 +73,15 @@ public class ImgSelectionThread implements Runnable{
                 }
                 catch(FileNotFoundException ignored){
                     //camera not found in xml document
-                    imgViewText.setText(imgViewText.getText() +
+                    imageThreadable.setImageViewText(imageThreadable.getImageViewText() +
                             " (full res image not found)");
                     return;
                 }
 
                 //set imageview to selected image
                 if (!imgFile.getAbsolutePath().toLowerCase().matches(".*\\.tiff?")) {
-                    int requestedWidth = (int) chunkViewerImgView.getFitWidth();
-                    int requestedHeight = (int) chunkViewerImgView.getFitHeight();
+                    int requestedWidth = (int) imgView.getFitWidth();
+                    int requestedHeight = (int) imgView.getFitHeight();
                     boolean preserveRatio = true;
                     boolean smooth = true;        // Use a smoother resampling algorithm
 
@@ -102,7 +98,8 @@ public class ImgSelectionThread implements Runnable{
                 imgCache.put(imageName, image);
 
             } catch (IllegalArgumentException e) {//could not find image
-                imgViewText.setText(imgViewText.getText() + " (full res image not found)");
+                imageThreadable.setImageViewText(
+                        imageThreadable.getImageViewText() + " (full res image not found)");
                 log.warn("Could not find full res image", e);
             } catch (IOException e) {
                 log.warn("Failed to read image", e);
@@ -114,8 +111,8 @@ public class ImgSelectionThread implements Runnable{
         Image finalImage = image;//copy here so a final version of image can be passed to lambda expression
         if (finalImage != null && !stopRequested) {
             Platform.runLater(() -> {
-                chunkViewerImgView.setImage(finalImage);
-                controller.updateImageText(imageName);
+                imgView.setImage(finalImage);
+                imageThreadable.setImageViewText(imageName);
             });
         }
     }

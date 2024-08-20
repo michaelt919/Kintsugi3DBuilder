@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -9,17 +9,16 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.io.primaryview;
+package kintsugi3d.builder.javafx.controllers.menubar;
 
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
-public interface PrimaryViewSelectionModel {
-    String getName();
-    List<View> getViews();
-    List<Image> getThumbnails();
-    Optional<String> findFullResImagePath(String imageName);
-
+public interface ImageThreadable {
+    ImageView getImageView();
+    String getImageViewText();
+    void setImageViewText(String txt);
+    Map<String, Image> getImageCache();
 }

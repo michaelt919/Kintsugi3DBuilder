@@ -31,6 +31,7 @@ import kintsugi3d.builder.io.primaryview.PrimaryViewSelectionModel;
 import kintsugi3d.builder.io.primaryview.View;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
+import kintsugi3d.builder.javafx.controllers.menubar.ImageThreadable;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
@@ -53,7 +54,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class PrimaryViewSelectController extends FXMLPageController implements CanConfirm
+public class PrimaryViewSelectController extends FXMLPageController implements CanConfirm, ImageThreadable
 {
     //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"
     //suppress warning?
@@ -63,7 +64,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     @FXML private AnchorPane hostAnchorPane;
 
     @FXML private TreeView<String> chunkTreeView;
-    @FXML private ImageView chunkViewerImgView;
+    @FXML private ImageView primaryImgView;
     @FXML private Text imgViewText;
     private MetashapeObjectChunk metashapeObjectChunk;
     private File cameraFile;
@@ -273,8 +274,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         if (selectedItem.getValue() != null) {
 
             String imageName = selectedItem.getValue();
-            updateImageText(imageName);
-            imgViewText.setText(imgViewText.getText() + " (preview)");
+            imgViewText.setText(imageName + " (preview)");
 
             //set thumbnail as main image, then update to full resolution later
             //don't set thumbnail if img is cached, otherwise would cause a flash
@@ -293,27 +293,23 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         }
     }
 
-    public void updateImageText(String imageName) {
-        imgViewText.setText(imageName);
-    }
-
     private void setThumbnailAsFullImage(TreeItem<String> selectedItem) {
         //use thumbnail as main image
         //used if image is not found, or if larger resolution image is being loaded
-        chunkViewerImgView.setImage(selectedItem.getGraphic().
+        primaryImgView.setImage(selectedItem.getGraphic().
                 snapshot(new SnapshotParameters(), null));
     }
 
     @FXML
     private void rotateRight() {
         //rotate in 90 degree increments
-        chunkViewerImgView.setRotate((chunkViewerImgView.getRotate() + 90) % 360);
+        primaryImgView.setRotate((primaryImgView.getRotate() + 90) % 360);
     }
 
     @FXML
     private void rotateLeft() {
         //rotate in 90 degree increments
-        chunkViewerImgView.setRotate((chunkViewerImgView.getRotate() - 90) % 360);
+        primaryImgView.setRotate((primaryImgView.getRotate() - 90) % 360);
     }
 
     private void showMissingImgsAlert(MetashapeObjectChunk metashapeObjectChunk, MissingImagesException mie) {
@@ -449,13 +445,13 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                     .loadAgisoftFromZIP(
                         metashapeObjectChunk.getFramePath(),
                         metashapeObjectChunk, fullResOverride, doSkipMissingCams,
-                        primaryView, chunkViewerImgView.getRotate()))
+                        primaryView, primaryImgView.getRotate()))
                 .start();
         }
         else{
             new Thread(() ->
                 MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(
-                    cameraFile.getPath(), cameraFile, meshFile, photosDir, primaryView, chunkViewerImgView.getRotate()))
+                    cameraFile.getPath(), cameraFile, meshFile, photosDir, primaryView, primaryImgView.getRotate()))
                 .start();
         }
 
@@ -477,15 +473,23 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         return true;
     }
 
-    public ImageView getChunkViewerImgView() {
-        return chunkViewerImgView;
+    @Override
+    public ImageView getImageView() {
+        return primaryImgView;
     }
 
-    public Text getImgViewText() {
-        return imgViewText;
+    @Override
+    public String getImageViewText() {
+        return imgViewText.getText();
     }
 
-    public Map<String, Image> getImgCache() {
+    @Override
+    public void setImageViewText(String txt) {
+        imgViewText.setText(txt);
+    }
+
+    @Override
+    public Map<String, Image> getImageCache() {
         return imgCache;
     }
 }
