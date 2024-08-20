@@ -148,13 +148,39 @@ public class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionMod
     @Override
     public Optional<String> findFullResImagePath(String imageName) {
         //find the camera (in chunk.xml) which holds the desired image
+        //may have slightly different label from imageName --> "Processed\img123.jpg" vs. "img123.jpg"
         Element selectedItemCam = findTargetCamera(imageName);
         if(selectedItemCam == null){
             return Optional.empty();
         }
 
-        //find the corresponding camera in frame.xml which should have a fuller path
-        return Optional.ofNullable(findFullResPath(selectedItemCam));
+        //need full label to find img path
+        String pathAttribute = selectedItemCam.getAttribute("label");
+        String pathAttributeName = new File(pathAttribute).getName();
+        File imageFile = new File(fullResSearchDir, pathAttributeName);
+
+        File finalImgFile;
+
+        //return original file
+        finalImgFile = ImageFinder.getInstance().tryFindImageFile(imageFile);
+        if(finalImgFile != null){return Optional.of(finalImgFile.getPath());}
+
+        //return file by searching canonical path
+        try{
+            finalImgFile = ImageFinder.getInstance().tryFindImageFile(new File(imageFile.getCanonicalPath()));
+            if(finalImgFile != null){return Optional.of(finalImgFile.getPath());}
+        }
+        catch(IOException e) {
+            log.warn("Error retrieving canonical file path for " + imageFile.getPath(), e);
+        }
+
+        //throw a hail mary and see if it sticks
+        finalImgFile = ImageFinder.getInstance().tryFindImageFile(new File(imageFile.getAbsolutePath()
+                .replace("..\\", "")));
+        if(finalImgFile != null){return Optional.of(finalImgFile.getPath());}
+
+        //give up
+        return Optional.empty();
     }
 
     private Element findTargetCamera(String imageName) {
@@ -166,36 +192,6 @@ public class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionMod
             }
         }
         return selectedItemCam;
-    }
-
-    private String findFullResPath(Element selectedItemCam){
-        String pathAttribute = selectedItemCam.getAttribute("label");
-
-        String pathAttributeName = new File(pathAttribute).getName();
-        File imageFile = new File(fullResSearchDir, pathAttributeName);
-
-        File finalImgFile;
-
-        //return original file
-        finalImgFile = ImageFinder.getInstance().tryFindImageFile(imageFile);
-        if(finalImgFile != null){return finalImgFile.getPath();}
-
-        //return file by searching canonical path
-        try{
-            finalImgFile = ImageFinder.getInstance().tryFindImageFile(new File(imageFile.getCanonicalPath()));
-            if(finalImgFile != null){return finalImgFile.getPath();}
-        }
-        catch(IOException e) {
-            log.warn("Error retrieving canonical file path for " + imageFile.getPath(), e);
-        }
-
-        //throw a hail mary and see if it sticks
-        finalImgFile = ImageFinder.getInstance().tryFindImageFile(new File(imageFile.getAbsolutePath()
-                .replace("..\\", "")));
-        if(finalImgFile != null){return finalImgFile.getPath();}
-
-        //give up
-        return null;
     }
 
     public Optional<Document> getCamDocument(){return Optional.ofNullable(cameraDocument);}
