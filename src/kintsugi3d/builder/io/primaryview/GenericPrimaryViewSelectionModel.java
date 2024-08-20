@@ -19,7 +19,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class GenericPrimaryViewSelectionModel implements PrimaryViewSelectionModel
+public final class GenericPrimaryViewSelectionModel implements PrimaryViewSelectionModel
 {
     private final String name;
     private final ViewSet viewSet;

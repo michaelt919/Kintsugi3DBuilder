@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionModel
+public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionModel
 {
     private static final Logger log = LoggerFactory.getLogger(AgisoftPrimaryViewSelectionModel.class);
     private final String chunkName;
