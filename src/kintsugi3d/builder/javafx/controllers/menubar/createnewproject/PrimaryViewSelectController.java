@@ -117,7 +117,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                 }
             }
         }
-        //custom import path loads from cameras xml file
+        //custom import path loads from loose files
         else
         {
             if(cameraFile == null || !cameraFile.equals(sharedCamFile))

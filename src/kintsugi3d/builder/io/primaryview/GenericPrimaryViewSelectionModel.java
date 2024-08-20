@@ -11,13 +11,13 @@
 
 package kintsugi3d.builder.io.primaryview;
 
+import javafx.scene.image.Image;
+import kintsugi3d.builder.core.ViewSet;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import javafx.scene.image.Image;
-import kintsugi3d.builder.core.ViewSet;
 
 public class GenericPrimaryViewSelectionModel implements PrimaryViewSelectionModel
 {
@@ -58,7 +58,12 @@ public class GenericPrimaryViewSelectionModel implements PrimaryViewSelectionMod
 
     @Override
     public Optional<String> findFullResImagePath(String imageName) {
-        //TODO: imp this
+        for (int i = 0; i < viewSet.getImageFiles().size(); ++i){
+            String fileName = viewSet.getImageFileName(i);
+            if (fileName.matches(".*" + imageName + ".*")){
+                return Optional.of(viewSet.getFullResImageFile(i).getPath());
+            }
+        }
         return Optional.empty();
     }
 }
