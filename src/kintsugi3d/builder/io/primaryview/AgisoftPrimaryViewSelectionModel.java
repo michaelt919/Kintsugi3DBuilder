@@ -12,6 +12,7 @@
 package kintsugi3d.builder.io.primaryview;
 
 import javafx.scene.image.Image;
+import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -42,6 +43,7 @@ public class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionMod
     private final List<Element> cameras;
     private File fullResSearchDir;
 
+    //custom import path
     private AgisoftPrimaryViewSelectionModel(File cameraFile) throws ParserConfigurationException, IOException, SAXException
     {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -74,6 +76,7 @@ public class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionMod
         thumbnails = new ArrayList<>(views.size());
     }
 
+    //metashape import path
     private AgisoftPrimaryViewSelectionModel(String chunkName, List<Element> cameras, List<Image> thumbnailImageList)
     {
         this.chunkName = chunkName;
@@ -144,8 +147,6 @@ public class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionMod
 
     @Override
     public Optional<String> findFullResImagePath(String imageName) {
-        boolean isDirectMetashapeImport = cameraDocument == null;
-
         //find the camera (in chunk.xml) which holds the desired image
         Element selectedItemCam = findTargetCamera(imageName);
         if(selectedItemCam == null){
@@ -153,7 +154,7 @@ public class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionMod
         }
 
         //find the corresponding camera in frame.xml which should have a fuller path
-        return Optional.of(findFullResPath(isDirectMetashapeImport, selectedItemCam));
+        return Optional.ofNullable(findFullResPath(selectedItemCam));
     }
 
     private Element findTargetCamera(String imageName) {
@@ -167,14 +168,34 @@ public class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelectionMod
         return selectedItemCam;
     }
 
-    private String findFullResPath(boolean isMetashapeImport, Element selectedItemCam) {
-        //TODO: verify that we don't need to check isMetashapeImport here
+    private String findFullResPath(Element selectedItemCam){
         String pathAttribute = selectedItemCam.getAttribute("label");
 
         String pathAttributeName = new File(pathAttribute).getName();
         File imageFile = new File(fullResSearchDir, pathAttributeName);
 
-        return imageFile.getAbsolutePath().replace("..\\", "");
+        File finalImgFile;
+
+        //return original file
+        finalImgFile = ImageFinder.getInstance().tryFindImageFile(imageFile);
+        if(finalImgFile != null){return finalImgFile.getPath();}
+
+        //return file by searching canonical path
+        try{
+            finalImgFile = ImageFinder.getInstance().tryFindImageFile(new File(imageFile.getCanonicalPath()));
+            if(finalImgFile != null){return finalImgFile.getPath();}
+        }
+        catch(IOException e) {
+            log.warn("Error retrieving canonical file path for " + imageFile.getPath(), e);
+        }
+
+        //throw a hail mary and see if it sticks
+        finalImgFile = ImageFinder.getInstance().tryFindImageFile(new File(imageFile.getAbsolutePath()
+                .replace("..\\", "")));
+        if(finalImgFile != null){return finalImgFile.getPath();}
+
+        //give up
+        return null;
     }
 
     public Optional<Document> getCamDocument(){return Optional.ofNullable(cameraDocument);}

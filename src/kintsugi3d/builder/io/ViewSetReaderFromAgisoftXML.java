@@ -696,7 +696,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         Map<Integer, String> cameraPathsMap = new HashMap<>(128);
 
         // Open the xml files that contains all the cameras' ids and file paths
-        Document frame = metashapeObjectChunk.getFrameZip();
+        Document frame = metashapeObjectChunk.getFrameXML();
         if (frame == null || frame.getDocumentElement() == null){
             throw new FileNotFoundException("No frame document found");
         }

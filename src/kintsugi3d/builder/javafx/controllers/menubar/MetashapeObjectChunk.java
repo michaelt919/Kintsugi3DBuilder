@@ -38,7 +38,7 @@ public class MetashapeObjectChunk {
     private int chunkID;
 
     private Document chunkXML;
-    private Document frameZip;
+    private Document frameXML;
 
     private ArrayList<Triplet<Integer, String, String>> modelInfo = new ArrayList<>(); //model id, name/label, and path
     private Integer defaultModelID;
@@ -46,7 +46,7 @@ public class MetashapeObjectChunk {
 
     public String getChunkZipPath() { return chunkZipPath; }
     public Document getChunkXML() { return chunkXML; }
-    public Document getFrameZip() { return frameZip; }
+    public Document getFrameXML() { return frameXML; }
 
     public String getChunkDirectoryPath() {
         String psxFilePath = this.metashapeObject.getPsxFilePath();
@@ -62,7 +62,7 @@ public class MetashapeObjectChunk {
         chunkName = "";
         chunkID = -1;//TODO: GOOD NULL CHUNK ID?
         chunkXML = null;
-        frameZip = null;
+        frameXML = null;
         currModelID = -1;
     }
 
@@ -95,7 +95,7 @@ public class MetashapeObjectChunk {
         String frameZipPath = getFramePath();
 
         try {
-            this.frameZip = UnzipHelper.unzipToDocument(frameZipPath);
+            this.frameXML = UnzipHelper.unzipToDocument(frameZipPath);
         } catch (IOException e) {
             log.error("An error occurred loading Metashape chunk:", e);
         }
@@ -200,7 +200,7 @@ public class MetashapeObjectChunk {
     }
 
     public List<Element> findAllCameras() {
-        NodeList cams = this.frameZip.getElementsByTagName("camera");
+        NodeList cams = this.chunkXML.getElementsByTagName("camera");
         ArrayList<Element> cameras = new ArrayList<>();
         for (int i = 0; i < cams.getLength(); ++i) {
             Node camera = cams.item(i);
@@ -232,7 +232,7 @@ public class MetashapeObjectChunk {
         //assume that path is relative to parent of .psx file path
 
         try{
-            NodeList frameCams = frameZip.getElementsByTagName("camera");
+            NodeList frameCams = frameXML.getElementsByTagName("camera");
 
             //this will probably exit after the first camera
             for(int i = 0; i < frameCams.getLength(); ++i){
@@ -259,7 +259,7 @@ public class MetashapeObjectChunk {
         //  <model id="0" path="model.1/model.zip"/> --> returns "model.1/model.zip"
 
         try{
-            NodeList elems = ((Element) frameZip.getElementsByTagName("frame").item(0))
+            NodeList elems = ((Element) frameXML.getElementsByTagName("frame").item(0))
                     .getElementsByTagName("model");
 
             //this if statement triggers if chunk has one model and that model has no id

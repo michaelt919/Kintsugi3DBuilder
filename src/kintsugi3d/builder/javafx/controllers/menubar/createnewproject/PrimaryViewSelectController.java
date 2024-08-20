@@ -122,6 +122,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         {
             if(cameraFile == null || !cameraFile.equals(sharedCamFile))
             {
+                this.fullResOverride = null;
                 updateSharedInfo();
                 initTreeView(sharedCamFile);
             }
@@ -369,7 +370,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         }
 
         // Open the xml files that contains all the cameras' ids and file paths
-        Document frame = metashapeObjectChunk.getFrameZip();
+        Document frame = metashapeObjectChunk.getFrameXML();
         if (frame == null || frame.getDocumentElement() == null) {
             ProjectIO.handleException("Error reading Metashape frame.zip document.", new NullPointerException("No frame document found"));
             return;
