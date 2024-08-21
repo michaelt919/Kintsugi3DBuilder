@@ -69,6 +69,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     @FXML private Text imgViewText;
 
     @FXML private TextField imgSearchTxtField;
+    @FXML private CheckBox regexMode;
     private MetashapeObjectChunk metashapeObjectChunk;
     private File cameraFile;
     private File meshFile;
@@ -232,8 +233,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             destinationItem.getChildren().add(imageTreeItem);
         }
 
-        //TODO: redo the way this is created?
-        new SearchableTreeView(chunkTreeView, imgSearchTxtField);
+        SearchableTreeView.bind(chunkTreeView, imgSearchTxtField, regexMode);
 
         //unroll treeview
         chunkTreeView.getRoot().setExpanded(true);

@@ -14,58 +14,62 @@ package kintsugi3d.builder.javafx.controllers.menubar;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.scene.control.TextInputControl;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 
 import java.util.Iterator;
 
-public class SearchableTreeView {
-    private TreeView<String> treeView = new TreeView<>();
-    private TreeItem<String> backupRoot; //use this to restore chunkTreeView to original state
-    private TextInputControl searchTextInput;
-
-    /**
-     * Creates a tree view which can be "pruned" using a search term. Reverts back to the full tree when search term is "".
-     * Inputted parameters are shallow copied into this object's member vars.
-     * @param tree
-     * @param txtInput
-     */
-    public SearchableTreeView(TreeView<String> tree, TextInputControl txtInput){
-        backupRoot = deepCopy(tree.getRoot());
-
-        treeView = tree;
-        searchTextInput = txtInput;
-
-        searchTextInput.textProperty().addListener((obs, oldVal, newVal)->{
-            ObservableList<TreeItem<String>> leaves = getTreeViewLeaves();
-
-            treeView.setRoot(deepCopy(backupRoot));
-
-            String searchTxt = newVal.trim();
-            if (searchTxt.isBlank()){
-                treeView.setRoot(deepCopy(backupRoot));
-                treeView.getRoot().setExpanded(true);
-                return;
-            }
-
-            FilteredList<TreeItem<String>> filteredLeaves = new FilteredList<>(leaves, visibility->true);
-            filteredLeaves.setPredicate(leaf->leaf.getValue().matches(".*" + searchTxt + ".*"));
-
-            for (TreeItem<String> leaf : leaves){
-                if(!filteredLeaves.contains(leaf)){
-                    removeLeaf(treeView, leaf);
-                }
-            }
-            treeView.getRoot().setExpanded(true);
-        });
+public final class SearchableTreeView {
+    private SearchableTreeView(){
+        //hide useless constructor
     }
 
-    private void removeLeaf(TreeView<String> treeView, TreeItem<String> toRemove) {
+    public static void bind(TreeView<String> tree, TextField textInput, CheckBox regexMode) {
+        TreeItem<String> backupRoot = deepCopy(tree.getRoot());
+
+        textInput.textProperty().addListener((obs, oldText, newText)-> updateVals(tree, regexMode, newText, backupRoot));
+
+        if(regexMode != null){
+            regexMode.selectedProperty().addListener((obs, oldVal, newVal)-> updateVals(tree, regexMode, textInput.getText(), backupRoot));
+        }
+    }
+    public static void bind(TreeView<String> tree, TextField textInput){
+        bind(tree, textInput, null);
+    }
+
+    private static void updateVals(TreeView<String> tree, CheckBox regexMode, String newVal, TreeItem<String> backupRoot) {
+        ObservableList<TreeItem<String>> leaves = getTreeViewLeaves(backupRoot);
+
+        tree.setRoot(deepCopy(backupRoot));
+
+        String searchTxt = newVal.trim();
+        if (searchTxt.isBlank()){
+            tree.setRoot(deepCopy(backupRoot));
+            tree.getRoot().setExpanded(true);
+            return;
+        }
+
+        FilteredList<TreeItem<String>> filteredLeaves = new FilteredList<>(leaves, visibility->true);
+
+        filteredLeaves.setPredicate(regexMode != null && regexMode.isSelected() ? leaf->leaf.getValue().matches(".*" + searchTxt + ".*") :
+                leaf->leaf.getValue().contains(searchTxt));
+
+
+        for (TreeItem<String> leaf : leaves){
+            if(!filteredLeaves.contains(leaf)){
+                removeLeaf(tree, leaf);
+            }
+        }
+        tree.getRoot().setExpanded(true);
+    }
+
+    private static void removeLeaf(TreeView<String> treeView, TreeItem<String> toRemove) {
         removeLeafRec(treeView.getRoot().getChildren().iterator(), toRemove);
     }
 
-    private void removeLeafRec(Iterator<TreeItem<String>> curr, TreeItem<String> toRemove) {
+    private static void removeLeafRec(Iterator<TreeItem<String>> curr, TreeItem<String> toRemove) {
         TreeItem<String> currItem = curr.next();
 
         if(currItem.getValue().equals(toRemove.getValue())){
@@ -85,7 +89,7 @@ public class SearchableTreeView {
         }
     }
 
-    TreeItem<String> deepCopy(TreeItem<String> item) {
+    private static TreeItem<String> deepCopy(TreeItem<String> item) {
         TreeItem<String> copy = new TreeItem<>(item.getValue(), item.getGraphic());
         for (TreeItem<String> child : item.getChildren()) {
             copy.getChildren().add(deepCopy(child));
@@ -93,13 +97,13 @@ public class SearchableTreeView {
         return copy;
     }
 
-    private ObservableList<TreeItem<String>> getTreeViewLeaves() {
+    private static ObservableList<TreeItem<String>> getTreeViewLeaves(TreeItem<String> backupRoot) {
         ObservableList<TreeItem<String>> list = FXCollections.observableArrayList();
         getTreeViewLeavesRec(backupRoot, list);
         return list;
     }
 
-    private void getTreeViewLeavesRec(TreeItem<String> item, ObservableList<TreeItem<String>> list) {
+    private static void getTreeViewLeavesRec(TreeItem<String> item, ObservableList<TreeItem<String>> list) {
         if(item.isLeaf()){
             list.add(item);
         }
