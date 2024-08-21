@@ -12,6 +12,9 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
@@ -47,10 +50,7 @@ import org.w3c.dom.NodeList;
 
 import java.io.File;
 import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -66,6 +66,10 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     @FXML private TreeView<String> chunkTreeView;
     @FXML private ImageView primaryImgView;
     @FXML private Text imgViewText;
+
+    @FXML private TextField imgSearchTxtField;
+
+    private TreeItem<String> backupRoot; //use this to restore chunkTreeView to original state
     private MetashapeObjectChunk metashapeObjectChunk;
     private File cameraFile;
     private File meshFile;
@@ -229,11 +233,86 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             destinationItem.getChildren().add(imageTreeItem);
         }
 
+        backupRoot = deepCopy(chunkTreeView.getRoot());
+
+        //add leaves to filtered list for searching
+        imgSearchTxtField.textProperty().addListener((obs, oldVal, newVal)->{
+            ObservableList<TreeItem<String>> leaves = getTreeViewLeaves();
+
+            chunkTreeView.setRoot(deepCopy(backupRoot));
+
+            String searchTxt = newVal.trim();
+            if (searchTxt.isBlank()){
+                chunkTreeView.setRoot(deepCopy(backupRoot));
+                chunkTreeView.getRoot().setExpanded(true);
+                return;
+            }
+
+            FilteredList<TreeItem<String>> filteredLeaves = new FilteredList<>(leaves, visibility->true);
+            filteredLeaves.setPredicate(leaf->leaf.getValue().matches(".*" + searchTxt + ".*"));
+
+            for (TreeItem<String> leaf : leaves){
+                if(!filteredLeaves.contains(leaf)){
+                    removeLeaf(chunkTreeView, leaf);
+                }
+            }
+            chunkTreeView.getRoot().setExpanded(true);
+        });
+
         //unroll treeview
         chunkTreeView.getRoot().setExpanded(true);
 
         chunkTreeView.getSelectionModel().select(1);
         selectImageInTreeView();
+    }
+
+    private void removeLeaf(TreeView<String> treeView, TreeItem<String> toRemove) {
+        removeLeafRec(treeView.getRoot().getChildren().iterator(), toRemove);
+    }
+
+    private void removeLeafRec(Iterator<TreeItem<String>> curr, TreeItem<String> toRemove) {
+        TreeItem<String> currItem = curr.next();
+
+        if(currItem.getValue().equals(toRemove.getValue())){
+            curr.remove();
+            return;
+        }
+
+        //search child nodes if needed
+        if(!currItem.getChildren().isEmpty()){
+            Iterator<TreeItem<String>> childrenIter = currItem.getChildren().iterator();
+            removeLeafRec(childrenIter, toRemove);
+        }
+
+        //search sibling nodes if needed
+        if(curr.hasNext()){
+            removeLeafRec(curr, toRemove);
+        }
+    }
+
+    TreeItem<String> deepCopy(TreeItem<String> item) {
+        TreeItem<String> copy = new TreeItem<>(item.getValue(), item.getGraphic());
+        for (TreeItem<String> child : item.getChildren()) {
+            copy.getChildren().add(deepCopy(child));
+        }
+        return copy;
+    }
+
+    private ObservableList<TreeItem<String>> getTreeViewLeaves() {
+        ObservableList<TreeItem<String>> list = FXCollections.observableArrayList();
+        getTreeViewLeavesRec(backupRoot, list);
+        return list;
+    }
+
+    private void getTreeViewLeavesRec(TreeItem<String> item, ObservableList<TreeItem<String>> list) {
+        if(item.isLeaf()){
+            list.add(item);
+        }
+        else{
+            for (TreeItem<String> child : item.getChildren()){
+                getTreeViewLeavesRec(child, list);
+            }
+        }
     }
 
     private static TreeItem<String> getStringTreeItem(List<Image> thumbnailImgList, int i, String imageName) {
