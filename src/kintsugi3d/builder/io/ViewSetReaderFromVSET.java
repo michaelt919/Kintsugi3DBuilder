@@ -11,13 +11,6 @@
 
 package kintsugi3d.builder.io;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
@@ -27,6 +20,13 @@ import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 /**
  * Handles loading view sets from the VSET text file format
@@ -243,7 +243,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                             .setCurrentCameraProjectionIndex(projectionId)
                             .setCurrentLightIndex(lightId)
                             .setCurrentImageFile(new File(imgFilename))
-                            .finish();
+                            .commitCurrentCameraPose();
                         break;
                     }
                     default:
