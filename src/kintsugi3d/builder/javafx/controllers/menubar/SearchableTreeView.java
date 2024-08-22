@@ -62,7 +62,10 @@ public final class SearchableTreeView {
                 removeLeaf(tree, leaf);
             }
         }
-        tree.getRoot().setExpanded(true);
+
+        for (TreeItem<String> group : getTreeViewGroups(tree.getRoot())){
+            group.setExpanded(true);
+        }
     }
 
     private static void removeLeaf(TreeView<String> treeView, TreeItem<String> toRemove) {
@@ -95,6 +98,22 @@ public final class SearchableTreeView {
             copy.getChildren().add(deepCopy(child));
         }
         return copy;
+    }
+
+    private static ObservableList<TreeItem<String>> getTreeViewGroups(TreeItem<String> backupRoot){
+        ObservableList<TreeItem<String>> list = FXCollections.observableArrayList();
+        getTreeViewGroupsRec(backupRoot, list);
+        return list;
+    }
+
+    private static void getTreeViewGroupsRec(TreeItem<String> item, ObservableList<TreeItem<String>> list) {
+        if (!item.getChildren().isEmpty()){
+            list.add(item);
+
+            for(TreeItem<String> child : item.getChildren()){
+                getTreeViewGroupsRec(child, list);
+            }
+        }
     }
 
     private static ObservableList<TreeItem<String>> getTreeViewLeaves(TreeItem<String> backupRoot) {
