@@ -12,11 +12,10 @@
   -->
 
 <?import javafx.geometry.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.Cursor?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
-
 <AnchorPane prefHeight="720.0" styleClass="menuebaranchorpane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.MenubarController">
     <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <children>
@@ -383,11 +382,6 @@
                                 <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Export Specular Fit" visible="false">
                                     <accelerator>
                                         <KeyCodeCombination alt="UP" code="P" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                                    </accelerator>
-                                </MenuItem>
-                                <MenuItem mnemonicParsing="false" onAction="#unzip" text="Unzip Metashape File">
-                                    <accelerator>
-                                        <KeyCodeCombination alt="UP" code="M" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                                     </accelerator>
                                 </MenuItem>
                                 <MenuItem mnemonicParsing="false" onAction="#file_loadOptions" text="Load Options..." visible="false" />

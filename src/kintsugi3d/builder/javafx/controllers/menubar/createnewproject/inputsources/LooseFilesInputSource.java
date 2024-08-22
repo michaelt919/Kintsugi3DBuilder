@@ -13,11 +13,18 @@ package kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsour
 
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.io.ViewSetReader;
+import kintsugi3d.builder.javafx.MultithreadModels;
+import org.apache.commons.lang3.NotImplementedException;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LooseFilesInputSource implements InputSource{
+public class LooseFilesInputSource extends InputSource{
+    private File cameraFile;
+    private File meshFile;
+    private File photosDir;
+
     @Override
     public List<FileChooser.ExtensionFilter> getExtensionFilters() {
         List<FileChooser.ExtensionFilter> list = new ArrayList<>();
@@ -29,5 +36,33 @@ public class LooseFilesInputSource implements InputSource{
     @Override
     public ViewSetReader getCameraFileReader() {
         return null;
+    }
+
+    @Override
+    public void initTreeView() {
+        //TODO:
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void loadProject(String primaryView, double rotate) {
+        new Thread(() ->
+                MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(
+                        cameraFile.getPath(), cameraFile, meshFile, photosDir, primaryView, rotate))
+                .start();
+        super.loadProject(primaryView, rotate);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof LooseFilesInputSource)){
+            return false;
+        }
+
+        LooseFilesInputSource other = (LooseFilesInputSource) obj;
+
+        return this.cameraFile.equals(other.cameraFile) &&
+                this.meshFile.equals(other.meshFile) &&
+                this.photosDir.equals(other.photosDir);
     }
 }

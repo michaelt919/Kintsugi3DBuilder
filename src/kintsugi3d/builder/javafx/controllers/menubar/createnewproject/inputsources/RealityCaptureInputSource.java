@@ -14,11 +14,18 @@ package kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsour
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.io.ViewSetReader;
 import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
+import kintsugi3d.builder.javafx.MultithreadModels;
+import org.apache.commons.lang3.NotImplementedException;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.List;
 
-public class RealityCaptureInputSource implements InputSource{
+public class RealityCaptureInputSource extends InputSource{
+    private File cameraFile;
+    private File meshFile;
+    private File photosDir;
+
     @Override
     public List<FileChooser.ExtensionFilter> getExtensionFilters() {
         return Collections.singletonList(new FileChooser.ExtensionFilter("Reality Capture CSV file", "*.csv"));
@@ -27,5 +34,33 @@ public class RealityCaptureInputSource implements InputSource{
     @Override
     public ViewSetReader getCameraFileReader() {
         return ViewSetReaderFromRealityCaptureCSV.getInstance();
+    }
+
+    @Override
+    public void initTreeView() {
+        //TODO:
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void loadProject(String primaryView, double rotate) {
+        new Thread(() ->
+                MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(
+                        cameraFile.getPath(), cameraFile, meshFile, photosDir, primaryView, rotate))
+                .start();
+        super.loadProject(primaryView, rotate);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof RealityCaptureInputSource)){
+            return false;
+        }
+
+        RealityCaptureInputSource other = (RealityCaptureInputSource) obj;
+
+        return this.cameraFile.equals(other.cameraFile) &&
+                this.meshFile.equals(other.meshFile) &&
+                this.photosDir.equals(other.photosDir);
     }
 }

@@ -843,19 +843,6 @@ public class MenubarController
         return fxmlLoader.getController();
     }
 
-    public UnzipFileSelectionController unzip() {
-        UnzipFileSelectionController unzipFileSelectionController = null;
-        try {
-            unzipFileSelectionController = makeWindow(".psx Unzipper", unzipperOpen, "fxml/menubar/UnzipFileSelection.fxml");
-            unzipFileSelectionController.init();
-        }
-        catch(Exception e)
-        {
-            handleException("An error occurred opening file unzipper", e);
-        }
-        return unzipFileSelectionController;
-    }
-
     public void objectOrientation()
     {
         if (!objectOrientationWindowOpen.get())
