@@ -285,6 +285,11 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
+        public Builder setPrimaryViewRotation(float rotation){
+            result.setPrimaryViewRotation(rotation);
+            return this;
+        }
+
         public ViewSet finish()
         {
             if (needsClipPlanes)

@@ -87,6 +87,10 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         scanner.nextLine();
                         break;
                     }
+                    case "r":
+                        builder.setPrimaryViewRotation(scanner.nextFloat());
+                        scanner.nextLine();
+                        break;
                     case "m":
                     {
                         builder.setGeometryFileName(scanner.nextLine().trim());
