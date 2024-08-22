@@ -13,7 +13,6 @@ package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -302,8 +301,8 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     private void setThumbnailAsFullImage(TreeItem<String> selectedItem) {
         //use thumbnail as main image
         //used if image is not found, or if larger resolution image is being loaded
-        primaryImgView.setImage(selectedItem.getGraphic().
-                snapshot(new SnapshotParameters(), null));
+        ImageView imageView = (ImageView) selectedItem.getGraphic();
+        primaryImgView.setImage(imageView.getImage());
     }
 
     @FXML
