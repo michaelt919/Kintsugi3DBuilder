@@ -14,7 +14,6 @@ public abstract class FXMLPageController {
 
     protected FXMLPageScrollerController hostScrollerController;
     protected FXMLPage hostPage;
-
     protected Runnable loadStartCallback;
     protected Consumer<ViewSet> viewSetCallback;
 

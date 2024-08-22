@@ -11,18 +11,6 @@
 
 package kintsugi3d.builder.javafx;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Scanner;
-import java.util.function.Function;
-import java.util.function.Predicate;
-
 import com.sun.glass.ui.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -54,6 +42,18 @@ import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Scanner;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public final class ProjectIO
 {
@@ -303,7 +303,7 @@ public final class ProjectIO
             FXMLPageScrollerController scrollerController =
                     makeWindow(parentWindow, "Load Files", loaderWindowOpen, hostFXMLPath);
 
-            String firstPageFXMLPath = "/fxml/menubar/createnewproject/ImportOrCustomProject.fxml";
+            String firstPageFXMLPath = "/fxml/menubar/createnewproject/SelectImportOptions.fxml";
             scrollerController.setPages(pages, firstPageFXMLPath);
             scrollerController.init();
             WelcomeWindowController.getInstance().hide();

@@ -199,10 +199,10 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
             ((ButtonBase) alert.getDialogPane().lookupButton(openCustomProj)).setOnAction(event -> {
                 //manually navigate though pages to get to custom loader
-                hostScrollerController.prevPage();//go to ImportOrCustomProject.fxml
-                ImportOrCustomProjectController controller = (ImportOrCustomProjectController)
+                hostScrollerController.prevPage();//go to SelectImportOptions.fxml
+                SelectImportOptionsController controller = (SelectImportOptionsController)
                         hostScrollerController.getCurrentPage().getController();
-                controller.customImportSelect();
+                controller.looseFilesSelect();
                 alertShown = false;
             });
 

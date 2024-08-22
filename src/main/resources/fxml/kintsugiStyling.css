@@ -351,13 +351,13 @@ dialog-pane{
     -fx-fill:#ffffff;
 }
 
-.toggle-button:selected .text{
-    -fx-fill: #000000;
-}
 
 .toggle-button{
-    -fx-background-color: #383838;
-    -fx-background-radius: 30 30 30 30;
+    -fx-background-color: #CECECE;
+}
+
+.toggle-button .text{
+    -fx-fill:#030303;
 }
 
 .toggle-button:selected{
@@ -365,17 +365,16 @@ dialog-pane{
     -fx-font-weight:bold;
 }
 
+.toggle-button:selected .text{
+    -fx-fill: #000000;
+}
+
 .toggle-button:hover{
- /*   -fx-background-color: #222255; */
     -fx-background-color: #D4AA00;
 }
 
-.toggle-button:hover .text{
-    -fx-fill: #ffffff;
-}
-
 .toggle-button:pressed {
-    -fx-background-color: #262626;
+    -fx-background-color: #383838;
 }
 
 .tool-bar{
