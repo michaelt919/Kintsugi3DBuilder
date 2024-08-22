@@ -11,19 +11,6 @@
 
 package kintsugi3d.builder.resources.ibr;
 
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.text.MessageFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Objects;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.IntStream;
-import javax.imageio.ImageIO;
-import javax.xml.stream.XMLStreamException;
-
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
@@ -49,6 +36,19 @@ import kintsugi3d.util.ImageHelper;
 import kintsugi3d.util.ImageUndistorter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import javax.xml.stream.XMLStreamException;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Objects;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
 
 /**
  * A class that encapsulates all of the GPU resources like vertex buffers, uniform buffers, and textures for a given
@@ -125,7 +125,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         public Builder<ContextType> setPrimaryView(String primaryViewName, double rotation)
         {
             this.primaryViewName = primaryViewName;
-            this.viewSet.setPrimaryViewRotation(rotation);
+            this.viewSet.setPrimaryViewRotationDegrees(rotation);
             return this;
         }
 

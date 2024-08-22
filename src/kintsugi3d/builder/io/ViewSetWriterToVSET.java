@@ -69,7 +69,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
 
         out.println();
         out.println("# Primary View Rotation (degrees)");
-        out.println("r " + viewSet.getPrimaryViewRotation());
+        out.println("r " + viewSet.getPrimaryViewRotationDegrees());
         out.println();
 
         out.println();

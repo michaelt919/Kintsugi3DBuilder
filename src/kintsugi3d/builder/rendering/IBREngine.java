@@ -11,11 +11,6 @@
 
 package kintsugi3d.builder.rendering;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.export.specular.gltf.SpecularFitGltfExporter;
 import kintsugi3d.builder.fit.settings.ExportSettings;
@@ -41,6 +36,11 @@ import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class IBREngine<ContextType extends Context<ContextType>> implements IBRInstance<ContextType>
 {
@@ -215,7 +215,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
             Matrix4 primaryCameraPose = resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex());
 
-            sceneModel.setOrientation(Matrix4.rotateZ(-resources.getViewSet().getPrimaryViewRotation())
+            sceneModel.setOrientation(Matrix4.rotateZ(Math.toRadians(-resources.getViewSet().getPrimaryViewRotationDegrees()))
                             .times(primaryCameraPose).getUpperLeft3x3());
 
             sceneModel.setCentroid(resources.getGeometry().getCentroid());
