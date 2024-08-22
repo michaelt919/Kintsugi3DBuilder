@@ -6,7 +6,8 @@ public interface ShareInfo {
         MESH_FILE,
         PHOTO_DIR,
         METASHAPE_OBJ_CHUNK,
-        PRIMARY_VIEW
+        PRIMARY_VIEW,
+        INPUT_SOURCE
     }
 
     /**

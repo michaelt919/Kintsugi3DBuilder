@@ -20,6 +20,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.util.RecentProjects;
@@ -35,6 +36,8 @@ public class CustomImportController extends FXMLPageController implements ShareI
     @FXML private Text loadCheckObj;
     @FXML private Text loadCheckImages;
     @FXML private VBox root;
+
+    @FXML private Text camPositionsTxt;
 
     private Stage thisStage;
 
@@ -73,6 +76,20 @@ public class CustomImportController extends FXMLPageController implements ShareI
     public void refresh() {
         File recentFile = RecentProjects.getMostRecentDirectory();
         setInitDirectories(recentFile);
+
+        InputSource source = hostScrollerController.getInfo(Info.INPUT_SOURCE);
+        if(source != null){
+            camFileChooser.getExtensionFilters().clear();
+
+            StringBuilder cameraPositionsTextBuilder = new StringBuilder("Camera Positions\n(");
+            for (ExtensionFilter filter : source.getExtensionFilters()){
+                camFileChooser.getExtensionFilters().add(filter);
+                cameraPositionsTextBuilder.append(filter.getDescription()).append(" or\n");
+            }
+            int finalIdx = cameraPositionsTextBuilder.length();
+            cameraPositionsTextBuilder.replace(finalIdx - 4, finalIdx,")");
+            camPositionsTxt.setText(cameraPositionsTextBuilder.toString());
+        }
     }
 
     @Override

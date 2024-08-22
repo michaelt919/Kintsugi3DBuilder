@@ -34,6 +34,7 @@ import kintsugi3d.builder.javafx.controllers.menubar.ImageThreadable;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.SearchableTreeView;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
@@ -103,6 +104,8 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         File sharedFullResDir = hostScrollerController.getInfo(ShareInfo.Info.PHOTO_DIR);
 
         doSkipMissingCams = false;
+
+        InputSource source = hostScrollerController.getInfo(ShareInfo.Info.INPUT_SOURCE);
 
         boolean usingMetashapeImport =
             hostPage.getPrevPage() == hostScrollerController.getPage("/fxml/menubar/createnewproject/MetashapeImport.fxml");
