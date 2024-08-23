@@ -31,7 +31,7 @@
                         <CheckBox fx:id="regexMode" mnemonicParsing="false" text="Regex Mode" />
                      </children>
                   </HBox>
-                  <TreeView fx:id="chunkTreeView" onContextMenuRequested="#selectImageInTreeView" onKeyTyped="#selectImageInTreeView" onMouseClicked="#selectImageInTreeView" prefHeight="400.0" prefWidth="450.0" />
+                  <TreeView fx:id="chunkTreeView" onContextMenuRequested="#selectImageInTreeView" onKeyTyped="#selectImageInTreeView" prefHeight="400.0" prefWidth="450.0" />
                </children>
             </VBox>
             <AnchorPane>

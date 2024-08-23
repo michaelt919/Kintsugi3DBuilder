@@ -23,6 +23,8 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
+import javafx.stage.Window;
+import javafx.stage.WindowEvent;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.ImageThreadable;
 import kintsugi3d.builder.javafx.controllers.menubar.SearchableTreeView;
@@ -31,6 +33,7 @@ import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsourc
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
+import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.resources.ibr.MissingImagesException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +66,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         //TODO: temp hack to make text visible, need to change textflow css?
         imgViewText.setFill(Paint.valueOf("white"));
 
+        chunkTreeView.getSelectionModel().selectedIndexProperty().addListener((a, b, c)-> selectImageInTreeView());
         this.imgCache = new HashMap<>();
     }
 
@@ -73,7 +77,9 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
         if (!sharedSource.equals(source)){
             source = sharedSource;
-            source.setTreeView(chunkTreeView);
+
+            //create an unbound instance and only bind elements when we know chunkTreeView.getRoot() != null
+            source.setSearchableTreeView(SearchableTreeView.createUnboundInstance(chunkTreeView, imgSearchTxtField, regexMode));
             try
             {
                 source.verifyInfo(null);
@@ -87,8 +93,6 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                 }
             }
         }
-        //TODO: need to fix binding
-        SearchableTreeView.bind(chunkTreeView, imgSearchTxtField, regexMode);
     }
 
     @Override
@@ -167,6 +171,11 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
         String primaryView = chunkTreeView.getSelectionModel().getSelectedItem().getValue();
         source.loadProject(primaryView, primaryImgView.getRotate());
+
+        WelcomeWindowController.getInstance().hide();
+
+        Window window = hostAnchorPane.getScene().getWindow();
+        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
     }
 
     @Override

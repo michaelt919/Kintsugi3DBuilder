@@ -15,28 +15,40 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 
 import java.util.Iterator;
 
 public final class SearchableTreeView {
-    private SearchableTreeView(){
-        //hide useless constructor
+    TreeView<String> treeView;
+    TextInputControl textInput;
+    CheckBox regexMode;
+
+    private SearchableTreeView(TreeView<String> tree, TextInputControl textInput, CheckBox regexMode){
+        this.treeView = tree;
+        this.textInput = textInput;
+        this.regexMode = regexMode;
     }
 
-    public static void bind(TreeView<String> tree, TextField textInput, CheckBox regexMode) {
-        TreeItem<String> backupRoot = deepCopy(tree.getRoot());
+    public SearchableTreeView bind() {
+        TreeItem<String> backupRoot = deepCopy(treeView.getRoot());
 
-        textInput.textProperty().addListener((obs, oldText, newText)-> updateVals(tree, regexMode, newText, backupRoot));
+        textInput.textProperty().addListener((obs, oldText, newText)-> updateVals(treeView, regexMode, newText, backupRoot));
 
         if(regexMode != null){
-            regexMode.selectedProperty().addListener((obs, oldVal, newVal)-> updateVals(tree, regexMode, textInput.getText(), backupRoot));
+            regexMode.selectedProperty().addListener((obs, oldVal, newVal)-> updateVals(treeView, regexMode, textInput.getText(), backupRoot));
         }
+        return this;
     }
-    public static void bind(TreeView<String> tree, TextField textInput){
-        bind(tree, textInput, null);
+
+    public static SearchableTreeView createUnboundInstance(TreeView<String> tree, TextInputControl textInput, CheckBox regexMode){
+        return new SearchableTreeView(tree, textInput, regexMode);
+    }
+
+    public static SearchableTreeView createUnboundInstance(TreeView<String> tree, TextInputControl textInput){
+        return new SearchableTreeView(tree, textInput, null);
     }
 
     private static void updateVals(TreeView<String> tree, CheckBox regexMode, String newVal, TreeItem<String> backupRoot) {
@@ -131,5 +143,9 @@ public final class SearchableTreeView {
                 getTreeViewLeavesRec(child, list);
             }
         }
+    }
+
+    public TreeView<String> getTreeView() {
+        return this.treeView;
     }
 }

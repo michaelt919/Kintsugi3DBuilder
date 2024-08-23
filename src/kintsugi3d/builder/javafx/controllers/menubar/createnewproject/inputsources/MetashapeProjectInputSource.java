@@ -134,7 +134,9 @@ public class MetashapeProjectInputSource extends InputSource{
 
         File fullResDir = fullResOverride != null ? fullResOverride : metashapeObjectChunk.findFullResImgDirectory();
         primaryViewSelectionModel = AgisoftPrimaryViewSelectionModel.createInstance(chunkName, cameras, thumbnailImageList, fullResDir);
+
         addTreeElems(primaryViewSelectionModel);
+        searchableTreeView.bind();
     }
 
     @Override
@@ -146,7 +148,6 @@ public class MetashapeProjectInputSource extends InputSource{
                                 metashapeObjectChunk, fullResOverride, doSkipMissingCams,
                                 primaryView, rotate))
                 .start();
-        super.loadProject(primaryView, rotate);
     }
 
     @Override

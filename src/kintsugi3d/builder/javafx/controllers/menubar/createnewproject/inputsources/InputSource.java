@@ -16,13 +16,10 @@ import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
-import javafx.stage.Window;
-import javafx.stage.WindowEvent;
 import kintsugi3d.builder.io.ViewSetReader;
 import kintsugi3d.builder.io.primaryview.PrimaryViewSelectionModel;
 import kintsugi3d.builder.io.primaryview.View;
-import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
-import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
+import kintsugi3d.builder.javafx.controllers.menubar.SearchableTreeView;
 
 import java.io.File;
 import java.util.List;
@@ -33,6 +30,7 @@ public abstract class InputSource {
     private static final int THUMBNAIL_SIZE = 30;
     private TreeView<String> treeView;
     protected PrimaryViewSelectionModel primaryViewSelectionModel;
+    protected SearchableTreeView searchableTreeView;
 
     public abstract List<FileChooser.ExtensionFilter> getExtensionFilters();
     abstract ViewSetReader getCameraFileReader();
@@ -40,8 +38,9 @@ public abstract class InputSource {
     {
     }
 
-    public void setTreeView(TreeView<String> treeView){
-        this.treeView = treeView;
+    public void setSearchableTreeView(SearchableTreeView searchableTreeView){
+        this.searchableTreeView = searchableTreeView;
+        this.treeView = searchableTreeView.getTreeView();
     }
 
     public PrimaryViewSelectionModel getPrimarySelectionModel(){
@@ -50,12 +49,7 @@ public abstract class InputSource {
 
     public abstract void initTreeView();
 
-    public void loadProject(String primaryView, double rotate){
-        WelcomeWindowController.getInstance().hide();
-
-        Window window = MenubarController.getInstance().getWindow();
-        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
-    }
+    public abstract void loadProject(String primaryView, double rotate);
 
     protected void addTreeElems(PrimaryViewSelectionModel primaryViewSelectionModel){
         TreeItem<String> rootItem = new TreeItem<>(primaryViewSelectionModel.getName());
@@ -108,7 +102,6 @@ public abstract class InputSource {
 
         //unroll treeview
         treeView.getRoot().setExpanded(true);
-
         treeView.getSelectionModel().select(1);
     }
 

@@ -50,7 +50,6 @@ public class LooseFilesInputSource extends InputSource{
                 MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(
                         cameraFile.getPath(), cameraFile, meshFile, photosDir, primaryView, rotate))
                 .start();
-        super.loadProject(primaryView, rotate);
     }
 
     @Override
