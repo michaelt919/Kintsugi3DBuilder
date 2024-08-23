@@ -21,6 +21,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.InputSource;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.LooseFilesInputSource;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.RealityCaptureInputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.util.RecentProjects;
@@ -46,7 +48,7 @@ public class CustomImportController extends FXMLPageController implements ShareI
     private final DirectoryChooser photoDirectoryChooser = new DirectoryChooser();
 
     private File cameraFile;
-    private File objFile;
+    private File meshFile;
     private File photoDir;
 
     @Override
@@ -122,7 +124,7 @@ public class CustomImportController extends FXMLPageController implements ShareI
 
         if (temp != null)
         {
-            objFile = temp;
+            meshFile = temp;
             setHomeDir(temp);
             loadCheckObj.setText("Loaded");
             loadCheckObj.setFill(Paint.valueOf("Green"));
@@ -149,7 +151,7 @@ public class CustomImportController extends FXMLPageController implements ShareI
     }
 
     private boolean areAllFilesLoaded() {
-        return (cameraFile != null) && (objFile != null) && (photoDir != null);
+        return (cameraFile != null) && (meshFile != null) && (photoDir != null);
     }
 
 
@@ -179,10 +181,24 @@ public class CustomImportController extends FXMLPageController implements ShareI
 
     @Override
     public void shareInfo() {
-        hostScrollerController.addInfo(Info.CAM_FILE, cameraFile);
-        hostScrollerController.addInfo(Info.PHOTO_DIR, photoDir);
-        hostScrollerController.addInfo(Info.MESH_FILE, objFile);
+        //overwrite old source so we can compare old and new versions in PrimaryViewSelectController
+        InputSource source = hostScrollerController.getInfo(Info.INPUT_SOURCE);
+        if (source instanceof LooseFilesInputSource){
 
-        hostScrollerController.addInfo(Info.METASHAPE_OBJ_CHUNK, null);
+            hostScrollerController.addInfo(Info.INPUT_SOURCE,
+                    new LooseFilesInputSource().setCameraFile(cameraFile)
+                    .setMeshFile(meshFile)
+                    .setPhotosDir(photoDir));
+        }
+        else if(source instanceof RealityCaptureInputSource){
+            hostScrollerController.addInfo(Info.INPUT_SOURCE,
+                    new RealityCaptureInputSource()
+                    .setCameraFile(cameraFile)
+                    .setMeshFile(meshFile)
+                    .setPhotosDir(photoDir));
+        }
+        else{
+            log.error("Error sending info to host controller. LooseFilesInputSource or RealityCaptureInputSource expected.");
+        }
     }
 }

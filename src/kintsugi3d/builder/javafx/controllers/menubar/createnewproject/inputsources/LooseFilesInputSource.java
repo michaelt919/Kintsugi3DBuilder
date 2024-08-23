@@ -13,10 +13,14 @@ package kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsour
 
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.io.ViewSetReader;
+import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
+import kintsugi3d.builder.io.primaryview.AgisoftPrimaryViewSelectionModel;
+import kintsugi3d.builder.io.primaryview.GenericPrimaryViewSelectionModel;
 import kintsugi3d.builder.javafx.MultithreadModels;
-import org.apache.commons.lang3.NotImplementedException;
+import kintsugi3d.builder.javafx.ProjectIO;
 
 import java.io.File;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,10 +42,46 @@ public class LooseFilesInputSource extends InputSource{
         return null;
     }
 
+    public LooseFilesInputSource setCameraFile(File camFile){
+        this.cameraFile = camFile;
+        return this;
+    }
+
+    public LooseFilesInputSource setMeshFile(File meshFile){
+        this.meshFile = meshFile;
+        return this;
+    }
+
+    public LooseFilesInputSource setPhotosDir(File photosDir){
+        this.photosDir = photosDir;
+        return this;
+    }
+
     @Override
     public void initTreeView() {
-        //TODO:
-        throw new NotImplementedException();
+        try {
+            if (cameraFile.getName().endsWith(".xml")) // Agisoft Metashape
+            {
+                primaryViewSelectionModel = AgisoftPrimaryViewSelectionModel.createInstance(cameraFile, photosDir);
+            }
+            else if (cameraFile.getName().endsWith(".csv")) // RealityCapture
+            {
+                primaryViewSelectionModel = GenericPrimaryViewSelectionModel.createInstance(cameraFile.getName(),
+                        ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile, meshFile, photosDir));
+            }
+            else
+            {
+                ProjectIO.handleException("Error initializing primary view selection.",
+                        new IllegalArgumentException(MessageFormat.format("File extension not recognized for {0}", cameraFile.getName())));
+                return;
+            }
+
+            addTreeElems(primaryViewSelectionModel);
+            searchableTreeView.bind();
+
+        } catch (Exception e) {
+            ProjectIO.handleException("Error initializing primary view selection.", e);
+        }
     }
 
     @Override

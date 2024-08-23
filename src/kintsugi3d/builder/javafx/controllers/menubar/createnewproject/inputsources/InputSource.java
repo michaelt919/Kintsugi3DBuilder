@@ -118,4 +118,7 @@ public abstract class InputSource {
 
         return new TreeItem<>(imageName, thumbnailImgView);
     }
+
+    @Override
+    public abstract boolean equals(Object obj);
 }

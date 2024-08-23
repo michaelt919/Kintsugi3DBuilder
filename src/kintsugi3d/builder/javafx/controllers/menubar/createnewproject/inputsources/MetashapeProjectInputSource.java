@@ -51,8 +51,9 @@ public class MetashapeProjectInputSource extends InputSource{
     public ViewSetReader getCameraFileReader() {
         return ViewSetReaderFromAgisoftXML.getInstance();
     }
-    public void setMetashapeObjectChunk(MetashapeObjectChunk moc){
+    public MetashapeProjectInputSource setMetashapeObjectChunk(MetashapeObjectChunk moc){
         this.metashapeObjectChunk = moc;
+        return this;
     }
     public void setFullResOverride(File override){
         this.fullResOverride = override;
@@ -157,8 +158,9 @@ public class MetashapeProjectInputSource extends InputSource{
         }
 
         MetashapeProjectInputSource other = (MetashapeProjectInputSource) obj;
-        return other.metashapeObjectChunk.equals(this.metashapeObjectChunk) &&
-                other.fullResOverride.equals(this.fullResOverride);
+
+        return this.metashapeObjectChunk.equals(other.metashapeObjectChunk) &&
+                this.fullResOverride.equals(other.fullResOverride);
     }
 
     public void showMissingImgsAlert(MissingImagesException mie) {

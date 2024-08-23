@@ -14,8 +14,9 @@ package kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsour
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.io.ViewSetReader;
 import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
+import kintsugi3d.builder.io.primaryview.GenericPrimaryViewSelectionModel;
 import kintsugi3d.builder.javafx.MultithreadModels;
-import org.apache.commons.lang3.NotImplementedException;
+import kintsugi3d.builder.javafx.ProjectIO;
 
 import java.io.File;
 import java.util.Collections;
@@ -38,8 +39,15 @@ public class RealityCaptureInputSource extends InputSource{
 
     @Override
     public void initTreeView() {
-        //TODO:
-        throw new NotImplementedException();
+        try {
+            primaryViewSelectionModel = GenericPrimaryViewSelectionModel.createInstance(cameraFile.getName(),
+                    ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile, meshFile, photosDir));
+
+            addTreeElems(primaryViewSelectionModel);
+            searchableTreeView.bind();
+        } catch (Exception e) {
+            ProjectIO.handleException("Error initializing primary view selection.", e);
+        }
     }
 
     @Override
@@ -61,5 +69,20 @@ public class RealityCaptureInputSource extends InputSource{
         return this.cameraFile.equals(other.cameraFile) &&
                 this.meshFile.equals(other.meshFile) &&
                 this.photosDir.equals(other.photosDir);
+    }
+
+    public RealityCaptureInputSource setCameraFile(File cameraFile) {
+        this.cameraFile = cameraFile;
+        return this;
+    }
+
+    public RealityCaptureInputSource setMeshFile(File meshFile) {
+        this.meshFile = meshFile;
+        return this;
+    }
+
+    public RealityCaptureInputSource setPhotosDir(File photosDir) {
+        this.photosDir = photosDir;
+        return this;
     }
 }
