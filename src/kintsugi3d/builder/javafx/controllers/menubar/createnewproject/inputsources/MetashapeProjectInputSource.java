@@ -40,8 +40,6 @@ import java.util.List;
 public class MetashapeProjectInputSource extends InputSource{
     private static final Logger log = LoggerFactory.getLogger(MetashapeProjectInputSource.class);
     private MetashapeObjectChunk metashapeObjectChunk;
-    private File fullResOverride;
-    private boolean doSkipMissingCams;
     @Override
     public List<FileChooser.ExtensionFilter> getExtensionFilters() {
         return Collections.singletonList(new FileChooser.ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
@@ -55,12 +53,9 @@ public class MetashapeProjectInputSource extends InputSource{
         this.metashapeObjectChunk = moc;
         return this;
     }
-    public void setFullResOverride(File override){
-        this.fullResOverride = override;
-    }
     @Override
     public void verifyInfo(File fullResDirectoryOverride){
-        this.fullResOverride = fullResDirectoryOverride;
+        metashapeObjectChunk.getLoadPreferences().fullResOverride = fullResDirectoryOverride;
 
         // Get reference to the chunk directory
         File chunkDirectory = new File(metashapeObjectChunk.getChunkDirectoryPath());
@@ -133,6 +128,7 @@ public class MetashapeProjectInputSource extends InputSource{
         List <Image> thumbnailImageList = metashapeObjectChunk.loadThumbnailImageList();
         List<Element> cameras = metashapeObjectChunk.findEnabledCameras();
 
+        File fullResOverride = metashapeObjectChunk.getLoadPreferences().fullResOverride;
         File fullResDir = fullResOverride != null ? fullResOverride : metashapeObjectChunk.findFullResImgDirectory();
         primaryViewSelectionModel = AgisoftPrimaryViewSelectionModel.createInstance(chunkName, cameras, thumbnailImageList, fullResDir);
 
@@ -140,15 +136,12 @@ public class MetashapeProjectInputSource extends InputSource{
         searchableTreeView.bind();
     }
 
+    //TODO: uncouple loadProject() from primaryView
     @Override
     public void loadProject(String primaryView, double rotate) {
-        new Thread(() ->
-                MultithreadModels.getInstance().getIOModel()
-                        .loadAgisoftFromZIP(
-                                metashapeObjectChunk.getFramePath(),
-                                metashapeObjectChunk, fullResOverride, doSkipMissingCams,
-                                primaryView, rotate))
-                .start();
+        metashapeObjectChunk.getLoadPreferences().primaryViewName = primaryView;
+        metashapeObjectChunk.getLoadPreferences().primaryViewRotateDegrees = rotate;
+        new Thread(() -> MultithreadModels.getInstance().getIOModel().loadAgisoftFromZIP(metashapeObjectChunk)).start();
     }
 
     @Override
@@ -159,8 +152,7 @@ public class MetashapeProjectInputSource extends InputSource{
 
         MetashapeProjectInputSource other = (MetashapeProjectInputSource) obj;
 
-        return this.metashapeObjectChunk.equals(other.metashapeObjectChunk) &&
-                this.fullResOverride.equals(other.fullResOverride);
+        return this.metashapeObjectChunk.equals(other.metashapeObjectChunk);
     }
 
     public void showMissingImgsAlert(MissingImagesException mie) {
@@ -199,8 +191,8 @@ public class MetashapeProjectInputSource extends InputSource{
         });
 
         ((ButtonBase) alert.getDialogPane().lookupButton(skipMissingCams)).setOnAction(event -> {
-            this.fullResOverride = prevTriedDirectory;
-            doSkipMissingCams = true;
+            metashapeObjectChunk.getLoadPreferences().fullResOverride = prevTriedDirectory;
+            metashapeObjectChunk.getLoadPreferences().doSkipMissingCams = true;
             initTreeView();
         });
 

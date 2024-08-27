@@ -11,16 +11,6 @@
 
 package kintsugi3d.builder.rendering;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.DoubleUnaryOperator;
-
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
@@ -40,6 +30,16 @@ import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.EncodableColorImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.DoubleUnaryOperator;
 
 public class IBRInstanceManager<ContextType extends Context<ContextType>> implements IOHandler, InteractiveRenderable<ContextType>
 {
@@ -343,8 +343,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions, File fullResOverride,
-                                   boolean doSkipMissingCams, String primaryViewName, double rotation) {
+    public void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions) {
 
         // TODO There currently isn't functionality for a supportingFilesDirectory at this early in the process
         //  Restructuring required from Tetzlaff.
@@ -358,13 +357,16 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
         File supportingFilesDirectory = null;
         try {
+            String primaryViewName = metashapeObjectChunk.getLoadPreferences().primaryViewName;
+            double rotation = metashapeObjectChunk.getLoadPreferences().primaryViewRotateDegrees;
+
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                     .setProgressMonitor(this.progressMonitor)
                     .setLoadOptions(loadOptions)
-                    .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, fullResOverride, doSkipMissingCams)
+                    .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory)
                     .setPrimaryView(primaryViewName, rotation);
 
-            loadInstance(id, builder);
+            loadInstance(metashapeObjectChunk.getFramePath(), builder);
         }
         catch(UserCancellationException e)
         {

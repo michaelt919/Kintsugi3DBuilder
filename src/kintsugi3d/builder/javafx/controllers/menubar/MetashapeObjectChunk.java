@@ -42,6 +42,7 @@ public class MetashapeObjectChunk {
     private ArrayList<Triplet<Integer, String, String>> modelInfo = new ArrayList<>(); //model id, name/label, and path
     private Integer defaultModelID;
     private Integer currModelID;
+    private LoadPreferences loadPreferences;
 
     public String getChunkZipPath() { return chunkZipPath; }
     public Document getChunkXML() { return chunkXML; }
@@ -57,17 +58,22 @@ public class MetashapeObjectChunk {
 
 
     private MetashapeObjectChunk(){
-        metashapeObject = new MetashapeObject();
-        chunkName = "";
-        chunkID = -1;//TODO: GOOD NULL CHUNK ID?
-        chunkXML = null;
-        frameXML = null;
-        currModelID = -1;
+        //hide useless constructor
     }
+
+    public class LoadPreferences{
+        public File fullResOverride;
+        public boolean doSkipMissingCams;
+        public String primaryViewName;
+        public double primaryViewRotateDegrees;
+    }
+
+    public LoadPreferences getLoadPreferences(){return loadPreferences;}
 
     public MetashapeObjectChunk(MetashapeObject metashapeObject, String chunkName, Integer currModelID) {
         this.metashapeObject = metashapeObject;
         this.currModelID = currModelID;
+        this.loadPreferences = new LoadPreferences();
 
         updateChunk(chunkName);
     }

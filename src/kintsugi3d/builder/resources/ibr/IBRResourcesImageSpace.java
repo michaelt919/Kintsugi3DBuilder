@@ -202,11 +202,10 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
          * @return
          * @throws IOException
          */
-        public Builder<ContextType> loadAgisoftFromZIP(
-            MetashapeObjectChunk metashapeObjectChunk, File supportingFilesDirectory, File fullResDirectoryOverride, boolean ignoreMissingCams)
+        public Builder<ContextType> loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, File supportingFilesDirectory)
             throws IOException, XMLStreamException
         {
-            this.viewSet = ViewSetReaderFromAgisoftXML.readChunkFromZip(metashapeObjectChunk, supportingFilesDirectory, fullResDirectoryOverride, ignoreMissingCams);
+            this.viewSet = ViewSetReaderFromAgisoftXML.readChunkFromZip(metashapeObjectChunk, supportingFilesDirectory);
             updateViewSetFromLoadOptions();
             loadAndValidateGeometry();
             return this;
