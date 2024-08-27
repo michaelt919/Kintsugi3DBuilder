@@ -343,7 +343,7 @@ public class MenubarController
             @Override
             public void setStageCount(int count)
             {
-                stageCountProperty.setValue(count);
+                Platform.runLater(()->stageCountProperty.setValue(count));
             }
 
             @Override
@@ -351,19 +351,20 @@ public class MenubarController
             {
 //                this.maximum = 0.0; //leave this in and only call setMaxProgress() after setStage()?
                 this.localProgress = 0.0;
-                this.currentStageProperty.setValue(stage + 1); //index starting from 1
+                int currentStage = stage + 1; //index from 1, copy so we can update currentStageProperty w/ Platform.runLater to avoid threading issue
+                Platform.runLater(()-> this.currentStageProperty.setValue(currentStage));
 
                 Platform.runLater(() -> localProgressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS));
 
                 //index current stage from 0 in this instance
-                overallProgress = (double) (currentStageProperty.getValue() - 1) / stageCountProperty.getValue();
+                overallProgress = (double) (currentStage - 1) / stageCountProperty.getValue();
                 Platform.runLater(()-> overallProgressBar.setProgress(overallProgress));
 
-                log.info("[Stage {}/{}] {}", currentStageProperty.getValue(), stageCountProperty.getValue(), message);
+                log.info("[Stage {}/{}] {}", currentStage, stageCountProperty.getValue(), message);
 
                 Platform.runLater(()-> overallTextLabel.setText(message));
 
-                if(currentStageProperty.getValue() > stageCountProperty.getValue()){
+                if(currentStage > stageCountProperty.getValue()){
                     Platform.runLater(()->localTextLabel.setText(FINISHING_UP));
                 }
                 else{
