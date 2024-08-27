@@ -15,12 +15,10 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
-import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.app.OperatingSystem;
 import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.util.Launch4jConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.builder.util.Launch4jConfiguration;
 
 import java.io.IOException;
 import java.net.URL;
@@ -38,7 +36,6 @@ public class SystemMemoryController implements Initializable, SystemSettingsCont
     @FXML private Spinner<Integer> maxMemSpinner;
     @FXML private Button okButton;
     @FXML private Button applyButton;
-    @FXML private Button closeButton;
     @FXML private AnchorPane root;
 
     private Launch4jConfiguration configuration;
@@ -49,11 +46,6 @@ public class SystemMemoryController implements Initializable, SystemSettingsCont
         init();
     }
 
-    public void button_OK()
-    {
-        button_Apply();
-        button_Close();
-    }
 
     public void button_Apply()
     {
@@ -91,11 +83,6 @@ public class SystemMemoryController implements Initializable, SystemSettingsCont
         alert.show();
     }
 
-    public void button_Close()
-    {
-        //TODO: NEEDS TO HAVE DIFFERENT BEHAVIOR WHEN INSIDE SYSTEM SETTINGS
-        root.getScene().getWindow().hide();
-    }
 
     @Override
     public void init() {
