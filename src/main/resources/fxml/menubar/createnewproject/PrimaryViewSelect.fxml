@@ -28,7 +28,7 @@
                      </VBox.margin>
                      <children>
                         <TextField fx:id="imgSearchTxtField" prefColumnCount="25" promptText="Enter image name" />
-                        <CheckBox fx:id="regexMode" mnemonicParsing="false" text="Regex Mode" />
+                        <CheckBox fx:id="regexMode" mnemonicParsing="false" text="Regex Mode" visible="false" />
                      </children>
                   </HBox>
                   <TreeView fx:id="chunkTreeView" onContextMenuRequested="#selectImageInTreeView" onKeyTyped="#selectImageInTreeView" prefHeight="400.0" prefWidth="450.0" />
