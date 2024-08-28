@@ -859,6 +859,8 @@ public class MenubarController
                         loadedViewSet.getLightPosition(loadedViewSet.getLightIndex(loadedViewSet.getPrimaryViewIndex())).getXY());
                 }
 
+                cameraViewListController.rebindSearchableListView();
+
                 // Enables light calibration mode when the window is opened.
                 internalModels.getSettingsModel().set("lightCalibrationMode", true);
             }

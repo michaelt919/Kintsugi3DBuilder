@@ -21,10 +21,9 @@ import javafx.scene.control.TreeView;
 
 import java.util.Iterator;
 
-public final class SearchableTreeView {
+public final class SearchableTreeView extends SearchableView {
     TreeView<String> treeView;
-    TextInputControl textInput;
-    CheckBox regexMode;
+    TreeItem<String> backupRoot;
 
     private SearchableTreeView(TreeView<String> tree, TextInputControl textInput, CheckBox regexMode){
         this.treeView = tree;
@@ -33,12 +32,12 @@ public final class SearchableTreeView {
     }
 
     public SearchableTreeView bind() {
-        TreeItem<String> backupRoot = deepCopy(treeView.getRoot());
+        backupRoot = deepCopy(treeView.getRoot());
 
-        textInput.textProperty().addListener((obs, oldText, newText)-> updateVals(treeView, regexMode, newText, backupRoot));
+        textInput.textProperty().addListener((obs, oldText, newText)-> updateView());
 
         if(regexMode != null){
-            regexMode.selectedProperty().addListener((obs, oldVal, newVal)-> updateVals(treeView, regexMode, textInput.getText(), backupRoot));
+            regexMode.selectedProperty().addListener((obs, oldVal, newVal)-> updateView());
         }
         return this;
     }
@@ -51,18 +50,17 @@ public final class SearchableTreeView {
         return new SearchableTreeView(tree, textInput, null);
     }
 
-    private static void updateVals(TreeView<String> tree, CheckBox regexMode, String newVal, TreeItem<String> backupRoot) {
-        ObservableList<TreeItem<String>> leaves = getTreeViewLeaves(backupRoot);
+    @Override
+    protected void updateView() {
+        treeView.setRoot(deepCopy(backupRoot));
 
-        tree.setRoot(deepCopy(backupRoot));
-
-        String searchTxt = newVal.trim();
+        String searchTxt = textInput.getText().trim();
         if (searchTxt.isBlank()){
-            tree.setRoot(deepCopy(backupRoot));
-            tree.getRoot().setExpanded(true);
+            treeView.getRoot().setExpanded(true);
             return;
         }
 
+        ObservableList<TreeItem<String>> leaves = getTreeViewLeaves(backupRoot);
         FilteredList<TreeItem<String>> filteredLeaves = new FilteredList<>(leaves, visibility->true);
 
         filteredLeaves.setPredicate(regexMode != null && regexMode.isSelected() ? leaf->leaf.getValue().matches(".*" + searchTxt + ".*") :
@@ -71,11 +69,11 @@ public final class SearchableTreeView {
 
         for (TreeItem<String> leaf : leaves){
             if(!filteredLeaves.contains(leaf)){
-                removeLeaf(tree, leaf);
+                removeLeaf(treeView, leaf);
             }
         }
 
-        for (TreeItem<String> group : getTreeViewGroups(tree.getRoot())){
+        for (TreeItem<String> group : getTreeViewGroups(treeView.getRoot())){
             group.setExpanded(true);
         }
     }
