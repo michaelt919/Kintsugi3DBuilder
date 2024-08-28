@@ -203,14 +203,12 @@ dialog-pane{
     -fx-text-fill: #FFFFFF;
 }
 
-/* Apply to even cells */
 .list-cell:even {
-    -fx-background-color: #333333; /* Even cell background color */
+    -fx-background-color: #333333;
 }
 
-/* Apply to odd cells */
 .list-cell:odd {
-    -fx-background-color: #262626; /* Odd cell background color */
+    -fx-background-color: #262626;
 }
 
 .list-cell:selected{
@@ -395,9 +393,21 @@ dialog-pane{
 
 /*Tree cell styling stolen from stack overflow --> https://stackoverflow.com/questions/30684308/javafx-treeview-css */
 .tree-view, .tree-cell {
-    -fx-background-color: black ;
     -fx-text-fill: white ;
 }
+
+.tree-cell:even {
+    -fx-background-color: #333333;
+}
+
+.tree-cell:odd {
+    -fx-background-color: #262626;
+}
+
+.tree-cell:empty{
+    -fx-background-color: #202020;
+}
+
 .tree-cell:expanded, .tree-cell:sub-tree-item {
     -fx-background-color: #404040 ;
 }
