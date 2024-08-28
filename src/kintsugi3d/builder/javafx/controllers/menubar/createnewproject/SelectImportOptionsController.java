@@ -5,6 +5,7 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.LooseFilesInputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.MetashapeProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.RealityCaptureInputSource;
@@ -30,48 +31,45 @@ public class SelectImportOptionsController extends FXMLPageController {
         buttons.getToggles().add(metashapeImportButton);
         buttons.getToggles().add(looseFilesImportButton);
         buttons.getToggles().add(realityCaptureImportButton);
+
+        metashapeImportButton.setOnAction(e -> handleButtonSelect(metashapeImportButton,
+                "/fxml/menubar/createnewproject/MetashapeImport.fxml", new MetashapeProjectInputSource()));
+        looseFilesImportButton.setOnAction(e-> handleButtonSelect(looseFilesImportButton,
+                "/fxml/menubar/createnewproject/CustomImport.fxml", new LooseFilesInputSource()));
+
+        realityCaptureImportButton.setOnAction(e -> handleButtonSelect(realityCaptureImportButton,
+                "/fxml/menubar/createnewproject/CustomImport.fxml", new RealityCaptureInputSource()));
+
+        buttons.selectedToggleProperty().addListener((a, b, c)->{
+            resetFont(metashapeImportButton);
+            resetFont(looseFilesImportButton);
+            resetFont(realityCaptureImportButton);
+        });
     }
 
     @Override
     public void refresh() {
     }
 
-    public void metashapeImportSelect() {
-        if(metashapeImportButton.isSelected()){
-            String importMetashapeFXMLPath = "/fxml/menubar/createnewproject/MetashapeImport.fxml";
-            hostPage.setNextPage(hostScrollerController.getPage(importMetashapeFXMLPath));
+    public void handleButtonSelect(ToggleButton button, String path, InputSource source) {
+        if (button.isSelected()) {
+            hostPage.setNextPage(hostScrollerController.getPage(path));
             hostScrollerController.updatePrevAndNextButtons();
-            hostScrollerController.addInfo(ShareInfo.Info.INPUT_SOURCE, new MetashapeProjectInputSource());
-        }
-        else{
+            hostScrollerController.addInfo(ShareInfo.Info.INPUT_SOURCE, source);
+        } else {
             hostPage.setNextPage(null);
             hostScrollerController.updatePrevAndNextButtons();
         }
     }
 
     public void looseFilesSelect() {
-        if(looseFilesImportButton.isSelected()){
-            String customImportFXMLPath = "/fxml/menubar/createnewproject/CustomImport.fxml";
-            hostPage.setNextPage(hostScrollerController.getPage(customImportFXMLPath));
-            hostScrollerController.updatePrevAndNextButtons();
-            hostScrollerController.addInfo(ShareInfo.Info.INPUT_SOURCE, new LooseFilesInputSource());
-        }
-        else{
-            hostPage.setNextPage(null);
-            hostScrollerController.updatePrevAndNextButtons();
-        }
+        hostPage.setNextPage(hostScrollerController.getPage("/fxml/menubar/createnewproject/CustomImport.fxml"));
+        hostScrollerController.nextPage();
     }
 
-    public void realityCaptureImportSelect() {
-        if(realityCaptureImportButton.isSelected()){
-            String customImportFXMLPath = "/fxml/menubar/createnewproject/CustomImport.fxml";
-            hostPage.setNextPage(hostScrollerController.getPage(customImportFXMLPath));
-            hostScrollerController.updatePrevAndNextButtons();
-            hostScrollerController.addInfo(ShareInfo.Info.INPUT_SOURCE, new RealityCaptureInputSource());
-        }
-        else{
-            hostPage.setNextPage(null);
-            hostScrollerController.updatePrevAndNextButtons();
-        }
+    private void resetFont(ToggleButton button){
+        button.getStyleClass().clear();
+        button.getStyleClass().add("toggle-button");
+        button.getStyleClass().add(button.isSelected() ? "wireframeTitle" : "wireframeSubtitle");
     }
 }
