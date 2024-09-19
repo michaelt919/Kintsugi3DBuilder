@@ -17,10 +17,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 
@@ -71,9 +68,9 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
         {
             // Expecting a world-to-camera space transformation, so we need to invert.
             return Matrix4.fromDoublePrecision(
-                DoubleMatrix4.rotateY(-roll * Math.PI / 90) // Reality capture specifies angles in degrees.
-                    .times(DoubleMatrix4.rotateX(-pitch * Math.PI / 90))
-                    .times(DoubleMatrix4.rotateZ(-heading * Math.PI / 90))
+                DoubleMatrix4.rotateY(-roll * Math.PI / 180) // Reality capture specifies angles in degrees.
+                    .times(DoubleMatrix4.rotateX(-pitch * Math.PI / 180))
+                    .times(DoubleMatrix4.rotateZ(heading * Math.PI / 180))
                     .times(DoubleMatrix4.translate(-x, -y, -alt)));
         }
 
@@ -93,7 +90,8 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
                     float fScaled = f * width / 35.0f; // 35 mm standard
 
                     return new DistortionProjection(width, height,
-                        fScaled/*, fScaled, px * width / 35.0f, py * height / 35.0f,
+                        fScaled, fScaled,
+                        ((float)width / 2.f) + (px * width), ((float)height / 2.f + (py * height)),
                         k1, k2, k3, k4, t1, t2, 0.0f /* skew not supported by RealityCapture export */);
                 }
                 else
