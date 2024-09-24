@@ -243,7 +243,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                             .setCurrentCameraProjectionIndex(projectionId)
                             .setCurrentLightIndex(lightId)
                             .setCurrentImageFile(new File(imgFilename))
-                            .finish();
+                            .commitCurrentCameraPose();
                         break;
                     }
                     default:
