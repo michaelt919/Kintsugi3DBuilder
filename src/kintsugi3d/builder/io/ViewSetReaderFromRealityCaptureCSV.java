@@ -68,9 +68,9 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
         {
             // Expecting a world-to-camera space transformation, so we need to invert.
             return Matrix4.fromDoublePrecision(
-                DoubleMatrix4.rotateY(roll * Math.PI / 180) // Reality capture specifies angles in degrees.
-                    .times(DoubleMatrix4.rotateX(-pitch * Math.PI / 180))
+                DoubleMatrix4.rotateX(-pitch * Math.PI / 180) // Reality capture specifies angles in degrees.
                     .times(DoubleMatrix4.rotateZ(heading * Math.PI / 180))
+                    .times(DoubleMatrix4.rotateY(roll * Math.PI / 180))
                     .times(DoubleMatrix4.translate(-x, -y, -alt)));
         }
 
