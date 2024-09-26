@@ -288,6 +288,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                 newItem.getIBRResources().initializeLightIntensities(lightIntensity, false);
                 newItem.reloadShaders();
 
+                MenubarController.getInstance().setToggleableShaderDisable(!hasSpecularMaterials());
+
                 if (progressMonitor != null)
                 {
                     progressMonitor.complete();
@@ -584,6 +586,15 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             ibrInstance.getDynamicResourceManager().setLightCalibration(
                 ibrInstance.getSceneModel().getSettingsModel().get("currentLightCalibration", Vector2.class).asVector3());
         }
+    }
+
+    public boolean hasSpecularMaterials()
+    {
+        SpecularMaterialResources<ContextType> material = ibrInstance.getIBRResources().getSpecularMaterialResources();
+        return material.getAlbedoMap() != null &&
+            material.getSpecularRoughnessMap() != null &&
+            material.getNormalMap() != null &&
+            material.getORMMap() != null;
     }
 
     public void setCameraViewListModel(CameraViewListModel cameraViewListModel)
