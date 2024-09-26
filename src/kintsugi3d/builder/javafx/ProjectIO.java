@@ -11,18 +11,6 @@
 
 package kintsugi3d.builder.javafx;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Scanner;
-import java.util.function.Function;
-import java.util.function.Predicate;
-
 import com.sun.glass.ui.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -54,6 +42,18 @@ import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Scanner;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public final class ProjectIO
 {
@@ -227,7 +227,8 @@ public final class ProjectIO
 
         MultithreadModels.getInstance().getIOModel().unload();
         projectLoaded = true;
-        MenubarController.getInstance().setToggleableShaderDisable(true);
+        //TODO: check for previously generated materials before disabling these shaders
+//        MenubarController.getInstance().setToggleableShaderDisable(true);
     }
 
     private void onViewSetCreated(ViewSet viewSet, Window parentWindow)
@@ -412,7 +413,8 @@ public final class ProjectIO
             WelcomeWindowController.getInstance().hide();
 
             //disable some shaders because they only function properly after processing textures
-            MenubarController.getInstance().setToggleableShaderDisable(true);
+            //TODO: check for previously generated materials before disabling these shaders
+//            MenubarController.getInstance().setToggleableShaderDisable(true);
         }
     }
 
@@ -591,8 +593,6 @@ public final class ProjectIO
 
         MultithreadModels.getInstance().getIOModel().unload();
         projectLoaded = false;
-
-        MenubarController.getInstance().setToggleableShaderDisable(true);
     }
 
     public void closeProjectAfterConfirmation()

@@ -456,8 +456,6 @@ public class MenubarController
         toggleableShaders.add(materialBasis);
         toggleableShaders.add(imgBasedWithTextures);
 
-        setToggleableShaderDisable(true);
-
         //add tooltips to recent projects list modifiers
         Tooltip tip = new Tooltip("Remove references to items not found in file explorer. " +
                 "Will not modify your file system.");
