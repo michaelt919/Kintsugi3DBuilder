@@ -591,9 +591,9 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     public boolean hasSpecularMaterials()
     {
         SpecularMaterialResources<ContextType> material = ibrInstance.getIBRResources().getSpecularMaterialResources();
-        return material.getAlbedoMap() != null &&
-            material.getSpecularRoughnessMap() != null &&
-            material.getNormalMap() != null &&
+        return material.getAlbedoMap() != null ||
+            material.getSpecularRoughnessMap() != null ||
+            material.getSpecularReflectivityMap() != null ||
             material.getORMMap() != null;
     }
 
