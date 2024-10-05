@@ -64,7 +64,10 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -115,40 +118,15 @@ public class MenubarController
     //menu items
     @FXML private CheckMenuItem is3DGridCheckMenuItem;
     @FXML private CheckMenuItem compassCheckMenuItem;
-    @FXML private CheckMenuItem halfResolutionCheckMenuItem;
     @FXML private CheckMenuItem multiSamplingCheckMenuItem;
-    @FXML private CheckMenuItem sceneWindowMenuItem;
     @FXML private CheckMenuItem relightingCheckMenuItem;
     @FXML private CheckMenuItem sceneWindowCheckMenuItem;
     @FXML private CheckMenuItem environmentMappingCheckMenuItem; //TODO imp. this
-    @FXML private CheckMenuItem shadowsCheckMenuItem;
     @FXML private CheckMenuItem visibleLightsCheckMenuItem;
     @FXML private CheckMenuItem visibleLightWidgetsCheckMenuItem;
     @FXML private CheckMenuItem visibleCameraPoseCheckMenuItem;
     @FXML private CheckMenuItem visibleSavedCameraPoseCheckMenuItem;
 
-    @FXML private CheckMenuItem phyMaskingCheckMenuItem;
-    @FXML private CheckMenuItem fresnelEffectCheckMenuItem;
-
-    @FXML private CheckMenuItem autoCacheClearingCheckMenuItem;
-    @FXML private CheckMenuItem autoSaveCheckMenuItem;
-    @FXML private CheckMenuItem mipmapCheckMenuItem;
-    @FXML private CheckMenuItem reduceViewportResolutionCheckMenuItem;
-    @FXML private CheckMenuItem darkModeCheckMenuItem;
-    @FXML private CheckMenuItem standAlone3dViewerCheckMenuItem;
-
-    @FXML private CheckMenuItem imageCompressionCheckMenuItem;
-
-    @FXML private Menu perLightIntensityMenu;
-    @FXML private Menu ambientLightSettingsMenu;
-    @FXML public Slider perLight1IntensitySlider;
-    @FXML public Slider ambientLightIntensitySlider;
-
-    @FXML public TextField perLight1IntensityTxtField;
-    @FXML
-    private MenuItem perLightColorPickerMenuItem;
-
-    @FXML public TextField ambientLightIntensityTxtField;
 
     @FXML private Menu exportMenu;
     @FXML private Menu recentProjectsMenu;
@@ -170,7 +148,6 @@ public class MenubarController
     @FXML private FramebufferView framebufferView;
 
     private Window window;
-
     private Runnable userDocumentationHandler;
 
     public MenubarController()
@@ -206,11 +183,7 @@ public class MenubarController
         this.overallProgressBar = ProgressBarsController.getInstance().getOverallProgressBar();
 
         this.localProgressBar.getScene().getWindow().setOnCloseRequest(
-                event->{
-//                    if(ProgressBarsController.getInstance().isProcessing()){
-                        this.miniProgressPane.setVisible(true);
-//                    }
-                });
+                event-> this.miniProgressPane.setVisible(true));
         this.cameraViewListController.init(injectedInternalModels.getCameraViewListModel());
 
         this.internalModels = injectedInternalModels;
@@ -243,9 +216,8 @@ public class MenubarController
 
                 if (keyCodeCombo == null || action == null){continue;}
 
-                WelcomeWindowController.getInstance().addAccelerator(keyCodeCombo, () -> {
-                    Platform.runLater(() -> action.handle(new ActionEvent()));
-                });
+                WelcomeWindowController.getInstance().addAccelerator(keyCodeCombo, () ->
+                        Platform.runLater(() -> action.handle(new ActionEvent())));
             }
         }
         MultithreadModels.getInstance().getIOModel().addProgressMonitor(new ProgressMonitor()
@@ -343,27 +315,27 @@ public class MenubarController
             @Override
             public void setStageCount(int count)
             {
-                stageCountProperty.setValue(count);
+                Platform.runLater(()->stageCountProperty.setValue(count));
             }
 
             @Override
             public void setStage(int stage, String message)
             {
-//                this.maximum = 0.0; //leave this in and only call setMaxProgress() after setStage()?
                 this.localProgress = 0.0;
-                this.currentStageProperty.setValue(stage + 1); //index starting from 1
+                int currentStage = stage + 1; //index from 1, copy so we can update currentStageProperty w/ Platform.runLater to avoid threading issue
+                Platform.runLater(()-> this.currentStageProperty.setValue(currentStage));
 
                 Platform.runLater(() -> localProgressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS));
 
                 //index current stage from 0 in this instance
-                overallProgress = (double) (currentStageProperty.getValue() - 1) / stageCountProperty.getValue();
+                overallProgress = (double) (currentStage - 1) / stageCountProperty.getValue();
                 Platform.runLater(()-> overallProgressBar.setProgress(overallProgress));
 
-                log.info("[Stage {}/{}] {}", currentStageProperty.getValue(), stageCountProperty.getValue(), message);
+                log.info("[Stage {}/{}] {}", currentStage, stageCountProperty.getValue(), message);
 
                 Platform.runLater(()-> overallTextLabel.setText(message));
 
-                if(currentStageProperty.getValue() > stageCountProperty.getValue()){
+                if(currentStage > stageCountProperty.getValue()){
                     Platform.runLater(()->localTextLabel.setText(FINISHING_UP));
                 }
                 else{
@@ -476,7 +448,6 @@ public class MenubarController
 
         initToggleGroups();
         bindCheckMenuItems();
-        updateRelightingVisibility();
 
         RecentProjects.updateAllControlStructures();
 
@@ -497,7 +468,6 @@ public class MenubarController
     }
 
     private void hideAllProgress() {
-        //TODO: sometimes causes a small flash of the mini progress bar before it fully disappears
         ProgressBarsController.getInstance().hideStage();
         dismissMiniProgressBar();
     }
@@ -607,18 +577,15 @@ public class MenubarController
 
     private void bindCheckMenuItems()
     {
+        visibleLightWidgetsCheckMenuItem.disableProperty().bind(relightingCheckMenuItem.selectedProperty().not());
+
         //value binding
-//        lightCalibrationCheckMenuItem.selectedProperty().bindBidirectional(
-//            internalModels.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
         is3DGridCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("is3DGridEnabled"));
         compassCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("compassEnabled"));
         relightingCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("relightingEnabled"));
-        shadowsCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("shadowsEnabled"));
-        shadowsCheckMenuItem.setSelected(true);//need to do this here because it doesn't work in the fxml after binding
+                    internalModels.getSettingsModel().getBooleanProperty("relightingEnabled"));
         visibleLightsCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("visibleLightsEnabled"));
         visibleLightWidgetsCheckMenuItem.selectedProperty().bindBidirectional(
@@ -629,21 +596,8 @@ public class MenubarController
             internalModels.getSettingsModel().getBooleanProperty("visibleCameraPosesEnabled"));
         visibleSavedCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("visibleSavedCameraPosesEnabled"));
-        phyMaskingCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("pbrGeometricAttenuationEnabled"));
-        fresnelEffectCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("fresnelEnabled"));
-        halfResolutionCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("halfResolutionEnabled"));
         multiSamplingCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("multisamplingEnabled"));
-        sceneWindowMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("sceneWindowOpen"));
-
-        mipmapCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getLoadOptionsModel().mipmaps);
-
-        imageCompressionCheckMenuItem.selectedProperty().bindBidirectional(
-                internalModels.getLoadOptionsModel().compression);
     }
 
     //Menubar->File
@@ -713,21 +667,10 @@ public class MenubarController
     }
 
     @FXML
-    private void exportRequestUI(){
-        try{
-            IBRRequestUI requestUI = ExportRequestUI.create(this.window, MultithreadModels.getInstance());
-            requestUI.bind(internalModels.getSettingsModel());
-            requestUI.prompt(Rendering.getRequestQueue());
-        } catch (Exception e) {
-            handleException("An error occurred with ExportRequest handler", e);
-        }
-    }
-
-    @FXML
     private void file_exit()
     {
         WindowSynchronization.getInstance().quit();
-    }//TODO: how to apply dark mode here?
+    }
 
     @FXML
     private void help_userManual()
@@ -998,32 +941,6 @@ public class MenubarController
     }
 
 
-    public void updateRelightingVisibility() {
-        ArrayList<Object> controlItems = new ArrayList<>();
-        controlItems.add(visibleLightWidgetsCheckMenuItem);
-        controlItems.add(perLightIntensityMenu);
-        controlItems.add(ambientLightSettingsMenu);
-        updateCheckMenuItemVisibilities(relightingCheckMenuItem, controlItems);
-    }
-
-    //if the check menu item is disabled, also disable the control items (labels, text fields, etc.)
-    // or Menu Items it is associated with
-    private void updateCheckMenuItemVisibilities(CheckMenuItem checkMenuItem, Collection<Object> items){
-        boolean isChecked = checkMenuItem.isSelected();
-
-        for(Object item : items){
-            if (item instanceof javafx.scene.control.Control){
-                Control convertedControlItem = (Control) item;
-                convertedControlItem.setDisable(!isChecked);
-            }
-            else if (item instanceof MenuItem){
-                MenuItem convertedMenuItem = (MenuItem) item;
-                convertedMenuItem.setDisable(!isChecked);
-            }
-        }
-    }
-
-
     //used so the user can click on the About menu and immediately see the about modal
     //instead of clicking on a single menu item
     //NOT IN USE as of July 9, 2024
@@ -1070,6 +987,7 @@ public class MenubarController
 
     //come up with a clearer name for this
     //set the disable of shaders which only work after processing textures
+    //TODO: bind these to some property instead of manually changing values
     public void setToggleableShaderDisable(boolean b) {
         for (RadioMenuItem item : toggleableShaders){
             item.setDisable(b);
