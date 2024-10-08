@@ -68,9 +68,9 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
         {
             // Expecting a world-to-camera space transformation, so we need to invert.
             return Matrix4.fromDoublePrecision(
-                DoubleMatrix4.rotateX(-pitch * Math.PI / 180) // Reality capture specifies angles in degrees.
+                DoubleMatrix4.rotateY(-roll * Math.PI / 180) // Reality capture specifies angles in degrees.
+                    .times(DoubleMatrix4.rotateX(-pitch * Math.PI / 180))
                     .times(DoubleMatrix4.rotateZ(heading * Math.PI / 180))
-                    .times(DoubleMatrix4.rotateY(roll * Math.PI / 180))
                     .times(DoubleMatrix4.translate(-x, -y, -alt)));
         }
 
@@ -90,7 +90,8 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
                     float fScaled = f * width / 35.0f; // 35 mm standard
 
                     return new DistortionProjection(width, height,
-                        fScaled/*, fScaled, px * width / 35.0f, py * height / 35.0f,
+                        fScaled, fScaled,
+                        0.0f, 0.0f,
                         k1, k2, k3, k4, t1, t2, 0.0f /* skew not supported by RealityCapture export */);
                 }
                 else
