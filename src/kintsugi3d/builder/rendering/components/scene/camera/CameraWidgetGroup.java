@@ -1,9 +1,17 @@
 package kintsugi3d.builder.rendering.components.scene.camera;
 
 import kintsugi3d.builder.core.CameraViewport;
+import kintsugi3d.builder.core.ReadonlyViewSet;
+import kintsugi3d.builder.core.RenderedComponent;
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
+import kintsugi3d.builder.rendering.components.BaseScene;
 import kintsugi3d.builder.rendering.components.ShaderComponent;
+import kintsugi3d.builder.rendering.components.lightcalibration.CameraFrustum;
+import kintsugi3d.builder.rendering.components.lightcalibration.CameraVisual;
+import kintsugi3d.builder.rendering.components.snap.ViewSelection;
+import kintsugi3d.builder.rendering.components.snap.ViewSelectionImpl;
+import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
@@ -14,19 +22,52 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-public class CameraWidgetGroup<ContextType extends Context<ContextType>> extends ShaderComponent<ContextType>
+public class CameraWidgetGroup<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
 {
-    private final IBRResourcesImageSpace<ContextType> resources;
-    private final SceneViewportModel sceneViewportModel;
-    private final SceneModel sceneModel;
+    private int cameraIndex;
 
-    public CameraWidgetGroup(ContextType context, IBRResourcesImageSpace<ContextType> resources,
+    private ViewSelection selection;
+
+    private IBRResourcesImageSpace<ContextType> resources;
+    private SceneModel sceneModel;
+    private SceneViewportModel sceneViewportModel;
+
+    private CameraVisual<ContextType> cameraVisual;
+    private CameraFrustum<ContextType> cameraFrustum;
+
+    public CameraWidgetGroup(IBRResourcesImageSpace<ContextType> resources,
                              SceneModel sceneModel, SceneViewportModel sceneViewportModel)
     {
-        super(context);
         this.resources = resources;
         this.sceneModel = sceneModel;
         this.sceneViewportModel = sceneViewportModel;
+
+        selection = new ViewSelectionImpl(resources.getViewSet(), sceneModel){
+            @Override
+            public int getSelectedViewIndex()
+            {
+                return cameraIndex;
+            }
+        };
+
+        cameraVisual = new CameraVisual<>(resources, sceneViewportModel);
+        cameraVisual.setViewSelection(selection);
+        cameraFrustum = new CameraFrustum<>(resources, sceneViewportModel);
+        cameraFrustum.setViewSelection(selection);
+    }
+
+    @Override
+    public void initialize()
+    {
+        cameraVisual.initialize();
+        cameraFrustum.initialize();
+    }
+
+    @Override
+    public void reloadShaders()
+    {
+        cameraVisual.reloadShaders();
+        cameraFrustum.reloadShaders();
     }
 
     @Override
@@ -34,43 +75,18 @@ public class CameraWidgetGroup<ContextType extends Context<ContextType>> extends
     {
         if (true) //TODO
         {
-            this.getDrawable().program().setUniform("projection", cameraViewport.getViewportProjection());
-            this.getDrawable().program().setUniform("color", new Vector4(0.0f, 1.0f, 0.0f, 1.0f));
-            this.getDrawable().program().setUniform("objectID", 0);
-
-
-            for (int i = 0; i < resources.getViewSet().getCameraPoseCount(); i++)
+            for (cameraIndex = 0; cameraIndex < resources.getViewSet().getCameraPoseCount(); cameraIndex++)
             {
-                Matrix4 model = sceneModel.getUnscaledMatrix(resources.getViewSet().getCameraPoseInverse(i))
-                    .times(Matrix4.scale(sceneModel.getScale()));
-
-                this.getDrawable().program().setUniform("model_view", cameraViewport.getView().times(model));
-                this.getDrawable().draw(PrimitiveMode.LINES, cameraViewport.ofFramebuffer(framebuffer));
+                cameraVisual.draw(framebuffer, cameraViewport);
+                cameraFrustum.draw(framebuffer, cameraViewport);
             }
         }
     }
 
     @Override
-    protected ProgramObject<ContextType> createProgram(ContextType context) throws IOException
+    public void close()
     {
-        return context.getShaderProgramBuilder()
-            .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-            .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
-            .createProgram();
-    }
-
-    @Override
-    protected Map<String, VertexBuffer<ContextType>> createVertexBuffers(ContextType context)
-    {
-        float[] arrow = {
-            0, 0, 0,
-            0, 0, -1,
-            0, 0, -1,
-            0, 0.1f, -0.9f,
-        };
-
-        return Map.of("position", context.createVertexBuffer()
-            .setData(NativeVectorBufferFactory.getInstance()
-                .createFromFloatArray(3, 4, arrow)));
+        cameraVisual.close();
+        cameraFrustum.close();
     }
 }
