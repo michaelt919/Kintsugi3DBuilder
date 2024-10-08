@@ -33,7 +33,7 @@ public class StandardScene<ContextType extends Context<ContextType>> extends Bas
         components.add(new LightVisualsGroup<>(context, sceneModel, sceneViewportModel));
 
         //TODO: Make toggleable by users; Does it need to be a loaded component when not rendering??
-        components.add(new CameraWidgetGroup<>(context, resources, sceneModel, sceneViewportModel));
+        components.add(new CameraWidgetGroup<>(resources, sceneModel, sceneViewportModel));
     }
 
 }
