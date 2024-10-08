@@ -73,7 +73,7 @@ public class CameraWidgetGroup<ContextType extends Context<ContextType>> impleme
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
-        if (true) //TODO
+        if (sceneModel.getSettingsModel().getBoolean("isCameraVisualEnabled"))
         {
             for (cameraIndex = 0; cameraIndex < resources.getViewSet().getCameraPoseCount(); cameraIndex++)
             {
