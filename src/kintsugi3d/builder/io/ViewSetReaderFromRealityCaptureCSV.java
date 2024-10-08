@@ -91,7 +91,7 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
 
                     return new DistortionProjection(width, height,
                         fScaled, fScaled,
-                        0.0f, 0.0f,
+                        ((float)width / 2.f) + (px * width), ((float)height / 2.f + (py * height)),
                         k1, k2, k3, k4, t1, t2, 0.0f /* skew not supported by RealityCapture export */);
                 }
                 else
