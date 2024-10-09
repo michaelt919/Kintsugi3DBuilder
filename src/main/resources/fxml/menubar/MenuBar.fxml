@@ -120,26 +120,28 @@
                                 <toggleGroup>
                                     <ToggleGroup fx:id="renderGroup" />
                                 </toggleGroup>
-                                <userData>renderModes/simpleSpecular.frag</userData>
+                                <userData>rendermodes/simpleSpecular.frag</userData>
                             </RadioMenuItem>
                             <RadioMenuItem mnemonicParsing="false" text="Normal mapped" toggleGroup="$renderGroup">
-                                <userData>renderModes/normalMapped.frag</userData>
+                                <userData>rendermodes/normalMapped.frag</userData>
                             </RadioMenuItem>
                             <RadioMenuItem mnemonicParsing="false" text="Textured Lambertian" toggleGroup="$renderGroup">
-                                <userData>renderModes/texturedLambertian.frag</userData>
+                                <userData>rendermodes/texturedLambertian.frag</userData>
                             </RadioMenuItem>
-                            <RadioMenuItem fx:id="materialMetallicity" mnemonicParsing="false" text="Material (metallicity)" toggleGroup="$renderGroup" userData="renderModes/texturedORMMaterial.frag">
+                            <RadioMenuItem fx:id="materialMetallicity" mnemonicParsing="false" text="Material (metallicity)" toggleGroup="$renderGroup">
+                                <userData>rendermodes/texturedORMMaterial.frag</userData>
                             </RadioMenuItem>
                             <RadioMenuItem fx:id="materialReflectivity" mnemonicParsing="false" text="Material (reflectivity)" toggleGroup="$renderGroup">
-                                <userData>renderModes/texturedMaterial.frag</userData>
+                                <userData>rendermodes/texturedMaterial.frag</userData>
                             </RadioMenuItem>
-                            <RadioMenuItem fx:id="materialBasis" mnemonicParsing="false" text="Material (basis)" toggleGroup="$renderGroup" userData="renderModes/basisMaterial.frag">
+                            <RadioMenuItem fx:id="materialBasis" mnemonicParsing="false" text="Material (basis)" toggleGroup="$renderGroup">
+                                <userData>rendermodes/basisMaterial.frag</userData>
                             </RadioMenuItem>
                             <RadioMenuItem mnemonicParsing="false" selected="true" text="Image-based" toggleGroup="$renderGroup">
-                                <userData>renderModes/ibrUntextured.frag</userData>
+                                <userData>rendermodes/ibrUntextured.frag</userData>
                             </RadioMenuItem>
                             <RadioMenuItem fx:id="imgBasedWithTextures" mnemonicParsing="false" text="Image-based with textures" toggleGroup="$renderGroup">
-                                <userData>renderModes/ibrTextured.frag</userData>
+                                <userData>rendermodes/ibrTextured.frag</userData>
                             </RadioMenuItem>
                         </Menu>
                         <Menu text="Help">
