@@ -157,7 +157,7 @@ public class DistortionProjection implements Projection
         float width, float height,
         float focalLength)
     {
-        this(width, height, focalLength, focalLength, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+        this(width, height, focalLength, focalLength, width / 2, height / 2, 0.0f, 0.0f, 0.0f);
     }
     
     @Override
