@@ -26,9 +26,7 @@ import com.opencsv.bean.CsvToBeanBuilder;
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
-import kintsugi3d.gl.vecmath.DoubleMatrix4;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.gl.vecmath.*;
 
 public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
 {
@@ -87,12 +85,11 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
                     int width = reader.getWidth(reader.getMinIndex());
                     int height = reader.getHeight(reader.getMinIndex());
 
-                    float fScaled = f * width / 35.0f; // 35 mm standard
+                    float fScaled = f * width / 36.0f; // 36 mm standard for Reality Capture
 
-                    return new DistortionProjection(width, height,
-                        fScaled, fScaled,
-                        ((float)width / 2.f) + (px * width), ((float)height / 2.f + (py * height)),
-                        k1, k2, k3, k4, t1, t2, 0.0f /* skew not supported by RealityCapture export */);
+                    return new DistortionProjection(width, height, fScaled, fScaled,
+                            px * width + (float)width / 2, py * height + (float)height / 2,
+                            k1, k2, k3, k4, t1, t2, 0.0f);
                 }
                 else
                 {
