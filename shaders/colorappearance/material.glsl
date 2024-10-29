@@ -13,6 +13,8 @@
 #ifndef MATERIAL_GLSL
 #define MATERIAL_GLSL
 
+#include "linearize.glsl"
+
 #line 17 1020
 
 in vec2 fTexCoord;
