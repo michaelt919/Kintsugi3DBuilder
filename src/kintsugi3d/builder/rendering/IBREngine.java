@@ -493,8 +493,10 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
                 Matrix4 rotation = Matrix4.IDENTITY;
                 if (getActiveViewSet() != null && projectModel.isUsePrimaryViewOrientation())
                 {
-                    //TODO: Use camera rotation from primary view selection modal
-                    rotation = getActiveViewSet().getCameraPose(getActiveViewSet().getPrimaryViewIndex());
+                    Matrix4 primaryCameraPose = resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex());
+
+                    rotation = Matrix4.rotateZ(Math.toRadians(-resources.getViewSet().getPrimaryViewRotationDegrees()))
+                            .times(primaryCameraPose);
                 }
 
                 Vector3 translation = rotation.getUpperLeft3x3().times(getActiveGeometry().getCentroid().times(-1.0f));
