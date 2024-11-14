@@ -20,10 +20,13 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
+import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.internal.ProjectModelBase;
 import kintsugi3d.builder.javafx.util.SafeLogScaleNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
@@ -32,6 +35,8 @@ public class SettingsObjectSceneController implements Initializable
 {
 
     @FXML private VBox root;
+
+    @FXML private CheckBox primaryViewCheckBox;
 
     @FXML private TextField xCenterTextField;
     @FXML private TextField yCenterTextField;
@@ -112,6 +117,8 @@ public class SettingsObjectSceneController implements Initializable
 
     public void bind(ObjectPoseSetting objectPose)
     {
+        ProjectModelBase projectModel = InternalModels.getInstance().getProjectModel();
+        primaryViewCheckBox.selectedProperty().bindBidirectional(projectModel.usePrimaryViewOrientationProperty());
 
         xCenterTextField.textProperty().bindBidirectional(objectPose.centerXProperty(), converter);
         yCenterTextField.textProperty().bindBidirectional(objectPose.centerYProperty(), converter);

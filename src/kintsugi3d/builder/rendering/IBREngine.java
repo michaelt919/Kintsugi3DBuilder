@@ -14,6 +14,8 @@ package kintsugi3d.builder.rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.export.specular.gltf.SpecularFitGltfExporter;
 import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.internal.ProjectModelBase;
 import kintsugi3d.builder.rendering.components.IBRSubject;
 import kintsugi3d.builder.rendering.components.StandardScene;
 import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibration3DScene;
@@ -32,6 +34,7 @@ import kintsugi3d.gl.builders.framebuffer.DepthAttachmentSpec;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.interactive.InitializationException;
+import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
@@ -59,6 +62,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     private final String id;
 
     private final SceneModel sceneModel;
+    private final ProjectModelBase projectModel = InternalModels.getInstance().getProjectModel();
 
     private ProgramObject<ContextType> simpleTexProgram;
     private Drawable<ContextType> simpleTexDrawable;
@@ -213,10 +217,17 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         {
             sceneModel.setScale(resources.getGeometry().getBoundingRadius() * 2);
 
-            Matrix4 primaryCameraPose = resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex());
+            if (projectModel.isUsePrimaryViewOrientation())
+            {
+                Matrix4 primaryCameraPose = resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex());
 
-            sceneModel.setOrientation(Matrix4.rotateZ(Math.toRadians(-resources.getViewSet().getPrimaryViewRotationDegrees()))
-                            .times(primaryCameraPose).getUpperLeft3x3());
+                sceneModel.setOrientation(Matrix4.rotateZ(Math.toRadians(-resources.getViewSet().getPrimaryViewRotationDegrees()))
+                        .times(primaryCameraPose).getUpperLeft3x3());
+            }
+            else
+            {
+                sceneModel.setOrientation(Matrix3.IDENTITY);
+            }
 
             sceneModel.setCentroid(resources.getGeometry().getCentroid());
         }
@@ -479,7 +490,13 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
             try
             {
-                Matrix4 rotation = getActiveViewSet() == null ? Matrix4.IDENTITY : getActiveViewSet().getCameraPose(getActiveViewSet().getPrimaryViewIndex());
+                Matrix4 rotation = Matrix4.IDENTITY;
+                if (getActiveViewSet() != null && projectModel.isUsePrimaryViewOrientation())
+                {
+                    //TODO: Use camera rotation from primary view selection modal
+                    rotation = getActiveViewSet().getCameraPose(getActiveViewSet().getPrimaryViewIndex());
+                }
+
                 Vector3 translation = rotation.getUpperLeft3x3().times(getActiveGeometry().getCentroid().times(-1.0f));
                 Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2),
                     translation.asVector4(1.0f));
