@@ -12,11 +12,10 @@
   -->
 
 <?import javafx.geometry.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.Cursor?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
-
 <AnchorPane prefHeight="720.0" styleClass="menuebaranchorpane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.MenubarController">
     <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <children>
@@ -111,146 +110,11 @@
                             <CheckMenuItem mnemonicParsing="false" selected="true" text="Snap-based Object Rotation (UNFINISHED)" visible="false" />
                             <SeparatorMenuItem mnemonicParsing="false" visible="false" />
                             <SeparatorMenuItem mnemonicParsing="false" visible="false">
-                                <!--                    <content>-->
-                                <!--                        <Label fx:id="lightingSettingsLabel" text="Lighting Settings" textFill="black">-->
-                                <!--                            <padding>-->
-                                <!--                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />-->
-                                <!--                            </padding>-->
-                                <!--                        </Label>-->
-                                <!--                    </content>-->
                             </SeparatorMenuItem>
-                            <CheckMenuItem fx:id="relightingCheckMenuItem" mnemonicParsing="false" onAction="#updateRelightingVisibility" selected="true" text="Relighting" />
+                            <CheckMenuItem fx:id="relightingCheckMenuItem" mnemonicParsing="false" selected="true" text="Relighting" />
                             <CheckMenuItem fx:id="visibleLightWidgetsCheckMenuItem" mnemonicParsing="false" selected="true" text="Show light widgets" />
                             <SeparatorMenuItem mnemonicParsing="false" />
                             <CheckMenuItem fx:id="sceneWindowCheckMenuItem" mnemonicParsing="false" text="Scene Window" />
-                            <!--                <Menu fx:id="perLightIntensityMenu" mnemonicParsing="false" text="Per-light Intensity (UNFINISHED)">-->
-                            <!--                    <items>-->
-                            <!--                        <CheckMenuItem fx:id="enableLight1CheckMenuItem" mnemonicParsing="false" selected="true" text="Enable Light 1" />-->
-                            <!--                        <CustomMenuItem hideOnClick="false">-->
-                            <!--                            <content>-->
-                            <!--                                <ColorPicker />-->
-                            <!--                            </content>-->
-                            <!--                        </CustomMenuItem>-->
-                            <!--                        <CustomMenuItem hideOnClick="false" mnemonicParsing="false" text="Intensity Slider Selection">-->
-                            <!--                            <content>-->
-                            <!--                                <VBox alignment="CENTER_LEFT" spacing="10.0">-->
-                            <!--                                    <children>-->
-                            <!--                                        <Label text="Intensity Selection"> text="Intensity Selection"</Label>-->
-                            <!--                                        <HBox alignment="CENTER_LEFT" spacing="10.0">-->
-                            <!--                                            <children>-->
-                            <!--                                                <TextField fx:id="perLight1IntensityTxtField" prefWidth="50.0" />-->
-                            <!--                                                <Slider fx:id="perLight1IntensitySlider" showTickLabels="true" showTickMarks="true">-->
-                            <!--                                                    <HBox.margin>-->
-                            <!--                                                        <Insets />-->
-                            <!--                                                    </HBox.margin></Slider>-->
-                            <!--                                            </children>-->
-                            <!--                                        </HBox>-->
-                            <!--                                    </children>-->
-                            <!--                                </VBox>-->
-                            <!--                            </content>-->
-                            <!--                        </CustomMenuItem>-->
-                            <!--                        <SeparatorMenuItem mnemonicParsing="false" />-->
-                            <!--                        <CheckMenuItem fx:id="enableLight2CheckMenuItem" mnemonicParsing="false" text="Enable Light 2" />-->
-                            <!--                        <CustomMenuItem hideOnClick="false">-->
-                            <!--                            <content>-->
-                            <!--                                <ColorPicker />-->
-                            <!--                            </content>-->
-                            <!--                        </CustomMenuItem>                  <CustomMenuItem hideOnClick="false" mnemonicParsing="false" text="Intensity Slider Selection">-->
-                            <!--                        <content>-->
-                            <!--                            <VBox alignment="CENTER_LEFT" spacing="10.0">-->
-                            <!--                                <children>-->
-                            <!--                                    <Label text="Intensity Selection"> text="Intensity Selection"</Label>-->
-                            <!--                                    <HBox alignment="CENTER_LEFT" spacing="10.0">-->
-                            <!--                                        <children>-->
-                            <!--                                            <TextField fx:id="perLight2IntensityTxtField" prefWidth="50.0" />-->
-                            <!--                                            <Slider fx:id="perLight2IntensitySlider" showTickLabels="true" showTickMarks="true">-->
-                            <!--                                                <HBox.margin>-->
-                            <!--                                                    <Insets />-->
-                            <!--                                                </HBox.margin></Slider>-->
-                            <!--                                        </children>-->
-                            <!--                                    </HBox>-->
-                            <!--                                </children>-->
-                            <!--                            </VBox>-->
-                            <!--                        </content>-->
-                            <!--                    </CustomMenuItem>-->
-                            <!--                        <SeparatorMenuItem mnemonicParsing="false" />-->
-                            <!--                        <CheckMenuItem fx:id="enableLight3CheckMenuItem" mnemonicParsing="false" text="Enable Light 3" />-->
-                            <!--                        <CustomMenuItem hideOnClick="false">-->
-                            <!--                            <content>-->
-                            <!--                                <ColorPicker />-->
-                            <!--                            </content>-->
-                            <!--                        </CustomMenuItem>                 <CustomMenuItem hideOnClick="false" mnemonicParsing="false" text="Intensity Slider Selection">-->
-                            <!--                        <content>-->
-                            <!--                            <VBox alignment="CENTER_LEFT" spacing="10.0">-->
-                            <!--                                <children>-->
-                            <!--                                    <Label text="Intensity Selection"> text="Intensity Selection"</Label>-->
-                            <!--                                    <HBox alignment="CENTER_LEFT" spacing="10.0">-->
-                            <!--                                        <children>-->
-                            <!--                                            <TextField fx:id="perLight3IntensityTxtField" prefWidth="50.0" />-->
-                            <!--                                            <Slider fx:id="perLight3IntensitySlider" showTickLabels="true" showTickMarks="true">-->
-                            <!--                                                <HBox.margin>-->
-                            <!--                                                    <Insets />-->
-                            <!--                                                </HBox.margin></Slider>-->
-                            <!--                                        </children>-->
-                            <!--                                    </HBox>-->
-                            <!--                                </children>-->
-                            <!--                            </VBox>-->
-                            <!--                        </content>-->
-                            <!--                    </CustomMenuItem>-->
-                            <!--                        <CheckMenuItem fx:id="enableLight4CheckMenuItem" mnemonicParsing="false" text="Enable Light 4" />-->
-                            <!--                        <CustomMenuItem hideOnClick="false">-->
-                            <!--                            <content>-->
-                            <!--                                <ColorPicker />-->
-                            <!--                            </content>-->
-                            <!--                        </CustomMenuItem>-->
-                            <!--                        <CustomMenuItem hideOnClick="false" mnemonicParsing="false" text="Intensity Slider Selection">-->
-                            <!--                            <content>-->
-                            <!--                                <VBox alignment="CENTER_LEFT" spacing="10.0">-->
-                            <!--                                    <children>-->
-                            <!--                                        <Label text="Intensity Selection"> text="Intensity Selection"</Label>-->
-                            <!--                                        <HBox alignment="CENTER_LEFT" spacing="10.0">-->
-                            <!--                                            <children>-->
-                            <!--                                                <TextField fx:id="perLight4IntensityTxtField" prefWidth="50.0" />-->
-                            <!--                                                <Slider fx:id="perLight4IntensitySlider" showTickLabels="true" showTickMarks="true">-->
-                            <!--                                                    <HBox.margin>-->
-                            <!--                                                        <Insets />-->
-                            <!--                                                    </HBox.margin></Slider>-->
-                            <!--                                            </children>-->
-                            <!--                                        </HBox>-->
-                            <!--                                    </children>-->
-                            <!--                                </VBox>-->
-                            <!--                            </content>-->
-                            <!--                        </CustomMenuItem>-->
-                            <!--                    </items>-->
-                            <!--                </Menu>-->
-                            <!--            <Menu fx:id="ambientLightSettingsMenu" mnemonicParsing="false" text="Ambient light settings (UNFINISHED)">-->
-                            <!--                <items>-->
-                            <!--                    <CustomMenuItem hideOnClick="false">-->
-                            <!--                        <content>-->
-                            <!--                            <ColorPicker/>-->
-                            <!--                        </content>-->
-                            <!--                    </CustomMenuItem>-->
-                            <!--                    <CustomMenuItem hideOnClick="false" mnemonicParsing="false" text="Intensity Slider Selection">-->
-                            <!--                        <content>-->
-                            <!--                            <VBox alignment="CENTER_LEFT" spacing="10.0">-->
-                            <!--                                <children>-->
-                            <!--                                    <Label text="Intensity Selection">text="Intensity Selection"</Label>-->
-                            <!--                                    <HBox alignment="CENTER_LEFT" spacing="10.0">-->
-                            <!--                                        <children>-->
-                            <!--                                            <TextField fx:id="ambientLightIntensityTxtField" prefWidth="50.0"/>-->
-                            <!--                                            <Slider fx:id="ambientLightIntensitySlider" showTickLabels="true" showTickMarks="true">-->
-                            <!--                                                <HBox.margin>-->
-                            <!--                                                    <Insets/>-->
-                            <!--                                                </HBox.margin>-->
-                            <!--                                            </Slider>-->
-                            <!--                                        </children>-->
-                            <!--                                    </HBox>-->
-                            <!--                                </children>-->
-                            <!--                            </VBox>-->
-                            <!--                        </content>-->
-                            <!--                    </CustomMenuItem>-->
-                            <!--                </items>-->
-                            <!--            </Menu>-->
                         </Menu>
                         <Menu mnemonicParsing="false" text="Shading">
                             <RadioMenuItem mnemonicParsing="false" text="Simple specular" toggleGroup="$renderGroup">
@@ -278,84 +142,6 @@
                             <RadioMenuItem fx:id="imgBasedWithTextures" mnemonicParsing="false" text="Image-based with textures" toggleGroup="$renderGroup">
                                 <userData>renderModes/ibrTextured.frag</userData>
                             </RadioMenuItem>
-                        </Menu>
-                        <Menu mnemonicParsing="false" text="System Settings" visible="false">
-                            <CheckMenuItem fx:id="autoCacheClearingCheckMenuItem" mnemonicParsing="false" selected="true" text="Auto Cache Clearing (UNFINISHED)" />
-                            <Menu mnemonicParsing="false" text="Cache Path">
-                                <SeparatorMenuItem mnemonicParsing="false">
-                                    <!--                    <content>-->
-                                    <!--                        <Label fx:id="cachePathLabel" text="Current Cache Path: ................................................">-->
-                                    <!--                            <padding>-->
-                                    <!--                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />-->
-                                    <!--                            </padding>-->
-                                    <!--                        </Label>-->
-                                    <!--                    </content>-->
-                                </SeparatorMenuItem>
-                                <!--                <CustomMenuItem mnemonicParsing="false" text="Clear Cache">-->
-                                <!--                    <content>-->
-                                <!--                        <Button fx:id="clearCacheButton" mnemonicParsing="false" text="Clear Cache (UNFINISHED)" />-->
-                                <!--                    </content>-->
-                                <!--                </CustomMenuItem>-->
-                                <!--                <CustomMenuItem mnemonicParsing="false" text="Set Cache Path">-->
-                                <!--                    <content>-->
-                                <!--                        <Button fx:id="setCachePathButton" mnemonicParsing="false" text="Set Cache Path (UNFINISHED)" />-->
-                                <!--                    </content>-->
-                                <!--                </CustomMenuItem>-->
-                            </Menu>
-                            <SeparatorMenuItem mnemonicParsing="false" />
-                            <CheckMenuItem fx:id="autoSaveCheckMenuItem" mnemonicParsing="false" selected="true" text="Autosave (UNFINISHED)" />
-                            <!--            <CustomMenuItem hideOnClick="false" mnemonicParsing="false" text="Options">-->
-                            <!--                <content>-->
-                            <!--                    <ChoiceBox fx:id="autosaveOptionsChoiceBox" prefWidth="200.0" />-->
-                            <!--                </content>-->
-                            <!--            </CustomMenuItem>-->
-                            <SeparatorMenuItem mnemonicParsing="false" />
-                            <CheckMenuItem fx:id="imageCompressionCheckMenuItem" mnemonicParsing="false" selected="true" text="Image Compression" />
-                            <SeparatorMenuItem mnemonicParsing="false" />
-                            <!--            <CheckMenuItem fx:id="preloadVisibilityEtcCheckMenuItem" mnemonicParsing="false" onAction="#updatePreloadVisibilityEtc" selected="true" text="Preload Visibility &amp; Shadow Testing" />-->
-                            <!--            <CustomMenuItem mnemonicParsing="false" text="Resolution Input Fields">-->
-                            <!--                <content>-->
-                            <!--                    <HBox alignment="CENTER_LEFT" spacing="10.0">-->
-                            <!--                        <children>-->
-                            <!--                            <HBox alignment="CENTER_LEFT">-->
-                            <!--                                <children>-->
-                            <!--                                    <Label fx:id="widthLabel" text="Width: " textFill="black">-->
-                            <!--                                    </Label>-->
-                            <!--                                    <TextField fx:id="widthTxtField" prefWidth="50.0" />-->
-                            <!--                                </children>-->
-                            <!--                            </HBox>-->
-                            <!--                            <HBox alignment="CENTER_LEFT">-->
-                            <!--                                <children>-->
-                            <!--                                    <Label fx:id="heightLabel" text="Height: " textFill="black">-->
-                            <!--                                    </Label>-->
-                            <!--                                    <TextField fx:id="heightTxtField" prefWidth="50.0" />-->
-                            <!--                                </children>-->
-                            <!--                            </HBox>-->
-                            <!--                        </children>-->
-                            <!--                        <padding>-->
-                            <!--                            <Insets left="5.0" right="5.0" />-->
-                            <!--                        </padding>-->
-                            <!--                    </HBox>-->
-                            <!--                </content>-->
-                            <!--            </CustomMenuItem>-->
-                            <SeparatorMenuItem mnemonicParsing="false" />
-                            <CheckMenuItem fx:id="mipmapCheckMenuItem" mnemonicParsing="false" selected="true" text="Mipmaps" />
-                            <SeparatorMenuItem mnemonicParsing="false" />
-                            <MenuItem mnemonicParsing="false" onAction="#shading_SystemMemory" text="System Memory… " />
-                            <SeparatorMenuItem mnemonicParsing="false" />
-                            <CheckMenuItem fx:id="halfResolutionCheckMenuItem" mnemonicParsing="false" text="Reduce Viewport Resolution" />
-                            <CheckMenuItem mnemonicParsing="false" text="Stand-alone 3D Viewer (UNFINISHED)" />
-                            <MenuItem mnemonicParsing="false" onAction="#shading_IBRSettings" text="Advanced Photo View..." />
-                            <CheckMenuItem fx:id="sceneWindowMenuItem" mnemonicParsing="false" selected="true" text="Show scene window..." />
-                            <SeparatorMenuItem mnemonicParsing="false" />
-                            <MenuItem mnemonicParsing="false" text="Accessibility Settings (UNFINISHED)" />
-                            <Menu text="Photo Lighting Settings">
-                                <CheckMenuItem fx:id="fresnelEffectCheckMenuItem" mnemonicParsing="false" text="Fresnel effect" />
-                                <CheckMenuItem fx:id="shadowsCheckMenuItem" mnemonicParsing="false" selected="true" text="Shadows" />
-                                <!--shadows check menu item is set as selected in the menubar controller
-                                        "selected" state is overwritten to "false" during binding-->
-                                <CheckMenuItem fx:id="phyMaskingCheckMenuItem" mnemonicParsing="false" text="Physically based masking/shadowing" />
-                            </Menu>
                         </Menu>
                         <Menu text="Help">
                             <MenuItem mnemonicParsing="false" onAction="#help_userManual" text="Documentation" />
@@ -394,12 +180,6 @@
                                 <MenuItem mnemonicParsing="false" onAction="#file_loadOptions" text="Load Options..." visible="false" />
                             </items>
                         </Menu>
-                        <!--        <padding>-->
-                        <!--            <Insets bottom="2.0" left="2.0" right="2.0" top="4.0" />-->
-                        <!--        </padding>-->
-                        <!--        <opaqueInsets>-->
-                        <!--            <Insets />-->
-                        <!--        </opaqueInsets>-->
                     </MenuBar>
                     <HBox alignment="CENTER_LEFT" spacing="10.0" visible="false" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
                         <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" visible="false" />
@@ -415,7 +195,6 @@
             <HBox prefHeight="675.0" prefWidth="3046.0" VBox.vgrow="ALWAYS">
                 <children>
                     <fx:include fx:id="cameraViewList" source="CameraViewList.fxml" VBox.vgrow="ALWAYS" />
-<!--                <fx:include fx:id="Eyedropper" source="EyedropperColorChecker.fxml" VBox.vgrow="ALWAYS" />-->
                     <fx:include fx:id="framebufferView" source="FramebufferView.fxml" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" />
                 </children>
             <VBox.margin>

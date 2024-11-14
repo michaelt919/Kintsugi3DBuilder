@@ -224,7 +224,6 @@ public final class ProjectIO
 
         MultithreadModels.getInstance().getIOModel().unload();
         projectLoaded = true;
-        MenubarController.getInstance().setToggleableShaderDisable(true);
     }
 
     private void onViewSetCreated(ViewSet viewSet, Window parentWindow)
@@ -412,7 +411,7 @@ public final class ProjectIO
 
             WelcomeWindowController.getInstance().hide();
 
-            //disable some shaders because they only function properly after processing textures
+            // Disable shaders that need processed textures until project load is complete.
             MenubarController.getInstance().setToggleableShaderDisable(true);
         }
     }
