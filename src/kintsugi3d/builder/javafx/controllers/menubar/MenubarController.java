@@ -856,7 +856,7 @@ public class MenubarController
                     ViewSet loadedViewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
 
                     internalModels.getSettingsModel().set("currentLightCalibration",
-                        loadedViewSet.getLightPosition(loadedViewSet.getLightIndex(loadedViewSet.getPrimaryViewIndex())).getXY());
+                        loadedViewSet.getLightPosition(loadedViewSet.getLightIndex(0)).getXY());
                 }
 
                 cameraViewListController.rebindSearchableListView();

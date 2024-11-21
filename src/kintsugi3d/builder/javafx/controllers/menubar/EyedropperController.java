@@ -653,7 +653,7 @@ public class EyedropperController implements Initializable {
         fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
         try{
-            fileChooser.setInitialDirectory(ioModel.getLoadedViewSet().getFullResImageFile(ioModel.getLoadedViewSet().getPrimaryViewIndex()).getParentFile());
+            fileChooser.setInitialDirectory(ioModel.getLoadedViewSet().getFullResImageFile(0).getParentFile());
         }
         catch(NullPointerException e){
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please load a model before using the color checker.");

@@ -200,7 +200,7 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
     {
         this(sharedResources, textureDirectory, loadOptions,
             readDimensionsFromFile(ImageFinder.getInstance().findImageFile(new File(textureDirectory,
-                sharedResources.getViewSet().getImageFileName(sharedResources.getViewSet().getPrimaryViewIndex())))),
+                sharedResources.getViewSet().getImageFileName(0)))),
             progressMonitor);
     }
 
