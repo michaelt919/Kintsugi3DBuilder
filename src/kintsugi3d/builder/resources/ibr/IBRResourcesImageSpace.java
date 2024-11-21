@@ -105,6 +105,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         private double[] linearLuminanceValues;
         private byte[] encodedLuminanceValues;
         private String primaryViewName;
+        private String orientationViewName;
 
         private Builder(ContextType context)
         {
@@ -122,10 +123,16 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             }
         }
 
-        public Builder<ContextType> setPrimaryView(String primaryViewName, double rotation)
+        public Builder<ContextType> setPrimaryView(String primaryViewName)
         {
             this.primaryViewName = primaryViewName;
-            this.viewSet.setPrimaryViewRotationDegrees(rotation);
+            return this;
+        }
+
+        public Builder<ContextType> setOrientationView(String orientationViewName, double rotation)
+        {
+            this.orientationViewName = orientationViewName;
+            this.viewSet.setOrientationViewRotationDegrees(rotation);
             return this;
         }
 
@@ -299,6 +306,11 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             if (primaryViewName != null)
             {
                 viewSet.setPrimaryView(primaryViewName);
+            }
+
+            if (orientationViewName != null)
+            {
+                viewSet.setOrientationView(orientationViewName);
             }
 
             if (geometry == null && viewSet.getGeometryFile() != null)

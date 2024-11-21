@@ -87,8 +87,14 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         scanner.nextLine();
                         break;
                     }
+                    case "O":
+                    {
+                        builder.setOrientationViewIndex(scanner.nextInt());
+                        scanner.nextLine();
+                        break;
+                    }
                     case "r":
-                        builder.setPrimaryViewRotation(scanner.nextFloat());
+                        builder.setOrientationViewRotation(scanner.nextFloat());
                         scanner.nextLine();
                         break;
                     case "m":

@@ -219,10 +219,10 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
             if (projectModel.isUsePrimaryViewOrientation())
             {
-                Matrix4 primaryCameraPose = resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex());
+                Matrix4 referenceCameraPose = resources.getViewSet().getCameraPose(resources.getViewSet().getOrientationViewIndex());
 
-                sceneModel.setOrientation(Matrix4.rotateZ(Math.toRadians(-resources.getViewSet().getPrimaryViewRotationDegrees()))
-                        .times(primaryCameraPose).getUpperLeft3x3());
+                sceneModel.setOrientation(Matrix4.rotateZ(Math.toRadians(-resources.getViewSet().getOrientationViewRotationDegrees()))
+                        .times(referenceCameraPose).getUpperLeft3x3());
             }
             else
             {
@@ -493,10 +493,10 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
                 Matrix4 rotation = Matrix4.IDENTITY;
                 if (getActiveViewSet() != null && projectModel.isUsePrimaryViewOrientation())
                 {
-                    Matrix4 primaryCameraPose = resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex());
+                    Matrix4 referenceCameraPose = resources.getViewSet().getCameraPose(resources.getViewSet().getOrientationViewIndex());
 
-                    rotation = Matrix4.rotateZ(Math.toRadians(-resources.getViewSet().getPrimaryViewRotationDegrees()))
-                            .times(primaryCameraPose);
+                    rotation = Matrix4.rotateZ(Math.toRadians(-resources.getViewSet().getOrientationViewRotationDegrees()))
+                            .times(referenceCameraPose);
                 }
 
                 Vector3 translation = rotation.getUpperLeft3x3().times(getActiveGeometry().getCentroid().times(-1.0f));

@@ -147,10 +147,20 @@ public final class ViewSet implements ReadonlyViewSet
     private float recommendedFarPlane = 100.0f;
 
     /**
-     * The index of the view that sets the initial orientation when viewing, is used for color calibration, etc.
+     * The index of the view used for color calibration
      */
     private int primaryViewIndex = 0;
-    private double primaryViewRotationDegrees = 0;
+
+    /**
+     * The index of the view used to reorient the model
+     */
+    private int orientationViewIndex = 0;
+
+    /**
+     * Roll rotation of the orientation view, used to correct sideways or upside down images
+     */
+    private double orientationViewRotationDegrees = 0;
+
     private int previewWidth = 0;
     private int previewHeight = 0;
 
@@ -285,8 +295,14 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
-        public Builder setPrimaryViewRotation(float rotation){
-            result.setPrimaryViewRotationDegrees(rotation);
+        public Builder setOrientationViewIndex(int viewIndex)
+        {
+            result.orientationViewIndex = viewIndex;
+            return this;
+        }
+
+        public Builder setOrientationViewRotation(float rotation){
+            result.setOrientationViewRotationDegrees(rotation);
             return this;
         }
 
@@ -562,7 +578,9 @@ public final class ViewSet implements ReadonlyViewSet
         result.infiniteLightSources = this.infiniteLightSources;
         result.recommendedNearPlane = this.recommendedNearPlane;
         result.recommendedFarPlane = this.recommendedFarPlane;
-        result.primaryViewIndex = primaryViewIndex;
+        result.primaryViewIndex = this.primaryViewIndex;
+        result.orientationViewIndex = this.orientationViewIndex;
+        result.orientationViewRotationDegrees = this.orientationViewRotationDegrees;
 
         return result;
     }
@@ -598,7 +616,9 @@ public final class ViewSet implements ReadonlyViewSet
         result.infiniteLightSources = this.infiniteLightSources;
         result.recommendedNearPlane = this.recommendedNearPlane;
         result.recommendedFarPlane = this.recommendedFarPlane;
-        result.primaryViewIndex = primaryViewIndex;
+        result.primaryViewIndex = this.primaryViewIndex;
+        result.orientationViewIndex = this.orientationViewIndex;
+        result.orientationViewRotationDegrees = this.orientationViewRotationDegrees;
 
         return result;
     }
@@ -860,8 +880,15 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public double getPrimaryViewRotationDegrees() {
-        return primaryViewRotationDegrees;
+    public int getOrientationViewIndex()
+    {
+        return this.orientationViewIndex;
+    }
+
+    @Override
+    public double getOrientationViewRotationDegrees()
+    {
+        return this.orientationViewRotationDegrees;
     }
 
     public void setPrimaryViewIndex(int poseIndex)
@@ -869,12 +896,12 @@ public final class ViewSet implements ReadonlyViewSet
         this.primaryViewIndex = poseIndex;
     }
 
-    public void setPrimaryView(String viewName)
+    private int findIndexOfView(String viewName)
     {
         int poseIndex = this.imageFiles.indexOf(new File(viewName));
         if (poseIndex >= 0)
         {
-            this.primaryViewIndex = poseIndex;
+            return poseIndex;
         }
         else{
             //comb through manually because imageFiles could contain parent files
@@ -890,10 +917,38 @@ public final class ViewSet implements ReadonlyViewSet
 
                 //TODO: will this cause issues if extensions are different? (ex. photo.jpg and photo.tiff)
                 if (shortenedImgName.equals(shortenedViewName)){
-                    this.primaryViewIndex = i;
-                    break;
+                    return i;
                 }
             }
+        }
+
+        return -1;
+    }
+
+    public void setPrimaryView(String viewName)
+    {
+        int viewIndex = findIndexOfView(viewName);
+        if (viewIndex >= 0)
+        {
+            this.primaryViewIndex = viewIndex;
+        }
+    }
+
+    /**
+     * Set the index of the view to use as a reference pose to reorient the model
+     * @param newOrientationViewIndex view index
+     */
+    public void setOrientationViewIndex(int newOrientationViewIndex)
+    {
+        this.orientationViewIndex = newOrientationViewIndex;
+    }
+
+    public void setOrientationView(String viewName)
+    {
+        int viewIndex = findIndexOfView(viewName);
+        if (viewIndex >= 0)
+        {
+            this.orientationViewIndex = viewIndex;
         }
     }
 
@@ -1064,7 +1119,8 @@ public final class ViewSet implements ReadonlyViewSet
         return uuid;
     }
 
-    public void setPrimaryViewRotationDegrees(double rotation) {
-        primaryViewRotationDegrees = rotation;
+    public void setOrientationViewRotationDegrees(double rotation)
+    {
+        orientationViewRotationDegrees = rotation;
     }
 }

@@ -367,7 +367,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                     .setProgressMonitor(this.progressMonitor)
                     .setLoadOptions(loadOptions)
                     .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory)
-                    .setPrimaryView(primaryViewName, rotation);
+                    .setOrientationView(primaryViewName, rotation);
 
             loadInstance(metashapeObjectChunk.getFramePath(), builder);
         }
@@ -396,7 +396,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                 .setProgressMonitor(this.progressMonitor)
                 .setLoadOptions(loadOptions)
                 .loadLooseFiles(xmlFile, meshFile, imageDirectory)
-                .setPrimaryView(primaryViewName, rotation);
+                .setOrientationView(primaryViewName, rotation);
 
             // Invoke callbacks now that view set is loaded
             loadInstance(id, builder);
