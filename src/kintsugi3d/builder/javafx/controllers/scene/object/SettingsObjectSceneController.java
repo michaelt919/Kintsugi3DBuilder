@@ -14,6 +14,7 @@ package kintsugi3d.builder.javafx.controllers.scene.object;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.ResourceBundle;
 
 import javafx.beans.value.ChangeListener;
@@ -34,13 +35,22 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.PrimaryViewSelectController;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.InputSource;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.LooseFilesInputSource;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.internal.ProjectModelBase;
 import kintsugi3d.builder.javafx.util.SafeLogScaleNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SettingsObjectSceneController implements Initializable
 {
+    private static final Logger log = LoggerFactory.getLogger(SettingsObjectSceneController.class);
+
 
     @FXML private VBox root;
 
@@ -174,7 +184,7 @@ public class SettingsObjectSceneController implements Initializable
     {
         try
         {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menubar/FXMLPageScroller.fxml"));
             Parent root = loader.load();
 
             Stage stage = new Stage();
@@ -182,11 +192,23 @@ public class SettingsObjectSceneController implements Initializable
             stage.setTitle("Select Orientation Reference View");
             stage.setScene(new Scene(root));
 
-            stage.show();
+            FXMLPageScrollerController scrollerController = loader.getController();
+
+            String viewSelectPath = "/fxml/menubar/createnewproject/PrimaryViewSelect.fxml";
+            FXMLLoader selectorLoader = new FXMLLoader(getClass().getResource(viewSelectPath));
+            selectorLoader.load();
+
+            ArrayList<FXMLPage> pages = new ArrayList<>();
+            pages.add(new FXMLPage(viewSelectPath, selectorLoader));
+
+            scrollerController.setPages(pages, viewSelectPath);
+            LooseFilesInputSource inputSource = new LooseFilesInputSource();
+            scrollerController.addInfo(ShareInfo.Info.INPUT_SOURCE, inputSource);
+            scrollerController.init();
         }
-        catch (IOException ioEx)
+        catch (Exception e)
         {
-            //TODO: log
+            log.error("Unable to open orientation view selector.", e);
         }
     }
 }

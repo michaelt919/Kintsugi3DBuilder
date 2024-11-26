@@ -31,7 +31,7 @@ public class FXMLPageScrollerController {
     ArrayList<FXMLPage> pages;
     FXMLPage currentPage;
 
-    HashMap<ShareInfo.Info, Object> sharedInfo;
+    private final HashMap<ShareInfo.Info, Object> sharedInfo = new HashMap<>();
 
     public void init() {
         for (FXMLPage page : pages){
@@ -44,8 +44,6 @@ public class FXMLPageScrollerController {
 
         String fileName = currentPage.getFxmlFilePath();
         initControllerAndUpdatePanel(fileName);
-
-        sharedInfo = new HashMap<>();
 
         currentPage.getController().setButtonShortcuts();
         Platform.runLater(()-> outerGridPane.getScene().getWindow().requestFocus());
