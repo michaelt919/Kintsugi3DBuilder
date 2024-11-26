@@ -491,7 +491,7 @@ public class MenubarController
         }
     }
 
-    // TODO TEST Populate menu based on a given input number
+    // Populate menu based on a given input number
     private void updateShaderList() {
         int value = 8;
         for (int i = 0; i < value; ++i) {
