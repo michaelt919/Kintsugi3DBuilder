@@ -55,24 +55,6 @@
                   </VBox>
                </children>
             </AnchorPane>
-<!--            <VBox alignment="CENTER" prefHeight="400.0" prefWidth="279.0">-->
-<!--               <children>-->
-<!--                  <HBox prefHeight="412.0" prefWidth="279.0">-->
-<!--                     <children>-->
-<!--                        <ChoiceBox fx:id="newChunkSelectionChoiceBox" prefHeight="26.0" prefWidth="176.0">-->
-<!--                           <HBox.margin>-->
-<!--                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />-->
-<!--                           </HBox.margin>-->
-<!--                        </ChoiceBox>-->
-<!--                        <Button fx:id="selectChunkButton" mnemonicParsing="false" onAction="#selectChunk" text="Select Chunk">-->
-<!--                           <HBox.margin>-->
-<!--                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />-->
-<!--                           </HBox.margin>-->
-<!--                        </Button>-->
-<!--                     </children>-->
-<!--                  </HBox>-->
-<!--               </children>-->
-<!--            </VBox>-->
          </children>
          <padding>
             <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />

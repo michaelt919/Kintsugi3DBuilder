@@ -26,8 +26,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import kintsugi3d.builder.javafx.controllers.scene.camera.CameraSetting;
 import kintsugi3d.builder.javafx.controllers.scene.environment.EnvironmentSetting;
 import kintsugi3d.builder.javafx.controllers.scene.lights.LightGroupSetting;
@@ -52,8 +50,6 @@ public abstract class ProjectModelBase implements ProjectModel
 
     private String colorCheckerFile;
 
-    private final BooleanProperty usePrimaryViewOrientation = new SimpleBooleanProperty(true);
-
 
     /**
      * Opens a Kintsugi 3D Builder project file (.k3d) and sets up the lights, camera, etc.
@@ -75,12 +71,6 @@ public abstract class ProjectModelBase implements ProjectModel
         if (vsetNode instanceof Element)
         {
             File newVsetFile = new File(projectFile.getParent(), ((Element) vsetNode).getAttribute("src"));
-
-            Node primaryViewOrientationNode = document.getElementsByTagName("UsePrimaryViewOrientation").item(0);
-            if (primaryViewOrientationNode != null)
-            {
-                usePrimaryViewOrientation.set(Boolean.parseBoolean(primaryViewOrientationNode.getTextContent()));
-            }
 
             Node cameraListNode = document.getElementsByTagName("CameraList").item(0);
             if (cameraListNode != null)
@@ -185,10 +175,6 @@ public abstract class ProjectModelBase implements ProjectModel
         vsetElement.setAttribute("src", projectFile.getParentFile().toPath().relativize(vsetFile.toPath()).toString());
         rootElement.appendChild(vsetElement);
 
-        Element primaryViewOrientation = document.createElement("UsePrimaryViewOrientation");
-        primaryViewOrientation.setTextContent(Boolean.toString(usePrimaryViewOrientation.get()));
-        rootElement.appendChild(primaryViewOrientation);
-
         synchronized (this.getCameraList())
         {
             Element cameraListElement = document.createElement("CameraList");
@@ -256,20 +242,5 @@ public abstract class ProjectModelBase implements ProjectModel
     public void setColorCheckerFile(String colorCheckerFile)
     {
         this.colorCheckerFile = colorCheckerFile;
-    }
-
-    public boolean isUsePrimaryViewOrientation()
-    {
-        return usePrimaryViewOrientation.get();
-    }
-
-    public void setUsePrimaryViewOrientation(boolean usePrimaryViewOrientation)
-    {
-        this.usePrimaryViewOrientation.set(usePrimaryViewOrientation);
-    }
-
-    public BooleanProperty usePrimaryViewOrientationProperty()
-    {
-        return usePrimaryViewOrientation;
     }
 }

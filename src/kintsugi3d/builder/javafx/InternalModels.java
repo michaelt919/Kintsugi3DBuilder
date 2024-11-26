@@ -17,7 +17,7 @@ public final class InternalModels
 {
     private static final InternalModels INSTANCE = new InternalModels();
 
-    public static InternalModels getInstance()
+    static InternalModels getInstance()
     {
         return INSTANCE;
     }

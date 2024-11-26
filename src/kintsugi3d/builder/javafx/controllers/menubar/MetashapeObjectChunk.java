@@ -64,8 +64,8 @@ public class MetashapeObjectChunk {
     public class LoadPreferences{
         public File fullResOverride;
         public boolean doSkipMissingCams;
-        public String primaryViewName;
-        public double primaryViewRotateDegrees;
+        public String orientationViewName;
+        public double orientationViewRotateDegrees;
     }
 
     public LoadPreferences getLoadPreferences(){return loadPreferences;}

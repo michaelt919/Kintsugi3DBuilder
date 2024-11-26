@@ -132,6 +132,12 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         public Builder<ContextType> setOrientationView(String orientationViewName, double rotation)
         {
             this.orientationViewName = orientationViewName;
+
+            if (orientationViewName == null)
+            {
+                this.viewSet.setOrientationViewIndex(-1);
+            }
+
             this.viewSet.setOrientationViewRotationDegrees(rotation);
             return this;
         }

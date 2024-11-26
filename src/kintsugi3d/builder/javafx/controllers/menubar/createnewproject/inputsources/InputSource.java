@@ -31,6 +31,7 @@ public abstract class InputSource {
     private TreeView<String> treeView;
     protected PrimaryViewSelectionModel primaryViewSelectionModel;
     protected SearchableTreeView searchableTreeView;
+    public static final TreeItem<String> NONE_ITEM = new TreeItem<>("Keep Imported Orientation");
 
     public abstract List<FileChooser.ExtensionFilter> getExtensionFilters();
     abstract ViewSetReader getCameraFileReader();
@@ -56,6 +57,8 @@ public abstract class InputSource {
         treeView.setRoot(rootItem);
 
         List<View> views = primaryViewSelectionModel.getViews();
+
+        rootItem.getChildren().add(NONE_ITEM);
 
         for (int i = 0; i < views.size(); i++)
         {

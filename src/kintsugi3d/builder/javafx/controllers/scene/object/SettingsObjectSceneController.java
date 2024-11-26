@@ -117,8 +117,9 @@ public class SettingsObjectSceneController implements Initializable
 
     public void bind(ObjectPoseSetting objectPose)
     {
-        ProjectModelBase projectModel = InternalModels.getInstance().getProjectModel();
-        primaryViewCheckBox.selectedProperty().bindBidirectional(projectModel.usePrimaryViewOrientationProperty());
+        //TODO
+        //ProjectModelBase projectModel = InternalModels.getInstance().getProjectModel();
+        //primaryViewCheckBox.selectedProperty().bindBidirectional(projectModel.usePrimaryViewOrientationProperty());
 
         xCenterTextField.textProperty().bindBidirectional(objectPose.centerXProperty(), converter);
         yCenterTextField.textProperty().bindBidirectional(objectPose.centerYProperty(), converter);

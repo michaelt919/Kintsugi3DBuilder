@@ -360,14 +360,14 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
         File supportingFilesDirectory = null;
         try {
-            String primaryViewName = metashapeObjectChunk.getLoadPreferences().primaryViewName;
-            double rotation = metashapeObjectChunk.getLoadPreferences().primaryViewRotateDegrees;
+            String orientationView = metashapeObjectChunk.getLoadPreferences().orientationViewName;
+            double rotation = metashapeObjectChunk.getLoadPreferences().orientationViewRotateDegrees;
 
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                     .setProgressMonitor(this.progressMonitor)
                     .setLoadOptions(loadOptions)
                     .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory)
-                    .setOrientationView(primaryViewName, rotation);
+                    .setOrientationView(orientationView, rotation);
 
             loadInstance(metashapeObjectChunk.getFramePath(), builder);
         }

@@ -169,7 +169,14 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                 viewSet ->viewSetCallback.accept(viewSet));
         }
 
-        String primaryView = chunkTreeView.getSelectionModel().getSelectedItem().getValue();
+        TreeItem<String> selection = chunkTreeView.getSelectionModel().getSelectedItem();
+
+        String primaryView = null;
+        if (selection != InputSource.NONE_ITEM)
+        {
+            primaryView = selection.getValue();
+        }
+
         source.loadProject(primaryView, primaryImgView.getRotate());
 
         WelcomeWindowController.getInstance().hide();

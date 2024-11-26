@@ -62,7 +62,6 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
     private final String id;
 
     private final SceneModel sceneModel;
-    private final ProjectModelBase projectModel = InternalModels.getInstance().getProjectModel();
 
     private ProgramObject<ContextType> simpleTexProgram;
     private Drawable<ContextType> simpleTexDrawable;
@@ -216,19 +215,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         if (resources.getGeometry() != null)
         {
             sceneModel.setScale(resources.getGeometry().getBoundingRadius() * 2);
-
-            if (projectModel.isUsePrimaryViewOrientation())
-            {
-                Matrix4 referenceCameraPose = resources.getViewSet().getCameraPose(resources.getViewSet().getOrientationViewIndex());
-
-                sceneModel.setOrientation(Matrix4.rotateZ(Math.toRadians(-resources.getViewSet().getOrientationViewRotationDegrees()))
-                        .times(referenceCameraPose).getUpperLeft3x3());
-            }
-            else
-            {
-                sceneModel.setOrientation(Matrix3.IDENTITY);
-            }
-
+            sceneModel.setOrientation(getModelOrientation());
             sceneModel.setCentroid(resources.getGeometry().getCentroid());
         }
     }
@@ -490,14 +477,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
             try
             {
-                Matrix4 rotation = Matrix4.IDENTITY;
-                if (getActiveViewSet() != null && projectModel.isUsePrimaryViewOrientation())
-                {
-                    Matrix4 referenceCameraPose = resources.getViewSet().getCameraPose(resources.getViewSet().getOrientationViewIndex());
-
-                    rotation = Matrix4.rotateZ(Math.toRadians(-resources.getViewSet().getOrientationViewRotationDegrees()))
-                            .times(referenceCameraPose);
-                }
+                Matrix4 rotation = getModelOrientation().asMatrix4();
 
                 Vector3 translation = rotation.getUpperLeft3x3().times(getActiveGeometry().getCentroid().times(-1.0f));
                 Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2),
@@ -550,5 +530,25 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
                 log.error("Error occurred during glTF export:", e);
             }
         }
+    }
+
+    private Matrix3 getModelOrientation()
+    {
+        if (getActiveViewSet() == null)
+        {
+            return Matrix3.IDENTITY;
+        }
+
+        ReadonlyViewSet viewSet = getActiveViewSet();
+        int referencePoseIndex = viewSet.getOrientationViewIndex();
+
+        if (referencePoseIndex < 0)
+        {
+            return Matrix3.IDENTITY;
+        }
+
+        Matrix3 referenceCameraPose = viewSet.getCameraPose(referencePoseIndex).getUpperLeft3x3();
+        return Matrix3.rotateZ(Math.toRadians(-viewSet.getOrientationViewRotationDegrees()))
+                .times(referenceCameraPose);
     }
 }

@@ -136,11 +136,11 @@ public class MetashapeProjectInputSource extends InputSource{
         searchableTreeView.bind();
     }
 
-    //TODO: uncouple loadProject() from primaryView
+    //TODO: uncouple loadProject() from orientationView
     @Override
-    public void loadProject(String primaryView, double rotate) {
-        metashapeObjectChunk.getLoadPreferences().primaryViewName = primaryView;
-        metashapeObjectChunk.getLoadPreferences().primaryViewRotateDegrees = rotate;
+    public void loadProject(String orientationView, double rotate) {
+        metashapeObjectChunk.getLoadPreferences().orientationViewName = orientationView;
+        metashapeObjectChunk.getLoadPreferences().orientationViewRotateDegrees = rotate;
         new Thread(() -> MultithreadModels.getInstance().getIOModel().loadAgisoftFromZIP(metashapeObjectChunk)).start();
     }
 

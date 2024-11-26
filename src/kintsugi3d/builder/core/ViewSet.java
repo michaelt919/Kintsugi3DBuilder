@@ -950,6 +950,10 @@ public final class ViewSet implements ReadonlyViewSet
         {
             this.orientationViewIndex = viewIndex;
         }
+        else
+        {
+            this.orientationViewIndex = -1;
+        }
     }
 
     public static String removeExt(String fileName) {
