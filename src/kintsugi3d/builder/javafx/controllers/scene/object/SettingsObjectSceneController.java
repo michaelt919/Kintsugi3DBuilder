@@ -11,6 +11,8 @@
 
 package kintsugi3d.builder.javafx.controllers.scene.object;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -18,14 +20,20 @@ import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.PrimaryViewSelectController;
 import kintsugi3d.builder.javafx.internal.ProjectModelBase;
 import kintsugi3d.builder.javafx.util.SafeLogScaleNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
@@ -36,7 +44,7 @@ public class SettingsObjectSceneController implements Initializable
 
     @FXML private VBox root;
 
-    @FXML private CheckBox primaryViewCheckBox;
+    @FXML private Button updateOrientationViewButton;
 
     @FXML private TextField xCenterTextField;
     @FXML private TextField yCenterTextField;
@@ -117,10 +125,6 @@ public class SettingsObjectSceneController implements Initializable
 
     public void bind(ObjectPoseSetting objectPose)
     {
-        //TODO
-        //ProjectModelBase projectModel = InternalModels.getInstance().getProjectModel();
-        //primaryViewCheckBox.selectedProperty().bindBidirectional(projectModel.usePrimaryViewOrientationProperty());
-
         xCenterTextField.textProperty().bindBidirectional(objectPose.centerXProperty(), converter);
         yCenterTextField.textProperty().bindBidirectional(objectPose.centerYProperty(), converter);
         zCenterTextField.textProperty().bindBidirectional(objectPose.centerZProperty(), converter);
@@ -164,5 +168,25 @@ public class SettingsObjectSceneController implements Initializable
     public void setOnActionSelectPoint(EventHandler<ActionEvent> actionEventEventHandler)
     {
         selectPointButton.setOnAction(actionEventEventHandler);
+    }
+
+    public void onUpdateOrientationView(ActionEvent actionEvent)
+    {
+        try
+        {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+            stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
+            stage.setTitle("Select Orientation Reference View");
+            stage.setScene(new Scene(root));
+
+            stage.show();
+        }
+        catch (IOException ioEx)
+        {
+            //TODO: log
+        }
     }
 }
