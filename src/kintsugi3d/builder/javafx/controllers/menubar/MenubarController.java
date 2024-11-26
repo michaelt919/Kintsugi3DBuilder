@@ -19,6 +19,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -58,6 +59,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -78,6 +80,8 @@ public class MenubarController
     private static final Logger log = LoggerFactory.getLogger(MenubarController.class);
 
     private static MenubarController instance;
+    public Menu heatmapMenu;
+    public Menu superimposeMenu;
     private InternalModels internalModels;
 
     //Window open flags
@@ -140,6 +144,9 @@ public class MenubarController
     @FXML private RadioMenuItem materialReflectivity;
     @FXML private RadioMenuItem materialBasis;
     @FXML private RadioMenuItem imgBasedWithTextures;
+    @FXML private String weightmapPath;
+    @FXML private String superimposePath;
+
 
     private List<RadioMenuItem> toggleableShaders = new ArrayList<>();
 
@@ -455,6 +462,8 @@ public class MenubarController
         toggleableShaders.add(materialReflectivity);
         toggleableShaders.add(materialBasis);
         toggleableShaders.add(imgBasedWithTextures);
+        //toggleableShaders.add(weightmapCombination);
+        updateShaderList();
 
         setToggleableShaderDisable(true);
 
@@ -479,6 +488,28 @@ public class MenubarController
 
         if(!ProgressBarsController.getInstance().getStage().isShowing()){
             miniProgressPane.setVisible(true);
+        }
+    }
+
+    // TODO TEST Populate menu based on a given input number
+    private void updateShaderList() {
+        int value = 8;
+        for (int i = 0; i < value; ++i) {
+            weightmapPath = "rendermodes/weightmaps/weightmap0" + i + ".frag";
+            superimposePath = "rendermodes/weightmaps/weightmapOverlay0" + i + ".frag";
+
+            RadioMenuItem heatmap = new RadioMenuItem("Weight map " + i);
+            RadioMenuItem b = new RadioMenuItem("Weight map " + i);
+
+            heatmap.setToggleGroup(renderGroup);
+            heatmap.setUserData(weightmapPath);
+            b.setToggleGroup(renderGroup);
+            b.setUserData(superimposePath);
+
+            heatmapMenu.getItems().add(i, heatmap);
+            superimposeMenu.getItems().add(i, b);
+            // when attempting to redefine 'heatmap' and use for superimposeMenu, K3D would crash
+
         }
     }
 
