@@ -12,7 +12,6 @@
 package kintsugi3d.builder.javafx.controllers.scene.object;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
@@ -26,21 +25,16 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
-import kintsugi3d.builder.javafx.InternalModels;
-import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.PrimaryViewSelectController;
-import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.InputSource;
-import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.LooseFilesInputSource;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
-import kintsugi3d.builder.javafx.internal.ProjectModelBase;
 import kintsugi3d.builder.javafx.util.SafeLogScaleNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
@@ -202,9 +196,10 @@ public class SettingsObjectSceneController implements Initializable
             pages.add(new FXMLPage(viewSelectPath, selectorLoader));
 
             scrollerController.setPages(pages, viewSelectPath);
-            LooseFilesInputSource inputSource = new LooseFilesInputSource();
-            scrollerController.addInfo(ShareInfo.Info.INPUT_SOURCE, inputSource);
+            scrollerController.addInfo(ShareInfo.Info.INPUT_SOURCE, new CurrentProjectInputSource());
             scrollerController.init();
+
+            stage.show();
         }
         catch (Exception e)
         {
