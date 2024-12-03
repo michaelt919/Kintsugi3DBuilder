@@ -20,6 +20,7 @@ import kintsugi3d.builder.io.ViewSetReader;
 import kintsugi3d.builder.io.primaryview.PrimaryViewSelectionModel;
 import kintsugi3d.builder.io.primaryview.View;
 import kintsugi3d.builder.javafx.controllers.menubar.SearchableTreeView;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.PrimaryViewSelectController;
 
 import java.io.File;
 import java.util.List;
@@ -105,7 +106,6 @@ public abstract class InputSource {
 
         //unroll treeview
         treeView.getRoot().setExpanded(true);
-        treeView.getSelectionModel().select(1);
     }
 
     private static TreeItem<String> getStringTreeItem(List<Image> thumbnailImgList, int i, String imageName) {
@@ -124,4 +124,10 @@ public abstract class InputSource {
 
     @Override
     public abstract boolean equals(Object obj);
+
+    public void setOrientationViewDefaultSelections(PrimaryViewSelectController controller)
+    {
+        treeView.getSelectionModel().select(1);
+        controller.setImageRotation(0);
+    }
 }

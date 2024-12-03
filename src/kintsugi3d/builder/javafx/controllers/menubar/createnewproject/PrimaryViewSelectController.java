@@ -29,6 +29,7 @@ import javafx.stage.WindowEvent;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.ImageThreadable;
 import kintsugi3d.builder.javafx.controllers.menubar.SearchableTreeView;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.MetashapeProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
@@ -87,6 +88,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             {
                 source.verifyInfo(null);
                 source.initTreeView();
+                source.setOrientationViewDefaultSelections(this);
             }
             catch(MissingImagesException mie)
             {
@@ -132,7 +134,8 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                 // Hide orientation controls
                 orientationControlsVBox.setVisible(false);
 
-                if (true /*isProjectBeingCreated*/) //TODO: Only change to skip if creating project, not if changing in existing project
+                // Don't change the button text to "Skip" when working with an existing project
+                if (!(source instanceof CurrentProjectInputSource))
                 {
                     // Set confirm button text
                     hostScrollerController.updateNextButtonLabel("Skip");
@@ -142,8 +145,6 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
                 // Remove any image currently in the thumbnail viewer
                 primaryImgView.setImage(null);
-
-                // Return early
                 return;
             }
             else
@@ -187,6 +188,11 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     private void rotateLeft() {
         //rotate in 90 degree increments
         primaryImgView.setRotate((primaryImgView.getRotate() - 90) % 360);
+    }
+
+    public void setImageRotation(double rotation)
+    {
+        primaryImgView.setRotate(rotation % 360);
     }
 
     @Override
