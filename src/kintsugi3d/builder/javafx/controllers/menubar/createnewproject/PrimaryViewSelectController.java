@@ -21,6 +21,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.Window;
@@ -56,6 +57,8 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
     @FXML private TextField imgSearchTxtField;
     @FXML private CheckBox regexMode;
+    @FXML private VBox orientationControlsVBox;
+
     private InputSource source;
     private HashMap<String, Image> imgCache;
     private ImgSelectionThread loadImgThread;
@@ -116,7 +119,41 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             return;
         }
 
-        if (selectedItem.getValue() != null) {
+        if (selectedItem.getValue() != null)
+        {
+            //if loadImgThread is running, kill it and start a new one
+            if(loadImgThread != null && loadImgThread.isActive())
+            {
+                loadImgThread.stopThread();
+            }
+
+            if (selectedItem == InputSource.NONE_ITEM)
+            {
+                // Hide orientation controls
+                orientationControlsVBox.setVisible(false);
+
+                if (true /*isProjectBeingCreated*/) //TODO: Only change to skip if creating project, not if changing in existing project
+                {
+                    // Set confirm button text
+                    hostScrollerController.updateNextButtonLabel("Skip");
+                }
+
+                imgViewText.setText("Keep model orientation as imported.");
+
+                // Remove any image currently in the thumbnail viewer
+                primaryImgView.setImage(null);
+
+                // Return early
+                return;
+            }
+            else
+            {
+                // Show orientation controls
+                orientationControlsVBox.setVisible(true);
+
+                // Set confirm button text
+                hostScrollerController.updateNextButtonLabel("Confirm");
+            }
 
             String imageName = selectedItem.getValue();
             imgViewText.setText(imageName + " (preview)");
@@ -125,11 +162,6 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             //don't set thumbnail if img is cached, otherwise would cause a flash
             if(!imgCache.containsKey(imageName)){
                 setThumbnailAsFullImage(selectedItem);
-            }
-
-            //if loadImgThread is running, kill it and start a new one
-            if(loadImgThread != null && loadImgThread.isActive()){
-                loadImgThread.stopThread();
             }
 
             loadImgThread = new ImgSelectionThread(imageName,this, source.getPrimarySelectionModel());

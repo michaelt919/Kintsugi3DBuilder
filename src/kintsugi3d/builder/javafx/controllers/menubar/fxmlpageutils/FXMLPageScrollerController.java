@@ -181,5 +181,10 @@ public class FXMLPageScrollerController {
 
     public Button getNextButton(){return nextButton;}
     public Button getPrevButton(){return prevButton;}
+
+    public void updateNextButtonLabel(String labelText)
+    {
+        nextButton.setText(labelText);
+    }
 }
 
