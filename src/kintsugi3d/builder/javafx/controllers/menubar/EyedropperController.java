@@ -36,17 +36,20 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kintsugi3d.builder.core.IOModel;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.internal.ProjectModelBase;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EyedropperController implements Initializable {
+public class EyedropperController extends FXMLPageController implements Initializable {
     private static final Logger log = LoggerFactory.getLogger(EyedropperController.class);
 
     static final String[] validExtensions = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
@@ -86,6 +89,8 @@ public class EyedropperController implements Initializable {
     private Image selectedFile;
     @FXML private Rectangle averageColorPreview = new Rectangle(); //displays the average color of selection
 
+    @FXML private HBox outerHbox;
+
     private IOModel ioModel = new IOModel();
     private ProjectModelBase projectModel = null;
 
@@ -106,42 +111,7 @@ public class EyedropperController implements Initializable {
     }
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        selectedFile = null;
-
-        colorPickerImgView.setPreserveRatio(true);
-        colorPickerImgView.setSmooth(true);
-
-        isSelecting = false;
-        isCropping = false;
-        canResetCrop = false;
-
-        selectedColors = new ArrayList<>();
-
-        colorSelectButtons = new ArrayList<>();
-        colorSelectButtons.add(button1);
-        colorSelectButtons.add(button2);
-        colorSelectButtons.add(button3);
-        colorSelectButtons.add(button4);
-        colorSelectButtons.add(button5);
-        colorSelectButtons.add(button6);
-
-        colorSelectTxtFields = new ArrayList<>();
-        colorSelectTxtFields.add(txtField1);
-        colorSelectTxtFields.add(txtField2);
-        colorSelectTxtFields.add(txtField3);
-        colorSelectTxtFields.add(txtField4);
-        colorSelectTxtFields.add(txtField5);
-        colorSelectTxtFields.add(txtField6);
-
-        finalSelectRectangles = new ArrayList<>();
-        finalSelectRectangles.add(finalSelectRect1);
-        finalSelectRectangles.add(finalSelectRect2);
-        finalSelectRectangles.add(finalSelectRect3);
-        finalSelectRectangles.add(finalSelectRect4);
-        finalSelectRectangles.add(finalSelectRect5);
-        finalSelectRectangles.add(finalSelectRect6);
-
-        updateApplyButton();
+        init();
     }
 
     private static Rectangle2D resetViewport(ImageView imageView) {
@@ -715,6 +685,59 @@ public class EyedropperController implements Initializable {
             //reset viewport and crop button text
             resetCrop();
         }
+    }
+
+    @Override
+    public Region getHostRegion()
+    {
+        return outerHbox;
+    }
+
+    @Override
+    public void init()
+    {
+        selectedFile = null;
+
+        colorPickerImgView.setPreserveRatio(true);
+        colorPickerImgView.setSmooth(true);
+
+        isSelecting = false;
+        isCropping = false;
+        canResetCrop = false;
+
+        selectedColors = new ArrayList<>();
+
+        colorSelectButtons = new ArrayList<>();
+        colorSelectButtons.add(button1);
+        colorSelectButtons.add(button2);
+        colorSelectButtons.add(button3);
+        colorSelectButtons.add(button4);
+        colorSelectButtons.add(button5);
+        colorSelectButtons.add(button6);
+
+        colorSelectTxtFields = new ArrayList<>();
+        colorSelectTxtFields.add(txtField1);
+        colorSelectTxtFields.add(txtField2);
+        colorSelectTxtFields.add(txtField3);
+        colorSelectTxtFields.add(txtField4);
+        colorSelectTxtFields.add(txtField5);
+        colorSelectTxtFields.add(txtField6);
+
+        finalSelectRectangles = new ArrayList<>();
+        finalSelectRectangles.add(finalSelectRect1);
+        finalSelectRectangles.add(finalSelectRect2);
+        finalSelectRectangles.add(finalSelectRect3);
+        finalSelectRectangles.add(finalSelectRect4);
+        finalSelectRectangles.add(finalSelectRect5);
+        finalSelectRectangles.add(finalSelectRect6);
+
+        updateApplyButton();
+    }
+
+    @Override
+    public void refresh()
+    {
+
     }
 
 //    public void setExitCallback(Runnable exitCallback)

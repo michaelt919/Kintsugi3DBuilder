@@ -145,11 +145,12 @@ public class FXMLPageScrollerController {
         //change next button to confirm button if applicable
         FXMLPageController controller = currentPage.getController();
 
-        if (controller instanceof CanConfirm){
+        if (controller instanceof ConfirmablePage && ((ConfirmablePage) controller).canConfirm())
+        {
             nextButton.setText("Confirm");
             nextButton.setFont(Font.font(nextButton.getFont().getFamily(), FontWeight.BOLD, nextButton.getFont().getSize()));
 
-            CanConfirm confirmerController = (CanConfirm) controller;
+            ConfirmablePage confirmerController = (ConfirmablePage) controller;
             nextButton.setOnAction(event->confirmerController.confirmButtonPress());
         }
         else{

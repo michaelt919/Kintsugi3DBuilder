@@ -30,7 +30,7 @@ import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.controllers.menubar.AboutController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ConfirmablePage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
@@ -286,7 +286,8 @@ public final class ProjectIO
 
                 FXMLPageController controller = loader.getController();
 
-                if (controller instanceof CanConfirm){
+                if (controller instanceof ConfirmablePage && ((ConfirmablePage) controller).canConfirm())
+                {
                     controller.setLoadStartCallback(this::onLoadStart);
                     controller.setViewSetCallback(
                             (viewSet) ->onViewSetCreated(viewSet, parentWindow));

@@ -42,6 +42,11 @@ import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.PrimaryViewSelectController;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.CurrentProjectInputSource;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
@@ -875,11 +880,35 @@ public class MenubarController
     {
         try
         {
-            EyedropperController eyedropperController =
-                    makeWindow("Tone Calibration", colorCheckerWindowOpen, "fxml/menubar/EyedropperColorChecker.fxml");
+            ArrayList<FXMLPage> pages = new ArrayList<>();
 
-            eyedropperController.setProjectModel(internalModels.getProjectModel());
-            eyedropperController.setIOModel(MultithreadModels.getInstance().getIOModel());
+            FXMLLoader viewLoader = new FXMLLoader(getClass().getResource("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml"));
+
+            viewLoader.setControllerFactory(c -> new PrimaryViewSelectController()
+            {
+                @Override
+                public boolean canConfirm()
+                {
+                    return false;
+                }
+            });
+
+            viewLoader.load();
+
+            FXMLPage viewPage = new FXMLPage("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml", viewLoader);
+            pages.add(viewPage);
+
+            FXMLLoader eyedropLoader = new FXMLLoader(getClass().getResource("/fxml/menubar/EyedropperColorChecker.fxml"));
+            eyedropLoader.load();
+            FXMLPage eyedropPage = new FXMLPage("/fxml/menubar/EyedropperColorChecker.fxml", eyedropLoader);
+            pages.add(eyedropPage);
+            viewPage.setNextPage(eyedropPage);
+
+            FXMLPageScrollerController scrollerController = makeWindow("Tone Calibration", colorCheckerWindowOpen,
+                "fxml/menubar/FXMLPageScroller.fxml");
+            scrollerController.setPages(pages, "/fxml/menubar/createnewproject/PrimaryViewSelect.fxml");
+            scrollerController.addInfo(ShareInfo.Info.INPUT_SOURCE, new CurrentProjectInputSource());
+            scrollerController.init();
         }
         catch (IOException|RuntimeException e)
         {

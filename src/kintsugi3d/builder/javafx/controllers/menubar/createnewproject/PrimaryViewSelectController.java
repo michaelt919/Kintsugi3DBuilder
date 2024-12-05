@@ -32,7 +32,7 @@ import kintsugi3d.builder.javafx.controllers.menubar.SearchableTreeView;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.MetashapeProjectInputSource;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ConfirmablePage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PrimaryViewSelectController extends FXMLPageController implements CanConfirm, ImageThreadable
+public class PrimaryViewSelectController extends FXMLPageController implements ConfirmablePage, ImageThreadable
 {
     //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"
     //suppress warning?
@@ -193,6 +193,12 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     public void setImageRotation(double rotation)
     {
         primaryImgView.setRotate(rotation % 360);
+    }
+
+    @Override
+    public boolean canConfirm()
+    {
+        return true;
     }
 
     @Override
