@@ -42,14 +42,19 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.Window;
+import javafx.stage.WindowEvent;
 import kintsugi3d.builder.core.IOModel;
+import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ConfirmablePage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.internal.ProjectModelBase;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EyedropperController extends FXMLPageController implements Initializable {
+public class EyedropperController extends FXMLPageController implements Initializable, ConfirmablePage
+{
     private static final Logger log = LoggerFactory.getLogger(EyedropperController.class);
 
     static final String[] validExtensions = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
@@ -737,7 +742,29 @@ public class EyedropperController extends FXMLPageController implements Initiali
     @Override
     public void refresh()
     {
+        setIOModel(MultithreadModels.getInstance().getIOModel());
+        updateApplyButton();
+    }
 
+    @Override
+    public boolean canConfirm()
+    {
+        return true;
+    }
+
+    @Override
+    public void confirmButtonPress()
+    {
+        applyButtonPressed();
+
+        Window window = outerHbox.getScene().getWindow();
+        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
+    }
+
+    @Override
+    public boolean isNextButtonValid()
+    {
+        return true;
     }
 
 //    public void setExitCallback(Runnable exitCallback)
