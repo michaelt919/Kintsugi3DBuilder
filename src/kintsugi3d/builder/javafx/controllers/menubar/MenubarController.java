@@ -907,6 +907,9 @@ public class MenubarController
 
             viewLoader.load();
 
+            CurrentProjectInputSource inputSource = new CurrentProjectInputSource();
+            inputSource.setIncludeNoneItem(false);
+
             FXMLPage viewPage = new FXMLPage("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml", viewLoader);
             pages.add(viewPage);
             pages.add(eyedropPage);
@@ -915,7 +918,7 @@ public class MenubarController
             FXMLPageScrollerController scrollerController = makeWindow("Tone Calibration", colorCheckerWindowOpen,
                 "fxml/menubar/FXMLPageScroller.fxml");
             scrollerController.setPages(pages, "/fxml/menubar/createnewproject/PrimaryViewSelect.fxml");
-            scrollerController.addInfo(ShareInfo.Info.INPUT_SOURCE, new CurrentProjectInputSource());
+            scrollerController.addInfo(ShareInfo.Info.INPUT_SOURCE, inputSource);
             scrollerController.init();
         }
         catch (IOException|RuntimeException e)

@@ -664,7 +664,6 @@ public class EyedropperController extends FXMLPageController implements Initiali
 
             //update buttons
             chooseImageButton.setVisible(false);
-            chooseNewImageButton.setVisible(true);
             cropButton.setVisible(true);
 
             //testing the code for saving the file

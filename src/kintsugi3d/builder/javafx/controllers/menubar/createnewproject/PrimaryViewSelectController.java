@@ -153,7 +153,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                 orientationControlsVBox.setVisible(true);
 
                 // Set confirm button text
-                hostScrollerController.updateNextButtonLabel("Confirm");
+                hostScrollerController.updateNextButtonLabel(canConfirm() ? "Confirm" : "Next");
             }
 
             String imageName = selectedItem.getValue();

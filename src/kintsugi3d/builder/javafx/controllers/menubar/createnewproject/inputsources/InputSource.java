@@ -33,6 +33,7 @@ public abstract class InputSource {
     protected PrimaryViewSelectionModel primaryViewSelectionModel;
     protected SearchableTreeView searchableTreeView;
     public static final TreeItem<String> NONE_ITEM = new TreeItem<>("Keep Imported Orientation");
+    private boolean includeNoneItem = true;
 
     public abstract List<FileChooser.ExtensionFilter> getExtensionFilters();
     abstract ViewSetReader getCameraFileReader();
@@ -59,7 +60,10 @@ public abstract class InputSource {
 
         List<View> views = primaryViewSelectionModel.getViews();
 
-        rootItem.getChildren().add(NONE_ITEM);
+        if (includeNoneItem)
+        {
+            rootItem.getChildren().add(NONE_ITEM);
+        }
 
         for (int i = 0; i < views.size(); i++)
         {
@@ -129,5 +133,10 @@ public abstract class InputSource {
     {
         treeView.getSelectionModel().select(1);
         controller.setImageRotation(0);
+    }
+
+    public void setIncludeNoneItem(boolean include)
+    {
+        this.includeNoneItem = include;
     }
 }
