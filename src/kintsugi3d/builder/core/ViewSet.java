@@ -851,6 +851,12 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
+    public File getFullResImageFile(String viewName)
+    {
+        return getFullResImageFile(findIndexOfView(viewName));
+    }
+
+    @Override
     public File getPreviewImageFile(int poseIndex)
     {
         // Use PNG for preview images (TODO: make this a configurable setting?)

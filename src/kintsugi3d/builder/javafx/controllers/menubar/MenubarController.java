@@ -882,6 +882,10 @@ public class MenubarController
         {
             ArrayList<FXMLPage> pages = new ArrayList<>();
 
+            FXMLLoader eyedropLoader = new FXMLLoader(getClass().getResource("/fxml/menubar/EyedropperColorChecker.fxml"));
+            eyedropLoader.load();
+            FXMLPage eyedropPage = new FXMLPage("/fxml/menubar/EyedropperColorChecker.fxml", eyedropLoader);
+
             FXMLLoader viewLoader = new FXMLLoader(getClass().getResource("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml"));
 
             viewLoader.setControllerFactory(c -> new PrimaryViewSelectController()
@@ -891,16 +895,20 @@ public class MenubarController
                 {
                     return false;
                 }
+
+                @Override
+                public void nextButtonPressed()
+                {
+                    EyedropperController controller = eyedropLoader.getController();
+                    String viewName = getSelectedViewName();
+                    controller.setImage(MultithreadModels.getInstance().getIOModel().getLoadedViewSet().getFullResImageFile(viewName));
+                }
             });
 
             viewLoader.load();
 
             FXMLPage viewPage = new FXMLPage("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml", viewLoader);
             pages.add(viewPage);
-
-            FXMLLoader eyedropLoader = new FXMLLoader(getClass().getResource("/fxml/menubar/EyedropperColorChecker.fxml"));
-            eyedropLoader.load();
-            FXMLPage eyedropPage = new FXMLPage("/fxml/menubar/EyedropperColorChecker.fxml", eyedropLoader);
             pages.add(eyedropPage);
             viewPage.setNextPage(eyedropPage);
 

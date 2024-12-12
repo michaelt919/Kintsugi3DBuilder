@@ -129,6 +129,8 @@ public interface ReadonlyViewSet
      */
     File getFullResImageFile(int poseIndex);
 
+    File getFullResImageFile(String viewName);
+
     /**
      * Gets the downscaled "preview" image file corresponding to a particular view.
      * @param poseIndex The index of the image file to retrieve.

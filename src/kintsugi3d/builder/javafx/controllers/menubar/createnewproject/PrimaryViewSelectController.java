@@ -213,15 +213,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                 viewSet ->viewSetCallback.accept(viewSet));
         }
 
-        TreeItem<String> selection = chunkTreeView.getSelectionModel().getSelectedItem();
-
-        String primaryView = null;
-        if (selection != InputSource.NONE_ITEM)
-        {
-            primaryView = selection.getValue();
-        }
-
-        source.loadProject(primaryView, primaryImgView.getRotate());
+        source.loadProject(getSelectedViewName(), primaryImgView.getRotate());
 
         WelcomeWindowController.getInstance().hide();
 
@@ -252,5 +244,18 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     @Override
     public Map<String, Image> getImageCache() {
         return imgCache;
+    }
+
+    public String getSelectedViewName()
+    {
+        TreeItem<String> selection = chunkTreeView.getSelectionModel().getSelectedItem();
+
+        String viewName = null;
+        if (selection != InputSource.NONE_ITEM)
+        {
+            viewName = selection.getValue();
+        }
+
+        return viewName;
     }
 }
