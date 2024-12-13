@@ -629,12 +629,16 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             }
                             break;
                         case "camera":
-                            if (camera != null && camera.transform != null)
+                            if (camera != null)
                             {
-                                cameraSet.add(camera);
-                                log.debug("\tAdding camera {}, with sensor {} and image {}\n",
-                                    cameraID, sensorID, imageFile);
-                                camera = null;
+                                if (camera.transform != null)
+                                {
+                                    // Only add camera if it has a valid transform
+                                    cameraSet.add(camera);
+                                    log.debug("\tAdding camera {}, with sensor {} and image {}\n",
+                                        cameraID, sensorID, imageFile);
+                                }
+                                camera = null; // Clear the camera regardless
                             }
                             break;
                     }
