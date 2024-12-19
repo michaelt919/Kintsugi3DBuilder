@@ -2,6 +2,7 @@ package kintsugi3d.builder.javafx.controllers.menubar;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Label;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
@@ -14,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 
 public class SelectToneCalibrationImageController extends FXMLPageController
 {
@@ -25,6 +25,7 @@ public class SelectToneCalibrationImageController extends FXMLPageController
     @FXML private ToggleButton primaryViewImageButton;
     @FXML private ToggleButton previousImageButton;
     @FXML private ToggleButton selectImageFileButton;
+    @FXML private Label selectImageFileLabel;
 
     private FileChooser imageFileChooser;
     private File selectedImageFile = null;
@@ -54,7 +55,15 @@ public class SelectToneCalibrationImageController extends FXMLPageController
 
         buttonGroup.selectToggle(primaryViewImageButton);
 
+        previousImageButton.setDisable(true); //TODO: Only if no image was previously selected
+
         selectImageFileButton.setOnAction(this::selectImageFileAction);
+
+        selectImageFileLabel.setVisible(selectImageFileButton.isSelected());
+        buttonGroup.selectedToggleProperty().addListener((a, b, c) ->
+        {
+            selectImageFileLabel.setVisible(selectImageFileButton.isSelected());
+        });
     }
 
     @Override
@@ -77,11 +86,11 @@ public class SelectToneCalibrationImageController extends FXMLPageController
         {
             ViewSet viewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
             int primaryViewIndex = viewSet.getPrimaryViewIndex();
-            imageFile = MultithreadModels.getInstance().getIOModel().getLoadedViewSet().getFullResImageFile(primaryViewIndex);
+            imageFile = viewSet.getFullResImageFile(primaryViewIndex);
         }
         else if (buttonGroup.getSelectedToggle() == previousImageButton)
         {
-
+            //TODO: Pull the previously selected image path from the project file
         }
         else if (buttonGroup.getSelectedToggle() == selectImageFileButton)
         {
@@ -94,10 +103,15 @@ public class SelectToneCalibrationImageController extends FXMLPageController
 
     private void selectImageFileAction(ActionEvent event)
     {
+        // Don't show file chooser when deselecting
+        if (! selectImageFileButton.isSelected())
+            return;
+
         File temp = imageFileChooser.showOpenDialog(anchorPane.getScene().getWindow());
         if (temp != null)
         {
             selectedImageFile = temp;
+            selectImageFileLabel.setText("Selected: " + temp.getName());
         }
     }
 }

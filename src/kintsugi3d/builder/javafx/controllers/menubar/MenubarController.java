@@ -44,6 +44,7 @@ import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.PrimaryViewSelectController;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.CurrentProjectInputSource;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.InputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
@@ -69,10 +70,7 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -907,8 +905,7 @@ public class MenubarController
 
             viewLoader.load();
 
-            CurrentProjectInputSource inputSource = new CurrentProjectInputSource();
-            inputSource.setIncludeNoneItem(false);
+            CurrentProjectInputSource inputSource = getCurrentProjectInputSource();
 
             FXMLPage viewPage = new FXMLPage("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml", viewLoader);
             pages.add(viewPage);
@@ -936,6 +933,45 @@ public class MenubarController
         {
             handleException("An error occurred opening color checker window", e);
         }
+    }
+
+    private static CurrentProjectInputSource getCurrentProjectInputSource()
+    {
+        CurrentProjectInputSource inputSource = new CurrentProjectInputSource()
+        {
+            // Override this method to set the initial selection to the primary view instead of orientation view
+            @Override
+            public void setOrientationViewDefaultSelections(PrimaryViewSelectController controller)
+            {
+                ViewSet currentViewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+
+                if (currentViewSet == null)
+                    return;
+
+                // Set the initial selection to what is currently being used
+                TreeItem<String> selectionItem = InputSource.NONE_ITEM;
+
+                if (currentViewSet.getPrimaryViewIndex() >= 0)
+                {
+                    String viewName = currentViewSet.getImageFileName(currentViewSet.getPrimaryViewIndex());
+
+                    for (int i = 0; i < searchableTreeView.getTreeView().getExpandedItemCount(); i++)
+                    {
+                        TreeItem<String> item = searchableTreeView.getTreeView().getTreeItem(i);
+                        if (Objects.equals(item.getValue(), viewName))
+                        {
+                            selectionItem = item;
+                            break;
+                        }
+                    }
+                }
+
+                searchableTreeView.getTreeView().getSelectionModel().select(selectionItem);
+            }
+        };
+
+        inputSource.setIncludeNoneItem(false);
+        return inputSource;
     }
 
     public void shading_SystemMemory()

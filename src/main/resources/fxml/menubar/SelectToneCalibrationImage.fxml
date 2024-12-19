@@ -14,6 +14,7 @@
                </ToggleButton>
             <ToggleButton fx:id="selectImageFileButton" styleClass="wireframeSubtitle" layoutX="150.0" layoutY="240.0" mnemonicParsing="false" prefHeight="80.0" prefWidth="320.0" text="Select Image...">
                </ToggleButton>
+            <Label fx:id="selectImageFileLabel"></Label>
          </children>
       </VBox>
    </children>
