@@ -883,7 +883,6 @@ public class MenubarController
             FXMLLoader eyedropLoader = new FXMLLoader(getClass().getResource("/fxml/menubar/EyedropperColorChecker.fxml"));
             eyedropLoader.load();
             FXMLPage eyedropPage = new FXMLPage("/fxml/menubar/EyedropperColorChecker.fxml", eyedropLoader);
-            EyedropperController eyedropperController = eyedropLoader.getController();
 
             FXMLLoader viewLoader = new FXMLLoader(getClass().getResource("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml"));
 
@@ -913,10 +912,6 @@ public class MenubarController
             FXMLLoader imageSelectorLoader = new FXMLLoader(getClass().getResource("/fxml/menubar/SelectToneCalibrationImage.fxml"));
             imageSelectorLoader.load();
             FXMLPage imageSelectorPage = new FXMLPage("/fxml/menubar/SelectToneCalibrationImage.fxml", imageSelectorLoader);
-
-            SelectToneCalibrationImageController imageSelectorController = imageSelectorLoader.getController();
-            imageSelectorController.setEyedropperController(eyedropperController);
-
             pages.add(imageSelectorPage);
             viewPage.setNextPage(imageSelectorPage);
 

@@ -742,6 +742,13 @@ public class EyedropperController extends FXMLPageController implements Initiali
     public void refresh()
     {
         setIOModel(MultithreadModels.getInstance().getIOModel());
+
+        ProjectModelBase project = (ProjectModelBase) MultithreadModels.getInstance().getProjectModel();
+        if (project != null)
+        {
+            setImage(new File(project.getColorCheckerFile()));
+        }
+
         updateApplyButton();
     }
 

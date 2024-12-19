@@ -11,6 +11,8 @@ import javafx.stage.FileChooser;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
+import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
+import kintsugi3d.builder.javafx.internal.ProjectModelBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +33,6 @@ public class SelectToneCalibrationImageController extends FXMLPageController
     private File selectedImageFile = null;
 
     private final ToggleGroup buttonGroup = new ToggleGroup();
-    private EyedropperController eyedropperController;
 
     public SelectToneCalibrationImageController()
     {
@@ -70,17 +71,9 @@ public class SelectToneCalibrationImageController extends FXMLPageController
     public void refresh()
     { }
 
-    public void setEyedropperController(EyedropperController controller)
-    {
-        this.eyedropperController = controller;
-    }
-
     @Override
     public void nextButtonPressed()
     {
-        if (eyedropperController == null)
-            return;
-
         File imageFile = null;
         if (buttonGroup.getSelectedToggle() == primaryViewImageButton)
         {
@@ -98,7 +91,15 @@ public class SelectToneCalibrationImageController extends FXMLPageController
         }
 
         log.debug("Using image for tone calibration eyedropper: {}", imageFile);
-        eyedropperController.setImage(imageFile);
+        ObservableProjectModel project = (ObservableProjectModel) MultithreadModels.getInstance().getProjectModel();
+        try
+        {
+            project.setColorCheckerFile(imageFile.getAbsolutePath());
+        }
+        catch (NullPointerException ex)
+        {
+            log.error("Failed to set tone calibration image!");
+        }
     }
 
     private void selectImageFileAction(ActionEvent event)
