@@ -885,6 +885,7 @@ public class MenubarController
             FXMLLoader eyedropLoader = new FXMLLoader(getClass().getResource("/fxml/menubar/EyedropperColorChecker.fxml"));
             eyedropLoader.load();
             FXMLPage eyedropPage = new FXMLPage("/fxml/menubar/EyedropperColorChecker.fxml", eyedropLoader);
+            EyedropperController eyedropperController = eyedropLoader.getController();
 
             FXMLLoader viewLoader = new FXMLLoader(getClass().getResource("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml"));
 
@@ -899,9 +900,8 @@ public class MenubarController
                 @Override
                 public void nextButtonPressed()
                 {
-                    EyedropperController controller = eyedropLoader.getController();
                     String viewName = getSelectedViewName();
-                    controller.setImage(MultithreadModels.getInstance().getIOModel().getLoadedViewSet().getFullResImageFile(viewName));
+                    MultithreadModels.getInstance().getIOModel().getLoadedViewSet().setPrimaryView(viewName);
                 }
             });
 
@@ -912,8 +912,19 @@ public class MenubarController
 
             FXMLPage viewPage = new FXMLPage("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml", viewLoader);
             pages.add(viewPage);
+
+            FXMLLoader imageSelectorLoader = new FXMLLoader(getClass().getResource("/fxml/menubar/SelectToneCalibrationImage.fxml"));
+            imageSelectorLoader.load();
+            FXMLPage imageSelectorPage = new FXMLPage("/fxml/menubar/SelectToneCalibrationImage.fxml", imageSelectorLoader);
+
+            SelectToneCalibrationImageController imageSelectorController = imageSelectorLoader.getController();
+            imageSelectorController.setEyedropperController(eyedropperController);
+
+            pages.add(imageSelectorPage);
+            viewPage.setNextPage(imageSelectorPage);
+
             pages.add(eyedropPage);
-            viewPage.setNextPage(eyedropPage);
+            imageSelectorPage.setNextPage(eyedropPage);
 
             FXMLPageScrollerController scrollerController = makeWindow("Tone Calibration", colorCheckerWindowOpen,
                 "fxml/menubar/FXMLPageScroller.fxml");
