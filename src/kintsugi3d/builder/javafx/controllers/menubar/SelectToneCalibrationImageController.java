@@ -56,8 +56,6 @@ public class SelectToneCalibrationImageController extends FXMLPageController
 
         buttonGroup.selectToggle(primaryViewImageButton);
 
-        previousImageButton.setDisable(true); //TODO: Only if no image was previously selected
-
         selectImageFileButton.setOnAction(this::selectImageFileAction);
 
         selectImageFileLabel.setVisible(selectImageFileButton.isSelected());
@@ -69,7 +67,12 @@ public class SelectToneCalibrationImageController extends FXMLPageController
 
     @Override
     public void refresh()
-    { }
+    {
+        ObservableProjectModel project = (ObservableProjectModel) MultithreadModels.getInstance().getProjectModel();
+
+        boolean hasPreviousColorCheckerImage = project.getColorCheckerFile() != null && !project.getColorCheckerFile().isEmpty();
+        previousImageButton.setDisable(!hasPreviousColorCheckerImage);
+    }
 
     @Override
     public void nextButtonPressed()
@@ -81,24 +84,16 @@ public class SelectToneCalibrationImageController extends FXMLPageController
             int primaryViewIndex = viewSet.getPrimaryViewIndex();
             imageFile = viewSet.getFullResImageFile(primaryViewIndex);
         }
-        else if (buttonGroup.getSelectedToggle() == previousImageButton)
-        {
-            //TODO: Pull the previously selected image path from the project file
-        }
         else if (buttonGroup.getSelectedToggle() == selectImageFileButton)
         {
             imageFile = selectedImageFile;
         }
 
-        log.debug("Using image for tone calibration eyedropper: {}", imageFile);
-        ObservableProjectModel project = (ObservableProjectModel) MultithreadModels.getInstance().getProjectModel();
-        try
+        if (imageFile != null)
         {
+            log.debug("Setting new color calibration image: {}", imageFile);
+            ObservableProjectModel project = (ObservableProjectModel) MultithreadModels.getInstance().getProjectModel();
             project.setColorCheckerFile(imageFile.getAbsolutePath());
-        }
-        catch (NullPointerException ex)
-        {
-            log.error("Failed to set tone calibration image!");
         }
     }
 
