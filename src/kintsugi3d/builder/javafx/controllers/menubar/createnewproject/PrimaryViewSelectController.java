@@ -13,10 +13,7 @@ package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
@@ -59,6 +56,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     @FXML private TextField imgSearchTxtField;
     @FXML private CheckBox regexMode;
     @FXML private VBox orientationControlsVBox;
+    @FXML private Label hintTextLabel;
 
     private InputSource source;
     private HashMap<String, Image> imgCache;
@@ -72,6 +70,12 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
         chunkTreeView.getSelectionModel().selectedIndexProperty().addListener((a, b, c)-> selectImageInTreeView());
         this.imgCache = new HashMap<>();
+        hintTextLabel.setText(getHintText());
+    }
+
+    protected String getHintText()
+    {
+        return "Select model orientation view";
     }
 
     @Override

@@ -900,6 +900,12 @@ public class MenubarController
                     String viewName = getSelectedViewName();
                     MultithreadModels.getInstance().getIOModel().getLoadedViewSet().setPrimaryView(viewName);
                 }
+
+                @Override
+                protected String getHintText()
+                {
+                    return "Select light calibration view";
+                }
             });
 
             viewLoader.load();
