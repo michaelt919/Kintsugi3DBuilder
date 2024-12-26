@@ -67,9 +67,20 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         out.printf("c\t%.8f\t%.8f", viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane());
         out.println();
 
+        // Correct for the primary view selection index being moved to 0 when written to the vset file
+        int correctedOrientationViewIndex = viewSet.getOrientationViewIndex();
+        if (viewSet.getPrimaryViewIndex() == correctedOrientationViewIndex)
+        {
+            correctedOrientationViewIndex = 0;
+        }
+        else if (viewSet.getPrimaryViewIndex() > correctedOrientationViewIndex)
+        {
+            correctedOrientationViewIndex += 1;
+        }
+
         out.println();
         out.println("# Reference orientation view index");
-        out.println("O " + viewSet.getOrientationViewIndex());
+        out.println("O " + correctedOrientationViewIndex);
         out.println();
 
         out.println();
