@@ -20,7 +20,7 @@
    <children>
       <VBox>
          <children>
-            <Label fx:id="hintTextLabel" prefWidth="830.0" alignment="CENTER" styleClass="wireframeTitle" textAlignment="CENTER" >Select model orientation view</Label>
+            <Label fx:id="hintTextLabel" prefWidth="830.0" alignment="CENTER" styleClass="wireframeSubtitle" textAlignment="CENTER" >Select model orientation view</Label>
             <HBox spacing="40.0">
                <children>
                   <VBox spacing="20.0">

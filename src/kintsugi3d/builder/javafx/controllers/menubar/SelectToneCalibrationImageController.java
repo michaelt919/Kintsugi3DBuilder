@@ -12,7 +12,6 @@ import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.internal.ObservableProjectModel;
-import kintsugi3d.builder.javafx.internal.ProjectModelBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +61,7 @@ public class SelectToneCalibrationImageController extends FXMLPageController
         buttonGroup.selectedToggleProperty().addListener((a, b, c) ->
         {
             selectImageFileLabel.setVisible(selectImageFileButton.isSelected());
+            hostScrollerController.updatePrevAndNextButtons();
         });
     }
 
@@ -72,6 +72,11 @@ public class SelectToneCalibrationImageController extends FXMLPageController
 
         boolean hasPreviousColorCheckerImage = project.getColorCheckerFile() != null && !project.getColorCheckerFile().isEmpty();
         previousImageButton.setDisable(!hasPreviousColorCheckerImage);
+
+        if (hasPreviousColorCheckerImage)
+        {
+            buttonGroup.selectToggle(previousImageButton);
+        }
     }
 
     @Override
@@ -95,6 +100,12 @@ public class SelectToneCalibrationImageController extends FXMLPageController
             ObservableProjectModel project = (ObservableProjectModel) MultithreadModels.getInstance().getProjectModel();
             project.setColorCheckerFile(imageFile.getAbsolutePath());
         }
+    }
+
+    @Override
+    public boolean isNextButtonValid()
+    {
+        return buttonGroup.getSelectedToggle() != null;
     }
 
     private void selectImageFileAction(ActionEvent event)
