@@ -2,9 +2,14 @@
 #include <colorappearance/material.glsl>
 #include <specularfit/evaluateBRDF.glsl>
 
+#ifndef WEIGHTMAP_INDEX
+#define WEIGHTMAP_INDEX 0
+#endif
+
 layout(location = 0) out vec4 fragColor;
+// set index of weightmap as an out variable for overlay?
 
 void main() {
     //vec4 red = vec4(1, 0, 0, 1);
-    fragColor = texture(weightMaps, vec3(fTexCoord, 6));
+    fragColor = texture(weightMaps, vec3(fTexCoord, WEIGHTMAP_INDEX));
 }

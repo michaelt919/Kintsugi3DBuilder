@@ -14,10 +14,7 @@ package kintsugi3d.builder.rendering;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
@@ -539,6 +536,15 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         if (ibrInstance != null)
         {
             ibrInstance.getDynamicResourceManager().requestFragmentShader(shaderFile);
+        }
+    }
+
+    @Override
+    public void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines)
+    {
+        if (ibrInstance != null)
+        {
+            ibrInstance.getDynamicResourceManager().requestFragmentShader(shaderFile, extraDefines);
         }
     }
 

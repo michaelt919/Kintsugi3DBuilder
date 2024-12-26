@@ -66,10 +66,7 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -495,16 +492,16 @@ public class MenubarController
     private void updateShaderList() {
         int value = 8;
         for (int i = 0; i < value; ++i) {
-            weightmapPath = "rendermodes/weightmaps/weightmap0" + i + ".frag";
-            superimposePath = "rendermodes/weightmaps/weightmapOverlay0" + i + ".frag";
-
             RadioMenuItem heatmap = new RadioMenuItem("Weight map " + i);
             RadioMenuItem b = new RadioMenuItem("Weight map " + i);
 
+            Map<String, Optional<Object>> defines = new HashMap<>();
+            defines.put("WEIGHTMAP_INDEX", Optional.of(i));
+
             heatmap.setToggleGroup(renderGroup);
-            heatmap.setUserData(weightmapPath);
+            heatmap.setUserData(new RenderingShaderUserData("rendermodes/weightmaps/weightmapSingle.frag", defines));
             b.setToggleGroup(renderGroup);
-            b.setUserData(superimposePath);
+            b.setUserData(new RenderingShaderUserData("rendermodes/weightmaps/weightmapOverlay.frag", defines));
 
             heatmapMenu.getItems().add(i, heatmap);
             superimposeMenu.getItems().add(i, b);
@@ -593,16 +590,25 @@ public class MenubarController
     {
         renderGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) ->
         {
+            RenderingShaderUserData shaderData = null;
             if (newValue != null && newValue.getUserData() instanceof String)
             {
-                MultithreadModels.getInstance().getIOModel()
-                    .requestFragmentShader(new File("shaders", (String)newValue.getUserData()));
+                shaderData = new RenderingShaderUserData((String) newValue.getUserData());
             }
 
-//            if (newValue != null && newValue.getUserData() instanceof StandardRenderingMode)
-//            {
-//                internalModels.getSettingsModel().set("renderingMode", newValue.getUserData());
-//            }
+            if (newValue != null && newValue.getUserData() instanceof RenderingShaderUserData)
+            {
+                shaderData = (RenderingShaderUserData) newValue.getUserData();
+            }
+
+            if (shaderData == null)
+            {
+                handleException("Failed to parse shader data for rendering option.", new RuntimeException("shaderData is null!"));
+                return;
+            }
+
+            MultithreadModels.getInstance().getIOModel()
+                .requestFragmentShader(new File("shaders", shaderData.getShaderName()), shaderData.getShaderDefines());
         });
     }
 

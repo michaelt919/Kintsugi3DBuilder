@@ -13,6 +13,7 @@ package kintsugi3d.builder.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Map;
 import java.util.Optional;
 
 import kintsugi3d.gl.vecmath.Vector3;
@@ -21,6 +22,8 @@ import kintsugi3d.util.EncodableColorImage;
 public interface DynamicResourceManager
 {
     void requestFragmentShader(File shaderFile);
+
+    void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines);
 
     /**
      * Load a new backplate image.

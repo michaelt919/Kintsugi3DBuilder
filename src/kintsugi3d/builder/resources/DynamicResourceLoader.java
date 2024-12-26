@@ -15,6 +15,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import javax.imageio.ImageIO;
@@ -49,6 +50,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
     private final Object loadEnvironmentLock = new Object();
 
     private volatile File desiredShaderFile;
+    private volatile Map<String, Optional<Object>> shaderDefines;
 
     private volatile File desiredEnvironmentFile;
 
@@ -97,6 +99,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
         if (this.desiredShaderFile != null)
         {
             this.subject.useFragmentShader(desiredShaderFile);
+            this.subject.setExtraFragmentShaderDefines(this.shaderDefines);
             this.subject.reloadShaders();
 
             this.desiredShaderFile = null;
@@ -220,6 +223,13 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
     public void requestFragmentShader(File shaderFile)
     {
         this.desiredShaderFile = shaderFile;
+    }
+
+    @Override
+    public void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines)
+    {
+        this.desiredShaderFile = shaderFile;
+        this.shaderDefines = extraDefines;
     }
 
     @Override
