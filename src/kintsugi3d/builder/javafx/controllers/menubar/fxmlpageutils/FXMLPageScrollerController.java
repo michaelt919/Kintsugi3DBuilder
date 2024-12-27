@@ -47,7 +47,18 @@ public class FXMLPageScrollerController {
 
         currentPage.getController().setButtonShortcuts();
         Platform.runLater(()-> outerGridPane.getScene().getWindow().requestFocus());
+
+        outerGridPane.getScene().getWindow().setOnCloseRequest(this::onCloseRequest);
     }
+
+    private void onCloseRequest(WindowEvent windowEvent)
+    {
+        if (!currentPage.getController().closeButtonPressed())
+        {
+            windowEvent.consume();
+        }
+    }
+
     public void prevPage() {
         if (currentPage.hasPrevPage()){
             currentPage = currentPage.getPrevPage();

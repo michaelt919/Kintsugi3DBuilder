@@ -28,7 +28,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
-import javafx.scene.control.Alert;
+import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -773,8 +773,10 @@ public class EyedropperController extends FXMLPageController implements Initiali
         return true;
     }
 
-//    public void setExitCallback(Runnable exitCallback)
-//    {
-//        this.exitCallback = exitCallback;
-//    }
+    @Override
+    public boolean closeButtonPressed()
+    {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Discard tone calibration changes?");
+        return alert.showAndWait().get() == ButtonType.OK;
+    }
 }

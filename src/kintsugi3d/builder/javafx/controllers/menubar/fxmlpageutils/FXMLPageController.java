@@ -60,4 +60,9 @@ public abstract class FXMLPageController {
     {
         return true;
     }
+
+    public boolean closeButtonPressed()
+    {
+        return true;
+    }
 }
