@@ -906,6 +906,12 @@ public class MenubarController
                 {
                     return "Select light calibration view";
                 }
+
+                @Override
+                protected boolean showFixOrientation()
+                {
+                    return false;
+                }
             });
 
             viewLoader.load();

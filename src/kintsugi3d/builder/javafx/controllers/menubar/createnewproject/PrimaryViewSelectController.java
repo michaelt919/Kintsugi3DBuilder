@@ -102,6 +102,8 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                 }
             }
         }
+
+        orientationControlsVBox.setVisible(showFixOrientation());
     }
 
     @Override
@@ -154,7 +156,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             else
             {
                 // Show orientation controls
-                orientationControlsVBox.setVisible(true);
+                orientationControlsVBox.setVisible(showFixOrientation());
 
                 // Set confirm button text
                 hostScrollerController.updateNextButtonLabel(canConfirm() ? "Confirm" : "Next");
@@ -261,5 +263,10 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         }
 
         return viewName;
+    }
+
+    protected boolean showFixOrientation()
+    {
+        return true;
     }
 }
