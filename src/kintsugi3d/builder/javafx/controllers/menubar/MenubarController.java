@@ -42,6 +42,7 @@ import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.LightCalibrationViewSelectController;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.PrimaryViewSelectController;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.CurrentProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.InputSource;
@@ -886,33 +887,8 @@ public class MenubarController
 
             FXMLLoader viewLoader = new FXMLLoader(getClass().getResource("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml"));
 
-            viewLoader.setControllerFactory(c -> new PrimaryViewSelectController()
-            {
-                @Override
-                public boolean canConfirm()
-                {
-                    return false;
-                }
-
-                @Override
-                public void nextButtonPressed()
-                {
-                    String viewName = getSelectedViewName();
-                    MultithreadModels.getInstance().getIOModel().getLoadedViewSet().setPrimaryView(viewName);
-                }
-
-                @Override
-                protected String getHintText()
-                {
-                    return "Select light calibration view";
-                }
-
-                @Override
-                protected boolean showFixOrientation()
-                {
-                    return false;
-                }
-            });
+            // Override controller class
+            viewLoader.setControllerFactory(c -> new LightCalibrationViewSelectController());
 
             viewLoader.load();
 

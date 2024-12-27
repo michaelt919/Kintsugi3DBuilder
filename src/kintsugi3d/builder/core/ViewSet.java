@@ -902,7 +902,7 @@ public final class ViewSet implements ReadonlyViewSet
         this.primaryViewIndex = poseIndex;
     }
 
-    private int findIndexOfView(String viewName)
+    public int findIndexOfView(String viewName)
     {
         int poseIndex = this.imageFiles.indexOf(new File(viewName));
         if (poseIndex >= 0)

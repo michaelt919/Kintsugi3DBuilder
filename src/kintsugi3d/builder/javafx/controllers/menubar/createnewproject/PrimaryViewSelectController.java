@@ -40,6 +40,10 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Controller for the PrimaryViewSelector, which is now used as the orientation view selector
+ */
+//TODO: Rename to OrientationViewSelectController for clarity?
 public class PrimaryViewSelectController extends FXMLPageController implements ConfirmablePage, ImageThreadable
 {
     //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"

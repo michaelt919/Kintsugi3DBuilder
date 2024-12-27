@@ -56,5 +56,8 @@ public abstract class FXMLPageController {
     public void setLoadStartCallback(Runnable callback){this.loadStartCallback = callback;}
     public void setViewSetCallback(Consumer<ViewSet> callback){this.viewSetCallback = callback;}
 
-    public void nextButtonPressed() {}
+    public boolean nextButtonPressed()
+    {
+        return true;
+    }
 }

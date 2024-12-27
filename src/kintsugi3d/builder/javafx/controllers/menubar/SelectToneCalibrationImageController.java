@@ -2,9 +2,7 @@ package kintsugi3d.builder.javafx.controllers.menubar;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
@@ -16,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.Optional;
 
 public class SelectToneCalibrationImageController extends FXMLPageController
 {
@@ -80,7 +79,7 @@ public class SelectToneCalibrationImageController extends FXMLPageController
     }
 
     @Override
-    public void nextButtonPressed()
+    public boolean nextButtonPressed()
     {
         File imageFile = null;
         if (buttonGroup.getSelectedToggle() == primaryViewImageButton)
@@ -96,10 +95,23 @@ public class SelectToneCalibrationImageController extends FXMLPageController
 
         if (imageFile != null)
         {
+            if (true/*tone calibration values are not cleared*/) //TODO
+            {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Change tone calibration image? This will clear any previous tone calibration values!");
+                Optional<ButtonType> confirmResult = alert.showAndWait();
+                if (confirmResult.isEmpty() || confirmResult.get() != ButtonType.OK)
+                {
+                    return false;
+                }
+            }
+
+            //TODO: Clear tone calibration values
             log.debug("Setting new color calibration image: {}", imageFile);
             ObservableProjectModel project = (ObservableProjectModel) MultithreadModels.getInstance().getProjectModel();
             project.setColorCheckerFile(imageFile.getAbsolutePath());
         }
+
+        return true;
     }
 
     @Override

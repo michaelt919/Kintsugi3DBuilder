@@ -63,7 +63,10 @@ public class FXMLPageScrollerController {
     public void nextPage() {
         if (!currentPage.hasNextPage()){return;}
 
-        currentPage.getController().nextButtonPressed();
+        if (!currentPage.getController().nextButtonPressed())
+        {
+            return;
+        }
 
         String nextPath;
         try{
