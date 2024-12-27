@@ -95,7 +95,8 @@ public class SelectToneCalibrationImageController extends FXMLPageController
 
         if (imageFile != null)
         {
-            if (true/*tone calibration values are not cleared*/) //TODO
+            ViewSet viewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+            if (viewSet.hasCustomLuminanceEncoding())
             {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Change tone calibration image? This will clear any previous tone calibration values!");
                 Optional<ButtonType> confirmResult = alert.showAndWait();
@@ -105,7 +106,8 @@ public class SelectToneCalibrationImageController extends FXMLPageController
                 }
             }
 
-            //TODO: Clear tone calibration values
+            viewSet.clearTonemapping();
+
             log.debug("Setting new color calibration image: {}", imageFile);
             ObservableProjectModel project = (ObservableProjectModel) MultithreadModels.getInstance().getProjectModel();
             project.setColorCheckerFile(imageFile.getAbsolutePath());

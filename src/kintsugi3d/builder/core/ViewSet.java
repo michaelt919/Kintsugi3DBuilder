@@ -1088,6 +1088,12 @@ public final class ViewSet implements ReadonlyViewSet
         this.encodedLuminanceValues = encodedLuminanceValues.clone();
     }
 
+    public void clearTonemapping()
+    {
+        this.linearLuminanceValues = null;
+        this.encodedLuminanceValues = null;
+    }
+
     @Override
     public boolean areLightSourcesInfinite()
     {

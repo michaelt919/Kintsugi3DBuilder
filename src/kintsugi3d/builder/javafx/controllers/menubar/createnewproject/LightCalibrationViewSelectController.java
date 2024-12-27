@@ -27,7 +27,7 @@ public class LightCalibrationViewSelectController extends PrimaryViewSelectContr
             return true;
         }
 
-        if (true/*tone calibration values are not cleared*/) //TODO
+        if (viewSet.hasCustomLuminanceEncoding())
         {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Change light calibration view? This will clear any previous tone calibration values!");
             Optional<ButtonType> confirmResult = alert.showAndWait();
@@ -38,7 +38,7 @@ public class LightCalibrationViewSelectController extends PrimaryViewSelectContr
             }
         }
 
-        //TODO: Clear tone calibration values
+        viewSet.clearTonemapping();
         viewSet.setPrimaryViewIndex(viewIndex);
         return true;
     }
