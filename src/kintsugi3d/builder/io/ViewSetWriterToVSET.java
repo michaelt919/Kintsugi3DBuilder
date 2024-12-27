@@ -69,13 +69,16 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
 
         // Correct for the primary view selection index being moved to 0 when written to the vset file
         int correctedOrientationViewIndex = viewSet.getOrientationViewIndex();
-        if (viewSet.getPrimaryViewIndex() == correctedOrientationViewIndex)
+        if (viewSet.getOrientationViewIndex() >= 0)
         {
-            correctedOrientationViewIndex = 0;
-        }
-        else if (viewSet.getPrimaryViewIndex() > correctedOrientationViewIndex)
-        {
-            correctedOrientationViewIndex += 1;
+            if (viewSet.getPrimaryViewIndex() == correctedOrientationViewIndex)
+            {
+                correctedOrientationViewIndex = 0;
+            }
+            else if (viewSet.getPrimaryViewIndex() > correctedOrientationViewIndex)
+            {
+                correctedOrientationViewIndex += 1;
+            }
         }
 
         out.println();
