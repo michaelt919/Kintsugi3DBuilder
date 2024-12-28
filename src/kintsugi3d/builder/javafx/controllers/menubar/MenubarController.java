@@ -130,6 +130,7 @@ public class MenubarController
     @FXML private CheckMenuItem visibleLightWidgetsCheckMenuItem;
     @FXML private CheckMenuItem visibleCameraPoseCheckMenuItem;
     @FXML private CheckMenuItem visibleSavedCameraPoseCheckMenuItem;
+    @FXML private RadioMenuItem weightmapCombination;
 
 
     @FXML private Menu exportMenu;
@@ -510,6 +511,11 @@ public class MenubarController
         {
             log.error("Error attempting to load previous solution basis count:", e);
         }
+
+        Map<String, Optional<Object>> comboDefines = new HashMap<>();
+        comboDefines.put("WEIGHTMAP_INDEX", Optional.of(0));
+        comboDefines.put("WEIGHTMAP_COUNT", Optional.of(basisCount));
+        weightmapCombination.setUserData(new RenderingShaderUserData("rendermodes/weightmaps/weightmapCombination.frag", comboDefines));
 
         for (int i = 0; i < basisCount; ++i) {
             RadioMenuItem heatmap = new RadioMenuItem("Weight map " + i);
