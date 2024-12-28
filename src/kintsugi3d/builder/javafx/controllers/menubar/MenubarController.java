@@ -40,6 +40,9 @@ import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.export.projectExporter.ExportRequestUI;
 import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
+import kintsugi3d.builder.export.specular.SpecularFitSerializer;
+import kintsugi3d.builder.fit.decomposition.BasisResources;
+import kintsugi3d.builder.fit.decomposition.SpecularBasis;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
@@ -132,6 +135,7 @@ public class MenubarController
     @FXML private Menu exportMenu;
     @FXML private Menu recentProjectsMenu;
     @FXML private Menu cleanRecentProjectsMenu;
+    @FXML private Menu shadingMenu;
 
     @FXML private CustomMenuItem removeAllRefsCustMenuItem;
     @FXML private CustomMenuItem removeSomeRefsCustMenuItem;
@@ -460,7 +464,9 @@ public class MenubarController
         toggleableShaders.add(materialBasis);
         toggleableShaders.add(imgBasedWithTextures);
         //toggleableShaders.add(weightmapCombination);
+
         updateShaderList();
+        shadingMenu.setOnShowing(e -> updateShaderList());
 
         setToggleableShaderDisable(true);
 
@@ -490,8 +496,22 @@ public class MenubarController
 
     // Populate menu based on a given input number
     private void updateShaderList() {
-        int value = 8;
-        for (int i = 0; i < value; ++i) {
+        heatmapMenu.getItems().clear();
+        superimposeMenu.getItems().clear();
+
+        int basisCount = 0;
+        try
+        {
+            ViewSet viewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+            SpecularBasis basis = SpecularFitSerializer.deserializeBasisFunctions(viewSet.getSupportingFilesFilePath());
+            basisCount = basis.getCount();
+        }
+        catch (IOException | NullPointerException e)
+        {
+            log.error("Error attempting to load previous solution basis count:", e);
+        }
+
+        for (int i = 0; i < basisCount; ++i) {
             RadioMenuItem heatmap = new RadioMenuItem("Weight map " + i);
             RadioMenuItem b = new RadioMenuItem("Weight map " + i);
 

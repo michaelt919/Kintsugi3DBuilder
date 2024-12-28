@@ -1,5 +1,3 @@
-#version 330
-
 /*
  * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota
@@ -12,20 +10,18 @@
  *
  */
 
-#include <colorappearance/material.glsl>
-#include <specularfit/evaluateBRDF.glsl>
+const vec3 WEIGHTMAP_COLORS[8] = vec3[](
+    vec3(0,0,1),
+    vec3(0,1,0),
+    vec3(1,0,0),
+    vec3(1,0,1),
+    vec3(1,1,0),
+    vec3(0,1,1),
+    vec3(0.5,0,1),
+    vec3(0,0.5,0.5)
+);
 
-#ifndef WEIGHTMAP_INDEX
-#define WEIGHTMAP_INDEX 0
-#endif
-
-//in vec3 specularColor;
-layout(location = 0) out vec4 fragColor;
-
-void main() {
-    vec4 weightmapTex = texture(weightMaps, vec3(fTexCoord, WEIGHTMAP_INDEX));
-
-    Material m = getMaterial();
-    fragColor = vec4(vec4(m.specularColor, 1) + (weightmapTex.r * vec4(0.9,0,1,1)));
-
+vec4 getWeightmapColor(int index)
+{
+    return vec4(WEIGHTMAP_COLORS[index], 1);
 }

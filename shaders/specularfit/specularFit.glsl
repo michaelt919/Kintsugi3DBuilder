@@ -1,4 +1,3 @@
-#version 330
 /*
  * Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
  * Copyright (c) 2019 The Regents of the University of Minnesota

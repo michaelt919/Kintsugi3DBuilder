@@ -115,7 +115,7 @@
                             <SeparatorMenuItem mnemonicParsing="false" />
                             <CheckMenuItem fx:id="sceneWindowCheckMenuItem" mnemonicParsing="false" text="Scene Window" />
                         </Menu>
-                        <Menu mnemonicParsing="false" text="Shading">
+                        <Menu fx:id="shadingMenu" mnemonicParsing="false" text="Shading">
                             <RadioMenuItem mnemonicParsing="false" text="Simple specular" toggleGroup="$renderGroup">
                                 <toggleGroup>
                                     <ToggleGroup fx:id="renderGroup" />
@@ -143,7 +143,7 @@
                             </RadioMenuItem>
 <!--                            Testing-->
                             <RadioMenuItem fx:id="weightmapCombination" mnemonicParsing="false" text="Weight maps (combined)" toggleGroup="$renderGroup">
-                                <userData>renderModes/weightmaps/weightmapCombination.frag</userData>
+                                <userData>rendermodes/weightmaps/weightmapCombination.frag</userData>
                             </RadioMenuItem>
 <!--                            Individual weight map visualizations (without existing texture colors)-->
                             <Menu mnemonicParsing="false" fx:id="heatmapMenu" text="Weight maps (heat map visualization)">
