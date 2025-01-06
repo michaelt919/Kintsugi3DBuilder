@@ -173,7 +173,7 @@
                                     <RadioMenuItem mnemonicParsing="false" text="Roughness map" toggleGroup="$renderGroup">
                                         <userData>renderModes/maps/roughnessMap.frag</userData>
                                     </RadioMenuItem>
-                                    <RadioMenuItem mnemonicParsing="false" text="Specular color map" toggleGroup="$renderGroup">
+                                    <RadioMenuItem mnemonicParsing="false" text="Metallicity map" toggleGroup="$renderGroup">
                                         <userData>renderModes/maps/metallicMap.frag</userData>
                                     </RadioMenuItem>
                                     <RadioMenuItem mnemonicParsing="false"  text="Diffuse color map" toggleGroup="$renderGroup">
@@ -181,6 +181,9 @@
                                     </RadioMenuItem>
                                     <RadioMenuItem mnemonicParsing="false" text="Specular color map" toggleGroup="$renderGroup">
                                         <userData>renderModes/specularColor.frag</userData>
+                                    </RadioMenuItem>
+                                    <RadioMenuItem mnemonicParsing="false" text="Error map" toggleGroup="$renderGroup">
+                                        <userData>renderModes/maps/errorMap.frag</userData>
                                     </RadioMenuItem>
 
                                 </items>

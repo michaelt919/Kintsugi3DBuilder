@@ -5,6 +5,6 @@ layout(location = 0) out vec4 fragColor;
 
 void main() {
     vec2 texCoords = getTexCoords();
-    vec3 metallic = texture(ormMap.b, texCoords).rgb;
-    fragColor = vec4(metallic, 1);
+    float metallic = texture(ormMap, texCoords).b;
+    fragColor = vec4(vec3(metallic), 1);
 }

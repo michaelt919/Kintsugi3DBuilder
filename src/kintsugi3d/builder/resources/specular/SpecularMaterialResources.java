@@ -11,12 +11,12 @@
 
 package kintsugi3d.builder.resources.specular;
 
+import java.io.File;
+import java.util.Map;
+
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.gl.core.*;
-
-import java.io.File;
-import java.io.IOException;
 
 public interface SpecularMaterialResources<ContextType extends Context<ContextType>>
     extends AutoCloseable, ContextBound<ContextType>, Blittable<SpecularMaterialResources<ContextType>>
@@ -40,6 +40,11 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
     {
         // Occlusion would be in red channel so ORM can be used in place of occlusion if no explicit occlusion map
         return getORMMap();
+    }
+
+    default Map<String, Texture2D<ContextType>> getMetadataMaps()
+    {
+        return Map.of();
     }
 
     BasisResources<ContextType> getBasisResources();
@@ -95,6 +100,7 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
      * @param srcHeight The height of the rectangle to copy at the source resolution.
      * @param linearFiltering Whether or not to use linear filtering if the dimensions of the source and destination are not the same.
      */
+    @Override
     default void blitCroppedAndScaled(int destX, int destY, int destWidth, int destHeight,
         SpecularMaterialResources<ContextType> readSource, int srcX, int srcY, int srcWidth, int srcHeight, boolean linearFiltering)
     {
@@ -130,6 +136,15 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
                 readSource, readSource.getBasisWeightResources().weightMaps, srcX, srcY, srcWidth, srcHeight, linearFiltering);
             blitCroppedAndScaledSingle(this.getBasisWeightResources().weightMask, destX, destY, destWidth, destHeight,
                 readSource, readSource.getBasisWeightResources().weightMask, srcX, srcY, srcWidth, srcHeight, linearFiltering);
+        }
+
+        for (String key : this.getMetadataMaps().keySet())
+        {
+            if (readSource.getMetadataMaps().containsKey(key)) // both source and destination must contain the metadata map to blit
+            {
+                blitCroppedAndScaledSingle(this.getMetadataMaps().get(key), destX, destY, destWidth, destHeight,
+                    readSource, readSource.getMetadataMaps().get(key), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+            }
         }
     }
 
@@ -283,7 +298,7 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
             }
 
             @Override
-            public void saveAll(File outputDirectory)
+            public void saveMetadataMaps(File outputDirectory)
             {
             }
         };
@@ -311,5 +326,25 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
 
     void saveBasisFunctions(File outputDirectory);
 
-    void saveAll(File outputDirectory);
+    void saveMetadataMaps(File outputDirectory);
+
+    /**
+     * Saves all resources to the specified output directory
+     * @param outputDirectory
+     */
+    default void saveAll(File outputDirectory)
+    {
+        saveDiffuseMap(outputDirectory);
+        saveNormalMap(outputDirectory);
+        saveConstantMap(outputDirectory);
+        saveOcclusionMap(outputDirectory);
+        saveAlbedoMap(outputDirectory);
+        saveORMMap(outputDirectory);
+        saveSpecularReflectivityMap(outputDirectory);
+        saveSpecularRoughnessMap(outputDirectory);
+        savePackedWeightMaps(outputDirectory);
+        saveUnpackedWeightMaps(outputDirectory);
+        saveBasisFunctions(outputDirectory);
+        saveMetadataMaps(outputDirectory);
+    }
 }
