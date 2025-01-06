@@ -138,12 +138,14 @@ public interface SpecularMaterialResources<ContextType extends Context<ContextTy
                 readSource, readSource.getBasisWeightResources().weightMask, srcX, srcY, srcWidth, srcHeight, linearFiltering);
         }
 
-        for (String key : this.getMetadataMaps().keySet())
+        Map<String, Texture2D<ContextType>> metadataMaps = this.getMetadataMaps();
+        for (var entry : metadataMaps.entrySet())
         {
-            if (readSource.getMetadataMaps().containsKey(key)) // both source and destination must contain the metadata map to blit
+            Map<String, Texture2D<ContextType>> sourceMetadataMaps = readSource.getMetadataMaps();
+            if (sourceMetadataMaps.containsKey(entry.getKey())) // both source and destination must contain the metadata map to blit
             {
-                blitCroppedAndScaledSingle(this.getMetadataMaps().get(key), destX, destY, destWidth, destHeight,
-                    readSource, readSource.getMetadataMaps().get(key), srcX, srcY, srcWidth, srcHeight, linearFiltering);
+                blitCroppedAndScaledSingle(entry.getValue(), destX, destY, destWidth, destHeight,
+                    readSource, sourceMetadataMaps.get(entry.getKey()), srcX, srcY, srcWidth, srcHeight, linearFiltering);
             }
         }
     }
