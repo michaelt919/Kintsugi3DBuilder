@@ -42,6 +42,7 @@ import kintsugi3d.gl.core.Texture2D;
 import kintsugi3d.gl.material.ReadonlyMaterial;
 import kintsugi3d.gl.material.ReadonlyMaterialTextureMap;
 import kintsugi3d.util.ImageFinder;
+import org.ejml.simple.SimpleMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -378,6 +379,17 @@ public class SpecularFitProcess
                             // Use basis functions previously optimized at a lower resolution
                             SpecularDecomposition blockDecomposition =
                                 new SpecularDecompositionFromExistingBasis(blockSettings, sampledDecomposition);
+
+                            if (sampledDecomposition.getSpecularBasis().getCount() == 1)
+                            {
+                                // special case for a single basis function: pre-fill with default weights so that optimization is unnecesssary.
+                                int weightCount = blockSettings.width * blockSettings.height;
+                                for (int p = 0; p < weightCount; p++)
+                                {
+                                    blockDecomposition.setWeights(p, SimpleMatrix.identity(1));
+                                    blockDecomposition.setWeightsValidity(p, true);
+                                }
+                            }
 
                             // Optimize weights and normals
                             optimizeTexSpaceFit(blockResources,
