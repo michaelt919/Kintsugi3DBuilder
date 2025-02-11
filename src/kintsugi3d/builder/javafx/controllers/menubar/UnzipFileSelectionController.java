@@ -24,6 +24,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.PrimaryViewSelectController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,22 +147,16 @@ public class UnzipFileSelectionController {
 
         try {
             //load chunk viewer window
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/menubar/ChunkViewer.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/menubar/PrimaryViewSelect.fxml"));
             root = fxmlLoader.load();
-            ChunkViewerController chunkViewerController = fxmlLoader.getController();
+            PrimaryViewSelectController primaryViewSelectController = fxmlLoader.getController();
 
             metashapeObject.setPsxFilePath(psxPathTxtField.getText());
 
             //TODO: actually find model id instead of defaulting to 0
             MetashapeObjectChunk metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, selectedChunkName, 0);
 
-            chunkViewerController.initializeChunkSelectionAndTreeView(metashapeObjectChunk);
-
-            // Pass a reference of the LoaderController to callback in the chunk viewer controller.
-            // This is how the chosen chunk will be passed to the LoaderController
-            if(loaderControllerCallback != null){
-                chunkViewerController.loaderControllerCallback = loaderControllerCallback;
-            }
+            primaryViewSelectController.initTreeView(metashapeObjectChunk);
 
         }
         catch (Exception e){

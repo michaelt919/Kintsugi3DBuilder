@@ -11,39 +11,26 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
-import java.awt.*;
-import java.io.File;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.stream.IntStream;
-
-import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
-import javafx.stage.*;
-import javafx.stage.Window;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
-import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
+import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
-import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CustomImportController extends FXMLPageController implements ShareInfo, CanConfirm
+import java.io.File;
+
+public class CustomImportController extends FXMLPageController implements ShareInfo
 {
     private static final Logger log = LoggerFactory.getLogger(CustomImportController.class);
-    @FXML private ChoiceBox<String> primaryViewChoiceBox;
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
     @FXML private Text loadCheckImages;
@@ -69,13 +56,17 @@ public class CustomImportController extends FXMLPageController implements ShareI
         File recentFile = RecentProjects.getMostRecentDirectory();
         setInitDirectories(recentFile);
 
+        camFileChooser.getExtensionFilters().add(new ExtensionFilter("Reality Capture CSV file", "*.csv"));
         camFileChooser.getExtensionFilters().add(new ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
-        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ or PLY file", "*.obj", "*.ply"));
+        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ file", "*.obj"));
+        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Stanford PLY file", "*.ply"));
 
         camFileChooser.setTitle("Select camera positions file");
         objFileChooser.setTitle("Select object file");
 
         photoDirectoryChooser.setTitle("Select photo directory");
+
+        hostPage.setNextPage(hostScrollerController.getPage("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml"));
     }
 
     @Override
@@ -89,66 +80,17 @@ public class CustomImportController extends FXMLPageController implements ShareI
         return areAllFilesLoaded();
     }
 
-    /**
-     * Recursively chains together add calls to the dropdown, using Platform.runLater between each one
-     * to avoid locking up the JavaFX Application thread
-     * @param iterator
-     */
-    private void addToViewListRecursive(Iterator<String> iterator)
-    {
-        primaryViewChoiceBox.getItems().add(iterator.next());
-
-        if (iterator.hasNext())
-        {
-            Platform.runLater(() -> addToViewListRecursive(iterator));
-        }
-        else
-        {
-            // Finished adding all the choices; select the first one by default and re-enable
-            primaryViewChoiceBox.getSelectionModel().select(0);
-            primaryViewChoiceBox.setDisable(false);
-        }
-    }
-
     @FXML
     private void camFileSelect()
     {
-
         File temp = camFileChooser.showOpenDialog(getStage());
 
         if (temp != null)
         {
             cameraFile = temp;
             setHomeDir(temp);
-
-            try
-            {
-                ReadonlyViewSet newViewSet = ViewSetReaderFromAgisoftXML.getInstance().readFromFile(cameraFile);
-
-                loadCheckCameras.setText("Loaded");
-                loadCheckCameras.setFill(Paint.valueOf("Green"));
-
-                primaryViewChoiceBox.getItems().clear();
-
-                if (newViewSet.getCameraPoseCount() > 0)
-                {
-                    // Disable while updating the choices as it won't be responsive until it's done adding all the options
-                    primaryViewChoiceBox.setDisable(true);
-                    Iterator<String> imageIterator = IntStream.range(0, newViewSet.getCameraPoseCount())
-                        .mapToObj(newViewSet::getImageFileName)
-                        .sorted(Comparator.naturalOrder())
-                        .iterator();
-
-                    // Use individual Platform.runLater calls, chained together recursively
-                    // to prevent locking up the JavaFX Application thread
-                    Platform.runLater(() -> addToViewListRecursive(imageIterator));
-                }
-            }
-            catch (Exception e)
-            {
-                log.error("An error occurred reading camera file:", e);
-                new Alert(AlertType.ERROR, e.toString()).show();
-            }
+            loadCheckCameras.setText("Loaded");
+            loadCheckCameras.setFill(Paint.valueOf("Green"));
         }
 
         hostScrollerController.updatePrevAndNextButtons();
@@ -194,12 +136,6 @@ public class CustomImportController extends FXMLPageController implements ShareI
     }
 
 
-    private void close()
-    {
-        Window window = root.getScene().getWindow();
-        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
-    }
-
     private void setHomeDir(File home)
     {
         File parentDir = home.getParentFile();
@@ -228,35 +164,8 @@ public class CustomImportController extends FXMLPageController implements ShareI
     public void shareInfo() {
         hostScrollerController.addInfo(Info.CAM_FILE, cameraFile);
         hostScrollerController.addInfo(Info.PHOTO_DIR, photoDir);
-        hostScrollerController.addInfo(Info.OBJ_FILE, objFile);
-        hostScrollerController.addInfo(Info.PRIMARY_VIEW, primaryViewChoiceBox.getSelectionModel().getSelectedItem());
-    }
+        hostScrollerController.addInfo(Info.MESH_FILE, objFile);
 
-    @Override
-    public void confirmButtonPress() {
-        if (!areAllFilesLoaded()){
-            Toolkit.getDefaultToolkit().beep();
-            return;
-        }
-
-        if (loadStartCallback != null)
-        {
-            loadStartCallback.run();
-        }
-
-        if (viewSetCallback != null)
-        {
-            MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
-                    viewSet -> viewSetCallback.accept(viewSet));
-        }
-
-        new Thread(() ->
-                MultithreadModels.getInstance().getIOModel().loadFromAgisoftFiles(
-                        cameraFile.getPath(), cameraFile, objFile, photoDir,
-                        primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
-                .start();
-
-        WelcomeWindowController.getInstance().hide();
-        close();
+        hostScrollerController.addInfo(Info.METASHAPE_OBJ_CHUNK, null);
     }
 }

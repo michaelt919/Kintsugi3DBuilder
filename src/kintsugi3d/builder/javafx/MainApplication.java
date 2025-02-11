@@ -282,6 +282,7 @@ public class MainApplication extends Application
             StaticUtilities.clamp(0, 0.1, new SimpleFloatProperty(0.0025f)), true);
         settingsModel.createObjectSetting("weightMode", ShadingParameterMode.PER_PIXEL, true);
         settingsModel.createBooleanSetting("is3DGridEnabled", true, true);
+        settingsModel.createBooleanSetting("isCameraVisualEnabled", false, true);
         settingsModel.createBooleanSetting("compassEnabled", false, true);
         settingsModel.createBooleanSetting("multisamplingEnabled", false, true);
         settingsModel.createBooleanSetting("halfResolutionEnabled", false, true);

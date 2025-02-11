@@ -27,11 +27,21 @@ public class ImportOrCustomProjectController extends FXMLPageController {
     }
 
     public void metashapeImportSelect() {
+        //stop other pages from using accelerators to access these methods
+        //ideally, accelerators would be removed from the scene entirely instead of using this workaround
+        //however, attempting to clear accelerators leads to a ConcurrentModificationException
+        //hence, a "temporary" workaround
+        if(!(hostScrollerController.getCurrentPage().getController() instanceof ImportOrCustomProjectController)){
+            return;
+        }
         String importMetashapeFXMLPath = "/fxml/menubar/createnewproject/MetashapeImport.fxml";
         openChildPage(importMetashapeFXMLPath);
     }
 
     public void customImportSelect() {
+        if(!(hostScrollerController.getCurrentPage().getController() instanceof ImportOrCustomProjectController)){
+            return;
+        }
         String customImportFXMLPath = "/fxml/menubar/createnewproject/CustomImport.fxml";
         openChildPage(customImportFXMLPath);
     }
@@ -44,6 +54,7 @@ public class ImportOrCustomProjectController extends FXMLPageController {
 
         KeyCombination chooseCustomCode = new KeyCodeCombination(KeyCode.S);
 
+        //TODO: fix W and S accelerators being applied in pages where they shouldn't
         Scene scene = getHostRegion().getScene();
         scene.getAccelerators().put(chooseMetashapeCode, this::metashapeImportSelect);
         scene.getAccelerators().put(chooseCustomCode, this::customImportSelect);

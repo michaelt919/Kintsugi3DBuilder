@@ -81,8 +81,9 @@
                      <MenuItem mnemonicParsing="false" onAction="#showProgressBars" text="PROGRESS BARS TEST" visible="false" />
                      <MenuItem mnemonicParsing="false" onAction="#showWelcomeWindow" text="SHOW WELCOME WINDOW TEST" visible="false" />
                         </Menu>
-                        <Menu mnemonicParsing="false" text="View" visible="false">
+                        <Menu mnemonicParsing="false" text="View" visible="true">
                             <CheckMenuItem fx:id="is3DGridCheckMenuItem" mnemonicParsing="false" text="3D grid" visible="false" />
+                            <CheckMenuItem fx:id="isCameraVisualCheckMenuItem" mnemonicParsing="false" text="Camera Positions" visible="true" />
                             <CheckMenuItem fx:id="compassCheckMenuItem" mnemonicParsing="false" text="Compass" visible="false" />
                             <CheckMenuItem fx:id="multiSamplingCheckMenuItem" mnemonicParsing="false" text="Multi-sampling" visible="false" />
                         </Menu>

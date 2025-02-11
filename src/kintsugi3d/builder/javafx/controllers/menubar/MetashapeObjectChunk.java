@@ -25,11 +25,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 
 public class MetashapeObjectChunk {
     private static final Logger log = LoggerFactory.getLogger(MetashapeObjectChunk.class);
-    private Integer modelID;
 
     //contains a metashape object and a specific chunk
     private MetashapeObject metashapeObject;
@@ -38,14 +38,15 @@ public class MetashapeObjectChunk {
     private int chunkID;
 
     private Document chunkXML;
-    private Document frameZip;
+    private Document frameXML;
 
     private ArrayList<Triplet<Integer, String, String>> modelInfo = new ArrayList<>(); //model id, name/label, and path
-    private Integer activeModelID;
+    private Integer defaultModelID;
+    private Integer currModelID;
 
     public String getChunkZipPath() { return chunkZipPath; }
     public Document getChunkXML() { return chunkXML; }
-    public Document getFrameZip() { return frameZip; }
+    public Document getFrameXML() { return frameXML; }
 
     public String getChunkDirectoryPath() {
         String psxFilePath = this.metashapeObject.getPsxFilePath();
@@ -61,13 +62,13 @@ public class MetashapeObjectChunk {
         chunkName = "";
         chunkID = -1;//TODO: GOOD NULL CHUNK ID?
         chunkXML = null;
-        frameZip = null;
-        modelID = -1;
+        frameXML = null;
+        currModelID = -1;
     }
 
-    public MetashapeObjectChunk(MetashapeObject metashapeObject, String chunkName, Integer modelID) {
+    public MetashapeObjectChunk(MetashapeObject metashapeObject, String chunkName, Integer currModelID) {
         this.metashapeObject = metashapeObject;
-        this.modelID = modelID;
+        this.currModelID = currModelID;
 
         updateChunk(chunkName);
     }
@@ -94,7 +95,7 @@ public class MetashapeObjectChunk {
         String frameZipPath = getFramePath();
 
         try {
-            this.frameZip = UnzipHelper.unzipToDocument(frameZipPath);
+            this.frameXML = UnzipHelper.unzipToDocument(frameZipPath);
         } catch (IOException e) {
             log.error("An error occurred loading Metashape chunk:", e);
         }
@@ -111,7 +112,7 @@ public class MetashapeObjectChunk {
         //get active id
         try {
             Element elem = (Element) chunkXML.getElementsByTagName("models").item(0);
-            this.activeModelID = Integer.parseInt(elem.getAttribute("active_id"));
+            this.defaultModelID = Integer.parseInt(elem.getAttribute("active_id"));
         }
         catch(NumberFormatException | NullPointerException e){
             log.warn("Could not find active id for " + this.getPsxFilePath(), e);
@@ -226,57 +227,39 @@ public class MetashapeObjectChunk {
         return enabledCams;
     }
 
-    public Element matchImageToCam(String imageName) {
-        //takes in an image name, outputs the camera in frame.zip which took that image
+    public File findFullResImgDirectory(){
+        //get first camera path from frame xml
+        //assume that path is relative to parent of .psx file path
 
-        NodeList cameras = frameZip.getElementsByTagName("frame").
-                item(0).getChildNodes().
-                item(1).getChildNodes();
+        try{
+            NodeList frameCams = frameXML.getElementsByTagName("camera");
 
-        for (int i = 0; i < cameras.getLength(); ++i) {
-            //cameras also holds text fields associated with the cameras, so filter them out
-            if (cameras.item(i).getNodeName().equals("camera")) {
-                Element camera = (Element) cameras.item(i);
+            //this will probably exit after the first camera
+            for(int i = 0; i < frameCams.getLength(); ++i){
+                Element cam = (Element) frameCams.item(i);
 
-                Node photoNode = camera.getElementsByTagName("photo").item(0);
-                Element photoElement = (Element) photoNode;
+                if(cam.getNodeType() != Node.ELEMENT_NODE){continue;}
 
-                //path in photo element contains "../../.." before the name of the image,
-                // so we cannot test for an exact match
-                //using regex to see if the image names are the same regardless of their paths
-                //ex. "folder/anotherFolder/asdfghjk/imageName.png" matches with "imageName.png"
-                if (photoElement.getAttribute("path").matches(".*" + imageName + ".*")) {
-                    return camera;
-                }
+                String pathAttribute = ((Element) cam.getElementsByTagName("photo").item(0)).getAttribute("path");
+                return new File(getPsxFile().getParent(), pathAttribute).getParentFile();
             }
         }
+        catch(NumberFormatException nfe){
+            log.warn("Failed to find full res directory for Metashape Project.", nfe);
+        }
 
-        return null;//no matching camera found
-    }
-
-    public File getImgFileFromCam(Element selectedItemCam) {
-        Element photo = (Element) selectedItemCam.getElementsByTagName("photo").item(0);
-        String path = photo.getAttribute("path");
-        //example path: "../../../160518_mia337_114828_a_ding/160517_mia337_2013_9_7a_ding_nearFocus_R1_C4_0_30.jpg"
-
-        //need to replace ../../../ with the parent of the .psx file
-        File psxFile = new File(this.metashapeObject.getPsxFilePath());
-        String parentPath = psxFile.getParentFile().getAbsolutePath();
-        path = new File(new File(parentPath), path.substring(9)).getPath();
-
-        //String path now holds the full path to the selected thumbnail's full-res image
-        return new File(path);
+        return null;
     }
 
     public String getCurrentModelPath() {
-        return getModelPathFromXML(modelID);
+        return getModelPathFromXML(currModelID);
     }
 
     private String getModelPathFromXML(Integer mID) {
         //  <model id="0" path="model.1/model.zip"/> --> returns "model.1/model.zip"
 
         try{
-            NodeList elems = ((Element) frameZip.getElementsByTagName("frame").item(0))
+            NodeList elems = ((Element) frameXML.getElementsByTagName("frame").item(0))
                     .getElementsByTagName("model");
 
             //this if statement triggers if chunk has one model and that model has no id
@@ -305,5 +288,28 @@ public class MetashapeObjectChunk {
         return modelInfo;
     }
 
-    public Integer getActiveModelID(){return activeModelID;}
+    public Integer getDefaultModelID(){return defaultModelID;}
+
+    public Integer getCurrModelID(){return currModelID;}
+
+    public File getPsxFile() {
+        return metashapeObject.getPsxFile();
+    }
+
+    public boolean equals(Object rhs){
+        if (!(rhs instanceof MetashapeObjectChunk)){
+            return false;
+        }
+
+        MetashapeObjectChunk moc = (MetashapeObjectChunk) rhs;
+        //chunk name is the same
+        //active model id is the same
+        //psx path is the same
+
+        //TODO: may need to revisit this method if more precise criteria are needed
+
+        return Objects.equals(this.chunkName, moc.getChunkName()) &&
+                Objects.equals(this.currModelID, moc.getCurrModelID()) &&
+                this.getPsxFilePath().equals(moc.getPsxFilePath());
+    }
 }

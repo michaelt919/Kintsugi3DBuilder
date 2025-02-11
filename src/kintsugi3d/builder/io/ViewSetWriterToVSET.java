@@ -41,7 +41,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
 
         out.println();
         out.println("# ViewSet UUID");
-        out.println("U " + viewSet.getUuid());
+        out.println("U " + viewSet.getUUID());
 
         if (viewSet.getGeometryFileName() != null)
         {

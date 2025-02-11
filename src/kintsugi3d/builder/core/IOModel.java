@@ -11,10 +11,6 @@
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
-import kintsugi3d.util.EncodableColorImage;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -24,6 +20,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
+
+import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.util.EncodableColorImage;
 
 public class IOModel
 {
@@ -208,14 +208,14 @@ public class IOModel
         this.handler.loadFromVSETFile(id, vsetFile, supportingFilesDirectory, loadOptionsModel);
     }
 
-    public void loadFromAgisoftFiles(String id, File xmlFile, File meshFile, File undistortedImageDirectory, String primaryViewName)
+    public void loadFromLooseFiles(String id, File xmlFile, File meshFile, File fullResImageDirectory, String primaryViewName, double rotation)
     {
-        this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, primaryViewName, loadOptionsModel);
+        this.handler.loadFromLooseFiles(id, xmlFile, meshFile, fullResImageDirectory, primaryViewName, rotation, loadOptionsModel);
     }
 
-    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, String primaryViewName)
+    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, File fullResOverride, boolean doSkipMissingCams, String primaryViewName, double rotation)
     {
-        this.handler.loadAgisoftFromZIP(id, metashapeObjectChunk, loadOptionsModel, primaryViewName);
+        this.handler.loadAgisoftFromZIP(id, metashapeObjectChunk, loadOptionsModel, fullResOverride, doSkipMissingCams, primaryViewName, rotation);
     }
     public void requestFragmentShader(File shaderFile)
     {

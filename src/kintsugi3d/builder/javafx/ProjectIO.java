@@ -58,7 +58,6 @@ import org.slf4j.LoggerFactory;
 public final class ProjectIO
 {
     private static final ProjectIO INSTANCE = new ProjectIO();
-
     public static ProjectIO getInstance()
     {
         return INSTANCE;
@@ -74,8 +73,6 @@ public final class ProjectIO
     private Flag systemSettingsModalOpen = new Flag(false);
     private Flag progressBarsModalOpen = new Flag(false);
     private Flag aboutWindowOpen = new Flag(false);
-
-
 
     private FileChooser projectFileChooser;
 
@@ -235,8 +232,13 @@ public final class ProjectIO
         saveProjectAs(parentWindow, () -> setViewsetDirectories(viewSet));
     }
 
+    public static File getDefaultSupportingFilesDirectory(File projectFile)
+    {
+        return new File(projectFile.getParentFile(), projectFile.getName() + ".files");
+    }
+
     private void setViewsetDirectories(ViewSet viewSet) {
-        File filesDirectory = ViewSet.getDefaultSupportingFilesDirectory(projectFile);
+        File filesDirectory = getDefaultSupportingFilesDirectory(projectFile);
         filesDirectory.mkdirs();
 
         // need to use a lambda callback so that this is called after the file location is chosen
@@ -262,7 +264,6 @@ public final class ProjectIO
 
         if (!confirmClose("Are you sure you want to create a new project?")) {return;}
 
-        //File fxmlFilesDirectory = new File("src/main/resources/fxml/menubar/createnewproject");
         File fxmlFilesDirectory = new File("create-new-project-fxmls.txt");
 
         if (!fxmlFilesDirectory.exists()){
@@ -325,7 +326,7 @@ public final class ProjectIO
                 try
                 {
                     MultithreadModels.getInstance().getIOModel()
-                        .loadFromVSETFile(vsetFile.getPath(), vsetFile, ViewSet.getDefaultSupportingFilesDirectory(projectFile));
+                        .loadFromVSETFile(vsetFile.getPath(), vsetFile, getDefaultSupportingFilesDirectory(projectFile));
                 }
                 catch (RuntimeException e)
                 {
@@ -454,7 +455,7 @@ public final class ProjectIO
             {
                 IOModel ioModel = MultithreadModels.getInstance().getIOModel();
 
-                File filesDirectory = ViewSet.getDefaultSupportingFilesDirectory(projectFile);
+                File filesDirectory = getDefaultSupportingFilesDirectory(projectFile);
                 if (projectFile.getName().endsWith(".vset"))
                 {
                     ioModel.getLoadedViewSet().setRootDirectory(projectFile.getParentFile());

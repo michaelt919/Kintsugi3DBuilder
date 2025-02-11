@@ -137,6 +137,7 @@ public interface ReadonlyViewSet
     File getPreviewImageFile(int poseIndex);
 
     int getPrimaryViewIndex();
+    double getPrimaryViewRotation();
 
     /**
      * Gets the projection transformation defining the intrinsic properties of a particular camera.
@@ -242,5 +243,5 @@ public interface ReadonlyViewSet
     File findPreviewImageFile(int index) throws FileNotFoundException;
     File findPreviewPrimaryImageFile() throws FileNotFoundException;
 
-    UUID getUuid();
+    UUID getUUID();
 }

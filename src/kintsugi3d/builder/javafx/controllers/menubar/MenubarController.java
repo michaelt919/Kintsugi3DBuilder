@@ -121,6 +121,7 @@ public class MenubarController
 
     //menu items
     @FXML private CheckMenuItem is3DGridCheckMenuItem;
+    @FXML public CheckMenuItem isCameraVisualCheckMenuItem;
     @FXML private CheckMenuItem compassCheckMenuItem;
     @FXML private CheckMenuItem multiSamplingCheckMenuItem;
     @FXML private CheckMenuItem relightingCheckMenuItem;
@@ -645,6 +646,8 @@ public class MenubarController
         //value binding
         is3DGridCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("is3DGridEnabled"));
+        isCameraVisualCheckMenuItem.selectedProperty().bindBidirectional(
+            internalModels.getSettingsModel().getBooleanProperty("isCameraVisualEnabled"));
         compassCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("compassEnabled"));
         relightingCheckMenuItem.selectedProperty().bindBidirectional(

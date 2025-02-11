@@ -4,15 +4,15 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane fx:id = "anchorPane" prefHeight="400.0" prefWidth="600.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.createnewproject.ImportOrCustomProjectController">
+<AnchorPane fx:id="anchorPane" prefHeight="400.0" prefWidth="600.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.createnewproject.ImportOrCustomProjectController">
    <children>
       <VBox alignment="CENTER" layoutX="117.0" layoutY="72.0" prefHeight="400.0" prefWidth="600.0" spacing="60.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
-            <Button fx:id = "metashapeImportButton" mnemonicParsing="false" onAction="#metashapeImportSelect" prefHeight="80.0" prefWidth="200.0" text="Metashape Import">
+            <Button fx:id="metashapeImportButton" mnemonicParsing="false" onAction="#metashapeImportSelect" prefHeight="80.0" prefWidth="320.0" text="Metashape Import">
                <font>
                   <Font size="18.0" />
                </font></Button>
-            <Button mnemonicParsing="false" onAction="#customImportSelect" prefHeight="80.0" prefWidth="200.0" text="Custom Import">
+            <Button mnemonicParsing="false" onAction="#customImportSelect" prefHeight="80.0" prefWidth="320.0" text="RealityCapture / Loose Files Import">
                <font>
                   <Font size="18.0" />
                </font></Button>
