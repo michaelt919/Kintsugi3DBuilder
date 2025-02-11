@@ -136,15 +136,11 @@
                 <Rectangle fx:id="finalSelectRect6" arcHeight="5.0" arcWidth="5.0" height="26.0" stroke="WHITE" strokeType="INSIDE" visible="false" width="26.0" GridPane.columnIndex="3" GridPane.rowIndex="6" />
 
             </GridPane>
-            <VBox alignment="CENTER" spacing="18.0">
+            <VBox alignment="CENTER" spacing="10.0">
                 <children>
-                    <Button fx:id="cropButton" mnemonicParsing="false" onAction="#enterCropMode" prefHeight="46.0" prefWidth="247.0" text="Crop" visible="false">
-                        <font>
-                            <Font size="21.0" />
-                        </font>
-                        <VBox.margin>
-                            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-                        </VBox.margin>
+                    <Button fx:id="chooseNewImageButton" alignment="CENTER" contentDisplay="TOP" mnemonicParsing="false" onAction="#selectImage" text="Choose New Image..." visible="false">
+                    </Button>
+                    <Button fx:id="cropButton" mnemonicParsing="false" onAction="#enterCropMode" text="Crop" visible="false">
                     </Button>
                 </children>
             </VBox>

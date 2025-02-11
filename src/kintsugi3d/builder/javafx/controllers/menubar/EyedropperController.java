@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.DoubleUnaryOperator;
 import javax.imageio.ImageIO;
@@ -29,6 +30,7 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -100,6 +102,17 @@ public class EyedropperController extends FXMLPageController implements Initiali
     private ProjectModelBase projectModel = null;
 
     private Button sourceButton;
+
+    /**
+     * Set to true after the first time the warning about using multiple images for tone calibration has been shown
+     * to prevent the warning from appearing every time.
+     */
+    private boolean multiImageWarningShown = false;
+
+    /**
+     * Set to true to prevent warning about unsaved changes when closing the window via the "Confirm" button.
+     */
+    private boolean confirmExit = false;
 
 //    private Runnable exitCallback;
 
@@ -622,6 +635,26 @@ public class EyedropperController extends FXMLPageController implements Initiali
 
     @FXML
     private void selectImage(ActionEvent actionEvent) {
+        if (!multiImageWarningShown)
+        {
+            Alert alert = new Alert(AlertType.WARNING,
+                "Warning: using multiple images for tone calibration can result in inconsistencies in tone interpretation.  "
+                + "To be used for advanced workflows only.",
+                ButtonType.OK, ButtonType.CANCEL);
+            alert.setGraphic(null);
+            var result = alert.showAndWait();
+            if (result.isEmpty() || !result.get().equals(ButtonType.OK))
+            {
+                // User cancelled; do not select a new image
+                return;
+            }
+            else
+            {
+                // User confirmed; do not show warning again while this controller is active.
+                multiImageWarningShown = true;
+            }
+        }
+
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose Image File");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", validExtensions));
@@ -664,6 +697,7 @@ public class EyedropperController extends FXMLPageController implements Initiali
 
             //update buttons
             chooseImageButton.setVisible(false);
+            chooseNewImageButton.setVisible(true);
             cropButton.setVisible(true);
 
             //testing the code for saving the file
@@ -763,6 +797,9 @@ public class EyedropperController extends FXMLPageController implements Initiali
     {
         applyButtonPressed();
 
+        // Suppress warning about unsaved changes since the changes were just applied automatically.
+        confirmExit = true;
+
         Window window = outerHbox.getScene().getWindow();
         window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
     }
@@ -776,7 +813,16 @@ public class EyedropperController extends FXMLPageController implements Initiali
     @Override
     public boolean closeButtonPressed()
     {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Discard tone calibration changes?");
-        return alert.showAndWait().get() == ButtonType.OK;
+        // Suppress warning about unsaved changes since the changes were just applied automatically.
+        if (confirmExit)
+        {
+            return true;
+        }
+        else
+        {
+            Alert alert = new Alert(AlertType.CONFIRMATION, "Discard tone calibration changes?");
+            var result = alert.showAndWait();
+            return result.isPresent() && result.get().equals(ButtonType.OK);
+        }
     }
 }
