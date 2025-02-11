@@ -71,4 +71,10 @@ vec3 emissive()
 
 #include "subjectMain.glsl"
 
+// Prevents shader link errors when declaration from colorappearance.glsl is not defined
+vec4 getColor(int virtualIndex)
+{
+    return vec4(0);
+}
+
 #endif // BASIS_GLSL
