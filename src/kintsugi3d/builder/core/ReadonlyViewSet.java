@@ -129,6 +129,8 @@ public interface ReadonlyViewSet
      */
     File getFullResImageFile(int poseIndex);
 
+    File getFullResImageFile(String viewName);
+
     /**
      * Gets the downscaled "preview" image file corresponding to a particular view.
      * @param poseIndex The index of the image file to retrieve.
@@ -136,8 +138,23 @@ public interface ReadonlyViewSet
      */
     File getPreviewImageFile(int poseIndex);
 
+    /**
+     * Gets the view index to be used for color calibration and tonemapping operations
+     * @return view index
+     */
     int getPrimaryViewIndex();
-    double getPrimaryViewRotation();
+
+    /**
+     * Gets the view index to use as a reference pose for reorienting the model
+     * @return view index
+     */
+    int getOrientationViewIndex();
+
+    /**
+     * Roll rotation of the reference view pose to correct upside down and sideways images
+     * @return view index
+     */
+    double getOrientationViewRotationDegrees();
 
     /**
      * Gets the projection transformation defining the intrinsic properties of a particular camera.

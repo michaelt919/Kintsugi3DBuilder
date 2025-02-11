@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.menubar;
 
 import javafx.scene.image.Image;
+import kintsugi3d.gl.util.UnzipHelper;
 import kintsugi3d.util.Triplet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,13 +20,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import kintsugi3d.gl.util.UnzipHelper;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 
 public class MetashapeObjectChunk {
@@ -43,6 +42,7 @@ public class MetashapeObjectChunk {
     private ArrayList<Triplet<Integer, String, String>> modelInfo = new ArrayList<>(); //model id, name/label, and path
     private Integer defaultModelID;
     private Integer currModelID;
+    private LoadPreferences loadPreferences;
 
     public String getChunkZipPath() { return chunkZipPath; }
     public Document getChunkXML() { return chunkXML; }
@@ -58,17 +58,22 @@ public class MetashapeObjectChunk {
 
 
     private MetashapeObjectChunk(){
-        metashapeObject = new MetashapeObject();
-        chunkName = "";
-        chunkID = -1;//TODO: GOOD NULL CHUNK ID?
-        chunkXML = null;
-        frameXML = null;
-        currModelID = -1;
+        //hide useless constructor
     }
+
+    public class LoadPreferences{
+        public File fullResOverride;
+        public boolean doSkipMissingCams;
+        public String orientationViewName;
+        public double orientationViewRotateDegrees;
+    }
+
+    public LoadPreferences getLoadPreferences(){return loadPreferences;}
 
     public MetashapeObjectChunk(MetashapeObject metashapeObject, String chunkName, Integer currModelID) {
         this.metashapeObject = metashapeObject;
         this.currModelID = currModelID;
+        this.loadPreferences = new LoadPreferences();
 
         updateChunk(chunkName);
     }
@@ -303,13 +308,11 @@ public class MetashapeObjectChunk {
 
         MetashapeObjectChunk moc = (MetashapeObjectChunk) rhs;
         //chunk name is the same
-        //active model id is the same
         //psx path is the same
 
         //TODO: may need to revisit this method if more precise criteria are needed
 
-        return Objects.equals(this.chunkName, moc.getChunkName()) &&
-                Objects.equals(this.currModelID, moc.getCurrModelID()) &&
+        return this.chunkName.equals(moc.getChunkName()) &&
                 this.getPsxFilePath().equals(moc.getPsxFilePath());
     }
 }

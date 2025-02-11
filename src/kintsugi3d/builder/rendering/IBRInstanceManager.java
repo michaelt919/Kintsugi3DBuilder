@@ -39,6 +39,16 @@ import kintsugi3d.util.EncodableColorImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.DoubleUnaryOperator;
+
 public class IBRInstanceManager<ContextType extends Context<ContextType>> implements IOHandler, InteractiveRenderable<ContextType>
 {
     private static final Logger log = LoggerFactory.getLogger(IBRInstanceManager.class);
@@ -343,8 +353,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions, File fullResOverride,
-                                   boolean doSkipMissingCams, String primaryViewName, double rotation) {
+    public void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions) {
 
         // TODO There currently isn't functionality for a supportingFilesDirectory at this early in the process
         //  Restructuring required from Tetzlaff.
@@ -358,13 +367,16 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
         File supportingFilesDirectory = null;
         try {
+            String orientationView = metashapeObjectChunk.getLoadPreferences().orientationViewName;
+            double rotation = metashapeObjectChunk.getLoadPreferences().orientationViewRotateDegrees;
+
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                     .setProgressMonitor(this.progressMonitor)
                     .setLoadOptions(loadOptions)
-                    .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory, fullResOverride, doSkipMissingCams)
-                    .setPrimaryView(primaryViewName, rotation);
+                    .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory)
+                    .setOrientationView(orientationView, rotation);
 
-            loadInstance(id, builder);
+            loadInstance(metashapeObjectChunk.getFramePath(), builder);
         }
         catch(UserCancellationException e)
         {
@@ -391,7 +403,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                 .setProgressMonitor(this.progressMonitor)
                 .setLoadOptions(loadOptions)
                 .loadLooseFiles(xmlFile, meshFile, imageDirectory)
-                .setPrimaryView(primaryViewName, rotation);
+                .setOrientationView(primaryViewName, rotation);
 
             // Invoke callbacks now that view set is loaded
             loadInstance(id, builder);

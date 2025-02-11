@@ -11,6 +11,10 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.util.EncodableColorImage;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -18,10 +22,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
-
-import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
-import kintsugi3d.util.EncodableColorImage;
 
 public interface IOHandler
 {
@@ -33,7 +33,7 @@ public interface IOHandler
     void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions);
     void loadFromLooseFiles(String id, File xmlFile, File meshFile, File imageDirectory,
                                 String primaryViewName, double rotation, ReadonlyLoadOptionsModel loadOptions);
-    void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptionsModel, File fullResOverride, boolean doSkipMissingCams, String primaryViewName, double rotation);
+    void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptionsModel);
 
     void requestFragmentShader(File shaderFile);
 

@@ -17,7 +17,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
 <?import javafx.scene.text.Font?>
-<HBox prefHeight="402.0" prefWidth="736.0" style="-fx-background-color: black;" styleClass="hbox" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.EyedropperController">
+<HBox fx:id="outerHbox" prefHeight="402.0" prefWidth="736.0" styleClass="hbox" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.EyedropperController">
     <BorderPane prefHeight="421.0" prefWidth="467.0">
         <center>
             <Pane fx:id="colorPickerPane" onMouseDragged="#handleMouseDragged" onMousePressed="#handleMousePressed" onMouseReleased="#handleMouseReleased" prefHeight="400.0" prefWidth="399.0">
@@ -138,11 +138,6 @@
             </GridPane>
             <VBox alignment="CENTER" spacing="18.0">
                 <children>
-                    <Button fx:id="chooseNewImageButton" alignment="CENTER" contentDisplay="TOP" mnemonicParsing="false" onAction="#selectImage" prefHeight="46.0" prefWidth="247.0" text="Choose New Image..." visible="false">
-                        <font>
-                            <Font size="21.0" />
-                        </font>
-                    </Button>
                     <Button fx:id="cropButton" mnemonicParsing="false" onAction="#enterCropMode" prefHeight="46.0" prefWidth="247.0" text="Crop" visible="false">
                         <font>
                             <Font size="21.0" />

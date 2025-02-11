@@ -14,6 +14,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObject;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.InputSource;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.MetashapeProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.util.RecentProjects;
@@ -80,11 +82,15 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         //update metashapeObjectChunk with selected chunk from chunkSelectionChoiceBox
         updateMetashapeChunk();
 
-        hostScrollerController.addInfo(Info.METASHAPE_OBJ_CHUNK, metashapeObjectChunk);
-
-        hostScrollerController.addInfo(Info.CAM_FILE, null);
-        hostScrollerController.addInfo(Info.PHOTO_DIR, null);
-        hostScrollerController.addInfo(Info.MESH_FILE, null);
+        InputSource source = hostScrollerController.getInfo(Info.INPUT_SOURCE);
+        if (source instanceof MetashapeProjectInputSource){
+            //overwrite old source so we can compare old and new versions in PrimaryViewSelectController
+            hostScrollerController.addInfo(Info.INPUT_SOURCE,
+                    new MetashapeProjectInputSource().setMetashapeObjectChunk(metashapeObjectChunk));
+        }
+        else{
+            log.error("Error sending Metashape project info to host controller. MetashapeProjectInputSource expected.");
+        }
     }
 
     private void updateMetashapeChunk() {
@@ -199,10 +205,10 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
             ((ButtonBase) alert.getDialogPane().lookupButton(openCustomProj)).setOnAction(event -> {
                 //manually navigate though pages to get to custom loader
-                hostScrollerController.prevPage();//go to ImportOrCustomProject.fxml
-                ImportOrCustomProjectController controller = (ImportOrCustomProjectController)
+                hostScrollerController.prevPage();//go to SelectImportOptions.fxml
+                SelectImportOptionsController controller = (SelectImportOptionsController)
                         hostScrollerController.getCurrentPage().getController();
-                controller.customImportSelect();
+                controller.looseFilesSelect();
                 alertShown = false;
             });
 

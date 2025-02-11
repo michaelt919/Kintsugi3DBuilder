@@ -68,8 +68,6 @@ public class LightCalibrationContent <ContextType extends Context<ContextType>> 
     @Override
     public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
     {
-        int primaryLightIndex = this.resources.getViewSet().getLightIndex(this.resources.getViewSet().getPrimaryViewIndex());
-
         Vector3 lightPosition = sceneModel.getSettingsModel().get("currentLightCalibration", Vector2.class).asVector3();
         Matrix4 lightTransform = Matrix4.translate(lightPosition.negated());
 

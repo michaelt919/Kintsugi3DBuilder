@@ -46,6 +46,13 @@ import kintsugi3d.builder.fit.decomposition.SpecularBasis;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.LightCalibrationViewSelectController;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.PrimaryViewSelectController;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.CurrentProjectInputSource;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.InputSource;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
@@ -852,19 +859,6 @@ public class MenubarController
         return fxmlLoader.getController();
     }
 
-    public UnzipFileSelectionController unzip() {
-        UnzipFileSelectionController unzipFileSelectionController = null;
-        try {
-            unzipFileSelectionController = makeWindow(".psx Unzipper", unzipperOpen, "fxml/menubar/UnzipFileSelection.fxml");
-            unzipFileSelectionController.init();
-        }
-        catch(Exception e)
-        {
-            handleException("An error occurred opening file unzipper", e);
-        }
-        return unzipFileSelectionController;
-    }
-
     public void objectOrientation()
     {
         if (!objectOrientationWindowOpen.get())
@@ -935,8 +929,10 @@ public class MenubarController
                     ViewSet loadedViewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
 
                     internalModels.getSettingsModel().set("currentLightCalibration",
-                        loadedViewSet.getLightPosition(loadedViewSet.getLightIndex(loadedViewSet.getPrimaryViewIndex())).getXY());
+                        loadedViewSet.getLightPosition(loadedViewSet.getLightIndex(0)).getXY());
                 }
+
+                cameraViewListController.rebindSearchableListView();
 
                 // Enables light calibration mode when the window is opened.
                 internalModels.getSettingsModel().set("lightCalibrationMode", true);
@@ -952,16 +948,82 @@ public class MenubarController
     {
         try
         {
-            EyedropperController eyedropperController =
-                    makeWindow("Tone Calibration", colorCheckerWindowOpen, "fxml/menubar/EyedropperColorChecker.fxml");
+            ArrayList<FXMLPage> pages = new ArrayList<>();
 
-            eyedropperController.setProjectModel(internalModels.getProjectModel());
-            eyedropperController.setIOModel(MultithreadModels.getInstance().getIOModel());
+            FXMLLoader eyedropLoader = new FXMLLoader(getClass().getResource("/fxml/menubar/EyedropperColorChecker.fxml"));
+            eyedropLoader.load();
+            FXMLPage eyedropPage = new FXMLPage("/fxml/menubar/EyedropperColorChecker.fxml", eyedropLoader);
+
+            FXMLLoader viewLoader = new FXMLLoader(getClass().getResource("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml"));
+
+            // Override controller class
+            viewLoader.setControllerFactory(c -> new LightCalibrationViewSelectController());
+
+            viewLoader.load();
+
+            CurrentProjectInputSource inputSource = getCurrentProjectInputSource();
+
+            FXMLPage viewPage = new FXMLPage("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml", viewLoader);
+            pages.add(viewPage);
+
+            FXMLLoader imageSelectorLoader = new FXMLLoader(getClass().getResource("/fxml/menubar/SelectToneCalibrationImage.fxml"));
+            imageSelectorLoader.load();
+            FXMLPage imageSelectorPage = new FXMLPage("/fxml/menubar/SelectToneCalibrationImage.fxml", imageSelectorLoader);
+            pages.add(imageSelectorPage);
+            viewPage.setNextPage(imageSelectorPage);
+
+            pages.add(eyedropPage);
+            imageSelectorPage.setNextPage(eyedropPage);
+
+            FXMLPageScrollerController scrollerController = makeWindow("Tone Calibration", colorCheckerWindowOpen,
+                "fxml/menubar/FXMLPageScroller.fxml");
+            scrollerController.setPages(pages, "/fxml/menubar/createnewproject/PrimaryViewSelect.fxml");
+            scrollerController.addInfo(ShareInfo.Info.INPUT_SOURCE, inputSource);
+            scrollerController.init();
         }
         catch (IOException|RuntimeException e)
         {
             handleException("An error occurred opening color checker window", e);
         }
+    }
+
+    private static CurrentProjectInputSource getCurrentProjectInputSource()
+    {
+        CurrentProjectInputSource inputSource = new CurrentProjectInputSource()
+        {
+            // Override this method to set the initial selection to the primary view instead of orientation view
+            @Override
+            public void setOrientationViewDefaultSelections(PrimaryViewSelectController controller)
+            {
+                ViewSet currentViewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+
+                if (currentViewSet == null)
+                    return;
+
+                // Set the initial selection to what is currently being used
+                TreeItem<String> selectionItem = InputSource.NONE_ITEM;
+
+                if (currentViewSet.getPrimaryViewIndex() >= 0)
+                {
+                    String viewName = currentViewSet.getImageFileName(currentViewSet.getPrimaryViewIndex());
+
+                    for (int i = 0; i < searchableTreeView.getTreeView().getExpandedItemCount(); i++)
+                    {
+                        TreeItem<String> item = searchableTreeView.getTreeView().getTreeItem(i);
+                        if (Objects.equals(item.getValue(), viewName))
+                        {
+                            selectionItem = item;
+                            break;
+                        }
+                    }
+                }
+
+                searchableTreeView.getTreeView().getSelectionModel().select(selectionItem);
+            }
+        };
+
+        inputSource.setIncludeNoneItem(false);
+        return inputSource;
     }
 
     public void shading_SystemMemory()

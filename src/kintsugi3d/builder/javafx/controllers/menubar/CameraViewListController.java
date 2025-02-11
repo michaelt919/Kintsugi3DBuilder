@@ -14,17 +14,26 @@ package kintsugi3d.builder.javafx.controllers.menubar;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
 import kintsugi3d.builder.javafx.internal.CameraViewListModelImpl;
 
 public class CameraViewListController
 {
+    @FXML private TextField searchTxtField;
     @FXML private ListView<String> cameraViewList;
     @FXML private CheckBox snapToView;
+
+    private SearchableListView searchableListView;
 
     public void init(CameraViewListModelImpl cameraViewListModel)
     {
         cameraViewListModel.setSelectedCameraViewModel(cameraViewList.getSelectionModel());
         cameraViewListModel.setCameraViewListProperty(cameraViewList.itemsProperty());
         cameraViewListModel.setCameraViewSnapEnabledProperty(snapToView.selectedProperty());
+        searchableListView = SearchableListView.createUnboundInstance(cameraViewList, searchTxtField);
+    }
+
+    public void rebindSearchableListView(){
+        searchableListView.bind();
     }
 }
