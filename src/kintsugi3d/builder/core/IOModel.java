@@ -20,6 +20,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
@@ -219,6 +220,11 @@ public class IOModel
     public void requestFragmentShader(File shaderFile)
     {
         this.handler.requestFragmentShader(shaderFile);
+    }
+
+    public void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines)
+    {
+        this.handler.requestFragmentShader(shaderFile, extraDefines);
     }
 
     public Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException

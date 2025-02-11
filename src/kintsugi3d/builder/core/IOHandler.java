@@ -18,6 +18,7 @@ import kintsugi3d.util.AbstractImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
@@ -38,6 +39,8 @@ public interface IOHandler
     void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptionsModel, String primaryViewName);
 
     void requestFragmentShader(File shaderFile);
+
+    void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines);
 
     Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException;
     void loadBackplate(File backplateFile) throws FileNotFoundException;

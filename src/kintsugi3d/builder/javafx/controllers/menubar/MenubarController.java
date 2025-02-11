@@ -19,6 +19,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -39,6 +40,9 @@ import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.export.projectExporter.ExportRequestUI;
 import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
+import kintsugi3d.builder.export.specular.SpecularFitSerializer;
+import kintsugi3d.builder.fit.decomposition.BasisResources;
+import kintsugi3d.builder.fit.decomposition.SpecularBasis;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
@@ -58,16 +62,14 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -78,6 +80,8 @@ public class MenubarController
     private static final Logger log = LoggerFactory.getLogger(MenubarController.class);
 
     private static MenubarController instance;
+    public Menu heatmapMenu;
+    public Menu superimposeMenu;
     private InternalModels internalModels;
 
     //Window open flags
@@ -126,11 +130,13 @@ public class MenubarController
     @FXML private CheckMenuItem visibleLightWidgetsCheckMenuItem;
     @FXML private CheckMenuItem visibleCameraPoseCheckMenuItem;
     @FXML private CheckMenuItem visibleSavedCameraPoseCheckMenuItem;
+    @FXML private RadioMenuItem weightmapCombination;
 
 
     @FXML private Menu exportMenu;
     @FXML private Menu recentProjectsMenu;
     @FXML private Menu cleanRecentProjectsMenu;
+    @FXML private Menu shadingMenu;
 
     @FXML private CustomMenuItem removeAllRefsCustMenuItem;
     @FXML private CustomMenuItem removeSomeRefsCustMenuItem;
@@ -140,6 +146,9 @@ public class MenubarController
     @FXML private RadioMenuItem materialReflectivity;
     @FXML private RadioMenuItem materialBasis;
     @FXML private RadioMenuItem imgBasedWithTextures;
+    @FXML private String weightmapPath;
+    @FXML private String superimposePath;
+
 
     private List<RadioMenuItem> toggleableShaders = new ArrayList<>();
 
@@ -455,6 +464,10 @@ public class MenubarController
         toggleableShaders.add(materialReflectivity);
         toggleableShaders.add(materialBasis);
         toggleableShaders.add(imgBasedWithTextures);
+        //toggleableShaders.add(weightmapCombination);
+
+        updateShaderList();
+        shadingMenu.setOnShowing(e -> updateShaderList());
 
         setToggleableShaderDisable(true);
 
@@ -479,6 +492,47 @@ public class MenubarController
 
         if(!ProgressBarsController.getInstance().getStage().isShowing()){
             miniProgressPane.setVisible(true);
+        }
+    }
+
+    // Populate menu based on a given input number
+    private void updateShaderList() {
+        heatmapMenu.getItems().clear();
+        superimposeMenu.getItems().clear();
+
+        int basisCount = 0;
+        try
+        {
+            ViewSet viewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+            SpecularBasis basis = SpecularFitSerializer.deserializeBasisFunctions(viewSet.getSupportingFilesFilePath());
+            basisCount = basis.getCount();
+        }
+        catch (IOException | NullPointerException e)
+        {
+            log.error("Error attempting to load previous solution basis count:", e);
+        }
+
+        Map<String, Optional<Object>> comboDefines = new HashMap<>();
+        comboDefines.put("WEIGHTMAP_INDEX", Optional.of(0));
+        comboDefines.put("WEIGHTMAP_COUNT", Optional.of(basisCount));
+        weightmapCombination.setUserData(new RenderingShaderUserData("rendermodes/weightmaps/weightmapCombination.frag", comboDefines));
+
+        for (int i = 0; i < basisCount; ++i) {
+            RadioMenuItem heatmap = new RadioMenuItem("Weight map " + i);
+            RadioMenuItem b = new RadioMenuItem("Weight map " + i);
+
+            Map<String, Optional<Object>> defines = new HashMap<>();
+            defines.put("WEIGHTMAP_INDEX", Optional.of(i));
+
+            heatmap.setToggleGroup(renderGroup);
+            heatmap.setUserData(new RenderingShaderUserData("rendermodes/weightmaps/weightmapSingle.frag", defines));
+            b.setToggleGroup(renderGroup);
+            b.setUserData(new RenderingShaderUserData("rendermodes/weightmaps/weightmapOverlay.frag", defines));
+
+            heatmapMenu.getItems().add(i, heatmap);
+            superimposeMenu.getItems().add(i, b);
+            // when attempting to redefine 'heatmap' and use for superimposeMenu, K3D would crash
+
         }
     }
 
@@ -562,16 +616,25 @@ public class MenubarController
     {
         renderGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) ->
         {
+            RenderingShaderUserData shaderData = null;
             if (newValue != null && newValue.getUserData() instanceof String)
             {
-                MultithreadModels.getInstance().getIOModel()
-                    .requestFragmentShader(new File("shaders", (String)newValue.getUserData()));
+                shaderData = new RenderingShaderUserData((String) newValue.getUserData());
             }
 
-//            if (newValue != null && newValue.getUserData() instanceof StandardRenderingMode)
-//            {
-//                internalModels.getSettingsModel().set("renderingMode", newValue.getUserData());
-//            }
+            if (newValue != null && newValue.getUserData() instanceof RenderingShaderUserData)
+            {
+                shaderData = (RenderingShaderUserData) newValue.getUserData();
+            }
+
+            if (shaderData == null)
+            {
+                handleException("Failed to parse shader data for rendering option.", new RuntimeException("shaderData is null!"));
+                return;
+            }
+
+            MultithreadModels.getInstance().getIOModel()
+                .requestFragmentShader(new File("shaders", shaderData.getShaderName()), shaderData.getShaderDefines());
         });
     }
 
