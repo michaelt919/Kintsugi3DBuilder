@@ -149,7 +149,7 @@
                                 <userData>rendermodes/weightmaps/weightmapCombination.frag</userData>
                             </RadioMenuItem>
 <!--                            Individual weight map visualizations (without existing texture colors)-->
-                            <Menu mnemonicParsing="false" fx:id="heatmapMenu" text="Weight maps (heat map visualization)">
+                            <Menu mnemonicParsing="false" fx:id="heatmapMenu" text="Weight maps (grayscale)">
                                 <items>
                                 </items>
                             </Menu>
@@ -157,15 +157,7 @@
                                 <items>
                                 </items>
                             </Menu>
-
-                            <Menu mnemonicParsing="false" text="Weight maps (basis function scaling)">
-                                <items>
-                                    <RadioMenuItem mnemonicParsing="false" text="Testing" toggleGroup="$renderGroup">
-                                        <userData>renderModes/basisTesting.frag</userData>
-                                    </RadioMenuItem>
-                                </items>
-                            </Menu>
-                            <Menu mnemonicParsing="false" text="Map Visualizations">
+                            <Menu mnemonicParsing="false" text="Texture Visualizations">
                                 <items>
                                     <RadioMenuItem mnemonicParsing="false" text="Normal map" toggleGroup="$renderGroup">
                                         <userData>renderModes/maps/normalMap.frag</userData>

@@ -12,20 +12,67 @@
  *
  */
 
-#include <colorappearance/material.glsl>
-#include <specularfit/evaluateBRDF.glsl>
-
 #ifndef WEIGHTMAP_INDEX
 #define WEIGHTMAP_INDEX 0
 #endif
 
-//in vec3 specularColor;
-layout(location = 0) out vec4 fragColor;
+#include <subject/subject.glsl>
 
-void main() {
-    vec4 weightmapTex = texture(weightMaps, vec3(fTexCoord, WEIGHTMAP_INDEX));
+uniform vec3 defaultDiffuseColor;
 
-    Material m = getMaterial();
-    fragColor = vec4(vec4(m.specularColor, 1) + (weightmapTex.r * vec4(0.9,0,1,1)));
+#ifndef DEFAULT_DIFFUSE_COLOR
+#if SPECULAR_TEXTURE_ENABLED
+#define DEFAULT_DIFFUSE_COLOR (vec3(0.0))
+#else
+#define DEFAULT_DIFFUSE_COLOR (defaultDiffuseColor)
+#endif // !SPECULAR_TEXTURE_ENABLED
+#endif // DEFAULT_DIFFUSE_COLOR
 
+#ifndef DEFAULT_SPECULAR_COLOR
+#if DIFFUSE_TEXTURE_ENABLED
+#define DEFAULT_SPECULAR_COLOR (vec3(0.0))
+#else
+#define DEFAULT_SPECULAR_COLOR (vec3(0.04))
+#endif // DIFFUSE_TEXTURE_ENABLED
+#endif // DEFAULT_SPECULAR_COLOR
+
+#ifndef DEFAULT_SPECULAR_ROUGHNESS
+#define DEFAULT_SPECULAR_ROUGHNESS (0.1); // TODO pass in a default?
+#endif
+
+#include <colorappearance/material.glsl>
+#include <specularfit/evaluateBRDF.glsl>
+
+#line 62 3102
+
+vec3 global(ViewingParameters v, Material m)
+{
+    return getEnvironmentDiffuse(v.normalDir) * m.occlusion * min(vec3(1.0), m.diffuseColor + m.specularColor);
 }
+
+vec3 emissive()
+{
+    vec2 texCoords = getTexCoords();
+    vec4 weightmapTex = texture(weightMaps, vec3(texCoords, WEIGHTMAP_INDEX));
+    return weightmapTex.r * vec3(1,0,1);
+}
+
+vec3 specular(LightingParameters l, Material m)
+{
+    #if FRESNEL_EFFECT_ENABLED
+    // Multiply by PI since the fit was done in a divided-by-pi space in terms of diffuse albedo,
+    // but we implicitly do our real-time calculations in a pre-multiplied by pi space (i.e. no division by pi for diffuse).
+    vec3 mfdFresnelBase = PI * getBRDFEstimate(l.nDotH, 1.0); // set G to 1.0 since masking / shading is handled by subjectMain
+    return fresnel(mfdFresnelBase, vec3(getLuminance(mfdFresnelBase) / getLuminance(m.specularColor)), l.hDotV);
+    #else // !FRESNEL_EFFECT_ENABLED
+    return PI * getBRDFEstimate(l.nDotH, 1.0); // set G to 1.0 since masking / shading is handled by subjectMain
+    #endif // FRESNEL_EFFECT_ENABLED
+}
+
+vec3 diffuse(LightingParameters l, Material m)
+{
+    return m.diffuseColor;
+}
+
+//#include "subjectMain.glsl"
+#include <subject/subjectMain.glsl>
