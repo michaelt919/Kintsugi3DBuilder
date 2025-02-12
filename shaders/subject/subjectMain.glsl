@@ -121,7 +121,7 @@ void main()
 
     Material m = getMaterial();
 
-    vec3 radiance = vec3(0.0);
+    vec3 radiance = emissive();
 
 #if RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
     radiance += global(v, m);

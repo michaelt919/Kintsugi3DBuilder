@@ -73,8 +73,9 @@
                      <MenuItem mnemonicParsing="false" onAction="#showProgressBars" text="PROGRESS BARS TEST" visible="false" />
                      <MenuItem mnemonicParsing="false" onAction="#showWelcomeWindow" text="SHOW WELCOME WINDOW TEST" visible="false" />
                         </Menu>
-                        <Menu mnemonicParsing="false" text="View" visible="false">
+                        <Menu mnemonicParsing="false" text="View" visible="true">
                             <CheckMenuItem fx:id="is3DGridCheckMenuItem" mnemonicParsing="false" text="3D grid" visible="false" />
+                            <CheckMenuItem fx:id="isCameraVisualCheckMenuItem" mnemonicParsing="false" text="Camera Positions" visible="true" />
                             <CheckMenuItem fx:id="compassCheckMenuItem" mnemonicParsing="false" text="Compass" visible="false" />
                             <CheckMenuItem fx:id="multiSamplingCheckMenuItem" mnemonicParsing="false" text="Multi-sampling" visible="false" />
                         </Menu>
@@ -107,33 +108,78 @@
                             <SeparatorMenuItem mnemonicParsing="false" />
                             <CheckMenuItem fx:id="sceneWindowCheckMenuItem" mnemonicParsing="false" text="Scene Window" />
                         </Menu>
-                        <Menu mnemonicParsing="false" text="Shading">
+                        <Menu fx:id="shadingMenu" mnemonicParsing="false" text="Shading">
                             <RadioMenuItem mnemonicParsing="false" text="Simple specular" toggleGroup="$renderGroup">
                                 <toggleGroup>
                                     <ToggleGroup fx:id="renderGroup" />
                                 </toggleGroup>
-                                <userData>renderModes/simpleSpecular.frag</userData>
+                                <userData>rendermodes/simpleSpecular.frag</userData>
                             </RadioMenuItem>
                             <RadioMenuItem mnemonicParsing="false" text="Normal mapped" toggleGroup="$renderGroup">
-                                <userData>renderModes/normalMapped.frag</userData>
+                                <userData>rendermodes/normalMapped.frag</userData>
                             </RadioMenuItem>
                             <RadioMenuItem mnemonicParsing="false" text="Textured Lambertian" toggleGroup="$renderGroup">
-                                <userData>renderModes/texturedLambertian.frag</userData>
+                                <userData>rendermodes/texturedLambertian.frag</userData>
                             </RadioMenuItem>
-                            <RadioMenuItem fx:id="materialMetallicity" mnemonicParsing="false" text="Material (metallicity)" toggleGroup="$renderGroup" userData="renderModes/texturedORMMaterial.frag">
+                            <RadioMenuItem fx:id="materialMetallicity" mnemonicParsing="false" text="Material (metallicity)" toggleGroup="$renderGroup">
+                                <userData>rendermodes/texturedORMMaterial.frag</userData>
                             </RadioMenuItem>
                             <RadioMenuItem fx:id="materialReflectivity" mnemonicParsing="false" text="Material (reflectivity)" toggleGroup="$renderGroup">
-                                <userData>renderModes/texturedMaterial.frag</userData>
+                                <userData>rendermodes/texturedMaterial.frag</userData>
                             </RadioMenuItem>
-                            <RadioMenuItem fx:id="materialBasis" mnemonicParsing="false" text="Material (basis)" toggleGroup="$renderGroup" userData="renderModes/basisMaterial.frag">
+                            <RadioMenuItem fx:id="materialBasis" mnemonicParsing="false" text="Material (basis)" toggleGroup="$renderGroup">
+                                <userData>rendermodes/basisMaterial.frag</userData>
                             </RadioMenuItem>
                             <RadioMenuItem mnemonicParsing="false" selected="true" text="Image-based" toggleGroup="$renderGroup">
-                                <userData>renderModes/ibrUntextured.frag</userData>
+                                <userData>rendermodes/ibrUntextured.frag</userData>
                             </RadioMenuItem>
                             <RadioMenuItem fx:id="imgBasedWithTextures" mnemonicParsing="false" text="Image-based with textures" toggleGroup="$renderGroup">
-                                <userData>renderModes/ibrTextured.frag</userData>
+                                <userData>rendermodes/ibrTextured.frag</userData>
                             </RadioMenuItem>
+<!--                            Testing-->
+                            <RadioMenuItem fx:id="weightmapCombination" mnemonicParsing="false" text="Weight maps (combined)" toggleGroup="$renderGroup">
+                                <userData>rendermodes/weightmaps/weightmapCombination.frag</userData>
+                            </RadioMenuItem>
+<!--                            Individual weight map visualizations (without existing texture colors)-->
+                            <Menu mnemonicParsing="false" fx:id="heatmapMenu" text="Weight maps (grayscale)">
+                                <items>
+                                </items>
+                            </Menu>
+                            <Menu mnemonicParsing="false" fx:id="superimposeMenu" text="Weight maps (superimposed)">
+                                <items>
+                                </items>
+                            </Menu>
+                            <Menu mnemonicParsing="false" text="Texture Visualizations">
+                                <items>
+                                    <RadioMenuItem mnemonicParsing="false" text="Normal map" toggleGroup="$renderGroup">
+                                        <userData>renderModes/maps/normalMap.frag</userData>
+                                    </RadioMenuItem>
+                                    <RadioMenuItem mnemonicParsing="false" text="Albedo map" toggleGroup="$renderGroup">
+                                        <userData>renderModes/maps/albedoMap.frag</userData>
+                                    </RadioMenuItem>
+                                    <RadioMenuItem mnemonicParsing="false" text="Roughness map" toggleGroup="$renderGroup">
+                                        <userData>renderModes/maps/roughnessMap.frag</userData>
+                                    </RadioMenuItem>
+                                    <RadioMenuItem mnemonicParsing="false" text="Metallicity map" toggleGroup="$renderGroup">
+                                        <userData>renderModes/maps/metallicMap.frag</userData>
+                                    </RadioMenuItem>
+                                    <RadioMenuItem mnemonicParsing="false"  text="Diffuse color map" toggleGroup="$renderGroup">
+                                        <userData>renderModes/diffuseColor.frag</userData>
+                                    </RadioMenuItem>
+                                    <RadioMenuItem mnemonicParsing="false" text="Specular color map" toggleGroup="$renderGroup">
+                                        <userData>renderModes/specularColor.frag</userData>
+                                    </RadioMenuItem>
+                                    <RadioMenuItem mnemonicParsing="false" text="Error map" toggleGroup="$renderGroup">
+                                        <userData>renderModes/maps/errorMap.frag</userData>
+                                    </RadioMenuItem>
+
+                                </items>
+
+                            </Menu>
+
+
                         </Menu>
+
                         <Menu text="Help">
                             <MenuItem mnemonicParsing="false" onAction="#help_userManual" text="Documentation" />
                             <MenuItem mnemonicParsing="false" onAction="#help_console" text="View Log" />
@@ -161,11 +207,6 @@
                                 <MenuItem mnemonicParsing="false" onAction="#exportSpecularFit" text="Export Specular Fit" visible="false">
                                     <accelerator>
                                         <KeyCodeCombination alt="UP" code="P" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                                    </accelerator>
-                                </MenuItem>
-                                <MenuItem mnemonicParsing="false" onAction="#unzip" text="Unzip Metashape File">
-                                    <accelerator>
-                                        <KeyCodeCombination alt="UP" code="M" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                                     </accelerator>
                                 </MenuItem>
                                 <MenuItem mnemonicParsing="false" onAction="#file_loadOptions" text="Load Options..." visible="false" />

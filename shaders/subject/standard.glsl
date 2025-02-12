@@ -18,7 +18,7 @@
 uniform vec3 defaultDiffuseColor;
 
 #ifndef DEFAULT_DIFFUSE_COLOR
-#if SPECULAR_TEXTURE_ENABLED
+#if DIFFUSE_TEXTURE_ENABLED
 #define DEFAULT_DIFFUSE_COLOR (vec3(0.0))
 #else
 #define DEFAULT_DIFFUSE_COLOR (defaultDiffuseColor)
@@ -26,7 +26,7 @@ uniform vec3 defaultDiffuseColor;
 #endif // DEFAULT_DIFFUSE_COLOR
 
 #ifndef DEFAULT_SPECULAR_COLOR
-#if DIFFUSE_TEXTURE_ENABLED
+#if SPECULAR_TEXTURE_ENABLED
 #define DEFAULT_SPECULAR_COLOR (vec3(0.0))
 #else
 #define DEFAULT_SPECULAR_COLOR (vec3(0.04))
@@ -61,6 +61,17 @@ vec3 diffuse(LightingParameters l, Material m)
     return m.diffuseColor;
 }
 
+vec3 emissive()
+{
+    return vec3(0.0);
+}
+
 #include "subjectMain.glsl"
+
+// Prevents shader link errors when declaration from colorappearance.glsl is not defined
+vec4 getColor(int virtualIndex)
+{
+    return vec4(0);
+}
 
 #endif // STANDARD_GLSL

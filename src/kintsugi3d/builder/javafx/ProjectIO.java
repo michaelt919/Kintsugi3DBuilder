@@ -11,18 +11,6 @@
 
 package kintsugi3d.builder.javafx;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Scanner;
-import java.util.function.Function;
-import java.util.function.Predicate;
-
 import com.sun.glass.ui.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -42,7 +30,7 @@ import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.controllers.menubar.AboutController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ConfirmablePage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
@@ -55,10 +43,21 @@ import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Scanner;
+import java.util.function.Function;
+import java.util.function.Predicate;
+
 public final class ProjectIO
 {
     private static final ProjectIO INSTANCE = new ProjectIO();
-
     public static ProjectIO getInstance()
     {
         return INSTANCE;
@@ -74,8 +73,6 @@ public final class ProjectIO
     private Flag systemSettingsModalOpen = new Flag(false);
     private Flag progressBarsModalOpen = new Flag(false);
     private Flag aboutWindowOpen = new Flag(false);
-
-
 
     private FileChooser projectFileChooser;
 
@@ -235,8 +232,13 @@ public final class ProjectIO
         saveProjectAs(parentWindow, () -> setViewsetDirectories(viewSet));
     }
 
+    public static File getDefaultSupportingFilesDirectory(File projectFile)
+    {
+        return new File(projectFile.getParentFile(), projectFile.getName() + ".files");
+    }
+
     private void setViewsetDirectories(ViewSet viewSet) {
-        File filesDirectory = ViewSet.getDefaultSupportingFilesDirectory(projectFile);
+        File filesDirectory = getDefaultSupportingFilesDirectory(projectFile);
         filesDirectory.mkdirs();
 
         // need to use a lambda callback so that this is called after the file location is chosen
@@ -262,7 +264,6 @@ public final class ProjectIO
 
         if (!confirmClose("Are you sure you want to create a new project?")) {return;}
 
-        //File fxmlFilesDirectory = new File("src/main/resources/fxml/menubar/createnewproject");
         File fxmlFilesDirectory = new File("create-new-project-fxmls.txt");
 
         if (!fxmlFilesDirectory.exists()){
@@ -285,7 +286,8 @@ public final class ProjectIO
 
                 FXMLPageController controller = loader.getController();
 
-                if (controller instanceof CanConfirm){
+                if (controller instanceof ConfirmablePage && ((ConfirmablePage) controller).canConfirm())
+                {
                     controller.setLoadStartCallback(this::onLoadStart);
                     controller.setViewSetCallback(
                             (viewSet) ->onViewSetCreated(viewSet, parentWindow));
@@ -301,7 +303,7 @@ public final class ProjectIO
             FXMLPageScrollerController scrollerController =
                     makeWindow(parentWindow, "Load Files", loaderWindowOpen, hostFXMLPath);
 
-            String firstPageFXMLPath = "/fxml/menubar/createnewproject/ImportOrCustomProject.fxml";
+            String firstPageFXMLPath = "/fxml/menubar/createnewproject/SelectImportOptions.fxml";
             scrollerController.setPages(pages, firstPageFXMLPath);
             scrollerController.init();
             WelcomeWindowController.getInstance().hide();
@@ -325,7 +327,7 @@ public final class ProjectIO
                 try
                 {
                     MultithreadModels.getInstance().getIOModel()
-                        .loadFromVSETFile(vsetFile.getPath(), vsetFile, ViewSet.getDefaultSupportingFilesDirectory(projectFile));
+                        .loadFromVSETFile(vsetFile.getPath(), vsetFile, getDefaultSupportingFilesDirectory(projectFile));
                 }
                 catch (RuntimeException e)
                 {
@@ -454,7 +456,7 @@ public final class ProjectIO
             {
                 IOModel ioModel = MultithreadModels.getInstance().getIOModel();
 
-                File filesDirectory = ViewSet.getDefaultSupportingFilesDirectory(projectFile);
+                File filesDirectory = getDefaultSupportingFilesDirectory(projectFile);
                 if (projectFile.getName().endsWith(".vset"))
                 {
                     ioModel.getLoadedViewSet().setRootDirectory(projectFile.getParentFile());

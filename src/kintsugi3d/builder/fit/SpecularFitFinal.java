@@ -11,6 +11,13 @@
 
 package kintsugi3d.builder.fit;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.fit.finalize.AlbedoORMOptimization;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
@@ -18,9 +25,6 @@ import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.core.ColorFormat;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Texture2D;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Can do the roughness / ORM map fit, hole fill, etc., but should not need access to the original photographs
@@ -34,15 +38,17 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
 //    private final Texture2D<ContextType> quadraticMap;
     private final AlbedoORMOptimization<ContextType> albedoORMOptimization;
 
+    private final Map<String, Texture2D<ContextType>> metadataMaps;
+
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> createEmpty(
         SpecularMaterialResources<ContextType> original, TextureResolution textureResolution,
-        SpecularBasisSettings specularBasisSettings, boolean includeConstant) throws IOException
+        Collection<String> metadataMapNames, SpecularBasisSettings specularBasisSettings, boolean includeConstant) throws IOException
     {
-        return new SpecularFitFinal<>(original, textureResolution, specularBasisSettings, includeConstant);
+        return new SpecularFitFinal<>(original, textureResolution, metadataMapNames, specularBasisSettings, includeConstant);
     }
 
     private SpecularFitFinal(SpecularMaterialResources<ContextType> original, TextureResolution textureResolution,
-        SpecularBasisSettings specularBasisSettings, boolean includeConstant) throws IOException
+        Collection<String> metadataMapNames, SpecularBasisSettings specularBasisSettings, boolean includeConstant) throws IOException
     {
         super(original.getContext(), textureResolution, specularBasisSettings);
 
@@ -81,6 +87,18 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
 //                .createTexture()
 //            : null;
 
+        // Allocate metadata maps
+        metadataMaps = new HashMap<>(metadataMapNames.size());
+        for (String key : metadataMapNames)
+        {
+            metadataMaps.put(key,
+                context.getTextureFactory()
+                    .build2DColorTexture(textureResolution.width, textureResolution.height)
+                    .setInternalFormat(ColorFormat.RGBA8)
+                    .setLinearFilteringEnabled(true)
+                    .createTexture());
+        }
+
         albedoORMOptimization = original.getOcclusionMap() == null ?
             AlbedoORMOptimization.createWithoutOcclusion(context, textureResolution) :
             AlbedoORMOptimization.createWithOcclusion(original.getOcclusionMap(), textureResolution);
@@ -89,10 +107,10 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> loadFromPriorSolution(
         ContextType context, File priorSolutionDirectory) throws IOException
     {
-        return new SpecularFitFinal<>(context, priorSolutionDirectory);
+        return new SpecularFitFinal<>(context, SpecularFitOptimizable.getSerializableMetadataMapNames(), priorSolutionDirectory);
     }
 
-    private SpecularFitFinal(ContextType context, File priorSolutionDirectory) throws IOException
+    private SpecularFitFinal(ContextType context, Collection<String> metadataMapNames, File priorSolutionDirectory) throws IOException
     {
         super(context, priorSolutionDirectory);
 
@@ -131,6 +149,21 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
 //                .setLinearFilteringEnabled(true)
 //                .createTexture()
 //            : null;
+
+        // Load metadata maps
+        metadataMaps = new HashMap<>(metadataMapNames.size());
+        for (String key : metadataMapNames)
+        {
+            File metadataMapFile = new File(priorSolutionDirectory, key + ".png");
+            if (metadataMapFile.exists())
+            {
+                metadataMaps.put(key,
+                    context.getTextureFactory()
+                        .build2DColorTextureFromFile(metadataMapFile, true)
+                        .setLinearFilteringEnabled(true)
+                        .createTexture());
+            }
+        }
 
         AlbedoORMOptimization<ContextType> albedoORMOptimizationTemp = null;
         try
@@ -192,6 +225,11 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
         {
             albedoORMOptimization.close();
         }
+
+        for (Texture2D<ContextType> metadataMap : metadataMaps.values())
+        {
+            metadataMap.close();
+        }
     }
 
     @Override
@@ -227,6 +265,12 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
     public Texture2D<ContextType> getORMMap()
     {
         return albedoORMOptimization == null ? null : albedoORMOptimization.getORMMap();
+    }
+
+    @Override
+    public Map<String, Texture2D<ContextType>> getMetadataMaps()
+    {
+        return Collections.unmodifiableMap(metadataMaps);
     }
 
     public AlbedoORMOptimization<ContextType> getAlbedoORMOptimization()

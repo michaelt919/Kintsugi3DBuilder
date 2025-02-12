@@ -45,8 +45,7 @@ public class FinalReconstruction<ContextType extends Context<ContextType>>
         this.reconstructionSettings = reconstructionSettings;
 
         // Calculate reasonable image resolution for reconstructed images (supplemental output)
-        Projection defaultProj = resources.getViewSet().getCameraProjection(resources.getViewSet().getCameraProjectionIndex(
-            resources.getViewSet().getPrimaryViewIndex()));
+        Projection defaultProj = resources.getViewSet().getCameraProjection(resources.getViewSet().getCameraProjectionIndex(0));
         if (defaultProj.getAspectRatio() < 1.0)
         {
             imageWidth = textureResolution.width;

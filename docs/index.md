@@ -27,15 +27,32 @@ Kintsugi 3D still relies on Agisoft Metashape (or potentially other photogrammet
 In contrast, Kintsugi 3D, like its predecessor IBRelight, uses a photographic technique that leverages a flash mounted on the camera. There are two primary modes of capture: against a black background in a studio environment, or in-gallery. These two options reduce unintentional bounce light and offer accessibility and flexibility in terms of how the photos are taken, while providing essential reflectivity data for Kintsugi 3D to reconstruct specular maps, which most other photogrammetry workflows cannot replicate.
 
 ## References
-Lou Brown, Charles Walbridge, and Michael Tetzlaff, “Kintsugi 3D: An Empirically-Based Photogrammetry Production Pipeline,” *IS&T Archiving Conference*, 2024, pp. 76-80.
+Lou Brown, Charles Walbridge, and Michael Tetzlaff, “Kintsugi 3D: An Empirically-Based Photogrammetry Production Pipeline,” *IS&T Archiving Conference*, 2024, pp. 76-80.<br>
+[PDF](https://michaelt919.github.io/Kintsugi3DBuilder/Archiving2024.pdf)
 
-Michael Tetzlaff, “High-Fidelity Specular SVBRDF Acquisition from Flash Photographs,” *IEEE Transactions on Visualization and Computer Graphics (TVCG)*, vol. 30, no. 4, 2024, pp. 1885-1896.
+Michael Tetzlaff, “High-Fidelity Specular SVBRDF Acquisition from Flash Photographs,” *IEEE Transactions on Visualization and Computer Graphics (TVCG)*, vol. 30, no. 4, 2024, pp. 1885-1896.<br>
+[https://ieeexplore.ieee.org/document/10012127](https://ieeexplore.ieee.org/document/10012127)<br>
+[PDF](https://michaelt919.github.io/Kintsugi3DBuilder/IEEETVCG2023_FinalRevision.pdf)
+[Appendix](https://michaelt919.github.io/Kintsugi3DBuilder/IEEETVCG2023_FinalRevisionAppendix.pdf)<br>
+1077-2626 © 2023 IEEE. Personal use is permitted, but republication/redistribution requires IEEE permission.<br>
+See [https://www.ieee.org/publications/rights/index.html](https://www.ieee.org/publications/rights/index.html) for more information.
 
-Tyler Garcia, Zhangchi Lyu, and Michael Tetzlaff, “An Online Model Viewer for Cultural Heritage in Unity 3D,” *IS&T Archiving Conference*, 2022, pp. 50-55.
+Tyler Garcia, Zhangchi Lyu, and Michael Tetzlaff, “An Online Model Viewer for Cultural Heritage in Unity 3D,” *IS&T Archiving Conference*, 2022, pp. 50-55.<br>
+[PDF](https://michaelt919.github.io/Kintsugi3DBuilder/Archiving2022_FullPaper.pdf)
 
-Giljoo Nam, Joo Ho Lee, Diego Gutierrez, and Min H. Kim, “Practical SVBRDF Acquisition of 3D Objects with Unstructured Flash Photography,” *ACM Transactions on Graphics*, vol. 37, no. 6, 2018, pp. 267:1-267:12.
+Giljoo Nam, Joo Ho Lee, Diego Gutierrez, and Min H. Kim, “Practical SVBRDF Acquisition of 3D Objects with Unstructured Flash Photography,” *ACM Transactions on Graphics*, vol. 37, no. 6, 2018, pp. 267:1-267:12.<br>
+[https://dl.acm.org/doi/10.1145/3272127.3275017](https://dl.acm.org/doi/10.1145/3272127.3275017)
 
-Michael Tetzlaff, Gary Meyer, and Alex Kautz, “IBRelight: An Image-Based 3D Renderer for Cultural Heritage,” *IS&T Archiving Conference*, 2018, pp. 93-98.
+Michael Tetzlaff, Gary Meyer, and Alex Kautz, “IBRelight: An Image-Based 3D Renderer for Cultural Heritage,” *IS&T Archiving Conference*, 2018, pp. 93-98.<br>
+[PDF](https://michaelt919.github.io/Kintsugi3DBuilder/archiving2018.pdf)
+
+
+## Posters
+[Kintsugi 3D Viewer: User-Centric Design for Cultural Heritage Accessibility (May 2024)](https://michaelt919.github.io/Kintsugi3DBuilder/Research%20Day%202024%20Poster%20-%20KINTSUGI%203D%20VIEWER.pdf)
+
+[Kintsugi 3D Builder: User Experience Design and Implementation (May 2024)](https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi%203D%20Builder%20Poster%20Spring%202024.pdf)
+
+[User Experience of Visualizing Empirically-Based Textures in Kintsugi 3D Builder (December 2024)](https://michaelt919.github.io/Kintsugi3DBuilder/SGX-Poster-F2024.pdf)
 
 ## Contributors
 - Michael Tetzlaff (University of Minnesota / University of Wisconsin - Stout) - primary developer

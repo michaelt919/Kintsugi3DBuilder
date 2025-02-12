@@ -14,7 +14,6 @@ public abstract class FXMLPageController {
 
     protected FXMLPageScrollerController hostScrollerController;
     protected FXMLPage hostPage;
-
     protected Runnable loadStartCallback;
     protected Consumer<ViewSet> viewSetCallback;
 
@@ -56,4 +55,14 @@ public abstract class FXMLPageController {
 
     public void setLoadStartCallback(Runnable callback){this.loadStartCallback = callback;}
     public void setViewSetCallback(Consumer<ViewSet> callback){this.viewSetCallback = callback;}
+
+    public boolean nextButtonPressed()
+    {
+        return true;
+    }
+
+    public boolean closeButtonPressed()
+    {
+        return true;
+    }
 }

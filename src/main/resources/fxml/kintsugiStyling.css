@@ -203,14 +203,12 @@ dialog-pane{
     -fx-text-fill: #FFFFFF;
 }
 
-/* Apply to even cells */
 .list-cell:even {
-    -fx-background-color: #333333; /* Even cell background color */
+    -fx-background-color: #333333;
 }
 
-/* Apply to odd cells */
 .list-cell:odd {
-    -fx-background-color: #262626; /* Odd cell background color */
+    -fx-background-color: #262626;
 }
 
 .list-cell:selected{
@@ -351,13 +349,13 @@ dialog-pane{
     -fx-fill:#ffffff;
 }
 
-.toggle-button:selected .text{
-    -fx-fill: #000000;
-}
 
 .toggle-button{
-    -fx-background-color: #383838;
-    -fx-background-radius: 30 30 30 30;
+    -fx-background-color: #CECECE;
+}
+
+.toggle-button .text{
+    -fx-fill:#030303;
 }
 
 .toggle-button:selected{
@@ -365,17 +363,16 @@ dialog-pane{
     -fx-font-weight:bold;
 }
 
+.toggle-button:selected .text{
+    -fx-fill: #000000;
+}
+
 .toggle-button:hover{
- /*   -fx-background-color: #222255; */
     -fx-background-color: #D4AA00;
 }
 
-.toggle-button:hover .text{
-    -fx-fill: #ffffff;
-}
-
 .toggle-button:pressed {
-    -fx-background-color: #262626;
+    -fx-background-color: #383838;
 }
 
 .tool-bar{
@@ -392,6 +389,43 @@ dialog-pane{
 
 .tooltip .text{
     -fx-fill: #CECECE;
+}
+
+/*Tree cell styling stolen from stack overflow --> https://stackoverflow.com/questions/30684308/javafx-treeview-css */
+.tree-view, .tree-cell {
+    -fx-text-fill: white ;
+}
+
+.tree-cell:even {
+    -fx-background-color: #333333;
+}
+
+.tree-cell:odd {
+    -fx-background-color: #262626;
+}
+
+.tree-cell:empty{
+    -fx-background-color: #202020;
+}
+
+.tree-cell:expanded, .tree-cell:sub-tree-item {
+    -fx-background-color: #404040 ;
+}
+.tree-cell:selected {
+    -fx-font-weight: bold ;
+}
+.tree-cell {
+    -fx-padding: 0.75em 0em 0.75em 0em ;
+}
+.tree-cell:sub-tree-item {
+    -fx-padding: 0.25em ;
+}
+
+.tree-cell > .tree-disclosure-node > .arrow  {
+    -fx-background-color: none;
+}
+.tree-cell:expanded > .tree-disclosure-node > .arrow {
+    -fx-background-color: none;
 }
 
 .vbox{

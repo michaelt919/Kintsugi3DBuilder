@@ -47,6 +47,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
 
     // Set default shader to be the untextured IBR shader
     private File fragmentShaderFile;
+    private Map<String, Optional<Object>> fragmentShaderDefines;
 
 
     protected StandardShaderComponent(IBRResourcesImageSpace<ContextType> resources, SceneViewportModel sceneViewportModel, String sceneObjectTag,
@@ -192,6 +193,11 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
             }
         }
 
+        if (fragmentShaderDefines != null)
+        {
+            defineMap.putAll(fragmentShaderDefines);
+        }
+
         return defineMap;
     }
 
@@ -310,5 +316,10 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
     public void setLightCalibrationMode(boolean lightCalibrationMode)
     {
         this.lightCalibrationMode = lightCalibrationMode;
+    }
+
+    public void setExtraFragmentShaderDefines(Map<String, Optional<Object>> fragmentShaderDefines)
+    {
+        this.fragmentShaderDefines = fragmentShaderDefines;
     }
 }

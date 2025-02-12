@@ -20,6 +20,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
@@ -207,18 +208,23 @@ public class IOModel
         this.handler.loadFromVSETFile(id, vsetFile, supportingFilesDirectory, loadOptionsModel);
     }
 
-    public void loadFromAgisoftFiles(String id, File xmlFile, File meshFile, File undistortedImageDirectory, String primaryViewName)
+    public void loadFromLooseFiles(String id, File xmlFile, File meshFile, File fullResImageDirectory, String primaryViewName, double rotation)
     {
-        this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, primaryViewName, loadOptionsModel);
+        this.handler.loadFromLooseFiles(id, xmlFile, meshFile, fullResImageDirectory, primaryViewName, rotation, loadOptionsModel);
     }
 
-    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, String primaryViewName)
+    public void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk)
     {
-        this.handler.loadAgisoftFromZIP(id, metashapeObjectChunk, loadOptionsModel, primaryViewName);
+        this.handler.loadAgisoftFromZIP(metashapeObjectChunk, loadOptionsModel);
     }
     public void requestFragmentShader(File shaderFile)
     {
         this.handler.requestFragmentShader(shaderFile);
+    }
+
+    public void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines)
+    {
+        this.handler.requestFragmentShader(shaderFile, extraDefines);
     }
 
     public Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException

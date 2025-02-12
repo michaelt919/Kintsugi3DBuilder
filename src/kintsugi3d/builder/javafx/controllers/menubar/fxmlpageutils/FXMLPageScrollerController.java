@@ -31,7 +31,7 @@ public class FXMLPageScrollerController {
     ArrayList<FXMLPage> pages;
     FXMLPage currentPage;
 
-    HashMap<ShareInfo.Info, Object> sharedInfo;
+    private final HashMap<ShareInfo.Info, Object> sharedInfo = new HashMap<>();
 
     public void init() {
         for (FXMLPage page : pages){
@@ -45,11 +45,20 @@ public class FXMLPageScrollerController {
         String fileName = currentPage.getFxmlFilePath();
         initControllerAndUpdatePanel(fileName);
 
-        sharedInfo = new HashMap<>();
-
         currentPage.getController().setButtonShortcuts();
         Platform.runLater(()-> outerGridPane.getScene().getWindow().requestFocus());
+
+        outerGridPane.getScene().getWindow().setOnCloseRequest(this::onCloseRequest);
     }
+
+    private void onCloseRequest(WindowEvent windowEvent)
+    {
+        if (!currentPage.getController().closeButtonPressed())
+        {
+            windowEvent.consume();
+        }
+    }
+
     public void prevPage() {
         if (currentPage.hasPrevPage()){
             currentPage = currentPage.getPrevPage();
@@ -64,6 +73,11 @@ public class FXMLPageScrollerController {
 
     public void nextPage() {
         if (!currentPage.hasNextPage()){return;}
+
+        if (!currentPage.getController().nextButtonPressed())
+        {
+            return;
+        }
 
         String nextPath;
         try{
@@ -147,11 +161,12 @@ public class FXMLPageScrollerController {
         //change next button to confirm button if applicable
         FXMLPageController controller = currentPage.getController();
 
-        if (controller instanceof CanConfirm){
+        if (controller instanceof ConfirmablePage && ((ConfirmablePage) controller).canConfirm())
+        {
             nextButton.setText("Confirm");
             nextButton.setFont(Font.font(nextButton.getFont().getFamily(), FontWeight.BOLD, nextButton.getFont().getSize()));
 
-            CanConfirm confirmerController = (CanConfirm) controller;
+            ConfirmablePage confirmerController = (ConfirmablePage) controller;
             nextButton.setOnAction(event->confirmerController.confirmButtonPress());
         }
         else{
@@ -183,5 +198,10 @@ public class FXMLPageScrollerController {
 
     public Button getNextButton(){return nextButton;}
     public Button getPrevButton(){return prevButton;}
+
+    public void updateNextButtonLabel(String labelText)
+    {
+        nextButton.setText(labelText);
+    }
 }
 

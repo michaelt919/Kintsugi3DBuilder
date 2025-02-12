@@ -17,7 +17,7 @@ import java.util.stream.IntStream;
 
 import kintsugi3d.gl.core.*;
 
-public class ShaderBasedErrorCalculator<ContextType extends Context<ContextType>> implements Resource
+public final class ShaderBasedErrorCalculator<ContextType extends Context<ContextType>> implements Resource
 {
     // Compare fitted models against actual photographs
     private ProgramObject<ContextType> program;
@@ -53,9 +53,14 @@ public class ShaderBasedErrorCalculator<ContextType extends Context<ContextType>
         return program;
     }
 
-    public Framebuffer<ContextType> getFramebuffer()
+    public FramebufferObject<ContextType> getFramebuffer()
     {
         return framebuffer;
+    }
+
+    public Texture2D<ContextType> getFramebufferAsTexture()
+    {
+        return framebuffer.getColorAttachmentTexture(0);
     }
 
     public ReadonlyErrorReport getReport()
@@ -63,7 +68,6 @@ public class ShaderBasedErrorCalculator<ContextType extends Context<ContextType>
         return report;
     }
 
-    @SuppressWarnings("PackageVisibleField")
     private static class WeightedError
     {
         double error;

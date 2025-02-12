@@ -13,9 +13,12 @@
 #ifndef MATERIAL_GLSL
 #define MATERIAL_GLSL
 
-#line 17 1020
+#include "linearize.glsl"
+
+#line 19 1020
 
 in vec2 fTexCoord;
+out vec3 specularColor;
 
 #ifndef DIFFUSE_TEXTURE_ENABLED
 #define DIFFUSE_TEXTURE_ENABLED 0

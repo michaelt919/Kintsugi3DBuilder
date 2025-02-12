@@ -11,43 +11,35 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
-import java.awt.*;
-import java.io.File;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.stream.IntStream;
-
-import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
-import javafx.stage.*;
-import javafx.stage.Window;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
-import kintsugi3d.builder.core.ReadonlyViewSet;
-import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
-import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
+import javafx.stage.Stage;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.InputSource;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.LooseFilesInputSource;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.RealityCaptureInputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
-import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CustomImportController extends FXMLPageController implements ShareInfo, CanConfirm
+import java.io.File;
+
+public class CustomImportController extends FXMLPageController implements ShareInfo
 {
     private static final Logger log = LoggerFactory.getLogger(CustomImportController.class);
-    @FXML private ChoiceBox<String> primaryViewChoiceBox;
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
     @FXML private Text loadCheckImages;
     @FXML private VBox root;
+
+    @FXML private Text camPositionsTxt;
 
     private Stage thisStage;
 
@@ -56,7 +48,7 @@ public class CustomImportController extends FXMLPageController implements ShareI
     private final DirectoryChooser photoDirectoryChooser = new DirectoryChooser();
 
     private File cameraFile;
-    private File objFile;
+    private File meshFile;
     private File photoDir;
 
     @Override
@@ -69,19 +61,37 @@ public class CustomImportController extends FXMLPageController implements ShareI
         File recentFile = RecentProjects.getMostRecentDirectory();
         setInitDirectories(recentFile);
 
+        camFileChooser.getExtensionFilters().add(new ExtensionFilter("Reality Capture CSV file", "*.csv"));
         camFileChooser.getExtensionFilters().add(new ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
-        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ or PLY file", "*.obj", "*.ply"));
+        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ file", "*.obj"));
+        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Stanford PLY file", "*.ply"));
 
         camFileChooser.setTitle("Select camera positions file");
         objFileChooser.setTitle("Select object file");
 
         photoDirectoryChooser.setTitle("Select photo directory");
+
+        hostPage.setNextPage(hostScrollerController.getPage("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml"));
     }
 
     @Override
     public void refresh() {
         File recentFile = RecentProjects.getMostRecentDirectory();
         setInitDirectories(recentFile);
+
+        InputSource source = hostScrollerController.getInfo(Info.INPUT_SOURCE);
+        if(source != null){
+            camFileChooser.getExtensionFilters().clear();
+
+            StringBuilder cameraPositionsTextBuilder = new StringBuilder("Camera Positions\n(");
+            for (ExtensionFilter filter : source.getExtensionFilters()){
+                camFileChooser.getExtensionFilters().add(filter);
+                cameraPositionsTextBuilder.append(filter.getDescription()).append(" or\n");
+            }
+            int finalIdx = cameraPositionsTextBuilder.length();
+            cameraPositionsTextBuilder.replace(finalIdx - 4, finalIdx,")");
+            camPositionsTxt.setText(cameraPositionsTextBuilder.toString());
+        }
     }
 
     @Override
@@ -89,66 +99,17 @@ public class CustomImportController extends FXMLPageController implements ShareI
         return areAllFilesLoaded();
     }
 
-    /**
-     * Recursively chains together add calls to the dropdown, using Platform.runLater between each one
-     * to avoid locking up the JavaFX Application thread
-     * @param iterator
-     */
-    private void addToViewListRecursive(Iterator<String> iterator)
-    {
-        primaryViewChoiceBox.getItems().add(iterator.next());
-
-        if (iterator.hasNext())
-        {
-            Platform.runLater(() -> addToViewListRecursive(iterator));
-        }
-        else
-        {
-            // Finished adding all the choices; select the first one by default and re-enable
-            primaryViewChoiceBox.getSelectionModel().select(0);
-            primaryViewChoiceBox.setDisable(false);
-        }
-    }
-
     @FXML
     private void camFileSelect()
     {
-
         File temp = camFileChooser.showOpenDialog(getStage());
 
         if (temp != null)
         {
             cameraFile = temp;
             setHomeDir(temp);
-
-            try
-            {
-                ReadonlyViewSet newViewSet = ViewSetReaderFromAgisoftXML.getInstance().readFromFile(cameraFile);
-
-                loadCheckCameras.setText("Loaded");
-                loadCheckCameras.setFill(Paint.valueOf("Green"));
-
-                primaryViewChoiceBox.getItems().clear();
-
-                if (newViewSet.getCameraPoseCount() > 0)
-                {
-                    // Disable while updating the choices as it won't be responsive until it's done adding all the options
-                    primaryViewChoiceBox.setDisable(true);
-                    Iterator<String> imageIterator = IntStream.range(0, newViewSet.getCameraPoseCount())
-                        .mapToObj(newViewSet::getImageFileName)
-                        .sorted(Comparator.naturalOrder())
-                        .iterator();
-
-                    // Use individual Platform.runLater calls, chained together recursively
-                    // to prevent locking up the JavaFX Application thread
-                    Platform.runLater(() -> addToViewListRecursive(imageIterator));
-                }
-            }
-            catch (Exception e)
-            {
-                log.error("An error occurred reading camera file:", e);
-                new Alert(AlertType.ERROR, e.toString()).show();
-            }
+            loadCheckCameras.setText("Loaded");
+            loadCheckCameras.setFill(Paint.valueOf("Green"));
         }
 
         hostScrollerController.updatePrevAndNextButtons();
@@ -163,7 +124,7 @@ public class CustomImportController extends FXMLPageController implements ShareI
 
         if (temp != null)
         {
-            objFile = temp;
+            meshFile = temp;
             setHomeDir(temp);
             loadCheckObj.setText("Loaded");
             loadCheckObj.setFill(Paint.valueOf("Green"));
@@ -190,15 +151,9 @@ public class CustomImportController extends FXMLPageController implements ShareI
     }
 
     private boolean areAllFilesLoaded() {
-        return (cameraFile != null) && (objFile != null) && (photoDir != null);
+        return (cameraFile != null) && (meshFile != null) && (photoDir != null);
     }
 
-
-    private void close()
-    {
-        Window window = root.getScene().getWindow();
-        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
-    }
 
     private void setHomeDir(File home)
     {
@@ -226,37 +181,24 @@ public class CustomImportController extends FXMLPageController implements ShareI
 
     @Override
     public void shareInfo() {
-        hostScrollerController.addInfo(Info.CAM_FILE, cameraFile);
-        hostScrollerController.addInfo(Info.PHOTO_DIR, photoDir);
-        hostScrollerController.addInfo(Info.OBJ_FILE, objFile);
-        hostScrollerController.addInfo(Info.PRIMARY_VIEW, primaryViewChoiceBox.getSelectionModel().getSelectedItem());
-    }
+        //overwrite old source so we can compare old and new versions in PrimaryViewSelectController
+        InputSource source = hostScrollerController.getInfo(Info.INPUT_SOURCE);
+        if (source instanceof LooseFilesInputSource){
 
-    @Override
-    public void confirmButtonPress() {
-        if (!areAllFilesLoaded()){
-            Toolkit.getDefaultToolkit().beep();
-            return;
+            hostScrollerController.addInfo(Info.INPUT_SOURCE,
+                    new LooseFilesInputSource().setCameraFile(cameraFile)
+                    .setMeshFile(meshFile)
+                    .setPhotosDir(photoDir));
         }
-
-        if (loadStartCallback != null)
-        {
-            loadStartCallback.run();
+        else if(source instanceof RealityCaptureInputSource){
+            hostScrollerController.addInfo(Info.INPUT_SOURCE,
+                    new RealityCaptureInputSource()
+                    .setCameraFile(cameraFile)
+                    .setMeshFile(meshFile)
+                    .setPhotosDir(photoDir));
         }
-
-        if (viewSetCallback != null)
-        {
-            MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
-                    viewSet -> viewSetCallback.accept(viewSet));
+        else{
+            log.error("Error sending info to host controller. LooseFilesInputSource or RealityCaptureInputSource expected.");
         }
-
-        new Thread(() ->
-                MultithreadModels.getInstance().getIOModel().loadFromAgisoftFiles(
-                        cameraFile.getPath(), cameraFile, objFile, photoDir,
-                        primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
-                .start();
-
-        WelcomeWindowController.getInstance().hide();
-        close();
     }
 }

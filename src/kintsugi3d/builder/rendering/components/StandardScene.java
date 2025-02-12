@@ -13,6 +13,7 @@ package kintsugi3d.builder.rendering.components;
 
 import kintsugi3d.builder.core.SceneModel;
 import kintsugi3d.builder.rendering.SceneViewportModel;
+import kintsugi3d.builder.rendering.components.scene.camera.CameraWidgetGroup;
 import kintsugi3d.builder.rendering.components.scene.light.LightVisualsGroup;
 import kintsugi3d.builder.resources.LightingResources;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
@@ -30,6 +31,7 @@ public class StandardScene<ContextType extends Context<ContextType>> extends Bas
     {
         // the on-screen representation of lights
         components.add(new LightVisualsGroup<>(context, sceneModel, sceneViewportModel));
+        components.add(new CameraWidgetGroup<>(resources, sceneModel, sceneViewportModel));
     }
 
 }

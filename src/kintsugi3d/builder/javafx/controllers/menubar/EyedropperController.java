@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.DoubleUnaryOperator;
 import javax.imageio.ImageIO;
@@ -28,7 +29,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
-import javafx.scene.control.Alert;
+import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -36,17 +38,25 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.Window;
+import javafx.stage.WindowEvent;
 import kintsugi3d.builder.core.IOModel;
+import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ConfirmablePage;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.internal.ProjectModelBase;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EyedropperController implements Initializable {
+public class EyedropperController extends FXMLPageController implements Initializable, ConfirmablePage
+{
     private static final Logger log = LoggerFactory.getLogger(EyedropperController.class);
 
     static final String[] validExtensions = {"*.jpg", "*.jpeg", "*.png", "*.gif", "*.tif", "*.tiff", "*.png", "*.bmp", "*.wbmp"};
@@ -86,10 +96,23 @@ public class EyedropperController implements Initializable {
     private Image selectedFile;
     @FXML private Rectangle averageColorPreview = new Rectangle(); //displays the average color of selection
 
+    @FXML private HBox outerHbox;
+
     private IOModel ioModel = new IOModel();
     private ProjectModelBase projectModel = null;
 
     private Button sourceButton;
+
+    /**
+     * Set to true after the first time the warning about using multiple images for tone calibration has been shown
+     * to prevent the warning from appearing every time.
+     */
+    private boolean multiImageWarningShown = false;
+
+    /**
+     * Set to true to prevent warning about unsaved changes when closing the window via the "Confirm" button.
+     */
+    private boolean confirmExit = false;
 
 //    private Runnable exitCallback;
 
@@ -106,42 +129,7 @@ public class EyedropperController implements Initializable {
     }
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        selectedFile = null;
-
-        colorPickerImgView.setPreserveRatio(true);
-        colorPickerImgView.setSmooth(true);
-
-        isSelecting = false;
-        isCropping = false;
-        canResetCrop = false;
-
-        selectedColors = new ArrayList<>();
-
-        colorSelectButtons = new ArrayList<>();
-        colorSelectButtons.add(button1);
-        colorSelectButtons.add(button2);
-        colorSelectButtons.add(button3);
-        colorSelectButtons.add(button4);
-        colorSelectButtons.add(button5);
-        colorSelectButtons.add(button6);
-
-        colorSelectTxtFields = new ArrayList<>();
-        colorSelectTxtFields.add(txtField1);
-        colorSelectTxtFields.add(txtField2);
-        colorSelectTxtFields.add(txtField3);
-        colorSelectTxtFields.add(txtField4);
-        colorSelectTxtFields.add(txtField5);
-        colorSelectTxtFields.add(txtField6);
-
-        finalSelectRectangles = new ArrayList<>();
-        finalSelectRectangles.add(finalSelectRect1);
-        finalSelectRectangles.add(finalSelectRect2);
-        finalSelectRectangles.add(finalSelectRect3);
-        finalSelectRectangles.add(finalSelectRect4);
-        finalSelectRectangles.add(finalSelectRect5);
-        finalSelectRectangles.add(finalSelectRect6);
-
-        updateApplyButton();
+        init();
     }
 
     private static Rectangle2D resetViewport(ImageView imageView) {
@@ -647,13 +635,33 @@ public class EyedropperController implements Initializable {
 
     @FXML
     private void selectImage(ActionEvent actionEvent) {
+        if (!multiImageWarningShown)
+        {
+            Alert alert = new Alert(AlertType.WARNING,
+                "Warning: using multiple images for tone calibration can result in inconsistencies in tone interpretation.  "
+                + "To be used for advanced workflows only.",
+                ButtonType.OK, ButtonType.CANCEL);
+            alert.setGraphic(null);
+            var result = alert.showAndWait();
+            if (result.isEmpty() || !result.get().equals(ButtonType.OK))
+            {
+                // User cancelled; do not select a new image
+                return;
+            }
+            else
+            {
+                // User confirmed; do not show warning again while this controller is active.
+                multiImageWarningShown = true;
+            }
+        }
+
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose Image File");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", validExtensions));
         fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
         try{
-            fileChooser.setInitialDirectory(ioModel.getLoadedViewSet().getFullResImageFile(ioModel.getLoadedViewSet().getPrimaryViewIndex()).getParentFile());
+            fileChooser.setInitialDirectory(ioModel.getLoadedViewSet().getFullResImageFile(0).getParentFile());
         }
         catch(NullPointerException e){
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please load a model before using the color checker.");
@@ -717,8 +725,104 @@ public class EyedropperController implements Initializable {
         }
     }
 
-//    public void setExitCallback(Runnable exitCallback)
-//    {
-//        this.exitCallback = exitCallback;
-//    }
+    @Override
+    public Region getHostRegion()
+    {
+        return outerHbox;
+    }
+
+    @Override
+    public void init()
+    {
+        selectedFile = null;
+
+        colorPickerImgView.setPreserveRatio(true);
+        colorPickerImgView.setSmooth(true);
+
+        isSelecting = false;
+        isCropping = false;
+        canResetCrop = false;
+
+        selectedColors = new ArrayList<>();
+
+        colorSelectButtons = new ArrayList<>();
+        colorSelectButtons.add(button1);
+        colorSelectButtons.add(button2);
+        colorSelectButtons.add(button3);
+        colorSelectButtons.add(button4);
+        colorSelectButtons.add(button5);
+        colorSelectButtons.add(button6);
+
+        colorSelectTxtFields = new ArrayList<>();
+        colorSelectTxtFields.add(txtField1);
+        colorSelectTxtFields.add(txtField2);
+        colorSelectTxtFields.add(txtField3);
+        colorSelectTxtFields.add(txtField4);
+        colorSelectTxtFields.add(txtField5);
+        colorSelectTxtFields.add(txtField6);
+
+        finalSelectRectangles = new ArrayList<>();
+        finalSelectRectangles.add(finalSelectRect1);
+        finalSelectRectangles.add(finalSelectRect2);
+        finalSelectRectangles.add(finalSelectRect3);
+        finalSelectRectangles.add(finalSelectRect4);
+        finalSelectRectangles.add(finalSelectRect5);
+        finalSelectRectangles.add(finalSelectRect6);
+
+        updateApplyButton();
+    }
+
+    @Override
+    public void refresh()
+    {
+        setIOModel(MultithreadModels.getInstance().getIOModel());
+
+        ProjectModelBase project = (ProjectModelBase) MultithreadModels.getInstance().getProjectModel();
+        if (project != null)
+        {
+            setImage(new File(project.getColorCheckerFile()));
+        }
+
+        updateApplyButton();
+    }
+
+    @Override
+    public boolean canConfirm()
+    {
+        return true;
+    }
+
+    @Override
+    public void confirmButtonPress()
+    {
+        applyButtonPressed();
+
+        // Suppress warning about unsaved changes since the changes were just applied automatically.
+        confirmExit = true;
+
+        Window window = outerHbox.getScene().getWindow();
+        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
+    }
+
+    @Override
+    public boolean isNextButtonValid()
+    {
+        return true;
+    }
+
+    @Override
+    public boolean closeButtonPressed()
+    {
+        // Suppress warning about unsaved changes since the changes were just applied automatically.
+        if (confirmExit)
+        {
+            return true;
+        }
+        else
+        {
+            Alert alert = new Alert(AlertType.CONFIRMATION, "Discard tone calibration changes?");
+            var result = alert.showAndWait();
+            return result.isPresent() && result.get().equals(ButtonType.OK);
+        }
+    }
 }

@@ -1,12 +1,19 @@
 package kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils;
 
 public interface ShareInfo {
+    //TODO: remove/pull into FXMLPageScrollerController?
     enum Info{
-        OBJ_FILE,
-        METASHAPE_OBJ_CHUNK,
         CAM_FILE,
+        MESH_FILE,
         PHOTO_DIR,
-        PRIMARY_VIEW
+        METASHAPE_OBJ_CHUNK,
+        PRIMARY_VIEW,
+        INPUT_SOURCE
     }
-    void shareInfo(); //send info to FXML scroller controller upon hitting the next button
+
+    /**
+     * Send info to FXML scroller controller upon hitting the "Next" button.
+     * Useful for sending information across pages within a single scroller.
+     */
+    void shareInfo();
 }
