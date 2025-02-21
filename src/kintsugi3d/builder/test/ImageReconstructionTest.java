@@ -56,7 +56,8 @@ class ImageReconstructionTest
     @BeforeEach
     void setUp() throws Exception
     {
-        potatoViewSet = ViewSetReaderFromVSET.getInstance().readFromStream(getClass().getClassLoader().getResourceAsStream("test/Structured34View.vset"), null);
+        potatoViewSet = ViewSetReaderFromVSET.getInstance().readFromStream(
+            getClass().getClassLoader().getResourceAsStream("test/Structured34View.vset"), null, false);
         potatoViewSetTonemapped = potatoViewSet.copy();
 
         // Using tonemapping from the Guan Yu dataset

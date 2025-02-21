@@ -21,6 +21,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -48,6 +49,7 @@ public class CustomImportController extends FXMLPageController implements ShareI
     @FXML private Text loadCheckObj;
     @FXML private Text loadCheckImages;
     @FXML private VBox root;
+    @FXML private CheckBox undistortImagesCheckBox;
 
     private Stage thisStage;
 
@@ -113,7 +115,6 @@ public class CustomImportController extends FXMLPageController implements ShareI
     @FXML
     private void camFileSelect()
     {
-
         File temp = camFileChooser.showOpenDialog(getStage());
 
         if (temp != null)
@@ -252,7 +253,7 @@ public class CustomImportController extends FXMLPageController implements ShareI
 
         new Thread(() ->
                 MultithreadModels.getInstance().getIOModel().loadFromAgisoftFiles(
-                        cameraFile.getPath(), cameraFile, objFile, photoDir,
+                        cameraFile.getPath(), cameraFile, objFile, photoDir, undistortImagesCheckBox.isSelected(),
                         primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
                 .start();
 

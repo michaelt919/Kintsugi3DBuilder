@@ -113,5 +113,6 @@
          <Label text="Primary view:  " />
          <ChoiceBox fx:id="primaryViewChoiceBox" prefWidth="400.0" />
       </HBox>
+      <CheckBox fx:id="undistortImagesCheckBox" mnemonicParsing="false" selected="true" text="Undistort images" />
    </HBox>
 </VBox>
