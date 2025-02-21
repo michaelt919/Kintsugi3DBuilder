@@ -207,9 +207,10 @@ public class IOModel
         this.handler.loadFromVSETFile(id, vsetFile, supportingFilesDirectory, loadOptionsModel);
     }
 
-    public void loadFromAgisoftFiles(String id, File xmlFile, File meshFile, File undistortedImageDirectory, String primaryViewName)
+    public void loadFromAgisoftFiles(String id, File xmlFile, File meshFile, File imageDirectory,
+        boolean needsUndistortion, String primaryViewName)
     {
-        this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, primaryViewName, loadOptionsModel);
+        this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, imageDirectory, needsUndistortion, primaryViewName, loadOptionsModel);
     }
 
     public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, String primaryViewName)

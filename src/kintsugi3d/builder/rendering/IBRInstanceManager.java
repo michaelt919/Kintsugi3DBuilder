@@ -503,8 +503,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory, String primaryViewName,
-        ReadonlyLoadOptionsModel loadOptions)
+    public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory,
+        boolean needsUndistortion, String primaryViewName, ReadonlyLoadOptionsModel loadOptions)
     {
         if(this.progressMonitor.isConflictingProcess()){
             return;
@@ -517,7 +517,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                 .setProgressMonitor(this.progressMonitor)
                 .setLoadOptions(loadOptions)
-                .loadAgisoftFiles(xmlFile, meshFile, imageDirectory)
+                .loadAgisoftFiles(xmlFile, meshFile, imageDirectory, needsUndistortion)
                 .setPrimaryView(primaryViewName);
 
             // Invoke callbacks now that view set is loaded

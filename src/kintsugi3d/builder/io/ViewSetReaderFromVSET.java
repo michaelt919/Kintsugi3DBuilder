@@ -47,7 +47,8 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
     }
 
     @Override
-    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, Map<Integer, String> imagePathMap)
+    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory,
+        Map<Integer, String> imagePathMap, boolean needsUndistortion)
     {
         Date timestamp = new Date();
 
@@ -175,11 +176,21 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         float b1 = scanner.nextFloat(); // fx - fy
                         float b2 = scanner.nextFloat(); // a.k.a. skew
 
-                        result.getCameraProjectionList().add(new DistortionProjection(
+                        DistortionProjection distortionProjection = new DistortionProjection(
                             sensorWidth, sensorHeight,
                             focalLength + b1, focalLength,
                             cx, cy, k1, k2, k3, k4, p1, p2, b2
-                        ));
+                        );
+
+                        if (needsUndistortion)
+                        {
+                            result.getCameraProjectionList().add(distortionProjection);
+                        }
+                        else
+                        {
+                            result.getCameraProjectionList().add(new SimpleProjection(
+                                distortionProjection.getAspectRatio(), distortionProjection.getVerticalFieldOfView()));
+                        }
 
                         scanner.nextLine();
                         break;

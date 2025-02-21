@@ -35,10 +35,13 @@ public interface ViewSetReader
      * @param root
      * @param supportingFilesDirectory
      * @param imagePathMap A map of image IDs to paths, if passed this will override the paths being assigned to the images.
+     * @param needsUndistortion Whether or not the images need undistortion.  Should be true if loading original photos,
+     *                          or false if loading images that have already been undistorted by photogrammetry software.
      * @return The view set
      * @throws IOException If I/O errors occur while reading the file.
      */
-    ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, Map<Integer, String> imagePathMap) throws Exception;
+    ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory,
+        Map<Integer, String> imagePathMap, boolean needsUndistortion) throws Exception;
 
     /**
      * Loads a view set from an input file.
@@ -47,13 +50,15 @@ public interface ViewSetReader
      * @param stream The file to load
      * @param root
      * @param supportingFilesDirectory
+     * @param needsUndistortion Whether or not the images need undistortion.  Should be true if loading original photos,
+     *                          or false if loading images that have already been undistorted by photogrammetry software.
      * @return The view set
      * @throws IOException If I/O errors occur while reading the file.
      */
-    default ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory) throws Exception
+    default ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, boolean needsUndistortion) throws Exception
     {
         // Use root directory as supporting files directory
-        return readFromStream(stream, root, supportingFilesDirectory, null);
+        return readFromStream(stream, root, supportingFilesDirectory, null, needsUndistortion);
     }
 
     /**
@@ -62,13 +67,15 @@ public interface ViewSetReader
      * The supporting files directory may be overridden by a directory specified in the file.
      * @param stream
      * @param root
+     * @param needsUndistortion Whether or not the images need undistortion.  Should be true if loading original photos,
+     *                          or false if loading images that have already been undistorted by photogrammetry software.
      * @return The view set
      * @throws Exception If errors occur while reading the file.
      */
-    default ViewSet readFromStream(InputStream stream, File root) throws Exception
+    default ViewSet readFromStream(InputStream stream, File root, boolean needsUndistortion) throws Exception
     {
         // Use root directory as supporting files directory
-        return readFromStream(stream, root, root, null);
+        return readFromStream(stream, root, root, null, needsUndistortion);
     }
 
     /**
@@ -77,15 +84,32 @@ public interface ViewSetReader
      * The supporting files directory will be set as specified by default but may be overridden by a directory specified in the file.
      * @param file The file to load
      * @param supportingFilesDirectory
+     * @param needsUndistortion Whether or not the images need undistortion.  Should be true if loading original photos,
+     *                          or false if loading images that have already been undistorted by photogrammetry software.
+     * @return The view set
+     * @throws Exception If errors occur while reading the file.
+     */
+    default ViewSet readFromFile(File file, File supportingFilesDirectory, boolean needsUndistortion) throws Exception
+    {
+        try (InputStream stream = new FileInputStream(file))
+        {
+            return readFromStream(stream, file.getParentFile(), supportingFilesDirectory, null, needsUndistortion);
+        }
+    }
+
+    /**
+     * Loads a view set from an input file.
+     * By default, the view set's root directory will be set to the parent directory of the specified file.
+     * The supporting files directory will be set as specified by default but may be overridden by a directory specified in the file.
+     * Images will marked as requiring undistortion if distortion parameters exist in the file.
+     * @param file The file to load
+     * @param supportingFilesDirectory
      * @return The view set
      * @throws Exception If errors occur while reading the file.
      */
     default ViewSet readFromFile(File file, File supportingFilesDirectory) throws Exception
     {
-        try (InputStream stream = new FileInputStream(file))
-        {
-            return readFromStream(stream, file.getParentFile(), supportingFilesDirectory, null);
-        }
+        return readFromFile(file, supportingFilesDirectory, true);
     }
 
     /**
@@ -93,14 +117,30 @@ public interface ViewSetReader
      * By default, the view set's root directory and supporting files direcotry will be set to the parent directory of the specified file.
      * The supporting files directory may be overridden by a directory specified in the file.
      * @param file The file to load
+     * @param needsUndistortion Whether or not the images need undistortion.  Should be true if loading original photos,
+     *                          or false if loading images that have already been undistorted by photogrammetry software.
+     * @return The view set
+     * @throws IOException If I/O errors occur while reading the file.
+     */
+    default ViewSet readFromFile(File file, boolean needsUndistortion) throws Exception
+    {
+        try (InputStream stream = new FileInputStream(file))
+        {
+            return readFromStream(stream, file.getParentFile(), needsUndistortion);
+        }
+    }
+
+    /**
+     * Loads a view set from an input file.
+     * By default, the view set's root directory and supporting files direcotry will be set to the parent directory of the specified file.
+     * The supporting files directory may be overridden by a directory specified in the file.
+     * Images will marked as requiring undistortion if distortion parameters exist in the file.
+     * @param file The file to load
      * @return The view set
      * @throws IOException If I/O errors occur while reading the file.
      */
     default ViewSet readFromFile(File file) throws Exception
     {
-        try (InputStream stream = new FileInputStream(file))
-        {
-            return readFromStream(stream, file.getParentFile());
-        }
+        return readFromFile(file, true);
     }
 }

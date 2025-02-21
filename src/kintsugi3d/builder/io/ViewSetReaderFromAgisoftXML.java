@@ -23,6 +23,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import kintsugi3d.builder.core.DistortionProjection;
+import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.metrics.ViewRMSE;
 import kintsugi3d.gl.vecmath.Matrix3;
@@ -172,10 +173,11 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * @return
      * @throws XMLStreamException
      */
-    @Override
-    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, Map<Integer, String> imagePathMap) throws XMLStreamException
+    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory,
+        Map<Integer, String> imagePathMap, boolean needsUndistortion) throws XMLStreamException
     {
-        return readFromStream(stream, root, supportingFilesDirectory, imagePathMap, -1, false);
+        return readFromStream(stream, root, supportingFilesDirectory, imagePathMap,
+            needsUndistortion, -1, false);
     }
 
     /**
@@ -186,12 +188,16 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * @param root
      * @param supportingFilesDirectory
      * @param imagePathMap A map of image IDs to paths, if passed this will override the paths being assigned to the images.
+     * @param needsUndistortion Whether or not the images need undistortion.  Should be true if loading original photos,
+     *                          or false if loading images that have already been undistorted by photogrammetry software.
      * @param metashapeVersionOverride A parameter that can be passed to override the version of the XML document being read to circumvent formatting differences.
      * @param directAgisoftImport Used to ignore global transformations set in Metashape projects which would break rendering if not accounted for.
+
      * @return
      * @throws XMLStreamException
      */
-    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, Map<Integer, String> imagePathMap, int metashapeVersionOverride, boolean directAgisoftImport) throws XMLStreamException
+    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, Map<Integer, String> imagePathMap,
+        boolean needsUndistortion, int metashapeVersionOverride, boolean directAgisoftImport) throws XMLStreamException
     {
         Map<String, Sensor> sensorSet = new Hashtable<>();
         TreeSet<Camera> cameraSet = new TreeSet<>((c1, c2) ->
@@ -629,12 +635,16 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             }
                             break;
                         case "camera":
-                            if (camera != null && camera.transform != null)
+                            if (camera != null)
                             {
-                                cameraSet.add(camera);
-                                log.debug("\tAdding camera {}, with sensor {} and image {}\n",
-                                    cameraID, sensorID, imageFile);
-                                camera = null;
+                                if (camera.transform != null)
+                                {
+                                    // Only add camera if it has a valid transform
+                                    cameraSet.add(camera);
+                                    log.debug("\tAdding camera {}, with sensor {} and image {}\n",
+                                        cameraID, sensorID, imageFile);
+                                }
+                                camera = null; // Clear the camera regardless
                             }
                             break;
                     }
@@ -663,7 +673,8 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         for (int i = 0; i < sensors.length; i++)
         {
             sensors[i].index = i;
-            result.getCameraProjectionList().add(new DistortionProjection(
+
+            DistortionProjection distortionProjection = new DistortionProjection(
                 sensors[i].width,
                 sensors[i].height,
                 sensors[i].fx,
@@ -677,7 +688,17 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                 sensors[i].p1,
                 sensors[i].p2,
                 sensors[i].skew
-            ));
+            );
+
+            if (needsUndistortion)
+            {
+                result.getCameraProjectionList().add(distortionProjection);
+            }
+            else
+            {
+                result.getCameraProjectionList().add(new SimpleProjection(
+                    distortionProjection.getAspectRatio(), distortionProjection.getVerticalFieldOfView()));
+            }
         }
 
         Camera[] cameras = cameraSet.toArray(new Camera[0]);
