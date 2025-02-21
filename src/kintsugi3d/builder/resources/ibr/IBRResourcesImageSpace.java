@@ -309,7 +309,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                         fileStream = new BufferedInputStream(zis);
                         // Create and store ViewSet TODO: USING A HARD CODED VERSION VALUE (200)
                         this.viewSet = ((ViewSetReaderFromAgisoftXML) ViewSetReaderFromAgisoftXML.getInstance())
-                                .readFromStream(fileStream, rootDirectory, supportingFilesDirectory, cameraPathsMap, false, 200, true);
+                                .readFromStream(fileStream, rootDirectory, supportingFilesDirectory, cameraPathsMap, true, 200, true);
                         break;
                     }
                 }
