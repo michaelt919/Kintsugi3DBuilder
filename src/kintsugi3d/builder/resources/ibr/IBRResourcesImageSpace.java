@@ -193,16 +193,18 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         }
 
         // images are defined in the load options
-        public Builder<ContextType> loadLooseFiles(File cameraFile, File geometryFile, File fullResImageDirectory) throws Exception
+        public Builder<ContextType> loadLooseFiles(File cameraFile, File geometryFile, File fullResImageDirectory,
+            boolean needsUndistort) throws Exception
         {
-            return loadLooseFiles(getReaderForFile(cameraFile), cameraFile, geometryFile, fullResImageDirectory);
+            return loadLooseFiles(getReaderForFile(cameraFile), cameraFile, geometryFile, fullResImageDirectory, needsUndistort);
         }
 
         // images are defined in the load options
-        public Builder<ContextType> loadLooseFiles(ViewSetReader reader, File cameraFile, File geometryFile, File fullResImageDirectory) throws Exception
+        public Builder<ContextType> loadLooseFiles(ViewSetReader reader, File cameraFile, File geometryFile,
+            File fullResImageDirectory, boolean needsUndistort) throws Exception
         {
             // Load view set
-            this.viewSet = reader.readFromFile(cameraFile, geometryFile, fullResImageDirectory);
+            this.viewSet = reader.readFromFile(cameraFile, geometryFile, fullResImageDirectory, needsUndistort);
             updateViewSetFromLoadOptions();
             loadAndValidateGeometry();
             return this;

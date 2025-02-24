@@ -12,6 +12,7 @@
 package kintsugi3d.builder.io;
 
 import kintsugi3d.builder.core.DistortionProjection;
+import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
@@ -137,10 +138,12 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * @throws XMLStreamException
      */
     @Override
-    public ViewSet readFromStream(InputStream stream, File root, File geometryFile, File fullResImageDirectory) throws XMLStreamException
+    public ViewSet readFromStream(InputStream stream, File root, File geometryFile, File fullResImageDirectory,
+        boolean needsUndistort) throws XMLStreamException
     {
         // Use root directory as supporting files directory
-        ViewSet viewSet = readFromStream(stream, root, root, null, -1, false);
+        ViewSet viewSet = readFromStream(stream, root, root, needsUndistort,
+            null, -1, false);
         viewSet.setGeometryFile(geometryFile);
         viewSet.setFullResImageDirectory(fullResImageDirectory);
         return viewSet;
@@ -153,13 +156,15 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      * * @param stream
      * @param root
      * @param supportingFilesDirectory
+     * @param needsUndistort Whether or not the images need undistortion.  Should be true if loading original photos,
+     *                       or false if loading images that have already been undistorted by photogrammetry software.
      * @param imagePathMap A map of image IDs to paths, if passed this will override the paths being assigned to the images.
      * @param metashapeVersionOverride A parameter that can be passed to override the version of the XML document being read to circumvent formatting differences.
      * @param directAgisoftImport Used to ignore global transformations set in Metashape projects which would break rendering if not accounted for.
      * @return
      * @throws XMLStreamException
      */
-    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory,
+    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, boolean needsUndistort,
         Map<Integer, String> imagePathMap, int metashapeVersionOverride, boolean directAgisoftImport)
         throws XMLStreamException
     {
@@ -635,7 +640,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         for (int i = 0; i < sensors.length; i++)
         {
             sensors[i].index = i;
-            builder.addCameraProjection(new DistortionProjection(
+            DistortionProjection distortionProj = new DistortionProjection(
                 sensors[i].width,
                 sensors[i].height,
                 sensors[i].fx,
@@ -649,7 +654,17 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                 sensors[i].p1,
                 sensors[i].p2,
                 sensors[i].skew
-            ));
+            );
+
+            if (needsUndistort)
+            {
+                builder.addCameraProjection(distortionProj);
+            }
+            else
+            {
+                builder.addCameraProjection(new SimpleProjection(
+                    distortionProj.getAspectRatio(), distortionProj.getVerticalFieldOfView()));
+            }
         }
 
         Camera[] cameras = cameraSet.toArray(new Camera[0]);
@@ -793,7 +808,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     // Create and store ViewSet
                     // TODO: USING A HARD CODED VERSION VALUE (200)
                     ViewSet viewSet = ((ViewSetReaderFromAgisoftXML) ViewSetReaderFromAgisoftXML.getInstance())
-                        .readFromStream(fileStream, rootDirectory, supportingFilesDirectory, cameraPathsMap, 200, true);
+                        .readFromStream(fileStream, rootDirectory, supportingFilesDirectory, true, cameraPathsMap, 200, true);
 
                     // 3) load geometry from ZipInputStream from model's ZIP
                     String modelPath = metashapeObjectChunk.getCurrentModelPath();

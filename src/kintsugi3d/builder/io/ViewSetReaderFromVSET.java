@@ -53,10 +53,12 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
      * @param stream The file to load
      * @param root
      * @param supportingFilesDirectory
+     * @param needsUndistort Whether or not the images need undistortion.  Should be true if loading original photos,
+     *                       or false if loading images that have already been undistorted by photogrammetry software.
      * @return The view set
      * @throws IOException If I/O errors occur while reading the file.
      */
-    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory)
+    public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, boolean needsUndistort)
     {
         Date timestamp = new Date();
 
@@ -186,11 +188,21 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         float b1 = scanner.nextFloat(); // fx - fy
                         float b2 = scanner.nextFloat(); // a.k.a. skew
 
-                        builder.addCameraProjection(new DistortionProjection(
+                        DistortionProjection distortionProj = new DistortionProjection(
                             sensorWidth, sensorHeight,
                             focalLength + b1, focalLength,
                             cx, cy, k1, k2, k3, k4, p1, p2, b2
-                        ));
+                        );
+
+                        if (needsUndistort)
+                        {
+                            builder.addCameraProjection(distortionProj);
+                        }
+                        else
+                        {
+                            builder.addCameraProjection(new SimpleProjection(
+                                distortionProj.getAspectRatio(), distortionProj.getVerticalFieldOfView()));
+                        }
 
                         scanner.nextLine();
                         break;
@@ -288,9 +300,10 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         return result;
     }
 
-    public ViewSet readFromStream(InputStream stream, File root, File geometryFile, File fullResImageDirectory)
+    @Override
+    public ViewSet readFromStream(InputStream stream, File root, File geometryFile, File fullResImageDirectory, boolean needsUndistort)
     {
-        return readFromStream(stream, root, root);
+        return readFromStream(stream, root, root, needsUndistort);
     }
 
     /**
@@ -305,7 +318,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
     public ViewSet readFromStream(InputStream stream, File root)
     {
         // Use root directory as supporting files directory
-        return readFromStream(stream, root, root);
+        return readFromStream(stream, root, root, true);
     }
 
     /**
@@ -321,7 +334,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
     {
         try (InputStream stream = new FileInputStream(file))
         {
-            return readFromStream(stream, file.getParentFile(), supportingFilesDirectory);
+            return readFromStream(stream, file.getParentFile(), supportingFilesDirectory, true);
         }
     }
 

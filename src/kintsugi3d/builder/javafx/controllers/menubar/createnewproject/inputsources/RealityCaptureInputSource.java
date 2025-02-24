@@ -26,6 +26,7 @@ public class RealityCaptureInputSource extends InputSource{
     private File cameraFile;
     private File meshFile;
     private File photosDir;
+    private boolean needsUndistort;
 
     @Override
     public List<FileChooser.ExtensionFilter> getExtensionFilters() {
@@ -41,7 +42,7 @@ public class RealityCaptureInputSource extends InputSource{
     public void initTreeView() {
         try {
             primaryViewSelectionModel = GenericPrimaryViewSelectionModel.createInstance(cameraFile.getName(),
-                    ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile, meshFile, photosDir));
+                    ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile, meshFile, photosDir, true));
 
             addTreeElems(primaryViewSelectionModel);
             searchableTreeView.bind();
@@ -53,9 +54,9 @@ public class RealityCaptureInputSource extends InputSource{
     @Override
     public void loadProject(String primaryView, double rotate) {
         new Thread(() ->
-                MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(
-                        cameraFile.getPath(), cameraFile, meshFile, photosDir, primaryView, rotate))
-                .start();
+            MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(
+                cameraFile.getPath(), cameraFile, meshFile, photosDir, needsUndistort, primaryView, rotate))
+            .start();
     }
 
     @Override
@@ -81,8 +82,9 @@ public class RealityCaptureInputSource extends InputSource{
         return this;
     }
 
-    public RealityCaptureInputSource setPhotosDir(File photosDir) {
+    public RealityCaptureInputSource setPhotosDir(File photosDir, boolean needsUndistort) {
         this.photosDir = photosDir;
+        this.needsUndistort = needsUndistort;
         return this;
     }
 }

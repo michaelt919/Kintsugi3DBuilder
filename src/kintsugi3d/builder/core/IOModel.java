@@ -208,9 +208,11 @@ public class IOModel
         this.handler.loadFromVSETFile(id, vsetFile, supportingFilesDirectory, loadOptionsModel);
     }
 
-    public void loadFromLooseFiles(String id, File xmlFile, File meshFile, File fullResImageDirectory, String primaryViewName, double rotation)
+    public void loadFromLooseFiles(String id, File xmlFile, File meshFile, File fullResImageDirectory,
+        boolean needsUndistort, String primaryViewName, double rotation)
     {
-        this.handler.loadFromLooseFiles(id, xmlFile, meshFile, fullResImageDirectory, primaryViewName, rotation, loadOptionsModel);
+        this.handler.loadFromLooseFiles(id, xmlFile, meshFile, fullResImageDirectory, needsUndistort, primaryViewName,
+            rotation, loadOptionsModel);
     }
 
     public void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk)

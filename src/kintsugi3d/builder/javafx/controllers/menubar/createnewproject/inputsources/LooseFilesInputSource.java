@@ -28,6 +28,7 @@ public class LooseFilesInputSource extends InputSource{
     private File cameraFile;
     private File meshFile;
     private File photosDir;
+    private boolean needsUndistort;
 
     @Override
     public List<FileChooser.ExtensionFilter> getExtensionFilters() {
@@ -52,8 +53,9 @@ public class LooseFilesInputSource extends InputSource{
         return this;
     }
 
-    public LooseFilesInputSource setPhotosDir(File photosDir){
+    public LooseFilesInputSource setPhotosDir(File photosDir, boolean needsUndistort){
         this.photosDir = photosDir;
+        this.needsUndistort = needsUndistort;
         return this;
     }
 
@@ -67,7 +69,7 @@ public class LooseFilesInputSource extends InputSource{
             else if (cameraFile.getName().endsWith(".csv")) // RealityCapture
             {
                 primaryViewSelectionModel = GenericPrimaryViewSelectionModel.createInstance(cameraFile.getName(),
-                        ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile, meshFile, photosDir));
+                        ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile, meshFile, photosDir, true));
             }
             else
             {
@@ -88,7 +90,7 @@ public class LooseFilesInputSource extends InputSource{
     public void loadProject(String primaryView, double rotate) {
         new Thread(() ->
                 MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(
-                        cameraFile.getPath(), cameraFile, meshFile, photosDir, primaryView, rotate))
+                        cameraFile.getPath(), cameraFile, meshFile, photosDir, needsUndistort, primaryView, rotate))
                 .start();
     }
 
