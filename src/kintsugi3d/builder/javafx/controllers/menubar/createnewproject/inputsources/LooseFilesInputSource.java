@@ -23,12 +23,14 @@ import java.io.File;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class LooseFilesInputSource extends InputSource{
     private File cameraFile;
     private File meshFile;
     private File photosDir;
     private boolean needsUndistort;
+    private boolean hotSwap;
 
     @Override
     public List<FileChooser.ExtensionFilter> getExtensionFilters() {
@@ -57,6 +59,11 @@ public class LooseFilesInputSource extends InputSource{
         this.photosDir = photosDir;
         this.needsUndistort = needsUndistort;
         return this;
+    }
+
+    public void setHotSwap(boolean hotSwap)
+    {
+        this.hotSwap = hotSwap;
     }
 
     @Override
@@ -89,7 +96,7 @@ public class LooseFilesInputSource extends InputSource{
     @Override
     public void loadProject(String primaryView, double rotate) {
         new Thread(() ->
-                MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(
+                MultithreadModels.getInstance().getIOModel().hotSwapLooseFiles(
                         cameraFile.getPath(), cameraFile, meshFile, photosDir, needsUndistort, primaryView, rotate))
                 .start();
     }

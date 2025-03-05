@@ -389,7 +389,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
     @Override
     public void loadFromLooseFiles(String id, File xmlFile, File meshFile, File imageDirectory, boolean needsUndistort,
-        String primaryViewName, double rotation, ReadonlyLoadOptionsModel loadOptions)
+        String primaryViewName, double rotation, ReadonlyLoadOptionsModel loadOptions, UUID uuidOverride)
     {
         if(this.progressMonitor.isConflictingProcess()){
             return;
@@ -402,7 +402,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                 .setProgressMonitor(this.progressMonitor)
                 .setLoadOptions(loadOptions)
-                .loadLooseFiles(xmlFile, meshFile, imageDirectory, needsUndistort)
+                .loadLooseFiles(xmlFile, meshFile, imageDirectory, needsUndistort, uuidOverride)
                 .setOrientationView(primaryViewName, rotation);
 
             // Invoke callbacks now that view set is loaded

@@ -1135,6 +1135,11 @@ public final class ViewSet implements ReadonlyViewSet
         return uuid;
     }
 
+    public void setUuid(UUID uuid)
+    {
+        this.uuid = uuid;
+    }
+
     public void setOrientationViewRotationDegrees(double rotation)
     {
         orientationViewRotationDegrees = rotation;

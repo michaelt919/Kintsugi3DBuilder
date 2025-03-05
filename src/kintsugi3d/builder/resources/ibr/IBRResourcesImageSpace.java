@@ -45,6 +45,7 @@ import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -194,6 +195,13 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         // images are defined in the load options
         public Builder<ContextType> loadLooseFiles(File cameraFile, File geometryFile, File fullResImageDirectory,
+            boolean needsUndistort, UUID uuidOverride) throws Exception
+        {
+            return loadLooseFiles(getReaderForFile(cameraFile), cameraFile, geometryFile, fullResImageDirectory, needsUndistort, uuidOverride);
+        }
+
+        // images are defined in the load options
+        public Builder<ContextType> loadLooseFiles(File cameraFile, File geometryFile, File fullResImageDirectory,
             boolean needsUndistort) throws Exception
         {
             return loadLooseFiles(getReaderForFile(cameraFile), cameraFile, geometryFile, fullResImageDirectory, needsUndistort);
@@ -201,7 +209,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         // images are defined in the load options
         public Builder<ContextType> loadLooseFiles(ViewSetReader reader, File cameraFile, File geometryFile,
-            File fullResImageDirectory, boolean needsUndistort) throws Exception
+            File fullResImageDirectory, boolean needsUndistort, UUID uuidOverride) throws Exception
         {
             // Load view set
             this.viewSet = reader.readFromFile(cameraFile, geometryFile, fullResImageDirectory, needsUndistort);
@@ -209,6 +217,14 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             loadAndValidateGeometry();
             return this;
         }
+
+        // images are defined in the load options
+        public Builder<ContextType> loadLooseFiles(ViewSetReader reader, File cameraFile, File geometryFile,
+            File fullResImageDirectory, boolean needsUndistort) throws Exception
+        {
+            return this.loadLooseFiles(reader, cameraFile, geometryFile, fullResImageDirectory, needsUndistort, null);
+        }
+
 
         /**
          * Alternate version of loadAgisoftFromZIP that uses a metashapeObjectChunk as its parameter.

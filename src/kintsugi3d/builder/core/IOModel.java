@@ -215,6 +215,13 @@ public class IOModel
             rotation, loadOptionsModel);
     }
 
+    public void hotSwapLooseFiles(String id, File xmlFile, File meshFile, File fullResImageDirectory,
+        boolean needsUndistort, String primaryViewName, double rotation)
+    {
+        this.handler.loadFromLooseFiles(id, xmlFile, meshFile, fullResImageDirectory, needsUndistort, primaryViewName,
+            rotation, loadOptionsModel, getLoadedViewSet() != null ? getLoadedViewSet().getUUID() : null);
+    }
+
     public void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk)
     {
         this.handler.loadAgisoftFromZIP(metashapeObjectChunk, loadOptionsModel);
