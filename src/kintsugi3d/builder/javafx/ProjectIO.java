@@ -30,6 +30,7 @@ import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.controllers.menubar.AboutController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.HotSwapController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ConfirmablePage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
@@ -258,12 +259,8 @@ public final class ProjectIO
         }
     }
 
-    public void createProject(Window parentWindow)
+    private void openPageController(Window parentWindow, String title, String firstPageFXMLPath, Runnable successCallback)
     {
-        if (loaderWindowOpen.get()) {return;}
-
-        if (!confirmClose("Are you sure you want to create a new project?")) {return;}
-
         File fxmlFilesDirectory = new File("create-new-project-fxmls.txt");
 
         if (!fxmlFilesDirectory.exists()){
@@ -271,7 +268,8 @@ public final class ProjectIO
             return;
         }
 
-        try (Scanner scanner = new Scanner(fxmlFilesDirectory, StandardCharsets.UTF_8)){
+        try (Scanner scanner = new Scanner(fxmlFilesDirectory, StandardCharsets.UTF_8))
+        {
             scanner.useLocale(Locale.US);
 
             ArrayList<FXMLPage> pages = new ArrayList<>();
@@ -294,22 +292,51 @@ public final class ProjectIO
                 }
             }
 
-            if(pages.isEmpty()){
+            if(pages.isEmpty())
+            {
                 log.error("Failed to load fxml pages for \"Create New Project\" process.");
                 return;
             }
 
             String hostFXMLPath = "fxml/menubar/FXMLPageScroller.fxml";
             FXMLPageScrollerController scrollerController =
-                    makeWindow(parentWindow, "Load Files", loaderWindowOpen, hostFXMLPath);
+                    makeWindow(parentWindow, title, loaderWindowOpen, hostFXMLPath);
 
-            String firstPageFXMLPath = "/fxml/menubar/createnewproject/SelectImportOptions.fxml";
             scrollerController.setPages(pages, firstPageFXMLPath);
             scrollerController.init();
-            WelcomeWindowController.getInstance().hide();
-        } catch (IOException e) {
+
+            if (successCallback != null)
+            {
+                successCallback.run();
+            }
+        }
+        catch (IOException e)
+        {
             log.error("Could not find fxml files for \"Create New Project\" process.", e);
         }
+    }
+
+    public void createProject(Window parentWindow)
+    {
+        if (loaderWindowOpen.get())
+        {
+            return;
+        }
+
+        if (!confirmClose("Are you sure you want to create a new project?"))
+        {
+            return;
+        }
+
+        openPageController(parentWindow,"Load Files",
+            "/fxml/menubar/createnewproject/SelectImportOptions.fxml",
+            WelcomeWindowController.getInstance()::hide);
+    }
+
+    public void hotSwap(Window parentWindow)
+    {
+        openPageController(parentWindow,"Load Files",
+            "/fxml/menubar/createnewproject/HotSwap.fxml", null);
     }
 
     private static void startLoad(File projectFile, File vsetFile)
@@ -648,5 +675,4 @@ public final class ProjectIO
             handleException("An error occurred showing help and about", e);
         }
     }
-
 }

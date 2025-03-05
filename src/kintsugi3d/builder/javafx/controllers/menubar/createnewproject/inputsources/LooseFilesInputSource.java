@@ -61,9 +61,10 @@ public class LooseFilesInputSource extends InputSource{
         return this;
     }
 
-    public void setHotSwap(boolean hotSwap)
+    public LooseFilesInputSource setHotSwap(boolean hotSwap)
     {
         this.hotSwap = hotSwap;
+        return this;
     }
 
     @Override
@@ -94,11 +95,22 @@ public class LooseFilesInputSource extends InputSource{
     }
 
     @Override
-    public void loadProject(String primaryView, double rotate) {
-        new Thread(() ->
+    public void loadProject(String primaryView, double rotate)
+    {
+        if (hotSwap)
+        {
+            new Thread(() ->
                 MultithreadModels.getInstance().getIOModel().hotSwapLooseFiles(
-                        cameraFile.getPath(), cameraFile, meshFile, photosDir, needsUndistort, primaryView, rotate))
+                    cameraFile.getPath(), cameraFile, meshFile, photosDir, needsUndistort, primaryView, rotate))
                 .start();
+        }
+        else
+        {
+            new Thread(() ->
+                MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(
+                    cameraFile.getPath(), cameraFile, meshFile, photosDir, needsUndistort, primaryView, rotate))
+                .start();
+        }
     }
 
     @Override

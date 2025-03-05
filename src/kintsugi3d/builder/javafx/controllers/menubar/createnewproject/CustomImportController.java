@@ -53,6 +53,15 @@ public class CustomImportController extends FXMLPageController implements ShareI
     private File meshFile;
     private File photoDir;
 
+    /**
+     * Overridden by child class to enable hot swap
+     * @return
+     */
+    protected boolean shouldHotSwap()
+    {
+        return false;
+    }
+
     @Override
     public Region getHostRegion() {
         return root;
@@ -182,25 +191,39 @@ public class CustomImportController extends FXMLPageController implements ShareI
     }
 
     @Override
-    public void shareInfo() {
-        //overwrite old source so we can compare old and new versions in PrimaryViewSelectController
-        InputSource source = hostScrollerController.getInfo(Info.INPUT_SOURCE);
-        if (source instanceof LooseFilesInputSource){
-
+    public void shareInfo()
+    {
+        if (shouldHotSwap())
+        {
             hostScrollerController.addInfo(Info.INPUT_SOURCE,
+                new LooseFilesInputSource().setCameraFile(cameraFile)
+                    .setMeshFile(meshFile)
+                    .setPhotosDir(photoDir, undistortImagesCheckBox.isSelected())
+                    .setHotSwap(true));
+        }
+        else
+        {
+            //overwrite old source so we can compare old and new versions in PrimaryViewSelectController
+            InputSource source = hostScrollerController.getInfo(Info.INPUT_SOURCE);
+            if (source instanceof LooseFilesInputSource)
+            {
+                hostScrollerController.addInfo(Info.INPUT_SOURCE,
                     new LooseFilesInputSource().setCameraFile(cameraFile)
-                    .setMeshFile(meshFile)
-                    .setPhotosDir(photoDir, undistortImagesCheckBox.isSelected()));
-        }
-        else if(source instanceof RealityCaptureInputSource){
-            hostScrollerController.addInfo(Info.INPUT_SOURCE,
+                        .setMeshFile(meshFile)
+                        .setPhotosDir(photoDir, undistortImagesCheckBox.isSelected()));
+            }
+            else if (source instanceof RealityCaptureInputSource)
+            {
+                hostScrollerController.addInfo(Info.INPUT_SOURCE,
                     new RealityCaptureInputSource()
-                    .setCameraFile(cameraFile)
-                    .setMeshFile(meshFile)
-                    .setPhotosDir(photoDir, undistortImagesCheckBox.isSelected()));
-        }
-        else{
-            log.error("Error sending info to host controller. LooseFilesInputSource or RealityCaptureInputSource expected.");
+                        .setCameraFile(cameraFile)
+                        .setMeshFile(meshFile)
+                        .setPhotosDir(photoDir, undistortImagesCheckBox.isSelected()));
+            }
+            else
+            {
+                log.error("Error sending info to host controller. LooseFilesInputSource or RealityCaptureInputSource expected.");
+            }
         }
     }
 }
