@@ -213,14 +213,8 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
     @Override
     public void confirmButtonPress() {
-        if (loadStartCallback != null) {
-            loadStartCallback.run();
-        }
-
-        if (viewSetCallback != null) {
-            //"force" the user to save their project (user can still cancel saving)
-            MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
-                viewSet ->viewSetCallback.accept(viewSet));
+        if (confirmCallback != null) {
+            confirmCallback.run();
         }
 
         source.loadProject(getSelectedViewName(), primaryImgView.getRotate());

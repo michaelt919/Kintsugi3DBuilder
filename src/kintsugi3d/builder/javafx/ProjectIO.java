@@ -38,6 +38,8 @@ import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrol
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
+import kintsugi3d.builder.javafx.util.PageWindow;
+import kintsugi3d.builder.javafx.util.WindowUtilities;
 import kintsugi3d.builder.resources.ibr.MeshImportException;
 import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
@@ -70,10 +72,11 @@ public final class ProjectIO
     private File vsetFile;
     private boolean projectLoaded;
 
-    private final Flag loaderWindowOpen = new Flag(false);
     private Flag systemSettingsModalOpen = new Flag(false);
     private Flag progressBarsModalOpen = new Flag(false);
     private Flag aboutWindowOpen = new Flag(false);
+
+    private final PageWindow loaderWindow = new PageWindow();
 
     private FileChooser projectFileChooser;
 
@@ -182,40 +185,9 @@ public final class ProjectIO
         }
     }
 
-    private static <ControllerType> ControllerType makeWindow(Window parentWindow, String title, Flag flag,
-        Function<Parent, Scene> sceneFactory, String urlString) throws IOException
-    {
-        URL url = MenubarController.class.getClassLoader().getResource(urlString);
-        if (url == null)
-        {
-            throw new FileNotFoundException(urlString);
-        }
-        FXMLLoader fxmlLoader = new FXMLLoader(url);
-        Parent root = fxmlLoader.load();
-        Stage stage = new Stage();
-        stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-        stage.setTitle(title);
-        stage.setScene(sceneFactory.apply(root));
-        stage.initOwner(parentWindow);
-
-        stage.setResizable(false);
-
-        flag.set(true);
-        stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
-
-        stage.show();
-
-        return fxmlLoader.getController();
-    }
-
-    private static <ControllerType> ControllerType makeWindow(Window parentWindow, String title, Flag flag, String urlString) throws IOException
-    {
-        return makeWindow(parentWindow, title, flag, Scene::new, urlString);
-    }
-
     public boolean isCreateProjectWindowOpen()
     {
-        return loaderWindowOpen.get();
+        return loaderWindow.isOpen();
     }
 
     private void onLoadStart()
@@ -259,84 +231,34 @@ public final class ProjectIO
         }
     }
 
-    private void openPageController(Window parentWindow, String title, String firstPageFXMLPath, Runnable successCallback)
-    {
-        File fxmlFilesDirectory = new File("create-new-project-fxmls.txt");
-
-        if (!fxmlFilesDirectory.exists()){
-            log.error("Failed to open fxml files directory for \"Create New Project\" process.");
-            return;
-        }
-
-        try (Scanner scanner = new Scanner(fxmlFilesDirectory, StandardCharsets.UTF_8))
-        {
-            scanner.useLocale(Locale.US);
-
-            ArrayList<FXMLPage> pages = new ArrayList<>();
-
-            while (scanner.hasNext())
-            {
-                String fileName = scanner.next();
-                FXMLLoader loader = new FXMLLoader(getClass().getResource(fileName));
-                loader.load();
-
-                pages.add(new FXMLPage(fileName, loader));
-
-                FXMLPageController controller = loader.getController();
-
-                if (controller instanceof ConfirmablePage && ((ConfirmablePage) controller).canConfirm())
-                {
-                    controller.setLoadStartCallback(this::onLoadStart);
-                    controller.setViewSetCallback(
-                            (viewSet) ->onViewSetCreated(viewSet, parentWindow));
-                }
-            }
-
-            if(pages.isEmpty())
-            {
-                log.error("Failed to load fxml pages for \"Create New Project\" process.");
-                return;
-            }
-
-            String hostFXMLPath = "fxml/menubar/FXMLPageScroller.fxml";
-            FXMLPageScrollerController scrollerController =
-                    makeWindow(parentWindow, title, loaderWindowOpen, hostFXMLPath);
-
-            scrollerController.setPages(pages, firstPageFXMLPath);
-            scrollerController.init();
-
-            if (successCallback != null)
-            {
-                successCallback.run();
-            }
-        }
-        catch (IOException e)
-        {
-            log.error("Could not find fxml files for \"Create New Project\" process.", e);
-        }
-    }
-
     public void createProject(Window parentWindow)
     {
-        if (loaderWindowOpen.get())
-        {
-            return;
-        }
-
         if (!confirmClose("Are you sure you want to create a new project?"))
         {
             return;
         }
 
-        openPageController(parentWindow,"Load Files",
+        loaderWindow.open(parentWindow,"Load Files",
             "/fxml/menubar/createnewproject/SelectImportOptions.fxml",
-            WelcomeWindowController.getInstance()::hide);
+            WelcomeWindowController.getInstance()::hide,
+            () ->
+            {
+                onLoadStart();
+
+                // "force" the user to save their project (user can still cancel saving)
+                MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
+                    viewSet -> onViewSetCreated(viewSet, parentWindow));
+            });
     }
 
     public void hotSwap(Window parentWindow)
     {
-        openPageController(parentWindow,"Load Files",
-            "/fxml/menubar/createnewproject/HotSwap.fxml", null);
+        loaderWindow.open(parentWindow,"Load Files",
+            "/fxml/menubar/createnewproject/HotSwap.fxml", null, this::onLoadStart);
+
+        // "force" the user to save their project (user can still cancel saving)
+        MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
+            viewSet -> saveProject(parentWindow));
     }
 
     private static void startLoad(File projectFile, File vsetFile)
@@ -650,7 +572,7 @@ public final class ProjectIO
 
         try
         {
-            SystemSettingsController systemSettingsController = makeWindow(window, "System Settings", systemSettingsModalOpen, "fxml/menubar/systemsettings/SystemSettings.fxml");
+            SystemSettingsController systemSettingsController = WindowUtilities.makeWindow(window, "System Settings", systemSettingsModalOpen, "fxml/menubar/systemsettings/SystemSettings.fxml");
             systemSettingsController.init(internalModels, window);
             WelcomeWindowController.getInstance().hide();
             systemSettingsController.getHostWindow().setOnCloseRequest(e->WelcomeWindowController.getInstance().showIfNoModelLoaded());
@@ -665,7 +587,7 @@ public final class ProjectIO
         try
         {
 
-            AboutController aboutController = makeWindow(window,
+            AboutController aboutController = WindowUtilities.makeWindow(window,
                     "About Kintsugi 3D Builder", aboutWindowOpen, "fxml/menubar/About.fxml");
             aboutController.init();
             WelcomeWindowController.getInstance().hide();

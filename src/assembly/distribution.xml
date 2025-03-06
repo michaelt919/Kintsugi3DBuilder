@@ -30,7 +30,7 @@
             <outputDirectory></outputDirectory>
         </file>
         <file>
-            <source>target/classes/create-new-project-fxmls.txt</source>
+            <source>target/classes/fxml-index.txt</source>
             <outputDirectory></outputDirectory>
         </file>
         <file>

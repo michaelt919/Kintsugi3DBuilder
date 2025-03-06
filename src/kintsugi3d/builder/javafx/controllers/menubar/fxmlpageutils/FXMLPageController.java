@@ -25,8 +25,7 @@ public abstract class FXMLPageController {
 
     protected FXMLPageScrollerController hostScrollerController;
     protected FXMLPage hostPage;
-    protected Runnable loadStartCallback;
-    protected Consumer<ViewSet> viewSetCallback;
+    protected Runnable confirmCallback;
 
     public void setHostScrollerController(FXMLPageScrollerController scroller){this.hostScrollerController = scroller;}
     public FXMLPageScrollerController getHostScrollerController(){return hostScrollerController;}
@@ -64,8 +63,7 @@ public abstract class FXMLPageController {
         scene.getAccelerators().put(rightKeyCode, ()-> hostScrollerController.getNextButton().fire());
     }
 
-    public void setLoadStartCallback(Runnable callback){this.loadStartCallback = callback;}
-    public void setViewSetCallback(Consumer<ViewSet> callback){this.viewSetCallback = callback;}
+    public void setConfirmCallback(Runnable callback){this.confirmCallback = callback;}
 
     public boolean nextButtonPressed()
     {

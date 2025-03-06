@@ -101,9 +101,9 @@
          </GridPane.margin>
       </Text>
    </GridPane>
-<!--   <AnchorPane>-->
-<!--      <children>-->
-<!--         <CheckBox fx:id="undistortImagesCheckBox" mnemonicParsing="false" selected="true" text="Undistort images" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0"  />-->
-<!--      </children>-->
-<!--   </AnchorPane>-->
+   <AnchorPane>
+      <children>
+         <CheckBox fx:id="undistortImagesCheckBox" mnemonicParsing="false" selected="true" text="Undistort images" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0"  />
+      </children>
+   </AnchorPane>
 </VBox>
