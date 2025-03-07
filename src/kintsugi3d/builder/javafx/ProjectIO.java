@@ -253,12 +253,19 @@ public final class ProjectIO
 
     public void hotSwap(Window parentWindow)
     {
+        // remember old project filename
+        File oldProjectFile = projectFile;
+
         loaderWindow.open(parentWindow,"Load Files",
             "/fxml/menubar/createnewproject/HotSwap.fxml", null, this::onLoadStart);
 
         // "force" the user to save their project (user can still cancel saving)
         MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
-            viewSet -> saveProject(parentWindow));
+            viewSet ->
+            {
+                projectFile = oldProjectFile;
+                saveProject(parentWindow);
+            });
     }
 
     private static void startLoad(File projectFile, File vsetFile)

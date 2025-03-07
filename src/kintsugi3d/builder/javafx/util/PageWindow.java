@@ -39,8 +39,7 @@ public class PageWindow
         return windowOpen.get();
     }
 
-    public void open(Window parentWindow, String title, String firstPageFXMLPath,
-        Runnable initCallback, Runnable confirmCallback)
+    public void open(Window parentWindow, String title, String firstPageFXMLPath, Runnable initCallback, Runnable confirmCallback)
     {
         if (windowOpen.get())
         {

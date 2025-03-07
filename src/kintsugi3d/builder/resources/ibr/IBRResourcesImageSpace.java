@@ -213,6 +213,11 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         {
             // Load view set
             this.viewSet = reader.readFromFile(cameraFile, geometryFile, fullResImageDirectory, needsUndistort);
+            if (uuidOverride != null)
+            {
+                this.viewSet.setUuid(uuidOverride);
+            }
+
             updateViewSetFromLoadOptions();
             loadAndValidateGeometry();
             return this;
