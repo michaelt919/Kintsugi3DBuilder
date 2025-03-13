@@ -23,11 +23,14 @@ import java.io.File;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class LooseFilesInputSource extends InputSource{
     private File cameraFile;
     private File meshFile;
     private File photosDir;
+    private boolean needsUndistort;
+    private boolean hotSwap;
 
     @Override
     public List<FileChooser.ExtensionFilter> getExtensionFilters() {
@@ -52,8 +55,15 @@ public class LooseFilesInputSource extends InputSource{
         return this;
     }
 
-    public LooseFilesInputSource setPhotosDir(File photosDir){
+    public LooseFilesInputSource setPhotosDir(File photosDir, boolean needsUndistort){
         this.photosDir = photosDir;
+        this.needsUndistort = needsUndistort;
+        return this;
+    }
+
+    public LooseFilesInputSource setHotSwap(boolean hotSwap)
+    {
+        this.hotSwap = hotSwap;
         return this;
     }
 
@@ -67,7 +77,7 @@ public class LooseFilesInputSource extends InputSource{
             else if (cameraFile.getName().endsWith(".csv")) // RealityCapture
             {
                 primaryViewSelectionModel = GenericPrimaryViewSelectionModel.createInstance(cameraFile.getName(),
-                        ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile, meshFile, photosDir));
+                        ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile, meshFile, photosDir, true));
             }
             else
             {
@@ -85,11 +95,22 @@ public class LooseFilesInputSource extends InputSource{
     }
 
     @Override
-    public void loadProject(String primaryView, double rotate) {
-        new Thread(() ->
-                MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(
-                        cameraFile.getPath(), cameraFile, meshFile, photosDir, primaryView, rotate))
+    public void loadProject(String primaryView, double rotate)
+    {
+        if (hotSwap)
+        {
+            new Thread(() ->
+                MultithreadModels.getInstance().getIOModel().hotSwapLooseFiles(
+                    cameraFile.getPath(), cameraFile, meshFile, photosDir, needsUndistort, primaryView, rotate))
                 .start();
+        }
+        else
+        {
+            new Thread(() ->
+                MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(
+                    cameraFile.getPath(), cameraFile, meshFile, photosDir, needsUndistort, primaryView, rotate))
+                .start();
+        }
     }
 
     @Override

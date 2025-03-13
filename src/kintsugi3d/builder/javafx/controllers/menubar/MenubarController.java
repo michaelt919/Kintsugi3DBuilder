@@ -1216,4 +1216,9 @@ public class MenubarController
         Platform.runLater(()->miniProgressPane.setVisible(false));
         WelcomeWindowController.getInstance().showIfNoModelLoaded();
     }
+
+    public void file_hotSwap(ActionEvent actionEvent)
+    {
+        ProjectIO.getInstance().hotSwap(window);
+    }
 }

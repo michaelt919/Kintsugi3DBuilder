@@ -20,6 +20,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
@@ -31,8 +32,14 @@ public interface IOHandler
     File getLoadedProjectFile();
     void setLoadedProjectFile(File loadedProjectFile);
     void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions);
-    void loadFromLooseFiles(String id, File xmlFile, File meshFile, File imageDirectory,
-                                String primaryViewName, double rotation, ReadonlyLoadOptionsModel loadOptions);
+    void loadFromLooseFiles(String id, File xmlFile, File meshFile, File imageDirectory, boolean needsUndistort,
+                                String primaryViewName, double rotation, ReadonlyLoadOptionsModel loadOptions, UUID uuidOverride);
+
+    default void loadFromLooseFiles(String id, File xmlFile, File meshFile, File imageDirectory, boolean needsUndistort,
+        String primaryViewName, double rotation, ReadonlyLoadOptionsModel loadOptions)
+    {
+        loadFromLooseFiles(id, xmlFile, meshFile, imageDirectory, needsUndistort, primaryViewName, rotation, loadOptions, null);
+    }
     void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptionsModel);
 
     void requestFragmentShader(File shaderFile);

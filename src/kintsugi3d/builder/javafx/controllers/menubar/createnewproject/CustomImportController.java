@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.CheckBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
@@ -34,12 +35,13 @@ import java.io.File;
 public class CustomImportController extends FXMLPageController implements ShareInfo
 {
     private static final Logger log = LoggerFactory.getLogger(CustomImportController.class);
+
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
     @FXML private Text loadCheckImages;
     @FXML private VBox root;
-
     @FXML private Text camPositionsTxt;
+    @FXML private CheckBox undistortImagesCheckBox;
 
     private Stage thisStage;
 
@@ -50,6 +52,15 @@ public class CustomImportController extends FXMLPageController implements ShareI
     private File cameraFile;
     private File meshFile;
     private File photoDir;
+
+    /**
+     * Overridden by child class to enable hot swap
+     * @return
+     */
+    protected boolean shouldHotSwap()
+    {
+        return false;
+    }
 
     @Override
     public Region getHostRegion() {
@@ -180,25 +191,39 @@ public class CustomImportController extends FXMLPageController implements ShareI
     }
 
     @Override
-    public void shareInfo() {
-        //overwrite old source so we can compare old and new versions in PrimaryViewSelectController
-        InputSource source = hostScrollerController.getInfo(Info.INPUT_SOURCE);
-        if (source instanceof LooseFilesInputSource){
-
+    public void shareInfo()
+    {
+        if (shouldHotSwap())
+        {
             hostScrollerController.addInfo(Info.INPUT_SOURCE,
+                new LooseFilesInputSource().setCameraFile(cameraFile)
+                    .setMeshFile(meshFile)
+                    .setPhotosDir(photoDir, undistortImagesCheckBox.isSelected())
+                    .setHotSwap(true));
+        }
+        else
+        {
+            //overwrite old source so we can compare old and new versions in PrimaryViewSelectController
+            InputSource source = hostScrollerController.getInfo(Info.INPUT_SOURCE);
+            if (source instanceof LooseFilesInputSource)
+            {
+                hostScrollerController.addInfo(Info.INPUT_SOURCE,
                     new LooseFilesInputSource().setCameraFile(cameraFile)
-                    .setMeshFile(meshFile)
-                    .setPhotosDir(photoDir));
-        }
-        else if(source instanceof RealityCaptureInputSource){
-            hostScrollerController.addInfo(Info.INPUT_SOURCE,
+                        .setMeshFile(meshFile)
+                        .setPhotosDir(photoDir, undistortImagesCheckBox.isSelected()));
+            }
+            else if (source instanceof RealityCaptureInputSource)
+            {
+                hostScrollerController.addInfo(Info.INPUT_SOURCE,
                     new RealityCaptureInputSource()
-                    .setCameraFile(cameraFile)
-                    .setMeshFile(meshFile)
-                    .setPhotosDir(photoDir));
-        }
-        else{
-            log.error("Error sending info to host controller. LooseFilesInputSource or RealityCaptureInputSource expected.");
+                        .setCameraFile(cameraFile)
+                        .setMeshFile(meshFile)
+                        .setPhotosDir(photoDir, undistortImagesCheckBox.isSelected()));
+            }
+            else
+            {
+                log.error("Error sending info to host controller. LooseFilesInputSource or RealityCaptureInputSource expected.");
+            }
         }
     }
 }

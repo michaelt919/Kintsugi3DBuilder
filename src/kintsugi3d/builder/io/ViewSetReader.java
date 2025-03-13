@@ -27,10 +27,13 @@ public interface ViewSetReader
      * @param root
      * @param geometryFile
      * @param fullResImageDirectory
+     * @param needsUndistort Whether or not the images need undistortion.  Should be true if loading original photos,
+     *                       or false if loading images that have already been undistorted by photogrammetry software.
      * @return The view set
      * @throws IOException If I/O errors occur while reading the file.
      */
-    ViewSet readFromStream(InputStream stream, File root, File geometryFile, File fullResImageDirectory) throws Exception;
+    ViewSet readFromStream(InputStream stream, File root, File geometryFile, File fullResImageDirectory,
+        boolean needsUndistort) throws Exception;
 
     /**
      * Loads a view set from an input file.
@@ -38,14 +41,17 @@ public interface ViewSetReader
      * @param cameraFile The file to load
      * @param geometryFile
      * @param fullResImageDirectory
+     * @param needsUndistort Whether or not the images need undistortion.  Should be true if loading original photos,
+     *                       or false if loading images that have already been undistorted by photogrammetry software.
      * @return The view set
      * @throws Exception If errors occur while reading the file.
      */
-    default ViewSet readFromFile(File cameraFile, File geometryFile, File fullResImageDirectory) throws Exception
+    default ViewSet readFromFile(File cameraFile, File geometryFile, File fullResImageDirectory,
+        boolean needsUndistort) throws Exception
     {
         try (InputStream stream = new FileInputStream(cameraFile))
         {
-            return readFromStream(stream, cameraFile.getParentFile(), geometryFile, fullResImageDirectory);
+            return readFromStream(stream, cameraFile.getParentFile(), geometryFile, fullResImageDirectory, needsUndistort);
         }
     }
 }

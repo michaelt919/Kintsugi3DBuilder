@@ -24,6 +24,8 @@ import javax.imageio.ImageReader;
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvToBeanBuilder;
 import kintsugi3d.builder.core.DistortionProjection;
+import kintsugi3d.builder.core.Projection;
+import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
 import kintsugi3d.gl.vecmath.*;
@@ -100,17 +102,28 @@ public final class ViewSetReaderFromRealityCaptureCSV implements ViewSetReader
     }
 
     @Override
-    public ViewSet readFromStream(InputStream stream, File root, File geometryFile, File fullResImageDirectory) throws IOException
+    public ViewSet readFromStream(InputStream stream, File root, File geometryFile, File fullResImageDirectory,
+        boolean needsUndistort) throws IOException
     {
         List<Camera> cameras = new CsvToBeanBuilder<Camera>(new InputStreamReader(stream, StandardCharsets.UTF_8))
             .withType(Camera.class).build().parse();
 
         // Try to figure out what the camera groups were
-        Map<DistortionProjection, List<String>> cameraMap = new HashMap<>(1);
+        Map<Projection, List<String>> cameraMap = new HashMap<>(1);
         for (Camera cam : cameras)
         {
             DistortionProjection distortionProjection = cam.getDistortionProjection(fullResImageDirectory);
-            cameraMap.computeIfAbsent(distortionProjection, k -> new ArrayList<>(1)).add(cam.name);
+
+            if (needsUndistort)
+            {
+                cameraMap.computeIfAbsent(distortionProjection, k -> new ArrayList<>(1)).add(cam.name);
+            }
+            else
+            {
+                cameraMap.computeIfAbsent(new SimpleProjection(
+                    distortionProjection.getAspectRatio(), distortionProjection.getVerticalFieldOfView()),
+                    k -> new ArrayList<>(1)).add(cam.name);
+            }
         }
 
         // Start building the view set

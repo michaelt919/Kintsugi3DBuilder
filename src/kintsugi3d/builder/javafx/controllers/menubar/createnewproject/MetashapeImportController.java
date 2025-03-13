@@ -108,24 +108,24 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         if (metashapeObjectChunk != null){
             MetashapeObject metashapeObject = metashapeObjectChunk.getMetashapeObject();
             String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
-            Integer modelID = getSelectedModelID();
+            String modelID = getSelectedModelID();
 
             metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, chunkName, modelID);
         }
     }
 
-    private Integer getSelectedModelID() {
+    private String getSelectedModelID() {
         String selectionAsString = (String) modelSelectionChoiceBox.getSelectionModel().getSelectedItem();
         return getModelIDFromSelection(selectionAsString);
     }
 
-    private static Integer getModelIDFromSelection(String selectionAsString) {
+    private static String getModelIDFromSelection(String selectionAsString) {
         //TODO: need to revisit this when formatting of model selection choice box changes
         if (selectionAsString.startsWith(NO_MODEL_ID_MSG)){
             return null;
         }
 
-        return Integer.parseInt(selectionAsString.substring(0, selectionAsString.indexOf(' ')));
+        return selectionAsString.substring(0, selectionAsString.indexOf(' '));
     }
 
     @FXML
@@ -160,16 +160,16 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         else{
             MetashapeObject metashapeObject = new MetashapeObject(metashapePsxFile.getAbsolutePath());
             String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
-            int modelID = 0;
+            String modelID = "0";
 
             metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, chunkName, modelID);
         }
 
 
-        ArrayList<Triplet<Integer, String, String>> modelInfo = metashapeObjectChunk.getModelInfo();
+        ArrayList<Triplet<String, String, String>> modelInfo = metashapeObjectChunk.getModelInfo();
 
         modelSelectionChoiceBox.getItems().clear();
-        for (Triplet<Integer, String, String> triplet : modelInfo){
+        for (Triplet<String, String, String> triplet : modelInfo){
             String modelID = triplet.first != null ? String.valueOf(triplet.first) : NO_MODEL_ID_MSG;
             String modelName = !triplet.second.isBlank() ? triplet.second : NO_MODEL_NAME_MSG;
             modelSelectionChoiceBox.getItems().add(modelID + "   " + modelName);
@@ -190,7 +190,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
         for (int i = 0; i < modelSelectionChoiceBox.getItems().size(); ++i){
             Object obj = modelSelectionChoiceBox.getItems().get(i);
-            Integer modelID = getModelIDFromSelection((String) obj);
+            String modelID = getModelIDFromSelection((String) obj);
             if (modelID == null){continue;}
 
             if (modelID.equals(metashapeObjectChunk.getDefaultModelID())){
