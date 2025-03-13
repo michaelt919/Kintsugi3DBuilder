@@ -67,10 +67,12 @@ Michael Tetzlaff, Gary Meyer, and Alex Kautz, “IBRelight: An Image-Based 3D Re
 - Blane Suess (University of Wisconsin - Stout) - contributor
 - Isaac Tesch (University of Wisconsin - Stout) - contributor
 - Nathaniel Willius (University of Wisconsin - Stout) - contributor
+- Atlas Collins (University of Wisconsin - Stout) - contributor
 - Darcy Hannen (University of Wisconsin - Stout) - UX designer
 - Isabel Smith (University of Wisconsin - Stout) - UX designer
 - Elliot Duffy (University of Wisconsin - Stout) - UX designer
 - Augusto Freitas (University of Wisconsin - Stout) - UX designer
+- Chloe Ferguson  (University of Wisconsin - Stout) - UX designer
 - Gary Meyer (University of Minnesota) - designer and advisor
 
 Kintsugi 3D was developed with support from a grant from the National Endowment for the Humanities (NEH PR-290101-23).
