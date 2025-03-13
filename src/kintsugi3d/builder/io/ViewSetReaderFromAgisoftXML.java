@@ -143,7 +143,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     {
         // Use root directory as supporting files directory
         ViewSet viewSet = readFromStream(stream, root, root, needsUndistort,
-            null, -1, false);
+            null, null, -1, false);
         viewSet.setGeometryFile(geometryFile);
         viewSet.setFullResImageDirectory(fullResImageDirectory);
         return viewSet;
@@ -160,12 +160,12 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
      *                       or false if loading images that have already been undistorted by photogrammetry software.
      * @param imagePathMap A map of image IDs to paths, if passed this will override the paths being assigned to the images.
      * @param metashapeVersionOverride A parameter that can be passed to override the version of the XML document being read to circumvent formatting differences.
-     * @param directAgisoftImport Used to ignore global transformations set in Metashape projects which would break rendering if not accounted for.
+     * @param ignoreGlobalTransforms Used to ignore global transformations set in Metashape projects which would break rendering if not accounted for.
      * @return
      * @throws XMLStreamException
      */
     public ViewSet readFromStream(InputStream stream, File root, File supportingFilesDirectory, boolean needsUndistort,
-        Map<Integer, String> imagePathMap, int metashapeVersionOverride, boolean directAgisoftImport)
+        String modelID, Map<Integer, String> imagePathMap, int metashapeVersionOverride, boolean ignoreGlobalTransforms)
         throws XMLStreamException
     {
         Map<String, Sensor> sensorSet = new Hashtable<>();
@@ -211,9 +211,12 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         int nextLightIndex = 0;
         int defaultLightIndex = -1;
 
+        Matrix4 globalTransform = Matrix4.IDENTITY;
         float globalScale = 1.0f;
-        Matrix4 globalRotation = Matrix4.IDENTITY;
         Vector3 globalTranslate = new Vector3(0.0f, 0.0f, 0.0f);
+
+        String currentModelID = null; // takes on the model ID while within a <model> tag
+        Matrix4 modelTransform = Matrix4.IDENTITY;
 
         float b1 = 0.0f; // fx - fy: https://www.agisoft.com/forum/index.php?topic=6437.0
 
@@ -428,7 +431,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             }
                             break;
                         case "transform":
-                            if (camera == null && intVersion >= 110)
+                            if (currentModelID == null && camera == null && intVersion >= 110)
                             {
                                 break;
                             }
@@ -484,19 +487,42 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
 
                                     camera.transform = trans;
                                 }
+                                else if (modelID != null && Objects.equals(currentModelID, modelID))
+                                {
+                                    // model transform (nested within a <model> tag)
+                                    if (expectedSize == 9)
+                                    {
+                                        log.debug("\tSetting model rotation.");
+                                        modelTransform = Matrix3.fromRows(
+                                                new Vector3(m[0], m[3], m[6]),
+                                                new Vector3(m[1], m[4], m[7]),
+                                                new Vector3(m[2], m[5], m[8]))
+                                            .asMatrix4();
+                                    }
+                                    else
+                                    {
+                                        log.debug("\tSetting model transformation.");
+                                        modelTransform = Matrix3.fromRows(
+                                                new Vector3(m[0], m[4], m[8]),
+                                                new Vector3(m[1], m[5], m[9]),
+                                                new Vector3(m[2], m[6], m[10]))
+                                            .asMatrix4()
+                                            .times(Matrix4.translate(m[3], m[7], m[11]));
+                                    }
+                                }
                                 else
                                 {
-                                    if (!directAgisoftImport){
+                                    if (!ignoreGlobalTransforms){
                                         if (expectedSize == 9) {
                                             log.debug("\tSetting global rotation.");
-                                            globalRotation = Matrix3.fromRows(
+                                            globalTransform = Matrix3.fromRows(
                                                             new Vector3(m[0], m[3], m[6]),
                                                             new Vector3(m[1], m[4], m[7]),
                                                             new Vector3(m[2], m[5], m[8]))
                                                     .asMatrix4();
                                         } else {
                                             log.debug("\tSetting global transformation.");
-                                            globalRotation = Matrix3.fromRows(
+                                            globalTransform = Matrix3.fromRows(
                                                             new Vector3(m[0], m[4], m[8]),
                                                             new Vector3(m[1], m[5], m[9]),
                                                             new Vector3(m[2], m[6], m[10]))
@@ -510,7 +536,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         break;
 
                         case "translation":
-                            if (camera == null && !directAgisoftImport)
+                            if (camera == null && !ignoreGlobalTransforms)
                             {
                                 log.debug("\tSetting global translate.");
                                 String[] components = reader.getElementText().split("\\s");
@@ -522,7 +548,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                             break;
 
                         case "scale":
-                            if (camera == null && !directAgisoftImport)
+                            if (camera == null && !ignoreGlobalTransforms)
                             {
                                 log.debug("\tSetting global scale.");
                                 globalScale = 1.0f / Float.parseFloat(reader.getElementText());
@@ -542,6 +568,9 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                 }
                             }
                             break;
+                        case "model":
+                            currentModelID = reader.getAttributeValue(null, "id");
+                            break;
                         case "projections":
                         case "depth":
                         case "frames":
@@ -555,7 +584,6 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         case "ground_control":
                         case "mesh":
                         case "texture":
-                        case "model":
                         case "calibration":
                         case "thumbnail":
                         case "point_cloud":
@@ -615,6 +643,9 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                                 }
                                 camera = null; // Clear the camera regardless
                             }
+                            break;
+                        case "model":
+                            currentModelID = null;
                             break;
                     }
                 }
@@ -678,8 +709,9 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             m1 = Matrix4.translate(displacement.times(1.0f / globalScale).minus(displacement)).times(m1);
 
             // TODO: Figure out the right way to integrate the global transforms
-            cam.transform = m1.times(globalRotation)
+            cam.transform = m1.times(globalTransform)
                 .times(Matrix4.translate(globalTranslate))
+                .times(modelTransform)
             ;//     .times(Matrix4.scale(globalScale));
 
             builder.setCurrentCameraPose(cam.transform);
@@ -808,7 +840,8 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     // Create and store ViewSet
                     // TODO: USING A HARD CODED VERSION VALUE (200)
                     ViewSet viewSet = ((ViewSetReaderFromAgisoftXML) ViewSetReaderFromAgisoftXML.getInstance())
-                        .readFromStream(fileStream, rootDirectory, supportingFilesDirectory, true, cameraPathsMap, 200, true);
+                        .readFromStream(fileStream, rootDirectory, supportingFilesDirectory, true,
+                            metashapeObjectChunk.getCurrModelID(), cameraPathsMap, 200, true);
 
                     // 3) load geometry from ZipInputStream from model's ZIP
                     String modelPath = metashapeObjectChunk.getCurrentModelPath();

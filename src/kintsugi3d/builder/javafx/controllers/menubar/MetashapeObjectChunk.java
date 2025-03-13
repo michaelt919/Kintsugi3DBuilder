@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 
 public class MetashapeObjectChunk {
@@ -39,9 +40,9 @@ public class MetashapeObjectChunk {
     private Document chunkXML;
     private Document frameXML;
 
-    private ArrayList<Triplet<Integer, String, String>> modelInfo = new ArrayList<>(); //model id, name/label, and path
-    private Integer defaultModelID;
-    private Integer currModelID;
+    private ArrayList<Triplet<String, String, String>> modelInfo = new ArrayList<>(); //model id, name/label, and path
+    private String defaultModelID;
+    private String currModelID;
     private LoadPreferences loadPreferences;
 
     public String getChunkZipPath() { return chunkZipPath; }
@@ -70,7 +71,7 @@ public class MetashapeObjectChunk {
 
     public LoadPreferences getLoadPreferences(){return loadPreferences;}
 
-    public MetashapeObjectChunk(MetashapeObject metashapeObject, String chunkName, Integer currModelID) {
+    public MetashapeObjectChunk(MetashapeObject metashapeObject, String chunkName, String currModelID) {
         this.metashapeObject = metashapeObject;
         this.currModelID = currModelID;
         this.loadPreferences = new LoadPreferences();
@@ -117,7 +118,7 @@ public class MetashapeObjectChunk {
         //get active id
         try {
             Element elem = (Element) chunkXML.getElementsByTagName("models").item(0);
-            this.defaultModelID = Integer.parseInt(elem.getAttribute("active_id"));
+            this.defaultModelID = elem.getAttribute("active_id");
         }
         catch(NumberFormatException | NullPointerException e){
             log.warn("Could not find active id for " + this.getPsxFilePath(), e);
@@ -129,11 +130,11 @@ public class MetashapeObjectChunk {
         for(int i = 0; i < modelList.getLength(); ++i){
             Element elem = (Element) modelList.item(i);
 
-            Integer tempModelID = null;
+            String tempModelID = null;
             String tempLabel = null;
             String tempPath;
             try{
-                tempModelID = Integer.parseInt(elem.getAttribute("id"));
+                tempModelID = elem.getAttribute("id");
             }
             catch(NumberFormatException nfe){
                 log.warn("Model has no id", nfe);
@@ -260,7 +261,7 @@ public class MetashapeObjectChunk {
         return getModelPathFromXML(currModelID);
     }
 
-    private String getModelPathFromXML(Integer mID) {
+    private String getModelPathFromXML(String mID) {
         //  <model id="0" path="model.1/model.zip"/> --> returns "model.1/model.zip"
 
         try{
@@ -276,7 +277,7 @@ public class MetashapeObjectChunk {
             for (int i = 0; i < elems.getLength(); i++) {
                 Element element = (Element) elems.item(i);
 
-                if (Integer.parseInt(element.getAttribute("id")) == mID){
+                if (Objects.equals(element.getAttribute("id"), mID)){
                     return element.getAttribute("path");
                 }
             }
@@ -289,13 +290,13 @@ public class MetashapeObjectChunk {
         return "";
     }
 
-    public ArrayList<Triplet<Integer, String, String>> getModelInfo(){
+    public ArrayList<Triplet<String, String, String>> getModelInfo(){
         return modelInfo;
     }
 
-    public Integer getDefaultModelID(){return defaultModelID;}
+    public String getDefaultModelID(){return defaultModelID;}
 
-    public Integer getCurrModelID(){return currModelID;}
+    public String getCurrModelID(){return currModelID;}
 
     public File getPsxFile() {
         return metashapeObject.getPsxFile();
