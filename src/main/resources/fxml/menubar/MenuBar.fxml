@@ -151,11 +151,11 @@
                                 <userData>rendermodes/weightmaps/weightmapCombination.frag</userData>
                             </RadioMenuItem>
 <!--                            Individual weight map visualizations (without existing texture colors)-->
-                            <Menu mnemonicParsing="false" fx:id="heatmapMenu" text="Weight maps (grayscale)">
+                            <Menu fx:id="heatmapMenu" mnemonicParsing="false" text="Weight maps (grayscale)">
                                 <items>
                                 </items>
                             </Menu>
-                            <Menu mnemonicParsing="false" fx:id="superimposeMenu" text="Weight maps (superimposed)">
+                            <Menu fx:id="superimposeMenu" mnemonicParsing="false" text="Weight maps (superimposed)">
                                 <items>
                                 </items>
                             </Menu>
@@ -173,7 +173,7 @@
                                     <RadioMenuItem mnemonicParsing="false" text="Metallicity map" toggleGroup="$renderGroup">
                                         <userData>renderModes/maps/metallicMap.frag</userData>
                                     </RadioMenuItem>
-                                    <RadioMenuItem mnemonicParsing="false"  text="Diffuse color map" toggleGroup="$renderGroup">
+                                    <RadioMenuItem mnemonicParsing="false" text="Diffuse color map" toggleGroup="$renderGroup">
                                         <userData>renderModes/diffuseColor.frag</userData>
                                     </RadioMenuItem>
                                     <RadioMenuItem mnemonicParsing="false" text="Specular color map" toggleGroup="$renderGroup">
@@ -224,7 +224,8 @@
                         </Menu>
                     </MenuBar>
                     <HBox alignment="CENTER_LEFT" spacing="10.0" visible="false" AnchorPane.bottomAnchor="2.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="2.0">
-                        <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" visible="false" />
+<!--                        leaving the checkbox in here causes scenebuilder to not render???-->
+<!--                        <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" visible="false" />-->
                         <Button fx:id="settingsButton" contentDisplay="CENTER" mnemonicParsing="false" onAction="#openSystemSettingsModal" prefHeight="25.0" prefWidth="80.0" styleClass="menubarbuttons" text="Settings">
                             <HBox.margin>
                                 <Insets />
@@ -245,6 +246,7 @@
             </HBox>
         </children>
     </VBox>
+    <Label fx:id="shaderName" styleClass="wireframeBodyLarge" text="Label" wrapText="true" AnchorPane.leftAnchor="100.0" AnchorPane.topAnchor="45.0" />
    <AnchorPane fx:id="miniProgressPane" layoutY="688.6666870117188" prefHeight="24.0" style="-fx-background-color: #202020;" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
       <children>
          <HBox fx:id="miniProgBarBoundingHBox" alignment="CENTER_RIGHT" onMouseClicked="#handleMiniProgressBar" onMouseEntered="#mouseEnterMiniBar" onMouseExited="#mouseExitMiniBar" onMouseMoved="#mouseEnterMiniBar" spacing="8.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="24.0">

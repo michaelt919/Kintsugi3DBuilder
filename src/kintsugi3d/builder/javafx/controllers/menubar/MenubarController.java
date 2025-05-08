@@ -19,12 +19,13 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
@@ -41,7 +42,6 @@ import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.export.projectExporter.ExportRequestUI;
 import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.export.specular.SpecularFitSerializer;
-import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.SpecularBasis;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
@@ -69,7 +69,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -79,6 +78,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static kintsugi3d.builder.javafx.ProjectIO.handleException;
 
@@ -145,6 +145,7 @@ public class MenubarController
     @FXML private Menu recentProjectsMenu;
     @FXML private Menu cleanRecentProjectsMenu;
     @FXML private Menu shadingMenu;
+    private int shadingIndex;
 
     @FXML private CustomMenuItem removeAllRefsCustMenuItem;
     @FXML private CustomMenuItem removeSomeRefsCustMenuItem;
@@ -163,6 +164,8 @@ public class MenubarController
     @FXML private VBox cameraViewList;
     @FXML private CameraViewListController cameraViewListController;
     @FXML private FramebufferView framebufferView;
+
+    @FXML private Label shaderName;
 
     private Window window;
     private Runnable userDocumentationHandler;
@@ -222,14 +225,10 @@ public class MenubarController
         doneButton.disableProperty().bind(ProgressBarsController.getInstance().getProcessingProperty());
 
         //send accelerators to welcome window
-        List<Menu> menus = mainMenubar.getMenus();
-
-        for (Menu menu : menus){
-            List<MenuItem> menuItems = menu.getItems();
-            for (MenuItem item : menuItems){
+        for (Menu menu : mainMenubar.getMenus()){
+            for (MenuItem item : menu.getItems()){
                 KeyCombination keyCodeCombo =  item.getAccelerator();
                 EventHandler<ActionEvent> action = item.getOnAction();
-
 
                 if (keyCodeCombo == null || action == null){continue;}
 
@@ -476,6 +475,38 @@ public class MenubarController
 
         updateShaderList();
         shadingMenu.setOnShowing(e -> updateShaderList());
+        //TODO: only show label when model is loaded
+        shaderName.textProperty().bind(Bindings.createStringBinding(()->
+                ((RadioMenuItem)renderGroup.getSelectedToggle()).getText(), renderGroup.selectedToggleProperty()));
+
+        KeyCombination ctrlDown = new KeyCodeCombination(KeyCode.DOWN, KeyCombination.CONTROL_DOWN);
+        instance.window.getScene().getAccelerators().put(ctrlDown, () -> {
+            List<RadioMenuItem> availableShaders = getRadioMenuItems(shadingMenu).stream()
+                    .filter(item -> !item.isDisable()).collect(Collectors.toList());
+            int numAvailableShaders = availableShaders.size();
+
+            RadioMenuItem curr = (RadioMenuItem) renderGroup.getSelectedToggle();
+            int idx = availableShaders.indexOf(curr);
+            idx = (idx + 1) % numAvailableShaders;
+            availableShaders.get(idx).setSelected(true);
+        });
+
+        KeyCombination ctrlUp = new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN);
+        instance.window.getScene().getAccelerators().put(ctrlUp, () -> {
+            List<RadioMenuItem> availableShaders = getRadioMenuItems(shadingMenu).stream()
+                    .filter(item -> !item.isDisable()).collect(Collectors.toList());
+            int numAvailableShaders = availableShaders.size();
+
+            RadioMenuItem curr = (RadioMenuItem) renderGroup.getSelectedToggle();
+            int idx = availableShaders.indexOf(curr);
+
+            //there's probably a better way to do this but whatever
+            idx = (idx - 1);
+            if (idx < 0){
+                idx = numAvailableShaders - 1;
+            }
+            availableShaders.get(idx).setSelected(true);
+        });
 
         setToggleableShaderDisable(true);
 
@@ -486,6 +517,24 @@ public class MenubarController
 
         tip = new Tooltip("Remove references to all recent projects. Will not modify your file system.");
         Tooltip.install(removeAllRefsCustMenuItem.getContent(), tip);
+    }
+
+    private List<RadioMenuItem> getRadioMenuItems(Menu menu){
+       List<RadioMenuItem> list = new ArrayList<>();
+       getRadioMenuItemsHelper(list, menu.getItems());
+       return list;
+    }
+
+    private void getRadioMenuItemsHelper(List<RadioMenuItem> radioMenuItems, List<MenuItem> menuItems){
+        for (MenuItem item : menuItems){
+            if (item instanceof RadioMenuItem) {
+                radioMenuItems.add((RadioMenuItem) item);
+            }
+            if (item instanceof Menu) {
+                Menu menu = (Menu) item;
+                getRadioMenuItemsHelper(radioMenuItems, menu.getItems());
+            }
+        };
     }
 
     private void hideAllProgress() {
