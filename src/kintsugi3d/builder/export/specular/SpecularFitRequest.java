@@ -102,7 +102,8 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
 
             //enable shaders which only work after processing textures
             MenubarController.getInstance().setToggleableShaderDisable(false);
-
+            MenubarController.getInstance().updateShaderList();
+            MenubarController.getInstance().selectMaterialBasisShader();
         }
         catch(IOException e) // thrown by createReflectanceProgram
         {

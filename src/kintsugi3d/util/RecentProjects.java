@@ -191,6 +191,7 @@ public class RecentProjects {
                 String fileName = RecentProjects.getItemsFromRecentsFile().get(i);
                 Tooltip tooltip = new Tooltip(fileName);
 
+                //TODO: figure out why this still freezes the builder despite Platform.runLater() usage
                 addItemToQuickAccess(fileName, recentButton);
                 recentButton.setTooltip(tooltip);
 

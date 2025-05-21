@@ -549,7 +549,14 @@ public final class ProjectIO
         MultithreadModels.getInstance().getIOModel().unload();
         projectLoaded = false;
 
+        WelcomeWindowController.getInstance().show();
+
+        //TODO: do we want this here?
+        MenubarController.getInstance().dismissMiniProgressBar();
+
         MenubarController.getInstance().setToggleableShaderDisable(true);
+        MenubarController.getInstance().setShaderNameVisibility(false);
+        MenubarController.getInstance().updateShaderList();
     }
 
     public void closeProjectAfterConfirmation()
@@ -557,9 +564,6 @@ public final class ProjectIO
         if (confirmClose("Are you sure you want to close the current project?"))
         {
             closeProject();
-            WelcomeWindowController.getInstance().show();
-            //TODO: do we want this here?
-            MenubarController.getInstance().dismissMiniProgressBar();
         }
     }
 

@@ -87,8 +87,6 @@ public class MenubarController
     private static final Logger log = LoggerFactory.getLogger(MenubarController.class);
 
     private static MenubarController instance;
-    public Menu heatmapMenu;
-    public Menu superimposeMenu;
     private InternalModels internalModels;
 
     //Window open flags
@@ -138,14 +136,14 @@ public class MenubarController
     @FXML private CheckMenuItem visibleLightWidgetsCheckMenuItem;
     @FXML private CheckMenuItem visibleCameraPoseCheckMenuItem;
     @FXML private CheckMenuItem visibleSavedCameraPoseCheckMenuItem;
-    @FXML private RadioMenuItem weightmapCombination;
 
 
     @FXML private Menu exportMenu;
     @FXML private Menu recentProjectsMenu;
     @FXML private Menu cleanRecentProjectsMenu;
     @FXML private Menu shadingMenu;
-    private int shadingIndex;
+    @FXML private Menu heatmapMenu;
+    @FXML private Menu superimposeMenu;
 
     @FXML private CustomMenuItem removeAllRefsCustMenuItem;
     @FXML private CustomMenuItem removeSomeRefsCustMenuItem;
@@ -155,11 +153,9 @@ public class MenubarController
     @FXML private RadioMenuItem materialReflectivity;
     @FXML private RadioMenuItem materialBasis;
     @FXML private RadioMenuItem imgBasedWithTextures;
-    @FXML private String weightmapPath;
-    @FXML private String superimposePath;
+    @FXML private RadioMenuItem weightmapCombination;
 
-
-    private List<RadioMenuItem> toggleableShaders = new ArrayList<>();
+    private final List<MenuItem> toggleableShaders = new ArrayList<>();
 
     @FXML private VBox cameraViewList;
     @FXML private CameraViewListController cameraViewListController;
@@ -224,7 +220,7 @@ public class MenubarController
         cancelButton.disableProperty().bind(ProgressBarsController.getInstance().getProcessingProperty().not());
         doneButton.disableProperty().bind(ProgressBarsController.getInstance().getProcessingProperty());
 
-        //send accelerators to welcome window
+        //send menubar accelerators to welcome window
         for (Menu menu : mainMenubar.getMenus()){
             for (MenuItem item : menu.getItems()){
                 KeyCombination keyCodeCombo =  item.getAccelerator();
@@ -410,7 +406,11 @@ public class MenubarController
                     Platform.runLater(()->localTextLabel.setText(revertText));
                 }
 
+                //todo: would be nice if this was bound to a hasHandler property
+                shaderName.setVisible(MultithreadModels.getInstance().getIOModel().hasValidHandler());
+
                 Platform.runLater(()->cancelButton.setText("Cancel"));
+                updateShaderList();
             }
 
             @Override
@@ -471,25 +471,15 @@ public class MenubarController
         toggleableShaders.add(materialReflectivity);
         toggleableShaders.add(materialBasis);
         toggleableShaders.add(imgBasedWithTextures);
-        //toggleableShaders.add(weightmapCombination);
+        toggleableShaders.add(weightmapCombination);
+
+        toggleableShaders.add(heatmapMenu);
+        toggleableShaders.add(superimposeMenu);
 
         updateShaderList();
-        shadingMenu.setOnShowing(e -> updateShaderList());
-        //TODO: only show label when model is loaded
+
         shaderName.textProperty().bind(Bindings.createStringBinding(()->
                 ((RadioMenuItem)renderGroup.getSelectedToggle()).getText(), renderGroup.selectedToggleProperty()));
-
-        KeyCombination ctrlDown = new KeyCodeCombination(KeyCode.DOWN, KeyCombination.CONTROL_DOWN);
-        instance.window.getScene().getAccelerators().put(ctrlDown, () -> {
-            List<RadioMenuItem> availableShaders = getRadioMenuItems(shadingMenu).stream()
-                    .filter(item -> !item.isDisable()).collect(Collectors.toList());
-            int numAvailableShaders = availableShaders.size();
-
-            RadioMenuItem curr = (RadioMenuItem) renderGroup.getSelectedToggle();
-            int idx = availableShaders.indexOf(curr);
-            idx = (idx + 1) % numAvailableShaders;
-            availableShaders.get(idx).setSelected(true);
-        });
 
         KeyCombination ctrlUp = new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN);
         instance.window.getScene().getAccelerators().put(ctrlUp, () -> {
@@ -507,6 +497,19 @@ public class MenubarController
             }
             availableShaders.get(idx).setSelected(true);
         });
+
+        KeyCombination ctrlDown = new KeyCodeCombination(KeyCode.DOWN, KeyCombination.CONTROL_DOWN);
+        instance.window.getScene().getAccelerators().put(ctrlDown, () -> {
+            List<RadioMenuItem> availableShaders = getRadioMenuItems(shadingMenu).stream()
+                    .filter(item -> !item.isDisable()).collect(Collectors.toList());
+            int numAvailableShaders = availableShaders.size();
+
+            RadioMenuItem curr = (RadioMenuItem) renderGroup.getSelectedToggle();
+            int idx = availableShaders.indexOf(curr);
+            idx = (idx + 1) % numAvailableShaders;
+            availableShaders.get(idx).setSelected(true);
+        });
+
 
         setToggleableShaderDisable(true);
 
@@ -553,7 +556,7 @@ public class MenubarController
     }
 
     // Populate menu based on a given input number
-    private void updateShaderList() {
+    public void updateShaderList() {
         heatmapMenu.getItems().clear();
         superimposeMenu.getItems().clear();
 
@@ -589,7 +592,6 @@ public class MenubarController
             heatmapMenu.getItems().add(i, heatmap);
             superimposeMenu.getItems().add(i, b);
             // when attempting to redefine 'heatmap' and use for superimposeMenu, K3D would crash
-
         }
     }
 
@@ -962,6 +964,7 @@ public class MenubarController
                             {
                                 MultithreadModels.getInstance().getIOModel().applyLightCalibration();
                                 MultithreadModels.getInstance().getSettingsModel().set("lightCalibrationMode", false);
+                                setShaderNameVisibility(true);
                             });
                         });
 
@@ -985,6 +988,10 @@ public class MenubarController
 
                 // Enables light calibration mode when the window is opened.
                 internalModels.getSettingsModel().set("lightCalibrationMode", true);
+
+                //shader name doesn't change like it should when opening light calibration, so hide it for now
+                //TODO: figure out how to show the correct name instead of hiding the text?
+                setShaderNameVisibility(false);
             }
             catch (Exception e)
             {
@@ -1166,9 +1173,7 @@ public class MenubarController
     //set the disable of shaders which only work after processing textures
     //TODO: bind these to some property instead of manually changing values
     public void setToggleableShaderDisable(boolean b) {
-        for (RadioMenuItem item : toggleableShaders){
-            item.setDisable(b);
-        }
+        toggleableShaders.forEach(menuItem -> menuItem.setDisable(b));
     }
 
     public Window getWindow(){return window;} //useful for creating alerts in back-end classes
@@ -1269,5 +1274,13 @@ public class MenubarController
     public void file_hotSwap(ActionEvent actionEvent)
     {
         ProjectIO.getInstance().hotSwap(window);
+    }
+
+    public void selectMaterialBasisShader(){
+        materialBasis.setSelected(true);
+    }
+
+    public void setShaderNameVisibility(boolean b) {
+        shaderName.setVisible(b);
     }
 }

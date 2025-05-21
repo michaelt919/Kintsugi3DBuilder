@@ -12,11 +12,12 @@
   -->
 
 <?import javafx.geometry.*?>
+<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.Cursor?>
 <?import javafx.scene.input.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane prefHeight="720.0" styleClass="menuebaranchorpane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.MenubarController">
+
+<AnchorPane prefHeight="720.0" styleClass="menuebaranchorpane" stylesheets="@../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.MenubarController">
     <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <children>
             <AnchorPane>
@@ -246,7 +247,7 @@
             </HBox>
         </children>
     </VBox>
-    <Label fx:id="shaderName" styleClass="wireframeBodyLarge" text="Label" wrapText="true" AnchorPane.leftAnchor="100.0" AnchorPane.topAnchor="45.0" />
+    <Label fx:id="shaderName" style="-fx-border-color: #efcb5c; -fx-label-padding: 10; -fx-border-radius: 30; -fx-opacity: 50;" styleClass="wireframeBodyLarge" text="Shading Label" visible="false" wrapText="true" AnchorPane.rightAnchor="32.0" AnchorPane.topAnchor="44.0" />
    <AnchorPane fx:id="miniProgressPane" layoutY="688.6666870117188" prefHeight="24.0" style="-fx-background-color: #202020;" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
       <children>
          <HBox fx:id="miniProgBarBoundingHBox" alignment="CENTER_RIGHT" onMouseClicked="#handleMiniProgressBar" onMouseEntered="#mouseEnterMiniBar" onMouseExited="#mouseExitMiniBar" onMouseMoved="#mouseEnterMiniBar" spacing="8.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="24.0">
