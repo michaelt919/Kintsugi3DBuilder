@@ -964,7 +964,7 @@ public class MenubarController
                             {
                                 MultithreadModels.getInstance().getIOModel().applyLightCalibration();
                                 MultithreadModels.getInstance().getSettingsModel().set("lightCalibrationMode", false);
-                                setShaderNameVisibility(true);
+                                setShaderNameVisibility(MultithreadModels.getInstance().getIOModel().hasValidHandler());
                             });
                         });
 

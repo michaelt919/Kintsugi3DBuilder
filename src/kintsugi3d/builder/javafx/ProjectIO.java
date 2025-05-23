@@ -13,28 +13,17 @@ package kintsugi3d.builder.javafx;
 
 import com.sun.glass.ui.Application;
 import javafx.application.Platform;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.image.Image;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
-import javafx.stage.Stage;
 import javafx.stage.Window;
-import javafx.stage.WindowEvent;
 import kintsugi3d.builder.core.DefaultProgressMonitor;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.javafx.controllers.menubar.AboutController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
-import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.HotSwapController;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ConfirmablePage;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
 import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
 import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
@@ -47,15 +36,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Locale;
 import java.util.Objects;
-import java.util.Scanner;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 public final class ProjectIO
@@ -272,7 +254,7 @@ public final class ProjectIO
     {
         MultithreadModels.getInstance().getIOModel().unload();
 
-        RecentProjects.updateRecentFiles(projectFile.getAbsolutePath());
+        RecentProjects.addToRecentFiles(projectFile.getAbsolutePath());
 
         if (Objects.equals(projectFile.getParentFile(), vsetFile.getParentFile()))
         {
@@ -522,7 +504,7 @@ public final class ProjectIO
                 callback.run();
             }
 
-            RecentProjects.updateRecentFiles(fileContainer.selectedFile.toString());
+            RecentProjects.addToRecentFiles(fileContainer.selectedFile.toString());
             saveProject(parentWindow);
         }
     }
