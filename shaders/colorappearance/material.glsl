@@ -18,7 +18,6 @@
 #line 19 1020
 
 in vec2 fTexCoord;
-out vec3 specularColor;
 
 #ifndef DIFFUSE_TEXTURE_ENABLED
 #define DIFFUSE_TEXTURE_ENABLED 0
