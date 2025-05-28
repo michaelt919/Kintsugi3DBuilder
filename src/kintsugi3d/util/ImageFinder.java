@@ -38,7 +38,6 @@ public class ImageFinder
 
     public String[] getSupportedImgFormats(){return altFormats;}
 
-    // TODO move outside this class
     public File findImageFile(File requestedFile) throws FileNotFoundException
     {
         if (requestedFile.exists())
@@ -48,21 +47,10 @@ public class ImageFinder
         else
         {
             // Try some alternate file formats/extensions
+            // Try appending first (will catch filenames that contain .'s but omit the extension)
             for(String extension : altFormats)
             {
-                String[] filenameParts = requestedFile.getName().split("\\.");
-
-                String altFileName;
-                if (filenameParts.length > 1)
-                {
-                    filenameParts[filenameParts.length - 1] = extension;
-                    altFileName = String.join(".", filenameParts);
-                }
-                else
-                {
-                    altFileName = String.join(".", filenameParts[0], extension);
-                }
-
+                String altFileName = String.join(".", requestedFile.getName(), extension);
                 File imageFileGuess = new File(requestedFile.getParentFile(), altFileName);
 
                 log.info("Trying '{}'", imageFileGuess.getAbsolutePath());
@@ -70,6 +58,27 @@ public class ImageFinder
                 {
                     log.info("Found!!");
                     return imageFileGuess;
+                }
+            }
+
+            // try substituting the part after the last . with various extensions
+            for(String extension : altFormats)
+            {
+                String[] filenameParts = requestedFile.getName().split("\\.");
+
+                if (filenameParts.length > 1)
+                {
+                    filenameParts[filenameParts.length - 1] = extension;
+                    String altFileName = String.join(".", filenameParts);
+
+                    File imageFileGuess = new File(requestedFile.getParentFile(), altFileName);
+
+                    log.info("Trying '{}'", imageFileGuess.getAbsolutePath());
+                    if (imageFileGuess.exists())
+                    {
+                        log.info("Found!!");
+                        return imageFileGuess;
+                    }
                 }
             }
 
