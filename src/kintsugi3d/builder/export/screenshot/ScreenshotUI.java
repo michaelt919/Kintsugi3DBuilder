@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -27,6 +27,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.core.IBRRequestQueue;
 import kintsugi3d.builder.core.IBRRequestUI;
@@ -115,6 +116,10 @@ public class ScreenshotUI implements IBRRequestUI
             //stage.close();
             if (builderSupplier != null)
             {
+                if(MultithreadModels.getInstance().getIOModel().getProgressMonitor().isConflictingProcess()){
+                    return;
+                }
+
                 requestQueue.addIBRRequest(
                     builderSupplier.get()
                         .setWidth(Integer.parseInt(widthTextField.getText()))

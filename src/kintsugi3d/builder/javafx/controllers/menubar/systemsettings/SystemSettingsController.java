@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -23,10 +23,9 @@ import kintsugi3d.builder.javafx.InternalModels;
 
 public class SystemSettingsController {
 
-    public AnchorPane settingsFxmlHost;//holds the fxml which contains whatever settings the user is modifying
+    @FXML private AnchorPane settingsFxmlHost;//holds the fxml which contains whatever settings the user is modifying
     //TODO: NEED TO REAPPLY ALL DEFAULT CHECKBOX SETTINGS
-    @FXML
-    private ListView<String> settingsListView;
+    @FXML private ListView<String> settingsListView;
 
     //Note: settings string MUST MATCH their .fxml counterparts
     //ex. Autosave Settings --> AutosaveSettings.fxml
@@ -87,6 +86,10 @@ public class SystemSettingsController {
     private void populateFileList() {
         settingsListView.getItems().clear();
         settingsListView.getItems().addAll(settingsNames);
+    }
+
+    public Window getHostWindow(){
+        return settingsFxmlHost.getScene().getWindow();
     }
 }
 

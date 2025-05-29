@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -44,6 +44,7 @@ import kintsugi3d.optimization.ShaderBasedErrorCalculator;
 import kintsugi3d.util.BufferedImageColorList;
 import kintsugi3d.util.ImageFinder;
 import kintsugi3d.util.ImageUndistorter;
+import org.ejml.simple.SimpleMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -187,9 +188,9 @@ public class SpecularFitProcess
         {
             // Preliminary optimization at low resolution to determine basis functions
             this.optimizeTexSpaceFit(resources, decomposition.getTextureResolution(),
-                (stream, errorCalculator, monitorLocal) -> specularFit.optimizeFromScratch(
+                (stream, monitorLocal) -> specularFit.optimizeFromScratch(
                     decomposition, stream, settings.getPreliminaryConvergenceTolerance(),
-                    errorCalculator, monitorLocal, TRACE_IMAGES && settings.getOutputDirectory() != null ? settings.getOutputDirectory() : null),
+                    monitorLocal, TRACE_IMAGES && settings.getOutputDirectory() != null ? settings.getOutputDirectory() : null),
                 specularFit, monitor);
 
 //            if (settings.getOutputDirectory() != null)
@@ -231,11 +232,6 @@ public class SpecularFitProcess
         }
 
         SpecularFitProgramFactory<ContextType> programFactory = getProgramFactory();
-
-        // Create space for the solution.
-        // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.
-        SpecularFitFinal<ContextType> fullResolution = SpecularFitFinal.createEmpty(original,
-            settings.getTextureResolution(), settings.getSpecularBasisSettings(), settings.shouldIncludeConstantTerm());
 
         try (IBRResourcesTextureSpace<ContextType> sampled = cache.createSampledResources(
                 new DefaultProgressMonitor() // simple progress monitor for logging; will not be shown in the UI
@@ -279,57 +275,66 @@ public class SpecularFitProcess
                     monitor.setStage(2, "Performing high-res fit...");
                 }
 
-                // Basis functions are not spatial, so we want to just copy for future use
-                // Copy from CPU since 1D texture arrays can't apparently be attached to an FBO (as necessary for blitting)
-                fullResolution.getBasisResources().updateFromSolution(sampledDecomposition);
+                // Create space for the solution.
+                // Complete "specular fit": includes basis representation on GPU, roughness / reflectivity fit, normal fit, and final diffuse fit.
+                SpecularFitFinal<ContextType> fullResolution = SpecularFitFinal.createEmpty(original,
+                    settings.getTextureResolution(), sampledFit.getMetadataMaps().keySet(), /* include all metadata maps supported by SpecularFitOptimizable */
+                    settings.getSpecularBasisSettings(), settings.shouldIncludeConstantTerm());
 
-                File geometryFile = sampled.getViewSet().getGeometryFile();
-                ReadonlyMaterial material = sampled.getGeometry().getMaterial();
-                ReadonlyMaterialTextureMap normalMap = material == null ? null : material.getNormalMap();
-                File inputNormalMap = geometryFile == null || material == null || normalMap == null ? null :
-                    ImageFinder.getInstance().tryFindImageFile(new File(geometryFile.getParentFile(), normalMap.getMapName()));
+                try
+                {
+                    // Basis functions are not spatial, so we want to just copy for future use
+                    // Copy from CPU since 1D texture arrays can't apparently be attached to an FBO (as necessary for blitting)
+                    fullResolution.getBasisResources().updateFromSolution(sampledDecomposition);
 
-                // Optimize weight maps and normal maps by blocks to fill the full resolution textures
-                optimizeBlocks(fullResolution, cache, sampledDecomposition, inputNormalMap, monitor);
-            }
+                    File geometryFile = sampled.getViewSet().getGeometryFile();
+                    ReadonlyMaterial material = sampled.getGeometry().getMaterial();
+                    ReadonlyMaterialTextureMap normalMap = material == null ? null : material.getNormalMap();
+                    File inputNormalMap = geometryFile == null || material == null || normalMap == null ? null :
+                        ImageFinder.getInstance().tryFindImageFile(new File(geometryFile.getParentFile(), normalMap.getMapName()));
 
-            if (monitor != null)
-            {
-                // Go back to indeterminate for wrap-up stuff
-                monitor.setStage(3, "Texture processing complete.");
-            }
+                    // Optimize weight maps and normal maps by blocks to fill the full resolution textures
+                    optimizeBlocks(fullResolution, cache, sampledDecomposition, inputNormalMap, monitor);
 
-            // Generate albedo / ORM maps at full resolution (does not require loaded source images)
+                    if (monitor != null)
+                    {
+                        // Go back to indeterminate for wrap-up stuff
+                        monitor.setStage(3, "Texture processing complete.");
+                    }
+
+                    // Generate albedo / ORM maps at full resolution (does not require loaded source images)
             fullResolution.getAlbedoORMOptimization().execute(fullResolution);
 
-            Duration duration = Duration.between(start, Instant.now());
-            log.info("Total processing time: " + duration);
+                    Duration duration = Duration.between(start, Instant.now());
+                    log.info("Total processing time: " + duration);
 
-            if (DEBUG_IMAGES && settings.getOutputDirectory() != null)
-            {
-                try (PrintStream time = new PrintStream(new File(settings.getOutputDirectory(), "time.txt"), StandardCharsets.UTF_8))
-                {
-                    time.println(duration);
+                    if (DEBUG_IMAGES && settings.getOutputDirectory() != null)
+                    {
+                        try (PrintStream time = new PrintStream(new File(settings.getOutputDirectory(), "time.txt"), StandardCharsets.UTF_8))
+                        {
+                            time.println(duration);
+                        }
+                        catch (FileNotFoundException e)
+                        {
+                            log.error("An error occurred writing time file:", e);
+                        }
+                    }
+
+                    if (settings.getOutputDirectory() != null)
+                    {
+                        fullResolution.saveAll(settings.getOutputDirectory());
+                    }
+
+                    return fullResolution;
                 }
-                catch (FileNotFoundException e)
+                catch (IOException|RuntimeException e)
                 {
-                    log.error("An error occurred writing time file:", e);
+                    // Prevent memory leak when an exception occurs
+                    fullResolution.close();
+
+                    throw e;
                 }
             }
-
-            if (settings.getOutputDirectory() != null)
-            {
-                fullResolution.saveAll(settings.getOutputDirectory());
-            }
-
-            return fullResolution;
-        }
-        catch (IOException|RuntimeException e)
-        {
-            // Prevent memory leak when an exception occurs
-            fullResolution.close();
-
-            throw e;
         }
     }
 
@@ -431,12 +436,22 @@ public class SpecularFitProcess
                             SpecularDecomposition blockDecomposition =
                                 new SpecularDecompositionFromExistingBasis(blockResolution, sampledDecomposition);
 
+                            if (sampledDecomposition.getSpecularBasis().getCount() == 1)
+                            {
+                                // special case for a single basis function: pre-fill with default weights so that optimization is unnecesssary.
+                                int weightCount = blockResolution.width * blockResolution.height;
+                                for (int p = 0; p < weightCount; p++)
+                                {
+                                    blockDecomposition.setWeights(p, SimpleMatrix.identity(1));
+                                    blockDecomposition.setWeightsValidity(p, true);
+                                }
+                            }
+
                             // Optimize weights and normals
                             optimizeTexSpaceFit(blockResources,
                                 blockResolution,
-                                (stream, errorCalculator, monitorLocal) -> blockOptimization.optimizeFromExistingBasis(
-                                    blockDecomposition, stream, settings.getConvergenceTolerance(),
-                                    errorCalculator, monitorLocal,
+                                (stream, monitorLocal) -> blockOptimization.optimizeFromExistingBasis(
+                                    blockDecomposition, stream, settings.getConvergenceTolerance(), monitorLocal,
                                     TRACE_IMAGES && settings.getOutputDirectory() != null ? settings.getOutputDirectory() : null),
                                 blockOptimization,
                                 new DefaultProgressMonitor() // wrap progress monitor with logic to account for it being just one block out of the whole.
@@ -524,14 +539,9 @@ public class SpecularFitProcess
                 resources.getContext().buildFramebufferObject(resolution.width, resolution.height)
                     .addColorAttachment(ColorFormat.RGBA32F)
                     .addColorAttachment(ColorFormat.RGBA32F));
-
-            ShaderBasedErrorCalculator<ContextType> errorCalculator = ShaderBasedErrorCalculator.create(resources.getContext(),
-                () -> createErrorCalcProgram(resources, programFactory),
-                program -> createErrorCalcDrawable(resultsForErrorCalc, resources, program),
-                resolution.width, resolution.height)
         )
         {
-            optimizationMethod.optimize(stream, errorCalculator, monitor);
+            optimizationMethod.optimize(stream, monitor);
         }
     }
 
@@ -572,35 +582,6 @@ public class SpecularFitProcess
         return programFactory.getShaderProgramBuilder(resources,
             new File("shaders/common/texspace_dynamic.vert"),
             new File("shaders/specularfit/extractReflectance.frag"));
-    }
-
-    private static <ContextType extends Context<ContextType>>
-    ProgramObject<ContextType> createErrorCalcProgram(
-        ReadonlyIBRResources<ContextType> resources, SpecularFitProgramFactory<ContextType> programFactory)
-    {
-        try
-        {
-            return programFactory.createProgram(resources,
-                new File("shaders/common/texspace_dynamic.vert"),
-                new File("shaders/specularfit/errorCalc.frag"));
-        }
-        catch (IOException e)
-        {
-            log.error("An error occurred creating error calculation shader:", e);
-            return null;
-        }
-    }
-
-    private static <ContextType extends Context<ContextType>> Drawable<ContextType> createErrorCalcDrawable(
-            SpecularMaterialResources<ContextType> specularFit, ReadonlyIBRResources<ContextType> resources, Program<ContextType> errorCalcProgram)
-    {
-        Drawable<ContextType> errorCalcDrawable = resources.createDrawable(errorCalcProgram);
-        specularFit.getBasisResources().useWithShaderProgram(errorCalcProgram);
-        specularFit.getBasisWeightResources().useWithShaderProgram(errorCalcProgram);
-        errorCalcProgram.setTexture("roughnessMap", specularFit.getSpecularRoughnessMap());
-        errorCalcProgram.setTexture("normalMap", specularFit.getNormalMap());
-        errorCalcProgram.setUniform("sRGB", false);
-        return errorCalcDrawable;
     }
 
     public void rescaleTextures()

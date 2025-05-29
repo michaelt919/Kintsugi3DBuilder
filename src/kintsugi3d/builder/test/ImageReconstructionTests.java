@@ -97,6 +97,11 @@ class ImageReconstructionTests
         }
 
         @Override
+        public void setProcessName(String processName)
+        {
+        }
+
+        @Override
         public void setStageCount(int count)
         {
             this.stageCount = count;
@@ -130,6 +135,12 @@ class ImageReconstructionTests
         public void fail(Throwable e)
         {
             e.printStackTrace();
+        }
+
+        @Override
+        public boolean isConflictingProcess()
+        {
+            return false;
         }
     }
 
@@ -991,10 +1002,11 @@ class ImageReconstructionTests
         try (IBRResourcesImageSpace<OpenGLContext> resources = IBRResourcesImageSpace.getBuilderForContext(context)
             .setLoadOptions(loadOptions)
             .setProgressMonitor(progressMonitor)
-            .loadAgisoftFiles(
+            .loadLooseFiles(
                 new File(classLoader.getResource("test/" + cameras).toURI()),
                 new File(classLoader.getResource("test/" + geometry).toURI()),
-                new File(classLoader.getResource("test/" + imageDirectory).toURI()))
+                new File(classLoader.getResource("test/" + imageDirectory).toURI()),
+                true)
             .create())
         {
             resources.calibrateLightIntensities(false);

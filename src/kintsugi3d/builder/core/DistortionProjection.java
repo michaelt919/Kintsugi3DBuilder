@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,6 +13,8 @@ package kintsugi3d.builder.core;
 
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector2;
+
+import java.util.Objects;
 
 /**
  * Creates a perspective projection that also maintains camera distortion parameters (for Brown's distortion model).
@@ -155,7 +157,7 @@ public class DistortionProjection implements Projection
         float width, float height,
         float focalLength)
     {
-        this(width, height, focalLength, focalLength, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+        this(width, height, focalLength, focalLength, width / 2, height / 2, 0.0f, 0.0f, 0.0f);
     }
     
     @Override
@@ -188,6 +190,28 @@ public class DistortionProjection implements Projection
     {
         return String.format("s\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
                                 cx, cy, width/height, fy, width, k1, k2, k3, k4, p1, p2, fx - fy, skew);
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof DistortionProjection)
+        {
+            DistortionProjection p = (DistortionProjection) obj;
+            //noinspection FloatingPointEquality
+            return width == p.width && height == p.height && fx == p.fx && fy == p.fy && cx == p.cx && cy == p.cy
+                && k1 == p.k1 && k2 == p.k2 && k3 == p.k3 && k4 == p.k4 && p1 == p.p1 && p2 == p.p2 && skew == p.skew;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(width, height, fx, fy, cx, cy, k1, k2, k3, k4, p1, p2, skew);
     }
 
     public DistortionProjection scaledTo(int newWidth, int newHeight)

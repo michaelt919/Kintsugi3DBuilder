@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,6 +11,61 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar;
 
+import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.stage.Window;
+import javafx.stage.WindowEvent;
+import kintsugi3d.builder.app.Rendering;
+import kintsugi3d.builder.app.WindowSynchronization;
+import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.export.projectExporter.ExportRequestUI;
+import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
+import kintsugi3d.builder.export.specular.SpecularFitSerializer;
+import kintsugi3d.builder.fit.decomposition.SpecularBasis;
+import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.ProjectIO;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.LightCalibrationViewSelectController;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.PrimaryViewSelectController;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.CurrentProjectInputSource;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.InputSource;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
+import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
+import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
+import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
+import kintsugi3d.builder.javafx.controllers.scene.object.ObjectPoseSetting;
+import kintsugi3d.builder.javafx.controllers.scene.object.SettingsObjectSceneController;
+import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.javafx.FramebufferView;
+import kintsugi3d.util.Flag;
+import kintsugi3d.util.RecentProjects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -19,48 +74,19 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
 import java.text.DecimalFormat;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
-import javafx.application.Platform;
-import javafx.beans.property.IntegerProperty;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.image.Image;
-import javafx.scene.layout.VBox;
-import javafx.stage.*;
-import javafx.util.StringConverter;
-import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.AdvPhotoViewController;
-import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
-import kintsugi3d.util.RecentProjects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import kintsugi3d.gl.core.Context;
-import kintsugi3d.gl.javafx.FramebufferView;
-import kintsugi3d.builder.app.Rendering;
-import kintsugi3d.builder.app.WindowSynchronization;
-import kintsugi3d.builder.core.*;
-import kintsugi3d.builder.export.projectExporter.ExportRequestUI;
-import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
-import kintsugi3d.builder.javafx.InternalModels;
-import kintsugi3d.builder.javafx.MultithreadModels;
-import kintsugi3d.builder.javafx.ProjectIO;
-import kintsugi3d.builder.javafx.controllers.scene.object.ObjectPoseSetting;
-import kintsugi3d.builder.javafx.controllers.scene.object.SettingsObjectSceneController;
-import kintsugi3d.util.Flag;
+import static kintsugi3d.builder.javafx.ProjectIO.handleException;
 
 public class MenubarController
 {
     private static final Logger log = LoggerFactory.getLogger(MenubarController.class);
 
     private static MenubarController instance;
-
     private InternalModels internalModels;
 
     //Window open flags
@@ -73,66 +99,51 @@ public class MenubarController
     private final Flag unzipperOpen = new Flag(false);
     private final Flag loggerWindowOpen = new Flag(false);
 
+    //progress bar modal
+    private ProgressBar localProgressBar;
+    private ProgressBar overallProgressBar;
+    private Button cancelButton;
+    private Button doneButton;
 
-    @FXML private ProgressBar progressBar;
+    private Label localTextLabel;
+    private Label overallTextLabel;
+
+    //minimized progress bar
+    @FXML private AnchorPane miniProgressPane; //entire bottom bar
+    @FXML private HBox miniProgBarBoundingHBox; //only label and progress bar
+    @FXML private Label miniProgressLabel;
+
+    @FXML private StackPane swapControlsStackPane; //contains either the progress bar or the dismiss button
+    @FXML private ProgressBar miniProgressBar;
+    @FXML private Button dismissButton;
 
     //toggle groups
     @FXML private ToggleGroup renderGroup;
 
     @FXML private Menu aboutMenu;
-    @FXML private Button cancelButton;
+
+    @FXML private MenuBar mainMenubar;
 
     //menu items
-    //TODO: ORGANIZE CHECK MENU ITEMS
     @FXML private CheckMenuItem is3DGridCheckMenuItem;
+    @FXML public CheckMenuItem isCameraVisualCheckMenuItem;
     @FXML private CheckMenuItem compassCheckMenuItem;
-    @FXML private CheckMenuItem halfResolutionCheckMenuItem;
     @FXML private CheckMenuItem multiSamplingCheckMenuItem;
-    @FXML private CheckMenuItem sceneWindowMenuItem;
     @FXML private CheckMenuItem relightingCheckMenuItem;
     @FXML private CheckMenuItem sceneWindowCheckMenuItem;
     @FXML private CheckMenuItem environmentMappingCheckMenuItem; //TODO imp. this
-    @FXML private CheckMenuItem shadowsCheckMenuItem;
     @FXML private CheckMenuItem visibleLightsCheckMenuItem;
     @FXML private CheckMenuItem visibleLightWidgetsCheckMenuItem;
     @FXML private CheckMenuItem visibleCameraPoseCheckMenuItem;
     @FXML private CheckMenuItem visibleSavedCameraPoseCheckMenuItem;
 
-    @FXML private CheckMenuItem phyMaskingCheckMenuItem;
-    @FXML private CheckMenuItem fresnelEffectCheckMenuItem;
-
-    @FXML private CheckMenuItem autoCacheClearingCheckMenuItem;
-    @FXML private CheckMenuItem autoSaveCheckMenuItem;
-//    @FXML private CheckMenuItem preloadVisibilityEtcCheckMenuItem;
-    @FXML private CheckMenuItem mipmapCheckMenuItem;
-    @FXML private CheckMenuItem reduceViewportResolutionCheckMenuItem;
-    @FXML private CheckMenuItem darkModeCheckMenuItem;
-    @FXML private CheckMenuItem standAlone3dViewerCheckMenuItem;
-//    @FXML public ChoiceBox<String> autosaveOptionsChoiceBox;
-
-    @FXML private CheckMenuItem imageCompressionCheckMenuItem;
-    //@FXML private CheckMenuItem lightCalibrationCheckMenuItem;
-
-
-//    @FXML private Label widthLabel;
-//    @FXML private TextField widthTxtField;
-//    @FXML private Label heightLabel;
-//    @FXML private TextField heightTxtField;
-
-    @FXML private Menu perLightIntensityMenu;
-    @FXML private Menu ambientLightSettingsMenu;
-    @FXML public Slider perLight1IntensitySlider;
-    @FXML public Slider ambientLightIntensitySlider;
-
-    @FXML public TextField perLight1IntensityTxtField;
-    @FXML
-    private MenuItem perLightColorPickerMenuItem;
-
-    @FXML public TextField ambientLightIntensityTxtField;
 
     @FXML private Menu exportMenu;
     @FXML private Menu recentProjectsMenu;
     @FXML private Menu cleanRecentProjectsMenu;
+    @FXML private Menu shadingMenu;
+    @FXML private Menu heatmapMenu;
+    @FXML private Menu superimposeMenu;
 
     @FXML private CustomMenuItem removeAllRefsCustMenuItem;
     @FXML private CustomMenuItem removeSomeRefsCustMenuItem;
@@ -142,21 +153,18 @@ public class MenubarController
     @FXML private RadioMenuItem materialReflectivity;
     @FXML private RadioMenuItem materialBasis;
     @FXML private RadioMenuItem imgBasedWithTextures;
+    @FXML private RadioMenuItem weightmapCombination;
 
-    private List<RadioMenuItem> toggleableShaders = new ArrayList<>();
+    private final List<MenuItem> toggleableShaders = new ArrayList<>();
 
     @FXML private VBox cameraViewList;
-//    @FXML private HBox Eyedropper;
     @FXML private CameraViewListController cameraViewListController;
     @FXML private FramebufferView framebufferView;
 
+    @FXML private Label shaderName;
+
     private Window window;
-
     private Runnable userDocumentationHandler;
-
-    final static Number DEFAULT_VALUE = 1024;
-//    private IntegerProperty widthIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
-//    private IntegerProperty heightIntProperty = new SimpleIntegerProperty((Integer) DEFAULT_VALUE);
 
     public MenubarController()
     {
@@ -177,19 +185,21 @@ public class MenubarController
 
         // remove camera view list from layout when invisible
         this.cameraViewList.managedProperty().bind(this.cameraViewList.visibleProperty());
-//        this.Eyedropper.managedProperty().bind(this.Eyedropper.visibleProperty());
-//        Eyedropper.setVisible(false);
-//        Eyedropper.setExitCallback(() -> Eyedropper.setVisible(false));
 
         // only show camera view list when light calibration mode is active
         // TODO make this a separate property to allow it to be shown in other contexts
         this.cameraViewList.visibleProperty().bind(injectedInternalModels.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
 
+        this.cancelButton = ProgressBarsController.getInstance().getCancelButton();
+        this.doneButton = ProgressBarsController.getInstance().getDoneButton();
+        this.localTextLabel = ProgressBarsController.getInstance().getLocalTextLabel();
+        this.overallTextLabel = ProgressBarsController.getInstance().getOverallTextLabel();
 
+        this.localProgressBar = ProgressBarsController.getInstance().getLocalProgressBar();
+        this.overallProgressBar = ProgressBarsController.getInstance().getOverallProgressBar();
 
-        // remove progress bar from layout when invisible
-        this.progressBar.managedProperty().bind(this.progressBar.visibleProperty());
-
+        this.localProgressBar.getScene().getWindow().setOnCloseRequest(
+                event-> this.miniProgressPane.setVisible(true));
         this.cameraViewListController.init(injectedInternalModels.getCameraViewListModel());
 
         this.internalModels = injectedInternalModels;
@@ -198,13 +208,41 @@ public class MenubarController
         // Keep track of whether cancellation was requested.
         AtomicBoolean cancelRequested = new AtomicBoolean(false);
 
-        cancelButton.setOnAction(event -> cancelRequested.set(true));
+        cancelButton.setOnAction(event -> {
+            cancelRequested.set(true);
+            Platform.runLater(()->cancelButton.setText("Cancelling..."));
+        });
 
+        doneButton.setOnAction(event ->{
+            hideAllProgress();
+        });
+
+        cancelButton.disableProperty().bind(ProgressBarsController.getInstance().getProcessingProperty().not());
+        doneButton.disableProperty().bind(ProgressBarsController.getInstance().getProcessingProperty());
+
+        //send menubar accelerators to welcome window
+        for (Menu menu : mainMenubar.getMenus()){
+            for (MenuItem item : menu.getItems()){
+                KeyCombination keyCodeCombo =  item.getAccelerator();
+                EventHandler<ActionEvent> action = item.getOnAction();
+
+                if (keyCodeCombo == null || action == null){continue;}
+
+                WelcomeWindowController.getInstance().addAccelerator(keyCodeCombo, () ->
+                        Platform.runLater(() -> action.handle(new ActionEvent())));
+            }
+        }
         MultithreadModels.getInstance().getIOModel().addProgressMonitor(new ProgressMonitor()
         {
+            private static final String FINISHING_UP = "Finishing up...";
             private double maximum = 0.0;
-            private double progress = 0.0;
-            private int stageCount = 0;
+            private double localProgress = 0.0;
+
+            private double overallProgress = 0.0;
+            private IntegerProperty stageCountProperty = new SimpleIntegerProperty(0);
+            private IntegerProperty currentStageProperty = new SimpleIntegerProperty(0);
+
+            private String revertText; //when process is finishing up, store last msg into here while displaying "Finishing up..."
 
             @Override
             public void allowUserCancellation() throws UserCancellationException
@@ -212,6 +250,14 @@ public class MenubarController
                 if (cancelRequested.get())
                 {
                     cancelRequested.set(false); // reset cancel flag
+
+                    WelcomeWindowController.getInstance().showIfNoModelLoaded();
+                    dismissMiniProgressBar();
+
+                    //need to end stopwatches here because they might need to be reused for another process
+                    //   before cancelComplete() is called
+                    ProgressBarsController.getInstance().endStopwatches();
+
                     throw new UserCancellationException("Cancellation requested by user.");
                 }
             }
@@ -220,69 +266,187 @@ public class MenubarController
             public void cancelComplete(UserCancellationException e)
             {
                 complete();
+                hideAllProgress();
             }
 
             @Override
             public void start()
             {
-                progress = 0.0;
+                cancelRequested.set(false);
+
+                stageCountProperty.setValue(0);
+                currentStageProperty.setValue(0);
+
+                localProgress = 0.0;
+                overallProgress = 0.0;
                 Platform.runLater(() ->
                 {
-                    progressBar.setVisible(true);
-                    cancelButton.setVisible(true);
-                    progressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
+                    localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
+                    overallProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
                 });
+
+                ProgressBarsController.getInstance().resetText();
+                ProgressBarsController.getInstance().showStage();
+                ProgressBarsController.getInstance().startStopwatches();
+
+                miniProgressPane.setVisible(false);
+                resetMiniProgressBar();
+
+                miniProgressBar.progressProperty().bind(overallProgressBar.progressProperty());
+
+                miniProgressLabel.textProperty().bind(Bindings.createStringBinding(()-> {
+                    String currProcessTxt = overallTextLabel.textProperty().getValue();
+
+                    //Display "Finishing up..." or something similar
+                    if (currentStageProperty.getValue() > stageCountProperty.getValue() &&
+                    ProgressBarsController.getInstance().isProcessing()){
+                        return localTextLabel.getText();
+                    }
+
+                    //Display "Loading..." or some end message (ex. "Finished loading images")
+                    // or just remove redundant "Stage 1/1"
+                    if (!ProgressBarsController.getInstance().isProcessing() ||
+                        stageCountProperty.getValue() <= 1){
+                        return currProcessTxt;
+                    }
+
+                    return String.format("%s (Stage %s/%s)",
+                            currProcessTxt, currentStageProperty.getValue(), stageCountProperty.getValue());
+
+
+                }, overallTextLabel.textProperty(), currentStageProperty, stageCountProperty,
+                        localTextLabel.textProperty()));//pass localTextLabel text property so this binding updates more often
+            }
+
+            @Override
+            public void setProcessName(String processName) {
+                Stage progressStage = (Stage) overallProgressBar.getScene().getWindow();
+                Platform.runLater(()->progressStage.setTitle(processName));
             }
 
             @Override
             public void setStageCount(int count)
             {
-                stageCount = count;
-                // TODO configure stage progress bar
+                Platform.runLater(()->stageCountProperty.setValue(count));
             }
 
             @Override
             public void setStage(int stage, String message)
             {
-                maximum = 0.0;
-                progress = 0.0;
-                Platform.runLater(() -> progressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS));
+                this.localProgress = 0.0;
+                int currentStage = stage + 1; //index from 1, copy so we can update currentStageProperty w/ Platform.runLater to avoid threading issue
+                Platform.runLater(()-> this.currentStageProperty.setValue(currentStage));
 
-                // TODO
-                log.info("[Stage {}/{}] {}", stage, stageCount, message);
+                Platform.runLater(() -> localProgressBar.setProgress(ProgressIndicator.INDETERMINATE_PROGRESS));
+
+                //index current stage from 0 in this instance
+                overallProgress = (double) (currentStage - 1) / stageCountProperty.getValue();
+                Platform.runLater(()-> overallProgressBar.setProgress(overallProgress));
+
+                log.info("[Stage {}/{}] {}", currentStage, stageCountProperty.getValue(), message);
+
+                Platform.runLater(()-> overallTextLabel.setText(message));
+
+                if(currentStage > stageCountProperty.getValue()){
+                    Platform.runLater(()->localTextLabel.setText(FINISHING_UP));
+                }
+                else{
+                    ProgressBarsController.getInstance().beginNewStage();
+                }
             }
 
             @Override
             public void setMaxProgress(double maxProgress)
             {
                 this.maximum = maxProgress;
-                Platform.runLater(() -> progressBar.setProgress(maxProgress == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : progress / maxProgress));
+                Platform.runLater(() -> localProgressBar.setProgress(maxProgress == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : localProgress / maxProgress));
             }
 
             @Override
             public void setProgress(double progress, String message)
             {
-                this.progress = progress;
-                Platform.runLater(() -> progressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : progress / maximum));
-                // TODO handle message
-                log.info("[{}%] {}", new DecimalFormat("#.##").format(progress / maximum * 100), message);
+                this.localProgress = progress / maximum;
+                Platform.runLater(() -> localProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : localProgress));
+
+                //index current stage from 0 in this instance
+                double offset = (double) (currentStageProperty.getValue() - 1) / stageCountProperty.getValue();
+                this.overallProgress = offset + (localProgress / stageCountProperty.getValue());
+                Platform.runLater(() -> overallProgressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : overallProgress));
+
+                log.info("[{}%] {}", new DecimalFormat("#.##").format(localProgress * 100), message);
+
+                //remove stage/stageCount from txt if it wouldn't make sense for it to be there (ex. Stage 0/0)
+                //useful for simple exports like orbit animation
+                boolean removeStageNums = stageCountProperty.getValue() <= 1 || currentStageProperty.getValue() == 0;
+                revertText = removeStageNums ? message :
+                        String.format("Stage %s/%s—%s", currentStageProperty.getValue(), stageCountProperty.getValue(), message);
+
+                Platform.runLater(()-> localTextLabel.setText(revertText));
+
+                ProgressBarsController.getInstance().clickStopwatches(progress, maximum);
             }
 
             @Override
             public void complete()
             {
                 this.maximum = 0.0;
-                Platform.runLater(() ->
-                {
-                    progressBar.setVisible(false);
-                    cancelButton.setVisible(false);
-                });
+                ProgressBarsController.getInstance().endStopwatches();
+                setReadyToDismissMiniProgBar();
+
+                if(overallProgressBar.getProgress() == ProgressIndicator.INDETERMINATE_PROGRESS){
+                    Platform.runLater(()->overallProgressBar.setProgress(1.0));
+                }
+
+                if(localProgressBar.getProgress() == ProgressIndicator.INDETERMINATE_PROGRESS){
+                    Platform.runLater(()->localProgressBar.setProgress(1.0));
+                }
+
+                //only revert text for processes which are not lightweight
+                if(localTextLabel.getText().equals(FINISHING_UP)){
+                    Platform.runLater(()->localTextLabel.setText(revertText));
+                }
+
+                //todo: would be nice if this was bound to a hasHandler property
+                shaderName.setVisible(MultithreadModels.getInstance().getIOModel().hasValidHandler());
+
+                Platform.runLater(()->cancelButton.setText("Cancel"));
+                updateShaderList();
             }
 
             @Override
             public void fail(Throwable e)
             {
                 complete();
+            }
+
+            @Override
+            public boolean isConflictingProcess(){
+                if (!ProgressBarsController.getInstance().isProcessing()){
+                    return false;
+                }
+
+                Platform.runLater(() ->
+                {
+                    ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+                    //ButtonType stopProcess = new ButtonType("Start New Process", ButtonBar.ButtonData.YES);
+                    Alert alert = new Alert(AlertType.NONE, "Cannot run multiple tasks at the same time.\n" +
+                            "Either wait for the current task to complete or cancel it." /*+
+                            "Press OK to finish the current process."*/, ok/*, stopProcess*/);
+                    alert.setHeaderText("Conflicting Tasks");
+
+//                    //continue current process, don't start a new one
+//                    ((Button) alert.getDialogPane().lookupButton(ok)).setOnAction(event -> {
+//                    });
+//
+//                    //cancel current process and start new one
+//                    ((Button) alert.getDialogPane().lookupButton(stopProcess)).setOnAction(event -> {
+//                        cancelRequested.set(true);
+//                    });
+
+                    alert.showAndWait();
+                });
+
+                return true;
             }
         });
 
@@ -300,8 +464,6 @@ public class MenubarController
 
         initToggleGroups();
         bindCheckMenuItems();
-        bindSlidersToTxtFields();
-        updateRelightingVisibility();
 
         RecentProjects.updateAllControlStructures();
 
@@ -309,46 +471,128 @@ public class MenubarController
         toggleableShaders.add(materialReflectivity);
         toggleableShaders.add(materialBasis);
         toggleableShaders.add(imgBasedWithTextures);
+        toggleableShaders.add(weightmapCombination);
+
+        toggleableShaders.add(heatmapMenu);
+        toggleableShaders.add(superimposeMenu);
+
+        updateShaderList();
+
+        shaderName.textProperty().bind(Bindings.createStringBinding(()->
+                ((RadioMenuItem)renderGroup.getSelectedToggle()).getText(), renderGroup.selectedToggleProperty()));
+
+        KeyCombination ctrlUp = new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN);
+        instance.window.getScene().getAccelerators().put(ctrlUp, () -> {
+            List<RadioMenuItem> availableShaders = getRadioMenuItems(shadingMenu).stream()
+                    .filter(item -> !item.isDisable()).collect(Collectors.toList());
+            int numAvailableShaders = availableShaders.size();
+
+            RadioMenuItem curr = (RadioMenuItem) renderGroup.getSelectedToggle();
+            int idx = availableShaders.indexOf(curr);
+
+            //there's probably a better way to do this but whatever
+            idx = (idx - 1);
+            if (idx < 0){
+                idx = numAvailableShaders - 1;
+            }
+            availableShaders.get(idx).setSelected(true);
+        });
+
+        KeyCombination ctrlDown = new KeyCodeCombination(KeyCode.DOWN, KeyCombination.CONTROL_DOWN);
+        instance.window.getScene().getAccelerators().put(ctrlDown, () -> {
+            List<RadioMenuItem> availableShaders = getRadioMenuItems(shadingMenu).stream()
+                    .filter(item -> !item.isDisable()).collect(Collectors.toList());
+            int numAvailableShaders = availableShaders.size();
+
+            RadioMenuItem curr = (RadioMenuItem) renderGroup.getSelectedToggle();
+            int idx = availableShaders.indexOf(curr);
+            idx = (idx + 1) % numAvailableShaders;
+            availableShaders.get(idx).setSelected(true);
+        });
+
 
         setToggleableShaderDisable(true);
 
         //add tooltips to recent projects list modifiers
         Tooltip tip = new Tooltip("Remove references to items not found in file explorer. " +
-                "Does not modify your file system.");
+                "Will not modify your file system.");
         Tooltip.install(removeSomeRefsCustMenuItem.getContent(), tip);
 
-        tip = new Tooltip("Remove references to all recent projects. Does not modify your file system.");
+        tip = new Tooltip("Remove references to all recent projects. Will not modify your file system.");
         Tooltip.install(removeAllRefsCustMenuItem.getContent(), tip);
+    }
 
+    private List<RadioMenuItem> getRadioMenuItems(Menu menu){
+       List<RadioMenuItem> list = new ArrayList<>();
+       getRadioMenuItemsHelper(list, menu.getItems());
+       return list;
+    }
 
-//        updatePreloadVisibilityEtc();
+    private void getRadioMenuItemsHelper(List<RadioMenuItem> radioMenuItems, List<MenuItem> menuItems){
+        for (MenuItem item : menuItems){
+            if (item instanceof RadioMenuItem) {
+                radioMenuItems.add((RadioMenuItem) item);
+            }
+            if (item instanceof Menu) {
+                Menu menu = (Menu) item;
+                getRadioMenuItemsHelper(radioMenuItems, menu.getItems());
+            }
+        };
+    }
 
-//        setupTxtFieldProperties(widthIntProperty, widthTxtField);
-//        setupTxtFieldProperties(heightIntProperty, heightTxtField);
-//
-//        widthTxtField.disableProperty().bind(preloadVisibilityEtcCheckMenuItem.selectedProperty().not());
-//        heightTxtField.disableProperty().bind(preloadVisibilityEtcCheckMenuItem.selectedProperty().not());
+    private void hideAllProgress() {
+        ProgressBarsController.getInstance().hideStage();
+        dismissMiniProgressBar();
+    }
 
+    private void setReadyToDismissMiniProgBar() {
+        setLighterMiniBar();
+        miniProgressBar.setVisible(false);
+        dismissButton.setVisible(true);
 
-//        lightCalibrationCheckMenuItem.selectedProperty().addListener(observable ->
-//        {
-//            if (!lightCalibrationCheckMenuItem.isSelected())
-//            {
-//                MultithreadModels.getInstance().getLoadingModel().applyLightCalibration();
-//                MultithreadModels.getInstance().getSettingsModel().set("currentLightCalibration", Vector2.ZERO);
-//            }
-//        });
+        if(!ProgressBarsController.getInstance().getStage().isShowing()){
+            miniProgressPane.setVisible(true);
+        }
+    }
 
+    // Populate menu based on a given input number
+    public void updateShaderList() {
+        heatmapMenu.getItems().clear();
+        superimposeMenu.getItems().clear();
 
-//        //add "Default Path" and "Choose Location..." items to choiceBox
-//        //initialize directory selection dropdown menu
-//        autosaveOptionsChoiceBox.getItems().addAll(defaultAutosaveSelection, CHOOSE_LOCATION);
-//
-//        //initialize option to default path
-//        autosaveOptionsChoiceBox.setValue(defaultAutosaveSelection);
-//
-//        //attach event handler (this cannot be done in scenebuilder)
-//        autosaveOptionsChoiceBox.setOnAction(this::handleDirectoryDropdownSelection);
+        int basisCount = 0;
+        try
+        {
+            ViewSet viewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+            SpecularBasis basis = SpecularFitSerializer.deserializeBasisFunctions(viewSet.getSupportingFilesFilePath());
+            basisCount = basis.getCount();
+        }
+        catch (IOException | NullPointerException e)
+        {
+            log.error("Error attempting to load previous solution basis count:", e);
+        }
+
+        Map<String, Optional<Object>> comboDefines = new HashMap<>();
+        comboDefines.put("WEIGHTMAP_INDEX", Optional.of(0));
+        comboDefines.put("WEIGHTMAP_COUNT", Optional.of(basisCount));
+        weightmapCombination.setUserData(new RenderingShaderUserData("rendermodes/weightmaps/weightmapCombination.frag", comboDefines));
+
+        for (int i = 0; i < basisCount; ++i) {
+            RadioMenuItem heatmap = new RadioMenuItem("Weight map " + i);
+            RadioMenuItem b = new RadioMenuItem("Weight map " + i);
+
+            Map<String, Optional<Object>> defines = new HashMap<>();
+            defines.put("WEIGHTMAP_INDEX", Optional.of(i));
+
+            heatmap.setToggleGroup(renderGroup);
+            heatmap.setUserData(new RenderingShaderUserData("rendermodes/weightmaps/weightmapSingle.frag", defines));
+            b.setToggleGroup(renderGroup);
+            b.setUserData(new RenderingShaderUserData("rendermodes/weightmaps/weightmapOverlay.frag", defines));
+
+            heatmapMenu.getItems().add(i, heatmap);
+            superimposeMenu.getItems().add(i, b);
+            // when attempting to redefine 'heatmap' and use for superimposeMenu, K3D would crash
+        }
     }
 
     private boolean loadExportClasses(Stage injectedStage, File exportClassDefinitionFile) {
@@ -431,33 +675,41 @@ public class MenubarController
     {
         renderGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) ->
         {
+            RenderingShaderUserData shaderData = null;
             if (newValue != null && newValue.getUserData() instanceof String)
             {
-                MultithreadModels.getInstance().getIOModel()
-                    .requestFragmentShader(new File("shaders", (String)newValue.getUserData()));
+                shaderData = new RenderingShaderUserData((String) newValue.getUserData());
             }
 
-//            if (newValue != null && newValue.getUserData() instanceof StandardRenderingMode)
-//            {
-//                internalModels.getSettingsModel().set("renderingMode", newValue.getUserData());
-//            }
+            if (newValue != null && newValue.getUserData() instanceof RenderingShaderUserData)
+            {
+                shaderData = (RenderingShaderUserData) newValue.getUserData();
+            }
+
+            if (shaderData == null)
+            {
+                handleException("Failed to parse shader data for rendering option.", new RuntimeException("shaderData is null!"));
+                return;
+            }
+
+            MultithreadModels.getInstance().getIOModel()
+                .requestFragmentShader(new File("shaders", shaderData.getShaderName()), shaderData.getShaderDefines());
         });
     }
 
     private void bindCheckMenuItems()
     {
+        visibleLightWidgetsCheckMenuItem.disableProperty().bind(relightingCheckMenuItem.selectedProperty().not());
+
         //value binding
-//        lightCalibrationCheckMenuItem.selectedProperty().bindBidirectional(
-//            internalModels.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
         is3DGridCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("is3DGridEnabled"));
+        isCameraVisualCheckMenuItem.selectedProperty().bindBidirectional(
+            internalModels.getSettingsModel().getBooleanProperty("isCameraVisualEnabled"));
         compassCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("compassEnabled"));
         relightingCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("relightingEnabled"));
-        shadowsCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("shadowsEnabled"));
-        shadowsCheckMenuItem.setSelected(true);//need to do this here because it doesn't work in the fxml after binding
         visibleLightsCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("visibleLightsEnabled"));
         visibleLightWidgetsCheckMenuItem.selectedProperty().bindBidirectional(
@@ -468,32 +720,8 @@ public class MenubarController
             internalModels.getSettingsModel().getBooleanProperty("visibleCameraPosesEnabled"));
         visibleSavedCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("visibleSavedCameraPosesEnabled"));
-        phyMaskingCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("pbrGeometricAttenuationEnabled"));
-        fresnelEffectCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("fresnelEnabled"));
-        halfResolutionCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("halfResolutionEnabled"));
         multiSamplingCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("multisamplingEnabled"));
-        sceneWindowMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("sceneWindowOpen"));
-
-        mipmapCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getLoadOptionsModel().mipmaps);
-//        preloadVisibilityEtcCheckMenuItem.selectedProperty().bindBidirectional(
-//                internalModels.getLoadOptionsModel().depthImages);
-
-//        widthIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthWidth);
-//        heightIntProperty.bindBidirectional(internalModels.getLoadOptionsModel().depthHeight);
-
-        imageCompressionCheckMenuItem.selectedProperty().bindBidirectional(
-                internalModels.getLoadOptionsModel().compression);
-    }
-
-    private void bindSlidersToTxtFields()
-    {
-        //TODO: BIND INTENSITY SLIDERS TO TEXT FIELDS HERE
-        //ignore now that this setting is in the system settings modal?
     }
 
     //Menubar->File
@@ -563,21 +791,10 @@ public class MenubarController
     }
 
     @FXML
-    private void exportRequestUI(){
-        try{
-            IBRRequestUI requestUI = ExportRequestUI.create(this.window, MultithreadModels.getInstance());
-            requestUI.bind(internalModels.getSettingsModel());
-            requestUI.prompt(Rendering.getRequestQueue());
-        } catch (Exception e) {
-            handleException("An error occurred with ExportRequest handler", e);
-        }
-    }
-
-    @FXML
     private void file_exit()
     {
         WindowSynchronization.getInstance().quit();
-    }//TODO: how to apply dark mode here?
+    }
 
     @FXML
     private void help_userManual()
@@ -588,7 +805,6 @@ public class MenubarController
     public void openAboutModal()
     {
         ProjectIO.getInstance().openAboutModal(window);
-
     }
 
     private <ControllerType> ControllerType makeWindow(String title, Flag flag, String urlString) throws IOException
@@ -694,30 +910,6 @@ public class MenubarController
         return fxmlLoader.getController();
     }
 
-
-    /**
-     * This function is to allow the LoaderController to pass a call back to the ChunkViewerController.
-     * @param loaderControllerCallback Reference to loaderController in order to call a callback function later.
-     * @return Returns a reference to the UnzipFileSelectionController
-     */
-    public void unzip(Consumer<MetashapeObjectChunk> loaderControllerCallback){
-        UnzipFileSelectionController unzipFileSelectionController = unzip();
-        unzipFileSelectionController.loaderControllerCallback = loaderControllerCallback;
-    }
-
-    public UnzipFileSelectionController unzip() {
-        UnzipFileSelectionController unzipFileSelectionController = null;
-        try {
-            unzipFileSelectionController = makeWindow(".psx Unzipper", unzipperOpen, "fxml/menubar/UnzipFileSelection.fxml");
-            unzipFileSelectionController.init();
-        }
-        catch(Exception e)
-        {
-            handleException("An error occurred opening file unzipper", e);
-        }
-        return unzipFileSelectionController;
-    }
-
     public void objectOrientation()
     {
         if (!objectOrientationWindowOpen.get())
@@ -772,6 +964,7 @@ public class MenubarController
                             {
                                 MultithreadModels.getInstance().getIOModel().applyLightCalibration();
                                 MultithreadModels.getInstance().getSettingsModel().set("lightCalibrationMode", false);
+                                setShaderNameVisibility(MultithreadModels.getInstance().getIOModel().hasValidHandler());
                             });
                         });
 
@@ -782,17 +975,23 @@ public class MenubarController
                 // Bind controller to settings model to synchronize with "currentLightCalibration".
                 lightCalibrationController.bind(internalModels.getSettingsModel());
 
-                if (MultithreadModels.getInstance().getIOModel().isInstanceLoaded())
+                if (MultithreadModels.getInstance().getIOModel().hasValidHandler())
                 {
                     // Set the "currentLightCalibration" to the existing calibration values in the view set.
                     ViewSet loadedViewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
 
                     internalModels.getSettingsModel().set("currentLightCalibration",
-                        loadedViewSet.getLightPosition(loadedViewSet.getLightIndex(loadedViewSet.getPrimaryViewIndex())).getXY());
+                        loadedViewSet.getLightPosition(loadedViewSet.getLightIndex(0)).getXY());
                 }
+
+                cameraViewListController.rebindSearchableListView();
 
                 // Enables light calibration mode when the window is opened.
                 internalModels.getSettingsModel().set("lightCalibrationMode", true);
+
+                //shader name doesn't change like it should when opening light calibration, so hide it for now
+                //TODO: figure out how to show the correct name instead of hiding the text?
+                setShaderNameVisibility(false);
             }
             catch (Exception e)
             {
@@ -803,27 +1002,84 @@ public class MenubarController
 
     public void eyedropperColorChecker()
     {
-//        if (colorCheckerWindowOpen.get())
-//        {
-//            Eyedropper.setVisible(false);
-//
-//            return;
-//        }
-
         try
         {
-//            Eyedropper.setVisible(true);
-            EyedropperController eyedropperController =
-                    makeWindow("Tone Calibration", colorCheckerWindowOpen, "fxml/menubar/EyedropperColorChecker.fxml");
+            ArrayList<FXMLPage> pages = new ArrayList<>();
 
-            eyedropperController.setProjectModel(internalModels.getProjectModel());
-            eyedropperController.setIOModel(MultithreadModels.getInstance().getIOModel());
+            FXMLLoader eyedropLoader = new FXMLLoader(getClass().getResource("/fxml/menubar/EyedropperColorChecker.fxml"));
+            eyedropLoader.load();
+            FXMLPage eyedropPage = new FXMLPage("/fxml/menubar/EyedropperColorChecker.fxml", eyedropLoader);
+
+            FXMLLoader viewLoader = new FXMLLoader(getClass().getResource("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml"));
+
+            // Override controller class
+            viewLoader.setControllerFactory(c -> new LightCalibrationViewSelectController());
+
+            viewLoader.load();
+
+            CurrentProjectInputSource inputSource = getCurrentProjectInputSource();
+
+            FXMLPage viewPage = new FXMLPage("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml", viewLoader);
+            pages.add(viewPage);
+
+            FXMLLoader imageSelectorLoader = new FXMLLoader(getClass().getResource("/fxml/menubar/SelectToneCalibrationImage.fxml"));
+            imageSelectorLoader.load();
+            FXMLPage imageSelectorPage = new FXMLPage("/fxml/menubar/SelectToneCalibrationImage.fxml", imageSelectorLoader);
+            pages.add(imageSelectorPage);
+            viewPage.setNextPage(imageSelectorPage);
+
+            pages.add(eyedropPage);
+            imageSelectorPage.setNextPage(eyedropPage);
+
+            FXMLPageScrollerController scrollerController = makeWindow("Tone Calibration", colorCheckerWindowOpen,
+                "fxml/menubar/FXMLPageScroller.fxml");
+            scrollerController.setPages(pages, "/fxml/menubar/createnewproject/PrimaryViewSelect.fxml");
+            scrollerController.addInfo(ShareInfo.Info.INPUT_SOURCE, inputSource);
+            scrollerController.init();
         }
         catch (IOException|RuntimeException e)
         {
-//            Eyedropper.setVisible(false);
             handleException("An error occurred opening color checker window", e);
         }
+    }
+
+    private static CurrentProjectInputSource getCurrentProjectInputSource()
+    {
+        CurrentProjectInputSource inputSource = new CurrentProjectInputSource()
+        {
+            // Override this method to set the initial selection to the primary view instead of orientation view
+            @Override
+            public void setOrientationViewDefaultSelections(PrimaryViewSelectController controller)
+            {
+                ViewSet currentViewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+
+                if (currentViewSet == null)
+                    return;
+
+                // Set the initial selection to what is currently being used
+                TreeItem<String> selectionItem = InputSource.NONE_ITEM;
+
+                if (currentViewSet.getPrimaryViewIndex() >= 0)
+                {
+                    String viewName = currentViewSet.getImageFileName(currentViewSet.getPrimaryViewIndex());
+
+                    for (int i = 0; i < searchableTreeView.getTreeView().getExpandedItemCount(); i++)
+                    {
+                        TreeItem<String> item = searchableTreeView.getTreeView().getTreeItem(i);
+                        if (Objects.equals(item.getValue(), viewName))
+                        {
+                            selectionItem = item;
+                            break;
+                        }
+                    }
+                }
+
+                searchableTreeView.getTreeView().getSelectionModel().select(selectionItem);
+            }
+        };
+
+        inputSource.setIncludeNoneItem(false);
+        return inputSource;
     }
 
     public void shading_SystemMemory()
@@ -863,113 +1119,15 @@ public class MenubarController
         }
     }
 
-
-//    private void handleDirectoryDropdownSelection(ActionEvent actionEvent) {
-//        //if user clicks "choose directory" option, open the directory chooser
-//        //then add an item to the dropdown which contains the path they selected
-//
-//        if (autosaveOptionsChoiceBox.getValue().equals(CHOOSE_LOCATION)){
-//            this.directoryChooser.setTitle("Choose an output directory");
-//
-//            Stage stage = (Stage) window;
-//            File file = this.directoryChooser.showDialog(stage.getOwner());
-//
-//            if (file != null && file.exists()){
-//                directoryChooser.setInitialDirectory(file);
-//                autosaveOptionsChoiceBox.getItems().add(file.getAbsolutePath());
-//                autosaveOptionsChoiceBox.setValue(file.getAbsolutePath());
-//            }
-//            else{
-//                Toolkit.getDefaultToolkit().beep();
-//            }
-//        }
-//    }
-
-//    public void updatePreloadVisibilityEtc() {
-//        //if check menu item is unchecked, disable "Preload Visibility & Shadow Testing" options
-//        ArrayList<Object> controlItems = new ArrayList<>();
-//        controlItems.add(heightLabel);
-//        controlItems.add(widthLabel);
-//        controlItems.add(heightTxtField);
-//        controlItems.add(widthTxtField);
-//
-//        updateCheckMenuItemVisibilities(preloadVisibilityEtcCheckMenuItem, controlItems);
-//    }
-
-    public void updateRelightingVisibility() {
-        ArrayList<Object> controlItems = new ArrayList<>();
-        controlItems.add(visibleLightWidgetsCheckMenuItem);
-        controlItems.add(perLightIntensityMenu);
-        controlItems.add(ambientLightSettingsMenu);
-        updateCheckMenuItemVisibilities(relightingCheckMenuItem, controlItems);
+    public void showProgressBars(){
+        ProjectIO.getInstance().openProgressBars();
+        miniProgressPane.setVisible(false);
     }
 
-    //if the check menu item is disabled, also disable the control items (labels, text fields, etc.)
-    // or Menu Items it is associated with
-    private void updateCheckMenuItemVisibilities(CheckMenuItem checkMenuItem, Collection<Object> items){
-        boolean isChecked = checkMenuItem.isSelected();
-
-        for(Object item : items){
-            if (item instanceof javafx.scene.control.Control){
-                Control convertedControlItem = (Control) item;
-                convertedControlItem.setDisable(!isChecked);
-            }
-            else if (item instanceof MenuItem){
-                MenuItem convertedMenuItem = (MenuItem) item;
-                convertedMenuItem.setDisable(!isChecked);
-            }
-        }
-    }
-
-    //this function is used to hook up the text field's string property to the backend
-    //StringProperty --> IntegerProperty
-    private void setupTxtFieldProperties(IntegerProperty integerProperty, TextField txtField) {StringConverter<Number> numberStringConverter = new StringConverter<Number>()
-        {
-            @Override
-            public String toString(Number object)
-            {
-                if (object != null)
-                {
-                    return Integer.toString(object.intValue());
-                }
-                else
-                {
-                    return String.valueOf(DEFAULT_VALUE);
-                }
-            }
-
-            @Override
-            public Number fromString(String string)
-            {
-                try
-                {
-                    return Integer.valueOf(string);
-                }
-                catch (NumberFormatException nfe)
-                {
-                    return DEFAULT_VALUE;
-                }
-            }
-        };
-        txtField.textProperty().bindBidirectional(integerProperty, numberStringConverter);
-        txtField.focusedProperty().addListener((ob, o, n) ->
-        {
-            if (o && !n)
-            {
-                txtField.setText(integerProperty.getValue().toString());
-            }
-        });
-        integerProperty.addListener((ob, o, n) ->
-        {
-            if (n.intValue() < 1)
-            {
-                integerProperty.setValue(1);
-            }
-        });
-    }
 
     //used so the user can click on the About menu and immediately see the about modal
     //instead of clicking on a single menu item
+    //NOT IN USE as of July 9, 2024
     public void hideAndShowAboutModal() {
         aboutMenu.hide();
         openAboutModal();
@@ -995,21 +1153,6 @@ public class MenubarController
         }
     }
 
-    private void handleException(String message, Exception e)
-    {
-        log.error("{}:", message, e);
-        Platform.runLater(() ->
-        {
-            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-            ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
-            Alert alert = new Alert(AlertType.ERROR, message + "\nSee the log for more info.", ok, showLog);
-            ((Button) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
-                help_console();
-            });
-            alert.show();
-        });
-    }
-
     public void file_removeInvalidReferences() {
         RecentProjects.removeInvalidReferences();
     }
@@ -1028,11 +1171,116 @@ public class MenubarController
 
     //come up with a clearer name for this
     //set the disable of shaders which only work after processing textures
+    //TODO: bind these to some property instead of manually changing values
     public void setToggleableShaderDisable(boolean b) {
-        for (RadioMenuItem item : toggleableShaders){
-            item.setDisable(b);
-        }
+        toggleableShaders.forEach(menuItem -> menuItem.setDisable(b));
     }
 
     public Window getWindow(){return window;} //useful for creating alerts in back-end classes
+
+    public void showWelcomeWindow() {
+        WelcomeWindowController.getInstance().show();
+    }
+
+    public void handleMiniProgressBar(MouseEvent event) {
+        double relX = event.getX() - swapControlsStackPane.getLayoutX();
+        double relY = event.getY() - swapControlsStackPane.getLayoutY();
+
+        if(!ProgressBarsController.getInstance().isProcessing() &&
+            swapControlsStackPane.contains(relX, relY)){
+            dismissMiniProgressBar();
+        }
+        else {
+            showProgressBars();
+        }
+    }
+
+    private void resetMiniProgressBar() {
+        miniProgressBar.setVisible(true);
+        dismissButton.setVisible(false);
+        setDarkestMiniBar();
+    }
+
+    public void mouseEnterMiniBar(MouseEvent event){
+        double relX;
+        double relY;
+
+        if(!event.getSource().equals(swapControlsStackPane)){
+            relX = event.getX() - swapControlsStackPane.getLayoutX();
+            relY = event.getY() - swapControlsStackPane.getLayoutY();
+        }
+        else{
+            relX = event.getX();
+            relY = event.getY();
+        }
+
+        setLightestMiniBar();
+
+        //don't highlight individual elements if still processing
+        if(ProgressBarsController.getInstance().isProcessing()){
+            return;
+        }
+
+        if(!swapControlsStackPane.contains(relX, relY)){
+            //highlight label if it's hovered over
+            miniProgBarBoundingHBox.setStyle("-fx-background-color: #CECECE");
+            swapControlsStackPane.setStyle("-fx-background-color: #ADADAD;");
+
+        }
+        else{
+            //highlight dismiss button area if it's hovered over
+            miniProgBarBoundingHBox.setStyle("-fx-background-color: #ADADAD;");
+            swapControlsStackPane.setStyle("-fx-background-color: #CECECE;");
+        }
+    }
+
+    public void mouseExitMiniBar() {
+        if(ProgressBarsController.getInstance().isProcessing()){
+            setDarkestMiniBar();
+        }
+        else{
+            setLighterMiniBar();
+        }
+    }
+
+    private void setLighterMiniBar() {
+        miniProgBarBoundingHBox.setStyle("-fx-background-color: #ADADAD;");
+        miniProgressLabel.setStyle("-fx-text-fill: #202020;");
+        swapControlsStackPane.setStyle("fx-fill: #ADADAD");
+
+        miniProgressBar.lookup(".track").setStyle("-fx-background-color: #383838");
+    }
+    private void setLightestMiniBar(){
+        miniProgBarBoundingHBox.setStyle("-fx-background-color: #CECECE");
+        miniProgressLabel.setStyle("-fx-text-fill: #202020;");
+        swapControlsStackPane.setStyle("-fx-background-color: #CECECE;");
+
+        miniProgressBar.lookup(".track").setStyle("-fx-background-color: #383838");
+    }
+
+    public void setDarkestMiniBar() {
+        miniProgBarBoundingHBox.setStyle("-fx-background-color: none;");
+        miniProgressLabel.setStyle("-fx-text-fill: #CECECE;");
+        swapControlsStackPane.setStyle("fx-fill: none");
+
+        miniProgressBar.lookup(".track").setStyle("-fx-background-color: #CECECE");
+    }
+
+    public void dismissMiniProgressBar() {
+        Platform.runLater(()->miniProgressPane.setVisible(false));
+        WelcomeWindowController.getInstance().showIfNoModelLoaded();
+    }
+
+    public void file_hotSwap(ActionEvent actionEvent)
+    {
+        ProjectIO.getInstance().hotSwap(window);
+    }
+
+    public void selectMaterialBasisShader(){
+        materialBasis.setSelected(true);
+    }
+
+    public void setShaderNameVisibility(boolean b) {
+        shaderName.setVisible(b);
+    }
 }

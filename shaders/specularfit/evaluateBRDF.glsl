@@ -13,7 +13,7 @@
 #ifndef EVALUATE_BRDF_GLSL
 #define EVALUATE_BRDF_GLSL
 
-#line 14 4001
+#line 17 4001
 
 uniform sampler2DArray weightMaps;
 uniform sampler1DArray basisFunctions;

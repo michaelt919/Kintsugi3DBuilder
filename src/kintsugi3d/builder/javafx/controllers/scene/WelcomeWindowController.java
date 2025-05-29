@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,14 +11,19 @@
 
 package kintsugi3d.builder.javafx.controllers.scene;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SplitMenuButton;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.IBRRequestManager;
 import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.util.RecentProjects;
@@ -35,6 +40,7 @@ public class WelcomeWindowController
 
 
     private static WelcomeWindowController INSTANCE;
+
     @FXML private Button recent1;
     @FXML private Button recent2;
     @FXML private Button recent3;
@@ -105,16 +111,13 @@ public class WelcomeWindowController
         ProjectIO.getInstance().openProjectWithPrompt(parentWindow);
     }
 
-    //TODO: FIND WAY TO NOT CLOSE FILE, BUT HIDE SO IT CAN BE RESHOWN
-    public void hideWelcomeWindow(){
-        window.close();
+    public void hide(){
+        window.hide();
     }
 
-    //TODO: just create a new welcome window?
-//    public void showWelcomeWindow(){
-//        window.show();
-//    }
-//
+    public void show(){
+        Platform.runLater(()->window.show());
+    }
 
     @FXML
     private void help_userManual()
@@ -151,10 +154,20 @@ public class WelcomeWindowController
     }
 
     public void openSystemSettingsModal() {
-        ProjectIO.getInstance().openSystemSettingsModal(internalModels, window);
+        ProjectIO.getInstance().openSystemSettingsModal(internalModels, parentWindow);
     }
 
     public void openAboutModal() {
-        ProjectIO.getInstance().openAboutModal(window);
+        ProjectIO.getInstance().openAboutModal(parentWindow);
+    }
+
+    public void showIfNoModelLoaded() {
+        if(!MultithreadModels.getInstance().getIOModel().hasValidHandler()){
+            show();
+        }
+    }
+
+    public void addAccelerator(KeyCombination keyCodeCombo, Runnable r) {
+        recent1.getScene().getAccelerators().put(keyCodeCombo, r);
     }
 }

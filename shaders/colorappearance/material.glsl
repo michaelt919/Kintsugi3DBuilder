@@ -13,7 +13,7 @@
 #ifndef MATERIAL_GLSL
 #define MATERIAL_GLSL
 
-#include <colorappearance/linearize.glsl>
+#include "linearize.glsl"
 
 #line 19 1020
 

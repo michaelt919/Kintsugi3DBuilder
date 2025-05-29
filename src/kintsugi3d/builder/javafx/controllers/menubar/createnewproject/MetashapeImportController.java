@@ -1,7 +1,16 @@
+/*
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject;
 
-import java.io.File;
-import java.util.ArrayList;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -14,22 +23,27 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.stage.Window;
-import javafx.stage.WindowEvent;
-import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObject;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
-import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.CanConfirm;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.InputSource;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.MetashapeProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
-import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.util.RecentProjects;
 import kintsugi3d.util.Triplet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class MetashapeImportController extends FXMLPageController implements ShareInfo, CanConfirm {
+import java.io.File;
+import java.util.ArrayList;
+
+public class MetashapeImportController extends FXMLPageController implements ShareInfo {
+    private static final Logger log = LoggerFactory.getLogger(MetashapeImportController.class);
+
     @FXML private Text fileNameTxtField;
     @FXML private AnchorPane anchorPane;
     @FXML private Text loadMetashapeObject;
+
     @FXML private ChoiceBox chunkSelectionChoiceBox;
     @FXML private ChoiceBox modelSelectionChoiceBox;
 
@@ -41,7 +55,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     private volatile boolean alertShown = false;
 
     FileChooser fileChooser;
-
     @Override
     public Region getHostRegion() {
         return anchorPane;
@@ -51,8 +64,10 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     public void init() {
         fileChooser = new FileChooser();
         fileChooser.setTitle("Choose .psx file");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Metashape files", "*.psx"));
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Metashape files (*.psx)", "*.psx"));
         fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
+
+        hostPage.setNextPage(hostScrollerController.getPage("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml"));
     }
 
     @Override
@@ -62,6 +77,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         chunkSelectionChoiceBox.setOnAction(event -> Platform.runLater(()->{
                 updateModelSelectionChoiceBox();
                 updateLoadedIndicators();
+
         }));
 
         fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
@@ -77,31 +93,39 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         //update metashapeObjectChunk with selected chunk from chunkSelectionChoiceBox
         updateMetashapeChunk();
 
-        hostScrollerController.addInfo(Info.METASHAPE_OBJ_CHUNK, metashapeObjectChunk);
+        InputSource source = hostScrollerController.getInfo(Info.INPUT_SOURCE);
+        if (source instanceof MetashapeProjectInputSource){
+            //overwrite old source so we can compare old and new versions in PrimaryViewSelectController
+            hostScrollerController.addInfo(Info.INPUT_SOURCE,
+                    new MetashapeProjectInputSource().setMetashapeObjectChunk(metashapeObjectChunk));
+        }
+        else{
+            log.error("Error sending Metashape project info to host controller. MetashapeProjectInputSource expected.");
+        }
     }
 
     private void updateMetashapeChunk() {
         if (metashapeObjectChunk != null){
             MetashapeObject metashapeObject = metashapeObjectChunk.getMetashapeObject();
             String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
-            Integer modelID = getSelectedModelID();
+            String modelID = getSelectedModelID();
 
             metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, chunkName, modelID);
         }
     }
 
-    private Integer getSelectedModelID() {
+    private String getSelectedModelID() {
         String selectionAsString = (String) modelSelectionChoiceBox.getSelectionModel().getSelectedItem();
         return getModelIDFromSelection(selectionAsString);
     }
 
-    private static Integer getModelIDFromSelection(String selectionAsString) {
+    private static String getModelIDFromSelection(String selectionAsString) {
         //TODO: need to revisit this when formatting of model selection choice box changes
         if (selectionAsString.startsWith(NO_MODEL_ID_MSG)){
             return null;
         }
 
-        return Integer.parseInt(selectionAsString.substring(0, selectionAsString.indexOf(' ')));
+        return selectionAsString.substring(0, selectionAsString.indexOf(' '));
     }
 
     @FXML
@@ -136,16 +160,16 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         else{
             MetashapeObject metashapeObject = new MetashapeObject(metashapePsxFile.getAbsolutePath());
             String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
-            int modelID = 0;
+            String modelID = "0";
 
             metashapeObjectChunk = new MetashapeObjectChunk(metashapeObject, chunkName, modelID);
         }
 
 
-        ArrayList<Triplet<Integer, String, String>> modelInfo = metashapeObjectChunk.getModelInfo();
+        ArrayList<Triplet<String, String, String>> modelInfo = metashapeObjectChunk.getModelInfo();
 
         modelSelectionChoiceBox.getItems().clear();
-        for (Triplet<Integer, String, String> triplet : modelInfo){
+        for (Triplet<String, String, String> triplet : modelInfo){
             String modelID = triplet.first != null ? String.valueOf(triplet.first) : NO_MODEL_ID_MSG;
             String modelName = !triplet.second.isBlank() ? triplet.second : NO_MODEL_NAME_MSG;
             modelSelectionChoiceBox.getItems().add(modelID + "   " + modelName);
@@ -162,14 +186,14 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         modelSelectionChoiceBox.setValue(modelSelectionChoiceBox.getItems().get(0));
         modelSelectionChoiceBox.setDisable(false);
 
-        if (metashapeObjectChunk.getActiveModelID() == null){return;}
+        if (metashapeObjectChunk.getDefaultModelID() == null){return;}
 
         for (int i = 0; i < modelSelectionChoiceBox.getItems().size(); ++i){
             Object obj = modelSelectionChoiceBox.getItems().get(i);
-            Integer modelID = getModelIDFromSelection((String) obj);
+            String modelID = getModelIDFromSelection((String) obj);
             if (modelID == null){continue;}
 
-            if (modelID.equals(metashapeObjectChunk.getActiveModelID())){
+            if (modelID.equals(metashapeObjectChunk.getDefaultModelID())){
                 modelSelectionChoiceBox.setValue(obj);
                 break;
             }
@@ -185,17 +209,17 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         alertShown = true;
         Platform.runLater(() ->
         {
-            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
             ButtonType openCustomProj = new ButtonType("Create Custom Project", ButtonBar.ButtonData.YES);
 
             Alert alert = new Alert(Alert.AlertType.NONE,"Please select another chunk or create a custom project.", ok, openCustomProj);
 
             ((ButtonBase) alert.getDialogPane().lookupButton(openCustomProj)).setOnAction(event -> {
                 //manually navigate though pages to get to custom loader
-                hostScrollerController.prevPage();//go to ImportOrCustomProject.fxml
-                ImportOrCustomProjectController controller = (ImportOrCustomProjectController)
+                hostScrollerController.prevPage();//go to SelectImportOptions.fxml
+                SelectImportOptionsController controller = (SelectImportOptionsController)
                         hostScrollerController.getCurrentPage().getController();
-                controller.customImportSelect();
+                controller.looseFilesSelect();
                 alertShown = false;
             });
 
@@ -222,9 +246,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
                 getChunkNamesDynamic(metashapeObject.getPsxFilePath());
 
         chunkSelectionChoiceBox.getItems().clear();
-        //TODO: implement recursive / platform.run later from CustomImportController?
-        //first attempt led to data dependency issues where the model selection choice box
-        //   needed info that the chunk selection choice box didn't have yet
         chunkSelectionChoiceBox.getItems().addAll(chunkNames);
 
 
@@ -267,32 +288,5 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
     private boolean isMetashapeObjectLoaded() {
         return metashapePsxFile != null;
-    }
-
-    @Override
-    public void confirmButtonPress() {
-        updateMetashapeChunk();
-        if (loadStartCallback != null) {
-            loadStartCallback.run();
-        }
-
-        if (viewSetCallback != null) {
-            //"force" the user to save their project (user can still cancel saving)
-            MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
-                    viewSet ->viewSetCallback.accept(viewSet));
-        }
-
-        new Thread(() ->
-                MultithreadModels.getInstance().getIOModel()
-                        .loadAgisoftFromZIP(
-                                metashapeObjectChunk.getFramePath(),
-                                metashapeObjectChunk,
-                                ""))//uses the first image in the viewset as the primary view
-                //TODO: add primary view selection to modal?
-                .start();
-        WelcomeWindowController.getInstance().hideWelcomeWindow();
-
-        Window window = anchorPane.getScene().getWindow();
-        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
     }
 }

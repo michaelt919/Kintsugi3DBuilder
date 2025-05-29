@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,6 +11,9 @@
 
 package kintsugi3d.builder.resources.specular;
 
+import java.io.File;
+import java.io.IOException;
+
 import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.export.specular.WeightImageCreator;
 import kintsugi3d.gl.core.Context;
@@ -19,9 +22,6 @@ import kintsugi3d.gl.core.SamplerType;
 import kintsugi3d.gl.core.Texture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
 
 public abstract class SpecularMaterialResourcesBase<ContextType extends Context<ContextType>>
     implements SpecularMaterialResources<ContextType>
@@ -52,6 +52,11 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         useTextureSafe(program, "occlusionMap", this.getOcclusionMap());
         useTextureSafe(program, "albedoMap", this.getAlbedoMap());
         useTextureSafe(program, "ormMap", this.getORMMap());
+
+        for (var entry : this.getMetadataMaps().entrySet())
+        {
+            useTextureSafe(program, "metadataMap_" + entry.getKey(), entry.getValue());
+        }
 
         if (this.getBasisResources() != null)
         {
@@ -252,23 +257,20 @@ public abstract class SpecularMaterialResourcesBase<ContextType extends Context<
         }
     }
 
-    /**
-     * Saves all resources to the specified output directory
-     * @param outputDirectory
-     */
     @Override
-    public void saveAll(File outputDirectory)
+    public void saveMetadataMaps(File outputDirectory)
     {
-        saveDiffuseMap(outputDirectory);
-        saveNormalMap(outputDirectory);
-        saveConstantMap(outputDirectory);
-        saveOcclusionMap(outputDirectory);
-        saveAlbedoMap(outputDirectory);
-        saveORMMap(outputDirectory);
-        saveSpecularReflectivityMap(outputDirectory);
-        saveSpecularRoughnessMap(outputDirectory);
-        savePackedWeightMaps(outputDirectory);
-        saveUnpackedWeightMaps(outputDirectory);
-        saveBasisFunctions(outputDirectory);
+        var metadataMaps = getMetadataMaps();
+        for (var entry : metadataMaps.entrySet())
+        {
+            try
+            {
+                entry.getValue().getColorTextureReader().saveToFile("PNG", new File(outputDirectory, entry.getKey() + ".png"));
+            }
+            catch (IOException e)
+            {
+                log.error("An error occurred saving metadata map: {}", entry.getKey(), e);
+            }
+        }
     }
 }

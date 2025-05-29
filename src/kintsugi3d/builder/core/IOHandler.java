@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -13,17 +13,16 @@ package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
-import kintsugi3d.util.AbstractImage;
+import kintsugi3d.util.EncodableColorImage;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
-
-import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.util.EncodableColorImage;
 
 public interface IOHandler
 {
@@ -33,11 +32,19 @@ public interface IOHandler
     File getLoadedProjectFile();
     void setLoadedProjectFile(File loadedProjectFile);
     void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions);
-    void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory,
-        String primaryViewName, ReadonlyLoadOptionsModel loadOptions);
-    void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptionsModel, String primaryViewName);
+    void loadFromLooseFiles(String id, File xmlFile, File meshFile, File imageDirectory, boolean needsUndistort,
+                                String primaryViewName, double rotation, ReadonlyLoadOptionsModel loadOptions, UUID uuidOverride);
+
+    default void loadFromLooseFiles(String id, File xmlFile, File meshFile, File imageDirectory, boolean needsUndistort,
+        String primaryViewName, double rotation, ReadonlyLoadOptionsModel loadOptions)
+    {
+        loadFromLooseFiles(id, xmlFile, meshFile, imageDirectory, needsUndistort, primaryViewName, rotation, loadOptions, null);
+    }
+    void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptionsModel);
 
     void requestFragmentShader(File shaderFile);
+
+    void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines);
 
     Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException;
     void loadBackplate(File backplateFile) throws FileNotFoundException;

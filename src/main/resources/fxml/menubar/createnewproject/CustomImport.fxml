@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (c) 2019 - 2023 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
   ~ Copyright (c) 2019 The Regents of the University of Minnesota
   ~
   ~ Licensed under GPLv3
@@ -9,7 +9,6 @@
   ~
   ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-  ~
   -->
 
 <?import javafx.geometry.*?>
@@ -17,7 +16,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<VBox fx:id="root" alignment="CENTER" prefHeight="310.0" prefWidth="730.0" style="-fx-background-color: #000000;" styleClass="vbox" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.createnewproject.CustomImportController">
+<VBox fx:id="root" alignment="CENTER" prefHeight="310.0" prefWidth="730.0" styleClass="vbox" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.createnewproject.CustomImportController">
    <GridPane alignment="CENTER" hgap="10.0" styleClass="grid-pane" vgap="10.0" VBox.vgrow="ALWAYS">
       <columnConstraints>
          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -32,7 +31,7 @@
       <padding>
          <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
       </padding>
-      <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text" text="Camera Positions&#10;(Agisoft Metashape XML file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+      <Text fx:id="camPositionsTxt" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text" text="Camera Positions&#10;(Agisoft Metashape XML or RealityCapture CSV file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
          <font>
             <Font name="Monospaced Regular" size="14.0" />
          </font>
@@ -40,7 +39,7 @@
             <Insets />
          </GridPane.margin>
       </Text>
-      <Text layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text" text="Mesh&#10;(Wavefront OBJ file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+      <Text layoutX="76.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text" text="Mesh&#10;(Wavefront OBJ or Stanford PLY file)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
          <font>
             <Font name="Monospaced Regular" size="14.0" />
          </font>
@@ -48,7 +47,7 @@
             <Insets />
          </GridPane.margin>
       </Text>
-      <Text layoutX="272.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text" text="Images&#10;(Directory containing images (.png, .jpg))" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+      <Text layoutX="272.0" layoutY="264.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text" text="Images&#10;(Directory containing images: .png, .jpg)" textAlignment="CENTER" wrappingWidth="236.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="CENTER">
          <font>
             <Font name="Monospaced Regular" size="14.0" />
          </font>
@@ -102,16 +101,9 @@
          </GridPane.margin>
       </Text>
    </GridPane>
-   <HBox alignment="CENTER" GridPane.columnSpan="3" GridPane.rowIndex="3">
-      <padding>
-         <Insets bottom="6.0" left="6.0" right="6.0" top="6.0" />
-      </padding>
-      <VBox.margin>
-         <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
-      </VBox.margin>
-      <HBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
-         <Label text="Primary view:  " />
-         <ChoiceBox fx:id="primaryViewChoiceBox" prefWidth="400.0" />
-      </HBox>
-   </HBox>
+   <AnchorPane>
+      <children>
+         <CheckBox fx:id="undistortImagesCheckBox" mnemonicParsing="false" selected="true" text="Undistort images" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0"  />
+      </children>
+   </AnchorPane>
 </VBox>

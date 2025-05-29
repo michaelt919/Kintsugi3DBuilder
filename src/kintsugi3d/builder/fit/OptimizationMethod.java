@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -15,11 +15,10 @@ import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.resources.ibr.stream.GraphicsStreamResource;
 import kintsugi3d.gl.core.Context;
-import kintsugi3d.optimization.ShaderBasedErrorCalculator;
 
 @FunctionalInterface
 public interface OptimizationMethod<ContextType extends Context<ContextType>>
 {
-    void optimize(GraphicsStreamResource<ContextType> stream, ShaderBasedErrorCalculator<ContextType> errorCalculator, ProgressMonitor monitor)
+    void optimize(GraphicsStreamResource<ContextType> stream, ProgressMonitor monitor)
         throws UserCancellationException;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -32,6 +32,11 @@ public class DefaultProgressMonitor implements ProgressMonitor
     }
 
     @Override
+    public void setProcessName(String processName)
+    {
+    }
+
+    @Override
     public void setStageCount(int count)
     {
     }
@@ -59,5 +64,10 @@ public class DefaultProgressMonitor implements ProgressMonitor
     @Override
     public void fail(Throwable e)
     {
+    }
+
+    @Override
+    public boolean isConflictingProcess() {
+        return false;
     }
 }

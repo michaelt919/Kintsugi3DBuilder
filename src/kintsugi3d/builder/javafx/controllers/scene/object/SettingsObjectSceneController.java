@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,27 +11,44 @@
 
 package kintsugi3d.builder.javafx.controllers.scene.object;
 
+import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.ResourceBundle;
 
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.CurrentProjectInputSource;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPage;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageScrollerController;
+import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.util.SafeLogScaleNumberStringConverter;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SettingsObjectSceneController implements Initializable
 {
+    private static final Logger log = LoggerFactory.getLogger(SettingsObjectSceneController.class);
+
 
     @FXML private VBox root;
+
+    @FXML private Button updateOrientationViewButton;
 
     @FXML private TextField xCenterTextField;
     @FXML private TextField yCenterTextField;
@@ -112,7 +129,6 @@ public class SettingsObjectSceneController implements Initializable
 
     public void bind(ObjectPoseSetting objectPose)
     {
-
         xCenterTextField.textProperty().bindBidirectional(objectPose.centerXProperty(), converter);
         yCenterTextField.textProperty().bindBidirectional(objectPose.centerYProperty(), converter);
         zCenterTextField.textProperty().bindBidirectional(objectPose.centerZProperty(), converter);
@@ -156,5 +172,38 @@ public class SettingsObjectSceneController implements Initializable
     public void setOnActionSelectPoint(EventHandler<ActionEvent> actionEventEventHandler)
     {
         selectPointButton.setOnAction(actionEventEventHandler);
+    }
+
+    public void onUpdateOrientationView(ActionEvent actionEvent)
+    {
+        try
+        {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menubar/FXMLPageScroller.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+            stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
+            stage.setTitle("Select Orientation Reference View");
+            stage.setScene(new Scene(root));
+
+            FXMLPageScrollerController scrollerController = loader.getController();
+
+            String viewSelectPath = "/fxml/menubar/createnewproject/PrimaryViewSelect.fxml";
+            FXMLLoader selectorLoader = new FXMLLoader(getClass().getResource(viewSelectPath));
+            selectorLoader.load();
+
+            ArrayList<FXMLPage> pages = new ArrayList<>();
+            pages.add(new FXMLPage(viewSelectPath, selectorLoader));
+
+            scrollerController.setPages(pages, viewSelectPath);
+            scrollerController.addInfo(ShareInfo.Info.INPUT_SOURCE, new CurrentProjectInputSource());
+            scrollerController.init();
+
+            stage.show();
+        }
+        catch (Exception e)
+        {
+            log.error("Unable to open orientation view selector.", e);
+        }
     }
 }

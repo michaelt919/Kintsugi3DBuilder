@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -17,7 +17,7 @@ import java.util.stream.IntStream;
 
 import kintsugi3d.gl.core.*;
 
-public class ShaderBasedErrorCalculator<ContextType extends Context<ContextType>> implements Resource
+public final class ShaderBasedErrorCalculator<ContextType extends Context<ContextType>> implements Resource
 {
     // Compare fitted models against actual photographs
     private ProgramObject<ContextType> program;
@@ -53,9 +53,14 @@ public class ShaderBasedErrorCalculator<ContextType extends Context<ContextType>
         return program;
     }
 
-    public Framebuffer<ContextType> getFramebuffer()
+    public FramebufferObject<ContextType> getFramebuffer()
     {
         return framebuffer;
+    }
+
+    public Texture2D<ContextType> getFramebufferAsTexture()
+    {
+        return framebuffer.getColorAttachmentTexture(0);
     }
 
     public ReadonlyErrorReport getReport()
@@ -63,7 +68,6 @@ public class ShaderBasedErrorCalculator<ContextType extends Context<ContextType>
         return report;
     }
 
-    @SuppressWarnings("PackageVisibleField")
     private static class WeightedError
     {
         double error;

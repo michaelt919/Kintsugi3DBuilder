@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
   ~ Copyright (c) 2019 The Regents of the University of Minnesota
   ~
   ~ Licensed under GPLv3
@@ -78,7 +78,7 @@
             <TextField fx:id="intensityTextField" prefHeight="25.0" prefWidth="70.0" GridPane.columnIndex="1" />
             <Slider fx:id="intensitySlider" blockIncrement="0.1" majorTickUnit="1.0" max="2.0" min="-2.0" prefHeight="38.0" prefWidth="230.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
             <Label text="Color:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-            <ColorPicker fx:id="colorPicker" prefHeight="25.0" prefWidth="300.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+            <ColorPicker styleClass="color-picker" fx:id="colorPicker" prefHeight="25.0" prefWidth="300.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1" />
             <ChoiceBox fx:id="lightTypeChoiceBox" prefHeight="25.0" prefWidth="300.0" visible="false" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="2" />
             <Label text="Spot Size:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
             <TextField fx:id="spotSizeTextField" prefHeight="25.0" prefWidth="70.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />

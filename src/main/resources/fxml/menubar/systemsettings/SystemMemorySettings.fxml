@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+  ~ Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
   ~ Copyright (c) 2019 The Regents of the University of Minnesota
   ~
   ~ Licensed under GPLv3
@@ -37,9 +37,7 @@
    </FlowPane>
    <HBox alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" prefHeight="0.0" prefWidth="200.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
       <children>
-         <Button fx:id="okButton" disable="true" mnemonicParsing="false" onAction="#button_OK" text="OK" />
          <Button fx:id="applyButton" mnemonicParsing="false" onAction="#button_Apply" text="Apply" />
-         <Button fx:id="closeButton" disable="true" mnemonicParsing="false" onAction="#button_Close" text="Close" />
       </children>
       <padding>
          <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -15,6 +15,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import javax.imageio.ImageIO;
@@ -49,6 +50,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
     private final Object loadEnvironmentLock = new Object();
 
     private volatile File desiredShaderFile;
+    private volatile Map<String, Optional<Object>> shaderDefines;
 
     private volatile File desiredEnvironmentFile;
 
@@ -97,6 +99,7 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
         if (this.desiredShaderFile != null)
         {
             this.subject.useFragmentShader(desiredShaderFile);
+            this.subject.setExtraFragmentShaderDefines(this.shaderDefines);
             this.subject.reloadShaders();
 
             this.desiredShaderFile = null;
@@ -223,6 +226,13 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
     }
 
     @Override
+    public void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines)
+    {
+        this.desiredShaderFile = shaderFile;
+        this.shaderDefines = extraDefines;
+    }
+
+    @Override
     public Optional<EncodableColorImage> loadEnvironmentMap(File environmentFile) throws FileNotFoundException
     {
         if (environmentFile == null)
@@ -252,8 +262,13 @@ public class DynamicResourceLoader<ContextType extends Context<ContextType>> imp
                 if (Objects.equals(environmentFile, desiredEnvironmentFile) &&
                         (!Objects.equals(environmentFile, currentEnvironmentFile) || lastModified != environmentLastModified))
                 {
+                    if(this.progressMonitor.isConflictingProcess()){
+                        return Optional.empty();
+                    }
+
                     this.progressMonitor.start();
                     this.progressMonitor.setMaxProgress(0.0);
+                    this.progressMonitor.setProcessName("Load Environment Map");
 
                     try
                     {

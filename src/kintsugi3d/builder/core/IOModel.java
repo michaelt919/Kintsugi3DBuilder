@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,11 +11,16 @@
 
 package kintsugi3d.builder.core;
 
+import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.util.EncodableColorImage;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
@@ -59,6 +64,14 @@ public class IOModel
             for (ProgressMonitor monitor : subMonitors)
             {
                 monitor.start();
+            }
+        }
+
+        @Override
+        public void setProcessName(String processName) {
+            for (ProgressMonitor monitor : subMonitors)
+            {
+                monitor.setProcessName(processName);
             }
         }
 
@@ -124,6 +137,19 @@ public class IOModel
                 monitor.warn(e);
             }
         }
+
+        @Override
+        public boolean isConflictingProcess() {
+            boolean processing = false;
+            for (ProgressMonitor monitor : subMonitors)
+            {
+                if(monitor.isConflictingProcess()){
+                    processing = true;
+                }
+            }
+
+            return processing;
+        }
     }
 
     private IOHandler handler;
@@ -149,11 +175,6 @@ public class IOModel
     public void setLoadOptionsModel(ReadonlyLoadOptionsModel loadOptionsModel)
     {
         this.loadOptionsModel = loadOptionsModel;
-    }
-
-    public boolean isInstanceLoaded()
-    {
-        return this.handler != null && this.handler.isInstanceLoaded();
     }
 
     public void addViewSetLoadCallback(Consumer<ViewSet> callback)
@@ -191,18 +212,32 @@ public class IOModel
         this.handler.loadFromVSETFile(id, vsetFile, supportingFilesDirectory, loadOptionsModel);
     }
 
-    public void loadFromAgisoftFiles(String id, File xmlFile, File meshFile, File imageDirectory, String primaryViewName)
+    public void loadFromLooseFiles(String id, File xmlFile, File meshFile, File fullResImageDirectory,
+        boolean needsUndistort, String primaryViewName, double rotation)
     {
-        this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, imageDirectory, primaryViewName, loadOptionsModel);
+        this.handler.loadFromLooseFiles(id, xmlFile, meshFile, fullResImageDirectory, needsUndistort, primaryViewName,
+            rotation, loadOptionsModel);
     }
 
-    public void loadAgisoftFromZIP(String id, MetashapeObjectChunk metashapeObjectChunk, String primaryViewName)
+    public void hotSwapLooseFiles(String id, File xmlFile, File meshFile, File fullResImageDirectory,
+        boolean needsUndistort, String primaryViewName, double rotation)
     {
-        this.handler.loadAgisoftFromZIP(id, metashapeObjectChunk, loadOptionsModel, primaryViewName);
+        this.handler.loadFromLooseFiles(id, xmlFile, meshFile, fullResImageDirectory, needsUndistort, primaryViewName,
+            rotation, loadOptionsModel, getLoadedViewSet() != null ? getLoadedViewSet().getUUID() : null);
+    }
+
+    public void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk)
+    {
+        this.handler.loadAgisoftFromZIP(metashapeObjectChunk, loadOptionsModel);
     }
     public void requestFragmentShader(File shaderFile)
     {
         this.handler.requestFragmentShader(shaderFile);
+    }
+
+    public void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines)
+    {
+        this.handler.requestFragmentShader(shaderFile, extraDefines);
     }
 
     public Optional<EncodableColorImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException

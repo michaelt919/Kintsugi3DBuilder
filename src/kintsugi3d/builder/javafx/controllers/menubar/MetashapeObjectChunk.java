@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.menubar;
 
 import javafx.scene.image.Image;
+import kintsugi3d.gl.util.UnzipHelper;
 import kintsugi3d.util.Triplet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,17 +20,16 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import kintsugi3d.gl.util.UnzipHelper;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 
 public class MetashapeObjectChunk {
     private static final Logger log = LoggerFactory.getLogger(MetashapeObjectChunk.class);
-    private Integer modelID;
 
     //contains a metashape object and a specific chunk
     private MetashapeObject metashapeObject;
@@ -38,14 +38,16 @@ public class MetashapeObjectChunk {
     private int chunkID;
 
     private Document chunkXML;
-    private Document frameZip;
+    private Document frameXML;
 
-    private ArrayList<Triplet<Integer, String, String>> modelInfo = new ArrayList<>();
-    private Integer activeModelID; //TODO: is this equivalent to default model id?
+    private ArrayList<Triplet<String, String, String>> modelInfo = new ArrayList<>(); //model id, name/label, and path
+    private String defaultModelID;
+    private String currModelID;
+    private LoadPreferences loadPreferences;
 
     public String getChunkZipPath() { return chunkZipPath; }
     public Document getChunkXML() { return chunkXML; }
-    public Document getFrameZip() { return frameZip; }
+    public Document getFrameXML() { return frameXML; }
 
     public String getChunkDirectoryPath() {
         String psxFilePath = this.metashapeObject.getPsxFilePath();
@@ -57,17 +59,22 @@ public class MetashapeObjectChunk {
 
 
     private MetashapeObjectChunk(){
-        metashapeObject = new MetashapeObject();
-        chunkName = "";
-        chunkID = -1;//TODO: GOOD NULL CHUNK ID?
-        chunkXML = null;
-        frameZip = null;
-        modelID = -1;
+        //hide useless constructor
     }
 
-    public MetashapeObjectChunk(MetashapeObject metashapeObject, String chunkName, Integer modelID) {
+    public class LoadPreferences{
+        public File fullResOverride;
+        public boolean doSkipMissingCams;
+        public String orientationViewName;
+        public double orientationViewRotateDegrees;
+    }
+
+    public LoadPreferences getLoadPreferences(){return loadPreferences;}
+
+    public MetashapeObjectChunk(MetashapeObject metashapeObject, String chunkName, String currModelID) {
         this.metashapeObject = metashapeObject;
-        this.modelID = modelID;
+        this.currModelID = currModelID;
+        this.loadPreferences = new LoadPreferences();
 
         updateChunk(chunkName);
     }
@@ -89,14 +96,12 @@ public class MetashapeObjectChunk {
         this.chunkID = getChunkIdFromZipPath();
 
         //unzip frame.zip
-        String psxFilePath = metashapeObject.getPsxFilePath();
-        String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4); //remove ".psx" from path
 
         //the 0 means that the program searches for info regarding frame 0
         String frameZipPath = getFramePath();
 
         try {
-            this.frameZip = UnzipHelper.unzipToDocument(frameZipPath);
+            this.frameXML = UnzipHelper.unzipToDocument(frameZipPath);
         } catch (IOException e) {
             log.error("An error occurred loading Metashape chunk:", e);
         }
@@ -113,7 +118,7 @@ public class MetashapeObjectChunk {
         //get active id
         try {
             Element elem = (Element) chunkXML.getElementsByTagName("models").item(0);
-            this.activeModelID = Integer.parseInt(elem.getAttribute("active_id"));
+            this.defaultModelID = elem.getAttribute("active_id");
         }
         catch(NumberFormatException | NullPointerException e){
             log.warn("Could not find active id for " + this.getPsxFilePath(), e);
@@ -125,11 +130,11 @@ public class MetashapeObjectChunk {
         for(int i = 0; i < modelList.getLength(); ++i){
             Element elem = (Element) modelList.item(i);
 
-            Integer tempModelID = null;
+            String tempModelID = null;
             String tempLabel = null;
             String tempPath;
             try{
-                tempModelID = Integer.parseInt(elem.getAttribute("id"));
+                tempModelID = elem.getAttribute("id");
             }
             catch(NumberFormatException nfe){
                 log.warn("Model has no id", nfe);
@@ -193,8 +198,6 @@ public class MetashapeObjectChunk {
 
     public List<Image> loadThumbnailImageList() {
         //unzip thumbnail folder
-        String psxFilePath = this.metashapeObject.getPsxFilePath();
-        String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4);//remove ".psx" from path
 
         //Note: the 0 denotes that these thumbnails are for frame 0
         //TODO: can get this info from thumbnails tag in frameXML instead of hard coding
@@ -202,7 +205,7 @@ public class MetashapeObjectChunk {
         return UnzipHelper.unzipImages(thumbnailPath);
     }
 
-    public List<Element> findThumbnailCameras() {
+    public List<Element> findAllCameras() {
         NodeList cams = this.chunkXML.getElementsByTagName("camera");
         ArrayList<Element> cameras = new ArrayList<>();
         for (int i = 0; i < cams.getLength(); ++i) {
@@ -214,57 +217,55 @@ public class MetashapeObjectChunk {
         return cameras;
     }
 
-    public Element matchImageToCam(String imageName) {
-        //takes in an image name, outputs the camera in frame.zip which took that image
+    public List<Element> findEnabledCameras() {
+        List<Element> allCams = findAllCameras();
+        List<Element> enabledCams = new ArrayList<>();
 
-        NodeList cameras = frameZip.getElementsByTagName("frame").
-                item(0).getChildNodes().
-                item(1).getChildNodes();
+        for(Element cam : allCams){
+            String enabled = cam.getAttribute("enabled");
 
-        for (int i = 0; i < cameras.getLength(); ++i) {
-            //cameras also holds text fields associated with the cameras, so filter them out
-            if (cameras.item(i).getNodeName().equals("camera")) {
-                Element camera = (Element) cameras.item(i);
-
-                Node photoNode = camera.getElementsByTagName("photo").item(0);
-                Element photoElement = (Element) photoNode;
-
-                //path in photo element contains "../../.." before the name of the image,
-                // so we cannot test for an exact match
-                //using regex to see if the image names are the same regardless of their paths
-                //ex. "folder/anotherFolder/asdfghjk/imageName.png" matches with "imageName.png"
-                if (photoElement.getAttribute("path").matches(".*" + imageName + ".*")) {
-                    return camera;
-                }
+            if (enabled.equals("true") ||
+                enabled.equals("1") ||
+                    enabled.isEmpty() /*cam is enabled by default*/){
+                enabledCams.add(cam);
             }
         }
-
-        return null;//no matching camera found
+        return enabledCams;
     }
 
-    public File getImgFileFromCam(Element selectedItemCam) {
-        Element photo = (Element) selectedItemCam.getElementsByTagName("photo").item(0);
-        String path = photo.getAttribute("path");
-        //example path: "../../../160518_mia337_114828_a_ding/160517_mia337_2013_9_7a_ding_nearFocus_R1_C4_0_30.jpg"
+    public File findFullResImgDirectory(){
+        //get first camera path from frame xml
+        //assume that path is relative to parent of .psx file path
 
-        //need to replace ../../../ with the parent of the .psx file
-        File psxFile = new File(this.metashapeObject.getPsxFilePath());
-        String parentPath = psxFile.getParentFile().getAbsolutePath();
-        path = new File(new File(parentPath), path.substring(9)).getPath();
+        try{
+            NodeList frameCams = frameXML.getElementsByTagName("camera");
 
-        //String path now holds the full path to the selected thumbnail's full-res image
-        return new File(path);
+            //this will probably exit after the first camera
+            for(int i = 0; i < frameCams.getLength(); ++i){
+                Element cam = (Element) frameCams.item(i);
+
+                if(cam.getNodeType() != Node.ELEMENT_NODE){continue;}
+
+                String pathAttribute = ((Element) cam.getElementsByTagName("photo").item(0)).getAttribute("path");
+                return new File(getPsxFile().getParent(), pathAttribute).getParentFile();
+            }
+        }
+        catch(NumberFormatException nfe){
+            log.warn("Failed to find full res directory for Metashape Project.", nfe);
+        }
+
+        return null;
     }
 
     public String getCurrentModelPath() {
-        return getModelPathFromXML(modelID);
+        return getModelPathFromXML(currModelID);
     }
 
-    private String getModelPathFromXML(Integer mID) {
+    private String getModelPathFromXML(String mID) {
         //  <model id="0" path="model.1/model.zip"/> --> returns "model.1/model.zip"
 
         try{
-            NodeList elems = ((Element) frameZip.getElementsByTagName("frame").item(0))
+            NodeList elems = ((Element) frameXML.getElementsByTagName("frame").item(0))
                     .getElementsByTagName("model");
 
             //this if statement triggers if chunk has one model and that model has no id
@@ -276,7 +277,7 @@ public class MetashapeObjectChunk {
             for (int i = 0; i < elems.getLength(); i++) {
                 Element element = (Element) elems.item(i);
 
-                if (Integer.parseInt(element.getAttribute("id")) == mID){
+                if (Objects.equals(element.getAttribute("id"), mID)){
                     return element.getAttribute("path");
                 }
             }
@@ -289,9 +290,30 @@ public class MetashapeObjectChunk {
         return "";
     }
 
-    public ArrayList<Triplet<Integer, String, String>> getModelInfo(){
+    public ArrayList<Triplet<String, String, String>> getModelInfo(){
         return modelInfo;
     }
 
-    public Integer getActiveModelID(){return activeModelID;}
+    public String getDefaultModelID(){return defaultModelID;}
+
+    public String getCurrModelID(){return currModelID;}
+
+    public File getPsxFile() {
+        return metashapeObject.getPsxFile();
+    }
+
+    public boolean equals(Object rhs){
+        if (!(rhs instanceof MetashapeObjectChunk)){
+            return false;
+        }
+
+        MetashapeObjectChunk moc = (MetashapeObjectChunk) rhs;
+        //chunk name is the same
+        //psx path is the same
+
+        //TODO: may need to revisit this method if more precise criteria are needed
+
+        return this.chunkName.equals(moc.getChunkName()) &&
+                this.getPsxFilePath().equals(moc.getPsxFilePath());
+    }
 }

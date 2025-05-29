@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -30,11 +30,9 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.core.IBRRequestQueue;
-import kintsugi3d.builder.core.IBRRequestUI;
-import kintsugi3d.builder.core.Kintsugi3DBuilderState;
-import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
+import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,6 +109,10 @@ public class SpecularFitRequestUI implements IBRRequestUI
         {
             //stage.close();
 
+            if(MultithreadModels.getInstance().getIOModel().getProgressMonitor().isConflictingProcess()){
+                return;
+            }
+
             SpecularFitRequestParams settings = new SpecularFitRequestParams(new TextureResolution(
                     Integer.parseInt(widthTextField.getText()),
                     Integer.parseInt(heightTextField.getText())),
@@ -158,7 +160,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
             // Image cache settings
             settings.getImageCacheSettings().setCacheParentDirectory(ApplicationFolders.getFitCacheRootDirectory().toFile());
 
-            SpecularFitRequest request = new SpecularFitRequest(settings);
+            ObservableIBRRequest request = new SpecularFitRequest(settings);
 
 //            if (priorSolutionCheckBox.isSelected() && priorSolutionField.getText() != null && !priorSolutionField.getText().isEmpty())
 //            {

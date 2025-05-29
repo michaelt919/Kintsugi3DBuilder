@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -304,7 +304,7 @@ public class ImageCache<ContextType extends Context<ContextType>>
             {
                 if (monitor != null)
                 {
-                    monitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(k), k, resources.getViewSet().getCameraPoseCount()));
+                    monitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(k), k+1, resources.getViewSet().getCameraPoseCount()));
                     monitor.allowUserCancellation();
                 }
 

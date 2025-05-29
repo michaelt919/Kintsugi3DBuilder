@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -47,6 +47,7 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
 
     // Set default shader to be the untextured IBR shader
     private File fragmentShaderFile;
+    private Map<String, Optional<Object>> fragmentShaderDefines;
 
 
     protected StandardShaderComponent(IBRResourcesImageSpace<ContextType> resources, SceneViewportModel sceneViewportModel, String sceneObjectTag,
@@ -192,6 +193,11 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
             }
         }
 
+        if (fragmentShaderDefines != null)
+        {
+            defineMap.putAll(fragmentShaderDefines);
+        }
+
         return defineMap;
     }
 
@@ -306,5 +312,10 @@ public abstract class StandardShaderComponent<ContextType extends Context<Contex
     public void setLightCalibrationMode(boolean lightCalibrationMode)
     {
         this.lightCalibrationMode = lightCalibrationMode;
+    }
+
+    public void setExtraFragmentShaderDefines(Map<String, Optional<Object>> fragmentShaderDefines)
+    {
+        this.fragmentShaderDefines = fragmentShaderDefines;
     }
 }

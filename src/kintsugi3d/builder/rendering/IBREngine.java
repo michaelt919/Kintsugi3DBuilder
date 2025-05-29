@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,14 +11,11 @@
 
 package kintsugi3d.builder.rendering;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.export.specular.gltf.SpecularFitGltfExporter;
 import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.internal.ProjectModelBase;
 import kintsugi3d.builder.rendering.components.IBRSubject;
 import kintsugi3d.builder.rendering.components.StandardScene;
 import kintsugi3d.builder.rendering.components.lightcalibration.LightCalibration3DScene;
@@ -37,11 +34,17 @@ import kintsugi3d.gl.builders.framebuffer.DepthAttachmentSpec;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.geometry.ReadonlyVertexGeometry;
 import kintsugi3d.gl.interactive.InitializationException;
+import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.SRGB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class IBREngine<ContextType extends Context<ContextType>> implements IBRInstance<ContextType>
 {
@@ -213,7 +216,7 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
         if (resources.getGeometry() != null)
         {
             sceneModel.setScale(resources.getGeometry().getBoundingRadius() * 2);
-            sceneModel.setOrientation(resources.getViewSet().getCameraPose(resources.getViewSet().getPrimaryViewIndex()).getUpperLeft3x3());
+            sceneModel.setOrientation(getModelOrientation());
             sceneModel.setCentroid(resources.getGeometry().getCentroid());
         }
     }
@@ -468,10 +471,14 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
             }
 
             log.info("Starting glTF export...");
+            if(progressMonitor != null){
+                progressMonitor.setProcessName("glTF Export");
+            }
 
             try
             {
-                Matrix4 rotation = getActiveViewSet() == null ? Matrix4.IDENTITY : getActiveViewSet().getCameraPose(getActiveViewSet().getPrimaryViewIndex());
+                Matrix4 rotation = getModelOrientation().asMatrix4();
+
                 Vector3 translation = rotation.getUpperLeft3x3().times(getActiveGeometry().getCentroid().times(-1.0f));
                 Matrix4 transform = Matrix4.fromColumns(rotation.getColumn(0), rotation.getColumn(1), rotation.getColumn(2),
                     translation.asVector4(1.0f));
@@ -523,5 +530,25 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
                 log.error("Error occurred during glTF export:", e);
             }
         }
+    }
+
+    private Matrix3 getModelOrientation()
+    {
+        if (getActiveViewSet() == null)
+        {
+            return Matrix3.IDENTITY;
+        }
+
+        ReadonlyViewSet viewSet = getActiveViewSet();
+        int referencePoseIndex = viewSet.getOrientationViewIndex();
+
+        if (referencePoseIndex < 0)
+        {
+            return Matrix3.IDENTITY;
+        }
+
+        Matrix3 referenceCameraPose = viewSet.getCameraPose(referencePoseIndex).getUpperLeft3x3();
+        return Matrix3.rotateZ(Math.toRadians(-viewSet.getOrientationViewRotationDegrees()))
+                .times(referenceCameraPose);
     }
 }
