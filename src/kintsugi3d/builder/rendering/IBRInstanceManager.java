@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -14,10 +14,7 @@ package kintsugi3d.builder.rendering;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
@@ -26,6 +23,8 @@ import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
@@ -39,6 +38,16 @@ import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.EncodableColorImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.DoubleUnaryOperator;
 
 public class IBRInstanceManager<ContextType extends Context<ContextType>> implements IOHandler, InteractiveRenderable<ContextType>
 {
@@ -161,7 +170,12 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     {
         loadedViewSet = builder.getViewSet();
 
-        MultithreadModels.getInstance().getCameraViewListModel().setCameraViewList(loadedViewSet.getImageFileNames());
+        List<File> imgFiles = loadedViewSet.getImageFiles();
+        List<String> imgFileNames = new ArrayList<>();
+
+        imgFiles.forEach(file->imgFileNames.add(file.getName()));
+
+        MultithreadModels.getInstance().getCameraViewListModel().setCameraViewList(imgFileNames);
 
         // Invoke callbacks now that view set is loaded
         invokeViewSetLoadCallbacks(loadedViewSet);
@@ -221,6 +235,14 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             }
 
             @Override
+            public void setProcessName(String processName) {
+                if (progressMonitor != null)
+                {
+                    progressMonitor.setProcessName(processName);
+                }
+            }
+
+            @Override
             public void setStageCount(int count)
             {
                 if (progressMonitor != null)
@@ -267,6 +289,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                 newItem.getIBRResources().initializeLightIntensities(lightIntensity, false);
                 newItem.reloadShaders();
 
+                MenubarController.getInstance().setToggleableShaderDisable(!hasSpecularMaterials());
+
                 if (progressMonitor != null)
                 {
                     progressMonitor.complete();
@@ -290,6 +314,11 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
                     progressMonitor.warn(e);
                 }
             }
+
+            @Override
+            public boolean isConflictingProcess() {
+                return progressMonitor.isConflictingProcess();
+            }
         });
         newInstance = newItem;
     }
@@ -297,7 +326,12 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     @Override
     public void loadFromVSETFile(String id, File vsetFile, File supportingFilesDirectory, ReadonlyLoadOptionsModel loadOptions)
     {
+        if(this.progressMonitor.isConflictingProcess()){
+            return;
+        }
+
         this.progressMonitor.start();
+        this.progressMonitor.setProcessName("Load from File");
 
         try
         {
@@ -319,18 +353,57 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File imageDirectory, String primaryViewName,
-        ReadonlyLoadOptionsModel loadOptions)
-    {
+    public void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions) {
+
+        // TODO There currently isn't functionality for a supportingFilesDirectory at this early in the process
+        //  Restructuring required from Tetzlaff.
+
+        if(this.progressMonitor.isConflictingProcess()){
+            return;
+        }
+
         this.progressMonitor.start();
+        this.progressMonitor.setProcessName("Load from Agisoft Project");
+
+        File supportingFilesDirectory = null;
+        try {
+            String orientationView = metashapeObjectChunk.getLoadPreferences().orientationViewName;
+            double rotation = metashapeObjectChunk.getLoadPreferences().orientationViewRotateDegrees;
+
+            Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
+                    .setProgressMonitor(this.progressMonitor)
+                    .setLoadOptions(loadOptions)
+                    .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory)
+                    .setOrientationView(orientationView, rotation);
+
+            loadInstance(metashapeObjectChunk.getFramePath(), builder);
+        }
+        catch(UserCancellationException e)
+        {
+            handleUserCancellation(e);
+        }
+        catch (Exception e) {
+            handleMissingFiles(e);
+        }
+    }
+
+    @Override
+    public void loadFromLooseFiles(String id, File xmlFile, File meshFile, File imageDirectory, boolean needsUndistort,
+        String primaryViewName, double rotation, ReadonlyLoadOptionsModel loadOptions, UUID uuidOverride)
+    {
+        if(this.progressMonitor.isConflictingProcess()){
+            return;
+        }
+        this.progressMonitor.start();
+        this.progressMonitor.setProcessName("Load from loose files");
 
         try
         {
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                 .setProgressMonitor(this.progressMonitor)
                 .setLoadOptions(loadOptions)
-                .loadAgisoftFiles(xmlFile, meshFile, imageDirectory)
-                .setPrimaryView(primaryViewName);
+                .loadLooseFiles(xmlFile, meshFile, imageDirectory, needsUndistort, uuidOverride)
+                .setOrientationView(primaryViewName, rotation);
 
             // Invoke callbacks now that view set is loaded
             loadInstance(id, builder);
@@ -351,6 +424,15 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         if (ibrInstance != null)
         {
             ibrInstance.getDynamicResourceManager().requestFragmentShader(shaderFile);
+        }
+    }
+
+    @Override
+    public void requestFragmentShader(File shaderFile, Map<String, Optional<Object>> extraDefines)
+    {
+        if (ibrInstance != null)
+        {
+            ibrInstance.getDynamicResourceManager().requestFragmentShader(shaderFile, extraDefines);
         }
     }
 
@@ -398,6 +480,15 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             ibrInstance.getDynamicResourceManager().setLightCalibration(
                 ibrInstance.getSceneModel().getSettingsModel().get("currentLightCalibration", Vector2.class).asVector3());
         }
+    }
+
+    public boolean hasSpecularMaterials()
+    {
+        SpecularMaterialResources<ContextType> material = ibrInstance.getIBRResources().getSpecularMaterialResources();
+        return material.getAlbedoMap() != null ||
+            material.getSpecularRoughnessMap() != null ||
+            material.getSpecularReflectivityMap() != null ||
+            material.getORMMap() != null;
     }
 
     public void setCameraViewListModel(CameraViewListModel cameraViewListModel)

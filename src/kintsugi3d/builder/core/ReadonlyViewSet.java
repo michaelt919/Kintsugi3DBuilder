@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -129,6 +129,8 @@ public interface ReadonlyViewSet
      */
     File getFullResImageFile(int poseIndex);
 
+    File getFullResImageFile(String viewName);
+
     /**
      * Gets the downscaled "preview" image file corresponding to a particular view.
      * @param poseIndex The index of the image file to retrieve.
@@ -136,7 +138,23 @@ public interface ReadonlyViewSet
      */
     File getPreviewImageFile(int poseIndex);
 
+    /**
+     * Gets the view index to be used for color calibration and tonemapping operations
+     * @return view index
+     */
     int getPrimaryViewIndex();
+
+    /**
+     * Gets the view index to use as a reference pose for reorienting the model
+     * @return view index
+     */
+    int getOrientationViewIndex();
+
+    /**
+     * Roll rotation of the reference view pose to correct upside down and sideways images
+     * @return view index
+     */
+    double getOrientationViewRotationDegrees();
 
     /**
      * Gets the projection transformation defining the intrinsic properties of a particular camera.
@@ -242,5 +260,5 @@ public interface ReadonlyViewSet
     File findPreviewImageFile(int index) throws FileNotFoundException;
     File findPreviewPrimaryImageFile() throws FileNotFoundException;
 
-    UUID getUuid();
+    UUID getUUID();
 }

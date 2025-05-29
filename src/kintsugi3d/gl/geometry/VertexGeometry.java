@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -20,10 +20,6 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import javafx.util.Pair;
-import org.jengineering.sjmply.PLY;
-import org.jengineering.sjmply.PLYElementList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.material.Material;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
@@ -33,6 +29,10 @@ import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.vecmath.Vector2;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
+import org.jengineering.sjmply.PLY;
+import org.jengineering.sjmply.PLYElementList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.jengineering.sjmply.PLYType.*;
 
@@ -44,6 +44,7 @@ import static org.jengineering.sjmply.PLYType.*;
 public final class VertexGeometry implements ReadonlyVertexGeometry
 {
     private static final Logger log = LoggerFactory.getLogger(VertexGeometry.class);
+    private static File geometryFile;
     private File filename;
 
     private boolean hasNormals;
@@ -97,6 +98,29 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
             int result = normalIndex;
             result = 31 * result + texCoordIndex;
             return result;
+        }
+    }
+
+    /**
+     * Initializes the mesh from a file containing the mesh in Wavefront OBJ format OR in PLY format
+     * @param geometryFile
+     * @throws IOException
+     */
+    public static VertexGeometry createFromGeometryFile(File geometryFile) throws IOException
+    {
+        VertexGeometry.geometryFile = geometryFile;
+        String fileName = geometryFile.getName();
+        String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
+
+        if ("zip".equalsIgnoreCase(fileExtension)){
+            //TODO: set VertexGeometry.geometryFile to unzipped file?
+            return VertexGeometry.createFromZippedPLYFile(geometryFile, "mesh.ply");
+        } else if("obj".equalsIgnoreCase(fileExtension)) {
+             return VertexGeometry.createFromOBJFile(geometryFile);
+        }else if("ply".equalsIgnoreCase(fileExtension)){
+            return VertexGeometry.createFromPLYFile(geometryFile);
+        }else{
+            return null;
         }
     }
 
@@ -316,6 +340,10 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
     {
         return createFromPLY(file, PLY.load(file.toPath()));
     }
+    public static VertexGeometry createFromZippedPLYFile(File zipFolder, String targetFileName) throws IOException
+    {
+        return createFromPLY(zipFolder, PLY.loadFromZip(zipFolder, targetFileName));
+    }
 
     private static VertexGeometry createFromPLY(File file, PLY ply) throws IOException
     {
@@ -415,9 +443,12 @@ public final class VertexGeometry implements ReadonlyVertexGeometry
                     if (facialTexCoords)
                     {
                         texCoordList.add(new Vector2(faceCoords[i][v*2], faceCoords[i][(v*2)+1]));
+                        texCoordIndexList.add(i * 3 + v); // facial texCoords are already in order
                     }
-
-                    texCoordIndexList.add(vertexIndex);
+                    else
+                    {
+                        texCoordIndexList.add(vertexIndex);
+                    }
                 }
             }
         }

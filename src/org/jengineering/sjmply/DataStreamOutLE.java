@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,11 +11,11 @@
 
 package org.jengineering.sjmply;
 
-import static java.lang.Double.doubleToRawLongBits;
-import static java.lang.Float.floatToRawIntBits;
-
 import java.io.IOException;
 import java.io.OutputStream;
+
+import static java.lang.Double.doubleToRawLongBits;
+import static java.lang.Float.floatToRawIntBits;
 
 /** Writer for {@link PLYFormat#BINARY_LITTLE_ENDIAN} encoded PLY data.
  *  

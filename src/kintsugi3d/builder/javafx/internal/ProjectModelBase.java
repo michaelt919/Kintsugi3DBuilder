@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -48,6 +48,9 @@ public abstract class ProjectModelBase implements ProjectModel
 
     public abstract List<ObjectPoseSetting> getObjectPoseList();
 
+    private String colorCheckerFile;
+
+
     /**
      * Opens a Kintsugi 3D Builder project file (.k3d) and sets up the lights, camera, etc.
      * Returns the file containing the viewset with the actual image data.
@@ -58,6 +61,7 @@ public abstract class ProjectModelBase implements ProjectModel
      * @throws ParserConfigurationException
      * @throws SAXException
      */
+
     @Override
     public final File openProjectFile(File projectFile) throws IOException, ParserConfigurationException, SAXException
     {
@@ -146,6 +150,12 @@ public abstract class ProjectModelBase implements ProjectModel
                 }
             }
 
+            Node colorPickerImageNode = document.getElementsByTagName("ColorCheckerFile").item(0);
+            if (colorPickerImageNode != null)
+            {
+                this.colorCheckerFile = colorPickerImageNode.getTextContent();
+            }
+
             return newVsetFile;
         }
         else
@@ -212,6 +222,11 @@ public abstract class ProjectModelBase implements ProjectModel
             }
         }
 
+        Element colorPickerImageElement = document.createElement("ColorCheckerFile");
+
+        colorPickerImageElement.setTextContent(this.getColorCheckerFile());
+        rootElement.appendChild(colorPickerImageElement);
+
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -220,5 +235,12 @@ public abstract class ProjectModelBase implements ProjectModel
         {
             transformer.transform(new DOMSource(document), new StreamResult(out));
         }
+    }
+
+    public String getColorCheckerFile() {return this.colorCheckerFile;}
+
+    public void setColorCheckerFile(String colorCheckerFile)
+    {
+        this.colorCheckerFile = colorCheckerFile;
     }
 }

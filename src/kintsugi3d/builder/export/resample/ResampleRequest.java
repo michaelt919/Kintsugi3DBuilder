@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -55,6 +55,9 @@ public class ResampleRequest implements ObservableIBRRequest
                 .createFramebufferObject()
         )
         {
+            if(monitor != null){
+                monitor.setProcessName("Resample");
+            }
             for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
             {
                 if (monitor != null)
@@ -80,7 +83,7 @@ public class ResampleRequest implements ObservableIBRRequest
                 if (monitor != null)
                 {
                     monitor.setProgress((double) i / (double) targetViewSet.getCameraPoseCount(),
-                        MessageFormat.format("{0} ({1}/{2})", targetViewSet.getImageFileName(i), i, targetViewSet.getCameraPoseCount()));
+                        MessageFormat.format("{0} ({1}/{2})", targetViewSet.getImageFileName(i), i+1, targetViewSet.getCameraPoseCount()));
                 }
             }
 

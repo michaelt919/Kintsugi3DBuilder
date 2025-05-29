@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -122,6 +122,12 @@ public abstract class SimpleAnimationRequestBase implements ObservableIBRRequest
                 .createFramebufferObject()
         )
         {
+            if(monitor!=null){
+                monitor.setProcessName("Orbit Animation");
+                monitor.setMaxProgress(frameCount);
+                monitor.setStageCount(1);
+                monitor.setStage(0, "Processing orbit images...");
+            }
             for (int i = 0; i < frameCount; i++)
             {
                 if (monitor != null)
@@ -143,9 +149,11 @@ public abstract class SimpleAnimationRequestBase implements ObservableIBRRequest
 
                 if (monitor != null)
                 {
-                    monitor.setProgress((double) i / (double) frameCount,
-                        MessageFormat.format("Frame {0}/{1}", i, frameCount));
+                    monitor.setProgress(i, MessageFormat.format("Frame {0}/{1}", i+1, frameCount));
                 }
+            }
+            if(monitor != null){
+                monitor.setStage(1, "Finished orbit animation.");
             }
         }
     }

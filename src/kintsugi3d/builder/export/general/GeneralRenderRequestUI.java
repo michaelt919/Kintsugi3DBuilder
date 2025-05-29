@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -30,6 +30,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import kintsugi3d.builder.javafx.MultithreadModels;
+import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import kintsugi3d.gl.core.Context;
@@ -61,8 +63,6 @@ public class GeneralRenderRequestUI implements IBRRequestUI
 
     private final FileChooser fileChooser = new FileChooser();
     private final DirectoryChooser directoryChooser = new DirectoryChooser();
-    private File lastDirectory;
-
     private Stage stage;
 
     private RequestFactory requestFactory;
@@ -136,6 +136,10 @@ public class GeneralRenderRequestUI implements IBRRequestUI
         runButton.setOnAction(event ->
         {
 //            stage.close();
+
+            if(MultithreadModels.getInstance().getIOModel().getProgressMonitor().isConflictingProcess()){
+                return;
+            }
 
             File fragmentShader = new File(fragmentShaderField.getText());
             File outputDirectory = new File(exportDirectoryField.getText());
@@ -218,10 +222,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
         this.fileChooser.getExtensionFilters().add(new ExtensionFilter("View set files", "*.vset"));
         if (targetVSetFileField.getText().isEmpty() || !new File(targetVSetFileField.getText()).exists())
         {
-            if (lastDirectory != null)
-            {
-                this.fileChooser.setInitialDirectory(lastDirectory);
-            }
+            this.fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
         }
         else
         {
@@ -233,7 +234,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
         if (file != null)
         {
             targetVSetFileField.setText(file.toString());
-            lastDirectory = file.getParentFile();
+            RecentProjects.setMostRecentDirectory(file.getParentFile());
         }
     }
 
@@ -245,10 +246,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
         this.fileChooser.getExtensionFilters().add(new ExtensionFilter("GLSL vertex shaders", "*.*"));
         if (customVertexShaderField.getText().isEmpty() || !new File(customVertexShaderField.getText()).exists())
         {
-            if (lastDirectory != null)
-            {
-                this.fileChooser.setInitialDirectory(lastDirectory);
-            }
+            this.fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
         }
         else
         {
@@ -260,7 +258,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
         if (file != null)
         {
             customVertexShaderField.setText(file.toString());
-            lastDirectory = file.getParentFile();
+            RecentProjects.setMostRecentDirectory(file.getParentFile());
         }
     }
 
@@ -272,10 +270,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
         this.fileChooser.getExtensionFilters().add(new ExtensionFilter("GLSL fragment shaders", "*.*"));
         if (fragmentShaderField.getText().isEmpty() || !new File(fragmentShaderField.getText()).exists())
         {
-            if (lastDirectory != null)
-            {
-                this.fileChooser.setInitialDirectory(lastDirectory);
-            }
+            this.fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
         }
         else
         {
@@ -287,7 +282,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
         if (file != null)
         {
             fragmentShaderField.setText(file.toString());
-            lastDirectory = file.getParentFile();
+            RecentProjects.setMostRecentDirectory(file.getParentFile());
         }
     }
 
@@ -297,10 +292,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
         this.directoryChooser.setTitle("Choose an output directory");
         if (exportDirectoryField.getText().isEmpty() || !new File(exportDirectoryField.getText()).exists())
         {
-            if (lastDirectory != null)
-            {
-                this.directoryChooser.setInitialDirectory(lastDirectory);
-            }
+            this.directoryChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
         }
         else
         {
@@ -311,7 +303,7 @@ public class GeneralRenderRequestUI implements IBRRequestUI
         if (file != null)
         {
             exportDirectoryField.setText(file.toString());
-            lastDirectory = file;
+            RecentProjects.setMostRecentDirectory(file.getParentFile());
         }
     }
 

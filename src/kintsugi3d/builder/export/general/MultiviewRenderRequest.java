@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -81,8 +81,13 @@ class MultiviewRenderRequest extends RenderRequestBase
                 if (!fileName.endsWith(".png"))
                 {
                     String[] parts = fileName.split("\\.");
-                    parts[parts.length - 1] = "png";
-                    fileName = String.join(".", parts);
+                    if (parts.length == 1){
+                        fileName = fileName + ".png";
+                    }
+                    else{
+                        parts[parts.length - 1] = "png";
+                        fileName = String.join(".", parts);
+                    }
                 }
 
                 File exportFile = new File(getOutputDirectory(), fileName);
@@ -92,7 +97,7 @@ class MultiviewRenderRequest extends RenderRequestBase
                 if (monitor != null)
                 {
                     monitor.setProgress((double) i / (double) resources.getViewSet().getCameraPoseCount(),
-                        MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(i), i, resources.getViewSet().getCameraPoseCount()));
+                        MessageFormat.format("{0} ({1}/{2})", resources.getViewSet().getImageFileName(i), i+1, resources.getViewSet().getCameraPoseCount()));
                 }
             }
         }

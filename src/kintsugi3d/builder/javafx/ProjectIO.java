@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,40 +11,34 @@
 
 package kintsugi3d.builder.javafx;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.URL;
-import java.util.Objects;
-import java.util.function.Function;
-import java.util.function.Predicate;
-
 import com.sun.glass.ui.Application;
 import javafx.application.Platform;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.image.Image;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
-import javafx.stage.Stage;
 import javafx.stage.Window;
-import javafx.stage.WindowEvent;
 import kintsugi3d.builder.core.DefaultProgressMonitor;
 import kintsugi3d.builder.core.IOModel;
 import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.javafx.controllers.menubar.LoaderController;
+import kintsugi3d.builder.javafx.controllers.menubar.AboutController;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
-import kintsugi3d.builder.javafx.controllers.scene.CreateProjectController;
+import kintsugi3d.builder.javafx.controllers.menubar.systemsettings.SystemSettingsController;
+import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
+import kintsugi3d.builder.javafx.util.PageWindow;
+import kintsugi3d.builder.javafx.util.WindowUtilities;
 import kintsugi3d.builder.resources.ibr.MeshImportException;
 import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Objects;
+import java.util.function.Predicate;
 
 public final class ProjectIO
 {
@@ -60,7 +54,11 @@ public final class ProjectIO
     private File vsetFile;
     private boolean projectLoaded;
 
-    private final Flag loaderWindowOpen = new Flag(false);
+    private Flag systemSettingsModalOpen = new Flag(false);
+    private Flag progressBarsModalOpen = new Flag(false);
+    private Flag aboutWindowOpen = new Flag(false);
+
+    private final PageWindow loaderWindow = new PageWindow();
 
     private FileChooser projectFileChooser;
 
@@ -69,8 +67,9 @@ public final class ProjectIO
         if (projectFileChooser == null)
         {
             projectFileChooser = new FileChooser();
-            projectFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
         }
+
+        projectFileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
         return projectFileChooser;
     }
@@ -101,7 +100,7 @@ public final class ProjectIO
                 projectLoaded = false;
                 if (e instanceof MeshImportException)
                 {
-                    handleException("Imported object is missing texture coordinates", e);
+                    handleException(e.getMessage(), e);
                 }
                 else
                 {
@@ -132,14 +131,14 @@ public final class ProjectIO
         return projectLoaded;
     }
 
-    private static void handleException(String message, Throwable e)
+    public static void handleException(String message, Throwable e)
     {
         log.error("{}:", message, e);
         Platform.runLater(() ->
         {
-            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+            ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
             ButtonType showLog = new ButtonType("Show Log", ButtonBar.ButtonData.YES);
-            Alert alert = new Alert(Alert.AlertType.ERROR, message + "\nSee the log for more info.", ok, showLog);
+            Alert alert = new Alert(Alert.AlertType.NONE, message + "\nSee the log for more info.", ok, showLog);
             ((ButtonBase) alert.getDialogPane().lookupButton(showLog)).setOnAction(event -> {
                 // Use the menubar's console open function to prevent 2 console windows from appearing
                 MenubarController.getInstance().help_console();
@@ -168,46 +167,9 @@ public final class ProjectIO
         }
     }
 
-    private static <ControllerType> ControllerType makeWindow(Window parentWindow, String title, Flag flag,
-        Function<Parent, Scene> sceneFactory, String urlString) throws IOException
-    {
-        URL url = MenubarController.class.getClassLoader().getResource(urlString);
-        if (url == null)
-        {
-            throw new FileNotFoundException(urlString);
-        }
-        FXMLLoader fxmlLoader = new FXMLLoader(url);
-        Parent root = fxmlLoader.load();
-        Stage stage = new Stage();
-        stage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
-        stage.setTitle(title);
-        stage.setScene(sceneFactory.apply(root));
-        stage.initOwner(parentWindow);
-
-        stage.setResizable(false);
-
-        flag.set(true);
-        stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
-
-        stage.show();
-
-        return fxmlLoader.getController();
-    }
-
-    private static <ControllerType> ControllerType makeWindow(Window parentWindow, String title, Flag flag, String urlString) throws IOException
-    {
-        return makeWindow(parentWindow, title, flag, Scene::new, urlString);
-    }
-
-    private static <ControllerType> ControllerType makeWindow(
-        Window parentWindow, String title, Flag flag, int width, int height, String urlString) throws IOException
-    {
-        return makeWindow(parentWindow, title, flag, root -> new Scene(root, width, height), urlString);
-    }
-
     public boolean isCreateProjectWindowOpen()
     {
-        return loaderWindowOpen.get();
+        return loaderWindow.isOpen();
     }
 
     private void onLoadStart()
@@ -219,84 +181,80 @@ public final class ProjectIO
         projectLoaded = true;
     }
 
-    private void onViewSetCreated(ViewSet viewSet, Window parentWindow, File defaultDirectory)
+    private void onViewSetCreated(ViewSet viewSet, Window parentWindow)
     {
         // Force user to save the project before proceeding, so that they have a place to save the results
-        saveProjectAs(parentWindow, () ->
-        {
-            File filesDirectory = ViewSet.getDefaultSupportingFilesDirectory(projectFile);
-            filesDirectory.mkdirs();
+        saveProjectAs(parentWindow, () -> setViewsetDirectories(viewSet));
+    }
 
-            // need to use a lambda callback so that this is called after the file location is chosen
-            // but before its actually saved
-            if (Objects.equals(vsetFile, projectFile)) // Saved as a VSET
-            {
-                // Set the root directory first, then the supporting files directory
+    public static File getDefaultSupportingFilesDirectory(File projectFile)
+    {
+        return new File(projectFile.getParentFile(), projectFile.getName() + ".files");
+    }
+
+    private void setViewsetDirectories(ViewSet viewSet) {
+        File filesDirectory = getDefaultSupportingFilesDirectory(projectFile);
+        filesDirectory.mkdirs();
+
+        // need to use a lambda callback so that this is called after the file location is chosen
+        // but before its actually saved
+        if (Objects.equals(vsetFile, projectFile)) // Saved as a VSET
+        {
+            // Set the root directory first, then the supporting files directory
                 MultithreadModels.getInstance().getIOModel()
                     .getLoadedViewSet().setRootDirectory(projectFile.getParentFile());
 
-                viewSet.setSupportingFilesDirectory(filesDirectory);
-            }
-            else // Saved as a Kintsugi 3D project
-            {
-                viewSet.setRootDirectory(filesDirectory);
-                viewSet.setSupportingFilesDirectory(filesDirectory);
-            }
-        }, defaultDirectory);
+            viewSet.setSupportingFilesDirectory(filesDirectory);
+        }
+        else // Saved as a Kintsugi 3D project
+        {
+            viewSet.setRootDirectory(filesDirectory);
+            viewSet.setSupportingFilesDirectory(filesDirectory);
+        }
     }
-
 
     public void createProject(Window parentWindow)
     {
-        if (!loaderWindowOpen.get())
+        if (!confirmClose("Are you sure you want to create a new project?"))
         {
-            if (confirmClose("Are you sure you want to create a new project?"))
-            {
-                try//recent files are updated in CreateProjectController after project is made
-                {
-                    LoaderController createProjectController =
-                        makeWindow(parentWindow, "Load Files", loaderWindowOpen, 750, 330, "fxml/menubar/Loader.fxml");
-                    createProjectController.setLoadStartCallback(this::onLoadStart);
-                    createProjectController.setViewSetCallback(
-                        (viewSet, defaultDirectory) -> onViewSetCreated(viewSet, parentWindow, defaultDirectory));
-                    createProjectController.init();
-                }
-                catch (Exception e)
-                {
-                    handleException("An error occurred creating a new project", e);
-                }
-            }
+            return;
         }
+
+        loaderWindow.open(parentWindow,"Load Files",
+            "/fxml/menubar/createnewproject/SelectImportOptions.fxml",
+            WelcomeWindowController.getInstance()::hide,
+            () ->
+            {
+                onLoadStart();
+
+                // "force" the user to save their project (user can still cancel saving)
+                MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
+                    viewSet -> onViewSetCreated(viewSet, parentWindow));
+            });
     }
 
-    public void createProjectNew(Window parentWindow)
+    public void hotSwap(Window parentWindow)
     {
-        if (!loaderWindowOpen.get())
-        {
-            if (confirmClose("Are you sure you want to create a new project?"))
+        // remember old project filename
+        File oldProjectFile = projectFile;
+
+        loaderWindow.open(parentWindow,"Load Files",
+            "/fxml/menubar/createnewproject/HotSwap.fxml", null, this::onLoadStart);
+
+        // "force" the user to save their project (user can still cancel saving)
+        MultithreadModels.getInstance().getIOModel().addViewSetLoadCallback(
+            viewSet ->
             {
-                try//recent files are updated in CreateProjectController after project is made
-                {
-                    CreateProjectController createProjectController =
-                            makeWindow(parentWindow, "Load Files", loaderWindowOpen, "fxml/menubar/CreateProject.fxml");
-                    createProjectController.setLoadStartCallback(this::onLoadStart);
-                    createProjectController.setViewSetCallback(viewSet -> onViewSetCreated(viewSet, parentWindow, null));
-                    createProjectController.init();
-                    WelcomeWindowController.getInstance().hideWelcomeWindow();
-                }
-                catch (Exception e)
-                {
-                    handleException("An error occurred creating a new project", e);
-                }
-            }
-        }
+                projectFile = oldProjectFile;
+                saveProject(parentWindow);
+            });
     }
 
     private static void startLoad(File projectFile, File vsetFile)
     {
         MultithreadModels.getInstance().getIOModel().unload();
 
-        RecentProjects.updateRecentFiles(projectFile.getAbsolutePath());
+        RecentProjects.addToRecentFiles(projectFile.getAbsolutePath());
 
         if (Objects.equals(projectFile.getParentFile(), vsetFile.getParentFile()))
         {
@@ -307,7 +265,7 @@ public final class ProjectIO
                 try
                 {
                     MultithreadModels.getInstance().getIOModel()
-                        .loadFromVSETFile(vsetFile.getPath(), vsetFile, ViewSet.getDefaultSupportingFilesDirectory(projectFile));
+                        .loadFromVSETFile(vsetFile.getPath(), vsetFile, getDefaultSupportingFilesDirectory(projectFile));
                 }
                 catch (RuntimeException e)
                 {
@@ -353,8 +311,15 @@ public final class ProjectIO
 
     public void openProjectFromFile(File selectedFile)
     {
-        //open the project and update the recent files list
+        //need to check for conflicting process early so crucial info isn't unloaded
+        if(MultithreadModels.getInstance().getIOModel().getProgressMonitor().isConflictingProcess()){
+            return;
+        }
+
+        //open the project, update the recent files list & recentDirectory, disable shaders which aren't useful until processing textures
         this.projectFile = selectedFile;
+        RecentProjects.setMostRecentDirectory(this.projectFile.getParentFile());
+
         File newVsetFile = null;
 
         if (projectFile.getName().endsWith(".vset"))
@@ -383,7 +348,10 @@ public final class ProjectIO
             // Have to set loaded project file after startLoad since startLoad resets everything in order to unload a previously loaded project.
             MultithreadModels.getInstance().getIOModel().setLoadedProjectFile(projectFile);
 
-            WelcomeWindowController.getInstance().hideWelcomeWindow();
+            WelcomeWindowController.getInstance().hide();
+
+            // Disable shaders that need processed textures until project load is complete.
+            MenubarController.getInstance().setToggleableShaderDisable(true);
         }
     }
 
@@ -421,11 +389,12 @@ public final class ProjectIO
         }
         else
         {
+            RecentProjects.setMostRecentDirectory(projectFile.getParentFile());
             try
             {
                 IOModel ioModel = MultithreadModels.getInstance().getIOModel();
 
-                File filesDirectory = ViewSet.getDefaultSupportingFilesDirectory(projectFile);
+                File filesDirectory = getDefaultSupportingFilesDirectory(projectFile);
                 if (projectFile.getName().endsWith(".vset"))
                 {
                     ioModel.getLoadedViewSet().setRootDirectory(projectFile.getParentFile());
@@ -518,7 +487,6 @@ public final class ProjectIO
             {
                 fileContainer.selectedFile = fileChooser.showSaveDialog(parentWindow);
                 fileContainer.complete = true;
-                RecentProjects.updateRecentFiles(fileContainer.selectedFile.toString());
             });
 
             while (!fileContainer.complete)
@@ -536,9 +504,11 @@ public final class ProjectIO
                 callback.run();
             }
 
+            RecentProjects.addToRecentFiles(fileContainer.selectedFile.toString());
             saveProject(parentWindow);
         }
     }
+
 
     /**
      * NOTE: After "Save As", view set will share the same UUID as the original project,
@@ -560,6 +530,15 @@ public final class ProjectIO
 
         MultithreadModels.getInstance().getIOModel().unload();
         projectLoaded = false;
+
+        WelcomeWindowController.getInstance().show();
+
+        //TODO: do we want this here?
+        MenubarController.getInstance().dismissMiniProgressBar();
+
+        MenubarController.getInstance().setToggleableShaderDisable(true);
+        MenubarController.getInstance().setShaderNameVisibility(false);
+        MenubarController.getInstance().updateShaderList();
     }
 
     public void closeProjectAfterConfirmation()
@@ -567,6 +546,48 @@ public final class ProjectIO
         if (confirmClose("Are you sure you want to close the current project?"))
         {
             closeProject();
+        }
+    }
+
+    public void openProgressBars(){
+        if(progressBarsModalOpen.get()){
+            return;
+        }
+
+        ProgressBarsController.getInstance().showStage();
+    }
+
+    public void openSystemSettingsModal(InternalModels internalModels, Window window) {
+        if (systemSettingsModalOpen.get())
+        {
+            return;
+        }
+
+        try
+        {
+            SystemSettingsController systemSettingsController = WindowUtilities.makeWindow(window, "System Settings", systemSettingsModalOpen, "fxml/menubar/systemsettings/SystemSettings.fxml");
+            systemSettingsController.init(internalModels, window);
+            WelcomeWindowController.getInstance().hide();
+            systemSettingsController.getHostWindow().setOnCloseRequest(e->WelcomeWindowController.getInstance().showIfNoModelLoaded());
+        }
+        catch (IOException e)
+        {
+            log.error("An error occurred opening the settings modal:", e);
+        }
+    }
+
+    public void openAboutModal(Window window) {
+        try
+        {
+
+            AboutController aboutController = WindowUtilities.makeWindow(window,
+                    "About Kintsugi 3D Builder", aboutWindowOpen, "fxml/menubar/About.fxml");
+            aboutController.init();
+            WelcomeWindowController.getInstance().hide();
+        }
+        catch (Exception e)
+        {
+            handleException("An error occurred showing help and about", e);
         }
     }
 }

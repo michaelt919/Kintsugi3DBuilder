@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,14 +11,14 @@
 
 package org.jengineering.sjmply;
 
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+
 import static java.lang.Byte.toUnsignedInt;
 import static java.lang.Byte.toUnsignedLong;
 import static java.lang.Double.longBitsToDouble;
 import static java.lang.Float.intBitsToFloat;
-
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
 
 /** Reader for {@link PLYFormat#BINARY_BIG_ENDIAN} encoded PLY data.
  *  

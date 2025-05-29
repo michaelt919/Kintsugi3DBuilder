@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -24,6 +24,8 @@ import kintsugi3d.builder.fit.ReconstructionShaders;
 import kintsugi3d.builder.fit.SpecularFitProcess;
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
+import kintsugi3d.builder.javafx.ProjectIO;
+import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.metrics.ColorAppearanceRMSE;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
@@ -78,6 +80,10 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
             // Set the output directory based on the view set's texture fit file path
             settings.setOutputDirectory(renderable.getActiveViewSet().getSupportingFilesFilePath());
 
+            if(monitor !=null){
+                monitor.setProcessName("Process Textures");
+            }
+
             // Perform the specular fit
             new SpecularFitProcess(settings).optimizeFit(renderable.getIBRResources(), monitor);
 
@@ -93,10 +99,15 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
             {
                 Kintsugi3DViewerLauncher.launchViewer(new File(settings.getOutputDirectory(), "model.glb"));
             }
+
+            //enable shaders which only work after processing textures
+            MenubarController.getInstance().setToggleableShaderDisable(false);
+            MenubarController.getInstance().updateShaderList();
+            MenubarController.getInstance().selectMaterialBasisShader();
         }
         catch(IOException e) // thrown by createReflectanceProgram
         {
-            log.error("Error executing specular fit request:", e);
+            ProjectIO.handleException("Error executing specular fit request:", e);
         }
     }
 

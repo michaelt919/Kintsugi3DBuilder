@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,16 +11,7 @@
 
 package org.jengineering.sjmply;
 
-import static java.lang.Float.floatToRawIntBits;
-import static java.lang.String.format;
-import static java.nio.file.Files.newOutputStream;
-import static java.util.Arrays.asList;
-import static java.util.Arrays.stream;
-import static org.jengineering.sjmply.PLYType.FLOAT32;
-import static org.jengineering.sjmply.PLYType.LIST;
-import static org.jengineering.sjmply.PLYType.UINT32;
-
-import java.awt.Desktop;
+import java.awt.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -31,6 +22,13 @@ import java.util.Base64;
 import java.util.function.IntConsumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import static java.lang.Float.floatToRawIntBits;
+import static java.lang.String.format;
+import static java.nio.file.Files.newOutputStream;
+import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
+import static org.jengineering.sjmply.PLYType.*;
 
 /** Utility methods to create <a href="https://plot.ly/">Plotly</a> 3D plots of PLY files.
  *  

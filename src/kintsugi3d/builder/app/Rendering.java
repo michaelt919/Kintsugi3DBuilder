@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -372,6 +372,11 @@ public final class Rendering
             }
 
             @Override
+            public void setProcessName(String processName) {
+                ioModel.getProgressMonitor().setProcessName(processName);
+            }
+
+            @Override
             public void setStageCount(int count)
             {
                 ioModel.getProgressMonitor().setStageCount(count);
@@ -411,6 +416,11 @@ public final class Rendering
             public void warn(Throwable e)
             {
                 ioModel.getProgressMonitor().warn(e);
+            }
+
+            @Override
+            public boolean isConflictingProcess() {
+                return ioModel.getProgressMonitor().isConflictingProcess();
             }
         });
 

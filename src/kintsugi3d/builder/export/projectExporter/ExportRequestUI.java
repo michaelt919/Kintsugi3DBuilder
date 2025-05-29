@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -29,6 +29,8 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
+
+import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import org.slf4j.Logger;
@@ -48,8 +50,8 @@ public class ExportRequestUI implements IBRRequestUI {
     @FXML private CheckBox glTFPackTexturesCheckBox;
     @FXML private CheckBox openViewerOnceCheckBox;
     @FXML private ComboBox<Integer> minimumTextureResolutionComboBox;
-    public File CurrentDirectoryFile;
-    public File ExportLocationFile;
+    public File currentDirectoryFile;
+    public File exportLocationFile;
     private final FileChooser objFileChooser = new FileChooser();
 
 
@@ -65,7 +67,7 @@ public class ExportRequestUI implements IBRRequestUI {
 
         if (modelAccess.getIOModel().getLoadedProjectFile() != null)
         {
-            exportRequest.CurrentDirectoryFile = modelAccess.getIOModel().getLoadedProjectFile().getParentFile();
+            exportRequest.currentDirectoryFile = modelAccess.getIOModel().getLoadedProjectFile().getParentFile();
         }
 
         exportRequest.stage = new Stage();
@@ -87,10 +89,10 @@ public class ExportRequestUI implements IBRRequestUI {
         setAllVariables(settings);
 
         //Sets FileChooser defaults
-        if (CurrentDirectoryFile != null)
+        if (currentDirectoryFile != null)
         {
-            objFileChooser.setInitialDirectory(CurrentDirectoryFile);
-            objFileChooser.setInitialFileName(CurrentDirectoryFile.getName());
+            objFileChooser.setInitialDirectory(currentDirectoryFile);
+            objFileChooser.setInitialFileName(currentDirectoryFile.getName());
         }
 
         objFileChooser.setTitle("Save project");
@@ -102,28 +104,34 @@ public class ExportRequestUI implements IBRRequestUI {
             //Updates settings to equal what widget is displaying
             saveAllVariables(settings);
 
+            if(MultithreadModels.getInstance().getIOModel().getProgressMonitor().isConflictingProcess()){
+                return;
+            }
+
             try
             {
-                ExportLocationFile = objFileChooser.showSaveDialog(stage);
-                requestQueue.addIBRRequest(new ObservableIBRRequest()
+                exportLocationFile = objFileChooser.showSaveDialog(stage);
+                if (exportLocationFile != null)
                 {
-                    @Override
-                    public <ContextType extends Context<ContextType>> void executeRequest(
-                        IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
+                    requestQueue.addIBRRequest(new ObservableIBRRequest()
                     {
-
-                        if (settings.isGlTFEnabled())
+                        @Override
+                        public <ContextType extends Context<ContextType>> void executeRequest(
+                        IBRInstance<ContextType> renderable, ProgressMonitor monitor) throws IOException
                         {
-                            renderable.saveGlTF(ExportLocationFile.getParentFile(), ExportLocationFile.getName(), settings);
-                            modelAccess.getIOModel().saveMaterialFiles(ExportLocationFile.getParentFile(), null);
-                        }
+                            if (settings.isGlTFEnabled())
+                            {
+                                    renderable.saveGlTF(exportLocationFile.getParentFile(), exportLocationFile.getName(), settings);
+                            modelAccess.getIOModel().saveMaterialFiles(exportLocationFile.getParentFile(), null);
+                                }
 
-                        if (settings.isOpenViewerOnceComplete())
-                        {
-                            Kintsugi3DViewerLauncher.launchViewer(ExportLocationFile);
-                        }
-                    }
-                });
+                            if (settings.isOpenViewerOnceComplete())
+                            {
+                                    Kintsugi3DViewerLauncher.launchViewer(exportLocationFile);
+                                }
+                            }
+                    });
+                }
             }
             catch (Exception ex)
             {
@@ -158,5 +166,6 @@ public class ExportRequestUI implements IBRRequestUI {
         settings.setOpenViewerOnceComplete(openViewerOnceCheckBox.isSelected());
         settings.setMinimumTextureResolution(minimumTextureResolutionComboBox.getValue());
         System.out.println(minimumTextureResolutionComboBox.getValue());
+
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -41,7 +41,7 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
 
         out.println();
         out.println("# ViewSet UUID");
-        out.println("U " + viewSet.getUuid());
+        out.println("U " + viewSet.getUUID());
 
         if (viewSet.getGeometryFileName() != null)
         {
@@ -65,6 +65,30 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         out.println();
         out.println("# Estimated near and far planes");
         out.printf("c\t%.8f\t%.8f", viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane());
+        out.println();
+
+        // Correct for the primary view selection index being moved to 0 when written to the vset file
+        int correctedOrientationViewIndex = viewSet.getOrientationViewIndex();
+        if (viewSet.getOrientationViewIndex() >= 0)
+        {
+            if (viewSet.getPrimaryViewIndex() == correctedOrientationViewIndex)
+            {
+                correctedOrientationViewIndex = 0;
+            }
+            else if (viewSet.getPrimaryViewIndex() > correctedOrientationViewIndex)
+            {
+                correctedOrientationViewIndex += 1;
+            }
+        }
+
+        out.println();
+        out.println("# Reference orientation view index");
+        out.println("O " + correctedOrientationViewIndex);
+        out.println();
+
+        out.println();
+        out.println("# Reference View Pose Rotation (degrees)");
+        out.println("r " + viewSet.getOrientationViewRotationDegrees());
         out.println();
 
         out.println();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -27,6 +27,7 @@ import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.app.SynchronizedWindow;
 import kintsugi3d.builder.app.WindowSynchronization;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
+import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.RootSceneController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.javafx.internal.SettingsModelImpl;
@@ -54,6 +55,8 @@ public class MainApplication extends Application
 
     private static MainApplication appInstance;
 
+    private static String[] arguments;
+
     public MainApplication()
     {
         appInstance = this;
@@ -62,6 +65,10 @@ public class MainApplication extends Application
     public static MainApplication getAppInstance()
     {
         return appInstance;
+    }
+
+    public static void setArgs(String[] args) {
+        arguments = args;
     }
 
     private static class StageSynchronization implements SynchronizedWindow
@@ -160,20 +167,27 @@ public class MainApplication extends Application
         URL welcomeWindowURL = getClass().getClassLoader().getResource(welcomeWindowFXMLFileName);
         assert welcomeWindowURL != null : "cant find " + welcomeWindowFXMLFileName;
 
+        String progressBarsFXMLFileName = "fxml/scene/ProgressBars.fxml";
+        URL progressBarsURL = getClass().getClassLoader().getResource(progressBarsFXMLFileName);
+        assert progressBarsURL != null : "cant find " + progressBarsFXMLFileName;
+
         //init fxml loaders
         FXMLLoader sceneFXMLLoader = new FXMLLoader(sceneURL);
         FXMLLoader menuBarFXMLLoader = new FXMLLoader(menuBarURL);
         FXMLLoader welcomeWindowFXMLLoader = new FXMLLoader(welcomeWindowURL);
+        FXMLLoader progressBarsFXMLLoader = new FXMLLoader(progressBarsURL);
 
         //load Parents
         Parent menuBarRoot = menuBarFXMLLoader.load();
         Parent sceneRoot = sceneFXMLLoader.load();
         Parent welcomeRoot = welcomeWindowFXMLLoader.load();
+        Parent progressBarsRoot = progressBarsFXMLLoader.load();
 
         //load Controllers
         RootSceneController sceneController = sceneFXMLLoader.getController();
         MenubarController menuBarController = menuBarFXMLLoader.getController();
         WelcomeWindowController welcomeWindowController = welcomeWindowFXMLLoader.getController();
+        ProgressBarsController progressBarsController = progressBarsFXMLLoader.getController();
 
         //load stages
         primaryStage.setTitle("Kintsugi 3D Builder");
@@ -190,6 +204,13 @@ public class MainApplication extends Application
         sceneStage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
         sceneStage.setTitle("Scene");
         sceneStage.setScene(new Scene(sceneRoot));
+
+        Stage progressBarsStage = new Stage();
+        progressBarsStage.getIcons().add(new Image(new File("Kintsugi3D-icon.png").toURI().toURL().toString()));
+        progressBarsStage.setTitle("Progress");
+        progressBarsStage.setScene(new Scene(progressBarsRoot));
+        progressBarsStage.initOwner(primaryStage.getScene().getWindow());
+        progressBarsStage.setResizable(false); //remove minimize and maximize buttons from system nav
 
         //set positions
 
@@ -230,7 +251,11 @@ public class MainApplication extends Application
 
         primaryStage.requestFocus();
         primaryStage.show();
-        welcomeStage.show();
+
+        //only show the welcome window after determining that no projects are being loaded from command line
+        if(arguments.length == 0){
+            welcomeStage.show();
+        }
 
         MultithreadModels.getInstance().getCanvasModel().addCanvasChangedListener(
             canvas -> menuBarController.getFramebufferView().setCanvas(canvas));
@@ -257,6 +282,7 @@ public class MainApplication extends Application
             StaticUtilities.clamp(0, 0.1, new SimpleFloatProperty(0.0025f)), true);
         settingsModel.createObjectSetting("weightMode", ShadingParameterMode.PER_PIXEL, true);
         settingsModel.createBooleanSetting("is3DGridEnabled", true, true);
+        settingsModel.createBooleanSetting("isCameraVisualEnabled", false, true);
         settingsModel.createBooleanSetting("compassEnabled", false, true);
         settingsModel.createBooleanSetting("multisamplingEnabled", false, true);
         settingsModel.createBooleanSetting("halfResolutionEnabled", false, true);
@@ -288,11 +314,14 @@ public class MainApplication extends Application
             InternalModels.getInstance().getProjectModel(),
             MultithreadModels.getInstance().getSceneViewportModel());
 
-        menuBarController.init(primaryStage, InternalModels.getInstance(),
-            () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
+        //init progress bars first so other controllers can access the progress bar fxml components
+        progressBarsController.init(progressBarsStage);
 
         welcomeWindowController.init(welcomeStage, Rendering.getRequestQueue(), InternalModels.getInstance(),
                 () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
+
+        menuBarController.init(primaryStage, InternalModels.getInstance(),
+            () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
 
         // Open scene window from the menu
         settingsModel.getBooleanProperty("sceneWindowOpen").addListener(sceneWindowOpen ->

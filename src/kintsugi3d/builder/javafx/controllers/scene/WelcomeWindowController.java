@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,48 +11,48 @@
 
 package kintsugi3d.builder.javafx.controllers.scene;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SplitMenuButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.core.IBRRequestManager;
 import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.gl.core.Context;
-import kintsugi3d.util.Flag;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class WelcomeWindowController
 {
     private static final Logger log = LoggerFactory.getLogger(WelcomeWindowController.class);
 
-    //Window open flags
-    private final Flag ibrOptionsWindowOpen = new Flag(false);
-    private final Flag jvmOptionsWindowOpen = new Flag(false);
-    private final Flag loadOptionsWindowOpen = new Flag(false);
-    private final Flag colorCheckerWindowOpen = new Flag(false);
-    private final Flag unzipperOpen = new Flag(false);
 
     private static WelcomeWindowController INSTANCE;
+
+    @FXML private Button recent1;
+    @FXML private Button recent2;
+    @FXML private Button recent3;
+    @FXML private Button recent4;
+    @FXML private Button recent5;
+    public List<Button> recentButtons = new ArrayList<>();
+    private InternalModels internalModels;
+
     public static WelcomeWindowController getInstance()
     {
         return INSTANCE;
     }
-
-
-    @FXML private ProgressBar progressBar;
-
-    //toggle groups
-    @FXML private ToggleGroup renderGroup;
 
     @FXML public SplitMenuButton recentProjectsSplitMenuButton;
 
@@ -64,57 +64,20 @@ public class WelcomeWindowController
     public <ContextType extends Context<ContextType>> void init(
             Stage injectedStage, IBRRequestManager<ContextType> requestQueue, InternalModels injectedInternalModels,
             Runnable injectedUserDocumentationHandler) {
+        INSTANCE = this;
+
         this.parentWindow = injectedStage.getOwner();
         this.window = injectedStage;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
+        this.internalModels = injectedInternalModels;
 
-        RecentProjects.initializeWelcomeWindowController(this);
-        updateRecentProjectsButton();
+        recentButtons.add(recent1);
+        recentButtons.add(recent2);
+        recentButtons.add(recent3);
+        recentButtons.add(recent4);
+        recentButtons.add(recent5);
 
-//        MultithreadModels.getInstance().getLoadingModel().addLoadingMonitor(new LoadingMonitor()
-//        {
-//            private double maximum = 0.0;
-//            private double progress = 0.0;
-//
-//            @Override
-//            public void startLoading() {
-//                progress = 0.0;
-//                Platform.runLater(() ->
-//                {
-//                    progressBar.setVisible(true);
-//                    progressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
-//                });
-//            }
-//
-//            @Override
-//            public void setMaximum(double maximum) {
-//                this.maximum = maximum;
-//                Platform.runLater(() -> progressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : progress / maximum));
-//            }
-//
-//            @Override
-//            public void setProgress(double progress) {
-//                this.progress = progress;
-//                Platform.runLater(() -> progressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : progress / maximum));
-//            }
-//
-//            @Override
-//            public void loadingComplete() {
-//                this.maximum = 0.0;
-//                Platform.runLater(() -> progressBar.setVisible(false));
-//            }
-//
-//            @Override
-//            public void loadingFailed(Exception e) {
-//                loadingComplete();
-//            }
-//        });
-
-        INSTANCE = this;
-    }
-
-    public void updateRecentProjectsButton() {
-        RecentProjects.updateRecentProjectsControl(recentProjectsSplitMenuButton);
+        RecentProjects.updateAllControlStructures();
     }
 
     public void handleMenuItemSelection(MenuItem item) {
@@ -124,25 +87,13 @@ public class WelcomeWindowController
 
     public void splitMenuButtonActions(ActionEvent actionEvent) {
         Object source = actionEvent.getSource();
-
         //user clicks on a menu item
         if (source.getClass() == MenuItem.class) {
             handleMenuItemSelection((MenuItem) actionEvent.getSource());
         }
-
         //user clicks on the button, so unroll the menu
         else{
             unrollMenu();
-        }
-    }
-
-    @FXML
-    private void file_createProject()
-    {
-        if (!ProjectIO.getInstance().isCreateProjectWindowOpen())
-        {
-            ProjectIO.getInstance().createProject(parentWindow);
-            updateRecentProjectsButton();
         }
     }
 
@@ -150,36 +101,23 @@ public class WelcomeWindowController
     {
         if (!ProjectIO.getInstance().isCreateProjectWindowOpen())
         {
-            ProjectIO.getInstance().createProjectNew(parentWindow);
-            updateRecentProjectsButton();
-
+            ProjectIO.getInstance().createProject(parentWindow);
         }
     }
 
     @FXML
-    private void file_openProject()//TODO: CHANGE NAMING CONVENTION? (file_...)
+    private void openProject()
     {
-
         ProjectIO.getInstance().openProjectWithPrompt(parentWindow);
-        hideWelcomeWindow();
-
     }
 
-    @FXML
-    private void file_closeProject()
-    {
-        //TODO: DISABLE THIS BUTTON IF NO PROJECT IS OPEN?
-        ProjectIO.getInstance().closeProjectAfterConfirmation();
+    public void hide(){
+        window.hide();
     }
 
-    //TODO: HIDE WELCOME WINDOW WHEN A PROJECT IS MADE/OPENED
-    public void hideWelcomeWindow(){
-        window.close();
+    public void show(){
+        Platform.runLater(()->window.show());
     }
-//    public void showWelcomeWindow(){
-//        window.show();
-//    }
-//
 
     @FXML
     private void help_userManual()
@@ -194,5 +132,42 @@ public class WelcomeWindowController
     public void hideMenu(MouseEvent mouseEvent){
         //recentProjectsSplitMenuButton.hide();
         //TODO: ONLY HIDE THE MENU WHEN THE USER'S MOUSE LEAVES THE CONTEXT MENU
+    }
+
+    public void recentButton(ActionEvent actionEvent) {
+        Object source = actionEvent.getSource();
+        //user clicks on a menu item
+        if (source.getClass() == Button.class) {
+            handleButtonSelection((Button) actionEvent.getSource());
+        }
+    }
+
+    public void handleButtonSelection(Button item) {
+        ArrayList<String> recentFileNames = (ArrayList<String>) RecentProjects.getItemsFromRecentsFile();
+        int i = 0;
+        for (Button button : recentButtons){
+            if (button == item){
+                ProjectIO.getInstance().openProjectFromFile(new File(recentFileNames.get(i)));
+            }
+            i++;
+        }
+    }
+
+    public void openSystemSettingsModal() {
+        ProjectIO.getInstance().openSystemSettingsModal(internalModels, parentWindow);
+    }
+
+    public void openAboutModal() {
+        ProjectIO.getInstance().openAboutModal(parentWindow);
+    }
+
+    public void showIfNoModelLoaded() {
+        if(!MultithreadModels.getInstance().getIOModel().hasValidHandler()){
+            show();
+        }
+    }
+
+    public void addAccelerator(KeyCombination keyCodeCombo, Runnable r) {
+        recent1.getScene().getAccelerators().put(keyCodeCombo, r);
     }
 }

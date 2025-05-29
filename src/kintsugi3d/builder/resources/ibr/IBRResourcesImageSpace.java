@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,23 +11,14 @@
 
 package kintsugi3d.builder.resources.ibr;
 
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.text.MessageFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Objects;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.IntStream;
-import javax.imageio.ImageIO;
-
 import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
+import kintsugi3d.builder.io.ViewSetReader;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
+import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
@@ -45,6 +36,20 @@ import kintsugi3d.util.ImageHelper;
 import kintsugi3d.util.ImageUndistorter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import javax.xml.stream.XMLStreamException;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
 
 /**
  * A class that encapsulates all of the GPU resources like vertex buffers, uniform buffers, and textures for a given
@@ -101,6 +106,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         private double[] linearLuminanceValues;
         private byte[] encodedLuminanceValues;
         private String primaryViewName;
+        private String orientationViewName;
 
         private Builder(ContextType context)
         {
@@ -109,15 +115,31 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         private void updateViewSetFromLoadOptions()
         {
-            this.viewSet.setPreviewImageResolution(loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
-            String directoryName = String.format("%s/_%dx%d", viewSet.getUuid().toString(), loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
+            if (this.loadOptions != null)
+            {
+                this.viewSet.setPreviewImageResolution(loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
+                String directoryName = String.format("%s/_%dx%d", viewSet.getUUID().toString(), loadOptions.getPreviewImageWidth(), loadOptions.getPreviewImageHeight());
 
-            this.viewSet.setRelativePreviewImagePathName(new File(ApplicationFolders.getPreviewImagesRootDirectory().toFile(), directoryName).toString());
+                this.viewSet.setRelativePreviewImagePathName(new File(ApplicationFolders.getPreviewImagesRootDirectory().toFile(), directoryName).toString());
+            }
         }
 
         public Builder<ContextType> setPrimaryView(String primaryViewName)
         {
             this.primaryViewName = primaryViewName;
+            return this;
+        }
+
+        public Builder<ContextType> setOrientationView(String orientationViewName, double rotation)
+        {
+            this.orientationViewName = orientationViewName;
+
+            if (orientationViewName == null)
+            {
+                this.viewSet.setOrientationViewIndex(-1);
+            }
+
+            this.viewSet.setOrientationViewRotationDegrees(rotation);
             return this;
         }
 
@@ -150,58 +172,106 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         public Builder<ContextType> loadVSETFile(File vsetFile, File supportingFilesDirectory) throws Exception
         {
             this.viewSet = ViewSetReaderFromVSET.getInstance().readFromFile(vsetFile, supportingFilesDirectory);
-            this.geometry = VertexGeometry.createFromOBJFile(this.viewSet.getGeometryFile());
+            updateViewSetFromLoadOptions();
+            loadAndValidateGeometry();
+            return this;
+        }
 
-            if (this.loadOptions != null)
+        private static ViewSetReader getReaderForFile(File cameraFile)
+        {
+            if (cameraFile.getName().endsWith(".xml")) // Agisoft Metashape
             {
-                updateViewSetFromLoadOptions();
+                return ViewSetReaderFromAgisoftXML.getInstance();
+            }
+            else if (cameraFile.getName().endsWith(".csv")) // RealityCapture
+            {
+                return ViewSetReaderFromRealityCaptureCSV.getInstance();
+            }
+            else
+            {
+                throw new IllegalArgumentException(MessageFormat.format("Unrecognized file extension for camera calibration: {0}", cameraFile));
+            }
+        }
+
+        // images are defined in the load options
+        public Builder<ContextType> loadLooseFiles(File cameraFile, File geometryFile, File fullResImageDirectory,
+            boolean needsUndistort, UUID uuidOverride) throws Exception
+        {
+            return loadLooseFiles(getReaderForFile(cameraFile), cameraFile, geometryFile, fullResImageDirectory, needsUndistort, uuidOverride);
+        }
+
+        // images are defined in the load options
+        public Builder<ContextType> loadLooseFiles(File cameraFile, File geometryFile, File fullResImageDirectory,
+            boolean needsUndistort) throws Exception
+        {
+            return loadLooseFiles(getReaderForFile(cameraFile), cameraFile, geometryFile, fullResImageDirectory, needsUndistort);
+        }
+
+        // images are defined in the load options
+        public Builder<ContextType> loadLooseFiles(ViewSetReader reader, File cameraFile, File geometryFile,
+            File fullResImageDirectory, boolean needsUndistort, UUID uuidOverride) throws Exception
+        {
+            // Load view set
+            this.viewSet = reader.readFromFile(cameraFile, geometryFile, fullResImageDirectory, needsUndistort);
+            if (uuidOverride != null)
+            {
+                this.viewSet.setUuid(uuidOverride);
             }
 
-            if (geometry != null)
-            {
-                viewSet.setGeometryFile(geometry.getFilename());
-            }
-
+            updateViewSetFromLoadOptions();
+            loadAndValidateGeometry();
             return this;
         }
 
         // images are defined in the load options
-        public Builder<ContextType> loadAgisoftFiles(File cameraFile, File geometryFile, File undistortedImageDirectory) throws Exception
+        public Builder<ContextType> loadLooseFiles(ViewSetReader reader, File cameraFile, File geometryFile,
+            File fullResImageDirectory, boolean needsUndistort) throws Exception
         {
-            this.viewSet = ViewSetReaderFromAgisoftXML.getInstance().readFromFile(cameraFile);
-            if (geometryFile != null)
-            {
-                if (geometryFile.getName().contains(".obj"))
-                {
-                    this.geometry = VertexGeometry.createFromOBJFile(geometryFile);
-                }
-                else if (geometryFile.getName().contains(".ply")) {
-                    this.geometry = VertexGeometry.createFromPLYFile(geometryFile);
-                }
-            }
-            if (!this.geometry.hasNormals()) {
-                throw new MeshImportException("Imported Object has no Normals");
-            }
-            if (!this.geometry.hasTexCoords()) {
-                throw new MeshImportException("Imported Object has no Texture Coordinates");
-            }
-            if (undistortedImageDirectory != null)
-            {
-                this.imageDirectoryOverride = undistortedImageDirectory;
-                this.viewSet.setRelativeFullResImagePathName(cameraFile.getParentFile().toPath().relativize(undistortedImageDirectory.toPath()).toString());
-            }
+            return this.loadLooseFiles(reader, cameraFile, geometryFile, fullResImageDirectory, needsUndistort, null);
+        }
 
-            if (geometry != null)
-            {
-                viewSet.setGeometryFile(geometry.getFilename());
-            }
 
-            if (this.loadOptions != null)
-            {
-                updateViewSetFromLoadOptions();
-            }
-
+        /**
+         * Alternate version of loadAgisoftFromZIP that uses a metashapeObjectChunk as its parameter.
+         * @param metashapeObjectChunk
+         * @param supportingFilesDirectory
+         * @return
+         * @throws IOException
+         */
+        public Builder<ContextType> loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, File supportingFilesDirectory)
+            throws IOException, XMLStreamException
+        {
+            this.viewSet = ViewSetReaderFromAgisoftXML.readChunkFromZip(metashapeObjectChunk, supportingFilesDirectory);
+            updateViewSetFromLoadOptions();
+            loadAndValidateGeometry();
             return this;
+        }
+
+        private void loadAndValidateGeometry() throws IOException
+        {
+            if (viewSet.getGeometryFile() != null)
+            {
+                this.geometry = VertexGeometry.createFromGeometryFile(viewSet.getGeometryFile());
+
+                if (this.geometry == null)
+                {
+                    throw new IllegalArgumentException(MessageFormat.format("Unsupported geometry file: {0}", viewSet.getGeometryFile()));
+                }
+
+                if (!this.geometry.hasNormals())
+                {
+                    throw new MeshImportException("Imported Object has no Normals");
+                }
+
+                if (!this.geometry.hasTexCoords())
+                {
+                    throw new MeshImportException("Imported Object has no Texture Coordinates");
+                }
+            }
+            else
+            {
+                throw new IllegalArgumentException("Geometry file may not be null.");
+            }
         }
 
         public ViewSet getViewSet()
@@ -267,10 +337,15 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 viewSet.setPrimaryView(primaryViewName);
             }
 
+            if (orientationViewName != null)
+            {
+                viewSet.setOrientationView(orientationViewName);
+            }
+
             if (geometry == null && viewSet.getGeometryFile() != null)
             {
                 // Load geometry if it wasn't specified but a view set was.
-                geometry = VertexGeometry.createFromOBJFile(viewSet.getGeometryFile());
+                geometry = VertexGeometry.createFromGeometryFile(viewSet.getGeometryFile());
             }
 
             return new IBRResourcesImageSpace<>(context, viewSet, geometry, loadOptions, progressMonitor);
@@ -285,6 +360,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     private IBRResourcesImageSpace(ContextType context, ViewSet viewSet, VertexGeometry geometry,
         ReadonlyLoadOptionsModel loadOptions, ProgressMonitor progressMonitor) throws IOException, UserCancellationException
     {
+        // IAN: This super call should be creating the geometry
         super(new IBRSharedResources<>(context, viewSet, geometry,
                     loadOptions != null ? loadOptions.getTextureLoadOptions() : new TextureLoadOptions()),
                 true);
@@ -341,7 +417,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
             {
                 if (progressMonitor != null)
                 {
-                    progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i, viewSet.getCameraPoseCount()));
+                    progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i + 1, viewSet.getCameraPoseCount()));
                     progressMonitor.allowUserCancellation();
                 }
 
@@ -683,7 +759,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
     public ImageCache<ContextType> cache(ImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException
     {
-        settings.setCacheFolderName(getViewSet().getUuid().toString());
+        settings.setCacheFolderName(getViewSet().getUUID().toString());
 
         ImageCache<ContextType> cache = new ImageCache<>(this, settings);
 
@@ -784,170 +860,11 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
             if (MULTITHREAD_PREVIEW_IMAGE_GENERATION)
             {
-                progressMonitor.setProgress(0, "Importing and downsizing images (multithread)...");
-
-                // Need to use custom ForkJoinPool so that number of threads doesn't go out of control and use up the Java heap space
-                ForkJoinPool customThreadPool = new ForkJoinPool(maxLoadingThreads);
-
-                customThreadPool.submit(() -> IntStream.range(0, viewSet.getCameraPoseCount())
-                    .parallel() // allow images to be processed in parallel; especially important for ICC transformation if present
-                    .forEach(i ->
-                    {
-                        try
-                        {
-                            // Check if the image is there first
-                            File previewImageFile = viewSet.findPreviewImageFile(i);
-                            logExists(previewImageFile);
-                            markFinished(viewSet, finishedCount);
-                            progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
-                                MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(i),
-                                    finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
-                        }
-                        catch (FileNotFoundException e)
-                        {
-                            // Only generate the image if it wasn't found
-                            int projectionIndex = viewSet.getCameraProjectionIndex(i);
-                            if (viewSet.getCameraProjection(projectionIndex) instanceof DistortionProjection)
-                            {
-                                try
-                                {
-                                    BufferedImage decodedImage = getDecodedImage(viewSet, i);
-
-                                    // Do the undistortion on the rendering thread
-                                    Rendering.runLater(new GraphicsRequest()
-                                    {
-                                        @Override
-                                        public <ContextType extends Context<ContextType>> void executeRequest(ContextType context)
-                                        {
-                                            try
-                                            {
-                                                BufferedImage imageOut = undistortImage(decodedImage, viewSet, projectionIndex, context);
-
-                                                // Write to a file on another thread so as not to block the rendering thread
-                                                new Thread(() ->
-                                                {
-                                                    try
-                                                    {
-                                                        ImageIO.write(imageOut, "PNG", viewSet.getPreviewImageFile(i));
-                                                        logFinished(viewSet.getPreviewImageFile(i));
-                                                        markFinished(viewSet, finishedCount);
-                                                        progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
-                                                            MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(i),
-                                                                finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
-                                                    }
-                                                    catch (IOException|RuntimeException ex)
-                                                    {
-                                                        // Failure to save the final file
-                                                        log.error(ex.getMessage(), ex);
-                                                        failedCount.getAndAdd(1);
-                                                    }
-
-                                                }).start();
-                                            }
-                                            catch (IOException|RuntimeException ex)
-                                            {
-                                                // Failure to undistort
-                                                log.error(ex.getMessage(), ex);
-                                                failedCount.getAndAdd(1);
-                                            }
-                                        }
-                                    });
-                                }
-                                catch (IOException|RuntimeException ex)
-                                {
-                                    // Failure to read the original image
-                                    log.error(ex.getMessage(), ex);
-                                    failedCount.getAndAdd(1);
-                                }
-                            }
-                            else
-                            {
-                                try
-                                {
-                                    // Fallback to simply resizing without undistorting
-                                    // Does not require graphics context, so threading is simple.
-                                    File fullResImageFile = viewSet.findFullResImageFile(i);
-                                    resizeImage(fullResImageFile, viewSet, i);
-                                    markFinished(viewSet, finishedCount);
-                                    progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
-                                        MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(i),
-                                            finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
-                                }
-                                catch (IOException|RuntimeException ex)
-                                {
-                                    log.error(ex.getMessage(), ex);
-                                    failedCount.getAndAdd(1);
-                                }
-                            }
-                        }
-                    }));
-
-                log.info("Finished reading all images; waiting for undistortion to finish on other threads");
+                multithreadPreviewImgGeneration(viewSet, maxLoadingThreads, progressMonitor, finishedCount, failedCount);
             }
             else // sequential mode
             {
-                // Do the undistortion on the rendering thread
-                Rendering.runLater(new GraphicsRequest()
-                {
-                    @Override
-                    public <ContextType extends Context<ContextType>> void executeRequest(ContextType context) throws UserCancellationException
-                    {
-                       for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
-                       {
-                           progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i, viewSet.getCameraPoseCount()));
-
-                           try
-                           {
-                               progressMonitor.allowUserCancellation();
-                           }
-                           catch (UserCancellationException e)
-                           {
-                               cancelled.set(e); // forward exception to another thread
-                               throw e;
-                           }
-
-                           try
-                           {
-                               // Check if the image is there first
-                               File previewImageFile = viewSet.findPreviewImageFile(i);
-                               logExists(previewImageFile);
-                               markFinished(viewSet, finishedCount);
-                           }
-                           catch (FileNotFoundException e)
-                           {
-                               try
-                               {
-                                   // Only generate the image if it wasn't found
-                                   int projectionIndex = viewSet.getCameraProjectionIndex(i);
-                                   if (viewSet.getCameraProjection(projectionIndex) instanceof DistortionProjection)
-                                   {
-                                       BufferedImage decodedImage = getDecodedImage(viewSet, i);
-                                       log.info("Undistorting image {}", i);
-                                       BufferedImage imageOut = undistortImage(decodedImage, viewSet, projectionIndex, context);
-                                       log.info("Saving image {}", i);
-                                       ImageIO.write(imageOut, "PNG", viewSet.getPreviewImageFile(i));
-                                       logFinished(viewSet.getPreviewImageFile(i));
-                                   }
-                                   else
-                                   {
-                                       // Fallback to simply resizing without undistorting
-                                       File fullResImageFile = viewSet.findFullResImageFile(i);
-                                       resizeImage(fullResImageFile, viewSet, i);
-                                   }
-
-                                   markFinished(viewSet, finishedCount);
-                               }
-                               catch (RuntimeException | IOException ex)
-                               {
-                                   log.error(ex.getMessage(), ex);
-                                   failedCount.getAndAdd(1);
-                               }
-                           }
-                       }
-                    }
-                });
-
-                log.info("Waiting for undistortion to finish on rendering thread");
+                sequentialPreviewImgGeneration(viewSet, progressMonitor, cancelled, finishedCount, failedCount);
             }
 
             // Wait for all threads to finish
@@ -972,6 +889,177 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 log.info("Undistorted preview images generated in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
             }
         }
+    }
+
+    private static void sequentialPreviewImgGeneration(ViewSet viewSet, ProgressMonitor progressMonitor,
+        AtomicReference<UserCancellationException> cancelled, AtomicInteger finishedCount, AtomicInteger failedCount)
+    {
+        // Do the undistortion on the rendering thread
+        Rendering.runLater(new GraphicsRequest()
+        {
+            @Override
+            public <ContextType extends Context<ContextType>> void executeRequest(ContextType context) throws UserCancellationException
+            {
+                for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+                {
+                    progressMonitor.setProgress(i, MessageFormat.format("{0} ({1}/{2})", viewSet.getImageFileName(i), i+1, viewSet.getCameraPoseCount()));
+
+                    try
+                    {
+                        progressMonitor.allowUserCancellation();
+                    }
+                    catch (UserCancellationException e)
+                    {
+                        cancelled.set(e); // forward exception to another thread
+                        throw e;
+                    }
+
+                    try
+                    {
+                        // Check if the image is there first
+                        File previewImageFile = viewSet.findPreviewImageFile(i);
+                        logExists(previewImageFile);
+                        markFinished(viewSet, finishedCount);
+                    }
+                    catch (FileNotFoundException e)
+                    {
+                        try
+                        {
+                            // Only generate the image if it wasn't found
+                            int projectionIndex = viewSet.getCameraProjectionIndex(i);
+                            if (viewSet.getCameraProjection(projectionIndex) instanceof DistortionProjection)
+                            {
+                                BufferedImage decodedImage = getDecodedImage(viewSet, i);
+                                log.info("Undistorting image {}", i);
+                                BufferedImage imageOut = undistortImage(decodedImage, viewSet, projectionIndex, context);
+                                log.info("Saving image {}", i);
+                                ImageIO.write(imageOut, "PNG", viewSet.getPreviewImageFile(i));
+                                logFinished(viewSet.getPreviewImageFile(i));
+                            }
+                            else
+                            {
+                                // Fallback to simply resizing without undistorting
+                                File fullResImageFile = viewSet.findFullResImageFile(i);
+                                resizeImage(fullResImageFile, viewSet, i);
+                            }
+
+                            markFinished(viewSet, finishedCount);
+                        }
+                        catch (RuntimeException | IOException ex)
+                        {
+                            log.error(ex.getMessage(), ex);
+                            failedCount.getAndAdd(1);
+                        }
+                    }
+                }
+            }
+        });
+
+        log.info("Waiting for undistortion to finish on rendering thread");
+    }
+
+    private static void multithreadPreviewImgGeneration(ViewSet viewSet, int maxLoadingThreads, ProgressMonitor progressMonitor,
+        AtomicInteger finishedCount, AtomicInteger failedCount)
+    {
+        progressMonitor.setProgress(0, "Importing and downsizing images (multithread)...");
+
+        // Need to use custom ForkJoinPool so that number of threads doesn't go out of control and use up the Java heap space
+        ForkJoinPool customThreadPool = new ForkJoinPool(maxLoadingThreads);
+
+        customThreadPool.submit(() -> IntStream.range(0, viewSet.getCameraPoseCount())
+            .parallel() // allow images to be processed in parallel; especially important for ICC transformation if present
+            .forEach(i ->
+            {
+                try
+                {
+                    // Check if the image is there first
+                    File previewImageFile = viewSet.findPreviewImageFile(i);
+                    logExists(previewImageFile);
+                    markFinished(viewSet, finishedCount);
+                    progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
+                        MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(i),
+                            finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
+                }
+                catch (FileNotFoundException e)
+                {
+                    // Only generate the image if it wasn't found
+                    int projectionIndex = viewSet.getCameraProjectionIndex(i);
+                    if (viewSet.getCameraProjection(projectionIndex) instanceof DistortionProjection)
+                    {
+                        try
+                        {
+                            BufferedImage decodedImage = getDecodedImage(viewSet, i);
+
+                            // Do the undistortion on the rendering thread
+                            Rendering.runLater(new GraphicsRequest()
+                            {
+                                @Override
+                                public <ContextType extends Context<ContextType>> void executeRequest(ContextType context)
+                                {
+                                    try
+                                    {
+                                        BufferedImage imageOut = undistortImage(decodedImage, viewSet, projectionIndex, context);
+
+                                        // Write to a file on another thread so as not to block the rendering thread
+                                        new Thread(() ->
+                                        {
+                                            try
+                                            {
+                                                ImageIO.write(imageOut, "PNG", viewSet.getPreviewImageFile(i));
+                                                logFinished(viewSet.getPreviewImageFile(i));
+                                                markFinished(viewSet, finishedCount);
+                                                progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
+                                                    MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(i),
+                                                        finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
+                                            }
+                                            catch (IOException|RuntimeException ex)
+                                            {
+                                                // Failure to save the final file
+                                                log.error(ex.getMessage(), ex);
+                                                failedCount.getAndAdd(1);
+                                            }
+
+                                        }).start();
+                                    }
+                                    catch (IOException|RuntimeException ex)
+                                    {
+                                        // Failure to undistort
+                                        log.error(ex.getMessage(), ex);
+                                        failedCount.getAndAdd(1);
+                                    }
+                                }
+                            });
+                        }
+                        catch (IOException|RuntimeException ex)
+                        {
+                            // Failure to read the original image
+                            log.error(ex.getMessage(), ex);
+                            failedCount.getAndAdd(1);
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            // Fallback to simply resizing without undistorting
+                            // Does not require graphics context, so threading is simple.
+                            File fullResImageFile = viewSet.findFullResImageFile(i);
+                            resizeImage(fullResImageFile, viewSet, i);
+                            markFinished(viewSet, finishedCount);
+                            progressMonitor.setProgress(finishedCount.get() + failedCount.get(),
+                                MessageFormat.format("Completed: {0} ({1}/{2})", viewSet.getImageFileName(i),
+                                    finishedCount.get() + failedCount.get(), viewSet.getCameraPoseCount()));
+                        }
+                        catch (IOException|RuntimeException ex)
+                        {
+                            log.error(ex.getMessage(), ex);
+                            failedCount.getAndAdd(1);
+                        }
+                    }
+                }
+            }));
+
+        log.info("Finished reading all images; waiting for undistortion to finish on other threads");
     }
 
     /**

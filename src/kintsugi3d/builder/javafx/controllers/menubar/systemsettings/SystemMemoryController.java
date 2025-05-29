@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -15,12 +15,10 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
-import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.app.OperatingSystem;
 import kintsugi3d.builder.javafx.InternalModels;
+import kintsugi3d.builder.util.Launch4jConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import kintsugi3d.builder.util.Launch4jConfiguration;
 
 import java.io.IOException;
 import java.net.URL;
@@ -38,7 +36,6 @@ public class SystemMemoryController implements Initializable, SystemSettingsCont
     @FXML private Spinner<Integer> maxMemSpinner;
     @FXML private Button okButton;
     @FXML private Button applyButton;
-    @FXML private Button closeButton;
     @FXML private AnchorPane root;
 
     private Launch4jConfiguration configuration;
@@ -49,17 +46,13 @@ public class SystemMemoryController implements Initializable, SystemSettingsCont
         init();
     }
 
-    public void button_OK()
-    {
-        button_Apply();
-        button_Close();
-    }
 
     public void button_Apply()
     {
         configuration.setEnableMaxMemory(maxMemCheckbox.isSelected());
         configuration.setMaxMemoryMb((Integer)maxMemSpinner.getValue());
 
+        ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
         try
         {
             try
@@ -76,25 +69,20 @@ public class SystemMemoryController implements Initializable, SystemSettingsCont
         catch (IOException e)
         {
             log.error("Failed to write to launch4j configuration file", e);
-            Alert alert = new Alert(Alert.AlertType.ERROR);
+            Alert alert = new Alert(Alert.AlertType.NONE, "", ok);
             alert.setTitle("Kintsugi 3D Builder");
             alert.setHeaderText("Writing failed");
             alert.setContentText("Kintsugi 3D Builder failed to write to the configuration file. Try restarting Kintsugi 3D Builder as administrator and try again.");
             alert.show();
         }
 
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        Alert alert = new Alert(Alert.AlertType.INFORMATION, "", ok);
         alert.setTitle("Kintsugi 3D Builder");
         alert.setHeaderText("Restart Required");
         alert.setContentText("A restart of Kintsugi 3D Builder is needed for changes to take effect.");
         alert.show();
     }
 
-    public void button_Close()
-    {
-        //TODO: NEEDS TO HAVE DIFFERENT BEHAVIOR WHEN INSIDE SYSTEM SETTINGS
-        root.getScene().getWindow().hide();
-    }
 
     @Override
     public void init() {

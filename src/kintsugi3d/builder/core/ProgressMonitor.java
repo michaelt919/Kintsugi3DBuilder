@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -37,6 +37,12 @@ public interface ProgressMonitor
      * This will always be fired before setProgress() or complete().
      */
     void start();
+
+    /**
+     * Send the name of the process up the call stack to the title of the Progress Bars modal.
+     * @param processName The name of the process.
+     */
+    void setProcessName(String processName);
 
     /**
      * A callback fired when the total number of stages is known.
@@ -89,4 +95,11 @@ public interface ProgressMonitor
     default void warn(Throwable e)
     {
     }
+
+    /**
+     * Usually a call to ProgressBarsController.getInstance().isProcessing().
+     * Used to stop multiple processes from conflicting with each other.
+     * @return true if a process is in progress.
+     */
+    boolean isConflictingProcess();
 }

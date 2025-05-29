@@ -64,6 +64,17 @@ vec3 diffuse(LightingParameters l, Material m)
     return m.diffuseColor;
 }
 
+vec3 emissive()
+{
+    return vec3(0.0);
+}
+
 #include "subjectMain.glsl"
+
+// Prevents shader link errors when declaration from colorappearance.glsl is not defined
+vec4 getColor(int virtualIndex)
+{
+    return vec4(0);
+}
 
 #endif // BASIS_GLSL

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -34,6 +34,7 @@ import kintsugi3d.builder.javafx.util.ImageFactory;
 import kintsugi3d.builder.javafx.util.SafeNumberStringConverter;
 import kintsugi3d.builder.javafx.util.StaticUtilities;
 import kintsugi3d.util.EncodableColorImage;
+import kintsugi3d.util.RecentProjects;
 
 public class SettingsEnvironmentSceneController implements Initializable
 {
@@ -198,11 +199,6 @@ public class SettingsEnvironmentSceneController implements Initializable
         envImageFileChooser.setTitle("Select an environment map");
         bpImageFileChooser.setTitle("Select a backplate image");
 
-        File userHome = new File(System.getProperty("user.home"));
-
-        envImageFileChooser.initialDirectoryProperty().set(userHome);
-        bpImageFileChooser.initialDirectoryProperty().set(userHome);
-
         envImageFileChooser.getExtensionFilters().add(new ExtensionFilter("Radiance HDR environment maps", "*.hdr"));
 
         bpImageFileChooser.getExtensionFilters().add(
@@ -259,6 +255,7 @@ public class SettingsEnvironmentSceneController implements Initializable
     @FXML
     private void pickEnvImageFile()
     {
+        envImageFileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
         File newFile = envImageFileChooser.showOpenDialog(root.getScene().getWindow());
         if (newFile != null)
         {
@@ -266,12 +263,15 @@ public class SettingsEnvironmentSceneController implements Initializable
             envUseImageCheckBox.setSelected(true);
             envImageFileChooser.initialDirectoryProperty().set(newFile.getParentFile());
             envImageFileChooser.initialFileNameProperty().set(newFile.getName());
+
+            RecentProjects.setMostRecentDirectory(newFile.getParentFile());
         }
     }
 
     @FXML
     private void pickBPImageFile()
     {
+        bpImageFileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
         File newFile = bpImageFileChooser.showOpenDialog(root.getScene().getWindow());
         if (newFile != null)
         {
@@ -279,6 +279,8 @@ public class SettingsEnvironmentSceneController implements Initializable
             bpUseImageCheckBox.setSelected(true);
             bpImageFileChooser.initialDirectoryProperty().set(newFile.getParentFile());
             bpImageFileChooser.initialFileNameProperty().set(newFile.getName());
+
+            RecentProjects.setMostRecentDirectory(newFile.getParentFile());
         }
     }
 

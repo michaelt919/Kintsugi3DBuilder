@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,6 +11,14 @@
 
 package org.jengineering.sjmply;
 
+import java.lang.reflect.Array;
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.IntFunction;
+import java.util.stream.Stream;
+
+import org.jengineering.sjmply.PLYType.*;
+
 import static java.lang.Math.toIntExact;
 import static java.lang.String.format;
 import static java.lang.System.arraycopy;
@@ -19,23 +27,6 @@ import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
-
-import java.lang.reflect.Array;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.function.BiFunction;
-import java.util.function.IntFunction;
-import java.util.stream.Stream;
-
-import org.jengineering.sjmply.PLYType.PLYFloat;
-import org.jengineering.sjmply.PLYType.PLYInt;
-import org.jengineering.sjmply.PLYType.PLYList;
-import org.jengineering.sjmply.PLYType.PLYNum;
-import org.jengineering.sjmply.PLYType.PLYSequence;
 
 /** A representation of an PLY series of elements (e.g. vertex, face, edge).
  *  The properties of these elements are themselves represented as an array

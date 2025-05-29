@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -11,11 +11,11 @@
 
 package org.jengineering.sjmply;
 
-import static java.nio.charset.StandardCharsets.US_ASCII;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.TreeMap;
+
+import static java.nio.charset.StandardCharsets.US_ASCII;
 
 /** {@link OutputStream} wrapper that allows line-wise writing of PLY header data, sneakily
  *  inserts the comments into the correct lines.

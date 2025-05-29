@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -27,11 +27,13 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.builder.core.IBRRequestQueue;
 import kintsugi3d.builder.core.IBRRequestUI;
 import kintsugi3d.builder.core.Kintsugi3DBuilderState;
 import kintsugi3d.builder.export.screenshot.ScreenshotRequest.Builder;
+import kintsugi3d.util.RecentProjects;
 
 public class ScreenshotUI implements IBRRequestUI
 {
@@ -41,8 +43,6 @@ public class ScreenshotUI implements IBRRequestUI
     @FXML private Button runButton;
 
     private final FileChooser fileChooser = new FileChooser();
-    private File lastDirectory;
-
     public interface BuilderSupplier
     {
         Builder<ScreenshotRequest> get();
@@ -85,10 +85,7 @@ public class ScreenshotUI implements IBRRequestUI
         this.fileChooser.setTitle("Choose an export file");
         if (exportFileField.getText().isEmpty())
         {
-            if (lastDirectory != null)
-            {
-                this.fileChooser.setInitialDirectory(lastDirectory);
-            }
+            this.fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
         }
         else
         {
@@ -99,7 +96,7 @@ public class ScreenshotUI implements IBRRequestUI
         if (file != null)
         {
             exportFileField.setText(file.toString());
-            lastDirectory = file;
+            RecentProjects.setMostRecentDirectory(file);
         }
     }
 
@@ -119,6 +116,10 @@ public class ScreenshotUI implements IBRRequestUI
             //stage.close();
             if (builderSupplier != null)
             {
+                if(MultithreadModels.getInstance().getIOModel().getProgressMonitor().isConflictingProcess()){
+                    return;
+                }
+
                 requestQueue.addIBRRequest(
                     builderSupplier.get()
                         .setWidth(Integer.parseInt(widthTextField.getText()))

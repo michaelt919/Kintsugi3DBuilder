@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -126,7 +126,7 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
             {
                 if (progressMonitor != null)
                 {
-                    progressMonitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", getViewSet().getImageFileName(k), k, getViewSet().getCameraPoseCount()));
+                    progressMonitor.setProgress(k, MessageFormat.format("{0} ({1}/{2})", getViewSet().getImageFileName(k), k+1, getViewSet().getCameraPoseCount()));
                     progressMonitor.allowUserCancellation();
                 }
 
@@ -200,7 +200,7 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
     {
         this(sharedResources, textureDirectory, loadOptions,
             readDimensionsFromFile(ImageFinder.getInstance().findImageFile(new File(textureDirectory,
-                sharedResources.getViewSet().getImageFileName(sharedResources.getViewSet().getPrimaryViewIndex())))),
+                sharedResources.getViewSet().getImageFileName(0)))),
             progressMonitor);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2024 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Blane Suess, Isaac Tesch, Nathaniel Willius
+ * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3
@@ -15,6 +15,7 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
+import java.text.MessageFormat;
 
 import org.lwjgl.*;
 import kintsugi3d.gl.core.*;
@@ -182,7 +183,12 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
             {
                 if (destination.remaining() < width * height * 4)
                 {
-                    throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
+                    throw new IllegalArgumentException(
+                        MessageFormat.format(
+                            "The destination buffer (capacity: {0}, limit: {1}, position: {2}, remaining: {3}) " +
+                                "is not big enough to hold the requested data (width: {4}, height: {5}).",
+                            destination.capacity(), destination.limit(),  destination.position(), destination.remaining(),
+                            width, height));
                 }
 
                 getReadContents().bindForRead(attachmentIndex);
@@ -200,7 +206,12 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
             {
                 if (destination.remaining() < width * height * 4)
                 {
-                    throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
+                    throw new IllegalArgumentException(
+                        MessageFormat.format(
+                            "The destination buffer (capacity: {0}, limit: {1}, position: {2}, remaining: {3}) " +
+                                "is not big enough to hold the requested data (width: {4}, height: {5}).",
+                            destination.capacity(), destination.limit(),  destination.position(), destination.remaining(),
+                            width, height));
                 }
 
                 getReadContents().bindForRead(attachmentIndex);
@@ -217,7 +228,12 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
             {
                 if (destination.remaining() < width * height * 4)
                 {
-                    throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
+                    throw new IllegalArgumentException(
+                        MessageFormat.format(
+                            "The destination buffer (capacity: {0}, limit: {1}, position: {2}, remaining: {3}) " +
+                                "is not big enough to hold the requested data (width: {4}, height: {5}).",
+                            destination.capacity(), destination.limit(),  destination.position(), destination.remaining(),
+                            width, height));
                 }
 
                 getReadContents().bindForRead(attachmentIndex);
@@ -253,7 +269,12 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
             {
                 if (destination.remaining() < width * height)
                 {
-                    throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
+                    throw new IllegalArgumentException(
+                        MessageFormat.format(
+                            "The destination buffer (capacity: {0}, limit: {1}, position: {2}, remaining: {3}) " +
+                                "is not big enough to hold the requested data (width: {4}, height: {5}).",
+                            destination.capacity(), destination.limit(),  destination.position(), destination.remaining(),
+                            width, height));
                 }
 
                 getReadContents().bindForRead(0);

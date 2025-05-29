@@ -1,9 +1,103 @@
+/*Note: line height is not supported as a native JavaFX CSS feature.*/
+
+.wireframeCaption {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-style: normal;
+    -fx-font-weight: 400;
+    -fx-font-size: 12px;
+}
+
+.wireframeBody {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-style: normal;
+    -fx-font-weight: 400;
+    -fx-font-size: 14px;
+}
+
+.wireframeBodyStrong {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-style: normal;
+    -fx-font-weight: 600;
+    -fx-font-size: 12px;
+}
+
+.wireframeBodyLarge {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-style: normal;
+    -fx-font-weight: 400;
+    -fx-font-size: 18px;
+}
+
+.wireframeSubtitle {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-style: normal;
+    -fx-font-weight: 600;
+    -fx-font-size: 20px;
+}
+
+.wireframeTitle {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-style: normal;
+    -fx-font-weight: 600;
+    -fx-font-size: 28px;
+}
+
+.wireframeTitleLarge {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-style: normal;
+    -fx-font-weight: 600;
+    -fx-font-size: 40px;
+}
+
+.wireframeDisplay {
+    -fx-font-family: 'Segoe UI';
+    -fx-font-style: normal;
+    -fx-font-weight:600;
+    -fx-font-size: 68px;
+}
+
+.kintsugi-3D-1{
+    -fx-fill: #FFE790; /* light yellow */
+}
+.kintsugi-3D-2{
+    -fx-fill: #EFCB5C; /* kintsugi yellow */
+}
+.kintsugi-3D-3{
+    -fx-fill: #383838; /* med gray */
+}
+.kintsugi-3D-4{
+    -fx-fill: #202020; /* dark gray */
+}
+.kintsugi-3D-5{
+    -fx-fill: #030305; /* off-black.*/
+}
+
+
+.kintsugi-3D-Wireframe-1{
+    fx-fill: #CECECE; /* off-white */
+}
+.kintsugi-3D-Wireframe-2{
+    fx-fill: #ADADAD; /* light gray */
+}
+.kintsugi-3D-Wireframe-3{
+    fx-fill: #383838; /* med gray */
+}
+.kintsugi-3D-Wireframe-4{
+    fx-fill: #202020; /* dark gray */
+}
+.kintsugi-3D-Wireframe-5{
+    fx-fill: #030303; /* off-black */
+}
+
+
+
+/********************************************************************************/
 .accordion{
-    -fx-background-color: #222230;
+    -fx-background-color: #262626;
 }
 
 .anchor-pane{
-    -fx-background-color: #000000;
+    -fx-background-color: #262626;
 }
 
 .accordion .content {
@@ -11,34 +105,53 @@
 }
 
 .button {
-    -fx-background-color: #272727;
-    -fx-text-fill: #FFFFFF;
-    -fx-background-radius: 30 30 30 30;
+    -fx-background-color: #CECECE;
+}
+
+.button .text{
+    -fx-fill:#030303;
 }
 
 .button:hover{
-    -fx-background-color: #222255;
+    -fx-background-color: #D4AA00;
 }
 
 .button:pressed {
-    -fx-background-color: #272727;
+    -fx-background-color: #262626;
+}
+
+.button:pressed .text{
+    -fx-fill: #CECECE;
+}
+
+.button-selected{
+    -fx-background-color: #D4AA00;
+ }
+
+.cachesettingsanchorepane{
+      -fx-background-color: #383838;
+ }
+
+.cameraviewlist{
+    -fx-background-color: #262626;
+    -fx-border-color: #262626;
 }
 
 .context-menu {
-    -fx-background-color: #000000;
+    -fx-background-color: #262626;
 }
 
 .check-box{
     -fx-text-fill: #FFFFFF;
+    -fx-background-color: #262626;
 }
 
 .color-picker{
-    -fx-background-color: #000000;
-    -fx-border-color: #222230;
-    -fx-text-fill:#000000;
+    -fx-background-color: #383838;
+    -fx-border-color: #383838;
 }
 
-.accordion .combo-box-base .text{ /*text within the dropdown for the color picker label in lighting settings*/
+.color-picker .text{
     -fx-fill: #000000;
 }
 
@@ -49,7 +162,7 @@
 /*TODO: change the color of combo box dropdown arrow*/
 
 .combo-box .text{
-    -fx-fill: #0000ff; /*TODO: trying to change the color of the item
+    -fx-fill: #ffffff; /*TODO: trying to change the color of the item
                             which is presented in the dropdown before it is unrolled*/
 }
 
@@ -58,15 +171,19 @@
 }
 
 dialog-pane{
-    -fx-background-color:#ff0000;
+    -fx-background-color:#ff0000; /*TODO:Should change this*/
 }
 
+.grayscalebuttons{
+    -fx-background-radius: 0 0 0 0;
+ }
+
 .grid-pane{
-    -fx-background-color: #000000;
+    -fx-background-color: #262626;
 }
 
 .hbox{
-    -fx-background-color: #000000;
+    -fx-background-color: #262626;
 }
 
 .label{
@@ -77,19 +194,21 @@ dialog-pane{
     -fx-tick-label-fill: #FFFFFF;
 }
 
+.specularfitcheckbox{
+       -fx-background-color: #383838;
+ }
+
 .list-view{
-    -fx-background-color: #000000;
+    -fx-background-color: #262626;
     -fx-text-fill: #FFFFFF;
 }
 
-/* Apply to even cells */
 .list-cell:even {
-    -fx-background-color: #333333; /* Even cell background color */
+    -fx-background-color: #333333;
 }
 
-/* Apply to odd cells */
 .list-cell:odd {
-    -fx-background-color: #272727; /* Odd cell background color */
+    -fx-background-color: #262626;
 }
 
 .list-cell:selected{
@@ -102,34 +221,65 @@ dialog-pane{
 }
 
 .menu{
-    -fx-background-color: #272727;
-    -fx-background-radius: 30 30 30 30;
+    -fx-background-color: #262626;
+    -fx-background-radius: 0 0 0 0;
+    /*-fx-background-color: #383838; brought in from main - Nathan merge
+    -fx-background-radius: 30 30 30 30;*/
+}
+.menu:hover{
+    -fx-background-color: #D4AA00;
 }
 
 .menu-bar{
-    -fx-background-color: #000000
+    -fx-background-color: #262626
+}
+.menu-item:hover{
+    -fx-background-color: #D4AA00;
 }
 
 .menu-item{
-    -fx-background-color:#000000;
+    -fx-background-color:#262626;
     -fx-text-fill: #FFFFFF;
 }
+
+.menubarbuttons{
+    -fx-background-color: #262626;
+    -fx-background-radius: 0 0 0 0;
+}
+.menuebaranchorpane{
+     -fx-background-color: #383838;
+ }
 
 .progress-bar{
     -fx-accent: #D4AA00; /*color of completed portion (Kintsugi yellow)*/
 }
 
 .progress-bar .track{
-    -fx-background-color: #444444; /*color of incomplete portion*/
+    -fx-background-color: #CECECE; /*color of incomplete portion*/
 }
 
-.split-menu-button {
-    -fx-base: #272727;
-    -fx-text-fill: #FFFFFF;
+.desaturated-progress-bar{
+    -fx-accent: #383838; /*color of completed portion*/
 }
 
 .split-button:hover{
-    -fx-background-color: #222255;
+    -fx-background-color: #D4AA00;
+}
+
+.split-menu-button {
+    -fx-background-color: #CECECE;
+}
+
+.split-menu-button .text{
+    -fx-fill:#030303;
+}
+
+.split-menu-button:hover{
+    -fx-base: #D4AA00;
+}
+
+.split-menu-button .menu-item .text{
+    -fx-fill:#CECECE;
 }
 
 .scroll-pane{
@@ -141,19 +291,28 @@ dialog-pane{
 }
 
 .tab{
-    -fx-background-color: #000000;
+    -fx-background-color: #383838;
+}
+.tab:selected{
+    -fx-background-color: #D4AA00;
+    -fx-font-weight:bold;
+}
+
+.tab:hover{
+ /*   -fx-background-color: #222255;*/
+    -fx-background-color: #D4AA00;
 }
 
 .tab-pane .tab-header-area .tab-header-background {
-    -fx-background-color: #272727;
+    -fx-background-color: #262626;
 }
 
-.table-row-cell: even{
+.table-row-cell:even{
     -fx-background-color: #333333; /* Even cell background color */
 }
 
 .table-row-cell: odd{
-    -fx-background-color: #272727; /* Odd cell background color */
+    -fx-background-color: #262626; /* Odd cell background color */
 }
 
 .table-view .column-header{
@@ -174,29 +333,29 @@ dialog-pane{
 }
 
 .text-field{
-    -fx-background-color: #222222;
+    -fx-background-color: #383838;
     -fx-text-fill: #ffffff;
 }
 
 .titled-pane{
-    -fx-background-color: #000000;
+    -fx-background-color: #262626;
 }
 
 .titled-pane > .title{ /*only applies to the dropdown bar, not the text or content within*/
-    -fx-background-color:#222230;
+    -fx-background-color:#383838;
 }
 
 .titled-pane > .title > *.text{
     -fx-fill:#ffffff;
 }
 
-.toggle-button:selected .text{
-    -fx-fill: #000000;
-}
 
 .toggle-button{
-    -fx-background-color: #272727;
-    -fx-background-radius: 30 30 30 30;
+    -fx-background-color: #CECECE;
+}
+
+.toggle-button .text{
+    -fx-fill:#030303;
 }
 
 .toggle-button:selected{
@@ -204,29 +363,71 @@ dialog-pane{
     -fx-font-weight:bold;
 }
 
-.toggle-button:hover{
-    -fx-background-color: #222255;
+.toggle-button:selected .text{
+    -fx-fill: #000000;
 }
 
-.toggle-button:hover .text{
-    -fx-fill: #ffffff;
+.toggle-button:hover{
+    -fx-background-color: #D4AA00;
 }
 
 .toggle-button:pressed {
-    -fx-background-color: #272727;
+    -fx-background-color: #383838;
 }
 
-
-
-
 .tool-bar{
-    -fx-background-color: #000000;
+    -fx-background-color: #262626;
 }
 
 .tool-bar .button{
     -fx-background-radius: 0;
 }
 
+.tooltip {
+    -fx-show-duration: indefinite; /* tooltips don't disappear until the user's mouse leaves the node*/
+}
+
+.tooltip .text{
+    -fx-fill: #CECECE;
+}
+
+/*Tree cell styling stolen from stack overflow --> https://stackoverflow.com/questions/30684308/javafx-treeview-css */
+.tree-view, .tree-cell {
+    -fx-text-fill: white ;
+}
+
+.tree-cell:even {
+    -fx-background-color: #333333;
+}
+
+.tree-cell:odd {
+    -fx-background-color: #262626;
+}
+
+.tree-cell:empty{
+    -fx-background-color: #202020;
+}
+
+.tree-cell:expanded, .tree-cell:sub-tree-item {
+    -fx-background-color: #404040 ;
+}
+.tree-cell:selected {
+    -fx-font-weight: bold ;
+}
+.tree-cell {
+    -fx-padding: 0.75em 0em 0.75em 0em ;
+}
+.tree-cell:sub-tree-item {
+    -fx-padding: 0.25em ;
+}
+
+.tree-cell > .tree-disclosure-node > .arrow  {
+    -fx-background-color: none;
+}
+.tree-cell:expanded > .tree-disclosure-node > .arrow {
+    -fx-background-color: none;
+}
+
 .vbox{
-    -fx-background-color: #444444;
+    -fx-background-color: #262626;
 }
