@@ -837,14 +837,6 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public String getImageFileNameWithFormat(int poseIndex, String format)
-    {
-        String[] parts = this.getImageFileName(poseIndex).split("\\.");
-        return Stream.concat(Arrays.stream(parts, 0, Math.max(1, parts.length - 1)), Stream.of(format))
-                .collect(Collectors.joining("."));
-    }
-
-    @Override
     public File getFullResImageFile(int poseIndex)
     {
         return new File(this.getFullResImageFilePath(), this.imageFiles.get(poseIndex).getPath());
@@ -860,7 +852,8 @@ public final class ViewSet implements ReadonlyViewSet
     public File getPreviewImageFile(int poseIndex)
     {
         // Use PNG for preview images (TODO: make this a configurable setting?)
-        return new File(this.getPreviewImageFilePath(), this.getImageFileNameWithFormat(poseIndex, "PNG"));
+        return new File(this.getPreviewImageFilePath(),
+            ImageFinder.getInstance().getImageFileNameWithFormat(this.getImageFileName(poseIndex), "png"));
     }
 
     public int getPreviewWidth()
