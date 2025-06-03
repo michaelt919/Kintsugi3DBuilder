@@ -11,16 +11,15 @@
 
 package kintsugi3d.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Singleton class
@@ -64,18 +63,22 @@ public final class ImageFinder
             // Filename already is in the requested format.
             return imageFileName;
         }
-        else if(IMG_FORMATS.contains(format))
-        {
-            // Replace the old file extension with the new one if recognized.
-            String[] parts = imageFileName.split("\\.");
-            return Stream.concat(Arrays.stream(parts, 0, Math.max(1, parts.length - 1)), Stream.of(format))
-                .collect(Collectors.joining("."));
-        }
         else
         {
-            // Otherwise just append the  new file extension to the end (even if the filename appears to have an extension,
-            // it may just be a name with dots in it that already had the standard extension stripped).
-            return String.format("%s.%s", imageFileName, format);
+            String[] parts = imageFileName.split("\\.");
+
+            if(IMG_FORMATS.contains(parts[parts.length - 1]))
+            {
+                // Replace the old file extension with the new one if recognized.
+                return Stream.concat(Arrays.stream(parts, 0, Math.max(1, parts.length - 1)), Stream.of(format))
+                    .collect(Collectors.joining("."));
+            }
+            else
+            {
+                // Otherwise just append the  new file extension to the end (even if the filename appears to have an extension,
+                // it may just be a name with dots in it that already had the standard extension stripped).
+                return String.format("%s.%s", imageFileName, format);
+            }
         }
     }
 
