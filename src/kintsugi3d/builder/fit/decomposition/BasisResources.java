@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
+import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.export.specular.SpecularFitSerializer;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
@@ -109,7 +110,7 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
      * @throws IOException If a part of the solution cannot be loaded form file.
      */
     public static <ContextType extends Context<ContextType>> BasisResources<ContextType> loadFromPriorSolution(
-        ContextType context, File priorSolutionDirectory) throws IOException
+            ContextType context, File priorSolutionDirectory, ProgressMonitor monitor) throws IOException
     {
         SpecularBasis basis = SpecularFitSerializer.deserializeBasisFunctions(priorSolutionDirectory);
 

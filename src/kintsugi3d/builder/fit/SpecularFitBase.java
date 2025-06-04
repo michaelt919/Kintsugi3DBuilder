@@ -11,7 +11,9 @@
 
 package kintsugi3d.builder.fit;
 
+import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.BasisWeightResources;
 import kintsugi3d.builder.fit.roughness.RoughnessOptimization;
@@ -82,12 +84,11 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
      * Roughness and reflectivity textures will be loaded from prior solution
      * @return
      */
-    protected SpecularFitBase(ContextType context, File priorSolutionDirectory) throws IOException
-    {
+    protected SpecularFitBase(ContextType context, File priorSolutionDirectory, ProgressMonitor monitor) throws IOException {
         this.context = context;
 
         // Textures calculated on CPU and passed to GPU (not framebuffers): basis functions & weights
-        this.basisResources = BasisResources.loadFromPriorSolution(context, priorSolutionDirectory);
+        this.basisResources = BasisResources.loadFromPriorSolution(context, priorSolutionDirectory, monitor);
         this.basisResourcesOwned = true;
 
         if (this.basisResources != null)
@@ -101,7 +102,7 @@ public abstract class SpecularFitBase<ContextType extends Context<ContextType>>
             this.basisWeightResources = BasisWeightResources.loadFromPriorSolution(
                 context, priorSolutionDirectory,
                 roughnessOptimization.getRoughnessTexture().getWidth(), roughnessOptimization.getRoughnessTexture().getHeight(),
-                basisResources.getBasisCount());
+                basisResources.getBasisCount(), monitor);
 
             this.roughnessOptimization.setInputWeights(basisWeightResources);
         }

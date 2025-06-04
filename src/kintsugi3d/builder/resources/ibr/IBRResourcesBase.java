@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.resources.ibr;
 
+import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.geometry.GeometryResources;
@@ -28,6 +29,7 @@ public abstract class IBRResourcesBase<ContextType extends Context<ContextType>>
      * Only one instance will be the owner of the shared resources (typicaly created when a project is loaded)
      */
     private final boolean ownerOfSharedResources;
+    private ProgressMonitor monitor;
 
     IBRResourcesBase(IBRSharedResources<ContextType> sharedResources, boolean ownerOfSharedResources)
     {

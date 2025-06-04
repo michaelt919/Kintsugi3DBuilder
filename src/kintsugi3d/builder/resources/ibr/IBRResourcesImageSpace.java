@@ -362,7 +362,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     {
         // IAN: This super call should be creating the geometry
         super(new IBRSharedResources<>(context, viewSet, geometry,
-                    loadOptions != null ? loadOptions.getTextureLoadOptions() : new TextureLoadOptions()),
+                    loadOptions != null ? loadOptions.getTextureLoadOptions() : new TextureLoadOptions(), progressMonitor),
                 true);
 
         // Read the images from a file
@@ -408,7 +408,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
             if(progressMonitor != null)
             {
-                progressMonitor.setStage(0, "Loading preview-resolution images...");
+                progressMonitor.setStage(2, "Loading preview-resolution images...");
                 progressMonitor.setMaxProgress(viewSet.getCameraPoseCount());
             }
 

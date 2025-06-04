@@ -12,6 +12,7 @@
 package kintsugi3d.builder.resources.ibr;
 
 import kintsugi3d.builder.core.ColorAppearanceMode;
+import kintsugi3d.builder.core.DefaultProgressMonitor;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.Context;
@@ -25,7 +26,7 @@ public class IBRResourcesAnalytic<ContextType extends Context<ContextType>> exte
 {
     public IBRResourcesAnalytic(ContextType context, ViewSet viewSet, VertexGeometry geometry)
     {
-        super(new IBRSharedResources<>(context, viewSet, geometry, new TextureLoadOptions()), true);
+        super(new IBRSharedResources<>(context, viewSet, geometry, new TextureLoadOptions(), new DefaultProgressMonitor()), true);
     }
 
     @Override

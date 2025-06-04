@@ -18,7 +18,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.fit.finalize.AlbedoORMOptimization;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
@@ -105,14 +107,12 @@ public final class SpecularFitFinal<ContextType extends Context<ContextType>> ex
     }
 
     public static <ContextType extends Context<ContextType>> SpecularFitFinal<ContextType> loadFromPriorSolution(
-        ContextType context, File priorSolutionDirectory) throws IOException
-    {
-        return new SpecularFitFinal<>(context, SpecularFitOptimizable.getSerializableMetadataMapNames(), priorSolutionDirectory);
+            ContextType context, File priorSolutionDirectory, ProgressMonitor monitor) throws IOException {
+        return new SpecularFitFinal<>(context, SpecularFitOptimizable.getSerializableMetadataMapNames(), priorSolutionDirectory, monitor);
     }
 
-    private SpecularFitFinal(ContextType context, Collection<String> metadataMapNames, File priorSolutionDirectory) throws IOException
-    {
-        super(context, priorSolutionDirectory);
+    private SpecularFitFinal(ContextType context, Collection<String> metadataMapNames, File priorSolutionDirectory, ProgressMonitor monitor) throws IOException {
+        super(context, priorSolutionDirectory, monitor);
 
         // Load diffuse map
         File diffuseMapFile = new File(priorSolutionDirectory, "diffuse.png");

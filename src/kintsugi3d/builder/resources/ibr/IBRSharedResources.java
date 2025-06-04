@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.resources.ibr;
 
+import kintsugi3d.builder.core.ProgressMonitor;
 import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.fit.SpecularFitFinal;
@@ -82,7 +83,7 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
 
     private final float[] cameraWeights;
 
-    IBRSharedResources(ContextType context, ViewSet viewSet, VertexGeometry geometry, TextureLoadOptions loadOptions)
+    IBRSharedResources(ContextType context, ViewSet viewSet, VertexGeometry geometry, TextureLoadOptions loadOptions, ProgressMonitor monitor)
     {
         this.context = context;
         this.viewSet = viewSet;
@@ -159,7 +160,7 @@ final class IBRSharedResources<ContextType extends Context<ContextType>>
                     SpecularMaterialResources<ContextType> loadedFit;
                     try
                     {
-                        loadedFit = SpecularFitFinal.loadFromPriorSolution(context, viewSet.getSupportingFilesFilePath());
+                        loadedFit = SpecularFitFinal.loadFromPriorSolution(context, viewSet.getSupportingFilesFilePath(), monitor);
                     }
                     catch (IOException e)
                     {

@@ -182,7 +182,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
         if(progressMonitor != null)
         {
-            progressMonitor.setStageCount(2);
+            progressMonitor.setStageCount(3);
             progressMonitor.setStage(0, "Generating preview-resolution images...");
         }
 
@@ -247,8 +247,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             {
                 if (progressMonitor != null)
                 {
-                    // Add one for the preview image generation step already completed.
-                    progressMonitor.setStageCount(count + 1);
+                    progressMonitor.setStageCount(count);
                 }
             }
 
@@ -257,8 +256,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             {
                 if (progressMonitor != null)
                 {
-                    // Add one for the preview image generation step already completed.
-                    progressMonitor.setStage(stage + 1, message);
+                    progressMonitor.setStage(stage, message);
                 }
             }
 

@@ -11,6 +11,8 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
+import kintsugi3d.builder.core.ProgressMonitor;
+import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.export.specular.SpecularFitSerializer;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
@@ -19,6 +21,7 @@ import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.MessageFormat;
 
 @SuppressWarnings("PublicField")
 public class BasisWeightResources<ContextType extends Context<ContextType>>
@@ -106,8 +109,7 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
      * @throws IOException If a part of the solution cannot be loaded form file.
      */
     public static <ContextType extends Context<ContextType>> BasisWeightResources<ContextType> loadFromPriorSolution(
-        ContextType context, File priorSolutionDirectory, int width, int height, int basisCount) throws IOException
-    {
+            ContextType context, File priorSolutionDirectory, int width, int height, int basisCount, ProgressMonitor monitor) throws IOException {
         BasisWeightResources<ContextType> resources = new BasisWeightResources<>(context, width, height, basisCount);
 
         // Fill trivial weight mask.
@@ -119,10 +121,24 @@ public class BasisWeightResources<ContextType extends Context<ContextType>>
         }
         resources.weightMask.load(weightMaskBuffer);
 
+        if (monitor != null)
+        {
+            monitor.setStage(1, "Loading Weight Maps...");
+            monitor.setMaxProgress(basisCount);
+        }
         for (int b = 0; b < basisCount; b++)
         {
+            if (monitor != null){
+                monitor.setProgress(b, "Weight Map " + (b + 1) + "/" + basisCount);
+                monitor.setProgress(b, MessageFormat.format("Weight Map {0}/{1}", b + 1, basisCount));
+                //TODO: allow user cancellation here
+            }
             // Load weight maps
             resources.weightMaps.loadLayer(b, new File(priorSolutionDirectory, SpecularFitSerializer.getWeightFileName(b)), true);
+        }
+        if (monitor != null){
+            monitor.setMaxProgress(0);
+            monitor.setProgress(basisCount, "Finished loading weight maps.");
         }
 
         return resources;

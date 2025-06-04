@@ -58,7 +58,7 @@ public class IBRResourcesTextureSpace<ContextType extends Context<ContextType>> 
         ContextType context, ViewSet viewSet, VertexGeometry geometry, TextureLoadOptions loadOptions,
         int texWidth, int texHeight, ProgressMonitor progressMonitor) throws IOException
     {
-        super(new IBRSharedResources<>(context, viewSet, geometry, loadOptions), true);
+        super(new IBRSharedResources<>(context, viewSet, geometry, loadOptions, new DefaultProgressMonitor()), true);
 
         // Deferred rendering: draw to geometry textures initially and then just draw using a rectangle and
         // the geometry info cached in the textures

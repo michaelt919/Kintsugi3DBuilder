@@ -76,7 +76,7 @@ public class SpecularFitProcess
 
         if (monitor != null)
         {
-            monitor.setStageCount(3);
+            monitor.setStageCount(4);
             monitor.setStage(0, "Building cache...");
         }
 
@@ -216,7 +216,7 @@ public class SpecularFitProcess
 
                 if (monitor != null)
                 {
-                    monitor.setStage(2, "Performing high-res fit...");
+                    monitor.setStage(3, "Performing high-res fit...");
                 }
 
                 // Create space for the solution.
