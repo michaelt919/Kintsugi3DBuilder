@@ -23,6 +23,7 @@ import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 import kintsugi3d.gl.core.*;
+import kintsugi3d.util.ImageFinder;
 
 class MultiviewRetargetRenderRequest extends RenderRequestBase
 {
@@ -84,19 +85,8 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
 
                 render(drawable, framebuffer);
 
-                String fileName = targetViewSet.getImageFileName(i);
-
-                if (!fileName.endsWith(".png"))
-                {
-                    String[] parts = fileName.split("\\.");
-                    if (parts.length == 1){
-                        fileName = fileName + ".png";
-                    }
-                    else{
-                        parts[parts.length - 1] = "png";
-                        fileName = String.join(".", parts);
-                    }
-                }
+                String fileName = ImageFinder.getInstance().getImageFileNameWithFormat(
+                    renderable.getActiveViewSet().getImageFileName(i), "png");
 
                 File exportFile = new File(getOutputDirectory(), fileName);
                 getOutputDirectory().mkdirs();
