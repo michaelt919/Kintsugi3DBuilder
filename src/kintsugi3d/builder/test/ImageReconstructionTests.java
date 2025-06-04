@@ -46,10 +46,7 @@ import kintsugi3d.gl.opengl.OpenGLContext;
 import kintsugi3d.gl.opengl.OpenGLContextFactory;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
-import kintsugi3d.util.ColorArrayImage;
-import kintsugi3d.util.ColorList;
-import kintsugi3d.util.Potato;
-import kintsugi3d.util.SRGB;
+import kintsugi3d.util.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -971,7 +968,8 @@ class ImageReconstructionTests
                             try
                             {
                                 view.getReconstructionFramebuffer().getTextureReaderForColorAttachment(0).saveToFile("PNG",
-                                    new File(outputDirectory, resources.getViewSet().getImageFileNameWithFormat(view.getIndex(), "png")),
+                                    new File(outputDirectory, ImageFinder.getInstance().getImageFileNameWithFormat(
+                                        resources.getViewSet().getImageFileName(view.getIndex()), "png")),
                                     // Luminance encoding expects [0, 1] range, but encodes in [0, 255] range.
                                     // Tonemapper parameter taken by saveToFile assumes both are [0, 255]
                                     (color, index) -> resources.getViewSet().getLuminanceEncoding().encode(
@@ -1058,7 +1056,8 @@ class ImageReconstructionTests
                     try
                     {
                         view.getReconstructionFramebuffer().getTextureReaderForColorAttachment(0).saveToFile("PNG",
-                            new File(outputDirectory, resources.getViewSet().getImageFileNameWithFormat(view.getIndex(), "png")),
+                            new File(outputDirectory, ImageFinder.getInstance().getImageFileNameWithFormat(
+                                resources.getViewSet().getImageFileName(view.getIndex()), "png")),
                             // Luminance encoding expects [0, 1] range, but encodes in [0, 255] range.
                             // Tonemapper parameter taken by saveToFile assumes both are [0, 255]
                             (color, index) -> resources.getViewSet().getLuminanceEncoding().encode(
