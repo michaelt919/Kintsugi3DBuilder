@@ -40,6 +40,7 @@ import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.vecmath.IntVector2;
 import kintsugi3d.gl.vecmath.Vector4;
 import kintsugi3d.util.BufferedImageBuilder;
+import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -253,30 +254,6 @@ public class ImageCache<ContextType extends Context<ContextType>>
         }
     }
 
-
-    private String getPNGFilename(int viewIndex)
-    {
-        String originalFilename = resources.getViewSet().getImageFileName(viewIndex);
-        String originalFilenameLowercase = originalFilename.toLowerCase();
-        if (originalFilenameLowercase.endsWith("png"))
-        {
-            return originalFilename;
-        }
-        else if (originalFilenameLowercase.endsWith("jpeg") || originalFilenameLowercase.endsWith("jpg")
-            || originalFilenameLowercase.endsWith("tif") || originalFilenameLowercase.endsWith("tiff"))
-        {
-            // Change file extension to .png
-            String[] filenameParts = resources.getViewSet().getImageFileName(viewIndex).split("\\.");
-            filenameParts[filenameParts.length - 1] = "png";
-            return String.join(".", filenameParts);
-        }
-        else
-        {
-            // Append .png
-            return originalFilename + ".png";
-        }
-    }
-
     private void buildCache(Framebuffer<ContextType> fbo, ProgressMonitor monitor)
         throws IOException, UserCancellationException
     {
@@ -317,7 +294,9 @@ public class ImageCache<ContextType extends Context<ContextType>>
                     image.setupShaderProgram(texSpaceProgram);
                     texSpaceDrawable.draw(fbo);
 
-                    String pngFilename = getPNGFilename(k);
+                    // Force PNG format for lossless encoding
+                    String pngFilename = ImageFinder.getInstance().getImageFileNameWithFormat(
+                        resources.getViewSet().getImageFileName(k), "png");
 
                     // "Sampled" image to store randomly selected pixels for preliminary optimization at a lower resolution.
                     BufferedImage sampled = new BufferedImage(settings.getSampledSize(), settings.getSampledSize(), BufferedImage.TYPE_INT_ARGB);

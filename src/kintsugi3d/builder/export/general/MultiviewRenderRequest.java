@@ -23,6 +23,7 @@ import kintsugi3d.builder.core.UserCancellationException;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.state.ReadonlySettingsModel;
 import kintsugi3d.gl.core.*;
+import kintsugi3d.util.ImageFinder;
 
 class MultiviewRenderRequest extends RenderRequestBase
 {
@@ -76,19 +77,8 @@ class MultiviewRenderRequest extends RenderRequestBase
 
                 render(drawable, framebuffer);
 
-                String fileName = renderable.getActiveViewSet().getImageFileName(i);
-
-                if (!fileName.endsWith(".png"))
-                {
-                    String[] parts = fileName.split("\\.");
-                    if (parts.length == 1){
-                        fileName = fileName + ".png";
-                    }
-                    else{
-                        parts[parts.length - 1] = "png";
-                        fileName = String.join(".", parts);
-                    }
-                }
+                String fileName = ImageFinder.getInstance().getImageFileNameWithFormat(
+                    renderable.getActiveViewSet().getImageFileName(i), "png");
 
                 File exportFile = new File(getOutputDirectory(), fileName);
                 getOutputDirectory().mkdirs();
