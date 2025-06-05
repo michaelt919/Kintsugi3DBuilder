@@ -18,16 +18,17 @@ import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Label;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
+import kintsugi3d.builder.app.logging.LogMessage;
+import kintsugi3d.builder.app.logging.RecentLogMessageAppender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
-import kintsugi3d.builder.app.logging.LogMessage;
-import kintsugi3d.builder.app.logging.RecentLogMessageAppender;
-import kintsugi3d.builder.javafx.MainApplication;
 
+import java.awt.*;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -92,7 +93,8 @@ public class LoggerController implements Initializable
         try
         {
             File logDir = new File(System.getProperty("Kintsugi3D.logDir"));
-            MainApplication.getAppInstance().getHostServices().showDocument(logDir.getAbsolutePath());
+            Desktop.getDesktop().open(logDir);
+
         }
         catch (Exception e)
         {
