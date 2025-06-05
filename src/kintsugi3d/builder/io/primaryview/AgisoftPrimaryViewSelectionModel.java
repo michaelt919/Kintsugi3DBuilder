@@ -11,7 +11,11 @@
 
 package kintsugi3d.builder.io.primaryview;
 
+import com.agisoft.metashape.Camera;
+import com.agisoft.metashape.CameraGroup;
+import com.agisoft.metashape.Chunk;
 import javafx.scene.image.Image;
+import kintsugi3d.gl.util.UnzipHelper;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +31,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -39,8 +44,11 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
     private final String chunkName;
     private final List<View> views;
     private final List<Image> thumbnails;
+
     private Document cameraDocument;
-    private final List<Element> cameras;
+
+    private final List<Element> cameraElements;
+    private final List<Camera> cameras;
     private File fullResSearchDir;
 
     //custom import path
@@ -60,7 +68,7 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
         NodeList cameraNodes = cameraDocument.getElementsByTagName("camera");
 
         //camera file is .xml, so img name is in camera node attribute "label"
-        cameras = IntStream.range(0, cameraNodes.getLength())
+        cameraElements = IntStream.range(0, cameraNodes.getLength())
                 .mapToObj(cameraNodes::item)
                 .filter(camera -> camera.getNodeType() == Node.ELEMENT_NODE)
                 .map(camera -> (Element) camera)
@@ -73,16 +81,47 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
 
         //prev-res images haven't been generated and no thumbnails are present,
         //so leave thumbnails list empty
+        //TODO: ^^^ this doesn't seem true, should at least check to see if they exist like we do for metashape import path
         thumbnails = new ArrayList<>(views.size());
+        
+        //TODO: need this?
+        this.cameras = new ArrayList<>(cameraElements.size());
     }
 
     //metashape import path
-    private AgisoftPrimaryViewSelectionModel(String chunkName, List<Element> cameras, List<Image> thumbnailImageList)
+    private AgisoftPrimaryViewSelectionModel(Chunk chunk)
     {
-        this.chunkName = chunkName;
-        this.cameras = cameras;
-        this.views = getViews(cameras.stream());
-        this.thumbnails = thumbnailImageList;
+        this.chunkName = chunk.getLabel();
+        this.cameras = Arrays.stream(chunk.getCameras()).collect(Collectors.toList());
+        this.views = cameras.stream().filter(Camera::isEnabled)
+                .map(camera -> {
+                    Optional<CameraGroup> group = camera.getGroup();
+
+                    if (group.isPresent()) {
+                        return new View(camera.getLabel(), group.get().getLabel());
+                    } else {
+                        return new View(camera.getLabel(), null);
+                    }
+                })
+                .collect(Collectors.toUnmodifiableList());
+
+        thumbnails = loadThumbnails(chunk);
+
+        this.cameraElements = new ArrayList<>(cameras.size());
+    }
+
+    private List<Image> loadThumbnails(Chunk chunk) {
+        //get model path
+        //get parent of parent of that
+        //append thumbnails/thumbnails.zip and we should be there
+        //TODO: make this better by reading the thumbnails path from frame.zip
+        //why is this not supported by the api? Who knows :/
+
+        File modelZip = new File(chunk.getModel().get().getPath());
+        File frameDir = modelZip.getParentFile().getParentFile();
+        File thumbnailsDir = new File(new File(frameDir, "thumbnails"), "thumbnails.zip");
+
+        return UnzipHelper.unzipImages(thumbnailsDir.getPath());
     }
 
     private static List<View> getViews(Stream<Element> cameras)
@@ -116,9 +155,9 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
         return new AgisoftPrimaryViewSelectionModel(cameraFile).setFullResSearchDir(fullResOverride);
     }
 
-    public static PrimaryViewSelectionModel createInstance(String chunkName, List<Element> cameras, List<Image> thumbnailImageList, File fullResOverride)
+    public static PrimaryViewSelectionModel createInstance(Chunk chunk, File fullResOverride)
     {
-        return new AgisoftPrimaryViewSelectionModel(chunkName, cameras, thumbnailImageList)
+        return new AgisoftPrimaryViewSelectionModel(chunk)
                 .setFullResSearchDir(fullResOverride);
     }
 
@@ -147,15 +186,22 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
 
     @Override
     public Optional<String> findFullResImagePath(String imageName) {
-        //find the camera (in chunk.xml) which holds the desired image
+        //find the camera which holds the desired image
         //may have slightly different label from imageName --> "Processed\img123.jpg" vs. "img123.jpg"
-        Element selectedItemCam = findTargetCamera(imageName);
-        if(selectedItemCam == null){
+        Camera targetCam = cameras.stream().filter(camera -> camera.getLabel()
+                .matches(".*" + imageName + ".*"))
+                .findFirst()
+                .orElse(null);
+
+        if(targetCam == null){
             return Optional.empty();
         }
 
+        //TODO: only works for metashape import, needs to also work for custom import
+        //can probably reuse findTargetCamera()
+
         //need full label to find img path
-        String pathAttribute = selectedItemCam.getAttribute("label");
+        String pathAttribute = targetCam.getLabel();
         String pathAttributeName = new File(pathAttribute).getName();
         File imageFile = new File(fullResSearchDir, pathAttributeName);
 
@@ -185,7 +231,7 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
 
     private Element findTargetCamera(String imageName) {
         Element selectedItemCam = null;
-        for(Element camera : cameras) {
+        for(Element camera : cameraElements) {
             if (camera.getAttribute("label").matches(".*" + imageName + ".*")) {
                 selectedItemCam = camera;
                 break;

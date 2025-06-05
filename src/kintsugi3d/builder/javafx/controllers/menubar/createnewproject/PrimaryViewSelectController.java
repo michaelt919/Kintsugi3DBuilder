@@ -23,7 +23,6 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
-import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.ImageThreadable;
 import kintsugi3d.builder.javafx.controllers.menubar.SearchableTreeView;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.CurrentProjectInputSource;
@@ -72,7 +71,8 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         //TODO: temp hack to make text visible, need to change textflow css?
         imgViewText.setFill(Paint.valueOf("white"));
 
-        chunkTreeView.getSelectionModel().selectedIndexProperty().addListener((a, b, c)-> selectImageInTreeView());
+        chunkTreeView.getSelectionModel().selectedIndexProperty().addListener((a, b, c)->
+                selectImageInTreeView());
         this.imgCache = new HashMap<>();
         hintTextLabel.setText(getHintText());
     }
@@ -87,7 +87,8 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     {
         InputSource sharedSource = hostScrollerController.getInfo(ShareInfo.Info.INPUT_SOURCE);
 
-        if (!sharedSource.equals(source)){
+        //TODO: implement .equals()
+//        if (!sharedSource.equals(source)){
             source = sharedSource;
 
             //create an unbound instance and only bind elements when we know chunkTreeView.getRoot() != null
@@ -105,7 +106,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                     Platform.runLater(() -> metaSource.showMissingImgsAlert(mie));
                 }
             }
-        }
+//        }
 
         orientationControlsVBox.setVisible(showFixOrientation());
     }
@@ -131,54 +132,49 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             return;
         }
 
-        if (selectedItem.getValue() != null)
-        {
-            //if loadImgThread is running, kill it and start a new one
-            if(loadImgThread != null && loadImgThread.isActive())
-            {
-                loadImgThread.stopThread();
-            }
-
-            if (selectedItem == InputSource.NONE_ITEM)
-            {
-                // Hide orientation controls
-                orientationControlsVBox.setVisible(false);
-
-                // Don't change the button text to "Skip" when working with an existing project
-                if (!(source instanceof CurrentProjectInputSource))
-                {
-                    // Set confirm button text
-                    hostScrollerController.updateNextButtonLabel("Skip");
-                }
-
-                imgViewText.setText("Keep model orientation as imported.");
-
-                // Remove any image currently in the thumbnail viewer
-                primaryImgView.setImage(null);
-                return;
-            }
-            else
-            {
-                // Show orientation controls
-                orientationControlsVBox.setVisible(showFixOrientation());
-
-                // Set confirm button text
-                hostScrollerController.updateNextButtonLabel(canConfirm() ? "Confirm" : "Next");
-            }
-
-            String imageName = selectedItem.getValue();
-            imgViewText.setText(imageName + " (preview)");
-
-            //set thumbnail as main image, then update to full resolution later
-            //don't set thumbnail if img is cached, otherwise would cause a flash
-            if(!imgCache.containsKey(imageName)){
-                setThumbnailAsFullImage(selectedItem);
-            }
-
-            loadImgThread = new ImgSelectionThread(imageName,this, source.getPrimarySelectionModel());
-            Thread myThread = new Thread(loadImgThread);
-            myThread.start();
+        if (selectedItem.getValue() == null) {
+            return;
         }
+        //if loadImgThread is running, kill it and start a new one
+        if (loadImgThread != null && loadImgThread.isActive()) {
+            loadImgThread.stopThread();
+        }
+
+        if (selectedItem == InputSource.NONE_ITEM) {
+            // Hide orientation controls
+            orientationControlsVBox.setVisible(false);
+
+            // Don't change the button text to "Skip" when working with an existing project
+            if (!(source instanceof CurrentProjectInputSource)) {
+                // Set confirm button text
+                hostScrollerController.updateNextButtonLabel("Skip");
+            }
+
+            imgViewText.setText("Keep model orientation as imported.");
+
+            // Remove any image currently in the thumbnail viewer
+            primaryImgView.setImage(null);
+            return;
+        }
+
+        // Show orientation controls
+        orientationControlsVBox.setVisible(showFixOrientation());
+
+        // Set confirm button text
+        hostScrollerController.updateNextButtonLabel(canConfirm() ? "Confirm" : "Next");
+
+        String imageName = selectedItem.getValue();
+        imgViewText.setText(imageName + " (preview)");
+
+        //set thumbnail as main image, then update to full resolution later
+        //don't set thumbnail if img is cached, otherwise would cause a flash
+        if (!imgCache.containsKey(imageName)) {
+            setThumbnailAsFullImage(selectedItem);
+        }
+
+        loadImgThread = new ImgSelectionThread(imageName, this, source.getPrimarySelectionModel());
+        Thread myThread = new Thread(loadImgThread);
+        myThread.start();
     }
 
     private void setThumbnailAsFullImage(TreeItem<String> selectedItem) {

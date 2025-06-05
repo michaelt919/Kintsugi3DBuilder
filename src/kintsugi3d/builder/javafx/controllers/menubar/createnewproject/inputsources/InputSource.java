@@ -36,6 +36,8 @@ public abstract class InputSource {
     private boolean includeNoneItem = true;
 
     public abstract List<FileChooser.ExtensionFilter> getExtensionFilters();
+
+    //TODO: how will this interact with the metashape refactor using the api?
     abstract ViewSetReader getCameraFileReader();
     public void verifyInfo(File fullResDirectoryOverride)
     {
