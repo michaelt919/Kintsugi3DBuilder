@@ -21,7 +21,7 @@ public interface RoughnessOptimization<ContextType extends Context<ContextType>>
 {
     void setInputWeights(BasisWeightResources<ContextType> weightResources);
     void clear();
-    void execute(float gamma);
+    void execute();
     void saveTextures(File outputDirectory);
 
     @Override

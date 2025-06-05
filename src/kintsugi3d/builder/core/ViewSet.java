@@ -11,6 +11,12 @@
 
 package kintsugi3d.builder.core;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import kintsugi3d.builder.metrics.ViewRMSE;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
@@ -125,11 +131,6 @@ public final class ViewSet implements ReadonlyViewSet
      * The mesh file.
      */
     private File geometryFile;
-
-    /**
-     * Used to decode pixel colors according to a gamma curve if reference values are unavailable, otherwise, affects the absolute brightness of the decoded colors.
-     */
-    private float gamma = 2.2f;
 
     /**
      * If false, inverse-square light attenuation should be applied.
@@ -565,7 +566,7 @@ public final class ViewSet implements ReadonlyViewSet
 
         if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
         {
-            result.setTonemapping(this.gamma,
+            result.setTonemapping(
                     Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
                     Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
         }
@@ -603,7 +604,7 @@ public final class ViewSet implements ReadonlyViewSet
 
         if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
         {
-            result.setTonemapping(this.gamma,
+            result.setTonemapping(
                     Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length),
                     Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length));
         }
@@ -837,14 +838,6 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public String getImageFileNameWithFormat(int poseIndex, String format)
-    {
-        String[] parts = this.getImageFileName(poseIndex).split("\\.");
-        return Stream.concat(Arrays.stream(parts, 0, Math.max(1, parts.length - 1)), Stream.of(format))
-                .collect(Collectors.joining("."));
-    }
-
-    @Override
     public File getFullResImageFile(int poseIndex)
     {
         return new File(this.getFullResImageFilePath(), this.imageFiles.get(poseIndex).getPath());
@@ -860,7 +853,8 @@ public final class ViewSet implements ReadonlyViewSet
     public File getPreviewImageFile(int poseIndex)
     {
         // Use PNG for preview images (TODO: make this a configurable setting?)
-        return new File(this.getPreviewImageFilePath(), this.getImageFileNameWithFormat(poseIndex, "PNG"));
+        return new File(this.getPreviewImageFilePath(),
+            ImageFinder.getInstance().getImageFileNameWithFormat(this.getImageFileName(poseIndex), "png"));
     }
 
     public int getPreviewWidth()
@@ -1044,12 +1038,6 @@ public final class ViewSet implements ReadonlyViewSet
     }
 
     @Override
-    public float getGamma()
-    {
-        return gamma;
-    }
-
-    @Override
     public boolean hasCustomLuminanceEncoding()
     {
         return linearLuminanceValues != null && encodedLuminanceValues != null
@@ -1061,11 +1049,11 @@ public final class ViewSet implements ReadonlyViewSet
     {
         if (hasCustomLuminanceEncoding())
         {
-            return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues, gamma);
+            return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
         }
         else
         {
-            return new SampledLuminanceEncoding(gamma);
+            return new SampledLuminanceEncoding();
         }
     }
 
@@ -1081,9 +1069,8 @@ public final class ViewSet implements ReadonlyViewSet
         return Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length);
     }
 
-    public void setTonemapping(float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues)
+    public void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
     {
-        this.gamma = gamma;
         this.linearLuminanceValues = linearLuminanceValues.clone();
         this.encodedLuminanceValues = encodedLuminanceValues.clone();
     }

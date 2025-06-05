@@ -12,7 +12,6 @@
 package kintsugi3d.builder.export.general;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.function.Consumer;
@@ -158,7 +157,6 @@ abstract class RenderRequestBase implements ObservableIBRRequest
 
         resources.setupShaderProgram(program);
 
-        program.setUniform("renderGamma", this.settingsModel.getFloat("gamma"));
         program.setUniform("weightExponent", this.settingsModel.getFloat("weightExponent"));
         program.setUniform("isotropyFactor", this.settingsModel.getFloat("isotropyFactor"));
         program.setUniform("occlusionBias", this.settingsModel.getFloat("occlusionBias"));

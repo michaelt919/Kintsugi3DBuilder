@@ -30,10 +30,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import kintsugi3d.builder.app.ApplicationFolders;
-import kintsugi3d.builder.core.IBRRequestQueue;
-import kintsugi3d.builder.core.IBRRequestUI;
-import kintsugi3d.builder.core.Kintsugi3DBuilderState;
-import kintsugi3d.builder.core.TextureResolution;
+import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.SpecularFitRequestParams;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.gl.core.Context;
@@ -120,7 +117,6 @@ public class SpecularFitRequestUI implements IBRRequestUI
                     Integer.parseInt(widthTextField.getText()),
                     Integer.parseInt(heightTextField.getText())),
                 modelAccess.getSettingsModel());
-            settings.setGamma(modelAccess.getSettingsModel().getFloat("gamma"));
 
             int basisCount = Integer.parseInt(basisCountTextField.getText());
             settings.getSpecularBasisSettings().setBasisCount(basisCount);
@@ -169,7 +165,7 @@ public class SpecularFitRequestUI implements IBRRequestUI
                 (int)Math.ceil(Math.max(settings.getTextureResolution().width, settings.getTextureResolution().height) / 256.0));
             settings.getImageCacheSettings().setSampledSize(256); // TODO expose this in the interface
 
-            SpecularFitRequest request = new SpecularFitRequest(settings, modelAccess);
+            ObservableIBRRequest request = new SpecularFitRequest(settings);
 
 //            if (priorSolutionCheckBox.isSelected() && priorSolutionField.getText() != null && !priorSolutionField.getText().isEmpty())
 //            {

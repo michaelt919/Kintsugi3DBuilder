@@ -272,8 +272,6 @@ public class MainApplication extends Application
         settingsModel.createBooleanSetting("lightWidgetsEnabled", false);
         settingsModel.createBooleanSetting("visibleCameraPosesEnabled", false);
         settingsModel.createBooleanSetting("visibleSavedCameraPosesEnabled", false);
-        settingsModel.createSettingFromProperty("gamma", Number.class,
-            StaticUtilities.clamp(1, 5, new SimpleFloatProperty(2.2f)), true);
         settingsModel.createSettingFromProperty("weightExponent", Number.class,
             StaticUtilities.clamp(1, 100, new SimpleFloatProperty(16.0f)), true);
         settingsModel.createSettingFromProperty("isotropyFactor", Number.class,

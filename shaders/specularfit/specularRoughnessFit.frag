@@ -72,6 +72,6 @@ void main()
     float roughnessSq = getLuminance(fresnel) / getLuminance(PI * f0);
     float roughness = sqrt(roughnessSq);
 
-    specularColor = vec4(pow(fresnel, vec3(1.0 / gamma)), 1.0);
+    specularColor = vec4(linearToSRGB(fresnel), 1.0);
     sqrtRoughness = vec4(vec3(sqrt(roughness)), 1.0);
 }

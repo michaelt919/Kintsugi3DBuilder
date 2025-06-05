@@ -64,7 +64,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     public void init() {
         fileChooser = new FileChooser();
         fileChooser.setTitle("Choose .psx file");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Metashape files", "*.psx"));
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Metashape files (*.psx)", "*.psx"));
         fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
         hostPage.setNextPage(hostScrollerController.getPage("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml"));

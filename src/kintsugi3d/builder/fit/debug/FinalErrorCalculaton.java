@@ -11,6 +11,13 @@
 
 package kintsugi3d.builder.fit.debug;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.FloatBuffer;
+import java.util.stream.IntStream;
+
 import kintsugi3d.builder.fit.SpecularFitProgramFactory;
 import kintsugi3d.builder.resources.ibr.IBRResources;
 import kintsugi3d.builder.resources.ibr.ReadonlyIBRResources;
@@ -19,16 +26,9 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.vecmath.DoubleVector2;
 import kintsugi3d.gl.vecmath.DoubleVector3;
 import kintsugi3d.optimization.ShaderBasedErrorCalculator;
-import org.lwjgl.BufferUtils;
+import org.lwjgl.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.FloatBuffer;
-import java.util.stream.IntStream;
 
 /**
  * A module that performs some final steps to finish a specular fit: filling holes in the weight maps, and calculating some final error statistics.
@@ -115,14 +115,14 @@ public final class FinalErrorCalculaton
         try (ProgramObject<ContextType> finalErrorCalcProgram = createFinalErrorCalcProgram(resources, programFactory);
             Drawable<ContextType> finalErrorCalcDrawable = resources.createDrawable(finalErrorCalcProgram))
         {
-            // Calculate RMSE using basis diffuse
+            // Calculate linear RMSE using basis diffuse
             basisErrorCalculator.update();
-            rmseOut.println("RMSE using basis diffuse: " + basisErrorCalculator.getReport().getError());
+            rmseOut.println("RMSE using basis diffuse (linear): " + basisErrorCalculator.getReport().getError());
 
-            // Calculate gamma-corrected RMSE using basis diffuse
-            basisErrorCalculator.getProgram().setUniform("errorGamma", 2.2f);
+            // Calculate sRGB RMSE using basis diffuse
+            basisErrorCalculator.getProgram().setUniform("sRGB", true);
             basisErrorCalculator.update();
-            rmseOut.println("RMSE using basis diffuse (gamma-corrected): " + basisErrorCalculator.getReport().getError());
+            rmseOut.println("RMSE using basis diffuse (sRGB): " + basisErrorCalculator.getReport().getError());
 
             // Setup drawable that uses the final diffuse texture (not limited to basis colors)
             specularFit.getBasisResources().useWithShaderProgram(finalErrorCalcProgram);
@@ -137,16 +137,16 @@ public final class FinalErrorCalculaton
                 finalErrorCalcProgram.setTexture("constantEstimate", specularFit.getConstantMap());
             }
 
-            finalErrorCalcProgram.setUniform("errorGamma", 1.0f);
+            finalErrorCalcProgram.setUniform("sRGB", false);
 
             // Reuse errorCalculator's framebuffer as a scratch framebuffer (for efficiency)
             Framebuffer<ContextType> scratchFramebuffer = basisErrorCalculator.getFramebuffer();
 
-            rmseOut.println("Final RMSE with final diffuse estimate: " +
+            rmseOut.println("Final RMSE with final diffuse estimate (linear): " +
                 runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCameraPoseCount()));
 
-            finalErrorCalcProgram.setUniform("errorGamma", 2.2f);
-            rmseOut.println("Final RMSE with final diffuse estimate (gamma-corrected): " +
+            finalErrorCalcProgram.setUniform("sRGB", true);
+            rmseOut.println("Final RMSE with final diffuse estimate (sRGB): " +
                 runFinalErrorCalculation(finalErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCameraPoseCount()));
 
             // Calculate error using the GGX fit rather than the basis functions.
@@ -187,13 +187,13 @@ public final class FinalErrorCalculaton
                 ggxErrorCalcProgram.setTexture("constantEstimate", specularFit.getConstantMap());
             }
 
-            ggxErrorCalcProgram.setUniform("errorGamma", 1.0f);
+            ggxErrorCalcProgram.setUniform("sRGB", false);
 
-            rmseOut.println("RMSE for GGX fit: " +
+            rmseOut.println("RMSE for GGX fit (linear): " +
                 runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCameraPoseCount()));
 
-            ggxErrorCalcProgram.setUniform("errorGamma", 2.2f);
-            rmseOut.println("RMSE for GGX fit (gamma-corrected): " +
+            ggxErrorCalcProgram.setUniform("sRGB", true);
+            rmseOut.println("RMSE for GGX fit (sRGB): " +
                 runFinalErrorCalculation(ggxErrorCalcDrawable, scratchFramebuffer, resources.getViewSet().getCameraPoseCount()));
         }
     }

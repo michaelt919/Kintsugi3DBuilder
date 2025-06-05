@@ -106,8 +106,7 @@ void main()
 
     vec4 diffuseFallback = cosineWeightedSums / max(1.0, cosineWeightedSums.a); // Constraining constant term to 0
 
-    diffuseOut = pow(
-        max(vec4(0), mix(diffuseFallback, diffuseColor, step(0.0, vec4(constantColor.rgb, 1.0)))), // use fallback if constant color is < 0
-        vec4(vec3(1.0 / gamma), 1.0));
-    constantOut = pow(constantColor, vec4(vec3(1.0 / gamma), 1.0));
+    diffuseOut = linearToSRGB(
+        max(vec4(0), mix(diffuseFallback, diffuseColor, step(0.0, vec4(constantColor.rgb, 1.0))))); // use fallback if constant color is < 0
+    constantOut = linearToSRGB(constantColor);
 }

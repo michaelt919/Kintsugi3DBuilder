@@ -12,10 +12,11 @@
   -->
 
 <?import javafx.geometry.*?>
+<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="196.0" prefWidth="260.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.systemsettings.CacheSettingsController">
+<AnchorPane prefHeight="196.0" prefWidth="260.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.systemsettings.CacheSettingsController">
     <VBox spacing="10.0">
         <children>
                     <Button mnemonicParsing="false" onAction="#clearCache" styleClass="button" text="Clear Cache" />
@@ -28,16 +29,22 @@
                                 <children>
                                     <VBox spacing="7.0">
                                         <children>
-                                            <Label text="  Current Cache Paths: " />
-                                 <Label fx:id="previewImageCacheLabel" text="........................">
+                                           <Label text="  Current Cache Paths: " />
+                                 <Label fx:id="previewImageCacheLabel" onMouseClicked="#openDirectory" text="No Path Set">
                                     <VBox.margin>
                                        <Insets left="16.0" />
                                     </VBox.margin>
+                                    <cursor>
+                                       <Cursor fx:constant="HAND" />
+                                    </cursor>
                                  </Label>
-                                 <Label fx:id="specularFitCacheLabel" text="........................">
+                                 <Label fx:id="specularFitCacheLabel" onMouseClicked="#openDirectory" text="No Path Set">
                                     <VBox.margin>
                                        <Insets left="16.0" />
                                     </VBox.margin>
+                                     <cursor>
+                                         <Cursor fx:constant="HAND" />
+                                     </cursor>
                                  </Label>
                                             <Button disable="true" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" styleClass="button" text="Set Cache Path" />
                                         </children>
