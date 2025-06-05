@@ -12,7 +12,6 @@
 package kintsugi3d.builder.app;
 
 import kintsugi3d.builder.preferences.GlobalUserPreferencesManager;
-import kintsugi3d.builder.preferences.ReadOnlyDirectoryPreferencesModel;
 import org.lwjgl.system.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +68,13 @@ public final class Kintsugi3DBuilder
         log.info("Application installation directory: {}", ApplicationFolders.getInstallationDirectory());
         log.info("Preview images root directory: {}", ApplicationFolders.getPreviewImagesRootDirectory());
         log.info("Fit cache root directory: {}", ApplicationFolders.getFitCacheRootDirectory());
+
+        //have to call this before first metashape usage in order to initialize native methods
+        https://github.com/jseinturier/metashape-java-maven
+
+        //had a problem with this working (UnsatisfiedLinkError due to missing dependencies of metashape.dll) until I installed metashape.
+        // Need to check if dll's are installed on the user's machine before running???
+        org.metashape.MetashapeNatives.isAvailable();
 
         //allow render thread to modify user interface thread
         System.setProperty("glass.disableThreadChecks", "true");

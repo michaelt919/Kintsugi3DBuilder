@@ -11,6 +11,7 @@
 
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources;
 
+import com.agisoft.metashape.Chunk;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
@@ -40,6 +41,8 @@ import java.util.List;
 public class MetashapeProjectInputSource extends InputSource{
     private static final Logger log = LoggerFactory.getLogger(MetashapeProjectInputSource.class);
     private MetashapeObjectChunk metashapeObjectChunk;
+    private Chunk chunk;
+
     @Override
     public List<FileChooser.ExtensionFilter> getExtensionFilters() {
         return Collections.singletonList(new FileChooser.ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
@@ -49,19 +52,15 @@ public class MetashapeProjectInputSource extends InputSource{
     public ViewSetReader getCameraFileReader() {
         return ViewSetReaderFromAgisoftXML.getInstance();
     }
-    public MetashapeProjectInputSource setMetashapeObjectChunk(MetashapeObjectChunk moc){
-        this.metashapeObjectChunk = moc;
+
+    public MetashapeProjectInputSource setChunk(Chunk chunk){
+        this.chunk = chunk;
         return this;
     }
     @Override
     public void verifyInfo(File fullResDirectoryOverride){
         metashapeObjectChunk.getLoadPreferences().fullResOverride = fullResDirectoryOverride;
 
-        // Get reference to the chunk directory
-        File chunkDirectory = new File(metashapeObjectChunk.getChunkDirectoryPath());
-        if (!chunkDirectory.exists()) {
-            log.error("Chunk directory does not exist: " + chunkDirectory);
-        }
         File rootDirectory = new File(metashapeObjectChunk.getPsxFilePath()).getParentFile();
         if (!rootDirectory.exists()) {
             log.error("Root directory does not exist: " + rootDirectory);
@@ -146,6 +145,7 @@ public class MetashapeProjectInputSource extends InputSource{
 
     @Override
     public boolean equals(Object obj) {
+        //TODO: metashape's api doesn't have an equals so we'll need to work around that
         if (!(obj instanceof MetashapeProjectInputSource)){
             return false;
         }

@@ -244,9 +244,23 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+    <repositories>
+        <!-- JOrigin repository -->
+        <repository>
+            <id>jorigin</id>
+            <name>jorigin-maven</name>
+            <url>https://maven.jorigin.org</url>
+        </repository>
+    </repositories>
     <dependencies>
+        <!-- The Agisoft Metashape Java  Wrapper -->
+        <dependency>
+            <groupId>com.agisoft</groupId>
+            <artifactId>metashape</artifactId>
+            <version>1.8.4</version>
+        </dependency>
 
-<!-- Something like this might work if we want to try to build for both PC and Mac on the same platform? -->
+        <!-- Something like this might work if we want to try to build for both PC and Mac on the same platform? -->
 <!--        <dependency>-->
 <!--            <groupId>org.openjfx</groupId>-->
 <!--            <artifactId>javafx-base</artifactId>-->
