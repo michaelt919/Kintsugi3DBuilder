@@ -148,6 +148,11 @@ public class MenubarController
     @FXML private CustomMenuItem removeAllRefsCustMenuItem;
     @FXML private CustomMenuItem removeSomeRefsCustMenuItem;
 
+    //pull this in so we can explicitly set shader to image-based upon load
+    //without this, user could select a shader, load a project,
+        //and the loaded project's appearance might not match the selected shader
+    @FXML private RadioMenuItem imageBased;
+
     //shaders which should only be enabled after processing textures
     @FXML private RadioMenuItem materialMetallicity;
     @FXML private RadioMenuItem materialReflectivity;
@@ -1277,7 +1282,11 @@ public class MenubarController
     }
 
     public void selectMaterialBasisShader(){
-        materialBasis.setSelected(true);
+        Platform.runLater(()-> materialBasis.setSelected(true));
+    }
+
+    public void selectImageBasedShader(){
+        Platform.runLater(()->imageBased.setSelected(true));
     }
 
     public void setShaderNameVisibility(boolean b) {
