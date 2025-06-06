@@ -12,6 +12,9 @@
  *
  */
 
+#include <colorappearance/linearize.glsl>
+#line 17 0
+
 in vec2 fTexCoord;
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out int fragObjectID;
@@ -22,7 +25,7 @@ uniform mat4 model_view;
 uniform mat4 projection;
 uniform mat4 envMapMatrix;
 uniform vec3 envMapIntensity;
-uniform float gamma;
+uniform bool sRGBEncoded;
 
 #ifndef PI
 #define PI 3.1415926535897932384626433832795
@@ -35,10 +38,21 @@ void main()
     vec3 viewDir =
         normalize((envMapMatrix * inverse(model_view) * vec4(unprojected.xyz / unprojected.w, 0.0)).xyz);
 
-    fragColor = vec4(envMapIntensity * pow(texture(env, viewDir).rgb, vec3(1.0 / gamma)), 1.0);
+    if (sRGBEncoded)
+    {
+        fragColor = vec4(envMapIntensity * texture(env, viewDir).rgb, 1.0);
 
-    // Use this version for a blurred background
-    //fragColor = vec4(envMapIntensity * pow(textureLod(env, viewDir, 3).rgb, vec3(1.0 / gamma)), 1.0);
+        // Use this version for a blurred background
+        //fragColor = vec4(envMapIntensity * textureLod(env, viewDir, 3).rgb, 1.0);
+    }
+    else
+    {
+        fragColor = vec4(envMapIntensity * linearToSRGB(texture(env, viewDir).rgb), 1.0);
+
+        // Use this version for a blurred background
+        //fragColor = vec4(envMapIntensity * linearToSRGB(textureLod(env, viewDir, 3).rgb), 1.0);
+    }
+
 
     fragObjectID = objectID;
 }

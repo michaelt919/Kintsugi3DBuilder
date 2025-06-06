@@ -53,12 +53,11 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
         SpecularFitRequestParams params = new SpecularFitRequestParams(
             new TextureResolution(2048, 2048),
             modelAccess.getSettingsModel());
-        params.setGamma(modelAccess.getSettingsModel().getFloat("gamma"));
         params.setOutputDirectory(new File(args[2]));
-        return new SpecularFitRequest(params, modelAccess);
+        return new SpecularFitRequest(params);
     }
 
-    public SpecularFitRequest(SpecularFitRequestParams settings, Kintsugi3DBuilderState modelAccess)
+    public SpecularFitRequest(SpecularFitRequestParams settings)
     {
         this.settings = settings;
     }

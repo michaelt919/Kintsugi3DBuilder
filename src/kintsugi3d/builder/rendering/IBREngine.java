@@ -37,6 +37,7 @@ import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
+import kintsugi3d.util.SRGB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -231,12 +232,11 @@ public class IBREngine<ContextType extends Context<ContextType>> implements IBRI
 
     private Vector3 calculateClearColor()
     {
-        float maxLuminance = (float) resources.getViewSet().getLuminanceEncoding().decodeFunction.applyAsDouble(255.0);
-        float gamma = this.sceneModel.getSettingsModel().getFloat("gamma");
+        float maxLuminance = (float) SRGB.fromLinear(resources.getViewSet().getLuminanceEncoding().decodeFunction.applyAsDouble(255.0));
         return new Vector3(
-                sceneModel.getLightingModel().getBackgroundColor().x / (float) Math.pow(maxLuminance, 1.0 / gamma),
-                sceneModel.getLightingModel().getBackgroundColor().y / (float) Math.pow(maxLuminance, 1.0 / gamma),
-                sceneModel.getLightingModel().getBackgroundColor().z / (float) Math.pow(maxLuminance, 1.0 / gamma));
+                sceneModel.getLightingModel().getBackgroundColor().x / maxLuminance,
+                sceneModel.getLightingModel().getBackgroundColor().y / maxLuminance,
+                sceneModel.getLightingModel().getBackgroundColor().z / maxLuminance);
     }
 
     @Override

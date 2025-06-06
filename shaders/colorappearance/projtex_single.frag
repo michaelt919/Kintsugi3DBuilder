@@ -61,7 +61,7 @@ void main()
 
         if (lightIntensityCompensation)
         {
-            fragColor = vec4(pow(getLinearColor().rgb / lightInfo.attenuatedIntensity, vec3(1.0 / gamma)), 1.0);
+            fragColor = vec4(linearToSRGB(getLinearColor().rgb / lightInfo.attenuatedIntensity), 1.0);
         }
         else
         {

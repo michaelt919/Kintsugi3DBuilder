@@ -11,6 +11,12 @@
 
 package kintsugi3d.builder.io;
 
+import java.io.File;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.stream.IntStream;
+
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
@@ -63,8 +69,6 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         Date timestamp = new Date();
 
         Builder builder = ViewSet.getBuilder(root, supportingFilesDirectory, 128);
-
-        float gamma = 2.2f;
 
         List<Double> linearLuminanceList = new ArrayList<>(8);
         List<Byte> encodedLuminanceList = new ArrayList<>(8);
@@ -217,8 +221,8 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                     }
                     case "g":
                     {
-                        // Gamma
-                        gamma = scanner.nextFloat();
+                        // Gamma -- no longer used
+//                        gamma = scanner.nextFloat();
                         scanner.nextLine();
                         break;
                     }
@@ -287,7 +291,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
             encodedLuminanceValues[i] = encodedLuminanceList.get(i);
         }
 
-        result.setTonemapping(gamma, linearLuminanceValues, encodedLuminanceValues);
+        result.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
 
         if (result.getSupportingFilesFilePath() != null)
         {

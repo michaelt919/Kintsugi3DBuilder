@@ -459,7 +459,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         else
         {
             // Default if no instance is loaded.
-            return new SampledLuminanceEncoding(2.2f).encodeFunction;
+            return new SampledLuminanceEncoding().encodeFunction;
         }
     }
 

@@ -17,7 +17,6 @@
 
 uniform vec3 reconstructionCameraPos;
 uniform vec3 reconstructionLightPos;
-// gamma defined in colorappearance.glsl
 
 layout(location = 0) out vec4 fragColor;
 
@@ -40,11 +39,11 @@ void main()
 
     // Constant term for pseudo-translucency
     // Division by PI since it's fit on the same scale as diffuse
-    vec3 constant = pow(getConstantTerm(), vec3(gamma)) / PI;
+    vec3 constant = sRGBToLinear(getConstantTerm()) / PI;
 
     if (l.nDotL > 0.0)
     {
-        vec3 brdf = pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma)) / PI + geomRatio * getMFDEstimate(l.nDotH);
+        vec3 brdf = sRGBToLinear(texture(diffuseMap, fTexCoord).rgb) / PI + geomRatio * getMFDEstimate(l.nDotH);
 
         // Gamma correction intentionally omitted for error calculation.
         fragColor = vec4(l.nDotL * brdf + constant, 1.0);

@@ -46,8 +46,8 @@ void main()
 
     vec3 diffuseGamma = texture(diffuseEstimate, fTexCoord).rgb;
     vec3 specularGamma = texture(specularEstimate, fTexCoord).rgb;
-    vec3 diffuseLinear = pow(diffuseGamma, vec3(gamma));
-    vec3 specularLinear = pow(specularGamma, vec3(gamma));
+    vec3 diffuseLinear = sRGBToLinear(diffuseGamma);
+    vec3 specularLinear = sRGBToLinear(specularGamma);
 
     // Weight RGB more towards diffuse for shiny materials; weight more equally for rough materials.
     // Just a heuristic; may need to be tweaked
@@ -89,7 +89,7 @@ void main()
     // Recalculate albedo now assuming a single metallicity for the R, G, and B channels
     albedoLinear = diffusePlusSpecular - 0.04 * (1 - maxMetallicity);
 
-    totalAlbedoOut = vec4(pow(albedoLinear, vec3(1.0 / gamma)), 1.0);
+    totalAlbedoOut = vec4(linearToSRGB(albedoLinear), 1.0);
 
 #if OCCLUSION_TEXTURE_ENABLED
     float occlusion = texture(occlusionTexture, fTexCoord).r;

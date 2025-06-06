@@ -16,8 +16,6 @@
 #include <colorappearance/colorappearance_multi_as_single.glsl>
 #line 18 0
 
-uniform float errorGamma;
-
 layout(location = 0) out vec4 errorOut;
 
 void main()
@@ -26,7 +24,7 @@ void main()
     float filteredMask = sqrtRoughness_Mask[1];
 
     float roughness = sqrtRoughness_Mask[0] * sqrtRoughness_Mask[0];
-    vec3 diffuseColor = pow(clamp(texture(diffuseMap, fTexCoord).rgb, 0, 1), vec3(gamma));
+    vec3 diffuseColor = sRGBToLinear(clamp(texture(diffuseMap, fTexCoord).rgb, 0, 1));
 
     vec3 position = getPosition();
 
@@ -51,12 +49,20 @@ void main()
     // "Light intensity" is defined in such a way that we need to multiply by pi to be properly normalized.
     vec3 incidentRadiance = PI * lightIntensity / dot(lightDisplacement, lightDisplacement);
 
-    vec3 actualReflectanceTimesNDotL = pow(imgColor.rgb / incidentRadiance, vec3(1 / errorGamma));
+    vec3 actualReflectanceTimesNDotL = imgColor.rgb / incidentRadiance;
+    if (sRGB)
+    {
+        actualReflectanceTimesNDotL = linearToSRGB(actualReflectanceTimesNDotL);
+    }
 
     float hDotV = max(0.0, dot(halfway, view));
     float maskingShadowing = geom(roughness, nDotH, nDotV, nDotL, hDotV);
     vec3 specular = getMFDEstimate(nDotH) * maskingShadowing / (4 * nDotV);
-    vec3 reflectanceEstimateTimesNDotL = pow(diffuseColor * nDotL / PI + specular, vec3(1 / errorGamma));
+    vec3 reflectanceEstimateTimesNDotL = diffuseColor * nDotL / PI + specular;
+    if (sRGB)
+    {
+        reflectanceEstimateTimesNDotL = linearToSRGB(reflectanceEstimateTimesNDotL);
+    }
 
     vec3 diff = actualReflectanceTimesNDotL - reflectanceEstimateTimesNDotL;
     float error = dot(diff, diff);

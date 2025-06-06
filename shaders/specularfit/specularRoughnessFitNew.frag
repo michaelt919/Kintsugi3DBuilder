@@ -151,6 +151,6 @@ void main()
 
     float roughness = sums.x / sums.y;
 
-    specularColor = vec4(pow(fresnelOverPi.rgb * PI, vec3(1.0 / gamma)), 1.0);
+    specularColor = vec4(linearToSRGB(fresnelOverPi.rgb * PI), 1.0);
     sqrtRoughness = vec4(vec3(sqrt(roughness)), 1.0);
 }

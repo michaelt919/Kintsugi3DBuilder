@@ -26,6 +26,7 @@ import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.FramebufferObject;
+import kintsugi3d.util.ImageFinder;
 
 public class ResampleRequest implements ObservableIBRRequest
 {
@@ -72,10 +73,8 @@ public class ResampleRequest implements ObservableIBRRequest
                     targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
                         .getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
 
-                String[] parts = targetViewSet.getImageFileName(i).split("\\.");
                 File exportFile = new File(resampleExportPath,
-                    Stream.concat(Arrays.stream(parts, 0, Math.max(1, parts.length - 1)), Stream.of("png"))
-                        .collect(Collectors.joining(".")));
+                    ImageFinder.getInstance().getImageFileNameWithFormat(targetViewSet.getImageFileName(i), "png"));
 
                 exportFile.getParentFile().mkdirs();
                 framebuffer.getTextureReaderForColorAttachment(0).saveToFile("PNG", exportFile);

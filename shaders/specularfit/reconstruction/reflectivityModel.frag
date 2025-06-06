@@ -17,7 +17,6 @@
 
 uniform vec3 reconstructionCameraPos;
 uniform vec3 reconstructionLightPos;
-// gamma defined in colorappearance.glsl
 
 layout(location = 0) out vec4 fragColor;
 
@@ -35,11 +34,11 @@ void main()
     }
 
     float roughness = sqrtRoughness_Mask[0] * sqrtRoughness_Mask[0] / (filteredMask * filteredMask);
-    vec3 diffuseColor = pow(texture(diffuseMap, fTexCoord).rgb / filteredMask, vec3(gamma));
-    vec3 specularColor = pow(texture(specularEstimate, fTexCoord).rgb / filteredMask, vec3(gamma));
+    vec3 diffuseColor = sRGBToLinear(texture(diffuseMap, fTexCoord).rgb / filteredMask);
+    vec3 specularColor = sRGBToLinear(texture(specularEstimate, fTexCoord).rgb / filteredMask);
 
     // Constant term for pseudo-translucency
-    vec3 constant = pow(getConstantTerm(), vec3(gamma)) / PI;
+    vec3 constant = sRGBToLinear(getConstantTerm()) / PI;
 
     LightingParameters l = calculateLightingParameters(reconstructionCameraPos, reconstructionLightPos);
     vec3 specular = distTimesPi(l.nDotH, vec3(roughness))

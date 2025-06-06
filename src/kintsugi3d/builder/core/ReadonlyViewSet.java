@@ -11,15 +11,15 @@
 
 package kintsugi3d.builder.core;
 
-import kintsugi3d.builder.metrics.ViewRMSE;
-import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
-import kintsugi3d.gl.vecmath.Matrix4;
-import kintsugi3d.gl.vecmath.Vector3;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.UUID;
+
+import kintsugi3d.builder.metrics.ViewRMSE;
+import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
 
 public interface ReadonlyViewSet
 {
@@ -113,14 +113,6 @@ public interface ReadonlyViewSet
      * @return The image file's relative name.
      */
     String getImageFileName(int poseIndex);
-
-    /**
-     * Gets the relative name of the image file corresponding to a particular view,
-     * with a specific file format (i.e. PNG, JPEG, etc.) -- which may not match the format originally specified in the view set.
-     * @param poseIndex The index of the image file to retrieve.
-     * @return The image file's relative name with the requested format.
-     */
-    String getImageFileNameWithFormat(int poseIndex, String format);
 
     /**
      * Gets the full resolution image file corresponding to a particular view.
@@ -231,8 +223,6 @@ public interface ReadonlyViewSet
      * @return The far plane value.
      */
     float getRecommendedFarPlane();
-
-    float getGamma();
 
     boolean hasCustomLuminanceEncoding();
 
