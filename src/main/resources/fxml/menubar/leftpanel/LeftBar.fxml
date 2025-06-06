@@ -10,20 +10,20 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox maxHeight="600" prefHeight="500.0" prefWidth="470.0" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.LeftBarController">
+<VBox maxHeight="600" prefHeight="500.0" prefWidth="470.0" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.LeftBarController">
     <Separator maxWidth="1.7976931348623157E308" prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
     <HBox alignment="TOP_RIGHT" maxWidth="1.7976931348623157E308" prefHeight="24.0" prefWidth="462.0" style="-fx-background-color: #383838;">
         <padding>
             <Insets bottom="4.0" left="8.0" right="4.0" top="4.0" />
         </padding>
         <ImageView fitHeight="16.0" fitWidth="12.0" pickOnBounds="true" preserveRatio="true">
-            <Image url="@../../../images/missingTexture.png" />
+            <Image url="@../../../../../../Kintsugi3D-icon.png" />
         <viewport>
            <Rectangle2D height="16.0" minX="12.0" minY="16.0" width="12.0" />
         </viewport>
         </ImageView>
     </HBox>
-    <Separator maxWidth="1.7976931348623157E308" prefWidth="200.0" styleClass="black-line" stylesheets="@../../../kintsugiStyling.css" />
+    <Separator maxWidth="1.7976931348623157E308" prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
    <HBox prefHeight="31.0" prefWidth="462.0">
       <children>
          <RadioButton fx:id="CamerasButton" maxHeight="32.0" maxWidth="1.7976931348623157E308" minHeight="32.0" mnemonicParsing="false" onAction="#chooseTabAction" prefHeight="32.0" style="-fx-alignment: center;" styleClass="stripped-radio-button" text="Cameras" textAlignment="CENTER" HBox.hgrow="ALWAYS">
