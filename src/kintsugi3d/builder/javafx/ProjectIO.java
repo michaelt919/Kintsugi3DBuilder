@@ -373,6 +373,12 @@ public final class ProjectIO
         }
     }
 
+    public void openProjectFromFileWithPrompt(File file){
+       if (confirmClose("Are you sure you want to open another project?")) {
+          openProjectFromFile(file);
+       }
+    }
+
     /**
      * NOTE: After "Save As", view set will share the same UUID as the original project,
      * including the preview resolution images and specular fit cache in the user's AppData folder.

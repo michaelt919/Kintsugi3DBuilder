@@ -133,7 +133,7 @@
                             <RadioMenuItem fx:id="materialBasis" mnemonicParsing="false" text="Material (basis)" toggleGroup="$renderGroup">
                                 <userData>rendermodes/basisMaterial.frag</userData>
                             </RadioMenuItem>
-                            <RadioMenuItem mnemonicParsing="false" selected="true" text="Image-based" toggleGroup="$renderGroup">
+                            <RadioMenuItem fx:id="imageBased" mnemonicParsing="false" selected="true" text="Image-based" toggleGroup="$renderGroup">
                                 <userData>rendermodes/ibrUntextured.frag</userData>
                             </RadioMenuItem>
                             <RadioMenuItem fx:id="imgBasedWithTextures" mnemonicParsing="false" text="Image-based with textures" toggleGroup="$renderGroup">
@@ -149,6 +149,10 @@
                                 </items>
                             </Menu>
                             <Menu fx:id="superimposeMenu" mnemonicParsing="false" text="Weight maps (superimposed)">
+                                <items>
+                                </items>
+                            </Menu>
+                            <Menu fx:id="paletteMaterialMenu" mnemonicParsing="false" text="Basis material palette">
                                 <items>
                                 </items>
                             </Menu>

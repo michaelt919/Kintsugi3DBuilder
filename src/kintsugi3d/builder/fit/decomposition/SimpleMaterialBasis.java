@@ -12,72 +12,83 @@
 package kintsugi3d.builder.fit.decomposition;
 
 import kintsugi3d.builder.export.specular.SpecularFitSerializer;
+import kintsugi3d.gl.vecmath.DoubleVector3;
 
 import java.io.File;
 import java.util.stream.IntStream;
 
-public class SimpleSpecularBasis implements SpecularBasis
+public class SimpleMaterialBasis implements MaterialBasis
 {
+    private final DoubleVector3[] diffuseColors;
+
     private final double[][] redBasis;
     private final double[][] greenBasis;
     private final double[][] blueBasis;
 
-    private final int basisCount;
-    private final int basisResolution;
+    private final int materialCount;
+    private final int specularResolution;
 
-    public SimpleSpecularBasis(int basisCount, int basisResolution)
+    public SimpleMaterialBasis(int materialCount, int specularResolution)
     {
-        redBasis = IntStream.range(0, basisCount).mapToObj(b -> new double[basisResolution + 1]).toArray(double[][]::new);
-        greenBasis = IntStream.range(0, basisCount).mapToObj(b -> new double[basisResolution + 1]).toArray(double[][]::new);
-        blueBasis = IntStream.range(0, basisCount).mapToObj(b -> new double[basisResolution + 1]).toArray(double[][]::new);
-        this.basisCount = basisCount;
-        this.basisResolution = basisResolution;
+        diffuseColors = IntStream.range(0, materialCount).mapToObj(b -> DoubleVector3.ZERO).toArray(DoubleVector3[]::new);
+        redBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).toArray(double[][]::new);
+        greenBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).toArray(double[][]::new);
+        blueBasis = IntStream.range(0, materialCount).mapToObj(b -> new double[specularResolution + 1]).toArray(double[][]::new);
+        this.materialCount = materialCount;
+        this.specularResolution = specularResolution;
     }
 
     @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
-    public SimpleSpecularBasis(double[][] redBasis, double[][] greenBasis, double[][] blueBasis)
+    public SimpleMaterialBasis(DoubleVector3[] diffuseColors, double[][] redBasis, double[][] greenBasis, double[][] blueBasis)
     {
+        this.diffuseColors = diffuseColors;
         this.redBasis = redBasis;
         this.greenBasis = greenBasis;
         this.blueBasis = blueBasis;
-        this.basisCount = redBasis.length;
-        this.basisResolution = redBasis[0].length - 1;
+        this.materialCount = redBasis.length;
+        this.specularResolution = redBasis[0].length - 1;
     }
 
     @Override
-    public double evaluateRed(int b, int m)
+    public DoubleVector3 getDiffuseColor(int b)
+    {
+        return diffuseColors[b];
+    }
+
+    @Override
+    public double evaluateSpecularRed(int b, int m)
     {
         return redBasis[b][m];
     }
 
     @Override
-    public double evaluateGreen(int b, int m)
+    public double evaluateSpecularGreen(int b, int m)
     {
         return greenBasis[b][m];
     }
 
     @Override
-    public double evaluateBlue(int b, int m)
+    public double evaluateSpecularBlue(int b, int m)
     {
         return blueBasis[b][m];
     }
 
     @Override
-    public int getCount()
+    public int getMaterialCount()
     {
-        return basisCount;
+        return materialCount;
     }
 
     @Override
-    public int getResolution()
+    public int getSpecularResolution()
     {
-        return basisResolution;
+        return specularResolution;
     }
 
     @Override
     public void save(File outputDirectory)
     {
-        SpecularFitSerializer.serializeBasisFunctions(basisCount, basisResolution, this, outputDirectory);
+        SpecularFitSerializer.serializeBasisFunctions(materialCount, specularResolution, this, outputDirectory);
     }
 
     /**

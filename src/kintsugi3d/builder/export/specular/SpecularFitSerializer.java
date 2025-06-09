@@ -11,10 +11,11 @@
 
 package kintsugi3d.builder.export.specular;
 
-import kintsugi3d.builder.fit.decomposition.SimpleSpecularBasis;
-import kintsugi3d.builder.fit.decomposition.SpecularBasis;
+import kintsugi3d.builder.fit.decomposition.SimpleMaterialBasis;
+import kintsugi3d.builder.fit.decomposition.MaterialBasis;
 import kintsugi3d.builder.fit.decomposition.SpecularBasisWeights;
 import kintsugi3d.gl.core.Texture3D;
+import kintsugi3d.gl.vecmath.DoubleVector3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,18 +23,24 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
-public class SpecularFitSerializer
+public final class SpecularFitSerializer
 {
     private static final Logger log = LoggerFactory.getLogger(SpecularFitSerializer.class);
+    private static final Pattern CSV_PATTERN = Pattern.compile("\\s*,+\\s*");
+
+    private SpecularFitSerializer()
+    {
+    }
 
     public static void saveWeightImages(int basisCount, int width, int height, SpecularBasisWeights basisWeights, File outputDirectory)
     {
@@ -102,39 +109,44 @@ public class SpecularFitSerializer
         }
     }
 
-    public static void serializeBasisFunctions(int basisCount, int microfacetDistributionResolution, SpecularBasis basis, File outputDirectory)
+    public static void serializeBasisFunctions(int basisCount, int microfacetDistributionResolution, MaterialBasis basis, File outputDirectory)
     {
         // Text file format
         try (PrintStream out = new PrintStream(new File(outputDirectory, getBasisFunctionsFilename()), StandardCharsets.UTF_8))
         {
             for (int b = 0; b < basisCount; b++)
             {
-                out.print("Red#" + b);
+                out.printf("Red#%d", b);
                 for (int m = 0; m <= microfacetDistributionResolution; m++)
                 {
                     out.print(", ");
-                    out.print(basis.evaluateRed(b, m));
+                    out.print(basis.evaluateSpecularRed(b, m));
                 }
                 out.println();
 
-                out.print("Green#" + b);
+                out.printf("Green#%d", b);
                 for (int m = 0; m <= microfacetDistributionResolution; m++)
                 {
                     out.print(", ");
-                    out.print(basis.evaluateGreen(b, m));
+                    out.print(basis.evaluateSpecularGreen(b, m));
                 }
                 out.println();
 
-                out.print("Blue#" + b);
+                out.printf("Blue#%d", b);
                 for (int m = 0; m <= microfacetDistributionResolution; m++)
                 {
                     out.print(", ");
-                    out.print(basis.evaluateBlue(b, m));
+                    out.print(basis.evaluateSpecularBlue(b, m));
                 }
                 out.println();
             }
 
-            out.println();
+            for (int b = 0; b < basisCount; b++)
+            {
+                DoubleVector3 diffuseColor = basis.getDiffuseColor(b);
+                out.printf("Diffuse#%d, %f, %f, %f", b, diffuseColor.x, diffuseColor.y, diffuseColor.z);
+                out.println();
+            }
         }
         catch (IOException e)
         {
@@ -153,7 +165,7 @@ public class SpecularFitSerializer
      * @param priorSolutionDirectory
      * @return An object containing the red, green, and blue basis functions.
      */
-    public static SpecularBasis deserializeBasisFunctions(File priorSolutionDirectory)
+    public static MaterialBasis deserializeBasisFunctions(File priorSolutionDirectory)
         throws IOException
     {
         File basisFile = new File(priorSolutionDirectory, getBasisFunctionsFilename());
@@ -166,7 +178,7 @@ public class SpecularFitSerializer
             {
                 in.useLocale(Locale.US);
                 String testLine = in.nextLine();
-                String[] elements = testLine.split("\\s*,+\\s*");
+                String[] elements = CSV_PATTERN.split(testLine);
                 if (elements[elements.length - 1].isBlank()) // detect trailing comma
                 {
                     // Don't count the blank element after the trailing comma, or the leading identifier on each line.
@@ -184,47 +196,105 @@ public class SpecularFitSerializer
             {
                 in.useLocale(Locale.US);
 
-                List<double[]> redBasis = new ArrayList<>(8);
-                List<double[]> greenBasis = new ArrayList<>(8);
-                List<double[]> blueBasis = new ArrayList<>(8);
+                List<double[]> specularRedBasis = new ArrayList<>(8);
+                List<double[]> specularGreenBasis = new ArrayList<>(8);
+                List<double[]> specularBlueBasis = new ArrayList<>(8);
 
                 in.useDelimiter("\\s*[,\\n\\r]+\\s*"); // CSV
 
+                String currentTag = in.next();
                 int b = 0;
-                while (in.hasNext())
+                while (!currentTag.startsWith("Diffuse") && in.hasNext()) // stop at end of file or if diffuse albedos found
                 {
                     // Beginning a new basis function for each RGB component.
-                    redBasis.add(new double[numElements]);
-                    greenBasis.add(new double[numElements]);
-                    blueBasis.add(new double[numElements]);
+                    specularRedBasis.add(new double[numElements]);
+                    specularGreenBasis.add(new double[numElements]);
+                    specularBlueBasis.add(new double[numElements]);
 
-                    in.next(); // "Red#{b}"
-                    for (int m = 0; m < numElements; m++)
+                    if (currentTag.equals(String.format("Red#%d", b)))
                     {
-                        redBasis.get(b)[m] = in.nextDouble();
+                        for (int m = 0; m < numElements; m++)
+                        {
+                            specularRedBasis.get(b)[m] = in.nextDouble();
+                        }
+                    }
+                    else
+                    {
+                        throw new IOException(MessageFormat.format("Unexpected line beginning with {0}", currentTag));
                     }
                     // newline
 
-                    in.next(); // "Green#{b}"
-                    for (int m = 0; m < numElements; m++)
+                    currentTag = in.next();
+                    if (currentTag.equals(String.format("Green#%d", b)))
                     {
-                        greenBasis.get(b)[m] = in.nextDouble();
+                        for (int m = 0; m < numElements; m++)
+                        {
+                            specularGreenBasis.get(b)[m] = in.nextDouble();
+                        }
+                    }
+                    else
+                    {
+                        throw new IOException(MessageFormat.format("Unexpected line beginning with {0}", currentTag));
                     }
                     // newline
 
-                    in.next(); // "Blue#{b}"
-                    for (int m = 0; m < numElements; m++)
+                    currentTag = in.next(); // "Blue#{b}"
+                    if (currentTag.equals(String.format("Blue#%d", b)))
                     {
-                        blueBasis.get(b)[m] = in.nextDouble();
+                        for (int m = 0; m < numElements; m++)
+                        {
+                            specularBlueBasis.get(b)[m] = in.nextDouble();
+                        }
+                    }
+                    else
+                    {
+                        throw new IOException(MessageFormat.format("Unexpected line beginning with {0}", currentTag));
                     }
                     // newline
+
+                    if (in.hasNext())
+                    {
+                        // Get tag of next element for while loop check
+                        currentTag = in.next();
+                    }
 
                     b++;
                 }
-                // newline
 
-                return new SimpleSpecularBasis(
-                    redBasis.toArray(double[][]::new), greenBasis.toArray(double[][]::new), blueBasis.toArray(double[][]::new));
+                DoubleVector3[] diffuseBasis = new DoubleVector3[b]; // "b" is the number of specular basis functions from the earlier loop
+                int diffuseCount = 0;
+
+                while (in.hasNext()) // parse diffuse albedos if found
+                {
+                    if (currentTag.equals(String.format("Diffuse#%d", diffuseCount)))
+                    {
+                        diffuseBasis[diffuseCount] = new DoubleVector3(in.nextDouble(), in.nextDouble(), in.nextDouble());
+                    }
+                    else
+                    {
+                        throw new IOException(MessageFormat.format("Unexpected line beginning with {0}", currentTag));
+                    }
+                    // newline
+
+                    if (in.hasNext())
+                    {
+                        // Get tag of next element
+                        currentTag = in.next();
+                    }
+
+                    diffuseCount++;
+                }
+
+                while (diffuseCount < diffuseBasis.length)
+                {
+                    // Default to black if not found
+                    diffuseBasis[diffuseCount] = DoubleVector3.ZERO;
+                    diffuseCount++;
+                }
+
+                return new SimpleMaterialBasis(
+                    diffuseBasis,
+                    specularRedBasis.toArray(double[][]::new), specularGreenBasis.toArray(double[][]::new), specularBlueBasis.toArray(double[][]::new));
             }
         }
         else
