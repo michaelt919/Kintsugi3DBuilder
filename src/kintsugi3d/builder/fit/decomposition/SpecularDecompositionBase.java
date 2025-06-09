@@ -220,7 +220,7 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
         {
             DoubleVector4 diffuseSum = DoubleVector4.ZERO;
 
-            for (int b = 0; b < getSpecularBasis().getCount(); b++)
+            for (int b = 0; b < getMaterialBasis().getMaterialCount(); b++)
             {
                 diffuseSum = diffuseSum.plus(getDiffuseAlbedo(b).asVector4(1.0)
                     .times(getWeight(b, p)));
@@ -251,7 +251,7 @@ public abstract class SpecularDecompositionBase implements SpecularDecomposition
     @Override
     public void saveBasisFunctions(File outputDirectory)
     {
-        getSpecularBasis().save(outputDirectory);
+        getMaterialBasis().save(outputDirectory);
     }
 
     @Override
