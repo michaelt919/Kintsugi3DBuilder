@@ -160,6 +160,10 @@
                                 <items>
                                 </items>
                             </Menu>
+                            <Menu fx:id="paletteMaterialMenu" mnemonicParsing="false" text="Basis material palette">
+                                <items>
+                                </items>
+                            </Menu>
                             <Menu mnemonicParsing="false" text="Texture Visualizations">
                                 <items>
                                     <RadioMenuItem mnemonicParsing="false" text="Normal map" toggleGroup="$renderGroup">
