@@ -11,17 +11,27 @@
 
 package kintsugi3d.builder.fit.decomposition;
 
+import kintsugi3d.gl.vecmath.DoubleVector3;
+import kintsugi3d.gl.vecmath.Vector3;
+
 import java.io.File;
 
-public interface SpecularBasis // TODO: avoid use of anonymous classes, add copy() method to improve robustness
+public interface MaterialBasis // TODO: avoid use of anonymous classes, add copy() method to improve robustness
 {
+    /**
+     * Gets the diffuse color for a particular basis function.
+     * @param b the basis function for which to retrieve the diffuse color.
+     * @return the diffuse color as a DoubleVector3 for basis function b.
+     */
+    DoubleVector3 getDiffuseColor (int b);
+
     /**
      * Evaluates a red basis function
      * @param b the basis function to evaluate
      * @param m the discrete element at which to evaluate the basis function
      * @return the value of red basis function b, at element m.
      */
-    double evaluateRed(int b, int m);
+    double evaluateSpecularRed(int b, int m);
 
     /**
      * Evaluates a green basis function
@@ -29,7 +39,7 @@ public interface SpecularBasis // TODO: avoid use of anonymous classes, add copy
      * @param m the discrete element at which to evaluate the basis function
      * @return the value of green basis function b, at element m.
      */
-    double evaluateGreen(int b, int m);
+    double evaluateSpecularGreen(int b, int m);
 
     /**
      * Evaluates a blue basis function
@@ -37,10 +47,10 @@ public interface SpecularBasis // TODO: avoid use of anonymous classes, add copy
      * @param m the discrete element at which to evaluate the basis function
      * @return the value of blue basis function b, at element m.
      */
-    double evaluateBlue(int b, int m);
+    double evaluateSpecularBlue(int b, int m);
 
-    int getCount();
-    int getResolution();
+    int getMaterialCount();
+    int getSpecularResolution();
 
     void save(File outputDirectory);
 }

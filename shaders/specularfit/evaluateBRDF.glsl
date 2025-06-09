@@ -43,9 +43,14 @@ vec3 getMFDEstimateRaw(float w)
     return estimate;
 }
 
+float getMFDLookupCoord(float nDotH)
+{
+    return sqrt(max(0.0, acos(nDotH) * 3.0 / PI));
+}
+
 vec3 getMFDEstimate(float nDotH)
 {
-    float w = sqrt(max(0.0, acos(nDotH) * 3.0 / PI));
+    float w = getMFDLookupCoord(nDotH);
     return getMFDEstimateRaw(w);
 }
 
@@ -64,7 +69,7 @@ vec3 getDiffuseEstimate()
 vec3 getBRDFEstimate(float nDotH, float geomFactor)
 {
     vec3 estimate = vec3(0);
-    float w = sqrt(max(0.0, acos(nDotH) * 3.0 / PI));
+    float w = getMFDLookupCoord(nDotH);
 
     for (int b = 0; b < BASIS_COUNT; b++)
     {
