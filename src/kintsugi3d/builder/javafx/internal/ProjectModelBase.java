@@ -48,7 +48,7 @@ public abstract class ProjectModelBase implements ProjectModel
 
     public abstract List<ObjectPoseSetting> getObjectPoseList();
 
-    private String colorCheckerFile;
+    private File colorCheckerFile;
 
 
     /**
@@ -153,7 +153,7 @@ public abstract class ProjectModelBase implements ProjectModel
             Node colorPickerImageNode = document.getElementsByTagName("ColorCheckerFile").item(0);
             if (colorPickerImageNode != null)
             {
-                this.colorCheckerFile = colorPickerImageNode.getTextContent();
+                this.colorCheckerFile = new File(colorPickerImageNode.getTextContent());
             }
 
             return newVsetFile;
@@ -224,7 +224,7 @@ public abstract class ProjectModelBase implements ProjectModel
 
         Element colorPickerImageElement = document.createElement("ColorCheckerFile");
 
-        colorPickerImageElement.setTextContent(this.getColorCheckerFile());
+        colorPickerImageElement.setTextContent(this.getColorCheckerFile().getPath());
         rootElement.appendChild(colorPickerImageElement);
 
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
@@ -237,9 +237,9 @@ public abstract class ProjectModelBase implements ProjectModel
         }
     }
 
-    public String getColorCheckerFile() {return this.colorCheckerFile;}
+    public File getColorCheckerFile() {return this.colorCheckerFile;}
 
-    public void setColorCheckerFile(String colorCheckerFile)
+    public void setColorCheckerFile(File colorCheckerFile)
     {
         this.colorCheckerFile = colorCheckerFile;
     }

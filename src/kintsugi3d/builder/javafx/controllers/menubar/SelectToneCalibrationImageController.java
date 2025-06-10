@@ -80,7 +80,7 @@ public class SelectToneCalibrationImageController extends FXMLPageController
     {
         ObservableProjectModel project = (ObservableProjectModel) MultithreadModels.getInstance().getProjectModel();
 
-        boolean hasPreviousColorCheckerImage = project.getColorCheckerFile() != null && !project.getColorCheckerFile().isEmpty();
+        boolean hasPreviousColorCheckerImage = project.getColorCheckerFile() != null && project.getColorCheckerFile().exists();
         previousImageButton.setDisable(!hasPreviousColorCheckerImage);
 
         if (hasPreviousColorCheckerImage)
@@ -121,7 +121,7 @@ public class SelectToneCalibrationImageController extends FXMLPageController
 
             log.debug("Setting new color calibration image: {}", imageFile);
             ObservableProjectModel project = (ObservableProjectModel) MultithreadModels.getInstance().getProjectModel();
-            project.setColorCheckerFile(imageFile.getAbsolutePath());
+            project.setColorCheckerFile(imageFile);
         }
 
         return true;
@@ -139,6 +139,16 @@ public class SelectToneCalibrationImageController extends FXMLPageController
         if (! selectImageFileButton.isSelected())
             return;
 
+        ObservableProjectModel project = (ObservableProjectModel) MultithreadModels.getInstance().getProjectModel();
+        File colorCheckerFile = project.getColorCheckerFile();
+        if (colorCheckerFile != null && colorCheckerFile.exists()){
+            imageFileChooser.setInitialDirectory(colorCheckerFile.getParentFile());
+        }
+        else{
+            ViewSet viewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
+
+            imageFileChooser.setInitialDirectory(viewSet.getFullResImageFilePath());
+        }
         File temp = imageFileChooser.showOpenDialog(anchorPane.getScene().getWindow());
         if (temp != null)
         {
