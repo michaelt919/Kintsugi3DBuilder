@@ -39,6 +39,8 @@ public class MetashapeDocument {
     private HashMap<String, String> chunkZipPathPairs;
     private ArrayList<String> chunkNames;
 
+    private List<MetashapeChunk> chunks;
+
     private Integer activeChunkID;
     private Document projectZipXML;
 
@@ -49,7 +51,7 @@ public class MetashapeDocument {
     }
 
     public MetashapeDocument(String path){
-        loadChunkNamesFromPSX(path);
+        readChunks(path);
     }
 
     public String getChunkNameFromID(int id) {
@@ -92,7 +94,7 @@ public class MetashapeDocument {
 
     }
 
-    public List<String> loadChunkNamesFromPSX(String psxPath) {
+    public List<String> readChunks(String psxPath) {
         //return the chunk names stored in the .psx file (and assigns them to this.chunkNames)
         //also initializes this.psxFilePath to psxFilePath
         //also puts values into this.chunkZipPathPairs
@@ -195,7 +197,7 @@ public class MetashapeDocument {
             return chunkNames;
         }
 
-        return loadChunkNamesFromPSX(psxFilePath);
+        return readChunks(psxFilePath);
     }
 
     public Map<String, String> getChunkZipPathPairs(){

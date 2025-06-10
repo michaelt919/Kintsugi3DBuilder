@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 
 public class MetashapeChunk {
@@ -33,43 +34,18 @@ public class MetashapeChunk {
 
     //contains a metashape object and a specific chunk
     private MetashapeDocument metashapeDocument;
-    private String chunkZipPath;
+    private String chunkZipXmlPath;
     private String chunkName;
     private int chunkID;
 
     private Document chunkXML;
     private Document frameXML;
 
-    private ArrayList<Triplet<String, String, String>> modelInfo = new ArrayList<>(); //model id, name/label, and path
-    private String defaultModelID;
+    private List<MetashapeModel> models = new ArrayList<>();
+
+    private Optional<Integer> defaultModelID;
     private String currModelID;
     private LoadPreferences loadPreferences;
-
-    public String getChunkZipPath() { return chunkZipPath; }
-    public Document getChunkXML() { return chunkXML; }
-    public Document getFrameXML() { return frameXML; }
-
-    public String getChunkDirectoryPath() {
-        String psxFilePath = this.metashapeDocument.getPsxFilePath();
-        String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4); //remove ".psx" from path
-        return new File(new File(psxPathBase + ".files"), Integer.toString(chunkID)).getPath();
-    }
-    public String getFrameDirectoryPath() { return new File(new File(getChunkDirectoryPath()), "0").getPath(); }
-    public String getFramePath() { return new File(new File(getFrameDirectoryPath()), "frame.zip").getPath(); }
-
-
-    private MetashapeChunk(){
-        //hide useless constructor
-    }
-
-    public class LoadPreferences{
-        public File fullResOverride;
-        public boolean doSkipMissingCams;
-        public String orientationViewName;
-        public double orientationViewRotateDegrees;
-    }
-
-    public LoadPreferences getLoadPreferences(){return loadPreferences;}
 
     public MetashapeChunk(MetashapeDocument metashapeDocument, String chunkName, String currModelID) {
         this.metashapeDocument = metashapeDocument;
@@ -82,11 +58,11 @@ public class MetashapeChunk {
     public void updateChunk(String chunkName) {
         this.chunkName = chunkName;
 
-        this.chunkZipPath = metashapeDocument.getChunkZipPathPairs().get(chunkName);
+        this.chunkZipXmlPath = metashapeDocument.getChunkZipPathPairs().get(chunkName);
 
         //set chunk xml
         try {
-            this.chunkXML = UnzipHelper.unzipToDocument(this.chunkZipPath);
+            this.chunkXML = UnzipHelper.unzipToDocument(this.chunkZipXmlPath);
         } catch (IOException e) {
             this.chunkXML = null;
             throw new RuntimeException(e);
@@ -106,62 +82,53 @@ public class MetashapeChunk {
             log.error("An error occurred loading Metashape chunk:", e);
         }
 
-        //set model info (model num/id, path, and label)
-        setModelInfo();
+        loadModelInfo();
     }
 
-    private void setModelInfo() {
-        //open up chunk xml
-        //loop through models in chunk xml
-        //if id isn't null, pull label info from chunk xml and pull path info from framezip
+    public String getChunkZipXmlPath() { return chunkZipXmlPath; }
+    public Document getChunkXML() { return chunkXML; }
+    public Document getFrameXML() { return frameXML; }
 
-        //get active id
+    public String getChunkDirectoryPath() {
+        String psxFilePath = this.metashapeDocument.getPsxFilePath();
+        String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4); //remove ".psx" from path
+        return new File(new File(psxPathBase + ".files"), Integer.toString(chunkID)).getPath();
+    }
+    public String getFrameDirectoryPath() { return new File(new File(getChunkDirectoryPath()), "0").getPath(); }
+    public String getFramePath() { return new File(new File(getFrameDirectoryPath()), "frame.zip").getPath(); }
+
+
+    private MetashapeChunk(){
+        //hide useless constructor
+    }
+
+
+    public class LoadPreferences{
+        public File fullResOverride;
+        public boolean doSkipMissingCams;
+        public String orientationViewName;
+        public double orientationViewRotateDegrees;
+    }
+
+    public LoadPreferences getLoadPreferences(){return loadPreferences;}
+
+    private void loadModelInfo() {
+        //get default model id if the chunk has one
         try {
-            Element elem = (Element) chunkXML.getElementsByTagName("models").item(0);
-            this.defaultModelID = elem.getAttribute("active_id");
+            Element elem1 = (Element) chunkXML.getElementsByTagName("models").item(0);
+            this.defaultModelID = Optional.of(Integer.parseInt(elem1.getAttribute("active_id")));
         }
         catch(NumberFormatException | NullPointerException e){
             log.warn("Could not find active id for " + this.getPsxFilePath(), e);
+            this.defaultModelID = Optional.empty();
         }
-        
+
         NodeList modelList = chunkXML.getElementsByTagName("model");
 
-        modelInfo = new ArrayList<>();
+        models = new ArrayList<>();
         for(int i = 0; i < modelList.getLength(); ++i){
             Element elem = (Element) modelList.item(i);
-
-            String tempModelID = null;
-            String tempLabel = null;
-            String tempPath;
-            try{
-                tempModelID = elem.getAttribute("id");
-            }
-            catch(NumberFormatException nfe){
-                log.warn("Model has no id", nfe);
-            }
-            
-            try{
-                tempLabel = elem.getAttribute("label");
-            }
-            catch(NumberFormatException nfe){
-                log.warn("Model has no label", nfe);
-            }
-            
-            tempPath = getModelPathFromXML(tempModelID);
-            
-            modelInfo.add(new Triplet<>(tempModelID, tempLabel, tempPath));
-        }
-
-        //if no model info yet, might be a single model in chunk which isn't labeled in chunk xml
-        //need to look in frame xml instead
-        //default to looking in frame xml first?
-        //ex. mia arrowhead
-        if (modelInfo.isEmpty()){
-            //TODO: needs more work, this is a quick hack to get arrowhead to work
-            String path = getModelPathFromXML(null);
-            if (!path.isBlank()) {
-                modelInfo.add(new Triplet<>(null, "", path));
-            }
+            models.add(MetashapeModel.parseFromElement(this, elem));
         }
     }
 
@@ -173,7 +140,7 @@ public class MetashapeChunk {
     private int getChunkIdFromZipPath() {
         //example chunk zip path ----> ...GuanYu_with_ground_truth.files\0\chunk.zip
         //want to extract the 0 in this example because that number denotes the chunkID
-        File file = new File(chunkZipPath);
+        File file = new File(chunkZipXmlPath);
 
         //parent file would give "...GuanYu_with_ground_truth.files\0" in this case
         File parentFile = new File(file.getParent());
@@ -258,43 +225,16 @@ public class MetashapeChunk {
     }
 
     public String getCurrentModelPath() {
-        return getModelPathFromXML(currModelID);
-    }
-
-    private String getModelPathFromXML(String mID) {
-        //  <model id="0" path="model.1/model.zip"/> --> returns "model.1/model.zip"
-
-        try{
-            NodeList elems = ((Element) frameXML.getElementsByTagName("frame").item(0))
-                    .getElementsByTagName("model");
-
-            //this if statement triggers if chunk has one model and that model has no id
-            if (elems.getLength() == 1 &&
-                    ((Element) elems.item(0)).getAttribute("id").isEmpty()){
-                return ((Element) elems.item(0)).getAttribute("path");
+        for (MetashapeModel model : models){
+            if (model.getId().isPresent() &&
+            model.getId().equals(defaultModelID)){
+                return model.getPath();
             }
-
-            for (int i = 0; i < elems.getLength(); i++) {
-                Element element = (Element) elems.item(i);
-
-                if (Objects.equals(element.getAttribute("id"), mID)){
-                    return element.getAttribute("path");
-                }
-            }
-
         }
-        catch(NullPointerException e){
-            return "";
-        }
-
         return "";
     }
 
-    public ArrayList<Triplet<String, String, String>> getModelInfo(){
-        return modelInfo;
-    }
-
-    public String getDefaultModelID(){return defaultModelID;}
+    public Optional<Integer> getDefaultModelID(){return defaultModelID;}
 
     public String getCurrModelID(){return currModelID;}
 
@@ -315,5 +255,8 @@ public class MetashapeChunk {
 
         return this.chunkName.equals(moc.getChunkName()) &&
                 this.getPsxFilePath().equals(moc.getPsxFilePath());
+    }
+    public List<MetashapeModel> getModels() {
+        return models;
     }
 }

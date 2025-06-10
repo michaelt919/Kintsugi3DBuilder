@@ -29,6 +29,7 @@ import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageContr
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
 import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeDocument;
+import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeModel;
 import kintsugi3d.util.RecentProjects;
 import kintsugi3d.util.Triplet;
 import org.slf4j.Logger;
@@ -166,12 +167,11 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         }
 
 
-        ArrayList<Triplet<String, String, String>> modelInfo = metashapeChunk.getModelInfo();
 
         modelSelectionChoiceBox.getItems().clear();
-        for (Triplet<String, String, String> triplet : modelInfo){
-            String modelID = triplet.first != null ? String.valueOf(triplet.first) : NO_MODEL_ID_MSG;
-            String modelName = !triplet.second.isBlank() ? triplet.second : NO_MODEL_NAME_MSG;
+        for (MetashapeModel model : metashapeChunk.getModels()){
+            String modelID = model.getId().isPresent() ? String.valueOf(model.getId().get()) : NO_MODEL_ID_MSG;
+            String modelName = !model.getLabel().isBlank() ? model.getLabel() : NO_MODEL_NAME_MSG;
             modelSelectionChoiceBox.getItems().add(modelID + "   " + modelName);
         }
 
@@ -186,14 +186,15 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         modelSelectionChoiceBox.setValue(modelSelectionChoiceBox.getItems().get(0));
         modelSelectionChoiceBox.setDisable(false);
 
-        if (metashapeChunk.getDefaultModelID() == null){return;}
+        if (metashapeChunk.getDefaultModelID().isEmpty()){return;}
 
         for (int i = 0; i < modelSelectionChoiceBox.getItems().size(); ++i){
             Object obj = modelSelectionChoiceBox.getItems().get(i);
             String modelID = getModelIDFromSelection((String) obj);
             if (modelID == null){continue;}
 
-            if (modelID.equals(metashapeChunk.getDefaultModelID())){
+            int id = Integer.parseInt(modelID);
+            if (metashapeChunk.getDefaultModelID().get().equals(id)){
                 modelSelectionChoiceBox.setValue(obj);
                 break;
             }
@@ -231,9 +232,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     }
 
     private boolean hasModels() {
-        return modelSelectionChoiceBox.getItems() != null &&
-                !modelSelectionChoiceBox.getItems().isEmpty() &&
-                modelSelectionChoiceBox.getItems().get(0) != null;
+        return !metashapeChunk.getModels().isEmpty();
     }
 
     private void updateChunkSelectionChoiceBox() {
