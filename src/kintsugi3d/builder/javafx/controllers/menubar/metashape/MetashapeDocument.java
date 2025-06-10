@@ -25,85 +25,26 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MetashapeDocument {
     private static final Logger log = LoggerFactory.getLogger(MetashapeDocument.class);
 
     private String psxFilePath;
 
-    //key is chunk name, value is path to chunk's zip file
-    private HashMap<String, String> chunkZipPathPairs;
-    private ArrayList<String> chunkNames;
-
     private List<MetashapeChunk> chunks;
 
-    private Integer activeChunkID;
+    private int activeChunkID;
     private Document projectZipXML;
 
-    public MetashapeDocument(){
-        psxFilePath = "";
-        chunkZipPathPairs = new HashMap<>();
-        chunkNames = new ArrayList<>();
+    //hide useless constructor
+    private MetashapeDocument(){
     }
 
     public MetashapeDocument(String path){
-        readChunks(path);
-    }
+        this.psxFilePath = path;
 
-    public String getChunkNameFromID(int id) {
-        //open project.zip
-        //get path from appropriate chunk id
-        //open chunk.zip
-        //TODO: do better logging here
-        NodeList chunks = projectZipXML.getElementsByTagName("chunk");
-        if (chunks == null || chunks.getLength() == 0){return "";}
-
-        String chunkPath = "";
-        for (int i = 0; i < chunks.getLength(); ++i){
-            Element elem = (Element) chunks.item(i);
-            String chunkElemID = elem.getAttribute("id");
-            if (Integer.parseInt(chunkElemID) == id){
-                chunkPath = elem.getAttribute("path");
-                break;
-            }
-        }
-
-        if (chunkPath.isBlank()){return "";}
-
-        chunkPath = new File(new File(getPSXPathBase() + ".files"), chunkPath).getPath();
-        try {
-            Document chunkXML = UnzipHelper.unzipToDocument(chunkPath);
-            NodeList chunkWrapper = chunkXML.getElementsByTagName("chunk");
-            if (chunkWrapper!= null && chunkWrapper.getLength() >0){
-                Element chunkElem = (Element) chunkWrapper.item(0);
-                return chunkElem.getAttribute("label");
-            }
-            else{
-                return "";
-            }
-        } catch (IOException e) {
-            log.error("Could not open chunk zip document", e);
-            return "";
-        }
-        //get chunk element
-        //return element label
-
-    }
-
-    public List<String> readChunks(String psxPath) {
-        //return the chunk names stored in the .psx file (and assigns them to this.chunkNames)
-        //also initializes this.psxFilePath to psxFilePath
-        //also puts values into this.chunkZipPathPairs
-
-        chunkNames = new ArrayList<>();
-        chunkZipPathPairs = new HashMap<>();
-        this.psxFilePath = psxPath;
-
-        if (!isValidPSXFilePath(psxFilePath)) {return chunkNames;}
+        if (!isValidPSXFilePath(psxFilePath)) {return;}
 
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -129,7 +70,7 @@ public class MetashapeDocument {
             String projectZipString = UnzipHelper.unzipToString(documentPathInfo);
             projectZipXML = UnzipHelper.convertStringToDocument(projectZipString);
 
-            if (projectZipXML == null){return chunkNames;}
+            if (projectZipXML == null){return ;}
 
             //set active chunk id if the project has one
             NodeList chunksWrapper = projectZipXML.getElementsByTagName("chunks");
@@ -146,21 +87,64 @@ public class MetashapeDocument {
 
             //...chunk.zip holds the information we need to extract (chunk name, id, etc)
 
-            //add all chunks to chunkNames list
-            loadChunkNamesList(chunkList);
+            loadChunks(chunkList);
         }
         catch (ParserConfigurationException | IOException | SAXException e) {
             log.error("An error occurred:", e);
         }
-        return chunkNames;
     }
 
-    private String getPSXPathBase() {
+    public String getChunkNameFromID(int id) {
+        Optional<MetashapeChunk> chunk = chunks.stream()
+                .filter(c -> c.getID() == id)
+                .findFirst();
+
+        if (chunk.isPresent()){
+            return chunk.get().getLabel();
+        }
+        return "";
+//        //open project.zip
+//        //get path from appropriate chunk id
+//        //open chunk.zip
+//        //TODO: do better logging here
+//        NodeList chunks = projectZipXML.getElementsByTagName("chunk");
+//        if (chunks == null || chunks.getLength() == 0){return "";}
+//
+//        String chunkPath = "";
+//        for (int i = 0; i < chunks.getLength(); ++i){
+//            Element elem = (Element) chunks.item(i);
+//            String chunkElemID = elem.getAttribute("id");
+//            if (Integer.parseInt(chunkElemID) == id){
+//                chunkPath = elem.getAttribute("path");
+//                break;
+//            }
+//        }
+//
+//        if (chunkPath.isBlank()){return "";}
+//
+//        chunkPath = new File(new File(getPSXPathBase() + ".files"), chunkPath).getPath();
+//        try {
+//            Document chunkXML = UnzipHelper.unzipToDocument(chunkPath);
+//            NodeList chunkWrapper = chunkXML.getElementsByTagName("chunk");
+//            if (chunkWrapper!= null && chunkWrapper.getLength() >0){
+//                Element chunkElem = (Element) chunkWrapper.item(0);
+//                return chunkElem.getAttribute("label");
+//            }
+//            else{
+//                return "";
+//            }
+//        } catch (IOException e) {
+//            log.error("Could not open chunk zip document", e);
+//            return "";
+//        }
+    }
+
+    String getPSXPathBase() {
         return psxFilePath.substring(0, psxFilePath.length() - 4);
     }
 
-    private void loadChunkNamesList(NodeList chunkList) throws IOException {
-        String chunkZipPath;
+    private void loadChunks(NodeList chunkList) throws IOException {
+        chunks = new ArrayList<>();
         for (int i = 0; i < chunkList.getLength(); ++i) {
             Node chunk = chunkList.item(i);
 
@@ -169,47 +153,10 @@ public class MetashapeDocument {
                 //<chunk id="0" path="0/chunk.zip"/>
                 Element chunkElement = (Element) chunk;
 
-                //open doc.xml within each chunk and read the chunk's label attribute --> display it to user
-                chunkZipPath = chunkElement.getAttribute("path"); //gives xx/chunk.zip where xx is a number
-
-                //append this path to the psxFilePath (without ".psx" at the end)
-                chunkZipPath = new File(new File(getPSXPathBase() + ".files"), chunkZipPath).getPath();
-
-                //fullChunkDocument has info about chunk name, cameras, images, etc.
-                Document fullChunkDocument = UnzipHelper.unzipToDocument(chunkZipPath);
-
-                //only one chunk in this inner chunk document, so no need for a for loop
-                Element fullChunkElement = (Element) fullChunkDocument.getElementsByTagName("chunk").item(0);
-
-                String chunkName = fullChunkElement.getAttribute("label");
-                chunkNames.add(chunkName);
-                chunkZipPathPairs.put(chunkName, chunkZipPath);
+                //TODO: set info about which chunk is active here
+                chunks.add(MetashapeChunk.parseFromElement(this, chunkElement));
             }
         }
-    }
-
-    public List<String> getChunkNames(){
-        return chunkNames;
-    }
-
-    public List<String> getChunkNamesDynamic(String psxFilePath){
-        if (chunkNames != null){
-            return chunkNames;
-        }
-
-        return readChunks(psxFilePath);
-    }
-
-    public Map<String, String> getChunkZipPathPairs(){
-        return chunkZipPathPairs;
-    }
-
-    public String getPsxFilePath() {
-        return psxFilePath;
-    }
-
-    public void setPsxFilePath(String path){
-        psxFilePath = path;
     }
 
     public Integer getActiveChunkID(){
@@ -223,5 +170,32 @@ public class MetashapeDocument {
 
     public File getPsxFile() {
         return new File(psxFilePath);
+    }
+
+    public String getPsxFilePath() {
+        return psxFilePath;
+    }
+
+    public List<MetashapeChunk> getChunks() {
+        return chunks;
+    }
+
+    public void selectChunk(String selectedChunkLabel) {
+        Optional<MetashapeChunk> selectedChunk = chunks.stream()
+                .filter(chunk -> chunk.getLabel().equals(selectedChunkLabel))
+                .findFirst();
+
+        if (selectedChunk.isEmpty()){
+            return;
+        }
+
+        this.activeChunkID = selectedChunk.get().getID();
+    }
+
+    public MetashapeChunk getSelectedChunk() {
+        return chunks.stream()
+                .filter(chunk -> chunk.getID() == activeChunkID)
+                .findFirst()
+                .orElse(null);
     }
 }

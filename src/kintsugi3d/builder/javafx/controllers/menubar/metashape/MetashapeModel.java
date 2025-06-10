@@ -23,10 +23,10 @@ public class MetashapeModel {
     }
 
     public static MetashapeModel parseFromElement(MetashapeChunk chunk, Element elem) {
-        Optional<Integer> tempModelID = Optional.empty();
+        Optional<Integer> modelID = Optional.empty();
         String tempLabel = null;
         try{
-            tempModelID = Optional.of(Integer.parseInt(elem.getAttribute("id")));
+            modelID = Optional.of(Integer.parseInt(elem.getAttribute("id")));
         }
         catch(NumberFormatException nfe){
             log.warn("Model has no id", nfe);
@@ -42,6 +42,7 @@ public class MetashapeModel {
         String path = "";
         //  <model id="0" path="model.1/model.zip"/> --> returns "model.1/model.zip"
 
+        //TODO: clean this up
         try{
             NodeList elems = ((Element) chunk.getFrameXML().getElementsByTagName("frame").item(0))
                     .getElementsByTagName("model");
@@ -54,7 +55,7 @@ public class MetashapeModel {
                 for (int i = 0; i < elems.getLength(); i++) {
                     Element element = (Element) elems.item(i);
 
-                    if (Objects.equals(element.getAttribute("id"), String.valueOf(tempModelID.get()))) {
+                    if (Objects.equals(element.getAttribute("id"), String.valueOf(modelID.get()))) {
                         path = element.getAttribute("path");
                         break;
                     }
@@ -79,7 +80,7 @@ public class MetashapeModel {
 //            }
 //        }
 
-        return new MetashapeModel(chunk, tempModelID, tempLabel, path);
+        return new MetashapeModel(chunk, modelID, tempLabel, path);
     }
 
     public Optional<Integer> getId(){

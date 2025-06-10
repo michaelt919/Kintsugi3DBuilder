@@ -812,7 +812,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             throw new FileNotFoundException(MessageFormat.format("Chunk directory does not exist: {0}", chunkDirectory));
         }
 
-        File rootDirectory = new File(metashapeChunk.getPsxFilePath()).getParentFile();
+        File rootDirectory = new File(metashapeChunk.getMetashapeObject().getPsxFilePath()).getParentFile();
         if (!rootDirectory.exists())
         {
             throw new FileNotFoundException(MessageFormat.format("Root directory does not exist: {0}", rootDirectory));
@@ -841,7 +841,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     // TODO: USING A HARD CODED VERSION VALUE (200)
                     ViewSet viewSet = ((ViewSetReaderFromAgisoftXML) ViewSetReaderFromAgisoftXML.getInstance())
                         .readFromStream(fileStream, rootDirectory, supportingFilesDirectory, true,
-                            metashapeChunk.getCurrModelID(), cameraPathsMap, 200, true);
+                            String.valueOf(metashapeChunk.getCurrModelID()), cameraPathsMap, 200, true);
 
                     // 3) load geometry from ZipInputStream from model's ZIP
                     String modelPath = metashapeChunk.getCurrentModelPath();

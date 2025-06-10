@@ -31,12 +31,12 @@ import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeDocument;
 import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeModel;
 import kintsugi3d.util.RecentProjects;
-import kintsugi3d.util.Triplet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class MetashapeImportController extends FXMLPageController implements ShareInfo {
     private static final Logger log = LoggerFactory.getLogger(MetashapeImportController.class);
@@ -45,11 +45,12 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     @FXML private AnchorPane anchorPane;
     @FXML private Text loadMetashapeObject;
 
-    @FXML private ChoiceBox chunkSelectionChoiceBox;
-    @FXML private ChoiceBox modelSelectionChoiceBox;
+    @FXML private ChoiceBox<String> chunkSelectionChoiceBox;
+    @FXML private ChoiceBox<String> modelSelectionChoiceBox;
 
     private File metashapePsxFile;
     private MetashapeChunk metashapeChunk;
+    private MetashapeDocument metashapeDocument;
 
     private static final String NO_MODEL_ID_MSG = "No Model ID";
     private static final String NO_MODEL_NAME_MSG = "Unnamed Model";
@@ -91,9 +92,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
     @Override
     public void shareInfo() {
-        //update metashapeObjectChunk with selected chunk from chunkSelectionChoiceBox
-        updateMetashapeChunk();
-
         InputSource source = hostScrollerController.getInfo(Info.INPUT_SOURCE);
         if (source instanceof MetashapeProjectInputSource){
             //overwrite old source so we can compare old and new versions in PrimaryViewSelectController
@@ -103,21 +101,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         else{
             log.error("Error sending Metashape project info to host controller. MetashapeProjectInputSource expected.");
         }
-    }
-
-    private void updateMetashapeChunk() {
-        if (metashapeChunk != null){
-            MetashapeDocument metashapeDocument = metashapeChunk.getMetashapeObject();
-            String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
-            String modelID = getSelectedModelID();
-
-            metashapeChunk = new MetashapeChunk(metashapeDocument, chunkName, modelID);
-        }
-    }
-
-    private String getSelectedModelID() {
-        String selectionAsString = (String) modelSelectionChoiceBox.getSelectionModel().getSelectedItem();
-        return getModelIDFromSelection(selectionAsString);
     }
 
     private static String getModelIDFromSelection(String selectionAsString) {
@@ -152,31 +135,20 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     }
 
     private void updateModelSelectionChoiceBox() {
+        if (chunkSelectionChoiceBox.getItems().isEmpty()) {
+            return;
+        }
+
         modelSelectionChoiceBox.setDisable(true);
-
-        if (metashapeChunk != null){
-            String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
-            metashapeChunk.updateChunk(chunkName);
-        }
-        else{
-            MetashapeDocument metashapeDocument = new MetashapeDocument(metashapePsxFile.getAbsolutePath());
-            String chunkName = (String) chunkSelectionChoiceBox.getSelectionModel().getSelectedItem();
-            String modelID = "0";
-
-            metashapeChunk = new MetashapeChunk(metashapeDocument, chunkName, modelID);
-        }
-
-
-
         modelSelectionChoiceBox.getItems().clear();
-        for (MetashapeModel model : metashapeChunk.getModels()){
+        for (MetashapeModel model : metashapeChunk.getModels()) {
             String modelID = model.getId().isPresent() ? String.valueOf(model.getId().get()) : NO_MODEL_ID_MSG;
             String modelName = !model.getLabel().isBlank() ? model.getLabel() : NO_MODEL_NAME_MSG;
             modelSelectionChoiceBox.getItems().add(modelID + "   " + modelName);
         }
 
 
-        if (!hasModels()){
+        if (!hasModels()) {
             showNoModelsAlert();
             return;
         }
@@ -186,15 +158,19 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         modelSelectionChoiceBox.setValue(modelSelectionChoiceBox.getItems().get(0));
         modelSelectionChoiceBox.setDisable(false);
 
-        if (metashapeChunk.getDefaultModelID().isEmpty()){return;}
+        if (metashapeChunk.getDefaultModelID().isEmpty()) {
+            return;
+        }
 
-        for (int i = 0; i < modelSelectionChoiceBox.getItems().size(); ++i){
-            Object obj = modelSelectionChoiceBox.getItems().get(i);
-            String modelID = getModelIDFromSelection((String) obj);
-            if (modelID == null){continue;}
+        for (int i = 0; i < modelSelectionChoiceBox.getItems().size(); ++i) {
+            String obj = modelSelectionChoiceBox.getItems().get(i);
+            String modelID = getModelIDFromSelection(obj);
+            if (modelID == null) {
+                continue;
+            }
 
             int id = Integer.parseInt(modelID);
-            if (metashapeChunk.getDefaultModelID().get().equals(id)){
+            if (metashapeChunk.getDefaultModelID().get().equals(id)) {
                 modelSelectionChoiceBox.setValue(obj);
                 break;
             }
@@ -239,14 +215,13 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         chunkSelectionChoiceBox.setDisable(true);
 
         //load chunks into chunk selection module
-        MetashapeDocument metashapeDocument = new MetashapeDocument(metashapePsxFile.getPath());
+        metashapeDocument = new MetashapeDocument(metashapePsxFile.getPath());
 
-        ArrayList<String> chunkNames = (ArrayList<String>) metashapeDocument.
-                getChunkNamesDynamic(metashapeDocument.getPsxFilePath());
+        List<String> chunkNames = metashapeDocument.getChunks().stream()
+                .map(MetashapeChunk::getLabel).collect(Collectors.toList());
 
         chunkSelectionChoiceBox.getItems().clear();
         chunkSelectionChoiceBox.getItems().addAll(chunkNames);
-
 
         //initialize choice box to first option instead of null option
         if (chunkSelectionChoiceBox.getItems() != null &&
@@ -259,15 +234,17 @@ public class MetashapeImportController extends FXMLPageController implements Sha
             if (activeChunkID != null){
                 String chunkName = metashapeDocument.getChunkNameFromID(activeChunkID);
 
-                for (Object obj : chunkSelectionChoiceBox.getItems()){
-                    String str = (String) obj;
+                for (String str : chunkSelectionChoiceBox.getItems()){
                     if (str.equals(chunkName)){
-                        chunkSelectionChoiceBox.setValue(obj);
+                        chunkSelectionChoiceBox.setValue(str);
                         break;
                     }
                 }
             }
         }
+
+        metashapeDocument.selectChunk(chunkSelectionChoiceBox.getValue());
+        metashapeChunk = metashapeDocument.getSelectedChunk();
     }
 
     private void updateLoadedIndicators() {

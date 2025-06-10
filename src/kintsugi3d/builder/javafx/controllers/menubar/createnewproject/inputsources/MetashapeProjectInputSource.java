@@ -62,7 +62,7 @@ public class MetashapeProjectInputSource extends InputSource{
         if (!chunkDirectory.exists()) {
             log.error("Chunk directory does not exist: " + chunkDirectory);
         }
-        File rootDirectory = new File(metashapeChunk.getPsxFilePath()).getParentFile();
+        File rootDirectory = new File(metashapeChunk.getMetashapeObject().getPsxFilePath()).getParentFile();
         if (!rootDirectory.exists()) {
             log.error("Root directory does not exist: " + rootDirectory);
         }
@@ -123,7 +123,7 @@ public class MetashapeProjectInputSource extends InputSource{
 
     @Override
     public void initTreeView() {
-        String chunkName = metashapeChunk.getChunkName();
+        String chunkName = metashapeChunk.getLabel();
 
         List <Image> thumbnailImageList = metashapeChunk.loadThumbnailImageList();
         List<Element> cameras = metashapeChunk.findEnabledCameras();
@@ -174,7 +174,7 @@ public class MetashapeProjectInputSource extends InputSource{
 
         ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event -> {
             DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setInitialDirectory(new File(metashapeChunk.getPsxFilePath()).getParentFile());
+            directoryChooser.setInitialDirectory(new File(metashapeChunk.getMetashapeObject().getPsxFilePath()).getParentFile());
 
             directoryChooser.setTitle("Choose New Image Directory");
             File newCamsFile = directoryChooser.showDialog(MenubarController.getInstance().getWindow());
