@@ -222,10 +222,11 @@ public abstract class ProjectModelBase implements ProjectModel
             }
         }
 
-        Element colorPickerImageElement = document.createElement("ColorCheckerFile");
-
-        colorPickerImageElement.setTextContent(this.getColorCheckerFile().getPath());
-        rootElement.appendChild(colorPickerImageElement);
+        if (this.getColorCheckerFile() != null){
+            Element colorPickerImageElement = document.createElement("ColorCheckerFile");
+            colorPickerImageElement.setTextContent(this.getColorCheckerFile().getPath());
+            rootElement.appendChild(colorPickerImageElement);
+        }
 
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
