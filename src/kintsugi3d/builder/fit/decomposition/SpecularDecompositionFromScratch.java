@@ -20,6 +20,7 @@ import kintsugi3d.builder.core.TextureResolution;
 import kintsugi3d.builder.export.specular.SpecularFitSerializer;
 import kintsugi3d.builder.fit.settings.SpecularBasisSettings;
 import kintsugi3d.gl.vecmath.DoubleVector3;
+import kintsugi3d.gl.vecmath.Vector3;
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 import org.slf4j.Logger;
@@ -66,39 +67,45 @@ public class SpecularDecompositionFromScratch extends SpecularDecompositionBase
     }
 
     @Override
-    public SpecularBasis getSpecularBasis()
+    public MaterialBasis getMaterialBasis()
     {
-        return new SpecularBasis()
+        return new MaterialBasis()
         {
             final int count = specularBasisSettings.getBasisCount();
             final int resolution = specularBasisSettings.getBasisResolution();
 
             @Override
-            public double evaluateRed(int b, int m)
+            public DoubleVector3 getDiffuseColor(int b)
+            {
+                return diffuseAlbedos[b];
+            }
+
+            @Override
+            public double evaluateSpecularRed(int b, int m)
             {
                 return specularRed.get(m, b);
             }
 
             @Override
-            public double evaluateGreen(int b, int m)
+            public double evaluateSpecularGreen(int b, int m)
             {
                 return specularGreen.get(m, b);
             }
 
             @Override
-            public double evaluateBlue(int b, int m)
+            public double evaluateSpecularBlue(int b, int m)
             {
                 return specularBlue.get(m, b);
             }
 
             @Override
-            public int getCount()
+            public int getMaterialCount()
             {
                 return count;
             }
 
             @Override
-            public int getResolution()
+            public int getSpecularResolution()
             {
                 return resolution;
             }

@@ -42,7 +42,7 @@ import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.export.projectExporter.ExportRequestUI;
 import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.export.specular.SpecularFitSerializer;
-import kintsugi3d.builder.fit.decomposition.SpecularBasis;
+import kintsugi3d.builder.fit.decomposition.MaterialBasis;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
@@ -144,6 +144,7 @@ public class MenubarController
     @FXML private Menu shadingMenu;
     @FXML private Menu heatmapMenu;
     @FXML private Menu superimposeMenu;
+    @FXML private Menu paletteMaterialMenu;
 
     @FXML private CustomMenuItem removeAllRefsCustMenuItem;
     @FXML private CustomMenuItem removeSomeRefsCustMenuItem;
@@ -564,13 +565,14 @@ public class MenubarController
     public void updateShaderList() {
         heatmapMenu.getItems().clear();
         superimposeMenu.getItems().clear();
+        paletteMaterialMenu.getItems().clear();
 
         int basisCount = 0;
         try
         {
             ViewSet viewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
-            SpecularBasis basis = SpecularFitSerializer.deserializeBasisFunctions(viewSet.getSupportingFilesFilePath());
-            basisCount = basis.getCount();
+            MaterialBasis basis = SpecularFitSerializer.deserializeBasisFunctions(viewSet.getSupportingFilesFilePath());
+            basisCount = basis.getMaterialCount();
         }
         catch (IOException | NullPointerException e)
         {
@@ -585,17 +587,23 @@ public class MenubarController
         for (int i = 0; i < basisCount; ++i) {
             RadioMenuItem heatmap = new RadioMenuItem("Weight map " + i);
             RadioMenuItem b = new RadioMenuItem("Weight map " + i);
+            RadioMenuItem paletteMaterial = new RadioMenuItem("Palette material " + i);
 
             Map<String, Optional<Object>> defines = new HashMap<>();
             defines.put("WEIGHTMAP_INDEX", Optional.of(i));
 
             heatmap.setToggleGroup(renderGroup);
             heatmap.setUserData(new RenderingShaderUserData("rendermodes/weightmaps/weightmapSingle.frag", defines));
+
             b.setToggleGroup(renderGroup);
             b.setUserData(new RenderingShaderUserData("rendermodes/weightmaps/weightmapOverlay.frag", defines));
 
+            paletteMaterial.setToggleGroup(renderGroup);
+            paletteMaterial.setUserData(new RenderingShaderUserData("rendermodes/basisMaterialSingle.frag", defines));
+
             heatmapMenu.getItems().add(i, heatmap);
             superimposeMenu.getItems().add(i, b);
+            paletteMaterialMenu.getItems().add(i, paletteMaterial);
             // when attempting to redefine 'heatmap' and use for superimposeMenu, K3D would crash
         }
     }

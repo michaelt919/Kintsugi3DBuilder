@@ -16,9 +16,11 @@ import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+import kintsugi3d.gl.vecmath.DoubleVector3;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 public class BasisResources<ContextType extends Context<ContextType>> implements Resource, ContextBound<ContextType>
 {
@@ -28,7 +30,8 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
     private final int basisCount;
     private final int basisResolution;
 
-    private SpecularBasis specularBasis;
+    private List<DoubleVector3> diffuseAlbedos;
+    private MaterialBasis materialBasis;
 
     public BasisResources(ContextType context, int basisCount, int basisResolution)
     {
@@ -53,9 +56,9 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
         return context;
     }
 
-    public SpecularBasis getSpecularBasis()
+    public MaterialBasis getSpecularBasis()
     {
-        return specularBasis;
+        return materialBasis;
     }
 
     public int getBasisCount()
@@ -70,7 +73,8 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
 
     public void updateFromSolution(SpecularDecomposition solution)
     {
-        this.specularBasis = solution.getSpecularBasis();
+        this.materialBasis = solution.getMaterialBasis();
+        this.diffuseAlbedos = solution.getDiffuseAlbedos();
 
         NativeVectorBufferFactory factory = NativeVectorBufferFactory.getInstance();
         NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3,
@@ -83,9 +87,9 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
             for (int m = 0; m <= basisResolution; m++)
             {
                 // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
-                basisMapBuffer.set(m + (basisResolution + 1) * b, 0, this.specularBasis.evaluateRed(b, m));
-                basisMapBuffer.set(m + (basisResolution + 1) * b, 1, this.specularBasis.evaluateGreen(b, m));
-                basisMapBuffer.set(m + (basisResolution + 1) * b, 2, this.specularBasis.evaluateBlue(b, m));
+                basisMapBuffer.set(m + (basisResolution + 1) * b, 0, this.materialBasis.evaluateSpecularRed(b, m));
+                basisMapBuffer.set(m + (basisResolution + 1) * b, 1, this.materialBasis.evaluateSpecularGreen(b, m));
+                basisMapBuffer.set(m + (basisResolution + 1) * b, 2, this.materialBasis.evaluateSpecularBlue(b, m));
             }
 
             // Store each channel of the diffuse albedo in the local buffer.
@@ -111,7 +115,7 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
     public static <ContextType extends Context<ContextType>> BasisResources<ContextType> loadFromPriorSolution(
         ContextType context, File priorSolutionDirectory) throws IOException
     {
-        SpecularBasis basis = SpecularFitSerializer.deserializeBasisFunctions(priorSolutionDirectory);
+        MaterialBasis basis = SpecularFitSerializer.deserializeBasisFunctions(priorSolutionDirectory);
 
         if (basis != null)
         {
@@ -119,27 +123,39 @@ public class BasisResources<ContextType extends Context<ContextType>> implements
 
             // Set up basis function buffer
             NativeVectorBuffer basisMapBuffer = factory.createEmpty(NativeDataType.FLOAT, 3,
-                basis.getCount() * (basis.getResolution() + 1));
+                basis.getMaterialCount() * (basis.getSpecularResolution() + 1));
 
-            for (int b = 0; b < basis.getCount(); b++)
+            for (int b = 0; b < basis.getMaterialCount(); b++)
             {
                 // Copy basis functions by color channel into the basis map buffer that will eventually be sent to the GPU..
-                for (int m = 0; m <= basis.getResolution(); m++)
+                for (int m = 0; m <= basis.getSpecularResolution(); m++)
                 {
                     // Format necessary for OpenGL is essentially transposed from the storage in the solution vectors.
-                    basisMapBuffer.set(m + (basis.getResolution() + 1) * b, 0, basis.evaluateRed(b, m));
-                    basisMapBuffer.set(m + (basis.getResolution() + 1) * b, 1, basis.evaluateGreen(b, m));
-                    basisMapBuffer.set(m + (basis.getResolution() + 1) * b, 2, basis.evaluateBlue(b, m));
+                    basisMapBuffer.set(m + (basis.getSpecularResolution() + 1) * b, 0, basis.evaluateSpecularRed(b, m));
+                    basisMapBuffer.set(m + (basis.getSpecularResolution() + 1) * b, 1, basis.evaluateSpecularGreen(b, m));
+                    basisMapBuffer.set(m + (basis.getSpecularResolution() + 1) * b, 2, basis.evaluateSpecularBlue(b, m));
                 }
             }
 
-            BasisResources<ContextType> resources = new BasisResources<>(context, basis.getCount(), basis.getResolution());
-            resources.specularBasis = basis;
+            // Diffuse albedos
+            NativeVectorBuffer diffuseNativeBuffer = factory.createEmpty(NativeDataType.FLOAT, 4, basis.getMaterialCount());
+            for (int b = 0; b < basis.getMaterialCount(); b++)
+            {
+                // Store each channel of the diffuse albedo in the local buffer.
+                diffuseNativeBuffer.set(b, 0, basis.getDiffuseColor(b).x);
+                diffuseNativeBuffer.set(b, 1, basis.getDiffuseColor(b).y);
+                diffuseNativeBuffer.set(b, 2, basis.getDiffuseColor(b).z);
+                diffuseNativeBuffer.set(b, 3, 1.0f);
+            }
+
+            BasisResources<ContextType> resources = new BasisResources<>(context, basis.getMaterialCount(), basis.getSpecularResolution());
+            resources.materialBasis = basis;
 
             // Send the basis functions to the GPU.
             resources.basisMaps.load(basisMapBuffer);
 
-            // Skip diffuse basis colors -- we'll optimize a diffuse map separately, so it shouldn't matter if they're all black.
+            // Send the diffuse albedos to the GPU.
+            resources.diffuseUniformBuffer.setData(diffuseNativeBuffer);
 
             return resources;
         }
