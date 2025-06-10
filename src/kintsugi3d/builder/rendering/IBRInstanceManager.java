@@ -24,7 +24,7 @@ import kintsugi3d.builder.fit.settings.ExportSettings;
 import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
-import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeChunk;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
@@ -39,15 +39,10 @@ import kintsugi3d.util.EncodableColorImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.DoubleUnaryOperator;
 
 public class IBRInstanceManager<ContextType extends Context<ContextType>> implements IOHandler, InteractiveRenderable<ContextType>
 {
@@ -355,7 +350,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptions) {
+    public void loadAgisoftFromZIP(MetashapeChunk metashapeChunk, ReadonlyLoadOptionsModel loadOptions) {
 
         // TODO There currently isn't functionality for a supportingFilesDirectory at this early in the process
         //  Restructuring required from Tetzlaff.
@@ -369,16 +364,16 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
         File supportingFilesDirectory = null;
         try {
-            String orientationView = metashapeObjectChunk.getLoadPreferences().orientationViewName;
-            double rotation = metashapeObjectChunk.getLoadPreferences().orientationViewRotateDegrees;
+            String orientationView = metashapeChunk.getLoadPreferences().orientationViewName;
+            double rotation = metashapeChunk.getLoadPreferences().orientationViewRotateDegrees;
 
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                     .setProgressMonitor(this.progressMonitor)
                     .setLoadOptions(loadOptions)
-                    .loadAgisoftFromZIP(metashapeObjectChunk, supportingFilesDirectory)
+                    .loadAgisoftFromZIP(metashapeChunk, supportingFilesDirectory)
                     .setOrientationView(orientationView, rotation);
 
-            loadInstance(metashapeObjectChunk.getFramePath(), builder);
+            loadInstance(metashapeChunk.getFramePath(), builder);
         }
         catch(UserCancellationException e)
         {

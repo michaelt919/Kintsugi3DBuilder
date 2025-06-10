@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.menubar;
+package kintsugi3d.builder.javafx.controllers.menubar.metashape;
 
 import javafx.scene.image.Image;
 import kintsugi3d.gl.util.UnzipHelper;
@@ -28,11 +28,11 @@ import java.util.List;
 import java.util.Objects;
 
 
-public class MetashapeObjectChunk {
-    private static final Logger log = LoggerFactory.getLogger(MetashapeObjectChunk.class);
+public class MetashapeChunk {
+    private static final Logger log = LoggerFactory.getLogger(MetashapeChunk.class);
 
     //contains a metashape object and a specific chunk
-    private MetashapeObject metashapeObject;
+    private MetashapeDocument metashapeDocument;
     private String chunkZipPath;
     private String chunkName;
     private int chunkID;
@@ -50,7 +50,7 @@ public class MetashapeObjectChunk {
     public Document getFrameXML() { return frameXML; }
 
     public String getChunkDirectoryPath() {
-        String psxFilePath = this.metashapeObject.getPsxFilePath();
+        String psxFilePath = this.metashapeDocument.getPsxFilePath();
         String psxPathBase = psxFilePath.substring(0, psxFilePath.length() - 4); //remove ".psx" from path
         return new File(new File(psxPathBase + ".files"), Integer.toString(chunkID)).getPath();
     }
@@ -58,7 +58,7 @@ public class MetashapeObjectChunk {
     public String getFramePath() { return new File(new File(getFrameDirectoryPath()), "frame.zip").getPath(); }
 
 
-    private MetashapeObjectChunk(){
+    private MetashapeChunk(){
         //hide useless constructor
     }
 
@@ -71,8 +71,8 @@ public class MetashapeObjectChunk {
 
     public LoadPreferences getLoadPreferences(){return loadPreferences;}
 
-    public MetashapeObjectChunk(MetashapeObject metashapeObject, String chunkName, String currModelID) {
-        this.metashapeObject = metashapeObject;
+    public MetashapeChunk(MetashapeDocument metashapeDocument, String chunkName, String currModelID) {
+        this.metashapeDocument = metashapeDocument;
         this.currModelID = currModelID;
         this.loadPreferences = new LoadPreferences();
 
@@ -82,7 +82,7 @@ public class MetashapeObjectChunk {
     public void updateChunk(String chunkName) {
         this.chunkName = chunkName;
 
-        this.chunkZipPath = metashapeObject.getChunkZipPathPairs().get(chunkName);
+        this.chunkZipPath = metashapeDocument.getChunkZipPathPairs().get(chunkName);
 
         //set chunk xml
         try {
@@ -189,11 +189,11 @@ public class MetashapeObjectChunk {
     }
 
     public String getPsxFilePath() {
-        return this.metashapeObject.getPsxFilePath();
+        return this.metashapeDocument.getPsxFilePath();
     }
 
-    public MetashapeObject getMetashapeObject() {
-        return this.metashapeObject;
+    public MetashapeDocument getMetashapeObject() {
+        return this.metashapeDocument;
     }
 
     public List<Image> loadThumbnailImageList() {
@@ -299,15 +299,15 @@ public class MetashapeObjectChunk {
     public String getCurrModelID(){return currModelID;}
 
     public File getPsxFile() {
-        return metashapeObject.getPsxFile();
+        return metashapeDocument.getPsxFile();
     }
 
     public boolean equals(Object rhs){
-        if (!(rhs instanceof MetashapeObjectChunk)){
+        if (!(rhs instanceof MetashapeChunk)){
             return false;
         }
 
-        MetashapeObjectChunk moc = (MetashapeObjectChunk) rhs;
+        MetashapeChunk moc = (MetashapeChunk) rhs;
         //chunk name is the same
         //psx path is the same
 

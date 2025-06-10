@@ -12,7 +12,7 @@
 package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeChunk;
 import kintsugi3d.util.EncodableColorImage;
 
 import java.io.File;
@@ -40,7 +40,7 @@ public interface IOHandler
     {
         loadFromLooseFiles(id, xmlFile, meshFile, imageDirectory, needsUndistort, primaryViewName, rotation, loadOptions, null);
     }
-    void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk, ReadonlyLoadOptionsModel loadOptionsModel);
+    void loadAgisoftFromZIP(MetashapeChunk metashapeChunk, ReadonlyLoadOptionsModel loadOptionsModel);
 
     void requestFragmentShader(File shaderFile);
 

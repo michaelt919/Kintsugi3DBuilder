@@ -25,7 +25,7 @@ import kintsugi3d.builder.io.primaryview.AgisoftPrimaryViewSelectionModel;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
-import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeChunk;
 import kintsugi3d.builder.resources.ibr.MissingImagesException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +39,7 @@ import java.util.List;
 
 public class MetashapeProjectInputSource extends InputSource{
     private static final Logger log = LoggerFactory.getLogger(MetashapeProjectInputSource.class);
-    private MetashapeObjectChunk metashapeObjectChunk;
+    private MetashapeChunk metashapeChunk;
     @Override
     public List<FileChooser.ExtensionFilter> getExtensionFilters() {
         return Collections.singletonList(new FileChooser.ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
@@ -49,26 +49,26 @@ public class MetashapeProjectInputSource extends InputSource{
     public ViewSetReader getCameraFileReader() {
         return ViewSetReaderFromAgisoftXML.getInstance();
     }
-    public MetashapeProjectInputSource setMetashapeObjectChunk(MetashapeObjectChunk moc){
-        this.metashapeObjectChunk = moc;
+    public MetashapeProjectInputSource setMetashapeObjectChunk(MetashapeChunk moc){
+        this.metashapeChunk = moc;
         return this;
     }
     @Override
     public void verifyInfo(File fullResDirectoryOverride){
-        metashapeObjectChunk.getLoadPreferences().fullResOverride = fullResDirectoryOverride;
+        metashapeChunk.getLoadPreferences().fullResOverride = fullResDirectoryOverride;
 
         // Get reference to the chunk directory
-        File chunkDirectory = new File(metashapeObjectChunk.getChunkDirectoryPath());
+        File chunkDirectory = new File(metashapeChunk.getChunkDirectoryPath());
         if (!chunkDirectory.exists()) {
             log.error("Chunk directory does not exist: " + chunkDirectory);
         }
-        File rootDirectory = new File(metashapeObjectChunk.getPsxFilePath()).getParentFile();
+        File rootDirectory = new File(metashapeChunk.getPsxFilePath()).getParentFile();
         if (!rootDirectory.exists()) {
             log.error("Root directory does not exist: " + rootDirectory);
         }
 
         // Open the xml files that contains all the cameras' ids and file paths
-        Document frame = metashapeObjectChunk.getFrameXML();
+        Document frame = metashapeChunk.getFrameXML();
         if (frame == null || frame.getDocumentElement() == null) {
             ProjectIO.handleException("Error reading Metashape frame.zip document.", new NullPointerException("No frame document found"));
             return;
@@ -81,7 +81,7 @@ public class MetashapeProjectInputSource extends InputSource{
         int numMissingFiles = 0;
         File fullResSearchDirectory;
         if (fullResDirectoryOverride == null) {
-            fullResSearchDirectory = new File(metashapeObjectChunk.getFramePath()).getParentFile();
+            fullResSearchDirectory = new File(metashapeChunk.getFramePath()).getParentFile();
         } else {
             fullResSearchDirectory = fullResDirectoryOverride;
         }
@@ -123,13 +123,13 @@ public class MetashapeProjectInputSource extends InputSource{
 
     @Override
     public void initTreeView() {
-        String chunkName = metashapeObjectChunk.getChunkName();
+        String chunkName = metashapeChunk.getChunkName();
 
-        List <Image> thumbnailImageList = metashapeObjectChunk.loadThumbnailImageList();
-        List<Element> cameras = metashapeObjectChunk.findEnabledCameras();
+        List <Image> thumbnailImageList = metashapeChunk.loadThumbnailImageList();
+        List<Element> cameras = metashapeChunk.findEnabledCameras();
 
-        File fullResOverride = metashapeObjectChunk.getLoadPreferences().fullResOverride;
-        File fullResDir = fullResOverride != null ? fullResOverride : metashapeObjectChunk.findFullResImgDirectory();
+        File fullResOverride = metashapeChunk.getLoadPreferences().fullResOverride;
+        File fullResDir = fullResOverride != null ? fullResOverride : metashapeChunk.findFullResImgDirectory();
         primaryViewSelectionModel = AgisoftPrimaryViewSelectionModel.createInstance(chunkName, cameras, thumbnailImageList, fullResDir);
 
         addTreeElems(primaryViewSelectionModel);
@@ -139,9 +139,9 @@ public class MetashapeProjectInputSource extends InputSource{
     //TODO: uncouple loadProject() from orientationView
     @Override
     public void loadProject(String orientationView, double rotate) {
-        metashapeObjectChunk.getLoadPreferences().orientationViewName = orientationView;
-        metashapeObjectChunk.getLoadPreferences().orientationViewRotateDegrees = rotate;
-        new Thread(() -> MultithreadModels.getInstance().getIOModel().loadAgisoftFromZIP(metashapeObjectChunk)).start();
+        metashapeChunk.getLoadPreferences().orientationViewName = orientationView;
+        metashapeChunk.getLoadPreferences().orientationViewRotateDegrees = rotate;
+        new Thread(() -> MultithreadModels.getInstance().getIOModel().loadAgisoftFromZIP(metashapeChunk)).start();
     }
 
     @Override
@@ -152,7 +152,7 @@ public class MetashapeProjectInputSource extends InputSource{
 
         MetashapeProjectInputSource other = (MetashapeProjectInputSource) obj;
 
-        return this.metashapeObjectChunk.equals(other.metashapeObjectChunk);
+        return this.metashapeChunk.equals(other.metashapeChunk);
     }
 
     public void showMissingImgsAlert(MissingImagesException mie) {
@@ -174,7 +174,7 @@ public class MetashapeProjectInputSource extends InputSource{
 
         ((ButtonBase) alert.getDialogPane().lookupButton(newDirectory)).setOnAction(event -> {
             DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setInitialDirectory(new File(metashapeObjectChunk.getPsxFilePath()).getParentFile());
+            directoryChooser.setInitialDirectory(new File(metashapeChunk.getPsxFilePath()).getParentFile());
 
             directoryChooser.setTitle("Choose New Image Directory");
             File newCamsFile = directoryChooser.showDialog(MenubarController.getInstance().getWindow());
@@ -191,8 +191,8 @@ public class MetashapeProjectInputSource extends InputSource{
         });
 
         ((ButtonBase) alert.getDialogPane().lookupButton(skipMissingCams)).setOnAction(event -> {
-            metashapeObjectChunk.getLoadPreferences().fullResOverride = prevTriedDirectory;
-            metashapeObjectChunk.getLoadPreferences().doSkipMissingCams = true;
+            metashapeChunk.getLoadPreferences().fullResOverride = prevTriedDirectory;
+            metashapeChunk.getLoadPreferences().doSkipMissingCams = true;
             initTreeView();
         });
 

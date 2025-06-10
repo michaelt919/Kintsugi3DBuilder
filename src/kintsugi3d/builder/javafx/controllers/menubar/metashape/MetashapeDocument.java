@@ -9,7 +9,7 @@
  * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
  */
 
-package kintsugi3d.builder.javafx.controllers.menubar;
+package kintsugi3d.builder.javafx.controllers.menubar.metashape;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +30,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MetashapeObject {
-    private static final Logger log = LoggerFactory.getLogger(MetashapeObject.class);
+public class MetashapeDocument {
+    private static final Logger log = LoggerFactory.getLogger(MetashapeDocument.class);
 
     private String psxFilePath;
 
@@ -42,13 +42,13 @@ public class MetashapeObject {
     private Integer activeChunkID;
     private Document projectZipXML;
 
-    public MetashapeObject(){
+    public MetashapeDocument(){
         psxFilePath = "";
         chunkZipPathPairs = new HashMap<>();
         chunkNames = new ArrayList<>();
     }
 
-    public MetashapeObject(String path){
+    public MetashapeDocument(String path){
         loadChunkNamesFromPSX(path);
     }
 

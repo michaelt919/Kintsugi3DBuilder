@@ -12,7 +12,7 @@
 package kintsugi3d.builder.core;
 
 import kintsugi3d.builder.fit.settings.ExportSettings;
-import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeChunk;
 import kintsugi3d.util.EncodableColorImage;
 
 import java.io.File;
@@ -222,9 +222,9 @@ public class IOModel
             rotation, loadOptionsModel, getLoadedViewSet() != null ? getLoadedViewSet().getUUID() : null);
     }
 
-    public void loadAgisoftFromZIP(MetashapeObjectChunk metashapeObjectChunk)
+    public void loadAgisoftFromZIP(MetashapeChunk metashapeChunk)
     {
-        this.handler.loadAgisoftFromZIP(metashapeObjectChunk, loadOptionsModel);
+        this.handler.loadAgisoftFromZIP(metashapeChunk, loadOptionsModel);
     }
     public void requestFragmentShader(File shaderFile)
     {
