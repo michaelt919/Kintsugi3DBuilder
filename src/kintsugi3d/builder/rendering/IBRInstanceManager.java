@@ -25,6 +25,7 @@ import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeChunk;
+import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeModel;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
@@ -350,7 +351,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     }
 
     @Override
-    public void loadAgisoftFromZIP(MetashapeChunk metashapeChunk, ReadonlyLoadOptionsModel loadOptions) {
+    public void loadAgisoftFromZIP(MetashapeModel model, ReadonlyLoadOptionsModel loadOptions) {
 
         // TODO There currently isn't functionality for a supportingFilesDirectory at this early in the process
         //  Restructuring required from Tetzlaff.
@@ -364,16 +365,17 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
         File supportingFilesDirectory = null;
         try {
-            String orientationView = metashapeChunk.getLoadPreferences().orientationViewName;
-            double rotation = metashapeChunk.getLoadPreferences().orientationViewRotateDegrees;
+            MetashapeChunk parentChunk = model.getChunk();
+            String orientationView = model.getLoadPreferences().orientationViewName;
+            double rotation = model.getLoadPreferences().orientationViewRotateDegrees;
 
             Builder<ContextType> builder = IBRResourcesImageSpace.getBuilderForContext(this.context)
                     .setProgressMonitor(this.progressMonitor)
                     .setLoadOptions(loadOptions)
-                    .loadAgisoftFromZIP(metashapeChunk, supportingFilesDirectory)
+                    .loadAgisoftFromZIP(model, supportingFilesDirectory)
                     .setOrientationView(orientationView, rotation);
 
-            loadInstance(metashapeChunk.getFramePath(), builder);
+            loadInstance(parentChunk.getFramePath(), builder);
         }
         catch(UserCancellationException e)
         {

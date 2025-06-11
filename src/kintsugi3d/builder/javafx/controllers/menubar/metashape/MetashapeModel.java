@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import java.io.File;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -14,6 +15,8 @@ public class MetashapeModel {
     private Optional<Integer> id;
     private String label;
     private String path;
+
+    private LoadPreferences loadPreferences = new LoadPreferences();
 
     private MetashapeModel(MetashapeChunk chunk, Optional<Integer> id, String label, String path){
         this.id = id;
@@ -83,6 +86,17 @@ public class MetashapeModel {
         return new MetashapeModel(chunk, modelID, tempLabel, path);
     }
 
+    public class LoadPreferences {
+        public File fullResOverride;
+        public boolean doSkipMissingCams = false;
+        public String orientationViewName;
+        public double orientationViewRotateDegrees = 0;
+    }
+
+    public LoadPreferences getLoadPreferences() {
+        return loadPreferences;
+    }
+
     public Optional<Integer> getId(){
         return id;
     }
@@ -93,5 +107,9 @@ public class MetashapeModel {
 
     public String getLabel(){
         return label;
+    }
+
+    public MetashapeChunk getChunk() {
+        return chunk;
     }
 }

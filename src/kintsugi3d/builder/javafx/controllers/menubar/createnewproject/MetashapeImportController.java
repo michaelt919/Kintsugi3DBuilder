@@ -96,7 +96,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         if (source instanceof MetashapeProjectInputSource){
             //overwrite old source so we can compare old and new versions in PrimaryViewSelectController
             hostScrollerController.addInfo(Info.INPUT_SOURCE,
-                    new MetashapeProjectInputSource().setMetashapeObjectChunk(metashapeChunk));
+                    new MetashapeProjectInputSource().setMetashapeModel(metashapeChunk.getSelectedModel()));
         }
         else{
             log.error("Error sending Metashape project info to host controller. MetashapeProjectInputSource expected.");

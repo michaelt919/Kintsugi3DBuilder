@@ -19,6 +19,7 @@ import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
 import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeChunk;
+import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeModel;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
@@ -230,15 +231,15 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         /**
          * Alternate version of loadAgisoftFromZIP that uses a metashapeObjectChunk as its parameter.
-         * @param metashapeChunk
+         * @param model
          * @param supportingFilesDirectory
          * @return
          * @throws IOException
          */
-        public Builder<ContextType> loadAgisoftFromZIP(MetashapeChunk metashapeChunk, File supportingFilesDirectory)
+        public Builder<ContextType> loadAgisoftFromZIP(MetashapeModel model, File supportingFilesDirectory)
             throws IOException, XMLStreamException
         {
-            this.viewSet = ViewSetReaderFromAgisoftXML.readChunkFromZip(metashapeChunk, supportingFilesDirectory);
+            this.viewSet = ViewSetReaderFromAgisoftXML.readChunkFromZip(model.getChunk(), supportingFilesDirectory);
             updateViewSetFromLoadOptions();
             loadAndValidateGeometry();
             return this;

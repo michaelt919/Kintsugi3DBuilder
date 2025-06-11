@@ -39,10 +39,8 @@ public class MetashapeChunk {
     private Document frameXML;
 
     private List<MetashapeModel> models = new ArrayList<>();
-
     private Optional<Integer> defaultModelID;
-    private int currModelID;
-    private LoadPreferences loadPreferences;
+    private MetashapeModel currModel;
 
     public static MetashapeChunk parseFromElement(MetashapeDocument document, Element chunkElement) throws IOException {
         Optional<Integer> chunkID = Optional.empty();
@@ -62,8 +60,8 @@ public class MetashapeChunk {
         //get default model id if the chunk has one
         Optional<Integer> defaultModelID = Optional.empty();
         try {
-            Element elem1 = (Element) fullChunkDocument.getElementsByTagName("models").item(0);
-            defaultModelID = Optional.of(Integer.parseInt(elem1.getAttribute("active_id")));
+            Element modelsElem = (Element) fullChunkDocument.getElementsByTagName("models").item(0);
+            defaultModelID = Optional.of(Integer.parseInt(modelsElem.getAttribute("active_id")));
         } catch (NumberFormatException | NullPointerException e) {
             log.warn("Could not find active id for " + document.getPsxFilePath(), e);
         }
@@ -105,12 +103,20 @@ public class MetashapeChunk {
         List<MetashapeModel> models = new ArrayList<>();
         for (int i = 0; i < modelList.getLength(); ++i) {
             Element elem = (Element) modelList.item(i);
-            models.add(MetashapeModel.parseFromElement(returned, elem));
+            MetashapeModel model = MetashapeModel.parseFromElement(returned, elem);
+            if (model.getId().isPresent() && model.getId().equals(defaultModelID)){
+                returned.setCurrentModel(model);
+            }
+            models.add(model);
         }
 
         returned.setModels(models);
 
         return returned;
+    }
+
+    private void setCurrentModel(MetashapeModel model) {
+        currModel = model;
     }
 
     private MetashapeChunk setChunkID(Optional<Integer> chunkID) {
@@ -174,16 +180,10 @@ public class MetashapeChunk {
         return id;
     }
 
-    public class LoadPreferences {
-        public File fullResOverride;
-        public boolean doSkipMissingCams;
-        public String orientationViewName;
-        public double orientationViewRotateDegrees;
+    public MetashapeModel getSelectedModel() {
+       return currModel;
     }
 
-    public LoadPreferences getLoadPreferences() {
-        return loadPreferences;
-    }
 
     public List<Image> loadThumbnailImageList() {
         //unzip thumbnail folder
@@ -284,14 +284,14 @@ public class MetashapeChunk {
     }
 
     public int getCurrModelID() {
-        return currModelID;
+        return currModel.getId().orElse(-1);
     }
 
     public File getPsxFile() {
         return metashapeDocument.getPsxFile();
     }
 
-    public MetashapeDocument getMetashapeObject() {
+    public MetashapeDocument getParentDocument() {
         return this.metashapeDocument;
     }
 }

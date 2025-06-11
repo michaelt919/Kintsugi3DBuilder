@@ -757,7 +757,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             .getElementsByTagName("camera");
 
         int numMissingFiles = 0;
-        File override = metashapeChunk.getLoadPreferences().fullResOverride;
+        File override = metashapeChunk.getSelectedModel().getLoadPreferences().fullResOverride;
         File fullResSearchDirectory = override == null ?
             new File(metashapeChunk.getFramePath()).getParentFile() :
             override;
@@ -795,7 +795,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             }
         }
 
-        if (!metashapeChunk.getLoadPreferences().doSkipMissingCams && numMissingFiles > 0){
+        if (!metashapeChunk.getSelectedModel().getLoadPreferences().doSkipMissingCams && numMissingFiles > 0){
             throw new MissingImagesException("Project is missing images.", numMissingFiles, exceptionFolder);
         }
 
@@ -812,7 +812,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
             throw new FileNotFoundException(MessageFormat.format("Chunk directory does not exist: {0}", chunkDirectory));
         }
 
-        File rootDirectory = new File(metashapeChunk.getMetashapeObject().getPsxFilePath()).getParentFile();
+        File rootDirectory = new File(metashapeChunk.getParentDocument().getPsxFilePath()).getParentFile();
         if (!rootDirectory.exists())
         {
             throw new FileNotFoundException(MessageFormat.format("Root directory does not exist: {0}", rootDirectory));
@@ -849,7 +849,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     if (modelPath.isEmpty()){throw new FileNotFoundException("Could not find model path");}
 
                     // 4) Set image directory to be parent directory of MetaShape project (and add to the photos' paths)
-                    File psxFile = new File(metashapeChunk.getMetashapeObject().getPsxFilePath());
+                    File psxFile = new File(metashapeChunk.getParentDocument().getPsxFilePath());
                     File fullResImageDirectory = new File(psxFile.getParent()); // The directory of full res photos
                     // Print error to log if unable to find fullResImageDirectory
                     if (!fullResImageDirectory.exists())
@@ -857,7 +857,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         throw new FileNotFoundException(MessageFormat.format("Unable to find fullResImageDirectory: {0}", fullResImageDirectory));
                     }
 
-                    File override = metashapeChunk.getLoadPreferences().fullResOverride;
+                    File override = metashapeChunk.getSelectedModel().getLoadPreferences().fullResOverride;
                     if (override != null)
                     {
                         viewSet.setFullResImageDirectory(override);

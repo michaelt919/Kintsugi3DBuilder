@@ -44,63 +44,64 @@ import java.util.Map;
  * Controller for the PrimaryViewSelector, which is now used as the orientation view selector
  */
 //TODO: Rename to OrientationViewSelectController for clarity?
-public class PrimaryViewSelectController extends FXMLPageController implements ConfirmablePage, ImageThreadable
-{
+public class PrimaryViewSelectController extends FXMLPageController implements ConfirmablePage, ImageThreadable {
     //TODO: --> "INFO: index exceeds maxCellCount. Check size calculations for class javafx.scene.control.skin.TreeViewSkin$1"
     //suppress warning?
 
     private static final Logger log = LoggerFactory.getLogger(PrimaryViewSelectController.class);
 
-    @FXML private AnchorPane hostAnchorPane;
+    @FXML
+    private AnchorPane hostAnchorPane;
 
-    @FXML private TreeView<String> chunkTreeView;
-    @FXML private ImageView primaryImgView;
-    @FXML private Text imgViewText;
+    @FXML
+    private TreeView<String> chunkTreeView;
+    @FXML
+    private ImageView primaryImgView;
+    @FXML
+    private Text imgViewText;
 
-    @FXML private TextField imgSearchTxtField;
-    @FXML private CheckBox regexMode;
-    @FXML private VBox orientationControlsVBox;
-    @FXML private Label hintTextLabel;
+    @FXML
+    private TextField imgSearchTxtField;
+    @FXML
+    private CheckBox regexMode;
+    @FXML
+    private VBox orientationControlsVBox;
+    @FXML
+    private Label hintTextLabel;
 
     private InputSource source;
     private HashMap<String, Image> imgCache;
     private ImgSelectionThread loadImgThread;
 
     @Override
-    public void init()
-    {
+    public void init() {
         //TODO: temp hack to make text visible, need to change textflow css?
         imgViewText.setFill(Paint.valueOf("white"));
 
-        chunkTreeView.getSelectionModel().selectedIndexProperty().addListener((a, b, c)-> selectImageInTreeView());
+        chunkTreeView.getSelectionModel().selectedIndexProperty().addListener((a, b, c) -> selectImageInTreeView());
         this.imgCache = new HashMap<>();
         hintTextLabel.setText(getHintText());
     }
 
-    protected String getHintText()
-    {
+    protected String getHintText() {
         return "Select model orientation view";
     }
 
     @Override
-    public void refresh()
-    {
+    public void refresh() {
         InputSource sharedSource = hostScrollerController.getInfo(ShareInfo.Info.INPUT_SOURCE);
 
-        if (!sharedSource.equals(source)){
+        if (!sharedSource.equals(source)) {
             source = sharedSource;
 
             //create an unbound instance and only bind elements when we know chunkTreeView.getRoot() != null
             source.setSearchableTreeView(SearchableTreeView.createUnboundInstance(chunkTreeView, imgSearchTxtField, regexMode));
-            try
-            {
+            try {
                 source.verifyInfo(null);
                 source.initTreeView();
                 source.setOrientationViewDefaultSelections(this);
-            }
-            catch(MissingImagesException mie)
-            {
-                if (source instanceof MetashapeProjectInputSource){
+            } catch (MissingImagesException mie) {
+                if (source instanceof MetashapeProjectInputSource) {
                     MetashapeProjectInputSource metaSource = (MetashapeProjectInputSource) source;
                     Platform.runLater(() -> metaSource.showMissingImgsAlert(mie));
                 }
@@ -118,35 +119,31 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     public void selectImageInTreeView() {
         //selectedItem holds the cameraID associated with the image
         TreeItem<String> selectedItem = chunkTreeView.getSelectionModel().getSelectedItem();
-        if(selectedItem == null){
+        if (selectedItem == null) {
             return;
         }
-        if (selectedItem == chunkTreeView.getRoot()){
+        if (selectedItem == chunkTreeView.getRoot()) {
             selectedItem.setExpanded(true);
             return;
         }
 
-        if (!selectedItem.isLeaf()){
+        if (!selectedItem.isLeaf()) {
             selectedItem.setExpanded(!selectedItem.isExpanded());
             return;
         }
 
-        if (selectedItem.getValue() != null)
-        {
+        if (selectedItem.getValue() != null) {
             //if loadImgThread is running, kill it and start a new one
-            if(loadImgThread != null && loadImgThread.isActive())
-            {
+            if (loadImgThread != null && loadImgThread.isActive()) {
                 loadImgThread.stopThread();
             }
 
-            if (selectedItem == InputSource.NONE_ITEM)
-            {
+            if (selectedItem == InputSource.NONE_ITEM) {
                 // Hide orientation controls
                 orientationControlsVBox.setVisible(false);
 
                 // Don't change the button text to "Skip" when working with an existing project
-                if (!(source instanceof CurrentProjectInputSource))
-                {
+                if (!(source instanceof CurrentProjectInputSource)) {
                     // Set confirm button text
                     hostScrollerController.updateNextButtonLabel("Skip");
                 }
@@ -156,9 +153,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
                 // Remove any image currently in the thumbnail viewer
                 primaryImgView.setImage(null);
                 return;
-            }
-            else
-            {
+            } else {
                 // Show orientation controls
                 orientationControlsVBox.setVisible(showFixOrientation());
 
@@ -171,11 +166,11 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
 
             //set thumbnail as main image, then update to full resolution later
             //don't set thumbnail if img is cached, otherwise would cause a flash
-            if(!imgCache.containsKey(imageName)){
+            if (!imgCache.containsKey(imageName)) {
                 setThumbnailAsFullImage(selectedItem);
             }
 
-            loadImgThread = new ImgSelectionThread(imageName,this, source.getPrimarySelectionModel());
+            loadImgThread = new ImgSelectionThread(imageName, this, source.getPrimarySelectionModel());
             Thread myThread = new Thread(loadImgThread);
             myThread.start();
         }
@@ -200,14 +195,12 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         primaryImgView.setRotate((primaryImgView.getRotate() - 90) % 360);
     }
 
-    public void setImageRotation(double rotation)
-    {
+    public void setImageRotation(double rotation) {
         primaryImgView.setRotate(rotation % 360);
     }
 
     @Override
-    public boolean canConfirm()
-    {
+    public boolean canConfirm() {
         return true;
     }
 
@@ -226,7 +219,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     }
 
     @Override
-    public boolean isNextButtonValid(){
+    public boolean isNextButtonValid() {
         return true;
     }
 
@@ -250,21 +243,18 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         return imgCache;
     }
 
-    public String getSelectedViewName()
-    {
+    public String getSelectedViewName() {
         TreeItem<String> selection = chunkTreeView.getSelectionModel().getSelectedItem();
 
         String viewName = null;
-        if (selection != InputSource.NONE_ITEM)
-        {
+        if (selection != InputSource.NONE_ITEM) {
             viewName = selection.getValue();
         }
 
         return viewName;
     }
 
-    protected boolean showFixOrientation()
-    {
+    protected boolean showFixOrientation() {
         return true;
     }
 }
