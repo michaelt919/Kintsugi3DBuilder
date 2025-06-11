@@ -163,6 +163,7 @@ public class MenubarController
     @FXML private VBox cameraViewList;
     @FXML private CameraViewListController cameraViewListController;
     @FXML private FramebufferView framebufferView;
+    //@FXML private CameraTabController cameraTabController; //Jacob
 
     private Window window;
     private Runnable userDocumentationHandler;
@@ -202,6 +203,8 @@ public class MenubarController
         this.localProgressBar.getScene().getWindow().setOnCloseRequest(
                 event-> this.miniProgressPane.setVisible(true));
         this.cameraViewListController.init(injectedInternalModels.getCameraViewListModel());
+
+        //this.cameraTabController.init(injectedInternalModels.getCameraViewListModel()); // Jacob
 
         this.internalModels = injectedInternalModels;
         this.userDocumentationHandler = injectedUserDocumentationHandler;

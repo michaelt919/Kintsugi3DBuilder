@@ -236,7 +236,7 @@
             </AnchorPane>
             <HBox prefHeight="675.0" prefWidth="3046.0" VBox.vgrow="ALWAYS">
                 <children>
-                    <!--<fx:include fx:id="leftBar" source="leftpanel/LeftBar.fxml" />-->
+                    <fx:include fx:id="leftBar" source="leftpanel/LeftBar.fxml" />
                     <fx:include fx:id="cameraViewList" source="CameraViewList.fxml" VBox.vgrow="ALWAYS" />
                     <fx:include fx:id="framebufferView" source="FramebufferView.fxml" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" />
                 </children>

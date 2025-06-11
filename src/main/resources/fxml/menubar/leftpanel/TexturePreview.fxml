@@ -9,14 +9,15 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
+<?import javafx.scene.text.TextFlow?>
 
-<VBox alignment="TOP_CENTER" maxWidth="460.0" prefHeight="289.0" prefWidth="385.0" styleClass="texture-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.LeftBarController">
+<VBox alignment="TOP_CENTER" prefHeight="289.0" styleClass="texture-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.LeftBarController">
 
-    <fx:include fx:id="texture_preview_header" source="TexturePreviewHeader.fxml" />
+    <fx:include fx:id="texture_preview_header" source="TexturePreviewHeader.fxml" HBox.hgrow="ALWAYS" />
 
     <VBox>
     <HBox spacing="5.0">
-        <VBox prefHeight="212.0" prefWidth="212.0">
+        <VBox HBox.hgrow="ALWAYS">
             <Text text="File Name:">
                <font>
                   <Font name="Segoe UI Semibold" size="12.0" />
@@ -24,17 +25,20 @@
 
             <Text styleClass="wireframeCaption" text="name_goes_here.jpg">
                 <VBox.margin>
-                   <Insets bottom="4.0" left="5.0" />
+                   <Insets left="5.0" />
                 </VBox.margin>
             </Text>
 
             <Text text="Resolution:">
                <font>
                   <Font name="Segoe UI Semibold" size="12.0" />
-               </font></Text>
+               </font>
+               <VBox.margin>
+                  <Insets top="4.0" />
+               </VBox.margin></Text>
             <Text styleClass="wireframeCaption" text="2048 x 2048">
                 <VBox.margin>
-                   <Insets bottom="4.0" left="5.0" />
+                   <Insets left="5.0" />
                 </VBox.margin>
             </Text>
 
@@ -42,28 +46,37 @@
                 <font>
                     <Font name="Segoe UI Semibold" size="12.0" />
                 </font>
+               <VBox.margin>
+                  <Insets top="4.0" />
+               </VBox.margin>
             </Text>
 
             <Text styleClass="wireframeCaption" text="331 KB">
             <VBox.margin>
-               <Insets bottom="4.0" left="5.0" />
+               <Insets left="5.0" />
             </VBox.margin></Text>
 
             <Text text="Purpose:">
                 <font>
                     <Font name="Segoe UI Semibold" size="12.0" />
                 </font>
+               <VBox.margin>
+                  <Insets top="4.0" />
+               </VBox.margin>
             </Text>
-
-            <Text styleClass="wireframeCaption" text="Description of what this texture type contributes to the material." wrappingWidth="200.0">
-            <VBox.margin>
-               <Insets bottom="4.0" left="5.0" />
-            </VBox.margin>
-            </Text>
+            <TextFlow prefWidth="200.0">
+               <children>
+      
+                  <Text styleClass="wireframeCaption" text="Description of what this texture type contributes to the material." />
+               </children>
+            </TextFlow>
             <Text text="Labels:">
                 <font>
                     <Font name="Segoe UI Semibold" size="12.0" />
                 </font>
+               <VBox.margin>
+                  <Insets top="4.0" />
+               </VBox.margin>
             </Text>
 
          <HBox.margin>

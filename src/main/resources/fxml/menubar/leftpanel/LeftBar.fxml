@@ -10,9 +10,9 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox maxHeight="600" prefHeight="500.0" prefWidth="470.0" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.LeftBarController">
-    <Separator maxWidth="1.7976931348623157E308" prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
-    <HBox alignment="TOP_RIGHT" maxWidth="1.7976931348623157E308" prefHeight="24.0" prefWidth="462.0" style="-fx-background-color: #383838;">
+<VBox maxWidth="500.0" prefWidth="494.0" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.LeftBarController">
+    <Separator maxWidth="500.0" prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
+    <HBox alignment="TOP_RIGHT" maxWidth="500.0" prefHeight="24.0" prefWidth="462.0" style="-fx-background-color: #383838;">
         <padding>
             <Insets bottom="4.0" left="8.0" right="4.0" top="4.0" />
         </padding>
@@ -23,8 +23,8 @@
         </viewport>
         </ImageView>
     </HBox>
-    <Separator maxWidth="1.7976931348623157E308" prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
-   <HBox prefHeight="31.0" prefWidth="462.0">
+    <Separator maxWidth="500.0" prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
+   <HBox maxWidth="500.0" prefHeight="31.0" prefWidth="462.0">
       <children>
          <RadioButton fx:id="CamerasButton" maxHeight="32.0" maxWidth="1.7976931348623157E308" minHeight="32.0" mnemonicParsing="false" onAction="#chooseTabAction" prefHeight="32.0" style="-fx-alignment: center;" styleClass="stripped-radio-button" text="Cameras" textAlignment="CENTER" HBox.hgrow="ALWAYS">
             <toggleGroup>
@@ -39,6 +39,6 @@
             </opaqueInsets></RadioButton>
       </children>
    </HBox>
-    <fx:include fx:id="textureTab" source="TextureTab.fxml" />
-    <fx:include fx:id="cameraTab" source="CameraTab.fxml" visible="false" managed="false"/>
+    <fx:include fx:id="textureTab" maxWidth="500.0" source="TextureTab.fxml" />
+    <fx:include fx:id="cameraTab" managed="false" maxWidth="500.0" source="CameraTab.fxml" visible="false" />
 </VBox>

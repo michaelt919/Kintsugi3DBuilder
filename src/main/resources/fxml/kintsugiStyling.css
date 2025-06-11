@@ -431,3 +431,81 @@ dialog-pane{
 .vbox{
     -fx-background-color: #262626;
 }
+
+/* Texture Type Component */
+.texture-background {
+    -fx-background-color: #ADADAD
+}
+
+.texture-button {
+    -fx-background-color: #383838;
+    -fx-background-radius: 0;
+    -fx-text-fill: #CECECE;
+    -fx-min-width: 184;
+    -fx-pref-width: 330;
+    -fx-min-height: 32;
+
+}
+
+.texture-button .text {
+    -fx-text-fill: #CECECE;
+}
+
+.texture-separator .line {
+    -fx-background-color: #383838;
+    -fx-pref-height: 1;
+    -fx-border-color: null ;
+}
+
+.black-line .line {
+    -fx-background-color: #080808;
+    -fx-pref-height: 1;
+    -fx-border-color: null ;
+}
+
+.stripped-radio-button > .radio {
+  -fx-background-color: transparent;
+  -fx-background-insets: 0;
+  -fx-background-radius: 0px;
+  -fx-padding: 0.0em; /* 4 8 4 8 */
+
+  -fx-min-width: 0;
+  -fx-pref-width: 0;
+  -fx-max-width: 0;
+}
+.stripped-radio-button:selected > .radio > .dot {
+  -fx-background-color: transparent;
+}
+
+.stripped-radio-button {
+  -fx-background-color: #202020
+}
+
+.stripped-radio-button:selected {
+  -fx-background-color: #383838
+}
+
+/* Styling for the scroll bar in left pane */
+.left-bar > scroll-pane {
+    -fx-background-color: #202020;
+}
+
+.left-bar .scroll-bar:vertical{
+    -fx-background-color:transparent;
+}
+
+.left-bar .increment-button, .decrement-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.left-bar .scroll-bar:vertical .track{
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0em;
+}
+
+.left-bar .scroll-bar:vertical .thumb {
+    -fx-background-color: white;
+    -fx-background-radius: 5em;
+}
