@@ -104,7 +104,7 @@ public abstract class InputSource {
             }
 
             //set image and thumbnail
-            TreeItem<String> imageTreeItem = getStringTreeItem(primaryViewSelectionModel.getThumbnails(), i, view.name);
+            TreeItem<String> imageTreeItem = createTreeItem(primaryViewSelectionModel.getThumbnails(), i, view);
             destinationItem.getChildren().add(imageTreeItem);
         }
 
@@ -112,7 +112,7 @@ public abstract class InputSource {
         treeView.getRoot().setExpanded(true);
     }
 
-    private static TreeItem<String> getStringTreeItem(List<Image> thumbnailImgList, int i, String imageName) {
+    private static TreeItem<String> createTreeItem(List<Image> thumbnailImgList, int i, View view) {
         ImageView thumbnailImgView;
         try {
             thumbnailImgView = new ImageView(thumbnailImgList.get(i));
@@ -123,7 +123,7 @@ public abstract class InputSource {
         thumbnailImgView.setFitWidth(THUMBNAIL_SIZE);
         thumbnailImgView.setFitHeight(THUMBNAIL_SIZE);
 
-        return new TreeItem<>(imageName, thumbnailImgView);
+        return new TreeItem<>(view.name, thumbnailImgView);
     }
 
     @Override

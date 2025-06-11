@@ -16,7 +16,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonBase;
 import javafx.scene.control.ButtonType;
-import javafx.scene.image.Image;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.io.ViewSetReader;
@@ -125,16 +124,7 @@ public class MetashapeProjectInputSource extends InputSource{
 
     @Override
     public void initTreeView() {
-        MetashapeChunk parentChunk = model.getChunk();
-        String chunkName = parentChunk.getLabel();
-
-        List <Image> thumbnailImageList = parentChunk.loadThumbnailImageList();
-        List<Element> cameras = parentChunk.findEnabledCameras();
-
-        File fullResOverride = model.getLoadPreferences().fullResOverride;
-        File fullResDir = fullResOverride != null ? fullResOverride : parentChunk.findFullResImgDirectory();
-        primaryViewSelectionModel = AgisoftPrimaryViewSelectionModel.createInstance(chunkName, cameras, thumbnailImageList, fullResDir);
-
+        primaryViewSelectionModel = AgisoftPrimaryViewSelectionModel.createInstance(model);
         addTreeElems(primaryViewSelectionModel);
         searchableTreeView.bind();
     }

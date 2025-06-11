@@ -12,6 +12,8 @@
 package kintsugi3d.builder.io.primaryview;
 
 import javafx.scene.image.Image;
+import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeChunk;
+import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeModel;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,8 +46,9 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
     private File fullResSearchDir;
 
     //custom import path
-    private AgisoftPrimaryViewSelectionModel(File cameraFile) throws ParserConfigurationException, IOException, SAXException
+    private AgisoftPrimaryViewSelectionModel(File cameraFile, File fullResSearchDir) throws ParserConfigurationException, IOException, SAXException
     {
+        this.fullResSearchDir = fullResSearchDir;
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder;
         builder = factory.newDocumentBuilder();
@@ -77,12 +80,13 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
     }
 
     //metashape import path
-    private AgisoftPrimaryViewSelectionModel(String chunkName, List<Element> cameras, List<Image> thumbnailImageList)
+    private AgisoftPrimaryViewSelectionModel(MetashapeModel model)
     {
-        this.chunkName = chunkName;
-        this.cameras = cameras;
+        MetashapeChunk parentChunk = model.getChunk();
+        this.chunkName = parentChunk.getLabel();
+        this.cameras = MetashapeChunk.findEnabledCameras(parentChunk.findChunkXmlCameras());
         this.views = getViews(cameras.stream());
-        this.thumbnails = thumbnailImageList;
+        this.thumbnails = parentChunk.loadThumbnailImageList();
     }
 
     private static List<View> getViews(Stream<Element> cameras)
@@ -113,18 +117,12 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
 
     public static PrimaryViewSelectionModel createInstance(File cameraFile, File fullResOverride) throws ParserConfigurationException, IOException, SAXException
     {
-        return new AgisoftPrimaryViewSelectionModel(cameraFile).setFullResSearchDir(fullResOverride);
+        return new AgisoftPrimaryViewSelectionModel(cameraFile, fullResOverride);
     }
 
-    public static PrimaryViewSelectionModel createInstance(String chunkName, List<Element> cameras, List<Image> thumbnailImageList, File fullResOverride)
+    public static PrimaryViewSelectionModel createInstance(MetashapeModel model)
     {
-        return new AgisoftPrimaryViewSelectionModel(chunkName, cameras, thumbnailImageList)
-                .setFullResSearchDir(fullResOverride);
-    }
-
-    private PrimaryViewSelectionModel setFullResSearchDir(File fullResOverride) {
-        this.fullResSearchDir = fullResOverride;
-        return this;
+        return new AgisoftPrimaryViewSelectionModel(model);
     }
 
     @Override
@@ -193,6 +191,4 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
         }
         return selectedItemCam;
     }
-
-    public Optional<Document> getCamDocument(){return Optional.ofNullable(cameraDocument);}
 }

@@ -16,15 +16,11 @@ import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
 import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeChunk;
-import kintsugi3d.builder.resources.ibr.MissingImagesException;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
@@ -740,68 +736,6 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         return builder.finish();
     }
 
-    private static Map<Integer, String> buildCameraPathsMap(
-            MetashapeChunk metashapeChunk, File rootDirectory)
-        throws FileNotFoundException
-    {
-        Map<Integer, String> cameraPathsMap = new HashMap<>(128);
-
-        // Open the xml files that contains all the cameras' ids and file paths
-        Document frame = metashapeChunk.getFrameXML();
-        if (frame == null || frame.getDocumentElement() == null){
-            throw new FileNotFoundException("No frame document found");
-        }
-
-        // Loop through the cameras and store each pair of id and path in the map
-        NodeList cameraList = ((Element) frame.getElementsByTagName("frame").item(0))
-            .getElementsByTagName("camera");
-
-        int numMissingFiles = 0;
-        File override = metashapeChunk.getSelectedModel().getLoadPreferences().fullResOverride;
-        File fullResSearchDirectory = override == null ?
-            new File(metashapeChunk.getFramePath()).getParentFile() :
-            override;
-
-
-        File exceptionFolder = null;
-
-        for (int i = 0; i < cameraList.getLength(); i++) {
-            Element cameraElement = (Element) cameraList.item(i);
-            int cameraId = Integer.parseInt(cameraElement.getAttribute("camera_id"));
-
-            String pathAttribute = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
-
-            File imageFile;
-            String finalPath = "";
-            if (override == null){
-                imageFile = new File(fullResSearchDirectory, pathAttribute);
-                finalPath = rootDirectory.toPath().relativize(imageFile.toPath()).toString();
-            }
-            else{
-                //if this doesn't work, then replace metashapeObjectChunk.getFramePath()).getParentFile()
-                //    and the first part of path with the file that the user selected
-                String pathAttributeName = new File(pathAttribute).getName();
-                imageFile = new File(override, pathAttributeName);
-                finalPath = imageFile.getName();
-            }
-
-            if (imageFile.exists() && !finalPath.isBlank()) {
-                // Add pair to the map
-                cameraPathsMap.put(cameraId, finalPath);
-            }
-            else{
-                numMissingFiles++;
-                exceptionFolder = imageFile.getParentFile();
-            }
-        }
-
-        if (!metashapeChunk.getSelectedModel().getLoadPreferences().doSkipMissingCams && numMissingFiles > 0){
-            throw new MissingImagesException("Project is missing images.", numMissingFiles, exceptionFolder);
-        }
-
-        return cameraPathsMap;
-    }
-
     public static ViewSet readChunkFromZip(MetashapeChunk metashapeChunk, File supportingFilesDirectory)
         throws IOException, XMLStreamException
     {
@@ -819,7 +753,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         }
 
         // 1) Construct camera ID to filename map from frame's ZIP
-        Map<Integer, String> cameraPathsMap = buildCameraPathsMap(metashapeChunk, rootDirectory);
+        Map<Integer, String> cameraPathsMap = metashapeChunk.buildCameraPathsMap();
 
         // 2) Load ViewSet from ZipInputStream from chunk's ZIP (eventually will accept the filename map as a parameter)
         File zipFile = new File(chunkDirectory, "chunk.zip");

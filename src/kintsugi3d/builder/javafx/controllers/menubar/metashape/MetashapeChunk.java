@@ -12,6 +12,7 @@
 package kintsugi3d.builder.javafx.controllers.menubar.metashape;
 
 import javafx.scene.image.Image;
+import kintsugi3d.builder.resources.ibr.MissingImagesException;
 import kintsugi3d.gl.util.UnzipHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,10 +22,10 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.text.MessageFormat;
+import java.util.*;
 
 
 public class MetashapeChunk {
@@ -194,7 +195,7 @@ public class MetashapeChunk {
         return UnzipHelper.unzipImages(thumbnailPath);
     }
 
-    public List<Element> findAllCameras() {
+    public List<Element> findChunkXmlCameras() {
         NodeList cams = this.chunkXML.getElementsByTagName("camera");
         ArrayList<Element> cameras = new ArrayList<>();
         for (int i = 0; i < cams.getLength(); ++i) {
@@ -206,11 +207,10 @@ public class MetashapeChunk {
         return cameras;
     }
 
-    public List<Element> findEnabledCameras() {
-        List<Element> allCams = findAllCameras();
+    public static List<Element> findEnabledCameras(List<Element> cams) {
         List<Element> enabledCams = new ArrayList<>();
 
-        for (Element cam : allCams) {
+        for (Element cam : cams) {
             String enabled = cam.getAttribute("enabled");
 
             if (enabled.equals("true") ||
@@ -220,6 +220,69 @@ public class MetashapeChunk {
             }
         }
         return enabledCams;
+    }
+
+    public Map<Integer, String> buildCameraPathsMap() throws FileNotFoundException
+    {
+        File rootDirectory = new File(getParentDocument().getPsxFilePath()).getParentFile();
+        if (!rootDirectory.exists())
+        {
+            throw new FileNotFoundException(MessageFormat.format("Root directory does not exist: {0}", rootDirectory));
+        }
+
+        Map<Integer, String> cameraPathsMap = new HashMap<>(128);
+
+        // Open the xml files that contains all the cameras' ids and file paths
+        if (frameXML == null || frameXML.getDocumentElement() == null){
+            throw new FileNotFoundException("No frame document found");
+        }
+
+        // Loop through the cameras and store each pair of id and path in the map
+        NodeList cameraList = ((Element) frameXML.getElementsByTagName("frame").item(0))
+                .getElementsByTagName("camera");
+
+        int numMissingFiles = 0;
+        File override = getSelectedModel().getLoadPreferences().fullResOverride;
+        File fullResSearchDirectory = override == null ?
+                new File(getFramePath()).getParentFile() :
+                override;
+
+
+        File exceptionFolder = null;
+
+        for (int i = 0; i < cameraList.getLength(); i++) {
+            Element cameraElement = (Element) cameraList.item(i);
+            int cameraId = Integer.parseInt(cameraElement.getAttribute("camera_id"));
+
+            String pathAttribute = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
+
+            File imageFile;
+            String finalPath = "";
+            if (override == null){
+                imageFile = new File(fullResSearchDirectory, pathAttribute);
+                finalPath = rootDirectory.toPath().relativize(imageFile.toPath()).toString();
+            }
+            else{
+                String pathAttributeName = new File(pathAttribute).getName();
+                imageFile = new File(override, pathAttributeName);
+                finalPath = imageFile.getName();
+            }
+
+            if (imageFile.exists() && !finalPath.isBlank()) {
+                // Add pair to the map
+                cameraPathsMap.put(cameraId, finalPath);
+            }
+            else{
+                numMissingFiles++;
+                exceptionFolder = imageFile.getParentFile();
+            }
+        }
+
+        if (!getSelectedModel().getLoadPreferences().doSkipMissingCams && numMissingFiles > 0){
+            throw new MissingImagesException("Project is missing images.", numMissingFiles, exceptionFolder);
+        }
+
+        return cameraPathsMap;
     }
 
     public File findFullResImgDirectory() {

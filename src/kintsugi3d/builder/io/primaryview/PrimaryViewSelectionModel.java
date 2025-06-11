@@ -21,5 +21,4 @@ public interface PrimaryViewSelectionModel {
     List<View> getViews();
     List<Image> getThumbnails();
     Optional<String> findFullResImagePath(String imageName);
-
 }
