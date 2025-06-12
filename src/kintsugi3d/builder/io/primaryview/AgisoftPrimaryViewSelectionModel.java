@@ -44,7 +44,8 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
     private final List<Element> cameras;
     private File fullResSearchDir;
 
-    private Map<Integer, String> cameraIdAndPaths;
+    private Map<Integer, String> cameraIdToFullRes;
+    private Map<Integer, String> cameraIdToThumbnails;
 
     //custom import path
     private AgisoftPrimaryViewSelectionModel(File cameraFile, File fullResSearchDir) throws ParserConfigurationException, IOException, SAXException
@@ -78,11 +79,11 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
         //so leave thumbnails list empty
         thumbnails = new ArrayList<>(views.size());
 
-        cameraIdAndPaths = new HashMap<>();
+        cameraIdToFullRes = new HashMap<>();
         for (View view : views){
             File imgFile = ImageFinder.getInstance().tryFindImageFile(new File(fullResSearchDir, view.name));
             if (imgFile != null && view.id != -1){
-                cameraIdAndPaths.put(view.id, imgFile.getPath());
+                cameraIdToFullRes.put(view.id, imgFile.getPath());
             }
         }
     }
@@ -97,7 +98,7 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
         this.thumbnails = parentChunk.loadThumbnailImageList();
 
         try{
-            this.cameraIdAndPaths = parentChunk.buildCameraPathsMap(false);
+            this.cameraIdToFullRes = parentChunk.buildCameraPathsMap(false);
         }
         catch(FileNotFoundException fnfe){
            log.warn("Failed to find source directories in Metashape project. Project images may not be found.", fnfe);
@@ -176,7 +177,7 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
         if (!selectedCamId.isBlank()){
            try{
                int id = Integer.parseInt(selectedCamId);
-               String path = cameraIdAndPaths.get(id);
+               String path = cameraIdToFullRes.get(id);
                if (path != null){
                    return Optional.of(path);
                }

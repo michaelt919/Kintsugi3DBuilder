@@ -65,46 +65,40 @@ public abstract class InputSource {
             rootItem.getChildren().add(NONE_ITEM);
         }
 
-        for (int i = 0; i < views.size(); i++)
-        {
-            View view = views.get(i);
-
+        for (View view : views) {
             //get parent of camera
             //if parent of camera is a group, create a group node and put it under the root, then add camera to it
             //unless that group already exists, then add the camera to the already created group
 
             TreeItem<String> destinationItem; //stores the node which the image will be added to
-            if(view.group != null)
-            {
+            if (view.group != null) {
                 List<TreeItem<String>> rootChildren = rootItem.getChildren();
                 AtomicBoolean groupAlreadyCreated = new AtomicBoolean(false);
                 AtomicReference<TreeItem<String>> matchingItem = new AtomicReference<>();
 
                 rootChildren.forEach(item -> {
-                    if (item.getValue().equals(view.group)){
+                    if (item.getValue().equals(view.group)) {
                         groupAlreadyCreated.set(true);
                         matchingItem.set(item);
                     }
                 });
 
-                if (groupAlreadyCreated.get()){
+                if (groupAlreadyCreated.get()) {
                     //add camera to existing group
                     destinationItem = matchingItem.get();
-                }
-                else{//group has not been created yet
+                } else {//group has not been created yet
                     TreeItem<String> newGroup = new TreeItem<>(view.group);
                     rootItem.getChildren().add(newGroup);
                     destinationItem = newGroup;
                 }
-            }
-            else{
+            } else {
                 //parent is camera, so add image to root node
                 //(camera is not part of a group)
                 destinationItem = rootItem;
             }
 
             //set image and thumbnail
-            TreeItem<String> imageTreeItem = createTreeItem(primaryViewSelectionModel.getThumbnails(), i, view);
+            TreeItem<String> imageTreeItem = createTreeItem(primaryViewSelectionModel.getThumbnails(), view);
             destinationItem.getChildren().add(imageTreeItem);
         }
 
@@ -112,11 +106,10 @@ public abstract class InputSource {
         treeView.getRoot().setExpanded(true);
     }
 
-    private static TreeItem<String> createTreeItem(List<Image> thumbnailImgList, int i, View view) {
+    private static TreeItem<String> createTreeItem(List<Image> thumbnailImgList, View view) {
         ImageView thumbnailImgView;
         try {
-            thumbnailImgView = new ImageView(thumbnailImgList.get(i));
-            //TODO: need to read the thumbnails doc.xml so we can verify we're actually getting the right thumbnail
+            thumbnailImgView = new ImageView(thumbnailImgList.get(view.id));
         } catch (IndexOutOfBoundsException e) {
             //thumbnail not found in thumbnailImgList
             thumbnailImgView = new ImageView(new Image(new File("question-mark.png").toURI().toString()));

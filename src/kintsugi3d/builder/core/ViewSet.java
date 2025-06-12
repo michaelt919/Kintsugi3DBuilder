@@ -915,7 +915,6 @@ public final class ViewSet implements ReadonlyViewSet
                 String shortenedImgName = removeExt(getImageFileName(i));
                 String shortenedViewName = removeExt(viewName);
 
-                //TODO: will this cause issues if extensions are different? (ex. photo.jpg and photo.tiff)
                 if (shortenedImgName.equals(shortenedViewName)){
                     return i;
                 }

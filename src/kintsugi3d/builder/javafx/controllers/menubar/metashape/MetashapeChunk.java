@@ -41,6 +41,7 @@ public class MetashapeChunk {
     private List<MetashapeModel> models = new ArrayList<>();
     private Optional<Integer> defaultModelID;
     private MetashapeModel currModel;
+    private File thumbnailsDir;
 
     public static MetashapeChunk parseFromElement(MetashapeDocument document, Element chunkElement) throws IOException {
         Optional<Integer> chunkID = Optional.empty();
@@ -55,7 +56,7 @@ public class MetashapeChunk {
         chunkZipPath = new File(new File(document.getPSXPathBase() + ".files"), chunkZipPath).getPath();
 
         //fullChunkDocument has info about chunk name, cameras, images, etc.
-        Document fullChunkDocument = UnzipHelper.unzipToDocument(chunkZipPath);
+        Document fullChunkDocument = UnzipHelper.unzipToDocument(new File(chunkZipPath));
 
         //get default model id if the chunk has one
         Optional<Integer> defaultModelID = Optional.empty();
@@ -85,7 +86,7 @@ public class MetashapeChunk {
 
         Document frameXML = null;
         try {
-            frameXML = UnzipHelper.unzipToDocument(frameZipPath);
+            frameXML = UnzipHelper.unzipToDocument(new File(frameZipPath));
         } catch (IOException e) {
             log.error("An error occurred loading frame.xml for Metashape chunk:", e);
         }
@@ -98,6 +99,18 @@ public class MetashapeChunk {
                 .setLabel(chunkName)
                 .setChunkID(chunkID)
                 .setDefaultModelID(defaultModelID);
+
+        if (frameXML != null){
+            NodeList list = frameXML.getElementsByTagName("thumbnails");
+            if (list.getLength() > 0){
+                Element thumbnailsElem = (Element) list.item(0);
+                //thumbnails path is relative to frame.zip's parent directory
+                File thumbnailsDir = new File(new File(frameZipPath).getParent(), thumbnailsElem.getAttribute("path"));
+                if (thumbnailsDir.exists()){
+                    returned.setThumbnailsDir(thumbnailsDir);
+                }
+            }
+        }
 
         List<MetashapeModel> models = new ArrayList<>();
 
@@ -137,6 +150,10 @@ public class MetashapeChunk {
 
     public boolean hasModels(){
         return !models.isEmpty();
+    }
+
+    private void setThumbnailsDir(File thumbnailsDir) {
+        this.thumbnailsDir = thumbnailsDir;
     }
 
     private void setCurrentModel(MetashapeModel model) {
@@ -210,13 +227,7 @@ public class MetashapeChunk {
 
 
     public List<Image> loadThumbnailImageList() {
-        //unzip thumbnail folder
-
-        //Note: the 0 denotes that these thumbnails are for frame 0
-        //TODO: can get this info from thumbnails tag in frameXML instead of hard coding
-        //TODO: looks like thumbnails don't always match full res images
-        String thumbnailPath = new File(new File(getFrameDirectoryPath(), "thumbnails"), "thumbnails.zip").getPath();
-        return UnzipHelper.unzipImages(thumbnailPath);
+        return UnzipHelper.unzipImages(thumbnailsDir);
     }
 
     public List<Element> findChunkXmlCameras() {

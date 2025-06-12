@@ -43,12 +43,12 @@ public class UnzipHelper {
     private UnzipHelper() {
     }
 
-    public static String unzipToString(String zipFileName) throws IOException {
+    public static String unzipToString(File zipFile) throws IOException {
         //unzip the zip file (which should be a .psx) and return the contents as a string
         //intended to only unzip one file
         //Note: if this function unzips a file with multiple text files, it will simply concatenate them
 
-        ZipInputStream zis= new ZipInputStream(new FileInputStream(zipFileName));
+        ZipInputStream zis= new ZipInputStream(new FileInputStream(zipFile));
         try{
             byte[] buffer = new byte[1024];
             StringBuilder s = new StringBuilder();
@@ -99,10 +99,10 @@ public class UnzipHelper {
         return null;
     }
 
-    public static List<Image> unzipImages(String zipFilePath){
+    public static List<Image> unzipImages(File zipFile){
         ArrayList<Image> images = new ArrayList<>();
 
-        try (ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFilePath))) {
+        try (ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFile))) {
             ZipEntry entry;
             while ((entry = zipInputStream.getNextEntry()) != null) {
                 String entryName = entry.getName();
@@ -149,7 +149,7 @@ public class UnzipHelper {
         return false;
     }
 
-    public static Document unzipToDocument(String zipPath) throws IOException {
-        return UnzipHelper.convertStringToDocument(UnzipHelper.unzipToString(zipPath));
+    public static Document unzipToDocument(File zipFile) throws IOException {
+        return UnzipHelper.convertStringToDocument(UnzipHelper.unzipToString(zipFile));
     }
 }

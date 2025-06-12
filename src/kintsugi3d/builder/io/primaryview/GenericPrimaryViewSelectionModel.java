@@ -13,6 +13,8 @@ package kintsugi3d.builder.io.primaryview;
 
 import javafx.scene.image.Image;
 import kintsugi3d.builder.core.ViewSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +23,8 @@ import java.util.stream.IntStream;
 
 public final class GenericPrimaryViewSelectionModel implements PrimaryViewSelectionModel
 {
+    private static final Logger log = LoggerFactory.getLogger(GenericPrimaryViewSelectionModel.class);
+
     private final String name;
     private final ViewSet viewSet;
 
