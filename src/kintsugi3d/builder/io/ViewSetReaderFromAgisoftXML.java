@@ -753,7 +753,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         }
 
         // 1) Construct camera ID to filename map from frame's ZIP
-        Map<Integer, String> cameraPathsMap = metashapeChunk.buildCameraPathsMap();
+        Map<Integer, String> cameraPathsMap = metashapeChunk.buildCameraPathsMap(true);
 
         // 2) Load ViewSet from ZipInputStream from chunk's ZIP (eventually will accept the filename map as a parameter)
         File zipFile = new File(chunkDirectory, "chunk.zip");

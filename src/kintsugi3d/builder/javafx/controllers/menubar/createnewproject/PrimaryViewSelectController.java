@@ -78,7 +78,8 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
         //TODO: temp hack to make text visible, need to change textflow css?
         imgViewText.setFill(Paint.valueOf("white"));
 
-        chunkTreeView.getSelectionModel().selectedIndexProperty().addListener((a, b, c) -> selectImageInTreeView());
+        chunkTreeView.getSelectionModel().selectedIndexProperty()
+                .addListener((a, b, c) -> selectImageInTreeView());
         this.imgCache = new HashMap<>();
         hintTextLabel.setText(getHintText());
     }

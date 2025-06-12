@@ -116,6 +116,7 @@ public abstract class InputSource {
         ImageView thumbnailImgView;
         try {
             thumbnailImgView = new ImageView(thumbnailImgList.get(i));
+            //TODO: need to read the thumbnails doc.xml so we can verify we're actually getting the right thumbnail
         } catch (IndexOutOfBoundsException e) {
             //thumbnail not found in thumbnailImgList
             thumbnailImgView = new ImageView(new Image(new File("question-mark.png").toURI().toString()));

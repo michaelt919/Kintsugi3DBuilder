@@ -54,19 +54,9 @@ public class MetashapeProjectInputSource extends InputSource{
         return this;
     }
     @Override
-    public void verifyInfo(File fullResDirectoryOverride){
+    public void verifyInfo(File fullResOverride){
         MetashapeChunk parentChunk = model.getChunk();
-        model.getLoadPreferences().fullResOverride = fullResDirectoryOverride;
-
-        // Get reference to the chunk directory
-        File chunkDirectory = new File(parentChunk.getChunkDirectoryPath());
-        if (!chunkDirectory.exists()) {
-            log.error("Chunk directory does not exist: " + chunkDirectory);
-        }
-        File rootDirectory = new File(parentChunk.getParentDocument().getPsxFilePath()).getParentFile();
-        if (!rootDirectory.exists()) {
-            log.error("Root directory does not exist: " + rootDirectory);
-        }
+        model.getLoadPreferences().fullResOverride = fullResOverride;
 
         // Open the xml files that contains all the cameras' ids and file paths
         Document frame = parentChunk.getFrameXML();
@@ -76,39 +66,19 @@ public class MetashapeProjectInputSource extends InputSource{
         }
 
         // Loop through the cameras and store each pair of id and path in the map
-        NodeList cameraList = ((Element) frame.getElementsByTagName("frame").item(0))
+        NodeList cameraList = ((Element) frame
+                .getElementsByTagName("frame").item(0)) //assuming frame 0
                 .getElementsByTagName("camera");
 
         int numMissingFiles = 0;
-        File fullResSearchDirectory;
-        if (fullResDirectoryOverride == null) {
-            fullResSearchDirectory = new File(parentChunk.getFramePath()).getParentFile();
-        } else {
-            fullResSearchDirectory = fullResDirectoryOverride;
-        }
-
         File exceptionFolder = null;
 
         for (int i = 0; i < cameraList.getLength(); i++) {
-
             Element cameraElement = (Element) cameraList.item(i);
 
-            String pathAttribute = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
+            File imageFile = getImageFromFrameCam(cameraElement, parentChunk);
 
-            File imageFile;
-            String finalPath = "";
-            if (fullResDirectoryOverride == null) {
-                imageFile = new File(fullResSearchDirectory, pathAttribute);
-                finalPath = rootDirectory.toPath().relativize(imageFile.toPath()).toString();
-            } else {
-                //if this doesn't work, then replace parentChunk.getFramePath()).getParentFile()
-                //    and the first part of path with the file that the user selected
-                String pathAttributeName = new File(pathAttribute).getName();
-                imageFile = new File(fullResDirectoryOverride, pathAttributeName);
-                finalPath = imageFile.getName();
-            }
-
-            if (!imageFile.exists() || finalPath.isBlank()) {
+            if (!imageFile.exists()) {
                 numMissingFiles++;
 
                 if (exceptionFolder == null) {
@@ -120,6 +90,23 @@ public class MetashapeProjectInputSource extends InputSource{
         if (numMissingFiles > 0) {
             throw new MissingImagesException("Project is missing images.", numMissingFiles, exceptionFolder);
         }
+    }
+
+    private static File getImageFromFrameCam(Element cameraElement, MetashapeChunk chunk) {
+        File fullResOverride = chunk.getSelectedModel().getLoadPreferences().fullResOverride;
+        String pathAttribute = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
+
+        File imageFile;
+        if (fullResOverride != null) {
+            //user selected an override
+            String pathAttributeName = new File(pathAttribute).getName();
+            imageFile = new File(fullResOverride, pathAttributeName);
+        } else {
+            //no override
+            File fullResDir = new File(chunk.getFramePath()).getParentFile();
+            imageFile = new File(fullResDir, pathAttribute);
+        }
+        return imageFile;
     }
 
     @Override

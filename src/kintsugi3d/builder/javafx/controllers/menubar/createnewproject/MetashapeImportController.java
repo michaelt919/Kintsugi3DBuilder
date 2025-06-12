@@ -47,7 +47,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     @FXML private ChoiceBox<String> chunkSelectionChoiceBox;
     @FXML private ChoiceBox<String> modelSelectionChoiceBox;
 
-    private File metashapePsxFile;
     private MetashapeDocument metashapeDocument;
 
     private static final String NO_MODEL_ID_MSG = "No Model ID";
@@ -85,7 +84,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
     @Override
     public boolean isNextButtonValid() {
-        return isMetashapeObjectLoaded() && hasModels();
+        return metashapeDocument != null && hasModels();
     }
 
     @Override
@@ -113,20 +112,20 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     @FXML
     private void psxFileSelect(ActionEvent actionEvent) {
         Stage stage = (Stage) ((Node)actionEvent.getSource()).getScene().getWindow();
-        metashapePsxFile = fileChooser.showOpenDialog(stage);
+        File file = fileChooser.showOpenDialog(stage);
 
-        if(metashapePsxFile != null){
-            RecentProjects.setMostRecentDirectory(metashapePsxFile.getParentFile());
+        if(file != null){
+            RecentProjects.setMostRecentDirectory(file.getParentFile());
             fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
-            fileNameTxtField.setText(metashapePsxFile.getName());
-            updateChoiceBoxes();
+            fileNameTxtField.setText(file.getName());
+            updateChoiceBoxes(file);
             updateLoadedIndicators();
         }
     }
 
-    private void updateChoiceBoxes() {
-        updateChunkSelectionChoiceBox();
+    private void updateChoiceBoxes(File psxFile) {
+        updateChunkSelectionChoiceBox(psxFile);
         updateModelSelectionChoiceBox();
         updateLoadedIndicators();
     }
@@ -221,11 +220,11 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         return !metashapeDocument.getSelectedChunk().getModels().isEmpty();
     }
 
-    private void updateChunkSelectionChoiceBox() {
+    private void updateChunkSelectionChoiceBox(File psxFile) {
         chunkSelectionChoiceBox.setDisable(true);
 
         //load chunks into chunk selection module
-        metashapeDocument = new MetashapeDocument(metashapePsxFile.getPath());
+        metashapeDocument = new MetashapeDocument(psxFile.getPath());
 
         List<MetashapeChunk> chunks = metashapeDocument.getChunks();
 
@@ -283,7 +282,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     }
 
     private void updateLoadedIndicators() {
-        if (isMetashapeObjectLoaded() && hasModels()) {//TODO: change condition to check for metashapeObjectChunk != null?
+        if (hasModels()) {
             loadMetashapeObject.setText("Loaded");
             loadMetashapeObject.setFill(Paint.valueOf("Green"));
 
@@ -295,9 +294,5 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
             hostScrollerController.setNextButtonDisable(true);
         }
-    }
-
-    private boolean isMetashapeObjectLoaded() {
-        return metashapePsxFile != null;
     }
 }

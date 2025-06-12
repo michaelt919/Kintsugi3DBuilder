@@ -214,6 +214,7 @@ public class MetashapeChunk {
 
         //Note: the 0 denotes that these thumbnails are for frame 0
         //TODO: can get this info from thumbnails tag in frameXML instead of hard coding
+        //TODO: looks like thumbnails don't always match full res images
         String thumbnailPath = new File(new File(getFrameDirectoryPath(), "thumbnails"), "thumbnails.zip").getPath();
         return UnzipHelper.unzipImages(thumbnailPath);
     }
@@ -245,7 +246,7 @@ public class MetashapeChunk {
         return enabledCams;
     }
 
-    public Map<Integer, String> buildCameraPathsMap() throws FileNotFoundException
+    public Map<Integer, String> buildCameraPathsMap(boolean useRelativePaths) throws FileNotFoundException
     {
         File rootDirectory = new File(getParentDocument().getPsxFilePath()).getParentFile();
         if (!rootDirectory.exists())
@@ -265,10 +266,11 @@ public class MetashapeChunk {
                 .getElementsByTagName("camera");
 
         int numMissingFiles = 0;
-        File override = getSelectedModel().getLoadPreferences().fullResOverride;
-        File fullResSearchDirectory = override == null ?
+        File modelOverride = this.getSelectedModel().getLoadPreferences().fullResOverride;
+        File fullResSearchDirectory = modelOverride == null ?
+                //full res image paths in frame.xml are relative to the frame document itself
                 new File(getFramePath()).getParentFile() :
-                override;
+                modelOverride;
 
 
         File exceptionFolder = null;
@@ -280,19 +282,20 @@ public class MetashapeChunk {
             String pathAttribute = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
 
             File imageFile;
-            String finalPath = "";
-            if (override == null){
+            String path = "";
+            if (modelOverride == null){
                 imageFile = new File(fullResSearchDirectory, pathAttribute);
-                finalPath = rootDirectory.toPath().relativize(imageFile.toPath()).toString();
+                path = rootDirectory.toPath().relativize(imageFile.toPath()).toString();
             }
             else{
                 String pathAttributeName = new File(pathAttribute).getName();
-                imageFile = new File(override, pathAttributeName);
-                finalPath = imageFile.getName();
+                imageFile = new File(fullResSearchDirectory, pathAttributeName);
+                path = imageFile.getName();
             }
 
-            if (imageFile.exists() && !finalPath.isBlank()) {
+            if (imageFile.exists() && !path.isBlank()) {
                 // Add pair to the map
+                String finalPath = useRelativePaths ? path : imageFile.getAbsolutePath();
                 cameraPathsMap.put(cameraId, finalPath);
             }
             else{
@@ -306,31 +309,6 @@ public class MetashapeChunk {
         }
 
         return cameraPathsMap;
-    }
-
-    public File findFullResImgDirectory() {
-        //get first camera path from frame xml
-        //assume that path is relative to parent of .psx file path
-
-        try {
-            NodeList frameCams = frameXML.getElementsByTagName("camera");
-
-            //this will probably exit after the first camera
-            for (int i = 0; i < frameCams.getLength(); ++i) {
-                Element cam = (Element) frameCams.item(i);
-
-                if (cam.getNodeType() != Node.ELEMENT_NODE) {
-                    continue;
-                }
-
-                String pathAttribute = ((Element) cam.getElementsByTagName("photo").item(0)).getAttribute("path");
-                return new File(getPsxFile().getParent(), pathAttribute).getParentFile();
-            }
-        } catch (NumberFormatException nfe) {
-            log.warn("Failed to find full res directory for Metashape Project.", nfe);
-        }
-
-        return null;
     }
 
     public String getCurrentModelPath() {

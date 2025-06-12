@@ -27,10 +27,9 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -44,6 +43,8 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
     private Document cameraDocument;
     private final List<Element> cameras;
     private File fullResSearchDir;
+
+    private Map<Integer, String> cameraIdAndPaths;
 
     //custom import path
     private AgisoftPrimaryViewSelectionModel(File cameraFile, File fullResSearchDir) throws ParserConfigurationException, IOException, SAXException
@@ -62,7 +63,6 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
         //get enabled cameras
         NodeList cameraNodes = cameraDocument.getElementsByTagName("camera");
 
-        //camera file is .xml, so img name is in camera node attribute "label"
         cameras = IntStream.range(0, cameraNodes.getLength())
                 .mapToObj(cameraNodes::item)
                 .filter(camera -> camera.getNodeType() == Node.ELEMENT_NODE)
@@ -77,6 +77,14 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
         //prev-res images haven't been generated and no thumbnails are present,
         //so leave thumbnails list empty
         thumbnails = new ArrayList<>(views.size());
+
+        cameraIdAndPaths = new HashMap<>();
+        for (View view : views){
+            File imgFile = ImageFinder.getInstance().tryFindImageFile(new File(fullResSearchDir, view.name));
+            if (imgFile != null && view.id != -1){
+                cameraIdAndPaths.put(view.id, imgFile.getPath());
+            }
+        }
     }
 
     //metashape import path
@@ -87,6 +95,13 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
         this.cameras = MetashapeChunk.findEnabledCameras(parentChunk.findChunkXmlCameras());
         this.views = getViews(cameras.stream());
         this.thumbnails = parentChunk.loadThumbnailImageList();
+
+        try{
+            this.cameraIdAndPaths = parentChunk.buildCameraPathsMap(false);
+        }
+        catch(FileNotFoundException fnfe){
+           log.warn("Failed to find source directories in Metashape project. Project images may not be found.", fnfe);
+        }
     }
 
     private static List<View> getViews(Stream<Element> cameras)
@@ -102,13 +117,17 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
             .map(camera ->
             {
                 Element parent = (Element) camera.getParentNode();
+                String label = camera.getAttribute("label");
+                String id = camera.getAttribute("id");
+                int parsedId = !id.isBlank() ? Integer.parseInt(id) : -1;
+
                 if("group".equals(parent.getTagName())) // (either a group or the root node)
                 {
-                    return new View(camera.getAttribute("label"), parent.getAttribute("label"));
+                    return new View(label, parsedId, parent.getAttribute("label"));
                 }
                 else
                 {
-                    return new View(camera.getAttribute("label"), null);
+                    return new View(label, parsedId, null);
                 }
             })
             .collect(Collectors.toUnmodifiableList());
@@ -150,6 +169,21 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
         Element selectedItemCam = findTargetCamera(imageName);
         if(selectedItemCam == null){
             return Optional.empty();
+        }
+
+        //hopefully the camera is in the camera paths map and we don't really have to do much work
+        String selectedCamId = selectedItemCam.getAttribute("id");
+        if (!selectedCamId.isBlank()){
+           try{
+               int id = Integer.parseInt(selectedCamId);
+               String path = cameraIdAndPaths.get(id);
+               if (path != null){
+                   return Optional.of(path);
+               }
+           }
+           catch(NumberFormatException nfe){
+               log.warn("Failed to parse camera id.", nfe);
+           }
         }
 
         //need full label to find img path
