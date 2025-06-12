@@ -50,11 +50,11 @@ Michael Tetzlaff, Gary Meyer, and Alex Kautz, “IBRelight: An Image-Based 3D Re
 - Luke Denney (University of Wisconsin - Stout) - contributor
 - Ian Anderson (University of Wisconsin - Stout) - contributor
 - Zoe Cuthrell (University of Wisconsin - Stout) - contributor
-- Melissa Kosharek (University of Wisconsin - Stout) - contributor
 - Blane Suess (University of Wisconsin - Stout) - contributor
 - Isaac Tesch (University of Wisconsin - Stout) - contributor
 - Nathaniel Willius (University of Wisconsin - Stout) - contributor
 - Atlas Collins (University of Wisconsin - Stout) - contributor
+- Melissa Kosharek (University of Wisconsin - Stout) - contributor
 - Darcy Hannen (University of Wisconsin - Stout) - UX designer
 - Isabel Smith (University of Wisconsin - Stout) - UX designer
 - Elliot Duffy (University of Wisconsin - Stout) - UX designer
