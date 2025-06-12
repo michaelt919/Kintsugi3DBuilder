@@ -42,8 +42,13 @@ public class MetashapeModel {
             log.warn("Model has no label", nfe);
         }
 
+        String path = findModelPath(chunk, modelID);
+
+        return new MetashapeModel(chunk, modelID, tempLabel, path);
+    }
+
+    private static String findModelPath(MetashapeChunk chunk, Optional<Integer> modelID) {
         String path = "";
-        //  <model id="0" path="model.1/model.zip"/> --> returns "model.1/model.zip"
 
         //TODO: clean this up
         try{
@@ -54,7 +59,8 @@ public class MetashapeModel {
             if (elems.getLength() == 1 &&
                     ((Element) elems.item(0)).getAttribute("id").isEmpty()) {
                 path = ((Element) elems.item(0)).getAttribute("path");
-            } else {
+            }
+            else {
                 for (int i = 0; i < elems.getLength(); i++) {
                     Element element = (Element) elems.item(i);
 
@@ -69,24 +75,10 @@ public class MetashapeModel {
         catch(NullPointerException e){
             //ignore, no path was found
         }
-
-        //if no model info yet, might be a single model in chunk which isn't labeled in chunk xml
-        //need to look in frame xml instead
-        //default to looking in frame xml first?
-        //ex. mia arrowhead
-        //TODO: look into making arrowhead work another way
-//        if (modelInfo.isEmpty()){
-//            //TODO: needs more work, this is a quick hack to get arrowhead to work
-//            String path = getModelPathFromXML(null);
-//            if (!path.isBlank()) {
-//                modelInfo.add(new Triplet<>(null, "", path));
-//            }
-//        }
-
-        return new MetashapeModel(chunk, modelID, tempLabel, path);
+        return path;
     }
 
-    public class LoadPreferences {
+    public static class LoadPreferences {
         public File fullResOverride;
         public boolean doSkipMissingCams = false;
         public String orientationViewName;

@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class MetashapeImportController extends FXMLPageController implements ShareInfo {
     private static final Logger log = LoggerFactory.getLogger(MetashapeImportController.class);
@@ -49,7 +48,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     @FXML private ChoiceBox<String> modelSelectionChoiceBox;
 
     private File metashapePsxFile;
-    private MetashapeChunk metashapeChunk;
     private MetashapeDocument metashapeDocument;
 
     private static final String NO_MODEL_ID_MSG = "No Model ID";
@@ -96,7 +94,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         if (source instanceof MetashapeProjectInputSource){
             //overwrite old source so we can compare old and new versions in PrimaryViewSelectController
             hostScrollerController.addInfo(Info.INPUT_SOURCE,
-                    new MetashapeProjectInputSource().setMetashapeModel(metashapeChunk.getSelectedModel()));
+                    new MetashapeProjectInputSource().setMetashapeModel(metashapeDocument.getSelectedChunk().getSelectedModel()));
         }
         else{
             log.error("Error sending Metashape project info to host controller. MetashapeProjectInputSource expected.");
@@ -118,13 +116,12 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         metashapePsxFile = fileChooser.showOpenDialog(stage);
 
         if(metashapePsxFile != null){
-            metashapeChunk = null;
+            RecentProjects.setMostRecentDirectory(metashapePsxFile.getParentFile());
+            fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
+
             fileNameTxtField.setText(metashapePsxFile.getName());
             updateChoiceBoxes();
             updateLoadedIndicators();
-
-            RecentProjects.setMostRecentDirectory(metashapePsxFile.getParentFile());
-            fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
         }
     }
 
@@ -141,7 +138,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
         modelSelectionChoiceBox.setDisable(true);
         modelSelectionChoiceBox.getItems().clear();
-        for (MetashapeModel model : metashapeChunk.getModels()) {
+        for (MetashapeModel model : metashapeDocument.getSelectedChunk().getModels()) {
             String modelID = model.getId().isPresent() ? String.valueOf(model.getId().get()) : NO_MODEL_ID_MSG;
             String modelName = !model.getLabel().isBlank() ? model.getLabel() : NO_MODEL_NAME_MSG;
             modelSelectionChoiceBox.getItems().add(modelID + "   " + modelName);
@@ -158,7 +155,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         modelSelectionChoiceBox.setValue(modelSelectionChoiceBox.getItems().get(0));
         modelSelectionChoiceBox.setDisable(false);
 
-        if (metashapeChunk.getDefaultModelID().isEmpty()) {
+        if (metashapeDocument.getSelectedChunk().getDefaultModelID().isEmpty()) {
             return;
         }
 
@@ -170,7 +167,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
             }
 
             int id = Integer.parseInt(modelID);
-            if (metashapeChunk.getDefaultModelID().get().equals(id)) {
+            if (metashapeDocument.getSelectedChunk().getDefaultModelID().get().equals(id)) {
                 modelSelectionChoiceBox.setValue(obj);
                 break;
             }
@@ -178,8 +175,8 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
     }
 
-    private void showNoModelsAlert() {
-        if (alertShown){
+    private void showMissingItemsAlert(String title, String msg) {
+        if (alertShown) {
             return;
         } //prevent multiple alerts from showing at once
 
@@ -189,7 +186,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
             ButtonType ok = new ButtonType("OK", ButtonBar.ButtonData.CANCEL_CLOSE);
             ButtonType openCustomProj = new ButtonType("Create Custom Project", ButtonBar.ButtonData.YES);
 
-            Alert alert = new Alert(Alert.AlertType.NONE,"Please select another chunk or create a custom project.", ok, openCustomProj);
+            Alert alert = new Alert(Alert.AlertType.NONE, msg, ok, openCustomProj);
 
             ((ButtonBase) alert.getDialogPane().lookupButton(openCustomProj)).setOnAction(event -> {
                 //manually navigate though pages to get to custom loader
@@ -202,13 +199,26 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
             ((ButtonBase) alert.getDialogPane().lookupButton(ok)).setOnAction(event -> alertShown = false);
 
-            alert.setTitle("Metashape chunk has no models.");
+            alert.setTitle(title);
             alert.show();
         });
     }
 
+    private void showNoChunksAlert(){
+       showMissingItemsAlert("Metashape document has no chunks.",
+               "Please select another document or create a custom project.");
+    }
+
+    private void showNoModelsAlert() {
+        showMissingItemsAlert("Metashape chunk has no models.",
+                "Please select another chunk or create a custom project.");
+    }
+
     private boolean hasModels() {
-        return !metashapeChunk.getModels().isEmpty();
+        if (metashapeDocument == null){
+            return false;
+        }
+        return !metashapeDocument.getSelectedChunk().getModels().isEmpty();
     }
 
     private void updateChunkSelectionChoiceBox() {
@@ -217,11 +227,37 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         //load chunks into chunk selection module
         metashapeDocument = new MetashapeDocument(metashapePsxFile.getPath());
 
-        List<String> chunkNames = metashapeDocument.getChunks().stream()
-                .map(MetashapeChunk::getLabel).collect(Collectors.toList());
+        List<MetashapeChunk> chunks = metashapeDocument.getChunks();
+
+        if (chunks.isEmpty()){
+            showNoChunksAlert();
+            modelSelectionChoiceBox.getItems().clear();
+            return;
+        }
 
         chunkSelectionChoiceBox.getItems().clear();
-        chunkSelectionChoiceBox.getItems().addAll(chunkNames);
+
+        boolean missingChunks = false;
+        for (MetashapeChunk chunk : chunks){
+            if (chunk.hasModels()){
+                chunkSelectionChoiceBox.getItems().add(chunk.getLabel());
+            }
+            else{
+                missingChunks = true;
+            }
+        }
+
+        if (chunkSelectionChoiceBox.getItems().isEmpty()) {
+            showMissingItemsAlert("All chunks are missing models.",
+                    "None of your chunks have valid model data. Please select another document or create a custom project.");
+            modelSelectionChoiceBox.getItems().clear();
+            return;
+        }
+
+        if (missingChunks) {
+            showMissingItemsAlert("Some chunks are missing models.",
+                    "Some of your chunks do not have models. They will not appear in the dropdown.");
+        }
 
         //initialize choice box to first option instead of null option
         if (chunkSelectionChoiceBox.getItems() != null &&
@@ -244,7 +280,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         }
 
         metashapeDocument.selectChunk(chunkSelectionChoiceBox.getValue());
-        metashapeChunk = metashapeDocument.getSelectedChunk();
     }
 
     private void updateLoadedIndicators() {

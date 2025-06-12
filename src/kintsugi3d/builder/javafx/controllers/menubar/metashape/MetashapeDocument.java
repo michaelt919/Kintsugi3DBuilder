@@ -85,8 +85,6 @@ public class MetashapeDocument {
             //find the chunks and open the .zip for each chunk
             NodeList chunkList = projectZipXML.getElementsByTagName("chunk");
 
-            //...chunk.zip holds the information we need to extract (chunk name, id, etc)
-
             loadChunks(chunkList);
         }
         catch (ParserConfigurationException | IOException | SAXException e) {
@@ -149,8 +147,6 @@ public class MetashapeDocument {
             Node chunk = chunkList.item(i);
 
             if (chunk.getNodeType() == Node.ELEMENT_NODE) {
-                //chunkElement holds simple info
-                //<chunk id="0" path="0/chunk.zip"/>
                 Element chunkElement = (Element) chunk;
 
                 //TODO: set info about which chunk is active here

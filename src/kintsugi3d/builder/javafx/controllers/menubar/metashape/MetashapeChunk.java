@@ -32,7 +32,6 @@ public class MetashapeChunk {
     private static final Logger log = LoggerFactory.getLogger(MetashapeChunk.class);
 
     private MetashapeDocument metashapeDocument;
-    private String chunkZipXmlPath;
     private String label;
     private int id;//TODO: is this optional?
 
@@ -91,7 +90,6 @@ public class MetashapeChunk {
             log.error("An error occurred loading frame.xml for Metashape chunk:", e);
         }
 
-        NodeList modelList = fullChunkDocument.getElementsByTagName("model");
 
         MetashapeChunk returned = new MetashapeChunk()
                 .setParentDocument(document)
@@ -102,18 +100,43 @@ public class MetashapeChunk {
                 .setDefaultModelID(defaultModelID);
 
         List<MetashapeModel> models = new ArrayList<>();
+
+        NodeList modelList = fullChunkDocument.getElementsByTagName("model");
+
+        //if model list is empty, then there is likely a single model listed in frameXml
+        if (modelList.getLength() == 0){
+            NodeList list = frameXML.getElementsByTagName("model");
+            Element modelElem = (Element) list.item(0);
+
+            if (modelElem != null){
+                MetashapeModel model = MetashapeModel.parseFromElement(returned, modelElem);
+                returned.setCurrentModel(model);
+                models.add(model);
+            }
+        }
+
+        boolean defaultIdFound = false;
         for (int i = 0; i < modelList.getLength(); ++i) {
             Element elem = (Element) modelList.item(i);
             MetashapeModel model = MetashapeModel.parseFromElement(returned, elem);
             if (model.getId().isPresent() && model.getId().equals(defaultModelID)){
                 returned.setCurrentModel(model);
+                defaultIdFound = true;
             }
             models.add(model);
+        }
+
+        if (!defaultIdFound && !models.isEmpty()){
+            returned.setCurrentModel(models.get(0));
         }
 
         returned.setModels(models);
 
         return returned;
+    }
+
+    public boolean hasModels(){
+        return !models.isEmpty();
     }
 
     private void setCurrentModel(MetashapeModel model) {
@@ -311,13 +334,7 @@ public class MetashapeChunk {
     }
 
     public String getCurrentModelPath() {
-        for (MetashapeModel model : models) {
-            if (model.getId().isPresent() &&
-                    model.getId().equals(defaultModelID)) {
-                return model.getPath();
-            }
-        }
-        return "";
+        return currModel.getPath();
     }
 
     public boolean equals(Object rhs) {
