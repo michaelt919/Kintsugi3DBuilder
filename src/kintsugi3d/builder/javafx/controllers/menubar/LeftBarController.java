@@ -21,10 +21,6 @@ public class LeftBarController {
         textureTab.setManaged(TexturesButton.isSelected());
         cameraTab.setVisible(CamerasButton.isSelected());
         cameraTab.setManaged(CamerasButton.isSelected());
-
-        System.out.println("TextureTab Visible: " + textureTab.isVisible());
-        System.out.println("CameraTab Visible: " + cameraTab.isVisible());
-
     }
 
 }

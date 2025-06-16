@@ -9,11 +9,11 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<HBox fx:id="texture_top_bar" alignment="CENTER_LEFT" prefHeight="13.0" styleClass="texture-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.LeftBarController">
-    <ImageView fx:id="texture_icon" id="texture_icon" fitHeight="24.0" fitWidth="24.0">
+<HBox fx:id="card_top_bar" alignment="CENTER_LEFT" prefHeight="13.0" styleClass="texture-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.CardController">
+    <ImageView id="texture_icon" fx:id="card_icon" fitHeight="24.0" fitWidth="24.0">
         <Image url="@../../../../../../Kintsugi3D-icon.png" />
     </ImageView>
-    <Text fx:id="texture_title" id="texture_title" strokeType="OUTSIDE" strokeWidth="0.0" text="Texture Type">
+    <Text id="texture_title" fx:id="card_title" strokeType="OUTSIDE" strokeWidth="0.0" text="Texture Type">
         <font>
             <Font name="Segoe UI Semibold" size="12.0" />
         </font>
@@ -22,7 +22,7 @@
         </HBox.margin>
     </Text>
     <Region maxWidth="1.7976931348623157E308" prefHeight="13.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
-    <Rectangle arcWidth="5.0" height="12.0" stroke="BLACK" strokeType="INSIDE" width="24.0" />
+    <Rectangle arcWidth="5.0" height="12.0" onMouseClicked="#toggleCardBody" stroke="BLACK" strokeType="INSIDE" width="24.0" />
    <padding>
       <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
    </padding>

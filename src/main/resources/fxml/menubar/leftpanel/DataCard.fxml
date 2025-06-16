@@ -6,16 +6,35 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 <?import javafx.scene.text.TextFlow?>
 
-<VBox alignment="TOP_CENTER" prefHeight="289.0" styleClass="texture-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.LeftBarController">
+<VBox id="data_card" fx:id="data_card" alignment="TOP_CENTER" styleClass="texture-background" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.CardController">
 
-    <fx:include fx:id="texture_preview_header" source="TexturePreviewHeader.fxml" HBox.hgrow="ALWAYS" />
+    <HBox fx:id="card_top_bar" onMouseClicked="#selectCard" alignment="CENTER_LEFT" prefHeight="13.0" styleClass="texture-background" stylesheets="@../../kintsugiStyling.css">
+        <ImageView id="texture_icon" fx:id="card_icon" fitHeight="24.0" fitWidth="24.0">
+            <Image url="@../../../../../../Kintsugi3D-icon.png" />
+        </ImageView>
+        <Text id="texture_title" fx:id="card_title" strokeType="OUTSIDE" strokeWidth="0.0" text="Texture Type">
+            <font>
+                <Font name="Segoe UI Semibold" size="12.0" />
+            </font>
+            <HBox.margin>
+                <Insets left="8.0" />
+            </HBox.margin>
+        </Text>
+        <Region maxWidth="1.7976931348623157E308" prefHeight="13.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
+        <Rectangle arcWidth="5.0" height="12.0" onMouseClicked="#minimizeCard" stroke="BLACK" strokeType="INSIDE" width="24.0" />
+        <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+        </padding>
+    </HBox>
 
-    <VBox>
+    <VBox fx:id="card_body" managed="false" prefHeight="275" visible="false">
     <HBox spacing="5.0">
         <VBox HBox.hgrow="ALWAYS">
             <Text text="File Name:">
@@ -23,7 +42,7 @@
                   <Font name="Segoe UI Semibold" size="12.0" />
                </font></Text>
 
-            <Text styleClass="wireframeCaption" text="name_goes_here.jpg">
+            <Text id="file_name" fx:id="file_name" styleClass="wireframeCaption" text="name_goes_here.jpg">
                 <VBox.margin>
                    <Insets left="5.0" />
                 </VBox.margin>
@@ -36,7 +55,7 @@
                <VBox.margin>
                   <Insets top="4.0" />
                </VBox.margin></Text>
-            <Text styleClass="wireframeCaption" text="2048 x 2048">
+            <Text id="resolution" fx:id="resolution" styleClass="wireframeCaption" text="2048 x 2048">
                 <VBox.margin>
                    <Insets left="5.0" />
                 </VBox.margin>
@@ -51,7 +70,7 @@
                </VBox.margin>
             </Text>
 
-            <Text styleClass="wireframeCaption" text="331 KB">
+            <Text id="file_size" fx:id="file_size" styleClass="wireframeCaption" text="331 KB">
             <VBox.margin>
                <Insets left="5.0" />
             </VBox.margin></Text>
@@ -67,7 +86,7 @@
             <TextFlow prefWidth="200.0">
                <children>
       
-                  <Text styleClass="wireframeCaption" text="Description of what this texture type contributes to the material." />
+                  <Text id="description" fx:id="description" styleClass="wireframeCaption" text="Description of what this texture type contributes to the material." />
                </children>
             </TextFlow>
             <Text text="Labels:">
@@ -84,7 +103,7 @@
          </HBox.margin>
 
         </VBox>
-        <ImageView fx:id="TexturePreview" fitHeight="212.0" fitWidth="212.0" layoutX="100.0" layoutY="100.0" pickOnBounds="true" preserveRatio="true">
+        <ImageView id="main_image" fx:id="main_image" fitHeight="212.0" fitWidth="212.0" layoutX="100.0" layoutY="100.0" pickOnBounds="true" preserveRatio="true">
             <HBox.margin>
                 <Insets right="3.0" />
             </HBox.margin>
@@ -169,7 +188,7 @@
     </HBox>
 
     <HBox alignment="TOP_CENTER">
-        <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;" styleClass="texture-button" stylesheets="@../../kintsugiStyling.css" text="Delete ">
+        <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;" styleClass="texture-button" stylesheets="@../../kintsugiStyling.css" text="Delete " onAction="#deleteSelf">
             <graphic>
                 <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
                     <image>

@@ -64,11 +64,11 @@
    <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefHeight="510.0" prefWidth="478.0" style="-fx-background-color: #202020;" VBox.vgrow="ALWAYS">
        <VBox fx:id="texture_vbox" spacing="5.0" style="-fx-background-color: #202020">
 
-           <fx:include fx:id="texture_preview_0" maxWidth="1.7976931348623157E308" source="TexturePreviewHeader.fxml" />
+           <fx:include fx:id="texture_preview_0" maxWidth="1.7976931348623157E308" source="DataCard.fxml" />
 
-           <fx:include fx:id="texture_preview_1" source="TexturePreview.fxml" />
+           <fx:include fx:id="texture_preview_1" source="DataCard.fxml" />
 
-           <fx:include fx:id="texture_preview_2" maxWidth="1.7976931348623157E308" source="TexturePreviewHeader.fxml" />
+           <fx:include fx:id="texture_preview_2" maxWidth="1.7976931348623157E308" source="DataCard.fxml" />
 
        </VBox>
       <VBox.margin>

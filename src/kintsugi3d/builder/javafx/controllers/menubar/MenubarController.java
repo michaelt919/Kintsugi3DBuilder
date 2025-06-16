@@ -204,7 +204,7 @@ public class MenubarController
                 event-> this.miniProgressPane.setVisible(true));
         this.cameraViewListController.init(injectedInternalModels.getCameraViewListModel());
 
-        //this.cameraTabController.init(injectedInternalModels.getCameraViewListModel()); // Jacob
+        //this.cameraTabController.init(injectedInternalModels.getCameraViewListModel()); //Jacob
 
         this.internalModels = injectedInternalModels;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
