@@ -89,7 +89,7 @@ public class RecentProjects {
             Tooltip.install(justAdded.getContent(), tooltip);
 
             justAdded.setOnAction(event -> {
-                ProjectIO.getInstance().openProjectFromFile(new File(fileName));
+                ProjectIO.getInstance().openProjectFromFileWithPrompt(new File(fileName));
             });
 
             ++i;
@@ -255,8 +255,6 @@ public class RecentProjects {
         contextMenu.getItems().addAll(remove, openInExplorer);
         control.setOnContextMenuRequested(e -> contextMenu.show(control, e.getScreenX(), e.getScreenY()));
     }
-
-
 
     private static void addItemToQuickAccess(String fileName, Button recentButton) {
         //set project file name

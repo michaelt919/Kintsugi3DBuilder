@@ -293,6 +293,8 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
                 MenubarController.getInstance().setToggleableShaderDisable(!hasSpecularMaterials());
 
+                MenubarController.getInstance().selectImageBasedShader();
+
                 if (progressMonitor != null)
                 {
                     progressMonitor.complete();

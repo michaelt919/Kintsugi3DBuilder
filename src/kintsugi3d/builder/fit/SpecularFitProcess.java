@@ -436,7 +436,7 @@ public class SpecularFitProcess
                             SpecularDecomposition blockDecomposition =
                                 new SpecularDecompositionFromExistingBasis(blockResolution, sampledDecomposition);
 
-                            if (sampledDecomposition.getSpecularBasis().getCount() == 1)
+                            if (sampledDecomposition.getMaterialBasis().getMaterialCount() == 1)
                             {
                                 // special case for a single basis function: pre-fill with default weights so that optimization is unnecesssary.
                                 int weightCount = blockResolution.width * blockResolution.height;

@@ -23,7 +23,7 @@ public interface SpecularDecomposition
 {
     List<DoubleVector3> getDiffuseAlbedos();
 
-    SpecularBasis getSpecularBasis();
+    MaterialBasis getMaterialBasis();
     SpecularBasisWeights getWeights();
 
     TextureResolution getTextureResolution();
