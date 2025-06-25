@@ -58,6 +58,7 @@ import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.javafx.controllers.scene.object.ObjectPoseSetting;
 import kintsugi3d.builder.javafx.controllers.scene.object.SettingsObjectSceneController;
+import kintsugi3d.builder.javafx.internal.CardsModelImpl;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.javafx.FramebufferView;
@@ -163,7 +164,8 @@ public class MenubarController
     @FXML private VBox cameraViewList;
     @FXML private CameraViewListController cameraViewListController;
     @FXML private FramebufferView framebufferView;
-    //@FXML private CameraTabController cameraTabController; //Jacob
+    @FXML private VBox leftBar;
+    @FXML private SideBarController leftBarController; //Jacob
 
     private Window window;
     private Runnable userDocumentationHandler;
@@ -203,8 +205,7 @@ public class MenubarController
         this.localProgressBar.getScene().getWindow().setOnCloseRequest(
                 event-> this.miniProgressPane.setVisible(true));
         this.cameraViewListController.init(injectedInternalModels.getCameraViewListModel());
-
-        //this.cameraTabController.init(injectedInternalModels.getCameraViewListModel()); //Jacob
+        this.leftBarController.init(injectedInternalModels.getCardsModels());
 
         this.internalModels = injectedInternalModels;
         this.userDocumentationHandler = injectedUserDocumentationHandler;

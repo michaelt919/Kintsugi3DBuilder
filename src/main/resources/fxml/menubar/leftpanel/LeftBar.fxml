@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox maxWidth="500.0" prefWidth="494.0" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.LeftBarController">
+<VBox fx:id="main_box" maxWidth="500.0" prefWidth="494.0" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.SideBarController">
     <Separator maxWidth="500.0" prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
     <HBox alignment="TOP_RIGHT" maxWidth="500.0" prefHeight="24.0" prefWidth="462.0" style="-fx-background-color: #383838;">
         <padding>
@@ -24,21 +24,21 @@
         </ImageView>
     </HBox>
     <Separator maxWidth="500.0" prefWidth="200.0" styleClass="black-line" stylesheets="@../../kintsugiStyling.css" />
-   <HBox maxWidth="500.0" prefHeight="31.0" prefWidth="462.0">
-      <children>
-         <RadioButton fx:id="CamerasButton" maxHeight="32.0" maxWidth="1.7976931348623157E308" minHeight="32.0" mnemonicParsing="false" onAction="#chooseTabAction" prefHeight="32.0" selected="true" style="-fx-alignment: center;" styleClass="stripped-radio-button" text="Cameras" textAlignment="CENTER" HBox.hgrow="ALWAYS">
-            <toggleGroup>
-               <ToggleGroup fx:id="LeftPanelNav" />
-            </toggleGroup></RadioButton>
-         <RadioButton fx:id="TexturesButton" maxHeight="32.0" maxWidth="1.7976931348623157E308" minHeight="32.0" mnemonicParsing="false" onAction="#chooseTabAction" prefHeight="32.0" style="-fx-alignment: center;" styleClass="stripped-radio-button" text="Textures" textAlignment="CENTER" toggleGroup="$LeftPanelNav" HBox.hgrow="ALWAYS">
-            <HBox.margin>
-               <Insets />
-            </HBox.margin>
-            <opaqueInsets>
-               <Insets />
-            </opaqueInsets></RadioButton>
-      </children>
+   <HBox fx:id="button_box" stylesheets="@../../kintsugiStyling.css" maxWidth="500.0" prefHeight="31.0" prefWidth="462.0">
+<!--      <children>-->
+<!--         <RadioButton fx:id="CamerasButton" maxHeight="32.0" maxWidth="1.7976931348623157E308" minHeight="32.0" mnemonicParsing="false" onAction="#chooseTabAction" prefHeight="32.0" selected="true" style="-fx-alignment: center;" styleClass="stripped-radio-button" text="Cameras" textAlignment="CENTER" HBox.hgrow="ALWAYS">-->
+<!--            <toggleGroup>-->
+<!--               <ToggleGroup fx:id="LeftPanelNav" />-->
+<!--            </toggleGroup></RadioButton>-->
+<!--         <RadioButton fx:id="TexturesButton" maxHeight="32.0" maxWidth="1.7976931348623157E308" minHeight="32.0" mnemonicParsing="false" onAction="#chooseTabAction" prefHeight="32.0" style="-fx-alignment: center;" styleClass="stripped-radio-button" text="Textures" textAlignment="CENTER" toggleGroup="$LeftPanelNav" HBox.hgrow="ALWAYS">-->
+<!--            <HBox.margin>-->
+<!--               <Insets />-->
+<!--            </HBox.margin>-->
+<!--            <opaqueInsets>-->
+<!--               <Insets />-->
+<!--            </opaqueInsets></RadioButton>-->
+<!--      </children>-->
    </HBox>
-    <fx:include fx:id="cameraTab" maxWidth="500.0" source="CameraTab.fxml" />
-    <fx:include fx:id="textureTab" maxWidth="500.0" source="TextureTab.fxml" visible="false" managed="false"/>
+    <!--<fx:include fx:id="cameraTab" maxWidth="500.0" source="CardTab.fxml" />
+    <fx:include fx:id="textureTab" maxWidth="500.0" source="TextureTab.fxml" visible="false" managed="false"/>-->
 </VBox>

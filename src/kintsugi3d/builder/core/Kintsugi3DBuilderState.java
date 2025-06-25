@@ -20,6 +20,7 @@ public interface Kintsugi3DBuilderState
     ReadonlyObjectModel getObjectModel();
     ReadonlyEnvironmentModel getEnvironmentModel();
     CameraViewListModel getCameraViewListModel();
+    CardsModel getCameraCardsModel();
 
     /**
      * Not read-only to allow export functions to change rendering mode (i.e. focus calibration)

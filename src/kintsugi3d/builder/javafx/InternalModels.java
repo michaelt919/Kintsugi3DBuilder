@@ -13,6 +13,8 @@ package kintsugi3d.builder.javafx;
 
 import kintsugi3d.builder.javafx.internal.*;
 
+import java.util.List;
+
 public final class InternalModels
 {
     private static final InternalModels INSTANCE = new InternalModels();
@@ -30,6 +32,7 @@ public final class InternalModels
     private final LoadOptionsModelImpl loadOptionsModel;
     private final SettingsModelImpl settingsModel;
     private final ObservableProjectModel projectModel;
+    private final TabModelsImpl cardsModels;
 
     private InternalModels()
     {
@@ -41,6 +44,7 @@ public final class InternalModels
         loadOptionsModel = new LoadOptionsModelImpl();
         settingsModel = new SettingsModelImpl();
         projectModel = new ObservableProjectModel();
+        cardsModels = new TabModelsImpl();
     }
 
     public CameraModelImpl getCameraModel()
@@ -62,6 +66,10 @@ public final class InternalModels
     {
         return cameraViewListModel;
     }
+
+    public CardsModelImpl getCardsModel(String label) { return cardsModels.getCardModel(label); }
+
+    public List<CardsModelImpl> getCardsModels() { return cardsModels.getCardModels(); }
 
     public LoadOptionsModelImpl getLoadOptionsModel()
     {

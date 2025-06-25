@@ -26,6 +26,7 @@ public final class MultithreadModels implements Kintsugi3DBuilderState
     private final ExtendedLightingModel lightingModel;
     private final ExtendedObjectModel objectModel;
     private final CameraViewListModel cameraViewListModel;
+    private final CardsModel cameraCardsModel;
     private final ProjectModel projectModel;
 
     private final SettingsModel settingsModel;
@@ -48,6 +49,7 @@ public final class MultithreadModels implements Kintsugi3DBuilderState
         lightingModel = new LightingModelWrapper(InternalModels.getInstance().getLightingModel());
         environmentModel = new EnvironmentModelWrapper(InternalModels.getInstance().getEnvironmentModel());
         cameraViewListModel = new CameraViewListModelWrapper(InternalModels.getInstance().getCameraViewListModel());
+        cameraCardsModel = new CardsModelWrapper(InternalModels.getInstance().getCardsModel("Cameras"));
         projectModel = InternalModels.getInstance().getProjectModel();
         settingsModel = new SettingsModelWrapper(InternalModels.getInstance().getSettingsModel());
         sceneViewportModel = new SceneViewportModelImpl();
@@ -79,6 +81,11 @@ public final class MultithreadModels implements Kintsugi3DBuilderState
     public CameraViewListModel getCameraViewListModel()
     {
         return cameraViewListModel;
+    }
+
+    @Override
+    public CardsModel getCameraCardsModel() {
+        return cameraCardsModel;
     }
 
     @Override

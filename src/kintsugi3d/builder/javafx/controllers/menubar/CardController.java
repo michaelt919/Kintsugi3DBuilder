@@ -2,10 +2,16 @@ package kintsugi3d.builder.javafx.controllers.menubar;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import kintsugi3d.builder.state.CameraCardsModel;
+import javafx.scene.text.TextFlow;
+import kintsugi3d.builder.resources.ProjectDataCard;
+import kintsugi3d.builder.state.CardsModel;
 
 public class CardController {
 
@@ -13,10 +19,10 @@ public class CardController {
     @FXML VBox card_body;
 
     @FXML Text card_title;
-    @FXML Text file_name;
-    @FXML Text resolution;
-    @FXML Text file_size;
-    @FXML Text description;
+    @FXML VBox text_content;
+
+    @FXML ImageView card_icon;
+    @FXML ImageView main_image;
 
     private String cardId;
     private int cardIndex;
@@ -24,13 +30,36 @@ public class CardController {
     private boolean cardVisibility = true;
     private boolean bodyVisibility = false;
 
-    private CameraCardsModel cameraCardsModel;
+    private CardsModel cameraCardsModel;
+    private ProjectDataCard dataCard;
 
-    public void init(CameraCardsModel cameraCardsModel, int index) {
+
+    public void init(CardsModel cameraCardsModel, ProjectDataCard dataCard, int index) {
         this.cameraCardsModel = cameraCardsModel;
-        cardIndex = index;
-        card_body.visibleProperty().bind(cameraCardsModel.getSelectedCameraViewIndexProperty().isEqualTo(cardIndex));
-        card_body.managedProperty().bind(cameraCardsModel.getSelectedCameraViewIndexProperty().isEqualTo(cardIndex));
+        this.dataCard = dataCard;
+        this.cardIndex = index;
+
+        card_title.setText(dataCard.getHeaderName());
+        //card_icon.setImage(new Image(dataCard.getImagePath()));
+        //main_image.setImage(new Image(dataCard.getImagePath()));
+
+        card_body.visibleProperty().bind(cameraCardsModel.getSelectedCardIndexProperty().isEqualTo(cardIndex));
+        card_body.managedProperty().bind(cameraCardsModel.getSelectedCardIndexProperty().isEqualTo(cardIndex));
+
+        text_content.getChildren().clear();
+        dataCard.getTextContent().forEach((key, value) -> {
+                Text label = new Text(key + ":");
+                label.setFont(Font.font("Segoe UI Semibold", 12));
+
+                Text caption = new Text(value);
+                caption.getStyleClass().add("wireframeCaption");
+                TextFlow flow = new TextFlow(caption);
+                flow.setPrefWidth(200);
+
+                text_content.getChildren().add(label);
+                text_content.getChildren().add(flow);
+                VBox.setMargin(flow, new Insets(0,0,4,5));
+        });
     }
 
     @FXML
@@ -38,12 +67,6 @@ public class CardController {
         bodyVisibility = !bodyVisibility;
         card_body.setVisible(bodyVisibility);
         card_body.setManaged(bodyVisibility);
-    }
-
-    public void toggleCardVisibility() {
-        cardVisibility = !cardVisibility;
-        data_card.setVisible(cardVisibility);
-        data_card.setManaged(cardVisibility);
     }
 
     public void setCardVisibility(boolean visibility) {
@@ -60,47 +83,31 @@ public class CardController {
         this.card_title.setText(title);
     }
 
-    public void setFileName(String fileName) {
-        this.file_name.setText(fileName);
-    }
-
-    public void setResolution(String resolution) {
-        this.resolution.setText(resolution);
-    }
-
-    public void setFileSize(String fileSize) {
-        this.file_size.setText(fileSize);
-    }
-
-    public void setDescription(String description) {
-        this.description.setText(description);
-    }
-
     public String getCardTitle() {
         return this.card_title.getText();
     }
 
     public boolean titleContainsString(String str) {
-        return card_title.getText().contains(str);
+        return card_title.getText().toLowerCase().contains(str.toLowerCase());
     }
 
     @FXML
     public void selectCard() {
-        cameraCardsModel.setSelectedCameraViewIndex(cardIndex);
+        cameraCardsModel.setSelectedCardIndex(cardIndex);
     }
 
     @FXML
     public void minimizeCard() {
-        if (cameraCardsModel.getSelectedCameraViewIndex() == cardIndex) {
+        if (cameraCardsModel.getSelectedCardIndex() == cardIndex) {
             cameraCardsModel.deselectCard();
         } else {
-            cameraCardsModel.setSelectedCameraViewIndex(cardIndex);
+            cameraCardsModel.setSelectedCardIndex(cardIndex);
         }
     }
 
     @FXML
     public void deleteSelf(ActionEvent e) {
-        cameraCardsModel.deleteCamera(cardIndex);
+        cameraCardsModel.deleteCard(cardIndex);
     }
 
 }

@@ -25,10 +25,13 @@ import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.builder.javafx.internal.CardsModelImpl;
+import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;
 import kintsugi3d.builder.resources.specular.SpecularMaterialResources;
 import kintsugi3d.builder.state.*;
+import kintsugi3d.builder.util.ProjectDataCardFactory;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.Framebuffer;
 import kintsugi3d.gl.interactive.InitializationException;
@@ -66,6 +69,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     private ReadonlyLightingModel lightingModel;
     private ReadonlySettingsModel settingsModel;
     private CameraViewListModel cameraViewListModel;
+    private CardsModel cameraCardsModel;
 
     private final List<Consumer<ViewSet>> viewSetLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>());
@@ -172,10 +176,13 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
 
         List<File> imgFiles = loadedViewSet.getImageFiles();
         List<String> imgFileNames = new ArrayList<>();
+        List<ProjectDataCard> cameraCards = new ArrayList<>();
 
         imgFiles.forEach(file->imgFileNames.add(file.getName()));
-
         MultithreadModels.getInstance().getCameraViewListModel().setCameraViewList(imgFileNames);
+
+        imgFiles.forEach(file-> cameraCards.add(ProjectDataCardFactory.createProjectDataCard(file)));
+        MultithreadModels.getInstance().getCameraCardsModel().setCardsList(cameraCards);
 
         // Invoke callbacks now that view set is loaded
         invokeViewSetLoadCallbacks(loadedViewSet);
@@ -204,6 +211,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         newItem.getSceneModel().setLightingModel(this.lightingModel);
         newItem.getSceneModel().setSettingsModel(this.settingsModel);
         newItem.getSceneModel().setCameraViewListModel(this.cameraViewListModel);
+        //newItem.getSceneModel().setCameraCardsModel(this.cameraCardsModel);
 
         newItem.setProgressMonitor(new ProgressMonitor()
         {
@@ -497,6 +505,14 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         if (ibrInstance != null)
         {
             ibrInstance.getSceneModel().setCameraViewListModel(cameraViewListModel);
+        }
+    }
+
+    public void setCameraCardsModel(CardsModel cameraCardsModel) {
+        this.cameraCardsModel = cameraCardsModel;
+        if (ibrInstance != null)
+        {
+            ibrInstance.getSceneModel().setCameraCardsModel(cameraCardsModel);
         }
     }
 
