@@ -123,7 +123,7 @@ public class MetashapeChunk {
 
             if (modelElem != null){
                 MetashapeModel model = MetashapeModel.parseFromElement(returned, modelElem);
-                returned.setCurrentModel(model);
+                returned.selectModel(model);
                 models.add(model);
             }
         }
@@ -133,14 +133,14 @@ public class MetashapeChunk {
             Element elem = (Element) modelList.item(i);
             MetashapeModel model = MetashapeModel.parseFromElement(returned, elem);
             if (model.getId().isPresent() && model.getId().equals(defaultModelID)){
-                returned.setCurrentModel(model);
+                returned.selectModel(model);
                 defaultIdFound = true;
             }
             models.add(model);
         }
 
         if (!defaultIdFound && !models.isEmpty()){
-            returned.setCurrentModel(models.get(0));
+            returned.selectModel(models.get(0));
         }
 
         returned.setModels(models);
@@ -156,7 +156,7 @@ public class MetashapeChunk {
         this.thumbnailsDir = thumbnailsDir;
     }
 
-    private void setCurrentModel(MetashapeModel model) {
+    private void selectModel(MetashapeModel model) {
         currModel = model;
     }
 

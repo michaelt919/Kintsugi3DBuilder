@@ -144,13 +144,17 @@ public class MetashapeDocument {
     private void loadChunks(NodeList chunkList) throws IOException {
         chunks = new ArrayList<>();
         for (int i = 0; i < chunkList.getLength(); ++i) {
-            Node chunk = chunkList.item(i);
+            Node chunkNode = chunkList.item(i);
 
-            if (chunk.getNodeType() == Node.ELEMENT_NODE) {
-                Element chunkElement = (Element) chunk;
+            if (chunkNode.getNodeType() == Node.ELEMENT_NODE) {
+                Element chunkElement = (Element) chunkNode;
 
-                //TODO: set info about which chunk is active here
-                chunks.add(MetashapeChunk.parseFromElement(this, chunkElement));
+                MetashapeChunk chunk = MetashapeChunk.parseFromElement(this, chunkElement);
+                chunks.add(chunk);
+
+                if (chunk.getID().equals(activeChunkID)){
+                    selectChunk(chunk.getLabel());
+                }
             }
         }
     }

@@ -109,6 +109,10 @@ public abstract class InputSource {
     private static TreeItem<String> createTreeItem(List<Image> thumbnailImgList, View view) {
         ImageView thumbnailImgView;
         try {
+            //this assumes that view id's are parallel with thumbnailImgList indices
+            //this is usually true (haven't found a case where it isn't)
+            //a more precise implementation would read the doc.xml inside thumbnails.zip and create a map
+            //  from camera id's to img paths
             thumbnailImgView = new ImageView(thumbnailImgList.get(view.id));
         } catch (IndexOutOfBoundsException e) {
             //thumbnail not found in thumbnailImgList
