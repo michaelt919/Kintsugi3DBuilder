@@ -231,7 +231,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
 
         /**
-         * Alternate version of loadAgisoftFromZIP that uses a metashapeObjectChunk as its parameter.
+         * Alternate version of loadAgisoftFromZIP that uses a MetashapeModel as its parameter.
          * @param model
          * @param supportingFilesDirectory
          * @return
