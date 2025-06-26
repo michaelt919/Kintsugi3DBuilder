@@ -226,8 +226,8 @@ public class MetashapeChunk {
     }
 
 
-    public List<Image> loadThumbnailImageList() {
-        return UnzipHelper.unzipImages(thumbnailsDir);
+    public Map<Integer, Image> loadThumbnailImageList() {
+        return UnzipHelper.unzipImagesToMap(thumbnailsDir);
     }
 
     public List<Element> findChunkXmlCameras() {

@@ -39,7 +39,7 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
     private static final Logger log = LoggerFactory.getLogger(AgisoftPrimaryViewSelectionModel.class);
     private final String chunkName;
     private final List<View> views;
-    private final List<Image> thumbnails;
+    private final Map<Integer, Image> thumbnails;
     private Document cameraDocument;
     private final List<Element> cameras;
     private File fullResSearchDir;
@@ -77,7 +77,7 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
 
         //prev-res images haven't been generated and no thumbnails are present,
         //so leave thumbnails list empty
-        thumbnails = new ArrayList<>(views.size());
+        thumbnails = new HashMap<>();
 
         cameraIdToFullRes = new HashMap<>();
         for (View view : views){
@@ -158,7 +158,7 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
     }
 
     @Override
-    public List<Image> getThumbnails()
+    public Map<Integer, Image> getThumbnails()
     {
         return thumbnails;
     }

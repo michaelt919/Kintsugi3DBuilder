@@ -19,6 +19,8 @@ import org.apache.commons.imaging.ImageReadException;
 import org.apache.commons.imaging.common.bytesource.ByteSourceInputStream;
 import org.apache.commons.imaging.formats.tiff.TiffImageParser;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -32,8 +34,11 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 public class UnzipHelper {
@@ -44,11 +49,14 @@ public class UnzipHelper {
     }
 
     public static String unzipToString(File zipFile) throws IOException {
-        //unzip the zip file (which should be a .psx) and return the contents as a string
+        //unzip the zip file and return the contents as a string
+        return directoryStreamToString(new FileInputStream(zipFile));
+    }
+
+    private static String directoryStreamToString(InputStream stream) throws IOException {
         //intended to only unzip one file
         //Note: if this function unzips a file with multiple text files, it will simply concatenate them
-
-        ZipInputStream zis= new ZipInputStream(new FileInputStream(zipFile));
+        ZipInputStream zis= new ZipInputStream(stream);
         try{
             byte[] buffer = new byte[1024];
             StringBuilder s = new StringBuilder();
@@ -66,6 +74,22 @@ public class UnzipHelper {
         finally{
             zis.closeEntry();
             zis.close();
+        }
+        return "";
+    }
+
+    //this function unzips a specific file within a zip directory
+    private static String fileStreamToString(InputStream stream) throws IOException {
+        try (stream) {
+            byte[] buffer = new byte[1024];
+            StringBuilder s = new StringBuilder();
+            int read = 0;
+            while ((read = stream.read(buffer, 0, 1024)) >= 0) {
+                s.append(new String(buffer, 0, read, StandardCharsets.UTF_8));
+            }
+            return s.toString();
+        } catch (Exception e) {
+            log.error("Error unzipping file:", e);
         }
         return "";
     }
@@ -151,5 +175,60 @@ public class UnzipHelper {
 
     public static Document unzipToDocument(File zipFile) throws IOException {
         return UnzipHelper.convertStringToDocument(UnzipHelper.unzipToString(zipFile));
+    }
+
+    public static Map<Integer, Image> unzipImagesToMap(File imgsDir) {
+        //ideally this would work with both thumbnails and masks and whatever else it needs to be compatible with
+        //  <thumbnail camera_id="0" path="c0.png"/>
+
+        Map<Integer, Image> imagesMap= new HashMap<>();
+
+        //need this intermediary because Image objects don't store their source path when unzipped this way
+        Map<String, Image> tempMap = new HashMap<>();
+
+        Document docXml = null;
+        try (ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(imgsDir))) {
+            ZipEntry entry;
+            while ((entry = zipInputStream.getNextEntry()) != null) {
+                String entryName = entry.getName();
+                if (!entryName.endsWith(".xml")){
+                    //this is an image, add it to the temp map
+                    tempMap.put(entryName, readImageData(zipInputStream, entryName));
+                }
+                else{
+                    try(ZipFile zFile = new ZipFile(imgsDir)) {
+                        docXml = convertStringToDocument(fileStreamToString(zFile.getInputStream(entry)));
+                    }
+                }
+                zipInputStream.closeEntry();
+            }
+
+        } catch (IOException | ImageReadException e) {
+            log.error("Error unzipping images:", e);
+        }
+
+        if (docXml == null){
+            return imagesMap;
+        }
+
+        NodeList list = docXml.getElementsByTagName("thumbnail");
+
+        for (int i = 0; i < list.getLength(); ++i){
+           Element elem = (Element) list.item(i);
+
+           String camId = elem.getAttribute("camera_id");
+           int cameraId = i;
+           if (!camId.isBlank()){
+              cameraId = Integer.parseInt(camId);
+           }
+
+           String path = elem.getAttribute("path");
+           Image img = tempMap.get(path);
+
+           imagesMap.put(cameraId, img);
+        }
+
+        log.info("Total images extracted: " + imagesMap.size());
+        return imagesMap;
     }
 }

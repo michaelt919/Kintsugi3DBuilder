@@ -24,6 +24,7 @@ import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.PrimaryVie
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -106,15 +107,13 @@ public abstract class InputSource {
         treeView.getRoot().setExpanded(true);
     }
 
-    private static TreeItem<String> createTreeItem(List<Image> thumbnailImgList, View view) {
+    private static TreeItem<String> createTreeItem(Map<Integer, Image> thumbnailImgList, View view) {
         ImageView thumbnailImgView;
-        try {
-            //this assumes that view id's are parallel with thumbnailImgList indices
-            //this is usually true (haven't found a case where it isn't)
-            //a more precise implementation would read the doc.xml inside thumbnails.zip and create a map
-            //  from camera id's to img paths
-            thumbnailImgView = new ImageView(thumbnailImgList.get(view.id));
-        } catch (IndexOutOfBoundsException e) {
+        Image img = thumbnailImgList.get(view.id);
+        if (img != null){
+            thumbnailImgView = new ImageView(img);
+        }
+        else{
             //thumbnail not found in thumbnailImgList
             thumbnailImgView = new ImageView(new Image(new File("question-mark.png").toURI().toString()));
         }

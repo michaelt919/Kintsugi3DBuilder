@@ -67,8 +67,7 @@ public class MetashapeDocument {
             documentPathInfo = getPSXPathBase() + documentPathInfo;
 
             //extract project.zip and open the doc.xml
-            String projectZipString = UnzipHelper.unzipToString(new File(documentPathInfo));
-            projectZipXML = UnzipHelper.convertStringToDocument(projectZipString);
+            projectZipXML = UnzipHelper.unzipToDocument(new File(documentPathInfo));
 
             if (projectZipXML == null){return ;}
 

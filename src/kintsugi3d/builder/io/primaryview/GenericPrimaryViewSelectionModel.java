@@ -16,7 +16,9 @@ import kintsugi3d.builder.core.ViewSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -54,10 +56,10 @@ public final class GenericPrimaryViewSelectionModel implements PrimaryViewSelect
     }
 
     @Override
-    public List<Image> getThumbnails()
+    public Map<Integer, Image> getThumbnails()
     {
         // TODO implement thumbnails for generic case
-        return List.of();
+        return new HashMap<>();
     }
 
     @Override
