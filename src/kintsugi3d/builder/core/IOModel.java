@@ -25,6 +25,10 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
+import kintsugi3d.builder.fit.settings.ExportSettings;
+import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
+import kintsugi3d.util.EncodableColorImage;
+
 public class IOModel
 {
     private static class AggregateProgressMonitor implements ProgressMonitor

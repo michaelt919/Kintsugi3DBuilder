@@ -18,6 +18,12 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonBase;
+import javafx.scene.control.ButtonType;
+import javafx.stage.DirectoryChooser;
 import kintsugi3d.builder.app.Rendering;
 import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.fit.settings.ExportSettings;
@@ -35,7 +41,6 @@ import kintsugi3d.gl.core.Framebuffer;
 import kintsugi3d.gl.interactive.InitializationException;
 import kintsugi3d.gl.interactive.InteractiveRenderable;
 import kintsugi3d.gl.vecmath.Vector2;
-import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.util.EncodableColorImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -279,10 +284,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
             @Override
             public void complete()
             {
-                double primaryViewDistance = newItem.getIBRResources().getPrimaryViewDistance();
-                Vector3 lightIntensity = new Vector3((float)(primaryViewDistance * primaryViewDistance));
-
-                newItem.getIBRResources().initializeLightIntensities(lightIntensity, false);
+                newItem.getIBRResources().calibrateLightIntensities(false);
                 newItem.reloadShaders();
 
                 MenubarController.getInstance().setToggleableShaderDisable(!hasSpecularMaterials());

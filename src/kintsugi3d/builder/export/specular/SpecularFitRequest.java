@@ -84,7 +84,7 @@ public class SpecularFitRequest implements ObservableIBRRequest //, ObservableGr
             }
 
             // Perform the specular fit
-            new SpecularFitProcess(settings).optimizeFit(renderable.getIBRResources(), monitor);
+            new SpecularFitProcess(settings).optimizeFitWithCache(renderable.getIBRResources(), monitor);
 
             // Perform reconstruction
             //performReconstruction(renderable.getIBRResources(), renderable.getIBRResources().getSpecularMaterialResources());

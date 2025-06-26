@@ -13,6 +13,7 @@ package kintsugi3d.gl.vecmath;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.function.IntUnaryOperator;
 
 /**
  * A vector of two dimensions (for linear algebra calculations) backed by 
@@ -61,6 +62,16 @@ public class IntVector2 implements Iterable<Integer>
     public Vector2 asFloatingPointNormalized()
     {
         return new Vector2(x / 255.0f, y / 255.0f);
+    }
+
+    public DoubleVector2 asDoubleFloatingPoint()
+    {
+        return new DoubleVector2(x, y);
+    }
+
+    public DoubleVector2 asDoubleFloatingPointNormalized()
+    {
+        return new DoubleVector2(x / 255.0, y / 255.0);
     }
 
     @Override
@@ -127,6 +138,11 @@ public class IntVector2 implements Iterable<Integer>
     public double distance(IntVector2 other)
     {
         return this.minus(other).length();
+    }
+
+    public IntVector2 applyOperator(IntUnaryOperator operator)
+    {
+        return new IntVector2(operator.applyAsInt(x), operator.applyAsInt(y));
     }
 
     @Override

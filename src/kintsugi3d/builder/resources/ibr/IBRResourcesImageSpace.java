@@ -58,6 +58,7 @@ import java.util.stream.IntStream;
  * @param <ContextType>
  */
 public final class IBRResourcesImageSpace<ContextType extends Context<ContextType>> extends IBRResourcesBase<ContextType>
+    implements IBRResourcesCacheable<ContextType>
 {
     private static final boolean MULTITHREAD_PREVIEW_IMAGE_GENERATION = false;
 
@@ -728,6 +729,19 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         return primaryViewDistance;
     }
 
+    public void calibrateLightIntensities(boolean infiniteLightSources)
+    {
+        if (primaryViewDistance > 0)
+        {
+            Vector3 lightIntensity = new Vector3((float) (primaryViewDistance * primaryViewDistance));
+            initializeLightIntensities(lightIntensity, infiniteLightSources);
+        }
+        else
+        {
+            log.warn("Light intensities not calibrated; primaryViewDistance was zero (were depth images generated first?)");
+        }
+    }
+
     /**
      * Creates a resource for just a single view, using the default image for that view but with custom load options
      * @param viewIndex
@@ -755,6 +769,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         return new SingleCalibratedImageResource<>(getContext(), getViewSet(), viewIndex, imageFile, getGeometry(), loadOptions);
     }
 
+    @Override
     public ImageCache<ContextType> cache(ImageCacheSettings settings, ProgressMonitor monitor) throws IOException, UserCancellationException
     {
         settings.setCacheFolderName(getViewSet().getUUID().toString());
@@ -779,7 +794,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
     }
 
     private static <ContextType extends Context<ContextType>> BufferedImage undistortImage(
-        BufferedImage distortedImage, ViewSet viewSet, int projectionIndex, ContextType context)
+        BufferedImage distortedImage, boolean mipmapsEnabled, ViewSet viewSet, int projectionIndex, ContextType context)
         throws IOException
     {
         DistortionProjection distortion = (DistortionProjection) viewSet.getCameraProjection(projectionIndex);
@@ -787,7 +802,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         try (ImageUndistorter<?> undistort = new ImageUndistorter<>(context))
         {
-            return undistort.undistort(distortedImage, distortion);
+            return undistort.undistort(distortedImage, mipmapsEnabled, distortion);
         }
     }
 
@@ -929,7 +944,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                             {
                                 BufferedImage decodedImage = getDecodedImage(viewSet, i);
                                 log.info("Undistorting image {}", i);
-                                BufferedImage imageOut = undistortImage(decodedImage, viewSet, projectionIndex, context);
+                                BufferedImage imageOut = undistortImage(decodedImage, true, viewSet, projectionIndex, context);
                                 log.info("Saving image {}", i);
                                 ImageIO.write(imageOut, "PNG", viewSet.getPreviewImageFile(i));
                                 logFinished(viewSet.getPreviewImageFile(i));
@@ -996,7 +1011,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                                 {
                                     try
                                     {
-                                        BufferedImage imageOut = undistortImage(decodedImage, viewSet, projectionIndex, context);
+                                        BufferedImage imageOut = undistortImage(decodedImage, true, viewSet, projectionIndex, context);
 
                                         // Write to a file on another thread so as not to block the rendering thread
                                         new Thread(() ->
@@ -1092,7 +1107,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
                 try (ImageUndistorter<?> undistort = new ImageUndistorter<>(getContext()))
                 {
-                    undistort.undistortFile(getViewSet().findFullResImageFile(poseIndex), distortion, getViewSet().getPreviewImageFile(poseIndex));
+                    undistort.undistortFile(getViewSet().findFullResImageFile(poseIndex), true, distortion, getViewSet().getPreviewImageFile(poseIndex));
                 }
 
                 return true;

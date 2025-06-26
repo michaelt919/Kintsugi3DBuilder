@@ -50,6 +50,12 @@ public class SpecularFitRequestParams
         else
         {
             this.textureResolution = textureResolution;
+
+            imageCacheSettings.setTextureWidth(textureResolution.width);
+            imageCacheSettings.setTextureHeight(textureResolution.height);
+            imageCacheSettings.setTextureSubdiv( // TODO expose this in the interface
+                (int)Math.ceil(Math.max(textureResolution.width, textureResolution.height) / 256.0));
+            imageCacheSettings.setSampledSize(256); // TODO expose this in the interface
         }
 
         if (ibrSettings == null)

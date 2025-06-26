@@ -248,6 +248,16 @@ public class Vector4 implements Iterable<Float>
         return new Vector4((float)operator.applyAsDouble(x), (float)operator.applyAsDouble(y), (float)operator.applyAsDouble(z), (float)operator.applyAsDouble(w));
     }
 
+    /**
+     * Applies operator to XYZ but leaves W unchanged.
+     * @param operator
+     * @return
+     */
+    public Vector4 applyOperatorXYZ(DoubleUnaryOperator operator)
+    {
+        return new Vector4((float)operator.applyAsDouble(x), (float)operator.applyAsDouble(y), (float)operator.applyAsDouble(z), w);
+    }
+
     @Override
     public String toString()
     {

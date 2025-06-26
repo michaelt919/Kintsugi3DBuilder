@@ -12,6 +12,9 @@
 package kintsugi3d.builder.resources.ibr;
 
 import java.util.List;
+
+import kintsugi3d.builder.core.ViewSet;
+import java.util.List;
 import java.util.Objects;
 
 import kintsugi3d.builder.core.ViewSet;
@@ -114,10 +117,7 @@ public abstract class IBRResourcesBase<ContextType extends Context<ContextType>>
     {
         for (int i = 0; i < this.getViewSet().getLightCount(); i++)
         {
-            if (Objects.equals(this.getViewSet().getLightIntensity(i), Vector3.ZERO))
-            {
-                this.getViewSet().setLightIntensity(i, lightIntensity);
-            }
+            this.getViewSet().setLightIntensity(i, lightIntensity);
         }
 
         this.getViewSet().setInfiniteLightSources(infiniteLightSources);

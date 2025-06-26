@@ -232,8 +232,8 @@
 <!--                        leaving the checkbox in here causes scenebuilder to not render???-->
 <!--                        <CheckBox disable="true" mnemonicParsing="false" text="Hide UI" visible="false" />-->
                         <Button fx:id="settingsButton" contentDisplay="CENTER" mnemonicParsing="false" onAction="#openSystemSettingsModal" prefHeight="25.0" prefWidth="80.0" styleClass="menubarbuttons" text="Settings">
-                            <HBox.margin>
-                                <Insets />
+                        <HBox.margin>
+                            <Insets />
                             </HBox.margin>
                         </Button>
                         <Button mnemonicParsing="false" onAction="#openAboutModal" text="About" />

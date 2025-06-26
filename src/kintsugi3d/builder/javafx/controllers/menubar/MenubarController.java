@@ -722,7 +722,7 @@ public class MenubarController
         compassCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("compassEnabled"));
         relightingCheckMenuItem.selectedProperty().bindBidirectional(
-                    internalModels.getSettingsModel().getBooleanProperty("relightingEnabled"));
+            internalModels.getSettingsModel().getBooleanProperty("relightingEnabled"));
         visibleLightsCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("visibleLightsEnabled"));
         visibleLightWidgetsCheckMenuItem.selectedProperty().bindBidirectional(

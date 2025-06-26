@@ -86,34 +86,4 @@ public abstract class SettingsModelBase implements SettingsModel
             }
         }
     }
-
-    public void createBooleanSetting(String name, boolean initialValue)
-    {
-        createBooleanSetting(name, initialValue, false);
-    }
-
-    public void createNumericSetting(String name, Number initialValue)
-    {
-        createNumericSetting(name, initialValue, false);
-    }
-
-    public void createObjectSetting(String name, Object initialValue)
-    {
-        createObjectSetting(name, initialValue, false);
-    }
-
-    public void createBooleanSetting(String name, boolean initialValue, boolean serialize)
-    {
-        createSetting(name, Boolean.class, initialValue, serialize);
-    }
-
-    public void createNumericSetting(String name, Number initialValue, boolean serialize)
-    {
-        createSetting(name, Number.class, initialValue, serialize);
-    }
-
-    public void createObjectSetting(String name, Object initialValue, boolean serialize)
-    {
-        createSetting(name, initialValue.getClass(), initialValue, serialize);
-    }
 }
