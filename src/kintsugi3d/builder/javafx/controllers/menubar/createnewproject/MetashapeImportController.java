@@ -74,9 +74,9 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         updateLoadedIndicators();
         //need to do Platform.runLater so updateModelSelectionChoiceBox can pull info from chunkSelectionChoiceBox
         chunkSelectionChoiceBox.setOnAction(event -> Platform.runLater(()->{
-                updateModelSelectionChoiceBox();
-                updateLoadedIndicators();
-
+            metashapeDocument.selectChunk(chunkSelectionChoiceBox.getValue());
+            updateModelSelectionChoiceBox();
+            updateLoadedIndicators();
         }));
 
         fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
@@ -277,8 +277,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
                 }
             }
         }
-
-        metashapeDocument.selectChunk(chunkSelectionChoiceBox.getValue());
     }
 
     private void updateLoadedIndicators() {
