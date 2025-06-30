@@ -18,7 +18,6 @@ import kintsugi3d.builder.io.ViewSetReader;
 import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
 import kintsugi3d.builder.io.ViewSetReaderFromVSET;
-import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeChunk;
 import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeModel;
 import kintsugi3d.gl.builders.ColorTextureBuilder;
 import kintsugi3d.gl.builders.ProgramBuilder;
@@ -240,7 +239,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         public Builder<ContextType> loadAgisoftFromZIP(MetashapeModel model, File supportingFilesDirectory)
             throws IOException, XMLStreamException
         {
-            this.viewSet = ViewSetReaderFromAgisoftXML.readChunkFromZip(model.getChunk(), supportingFilesDirectory);
+            this.viewSet = ViewSetReaderFromAgisoftXML.loadViewsetFromChunk(model.getChunk(), supportingFilesDirectory);
             updateViewSetFromLoadOptions();
             loadAndValidateGeometry();
             return this;
@@ -1108,6 +1107,12 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                 try (ImageUndistorter<?> undistort = new ImageUndistorter<>(getContext()))
                 {
                     undistort.undistortFile(getViewSet().findFullResImageFile(poseIndex), true, distortion, getViewSet().getPreviewImageFile(poseIndex));
+//                    undistort.undistortFile(
+//                            getViewSet().findFullResImageFile(poseIndex),
+//                            true,
+//                            distortion,
+//                            getViewSet().getPreviewImageFile(poseIndex),
+//                            getViewSet().getMask(poseIndex));
                 }
 
                 return true;

@@ -42,14 +42,15 @@ public class MetashapeChunk {
     private Optional<Integer> defaultModelID;
     private MetashapeModel currModel;
     private File thumbnailsDir;
+    private File masksDir = null;
 
     public static MetashapeChunk parseFromElement(MetashapeDocument document, Element chunkElement) throws IOException {
         Optional<Integer> chunkID = Optional.empty();
         String tempChunkID = chunkElement.getAttribute("id");
         if (!tempChunkID.isBlank()){
-           chunkID = Optional.of(Integer.parseInt(tempChunkID));
+            chunkID = Optional.of(Integer.parseInt(tempChunkID));
         }
-        //open doc.xml within each chunk and read the chunk's label attribute --> display it to user
+
         String chunkZipPath = chunkElement.getAttribute("path"); //gives xx/chunk.zip where xx is a number
 
         //append this path to the psxFilePath (without ".psx" at the end)
@@ -72,16 +73,16 @@ public class MetashapeChunk {
 
         Optional<String> chunkName = Optional.of(fullChunkElement.getAttribute("label"));
         if (chunkName.get().isBlank()){
-           chunkName = Optional.empty();
+            chunkName = Optional.empty();
         }
 
         //unzip frame.zip, use frame 0 by default
         NodeList frames =  fullChunkDocument.getElementsByTagName("frame");
         String frameZipPath = "";
         if (frames.getLength() > 0){
-           Element frameElem = (Element) frames.item(0);
-           String subPath = frameElem.getAttribute("path");
-           frameZipPath = new File(new File(chunkZipPath).getParent(), subPath).getAbsolutePath();
+            Element frameElem = (Element) frames.item(0);
+            String subPath = frameElem.getAttribute("path");
+            frameZipPath = new File(new File(chunkZipPath).getParent(), subPath).getAbsolutePath();
         }
 
         Document frameXML = null;
@@ -90,7 +91,6 @@ public class MetashapeChunk {
         } catch (IOException e) {
             log.error("An error occurred loading frame.xml for Metashape chunk:", e);
         }
-
 
         MetashapeChunk returned = new MetashapeChunk()
                 .setParentDocument(document)
@@ -101,6 +101,7 @@ public class MetashapeChunk {
                 .setDefaultModelID(defaultModelID);
 
         if (frameXML != null){
+            //parse thumbnail info
             NodeList list = frameXML.getElementsByTagName("thumbnails");
             if (list.getLength() > 0){
                 Element thumbnailsElem = (Element) list.item(0);
@@ -108,6 +109,17 @@ public class MetashapeChunk {
                 File thumbnailsDir = new File(new File(frameZipPath).getParent(), thumbnailsElem.getAttribute("path"));
                 if (thumbnailsDir.exists()){
                     returned.setThumbnailsDir(thumbnailsDir);
+                }
+            }
+
+            //parse mask info
+            list = frameXML.getElementsByTagName("masks");
+            if (list.getLength() > 0){
+                Element masksElem = (Element) list.item(0);
+                //masks path is relative to frame.zip's parent directory
+                File masksDir = new File(new File(frameZipPath).getParent(), masksElem.getAttribute("path"));
+                if (masksDir.exists()){
+                    returned.setMasksDir(masksDir);
                 }
             }
         }
@@ -147,6 +159,8 @@ public class MetashapeChunk {
 
         return returned;
     }
+
+    private void setMasksDir(File masksDir) { this.masksDir = masksDir; }
 
     public boolean hasModels(){
         return !models.isEmpty();
@@ -222,9 +236,8 @@ public class MetashapeChunk {
     }
 
     public MetashapeModel getSelectedModel() {
-       return currModel;
+        return currModel;
     }
-
 
     public Map<Integer, Image> loadThumbnailImageList() {
         return UnzipHelper.unzipImagesToMap(thumbnailsDir);
@@ -362,5 +375,9 @@ public class MetashapeChunk {
 
     public MetashapeDocument getParentDocument() {
         return this.metashapeDocument;
+    }
+
+    public File getMasksDirectory() {
+        return this.masksDir;
     }
 }

@@ -11,11 +11,13 @@
 
 package kintsugi3d.builder.io;
 
+import kintsugi3d.builder.app.ApplicationFolders;
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
 import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeChunk;
+import kintsugi3d.gl.util.UnzipHelper;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -27,6 +29,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.*;
+import java.nio.file.Files;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.zip.ZipEntry;
@@ -736,7 +739,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         return builder.finish();
     }
 
-    public static ViewSet readChunkFromZip(MetashapeChunk metashapeChunk, File supportingFilesDirectory)
+    public static ViewSet loadViewsetFromChunk(MetashapeChunk metashapeChunk, File supportingFilesDirectory)
         throws IOException, XMLStreamException
     {
         // Get reference to the chunk directory
@@ -802,11 +805,42 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         viewSet.setFullResImageDirectory(chunkDirectory.getParentFile().getParentFile());
                     }
 
+                    // mask info is inside frame.xml, so we need to read it outside of readFromStream() which takes chunk.xml
+                    File masksDir = metashapeChunk.getMasksDirectory();
+                    if (masksDir != null){
+                        copyMasks(viewSet, metashapeChunk);
+                    }
+
                     return viewSet;
                 }
             }
 
             throw new FileNotFoundException(MessageFormat.format("Could not find file {0} in zip {1}", targetFileName, zipFile));
         }
+    }
+
+    private static void copyMasks(ViewSet viewSet, MetashapeChunk metashapeChunk) {
+        File masksSrcDir = metashapeChunk.getMasksDirectory();
+
+        //get masks folder, then subfolder is viewset uuid
+        // (follow convention set by preview and fit image folders)
+        File masksDestinationDir = new File(new File(ApplicationFolders.getMasksDirectory().toUri()), viewSet.getUUID().toString());
+        masksDestinationDir.mkdirs();
+
+        if (masksSrcDir.toPath().endsWith(".zip")){
+            UnzipHelper.unzipImagesToDirectory(masksSrcDir, masksDestinationDir);
+        }
+        else{
+            //copy images like normal
+            try{
+                for (File imgFile : masksSrcDir.listFiles()) {
+                    Files.copy(imgFile.toPath(), new File(masksDestinationDir, imgFile.getName()).toPath());
+                }
+            } catch (NullPointerException | IOException e) {
+                log.error(MessageFormat.format("Failed to copy masks from {0} to {1}", masksSrcDir.getPath(), masksDestinationDir.getPath()));
+            }
+        }
+
+        //TODO: viewSet.setMasksDir( the directory )
     }
 }

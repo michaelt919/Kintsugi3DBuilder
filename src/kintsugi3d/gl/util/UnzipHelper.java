@@ -23,6 +23,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
+import javax.imageio.ImageIO;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
@@ -178,7 +179,6 @@ public class UnzipHelper {
     }
 
     public static Map<Integer, Image> unzipImagesToMap(File imgsDir) {
-        //ideally this would work with both thumbnails and masks and whatever else it needs to be compatible with
         //  <thumbnail camera_id="0" path="c0.png"/>
 
         Map<Integer, Image> imagesMap= new HashMap<>();
@@ -230,5 +230,30 @@ public class UnzipHelper {
 
         log.info("Total images extracted: " + imagesMap.size());
         return imagesMap;
+    }
+
+    public static void unzipImagesToDirectory(File zippedDir, File destinationDir) {
+        int numImages = 0;
+        try (ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zippedDir))) {
+            ZipEntry entry;
+            while ((entry = zipInputStream.getNextEntry()) != null) {
+                String entryName = entry.getName();
+                if (isValidImageType(entryName)) {
+                    Image image = readImageData(zipInputStream, entryName);
+
+                    int i = entryName.lastIndexOf('.');
+                    String extension =  entryName.substring(i + 1).toUpperCase();
+
+                    ImageIO.write(SwingFXUtils.fromFXImage(image, null), extension, new File(destinationDir, entryName));
+                    numImages++;
+                }
+                zipInputStream.closeEntry();
+            }
+
+        } catch (IOException | ImageReadException e) {
+            log.error("Error unzipping images:", e);
+        }
+
+        log.info("Total images extracted: " + numImages);
     }
 }

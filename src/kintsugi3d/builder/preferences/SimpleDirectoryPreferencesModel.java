@@ -21,6 +21,7 @@ public class SimpleDirectoryPreferencesModel implements DirectoryPreferencesMode
     private Path previewImagesDirectory = null;
     private Path logFileDirectory = null;
     private Path cacheDirectory = null;
+    private Path masksDirectory = null;
 
     private SimpleDirectoryPreferencesModel() {}
 
@@ -57,6 +58,16 @@ public class SimpleDirectoryPreferencesModel implements DirectoryPreferencesMode
     public Path getCacheDirectory()
     {
         return cacheDirectory;
+    }
+
+    @Override
+    public void setMasksDirectory(Path masksDirectory) {
+        this.masksDirectory =  masksDirectory;
+    }
+
+    @Override
+    public Path getMasksDirectory() {
+        return masksDirectory;
     }
 
     @Override
