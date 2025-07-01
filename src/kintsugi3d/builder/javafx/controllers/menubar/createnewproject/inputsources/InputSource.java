@@ -29,35 +29,49 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class InputSource {
-    private static final int THUMBNAIL_SIZE = 30;
-    private TreeView<String> treeView;
     protected PrimaryViewSelectionModel primaryViewSelectionModel;
+
     protected SearchableTreeView searchableTreeView;
     public static final TreeItem<String> NONE_ITEM = new TreeItem<>("Keep Imported Orientation");
     private boolean includeNoneItem = true;
 
+    private static final int THUMBNAIL_SIZE = 30;
+
     public abstract List<FileChooser.ExtensionFilter> getExtensionFilters();
-    abstract ViewSetReader getCameraFileReader();
-    public void verifyInfo(File fullResDirectoryOverride)
+
+    public abstract void initTreeView();
+
+    public abstract void loadProject(String primaryView, double rotate);
+
+    @Override
+    public abstract boolean equals(Object obj);
+
+    public void verifyInfo()
     {
     }
 
     public void setSearchableTreeView(SearchableTreeView searchableTreeView){
         this.searchableTreeView = searchableTreeView;
-        this.treeView = searchableTreeView.getTreeView();
     }
 
     public PrimaryViewSelectionModel getPrimarySelectionModel(){
         return this.primaryViewSelectionModel;
     }
 
-    public abstract void initTreeView();
+    public void setOrientationViewDefaultSelections(PrimaryViewSelectController controller)
+    {
+        searchableTreeView.getTreeView().getSelectionModel().select(1);
+        controller.setImageRotation(0);
+    }
 
-    public abstract void loadProject(String primaryView, double rotate);
+    public void setIncludeNoneItem(boolean include)
+    {
+        this.includeNoneItem = include;
+    }
 
     protected void addTreeElems(PrimaryViewSelectionModel primaryViewSelectionModel){
         TreeItem<String> rootItem = new TreeItem<>(primaryViewSelectionModel.getName());
-        treeView.setRoot(rootItem);
+        searchableTreeView.getTreeView().setRoot(rootItem);
 
         List<View> views = primaryViewSelectionModel.getViews();
 
@@ -104,7 +118,7 @@ public abstract class InputSource {
         }
 
         //unroll treeview
-        treeView.getRoot().setExpanded(true);
+        searchableTreeView.getTreeView().getRoot().setExpanded(true);
     }
 
     private static TreeItem<String> createTreeItem(Map<Integer, Image> thumbnailImgList, View view) {
@@ -121,19 +135,5 @@ public abstract class InputSource {
         thumbnailImgView.setFitHeight(THUMBNAIL_SIZE);
 
         return new TreeItem<>(view.name, thumbnailImgView);
-    }
-
-    @Override
-    public abstract boolean equals(Object obj);
-
-    public void setOrientationViewDefaultSelections(PrimaryViewSelectController controller)
-    {
-        treeView.getSelectionModel().select(1);
-        controller.setImageRotation(0);
-    }
-
-    public void setIncludeNoneItem(boolean include)
-    {
-        this.includeNoneItem = include;
     }
 }

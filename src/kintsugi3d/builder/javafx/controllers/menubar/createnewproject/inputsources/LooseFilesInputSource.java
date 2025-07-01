@@ -40,11 +40,6 @@ public class LooseFilesInputSource extends InputSource{
         return list;
     }
 
-    @Override
-    public ViewSetReader getCameraFileReader() {
-        return null;
-    }
-
     public LooseFilesInputSource setCameraFile(File camFile){
         this.cameraFile = camFile;
         return this;
@@ -72,11 +67,11 @@ public class LooseFilesInputSource extends InputSource{
         try {
             if (cameraFile.getName().endsWith(".xml")) // Agisoft Metashape
             {
-                primaryViewSelectionModel = AgisoftPrimaryViewSelectionModel.createInstance(cameraFile, photosDir);
+                primaryViewSelectionModel = new AgisoftPrimaryViewSelectionModel(cameraFile, photosDir);
             }
             else if (cameraFile.getName().endsWith(".csv")) // RealityCapture
             {
-                primaryViewSelectionModel = GenericPrimaryViewSelectionModel.createInstance(cameraFile.getName(),
+                primaryViewSelectionModel = new GenericPrimaryViewSelectionModel(cameraFile.getName(),
                         ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile, meshFile, photosDir, true));
             }
             else

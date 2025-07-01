@@ -40,23 +40,15 @@ import java.util.List;
 public class MetashapeProjectInputSource extends InputSource{
     private static final Logger log = LoggerFactory.getLogger(MetashapeProjectInputSource.class);
     private MetashapeModel model;
+
     @Override
     public List<FileChooser.ExtensionFilter> getExtensionFilters() {
         return Collections.singletonList(new FileChooser.ExtensionFilter("Agisoft Metashape XML file", "*.xml"));
     }
 
     @Override
-    public ViewSetReader getCameraFileReader() {
-        return ViewSetReaderFromAgisoftXML.getInstance();
-    }
-    public MetashapeProjectInputSource setMetashapeModel(MetashapeModel model){
-        this.model = model;
-        return this;
-    }
-    @Override
-    public void verifyInfo(File fullResOverride){
+    public void verifyInfo(){
         MetashapeChunk parentChunk = model.getChunk();
-        model.getLoadPreferences().fullResOverride = fullResOverride;
 
         // Open the xml files that contains all the cameras' ids and file paths
         Document frame = parentChunk.getFrameXML();
@@ -92,26 +84,15 @@ public class MetashapeProjectInputSource extends InputSource{
         }
     }
 
-    private static File getImageFromFrameCam(Element cameraElement, MetashapeChunk chunk) {
-        File fullResOverride = chunk.getSelectedModel().getLoadPreferences().fullResOverride;
-        String pathAttribute = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
-
-        File imageFile;
-        if (fullResOverride != null) {
-            //user selected an override
-            String pathAttributeName = new File(pathAttribute).getName();
-            imageFile = new File(fullResOverride, pathAttributeName);
-        } else {
-            //no override
-            File fullResDir = new File(chunk.getFramePath()).getParentFile();
-            imageFile = new File(fullResDir, pathAttribute);
-        }
-        return imageFile;
+    @Override
+    public boolean equals(Object obj) {
+        //TODO
+        return false;
     }
 
     @Override
     public void initTreeView() {
-        primaryViewSelectionModel = AgisoftPrimaryViewSelectionModel.createInstance(model);
+        primaryViewSelectionModel = new AgisoftPrimaryViewSelectionModel(model);
         addTreeElems(primaryViewSelectionModel);
         searchableTreeView.bind();
     }
@@ -124,17 +105,9 @@ public class MetashapeProjectInputSource extends InputSource{
         new Thread(() -> MultithreadModels.getInstance().getIOModel().loadAgisoftFromZIP(model)).start();
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        //TODO
-        return false;
-//        if (!(obj instanceof MetashapeProjectInputSource)){
-//            return false;
-//        }
-//
-//        MetashapeProjectInputSource other = (MetashapeProjectInputSource) obj;
-//
-//        return this.metashapeChunk.equals(other.metashapeChunk);
+    public MetashapeProjectInputSource setMetashapeModel(MetashapeModel model){
+        this.model = model;
+        return this;
     }
 
     public void showMissingImgsAlert(MissingImagesException mie) {
@@ -159,11 +132,11 @@ public class MetashapeProjectInputSource extends InputSource{
             directoryChooser.setInitialDirectory(new File(model.getChunk().getParentDocument().getPsxFilePath()).getParentFile());
 
             directoryChooser.setTitle("Choose New Image Directory");
-            File newCamsFile = directoryChooser.showDialog(MenubarController.getInstance().getWindow());
 
+            model.getLoadPreferences().fullResOverride = directoryChooser.showDialog(MenubarController.getInstance().getWindow());
             try
             {
-                verifyInfo(newCamsFile);
+                verifyInfo();
                 initTreeView();
             }
             catch(MissingImagesException mie2)
@@ -180,5 +153,22 @@ public class MetashapeProjectInputSource extends InputSource{
 
         alert.setTitle("Project is Missing Images");
         alert.show();
+    }
+
+    private static File getImageFromFrameCam(Element cameraElement, MetashapeChunk chunk) {
+        File fullResOverride = chunk.getSelectedModel().getLoadPreferences().fullResOverride;
+        String pathAttribute = ((Element) cameraElement.getElementsByTagName("photo").item(0)).getAttribute("path");
+
+        File imageFile;
+        if (fullResOverride != null) {
+            //user selected an override
+            String pathAttributeName = new File(pathAttribute).getName();
+            imageFile = new File(fullResOverride, pathAttributeName);
+        } else {
+            //no override
+            File fullResDir = new File(chunk.getFramePath()).getParentFile();
+            imageFile = new File(fullResDir, pathAttribute);
+        }
+        return imageFile;
     }
 }

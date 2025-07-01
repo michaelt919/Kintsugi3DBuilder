@@ -34,14 +34,9 @@ public class RealityCaptureInputSource extends InputSource{
     }
 
     @Override
-    public ViewSetReader getCameraFileReader() {
-        return ViewSetReaderFromRealityCaptureCSV.getInstance();
-    }
-
-    @Override
     public void initTreeView() {
         try {
-            primaryViewSelectionModel = GenericPrimaryViewSelectionModel.createInstance(cameraFile.getName(),
+            primaryViewSelectionModel = new GenericPrimaryViewSelectionModel(cameraFile.getName(),
                     ViewSetReaderFromRealityCaptureCSV.getInstance().readFromFile(cameraFile, meshFile, photosDir, true));
 
             addTreeElems(primaryViewSelectionModel);

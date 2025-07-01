@@ -14,7 +14,6 @@ package kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsour
 import javafx.scene.control.TreeItem;
 import javafx.stage.FileChooser;
 import kintsugi3d.builder.core.ViewSet;
-import kintsugi3d.builder.io.ViewSetReader;
 import kintsugi3d.builder.io.primaryview.GenericPrimaryViewSelectionModel;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.PrimaryViewSelectController;
@@ -31,16 +30,10 @@ public class CurrentProjectInputSource extends InputSource
     }
 
     @Override
-    ViewSetReader getCameraFileReader()
-    {
-        return null;
-    }
-
-    @Override
     public void initTreeView()
     {
         ViewSet currentViewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();
-        primaryViewSelectionModel = GenericPrimaryViewSelectionModel.createInstance("Current Project", currentViewSet);
+        primaryViewSelectionModel = new GenericPrimaryViewSelectionModel("Current Project", currentViewSet);
 
         addTreeElems(primaryViewSelectionModel);
         searchableTreeView.bind();

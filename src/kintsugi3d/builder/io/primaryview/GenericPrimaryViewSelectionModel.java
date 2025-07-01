@@ -30,15 +30,10 @@ public final class GenericPrimaryViewSelectionModel implements PrimaryViewSelect
     private final String name;
     private final ViewSet viewSet;
 
-    private GenericPrimaryViewSelectionModel(String name, ViewSet viewSet)
+    public GenericPrimaryViewSelectionModel(String name, ViewSet viewSet)
     {
         this.name = name;
         this.viewSet = viewSet;
-    }
-
-    public static PrimaryViewSelectionModel createInstance(String name, ViewSet viewSet)
-    {
-        return new GenericPrimaryViewSelectionModel(name, viewSet);
     }
 
     @Override

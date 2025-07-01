@@ -98,7 +98,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
             //create an unbound instance and only bind elements when we know chunkTreeView.getRoot() != null
             source.setSearchableTreeView(SearchableTreeView.createUnboundInstance(chunkTreeView, imgSearchTxtField, regexMode));
             try {
-                source.verifyInfo(null);
+                source.verifyInfo();
                 source.initTreeView();
                 source.setOrientationViewDefaultSelections(this);
             } catch (MissingImagesException mie) {

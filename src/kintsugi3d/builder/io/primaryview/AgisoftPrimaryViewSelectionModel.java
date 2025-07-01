@@ -39,23 +39,21 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
     private static final Logger log = LoggerFactory.getLogger(AgisoftPrimaryViewSelectionModel.class);
     private final String chunkName;
     private final List<View> views;
-    private final Map<Integer, Image> thumbnails;
-    private Document cameraDocument;
     private final List<Element> cameras;
     private File fullResSearchDir;
 
     private Map<Integer, String> cameraIdToFullRes;
-    private Map<Integer, String> cameraIdToThumbnails;
+    private final Map<Integer, Image> cameraIdToThumbnails;
 
     //custom import path
-    private AgisoftPrimaryViewSelectionModel(File cameraFile, File fullResSearchDir) throws ParserConfigurationException, IOException, SAXException
+    public AgisoftPrimaryViewSelectionModel(File cameraFile, File fullResSearchDir) throws ParserConfigurationException, IOException, SAXException
     {
         this.fullResSearchDir = fullResSearchDir;
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder;
         builder = factory.newDocumentBuilder();
 
-        cameraDocument = builder.parse(cameraFile);
+        Document cameraDocument = builder.parse(cameraFile);
 
         //get chunk name
         Element chunkElem = (Element) cameraDocument.getElementsByTagName("chunk").item(0);
@@ -77,7 +75,7 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
 
         //prev-res images haven't been generated and no thumbnails are present,
         //so leave thumbnails list empty
-        thumbnails = new HashMap<>();
+        cameraIdToThumbnails = new HashMap<>();
 
         cameraIdToFullRes = new HashMap<>();
         for (View view : views){
@@ -89,13 +87,13 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
     }
 
     //metashape import path
-    private AgisoftPrimaryViewSelectionModel(MetashapeModel model)
+    public AgisoftPrimaryViewSelectionModel(MetashapeModel model)
     {
         MetashapeChunk parentChunk = model.getChunk();
         this.chunkName = parentChunk.getLabel();
         this.cameras = MetashapeChunk.findEnabledCameras(parentChunk.findChunkXmlCameras());
         this.views = getViews(cameras.stream());
-        this.thumbnails = parentChunk.loadThumbnailImageList();
+        this.cameraIdToThumbnails = parentChunk.loadThumbnailImageList();
 
         try{
             this.cameraIdToFullRes = parentChunk.buildCameraPathsMap(false);
@@ -103,46 +101,6 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
         catch(FileNotFoundException fnfe){
            log.warn("Failed to find source directories in Metashape project. Project images may not be found.", fnfe);
         }
-    }
-
-    private static List<View> getViews(Stream<Element> cameras)
-    {
-        return cameras
-            .filter(camera ->
-            {
-                String enabled = camera.getAttribute("enabled");
-                return "true".equals(enabled) ||
-                    "1".equals(enabled) ||
-                    enabled.isEmpty(); /*cam is enabled by default*/
-            })
-            .map(camera ->
-            {
-                Element parent = (Element) camera.getParentNode();
-                String label = camera.getAttribute("label");
-                String id = camera.getAttribute("id");
-                int parsedId = !id.isBlank() ? Integer.parseInt(id) : -1;
-
-                if("group".equals(parent.getTagName())) // (either a group or the root node)
-                {
-                    return new View(label, parsedId, parent.getAttribute("label"));
-                }
-                else
-                {
-                    return new View(label, parsedId, null);
-                }
-            })
-            .collect(Collectors.toUnmodifiableList());
-    }
-
-
-    public static PrimaryViewSelectionModel createInstance(File cameraFile, File fullResOverride) throws ParserConfigurationException, IOException, SAXException
-    {
-        return new AgisoftPrimaryViewSelectionModel(cameraFile, fullResOverride);
-    }
-
-    public static PrimaryViewSelectionModel createInstance(MetashapeModel model)
-    {
-        return new AgisoftPrimaryViewSelectionModel(model);
     }
 
     @Override
@@ -160,7 +118,7 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
     @Override
     public Map<Integer, Image> getThumbnails()
     {
-        return thumbnails;
+        return cameraIdToThumbnails;
     }
 
     @Override
@@ -175,16 +133,16 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
         //hopefully the camera is in the camera paths map and we don't really have to do much work
         String selectedCamId = selectedItemCam.getAttribute("id");
         if (!selectedCamId.isBlank()){
-           try{
-               int id = Integer.parseInt(selectedCamId);
-               String path = cameraIdToFullRes.get(id);
-               if (path != null){
-                   return Optional.of(path);
-               }
-           }
-           catch(NumberFormatException nfe){
-               log.warn("Failed to parse camera id.", nfe);
-           }
+            try{
+                int id = Integer.parseInt(selectedCamId);
+                String path = cameraIdToFullRes.get(id);
+                if (path != null){
+                    return Optional.of(path);
+                }
+            }
+            catch(NumberFormatException nfe){
+                log.warn("Failed to parse camera id.", nfe);
+            }
         }
 
         //need full label to find img path
@@ -214,6 +172,35 @@ public final class AgisoftPrimaryViewSelectionModel implements PrimaryViewSelect
 
         //give up
         return Optional.empty();
+    }
+
+    private static List<View> getViews(Stream<Element> cameras)
+    {
+        return cameras
+            .filter(camera ->
+            {
+                String enabled = camera.getAttribute("enabled");
+                return "true".equals(enabled) ||
+                    "1".equals(enabled) ||
+                    enabled.isEmpty(); /*cam is enabled by default*/
+            })
+            .map(camera ->
+            {
+                Element parent = (Element) camera.getParentNode();
+                String label = camera.getAttribute("label");
+                String id = camera.getAttribute("id");
+                int parsedId = !id.isBlank() ? Integer.parseInt(id) : -1;
+
+                if("group".equals(parent.getTagName())) // (either a group or the root node)
+                {
+                    return new View(label, parsedId, parent.getAttribute("label"));
+                }
+                else
+                {
+                    return new View(label, parsedId, null);
+                }
+            })
+            .collect(Collectors.toUnmodifiableList());
     }
 
     private Element findTargetCamera(String imageName) {

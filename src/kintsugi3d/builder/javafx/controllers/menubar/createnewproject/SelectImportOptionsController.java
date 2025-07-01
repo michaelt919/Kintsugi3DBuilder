@@ -43,8 +43,10 @@ public class SelectImportOptionsController extends FXMLPageController {
         buttons.getToggles().add(looseFilesImportButton);
         buttons.getToggles().add(realityCaptureImportButton);
 
+        //add dummy input sources so we can add info to them later
         metashapeImportButton.setOnAction(e -> handleButtonSelect(metashapeImportButton,
                 "/fxml/menubar/createnewproject/MetashapeImport.fxml", new MetashapeProjectInputSource()));
+
         looseFilesImportButton.setOnAction(e-> handleButtonSelect(looseFilesImportButton,
                 "/fxml/menubar/createnewproject/CustomImport.fxml", new LooseFilesInputSource()));
 
@@ -73,6 +75,7 @@ public class SelectImportOptionsController extends FXMLPageController {
         }
     }
 
+    //have this so we can navigate to loose files selection from inside an error message somewhere else
     public void looseFilesSelect() {
         hostPage.setNextPage(hostScrollerController.getPage("/fxml/menubar/createnewproject/CustomImport.fxml"));
         hostScrollerController.nextPage();
