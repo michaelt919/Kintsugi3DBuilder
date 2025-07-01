@@ -170,7 +170,7 @@ public class MetashapeChunk {
         this.thumbnailsDir = thumbnailsDir;
     }
 
-    private void selectModel(MetashapeModel model) {
+    public void selectModel(MetashapeModel model) {
         currModel = model;
     }
 
@@ -339,20 +339,6 @@ public class MetashapeChunk {
         return currModel.getPath();
     }
 
-    public boolean equals(Object rhs) {
-        if (!(rhs instanceof MetashapeChunk)) {
-            return false;
-        }
-
-        MetashapeChunk moc = (MetashapeChunk) rhs;
-        //chunk name is the same
-        //psx path is the same
-
-        //TODO: may need to revisit this method if more precise criteria are needed
-
-        return this.label.equals(moc.getLabel()) && this.metashapeDocument.getPsxFilePath().equals(moc.metashapeDocument.getPsxFilePath());
-    }
-
     public List<MetashapeModel> getModels() {
         return models;
     }
@@ -383,5 +369,22 @@ public class MetashapeChunk {
 
     public void setMasksDirectory(File dir) {
         this.masksDir = dir;
+    }
+
+    @Override
+    public boolean equals(Object rhs) {
+        if (!(rhs instanceof MetashapeChunk)) {
+            return false;
+        }
+
+        MetashapeChunk other = (MetashapeChunk) rhs;
+
+        //chunk name is the same
+        //psx path is the same
+        //selected models are equal
+
+        return this.label.equals(other.label) &&
+                this.metashapeDocument.getPsxFilePath().equals(other.metashapeDocument.getPsxFilePath()) &&
+                this.getSelectedModel().equals(other.getSelectedModel());
     }
 }

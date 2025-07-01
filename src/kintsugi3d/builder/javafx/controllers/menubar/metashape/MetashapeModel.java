@@ -104,4 +104,18 @@ public class MetashapeModel {
     public MetashapeChunk getChunk() {
         return chunk;
     }
+
+    @Override
+    public boolean equals(Object obj){
+
+        if (!(obj instanceof MetashapeModel)){
+            return false;
+        }
+
+        MetashapeModel other = (MetashapeModel) obj;
+
+        return this.id.equals(other.id) &&
+                this.label.equals(other.label) &&
+                this.path.equals(other.path);
+    }
 }

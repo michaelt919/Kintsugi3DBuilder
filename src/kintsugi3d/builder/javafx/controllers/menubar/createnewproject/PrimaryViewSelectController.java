@@ -92,7 +92,7 @@ public class PrimaryViewSelectController extends FXMLPageController implements C
     public void refresh() {
         InputSource sharedSource = hostScrollerController.getInfo(ShareInfo.Info.INPUT_SOURCE);
 
-        if (!sharedSource.equals(source)) {
+        if (!sharedSource.equals(source)) { //check if sources are equal so we don't have to unzip images multiple times
             source = sharedSource;
 
             //create an unbound instance and only bind elements when we know chunkTreeView.getRoot() != null

@@ -18,8 +18,6 @@ import javafx.scene.control.ButtonBase;
 import javafx.scene.control.ButtonType;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
-import kintsugi3d.builder.io.ViewSetReader;
-import kintsugi3d.builder.io.ViewSetReaderFromAgisoftXML;
 import kintsugi3d.builder.io.primaryview.AgisoftPrimaryViewSelectionModel;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.ProjectIO;
@@ -86,8 +84,20 @@ public class MetashapeProjectInputSource extends InputSource{
 
     @Override
     public boolean equals(Object obj) {
-        //TODO
-        return false;
+        if (!(obj instanceof MetashapeProjectInputSource)){
+            return false;
+        }
+
+        MetashapeProjectInputSource other = (MetashapeProjectInputSource) obj;
+
+        //model and mask directory (if enabled) must be the same
+        if (!this.model.equals(other.model)){
+            return false;
+        }
+
+        //TODO: also check masks directory
+
+        return true;
     }
 
     @Override
@@ -141,7 +151,7 @@ public class MetashapeProjectInputSource extends InputSource{
             }
             catch(MissingImagesException mie2)
             {
-                    Platform.runLater(() -> showMissingImgsAlert(mie2));
+                Platform.runLater(() -> showMissingImgsAlert(mie2));
             }
         });
 

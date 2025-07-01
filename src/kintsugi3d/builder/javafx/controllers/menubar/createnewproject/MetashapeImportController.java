@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 
 public class MetashapeImportController extends FXMLPageController implements ShareInfo {
     private static final Logger log = LoggerFactory.getLogger(MetashapeImportController.class);
@@ -56,6 +57,8 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
     private static final String NO_MODEL_ID_MSG = "No Model ID";
     private static final String NO_MODEL_NAME_MSG = "Unnamed Model";
+    private static final String SPACER = "   ";
+
     private volatile boolean alertShown = false;
 
     @FXML private FileChooser psxFileChooser;
@@ -72,7 +75,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         psxFileChooser.setTitle("Choose .psx file");
         psxFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Metashape files (*.psx)", "*.psx"));
         psxFileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
-
 
         masksDirChooser = new DirectoryChooser();
         masksDirChooser.setTitle("Choose masks directory");
@@ -95,6 +97,21 @@ public class MetashapeImportController extends FXMLPageController implements Sha
             updateLoadedIndicators();
             updateMaskPath();
         }));
+
+        modelSelectionChoiceBox.setOnAction(event -> {
+            String selection = modelSelectionChoiceBox.getValue();
+
+            String name = getModelNameFromSelection(selection);
+            String id = getModelIDFromSelection(selection);
+            Optional<Integer> optId = id != null ? Optional.of(Integer.parseInt(id)) : Optional.empty();
+
+            for (MetashapeModel model : metashapeDocument.getSelectedChunk().getModels()){
+                if (name.equals(model.getLabel()) &&
+                       optId.equals( model.getId())){
+                   metashapeDocument.getSelectedChunk().selectModel(model);
+                }
+            }
+        });
 
         psxFileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
     }
@@ -124,6 +141,15 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         }
 
         return selectionAsString.substring(0, selectionAsString.indexOf(' '));
+    }
+
+    private static String getModelNameFromSelection(String selectionAsString) {
+        //TODO: need to revisit this when formatting of model selection choice box changes
+        if (selectionAsString.endsWith(NO_MODEL_NAME_MSG)){
+            return "";
+        }
+
+        return selectionAsString.substring(selectionAsString.indexOf(' ') + SPACER.length());
     }
 
     @FXML
@@ -181,7 +207,7 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         for (MetashapeModel model : metashapeDocument.getSelectedChunk().getModels()) {
             String modelID = model.getId().isPresent() ? String.valueOf(model.getId().get()) : NO_MODEL_ID_MSG;
             String modelName = !model.getLabel().isBlank() ? model.getLabel() : NO_MODEL_NAME_MSG;
-            modelSelectionChoiceBox.getItems().add(modelID + "   " + modelName);
+            modelSelectionChoiceBox.getItems().add(modelID + SPACER + modelName);
         }
 
 
@@ -212,7 +238,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
                 break;
             }
         }
-
     }
 
     private void showMissingItemsAlert(String title, String msg) {
