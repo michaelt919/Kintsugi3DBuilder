@@ -14,8 +14,6 @@ package kintsugi3d.builder.core;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import kintsugi3d.builder.metrics.ViewRMSE;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
@@ -28,12 +26,6 @@ import kintsugi3d.gl.vecmath.Vector4;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * A class representing a collection of photographs, or views.
@@ -95,6 +87,8 @@ public final class ViewSet implements ReadonlyViewSet
      */
     private final List<File> imageFiles;
 
+    private final List<File> maskFiles;
+
     private final List<ViewRMSE> viewErrorMetrics;
 
     /**
@@ -126,6 +120,11 @@ public final class ViewSet implements ReadonlyViewSet
      * The directory where the results of the texture / specular fitting are stored
      */
     private File supportingFilesDirectory;
+
+    /**
+     * The directory where the masks are stored, if any are present (null if no masks)
+     */
+    private File masksDirectory;
 
     /**
      * The mesh file.
@@ -391,6 +390,7 @@ public final class ViewSet implements ReadonlyViewSet
         this.cameraProjectionIndexList = new ArrayList<>(initialCapacity);
         this.lightIndexList = new ArrayList<>(initialCapacity);
         this.imageFiles = new ArrayList<>(initialCapacity);
+        this.maskFiles = new ArrayList<>(initialCapacity);
         this.viewErrorMetrics = new ArrayList<>(initialCapacity);
 
         // Often these lists will have just one element
@@ -857,6 +857,14 @@ public final class ViewSet implements ReadonlyViewSet
             ImageFinder.getInstance().getImageFileNameWithFormat(this.getImageFileName(poseIndex), "png"));
     }
 
+    @Override
+    public File getMask(int poseIndex) {
+        if (maskFiles.isEmpty()){
+            return null;
+        }
+        return maskFiles.get(poseIndex);
+    }
+
     public int getPreviewWidth()
     {
         return previewWidth;
@@ -1129,5 +1137,13 @@ public final class ViewSet implements ReadonlyViewSet
     public void setOrientationViewRotationDegrees(double rotation)
     {
         orientationViewRotationDegrees = rotation;
+    }
+
+    public void setMasksDirectory(File dir){
+        masksDirectory = dir;
+    }
+
+    public void addMasks(List<File> masks) {
+        maskFiles.addAll(masks);
     }
 }

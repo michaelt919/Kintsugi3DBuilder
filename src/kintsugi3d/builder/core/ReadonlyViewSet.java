@@ -131,6 +131,13 @@ public interface ReadonlyViewSet
     File getPreviewImageFile(int poseIndex);
 
     /**
+     * Gets the mask of a particular view, if it exists
+     * @param poseIndex The index of the image file to retrieve.
+     * @return The image file.
+     */
+    File getMask(int poseIndex);
+
+    /**
      * Gets the view index to be used for color calibration and tonemapping operations
      * @return view index
      */

@@ -30,6 +30,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.zip.ZipEntry;
@@ -827,20 +828,23 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         File masksDestinationDir = new File(new File(ApplicationFolders.getMasksDirectory().toUri()), viewSet.getUUID().toString());
         masksDestinationDir.mkdirs();
 
-        if (masksSrcDir.toPath().endsWith(".zip")){
-            UnzipHelper.unzipImagesToDirectory(masksSrcDir, masksDestinationDir);
+        List<File> masks = new ArrayList<>();
+        if (masksSrcDir.toString().endsWith(".zip")){
+            masks = UnzipHelper.unzipImagesToDirectory(masksSrcDir, masksDestinationDir);
         }
         else{
             //copy images like normal
             try{
                 for (File imgFile : masksSrcDir.listFiles()) {
-                    Files.copy(imgFile.toPath(), new File(masksDestinationDir, imgFile.getName()).toPath());
+                    Path path = Files.copy(imgFile.toPath(), new File(masksDestinationDir, imgFile.getName()).toPath());
+                    masks.add(path.toFile());
                 }
             } catch (NullPointerException | IOException e) {
                 log.error(MessageFormat.format("Failed to copy masks from {0} to {1}", masksSrcDir.getPath(), masksDestinationDir.getPath()));
             }
         }
 
-        //TODO: viewSet.setMasksDir( the directory )
+        viewSet.setMasksDirectory(masksDestinationDir);
+        viewSet.addMasks(masks);
     }
 }

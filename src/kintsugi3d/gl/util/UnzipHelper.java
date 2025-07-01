@@ -232,8 +232,13 @@ public class UnzipHelper {
         return imagesMap;
     }
 
-    public static void unzipImagesToDirectory(File zippedDir, File destinationDir) {
-        int numImages = 0;
+    public static List<File> unzipImagesToDirectory(File zippedDir, File destinationDir) {
+
+        //  <mask camera_id="0" path="c0.png"/>
+        //this function assumes that masks are listed in order by camera id
+
+        List<File> imgFiles = new ArrayList<>();
+
         try (ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zippedDir))) {
             ZipEntry entry;
             while ((entry = zipInputStream.getNextEntry()) != null) {
@@ -244,8 +249,12 @@ public class UnzipHelper {
                     int i = entryName.lastIndexOf('.');
                     String extension =  entryName.substring(i + 1).toUpperCase();
 
-                    ImageIO.write(SwingFXUtils.fromFXImage(image, null), extension, new File(destinationDir, entryName));
-                    numImages++;
+                    File imgFile = new File(destinationDir, entryName);
+
+                    //TODO: copying masks takes a long time (8 mins in debug mode for 150 images)
+                    //include in progress bar?
+                    ImageIO.write(SwingFXUtils.fromFXImage(image, null), extension, imgFile);
+                    imgFiles.add(imgFile);
                 }
                 zipInputStream.closeEntry();
             }
@@ -254,6 +263,7 @@ public class UnzipHelper {
             log.error("Error unzipping images:", e);
         }
 
-        log.info("Total images extracted: " + numImages);
+        log.info("Total images extracted: " + imgFiles.size());
+        return imgFiles;
     }
 }
