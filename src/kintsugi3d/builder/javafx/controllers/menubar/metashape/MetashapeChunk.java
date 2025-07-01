@@ -380,4 +380,8 @@ public class MetashapeChunk {
     public File getMasksDirectory() {
         return this.masksDir;
     }
+
+    public void setMasksDirectory(File dir) {
+        this.masksDir = dir;
+    }
 }

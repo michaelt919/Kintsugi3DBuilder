@@ -21,6 +21,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.InputSource;
@@ -44,6 +45,10 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     @FXML private AnchorPane anchorPane;
     @FXML private Text loadMetashapeObject;
 
+    @FXML private CheckBox useMasksCheckbox;
+    @FXML private Label masksDirLabel;
+    @FXML private Button chooseMasksDirButton;
+
     @FXML private ChoiceBox<String> chunkSelectionChoiceBox;
     @FXML private ChoiceBox<String> modelSelectionChoiceBox;
 
@@ -53,7 +58,9 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     private static final String NO_MODEL_NAME_MSG = "Unnamed Model";
     private volatile boolean alertShown = false;
 
-    FileChooser fileChooser;
+    @FXML private FileChooser psxFileChooser;
+    @FXML private DirectoryChooser masksDirChooser;
+
     @Override
     public Region getHostRegion() {
         return anchorPane;
@@ -61,12 +68,20 @@ public class MetashapeImportController extends FXMLPageController implements Sha
 
     @Override
     public void init() {
-        fileChooser = new FileChooser();
-        fileChooser.setTitle("Choose .psx file");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Metashape files (*.psx)", "*.psx"));
-        fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
+        psxFileChooser = new FileChooser();
+        psxFileChooser.setTitle("Choose .psx file");
+        psxFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Metashape files (*.psx)", "*.psx"));
+        psxFileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
+
+
+        masksDirChooser = new DirectoryChooser();
+        masksDirChooser.setTitle("Choose masks directory");
+        masksDirChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
         hostPage.setNextPage(hostScrollerController.getPage("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml"));
+
+        masksDirLabel.visibleProperty().bind(useMasksCheckbox.selectedProperty());
+        chooseMasksDirButton.visibleProperty().bind(useMasksCheckbox.selectedProperty());
     }
 
     @Override
@@ -75,11 +90,13 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         //need to do Platform.runLater so updateModelSelectionChoiceBox can pull info from chunkSelectionChoiceBox
         chunkSelectionChoiceBox.setOnAction(event -> Platform.runLater(()->{
             metashapeDocument.selectChunk(chunkSelectionChoiceBox.getValue());
+            masksDirChooser.setInitialDirectory(metashapeDocument.getPsxFile().getParentFile());
             updateModelSelectionChoiceBox();
             updateLoadedIndicators();
+            updateMaskPath();
         }));
 
-        fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
+        psxFileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
     }
 
     @Override
@@ -112,15 +129,39 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     @FXML
     private void psxFileSelect(ActionEvent actionEvent) {
         Stage stage = (Stage) ((Node)actionEvent.getSource()).getScene().getWindow();
-        File file = fileChooser.showOpenDialog(stage);
+        File file = psxFileChooser.showOpenDialog(stage);
 
         if(file != null){
             RecentProjects.setMostRecentDirectory(file.getParentFile());
-            fileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
+            psxFileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
+
+            masksDirChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
             fileNameTxtField.setText(file.getName());
             updateChoiceBoxes(file);
             updateLoadedIndicators();
+            updateMaskPath();
+        }
+    }
+
+    @FXML private void masksDirSelect(ActionEvent actionEvent) {
+        Stage stage = (Stage) ((Node)actionEvent.getSource()).getScene().getWindow();
+        File file = masksDirChooser.showDialog(stage);
+        if (file != null) {
+            RecentProjects.setMostRecentDirectory(file.getParentFile());
+            masksDirChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
+            metashapeDocument.getSelectedChunk().setMasksDirectory(file);
+            updateMaskPath();
+        }
+    }
+
+    private void updateMaskPath() {
+        File dir = metashapeDocument.getSelectedChunk().getMasksDirectory();
+        if (dir == null || !dir.exists()){
+            masksDirLabel.setText("...");
+        }
+        else{
+            masksDirLabel.setText(dir.getPath());
         }
     }
 

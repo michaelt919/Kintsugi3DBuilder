@@ -16,7 +16,7 @@
   ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
   -->
 
-<AnchorPane fx:id="anchorPane" prefHeight="334.0" prefWidth="600.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.createnewproject.MetashapeImportController">
+<AnchorPane fx:id="anchorPane" prefHeight="334.0" prefWidth="600.0" styleClass="anchor-pane" stylesheets="@../../kintsugiStyling.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kintsugi3d.builder.javafx.controllers.menubar.createnewproject.MetashapeImportController">
    <children>
       <VBox alignment="CENTER" layoutX="180.6666717529297" layoutY="76.66666412353516" prefHeight="189.33333079020184" prefWidth="416.6666717529297" spacing="20.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
@@ -24,6 +24,9 @@
                <font>
                   <Font name="Monospaced Bold" size="28.0" />
                </font>
+               <VBox.margin>
+                  <Insets top="8.0" />
+               </VBox.margin>
             </Text>
             <Button fx:id="metashapeFileSelectButton" mnemonicParsing="false" onAction="#psxFileSelect" text="Load">
                <font>
@@ -35,12 +38,13 @@
                   <Font name="Monospaced Regular" size="14.0" />
                </font>
             </Text>
-            <GridPane prefHeight="61.0" prefWidth="484.0" vgap="20.0">
+            <GridPane prefHeight="70.0" prefWidth="515.0" vgap="20.0">
                <columnConstraints>
                   <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="300.0" minWidth="10.0" prefWidth="0.9999847412109375" />
                   <ColumnConstraints hgrow="SOMETIMES" maxWidth="387.0" minWidth="10.0" prefWidth="122.33334859212243" />
                </columnConstraints>
                <rowConstraints>
+                  <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                   <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                   <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                </rowConstraints>
@@ -59,7 +63,25 @@
                   <ChoiceBox fx:id="modelSelectionChoiceBox" disable="true" prefHeight="25.0" prefWidth="223.0" styleClass="choicebox" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                </children>
                <VBox.margin>
-                  <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                  <Insets left="15.0" right="15.0" top="15.0" />
+               </VBox.margin>
+            </GridPane>
+            <GridPane alignment="TOP_CENTER" hgap="8.0" prefHeight="60.0" prefWidth="518.0" vgap="4.0" VBox.vgrow="NEVER">
+              <columnConstraints>
+                <ColumnConstraints halignment="RIGHT" hgrow="NEVER" maxWidth="238.0" minWidth="10.0" prefWidth="238.0" />
+                <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="495.0" minWidth="10.0" prefWidth="362.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+              </rowConstraints>
+               <children>
+                  <CheckBox fx:id="useMasksCheckbox" mnemonicParsing="false" text="Use Masks" />
+                  <Label fx:id="masksDirLabel" text="..." wrapText="true" GridPane.columnIndex="1" GridPane.rowSpan="2" />
+                  <Button fx:id="chooseMasksDirButton" mnemonicParsing="false" onAction="#masksDirSelect" text="Choose Directory" GridPane.rowIndex="1" />
+               </children>
+               <VBox.margin>
+                  <Insets bottom="15.0" />
                </VBox.margin>
             </GridPane>
          </children>
