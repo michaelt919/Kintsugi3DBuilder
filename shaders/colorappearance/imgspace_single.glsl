@@ -14,8 +14,9 @@
 #define IMGSPACE_SINGLE_GLSL
 
 #include "colorappearance_single.glsl"
+#include "source_pixel_weights.glsl"
 
-#line 19 1111
+#line 20 1111
 
 #ifndef VISIBILITY_TEST_ENABLED
 #define VISIBILITY_TEST_ENABLED 0
@@ -85,7 +86,8 @@ vec4 getColor()
         }
 #endif
 
-        return texture(viewImage, projTexCoord.xy);
+        return texture(viewImage, projTexCoord.xy)
+            * vec4(1, 1, 1, getSourcePixelWeight(projTexCoord.xy));
     }
 }
 

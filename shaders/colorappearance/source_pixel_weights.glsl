@@ -25,10 +25,10 @@
 #define EDGE_PROXIMITY_MARGIN 0.1
 #endif
 
-float getWeight(vec2 texCoord, int viewIndex)
+float getSourcePixelWeight(vec2 imageSpaceCoord)
 {
 #if EDGE_PROXIMITY_WEIGHT_ENABLED
-    vec2 weights = clamp((0.5 - abs(texCoord - 0.5)) / EDGE_PROXIMITY_MARGIN, 0.0, 1.0);
+    vec2 weights = clamp((0.5 - abs(imageSpaceCoord - 0.5)) / EDGE_PROXIMITY_MARGIN, 0.0, 1.0);
     return min(weights.x, weights.y);
 #else
     return 1.0;
