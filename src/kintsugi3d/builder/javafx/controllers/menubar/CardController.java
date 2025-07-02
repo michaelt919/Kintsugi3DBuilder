@@ -1,8 +1,5 @@
 package kintsugi3d.builder.javafx.controllers.menubar;
 
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.SimpleListProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -14,9 +11,6 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.state.CardsModel;
-
-import javax.script.SimpleBindings;
-import java.util.Map;
 
 public class CardController {
 

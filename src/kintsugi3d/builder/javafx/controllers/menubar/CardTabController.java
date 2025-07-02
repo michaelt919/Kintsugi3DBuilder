@@ -6,12 +6,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
-import kintsugi3d.builder.javafx.internal.CardsModelImpl;
 import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.state.CardsModel;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class CardTabController {
@@ -29,24 +27,21 @@ public class CardTabController {
     {
         this.cardsModel = cardsModel;
         List<ProjectDataCard> cards = cardsModel.getObservableCardsList();
-        for (int i = 0; i < cards.size(); i++) {
-            card_vbox.getChildren().add(createDataCard(cards.get(i)));
+        for (ProjectDataCard card : cards) {
+            card_vbox.getChildren().add(createDataCard(card));
         }
 
-        cardsModel.getObservableCardsList().addListener(new ListChangeListener<ProjectDataCard>() {
-            @Override
-            public void onChanged(Change<? extends ProjectDataCard> change) {
-                change.next();
-                if (change.wasRemoved()) {
-                    card_vbox.getChildren().remove(change.getFrom());
-                    dataCards.remove(change.getFrom());
-                    cardControllers.remove(change.getFrom());
-                } else {
-                    card_vbox.getChildren().clear();
-                    List<ProjectDataCard> cards = cardsModel.getObservableCardsList();
-                    for (ProjectDataCard card : cards) {
-                        card_vbox.getChildren().add(createDataCard(card));
-                    }
+        cardsModel.getObservableCardsList().addListener((ListChangeListener<ProjectDataCard>) change -> {
+            change.next();
+            if (change.wasRemoved()) {
+                card_vbox.getChildren().remove(change.getFrom());
+                dataCards.remove(change.getFrom());
+                cardControllers.remove(change.getFrom());
+            } else {
+                card_vbox.getChildren().clear();
+                List<ProjectDataCard> cards1 = cardsModel.getObservableCardsList();
+                for (ProjectDataCard card : cards1) {
+                    card_vbox.getChildren().add(createDataCard(card));
                 }
             }
         });
@@ -54,7 +49,7 @@ public class CardTabController {
 
     private VBox createDataCard(ProjectDataCard card) {
         VBox newCard = null;
-        CardController newCardController = null;
+        CardController newCardController;
         FXMLLoader loader = new FXMLLoader();
         try {
             loader.setLocation(getClass().getResource("/fxml/menubar/leftpanel/DataCard.fxml"));
@@ -88,8 +83,8 @@ public class CardTabController {
         dataCards.clear();
         cardControllers.clear();
         List<ProjectDataCard> cards = cardsModel.getObservableCardsList();
-        for (int i = 0; i < cards.size(); i++) {
-            card_vbox.getChildren().add(createDataCard(cards.get(i)));
+        for (ProjectDataCard card : cards) {
+            card_vbox.getChildren().add(createDataCard(card));
         }
     }
 }

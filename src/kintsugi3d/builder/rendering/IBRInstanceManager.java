@@ -25,7 +25,6 @@ import kintsugi3d.builder.io.ViewSetWriterToVSET;
 import kintsugi3d.builder.javafx.MultithreadModels;
 import kintsugi3d.builder.javafx.controllers.menubar.MenubarController;
 import kintsugi3d.builder.javafx.controllers.menubar.MetashapeObjectChunk;
-import kintsugi3d.builder.javafx.internal.CardsModelImpl;
 import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace;
 import kintsugi3d.builder.resources.ibr.IBRResourcesImageSpace.Builder;

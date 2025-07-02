@@ -15,7 +15,7 @@ public class TabModelsImpl implements TabModels {
     //private int modelCount;
 
     public TabModelsImpl() {
-        models = new LinkedHashMap<String, CardsModel>() {{
+        models = new LinkedHashMap<>() {{
             put("Cameras", new CardsModelImpl("Cameras"));
             put("Textures", new CardsModelImpl("Textures"));
             //put("Shaders", new CardsModelImpl("Shaders"));
@@ -53,14 +53,10 @@ public class TabModelsImpl implements TabModels {
     @Override
     public void setAllCardsModels(List<CardsModel> tabCardsModels) {
         models.clear();
-        tabCardsModels.forEach(model -> {
-            models.put(model.getModelLabel(), model);
-        });
+        tabCardsModels.forEach(model -> models.put(model.getModelLabel(), model));
 
         observableModels.clear();
-        tabCardsModels.forEach(model -> {
-            observableModels.put(model.getModelLabel(), model);
-        });
+        tabCardsModels.forEach(model -> observableModels.put(model.getModelLabel(), model));
     }
 
     @Override

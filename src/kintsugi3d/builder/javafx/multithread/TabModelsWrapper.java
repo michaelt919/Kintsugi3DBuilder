@@ -1,6 +1,5 @@
 package kintsugi3d.builder.javafx.multithread;
 
-import kintsugi3d.builder.javafx.internal.CardsModelImpl;
 import kintsugi3d.builder.javafx.util.MultithreadValue;
 import kintsugi3d.builder.state.CardsModel;
 import kintsugi3d.builder.state.TabModels;
@@ -27,7 +26,7 @@ public class TabModelsWrapper extends TabModelsBase {
 
     @Override
     public List<CardsModel> getAllCardsModels() {
-        return new ArrayList<CardsModel>(modelsList.getValue().values());
+        return new ArrayList<>(modelsList.getValue().values());
     }
 
     @Override
@@ -43,9 +42,7 @@ public class TabModelsWrapper extends TabModelsBase {
     @Override
     public void setAllCardsModels(List<CardsModel> tabCardsModels) {
         modelsList.getValue().clear();
-        tabCardsModels.forEach(model -> {
-            modelsList.getValue().put(model.getModelLabel(),model);
-        });
+        tabCardsModels.forEach(model -> modelsList.getValue().put(model.getModelLabel(),model));
     }
 
     @Override

@@ -29,7 +29,7 @@ public class TabModelsBase implements TabModels {
 
     @Override
     public List<CardsModel> getAllCardsModels() {
-        return new ArrayList<CardsModel>(models.values());
+        return new ArrayList<>(models.values());
     }
 
     @Override
@@ -52,14 +52,10 @@ public class TabModelsBase implements TabModels {
     @Override
     public void setAllCardsModels(List<CardsModel> tabCardsModels) {
         models.clear();
-        tabCardsModels.forEach(model -> {
-            models.put(model.getModelLabel(), model);
-        });
+        tabCardsModels.forEach(model -> models.put(model.getModelLabel(), model));
 
         observableModels.clear();
-        tabCardsModels.forEach(model -> {
-            observableModels.put(model.getModelLabel(), model);
-        });
+        tabCardsModels.forEach(model -> observableModels.put(model.getModelLabel(), model));
     }
 
     @Override

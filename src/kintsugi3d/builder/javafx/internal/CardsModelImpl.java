@@ -22,15 +22,15 @@ public class CardsModelImpl implements CardsModel {
     public CardsModelImpl(String label) {
         this.label = label;
         List<ProjectDataCard> dummyCards = new ArrayList<>();
-        dummyCards.add(new ProjectDataCard("Card One", "@../../../../../../Kintsugi3D-icon.png", new LinkedHashMap<String, String>() {{
+        dummyCards.add(new ProjectDataCard("Card One", "@../../../../../../Kintsugi3D-icon.png", new LinkedHashMap<>() {{
             put("File Name", "file_one"); put("Resolution", "320x200"); put("Size", "500 KB"); put("Purpose", "This is a description pertaining to the FIRST card."); put("Labels", "");
         }}));
 
-        dummyCards.add(new ProjectDataCard("Card Two", "@../../../../../../Kintsugi3D-icon.png", new LinkedHashMap<String, String>() {{
+        dummyCards.add(new ProjectDataCard("Card Two", "@../../../../../../Kintsugi3D-icon.png", new LinkedHashMap<>() {{
             put("File Name", "file_two"); put("Resolution", "1080x200"); put("Size", "1000 KB"); put("Purpose", "This is a description pertaining to the SECOND card."); put("Labels", "");
         }}));
 
-        dummyCards.add(new ProjectDataCard("Card Three", "@../../../../../../Kintsugi3D-icon.png", new LinkedHashMap<String, String>() {{
+        dummyCards.add(new ProjectDataCard("Card Three", "@../../../../../../Kintsugi3D-icon.png", new LinkedHashMap<>() {{
             put("File Name", "file_three"); put("Resolution", "720x200"); put("Size", "1500 KB"); put("Purpose", "This is a description pertaining to the THIRD card."); put("Labels", "");
         }}));
         cardsList = new SimpleListProperty<>();

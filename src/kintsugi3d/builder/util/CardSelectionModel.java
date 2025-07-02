@@ -8,12 +8,11 @@ import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
 import kintsugi3d.builder.resources.ProjectDataCard;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 
 public class CardSelectionModel {
-    private ObservableSet<String> selectedCards = FXCollections.observableSet(new LinkedHashSet<String>());
+    private ObservableSet<String> selectedCards = FXCollections.observableSet(new LinkedHashSet<>());
     private final Property<ObservableList<ProjectDataCard>> allCards;
     private StringProperty lastSelected = new SimpleStringProperty();
 

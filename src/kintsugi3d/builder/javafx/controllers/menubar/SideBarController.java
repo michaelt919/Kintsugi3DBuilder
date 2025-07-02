@@ -1,7 +1,6 @@
 package kintsugi3d.builder.javafx.controllers.menubar;
 
 import javafx.collections.MapChangeListener;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.RadioButton;
@@ -11,7 +10,6 @@ import javafx.scene.layout.VBox;
 import kintsugi3d.builder.state.CardsModel;
 import kintsugi3d.builder.state.TabModels;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,7 +71,7 @@ public class SideBarController {
 
     private VBox createTab(CardsModel model) {
         VBox newTab = null;
-        CardTabController newTabController = null;
+        CardTabController newTabController;
         FXMLLoader loader = new FXMLLoader();
         try {
             loader.setLocation(getClass().getResource("/fxml/menubar/leftpanel/CardTab.fxml"));

@@ -84,9 +84,7 @@
                </VBox.margin>
             </Text>
             <TextFlow prefWidth="200.0">
-               <children>
                   <Text id="description" fx:id="description" styleClass="wireframeCaption" text="Description of what this texture type contributes to the material." />
-               </children>
             </TextFlow>
             <Text text="Labels:">
                 <font>
@@ -121,9 +119,7 @@
    <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;" styleClass="texture-button" stylesheets="@../../kintsugiStyling.css" text="Replace">
       <graphic>
          <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-            <image>
                <Image url="@../../../../../../Kintsugi3D-icon.png" />
-            </image>
          </ImageView>
       </graphic>
          <font>
@@ -150,9 +146,7 @@
         <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;" styleClass="texture-button" stylesheets="@../../kintsugiStyling.css" text="Refresh" textFill="WHITE">
             <graphic>
                 <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                    <image>
                         <Image url="@../../../../../../Kintsugi3D-icon.png" />
-                    </image>
                 </ImageView>
             </graphic>
             <font>
@@ -170,9 +164,7 @@
         <Button graphicTextGap="8.0" mnemonicParsing="false" style="-fx-text-fill: #CECECE;" styleClass="texture-button" stylesheets="@../../kintsugiStyling.css" text="Disable">
             <graphic>
                 <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                    <image>
                         <Image url="@../../../../../../Kintsugi3D-icon.png" />
-                    </image>
                 </ImageView>
             </graphic>
             <font>
@@ -190,9 +182,7 @@
         <Button graphicTextGap="8.0" mnemonicParsing="false" onAction="#deleteSelf" style="-fx-text-fill: #CECECE;" styleClass="texture-button" stylesheets="@../../kintsugiStyling.css" text="Delete ">
             <graphic>
                 <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                    <image>
                         <Image url="@../../../../../../Kintsugi3D-icon.png" />
-                    </image>
                 </ImageView>
             </graphic>
             <font>

@@ -15,8 +15,6 @@ import kintsugi3d.builder.javafx.internal.*;
 import kintsugi3d.builder.state.CardsModel;
 import kintsugi3d.builder.state.TabModels;
 
-import java.util.List;
-
 public final class InternalModels
 {
     private static final InternalModels INSTANCE = new InternalModels();
