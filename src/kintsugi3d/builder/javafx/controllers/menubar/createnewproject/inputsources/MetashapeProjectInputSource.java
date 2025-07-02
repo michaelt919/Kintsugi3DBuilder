@@ -34,6 +34,7 @@ import org.w3c.dom.NodeList;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class MetashapeProjectInputSource extends InputSource{
     private static final Logger log = LoggerFactory.getLogger(MetashapeProjectInputSource.class);
@@ -90,14 +91,12 @@ public class MetashapeProjectInputSource extends InputSource{
 
         MetashapeProjectInputSource other = (MetashapeProjectInputSource) obj;
 
-        //model and mask directory (if enabled) must be the same
+        //model and mask directory must be the same
         if (!this.model.equals(other.model)){
             return false;
         }
 
-        //TODO: also check masks directory
-
-        return true;
+        return Objects.equals(this.model.getChunk().getMasksDirectory(), other.model.getChunk().getMasksDirectory());
     }
 
     @Override

@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.IntStream;
 
 import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.SimpleProjection;
@@ -27,12 +26,8 @@ import kintsugi3d.gl.vecmath.Vector4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
 
 /**
  * Handles loading view sets from the VSET text file format
@@ -106,6 +101,11 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                     case "m":
                     {
                         builder.setGeometryFileName(scanner.nextLine().trim());
+                        break;
+                    }
+                    case "M":
+                    {
+                        builder.setMasksDirectory(new File(scanner.nextLine().trim()));
                         break;
                     }
                     case "I":
@@ -270,6 +270,15 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                             .setCurrentLightIndex(lightId)
                             .setCurrentImageFile(new File(imgFilename))
                             .commitCurrentCameraPose();
+                        break;
+                    }
+                    case "k":
+                    {
+                        int cameraId = scanner.nextInt();
+
+                        String imgFilename = scanner.nextLine().trim();
+
+                        builder.addMask(imgFilename);
                         break;
                     }
                     default:

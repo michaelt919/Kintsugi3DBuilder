@@ -306,6 +306,15 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
+        public Builder setMasksDirectory(File file){
+            result.setMasksDirectory(file);
+            return this;
+        }
+
+        public void addMask(String imgFilename) {
+            result.addMask(new File(imgFilename));
+        }
+
         public ViewSet finish()
         {
             if (needsClipPlanes)
@@ -1129,6 +1138,16 @@ public final class ViewSet implements ReadonlyViewSet
         return uuid;
     }
 
+    @Override
+    public boolean hasMasks() {
+        return masksDirectory != null;
+    }
+
+    @Override
+    public File getMasksDirectory() {
+        return masksDirectory;
+    }
+
     public void setUuid(UUID uuid)
     {
         this.uuid = uuid;
@@ -1145,5 +1164,9 @@ public final class ViewSet implements ReadonlyViewSet
 
     public void addMasks(List<File> masks) {
         maskFiles.addAll(masks);
+    }
+
+    public void addMask(File mask){
+        maskFiles.add(mask);
     }
 }

@@ -29,10 +29,9 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -809,7 +808,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                     // mask info is inside frame.xml, so we need to read it outside of readFromStream() which takes chunk.xml
                     File masksDir = metashapeChunk.getMasksDirectory();
                     if (masksDir != null){
-                        copyMasks(viewSet, metashapeChunk);
+                        addMasks(viewSet, metashapeChunk);
                     }
 
                     return viewSet;
@@ -820,31 +819,28 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
         }
     }
 
-    private static void copyMasks(ViewSet viewSet, MetashapeChunk metashapeChunk) {
+    private static void addMasks(ViewSet viewSet, MetashapeChunk metashapeChunk) {
         File masksSrcDir = metashapeChunk.getMasksDirectory();
-
-        //get masks folder, then subfolder is viewset uuid
-        // (follow convention set by preview and fit image folders)
-        File masksDestinationDir = new File(new File(ApplicationFolders.getMasksDirectory().toUri()), viewSet.getUUID().toString());
-        masksDestinationDir.mkdirs();
 
         List<File> masks = new ArrayList<>();
         if (masksSrcDir.toString().endsWith(".zip")){
+            //TODO: add a warning that this will take a long time and that users should use exported masks if they have them already
+            //get masks folder, then subfolder is viewset uuid
+            // (follow convention set by preview and fit image folders)
+            File masksDestinationDir = new File(new File(ApplicationFolders.getMasksDirectory().toUri()), viewSet.getUUID().toString());
+            masksDestinationDir.mkdirs();
             masks = UnzipHelper.unzipImagesToDirectory(masksSrcDir, masksDestinationDir);
+            viewSet.setMasksDirectory(masksDestinationDir);
         }
         else{
-            //copy images like normal
-            try{
-                for (File imgFile : masksSrcDir.listFiles()) {
-                    Path path = Files.copy(imgFile.toPath(), new File(masksDestinationDir, imgFile.getName()).toPath());
-                    masks.add(path.toFile());
-                }
-            } catch (NullPointerException | IOException e) {
-                log.error(MessageFormat.format("Failed to copy masks from {0} to {1}", masksSrcDir.getPath(), masksDestinationDir.getPath()));
+            //don't copy masks, just point to existing folder
+            File[] files = masksSrcDir.listFiles();
+            if (files != null && files.length > 0){
+                masks = Arrays.stream(files).collect(Collectors.toList());
             }
+            viewSet.setMasksDirectory(masksSrcDir);
         }
 
-        viewSet.setMasksDirectory(masksDestinationDir);
         viewSet.addMasks(masks);
     }
 }

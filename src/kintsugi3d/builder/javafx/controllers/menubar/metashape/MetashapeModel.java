@@ -11,12 +11,12 @@ import java.util.Optional;
 
 public class MetashapeModel {
     private static final Logger log = LoggerFactory.getLogger(MetashapeModel.class);
-    private MetashapeChunk chunk;
-    private Optional<Integer> id;
-    private String label;
-    private String path;
+    private final MetashapeChunk chunk;
+    private final Optional<Integer> id;
+    private final String label;
+    private final String path;
 
-    private LoadPreferences loadPreferences = new LoadPreferences();
+    private final LoadPreferences loadPreferences = new LoadPreferences();
 
     private MetashapeModel(MetashapeChunk chunk, Optional<Integer> id, String label, String path){
         this.id = id;

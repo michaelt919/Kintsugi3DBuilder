@@ -113,6 +113,17 @@ public class MetashapeImportController extends FXMLPageController implements Sha
             }
         });
 
+        //set masks directory to null if the checkbox is not selected
+        useMasksCheckbox.setOnAction(event ->{
+           if (metashapeDocument == null){
+               return;
+           }
+
+           File dir = useMasksCheckbox.isSelected() ? new File(masksDirLabel.getText()) : null;
+
+           metashapeDocument.getSelectedChunk().setMasksDirectory(dir);
+        });
+
         psxFileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
     }
 
@@ -126,6 +137,9 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         InputSource source = hostScrollerController.getInfo(Info.INPUT_SOURCE);
         if (source instanceof MetashapeProjectInputSource){
             //overwrite old source so we can compare old and new versions in PrimaryViewSelectController
+            //Note: if we send the same model with different info (new mask directory, etc.) the controller will not notice the difference because
+                //it will still be looking at the same memory location
+            //this isn't a problem currently but might be later
             hostScrollerController.addInfo(Info.INPUT_SOURCE,
                     new MetashapeProjectInputSource().setMetashapeModel(metashapeDocument.getSelectedChunk().getSelectedModel()));
         }

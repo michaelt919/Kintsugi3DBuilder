@@ -258,4 +258,8 @@ public interface ReadonlyViewSet
     File findPreviewPrimaryImageFile() throws FileNotFoundException;
 
     UUID getUUID();
+
+    boolean hasMasks();
+
+    File getMasksDirectory();
 }

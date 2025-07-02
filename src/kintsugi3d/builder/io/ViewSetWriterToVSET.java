@@ -18,6 +18,7 @@ import kintsugi3d.gl.vecmath.Vector3;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
 
 public final class ViewSetWriterToVSET implements ViewSetWriter
 {
@@ -84,12 +85,23 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
         out.println();
         out.println("# Reference orientation view index");
         out.println("O " + correctedOrientationViewIndex);
-        out.println();
 
         out.println();
         out.println("# Reference View Pose Rotation (degrees)");
         out.println("r " + viewSet.getOrientationViewRotationDegrees());
         out.println();
+
+        if (viewSet.hasMasks()){
+            out.println();
+            out.println("# Masks directory");
+            out.println("M " + viewSet.getMasksDirectory().getAbsolutePath());
+
+            out.println();
+            out.println("# " + viewSet.getCameraPoseCount() + " masks");
+            for (int i = 0; i < viewSet.getCameraPoseCount(); ++i){
+                out.println(MessageFormat.format("k\t{0}\t{1}", i, viewSet.getMask(i).getName()));
+            }
+        }
 
         out.println();
         out.println("# " + viewSet.getCameraProjectionCount() + (viewSet.getCameraProjectionCount() == 1 ? " Sensor" : " Sensors"));
