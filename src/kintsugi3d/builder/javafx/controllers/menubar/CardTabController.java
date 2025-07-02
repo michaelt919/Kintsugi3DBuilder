@@ -11,6 +11,7 @@ import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.state.CardsModel;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class CardTabController {
@@ -22,30 +23,36 @@ public class CardTabController {
     private List<VBox> dataCards = new ArrayList<>();
     private List<CardController> cardControllers = new ArrayList<>();
 
-    private CardsModel cameraCardsModel;
+    private CardsModel cardsModel;
 
-    public void init(CardsModel cameraCardsModel)
+    public void init(CardsModel cardsModel)
     {
-        this.cameraCardsModel = cameraCardsModel;
-        List<ProjectDataCard> cards = cameraCardsModel.getCardsList();
+        this.cardsModel = cardsModel;
+        List<ProjectDataCard> cards = cardsModel.getObservableCardsList();
         for (int i = 0; i < cards.size(); i++) {
-            card_vbox.getChildren().add(createDataCard(cards.get(i), i));
+            card_vbox.getChildren().add(createDataCard(cards.get(i)));
         }
 
-        cameraCardsModel.getItems().addListener(new ListChangeListener<ProjectDataCard>() {
+        cardsModel.getObservableCardsList().addListener(new ListChangeListener<ProjectDataCard>() {
             @Override
-            public void onChanged(Change<? extends ProjectDataCard> c) {
-                card_vbox.getChildren().clear();
-                List<ProjectDataCard> cards = cameraCardsModel.getCardsList();
-                for (int i = 0; i < cards.size(); i++) {
-                    card_vbox.getChildren().add(createDataCard(cards.get(i), i));
+            public void onChanged(Change<? extends ProjectDataCard> change) {
+                change.next();
+                if (change.wasRemoved()) {
+                    card_vbox.getChildren().remove(change.getFrom());
+                    dataCards.remove(change.getFrom());
+                    cardControllers.remove(change.getFrom());
+                } else {
+                    card_vbox.getChildren().clear();
+                    List<ProjectDataCard> cards = cardsModel.getObservableCardsList();
+                    for (ProjectDataCard card : cards) {
+                        card_vbox.getChildren().add(createDataCard(card));
+                    }
                 }
             }
         });
     }
 
-
-    private VBox createDataCard(ProjectDataCard card, int index) {
+    private VBox createDataCard(ProjectDataCard card) {
         VBox newCard = null;
         CardController newCardController = null;
         FXMLLoader loader = new FXMLLoader();
@@ -57,7 +64,7 @@ public class CardTabController {
             dataCards.add(newCard);
             cardControllers.add(newCardController);
 
-            newCardController.init(cameraCardsModel, card, index);
+            newCardController.init(cardsModel, card);
         } catch (Exception e) {
             // throw new RuntimeException(e);
         }
@@ -74,5 +81,15 @@ public class CardTabController {
     public void setVisible(boolean visibility) {
         card_tab.setVisible(visibility);
         card_tab.setManaged(visibility);
+    }
+
+    public void refreshCardList() {
+        card_vbox.getChildren().clear();
+        dataCards.clear();
+        cardControllers.clear();
+        List<ProjectDataCard> cards = cardsModel.getObservableCardsList();
+        for (int i = 0; i < cards.size(); i++) {
+            card_vbox.getChildren().add(createDataCard(cards.get(i)));
+        }
     }
 }

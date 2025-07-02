@@ -1,9 +1,11 @@
 package kintsugi3d.builder.javafx.controllers.menubar;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.SimpleListProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
@@ -12,6 +14,9 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import kintsugi3d.builder.resources.ProjectDataCard;
 import kintsugi3d.builder.state.CardsModel;
+
+import javax.script.SimpleBindings;
+import java.util.Map;
 
 public class CardController {
 
@@ -25,26 +30,22 @@ public class CardController {
     @FXML ImageView main_image;
 
     private String cardId;
-    private int cardIndex;
-
-    private boolean cardVisibility = true;
-    private boolean bodyVisibility = false;
 
     private CardsModel cameraCardsModel;
     private ProjectDataCard dataCard;
 
 
-    public void init(CardsModel cameraCardsModel, ProjectDataCard dataCard, int index) {
+    public void init(CardsModel cameraCardsModel, ProjectDataCard dataCard) {
         this.cameraCardsModel = cameraCardsModel;
         this.dataCard = dataCard;
-        this.cardIndex = index;
+        this.cardId = dataCard.getCardId();
 
         card_title.setText(dataCard.getHeaderName());
         //card_icon.setImage(new Image(dataCard.getImagePath()));
         //main_image.setImage(new Image(dataCard.getImagePath()));
 
-        card_body.visibleProperty().bind(cameraCardsModel.getSelectedCardIndexProperty().isEqualTo(cardIndex));
-        card_body.managedProperty().bind(cameraCardsModel.getSelectedCardIndexProperty().isEqualTo(cardIndex));
+        card_body.visibleProperty().bind(cameraCardsModel.isExpandedProperty(cardId));
+        card_body.managedProperty().bind(cameraCardsModel.isExpandedProperty(cardId));
 
         text_content.getChildren().clear();
         dataCard.getTextContent().forEach((key, value) -> {
@@ -62,15 +63,7 @@ public class CardController {
         });
     }
 
-    @FXML
-    public void toggleCardBody(MouseEvent event) {
-        bodyVisibility = !bodyVisibility;
-        card_body.setVisible(bodyVisibility);
-        card_body.setManaged(bodyVisibility);
-    }
-
     public void setCardVisibility(boolean visibility) {
-        cardVisibility = visibility;
         data_card.setVisible(visibility);
         data_card.setManaged(visibility);
     }
@@ -92,22 +85,23 @@ public class CardController {
     }
 
     @FXML
-    public void selectCard() {
-        cameraCardsModel.setSelectedCardIndex(cardIndex);
+    public void headerClicked(MouseEvent e) {
+        cameraCardsModel.expandCard(cardId);
     }
 
     @FXML
-    public void minimizeCard() {
-        if (cameraCardsModel.getSelectedCardIndex() == cardIndex) {
-            cameraCardsModel.deselectCard();
+    public void expansionToggleClicked(MouseEvent e) {
+        if (cameraCardsModel.isExpanded(cardId)) {
+            cameraCardsModel.collapseCard(cardId);
         } else {
-            cameraCardsModel.setSelectedCardIndex(cardIndex);
+            cameraCardsModel.expandCard(cardId);
         }
+        e.consume();
     }
 
     @FXML
     public void deleteSelf(ActionEvent e) {
-        cameraCardsModel.deleteCard(cardIndex);
+        cameraCardsModel.deleteCard(cardId);
     }
 
 }

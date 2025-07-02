@@ -26,7 +26,7 @@ public class SceneModel
     private ReadonlyLightingModel lightingModel;
     private SafeReadonlySettingsModel settingsModel = new DefaultSettingsModel();
     private CameraViewListModel cameraViewListModel;
-    private CardsModel cameraCardsModel;
+    private TabModels tabModels;
 
     private Vector3 centroid = Vector3.ZERO;
     private Matrix3 orientation = Matrix3.IDENTITY;
@@ -59,7 +59,7 @@ public class SceneModel
         return cameraViewListModel;
     }
 
-    public CardsModel getCameraCardsModel() { return cameraCardsModel; }
+    public TabModels getTabModels() { return tabModels; }
 
 
     public Vector3 getCentroid()
@@ -106,8 +106,8 @@ public class SceneModel
         this.cameraViewListModel = cameraViewListModel;
     }
 
-    public void setCameraCardsModel(CardsModel cameraCardsModel) {
-        this.cameraCardsModel = cameraCardsModel;
+    public void setTabModels(TabModels tabModels) {
+        this.tabModels = tabModels;
     }
 
     public void setCentroid(Vector3 centroid)

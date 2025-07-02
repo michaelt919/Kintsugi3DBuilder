@@ -19,7 +19,6 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -41,7 +40,6 @@ import kintsugi3d.builder.core.*;
 import kintsugi3d.builder.export.projectExporter.ExportRequestUI;
 import kintsugi3d.builder.export.specular.SpecularFitRequestUI;
 import kintsugi3d.builder.export.specular.SpecularFitSerializer;
-import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.fit.decomposition.SpecularBasis;
 import kintsugi3d.builder.javafx.InternalModels;
 import kintsugi3d.builder.javafx.MultithreadModels;
@@ -58,7 +56,6 @@ import kintsugi3d.builder.javafx.controllers.scene.ProgressBarsController;
 import kintsugi3d.builder.javafx.controllers.scene.WelcomeWindowController;
 import kintsugi3d.builder.javafx.controllers.scene.object.ObjectPoseSetting;
 import kintsugi3d.builder.javafx.controllers.scene.object.SettingsObjectSceneController;
-import kintsugi3d.builder.javafx.internal.CardsModelImpl;
 import kintsugi3d.builder.util.Kintsugi3DViewerLauncher;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.javafx.FramebufferView;
@@ -70,7 +67,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -205,7 +201,7 @@ public class MenubarController
         this.localProgressBar.getScene().getWindow().setOnCloseRequest(
                 event-> this.miniProgressPane.setVisible(true));
         this.cameraViewListController.init(injectedInternalModels.getCameraViewListModel());
-        this.leftBarController.init(injectedInternalModels.getCardsModels());
+        this.leftBarController.init(injectedInternalModels.getTabModels());
 
         this.internalModels = injectedInternalModels;
         this.userDocumentationHandler = injectedUserDocumentationHandler;
@@ -220,6 +216,7 @@ public class MenubarController
 
         doneButton.setOnAction(event ->{
             hideAllProgress();
+            leftBarController.refreshTabs();
         });
 
         cancelButton.disableProperty().bind(ProgressBarsController.getInstance().getProcessingProperty().not());

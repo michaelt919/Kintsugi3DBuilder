@@ -1,12 +1,17 @@
 package kintsugi3d.builder.state;
 
-import kintsugi3d.builder.javafx.internal.CardsModelImpl;
+import javafx.collections.ObservableMap;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 
 public interface TabModels {
-    CardsModelImpl getCardModel(String label);
-    List<CardsModelImpl> getCardModels();
-    void addCardsModel(CardsModelImpl model);
-    void setCardModel(String label, CardsModelImpl model);
+    CardsModel getCardsModel(String label);
+    List<CardsModel> getAllCardsModels();
+    ObservableMap<String, CardsModel> getItems();
+    void addCardsModel(CardsModel model);
+    void replaceCardsModel(String label, CardsModel model);
+    void setAllCardsModels(List<CardsModel> tabCardsModels);
+    LinkedHashMap<String,CardsModel> getCardsModelsMap();
+    void setCardsModelsMap(LinkedHashMap<String,CardsModel> cardsModelsMap);
 }

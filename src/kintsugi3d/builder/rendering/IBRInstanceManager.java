@@ -69,7 +69,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
     private ReadonlyLightingModel lightingModel;
     private ReadonlySettingsModel settingsModel;
     private CameraViewListModel cameraViewListModel;
-    private CardsModel cameraCardsModel;
+    private TabModels tabModels;
 
     private final List<Consumer<ViewSet>> viewSetLoadCallbacks
         = Collections.synchronizedList(new ArrayList<>());
@@ -182,7 +182,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         MultithreadModels.getInstance().getCameraViewListModel().setCameraViewList(imgFileNames);
 
         imgFiles.forEach(file-> cameraCards.add(ProjectDataCardFactory.createProjectDataCard(file)));
-        MultithreadModels.getInstance().getCameraCardsModel().setCardsList(cameraCards);
+        MultithreadModels.getInstance().getTabModels().getCardsModel("Cameras").setCardsList(cameraCards);
 
         // Invoke callbacks now that view set is loaded
         invokeViewSetLoadCallbacks(loadedViewSet);
@@ -211,7 +211,7 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         newItem.getSceneModel().setLightingModel(this.lightingModel);
         newItem.getSceneModel().setSettingsModel(this.settingsModel);
         newItem.getSceneModel().setCameraViewListModel(this.cameraViewListModel);
-        //newItem.getSceneModel().setCameraCardsModel(this.cameraCardsModel);
+        newItem.getSceneModel().setTabModels(this.tabModels);
 
         newItem.setProgressMonitor(new ProgressMonitor()
         {
@@ -508,11 +508,11 @@ public class IBRInstanceManager<ContextType extends Context<ContextType>> implem
         }
     }
 
-    public void setCameraCardsModel(CardsModel cameraCardsModel) {
-        this.cameraCardsModel = cameraCardsModel;
+    public void setTabModels(TabModels tabModels) {
+        this.tabModels = tabModels;
         if (ibrInstance != null)
         {
-            ibrInstance.getSceneModel().setCameraCardsModel(cameraCardsModel);
+            ibrInstance.getSceneModel().setTabModels(tabModels);
         }
     }
 

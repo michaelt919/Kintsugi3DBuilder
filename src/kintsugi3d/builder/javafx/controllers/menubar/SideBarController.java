@@ -1,5 +1,6 @@
 package kintsugi3d.builder.javafx.controllers.menubar;
 
+import javafx.collections.MapChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -7,47 +8,26 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import kintsugi3d.builder.javafx.internal.CardsModelImpl;
 import kintsugi3d.builder.state.CardsModel;
+import kintsugi3d.builder.state.TabModels;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 public class SideBarController {
-
-    @FXML
-    public RadioButton TexturesButton, CamerasButton;
-
-    @FXML
-    public VBox textureTab, cameraTab;
-
     @FXML public HBox button_box;
     @FXML public VBox main_box;
 
     public ToggleGroup leftBarTG = new ToggleGroup();
     public List<RadioButton> buttons = new ArrayList<>();
     public List<CardTabController> tabControllers = new ArrayList<>();
-    public List<CardsModelImpl> tabModels;
+    public TabModels tabModels;
 
-
-    @FXML
-    private void chooseTabAction(ActionEvent event) throws IOException {
-//        tabControllers.forEach((controller)-> {
-//            controller.setVisible()
-//        });
-//
-//        textureTab.setVisible(TexturesButton.isSelected());
-//        textureTab.setManaged(TexturesButton.isSelected());
-//        cameraTab.setVisible(CamerasButton.isSelected());
-//        cameraTab.setManaged(CamerasButton.isSelected());
-    }
-
-    public void init(List<CardsModelImpl> tabModels) {
+    public void init(TabModels tabModels) {
         this.tabModels = tabModels;
-        tabModels.forEach(model -> {
-            RadioButton newButton = createButton(model.getLabel());
+        tabModels.getAllCardsModels().forEach(model -> {
+            RadioButton newButton = createButton(model.getModelLabel());
             VBox newTab = createTab(model);
 
             button_box.getChildren().add(newButton);
@@ -55,6 +35,10 @@ public class SideBarController {
 
             newTab.visibleProperty().bind(newButton.selectedProperty());
             newTab.managedProperty().bind(newButton.selectedProperty());
+        });
+
+        tabModels.getItems().addListener((MapChangeListener<String, CardsModel>) change -> {
+            //unnecessary?
         });
 
         buttons.get(0).setSelected(true);
@@ -103,6 +87,10 @@ public class SideBarController {
             // throw new RuntimeException(e);
         }
         return newTab;
+    }
+
+    public void refreshTabs() {
+        tabControllers.forEach(CardTabController::refreshCardList);
     }
 
 }

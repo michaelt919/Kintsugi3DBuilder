@@ -1,7 +1,8 @@
-package kintsugi3d.builder.javafx.internal;
+package kintsugi3d.builder.state.impl;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
+import kintsugi3d.builder.javafx.multithread.CardsModelWrapper;
 import kintsugi3d.builder.state.CardsModel;
 import kintsugi3d.builder.state.TabModels;
 
@@ -9,23 +10,21 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-public class TabModelsImpl implements TabModels {
-    private LinkedHashMap<String, CardsModel> models; //CardsModelImpl
+public class TabModelsBase implements TabModels {
+    private LinkedHashMap<String, CardsModel> models; //Wrappers
     private ObservableMap<String, CardsModel> observableModels;
-    //private int modelCount;
 
-    public TabModelsImpl() {
-        models = new LinkedHashMap<String, CardsModel>() {{
-            put("Cameras", new CardsModelImpl("Cameras"));
-            put("Textures", new CardsModelImpl("Textures"));
-            //put("Shaders", new CardsModelImpl("Shaders"));
-        }};
+    public TabModelsBase(List<CardsModel> cardsModels) {
+        models = new LinkedHashMap<>();
+        for (CardsModel cardsModel : cardsModels) {
+            models.put(cardsModel.getModelLabel(), new CardsModelWrapper(cardsModel));
+        }
         observableModels = FXCollections.observableMap(models);
     }
 
     @Override
     public CardsModel getCardsModel(String label) {
-        return observableModels.get(label);
+        return models.get(label);
     }
 
     @Override
