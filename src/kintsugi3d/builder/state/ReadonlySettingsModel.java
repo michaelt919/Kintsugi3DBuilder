@@ -18,7 +18,7 @@ import kintsugi3d.builder.preferences.serialization.SettingsModelSerializer;
 import java.util.Iterator;
 
 @JsonSerialize(as = SettingsModel.class, using = SettingsModelSerializer.class)
-public interface ReadonlySettingsModel
+public interface ReadonlySettingsModel extends Iterable<ReadonlySettingsModel.Setting>
 {
     interface Setting
     {
@@ -33,6 +33,8 @@ public interface ReadonlySettingsModel
     Class<?> getType(String name);
     boolean exists(String name);
     boolean shouldSerialize(String name);
+
+    @Override
     Iterator<Setting> iterator();
 
     default boolean existsForGet(String name, Class<?> settingType)
