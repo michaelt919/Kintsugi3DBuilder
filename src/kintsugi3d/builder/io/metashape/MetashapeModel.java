@@ -1,4 +1,4 @@
-package kintsugi3d.builder.javafx.controllers.menubar.metashape;
+package kintsugi3d.builder.io.metashape;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

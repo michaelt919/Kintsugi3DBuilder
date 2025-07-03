@@ -278,7 +278,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
 
                         String imgFilename = scanner.nextLine().trim();
 
-                        builder.addMask(imgFilename);
+                        builder.addMask(cameraId, imgFilename);
                         break;
                     }
                     default:

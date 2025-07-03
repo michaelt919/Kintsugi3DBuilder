@@ -28,9 +28,9 @@ import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsourc
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.MetashapeProjectInputSource;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.FXMLPageController;
 import kintsugi3d.builder.javafx.controllers.menubar.fxmlpageutils.ShareInfo;
-import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeChunk;
-import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeDocument;
-import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeModel;
+import kintsugi3d.builder.io.metashape.MetashapeChunk;
+import kintsugi3d.builder.io.metashape.MetashapeDocument;
+import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.util.RecentProjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -12,8 +12,8 @@
 package kintsugi3d.builder.io.primaryview;
 
 import javafx.scene.image.Image;
-import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeChunk;
-import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeModel;
+import kintsugi3d.builder.io.metashape.MetashapeChunk;
+import kintsugi3d.builder.io.metashape.MetashapeModel;
 import kintsugi3d.util.ImageFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -23,7 +23,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
-import javax.imageio.ImageIO;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
@@ -34,10 +33,7 @@ import javax.xml.transform.stream.StreamResult;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -232,38 +228,24 @@ public class UnzipHelper {
         return imagesMap;
     }
 
-    public static List<File> unzipImagesToDirectory(File zippedDir, File destinationDir) {
-
-        //  <mask camera_id="0" path="c0.png"/>
-        //this function assumes that masks are listed in order by camera id
-
-        List<File> imgFiles = new ArrayList<>();
-
-        try (ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zippedDir))) {
-            ZipEntry entry;
-            while ((entry = zipInputStream.getNextEntry()) != null) {
-                String entryName = entry.getName();
-                if (isValidImageType(entryName)) {
-                    Image image = readImageData(zipInputStream, entryName);
-
-                    int i = entryName.lastIndexOf('.');
-                    String extension =  entryName.substring(i + 1).toUpperCase();
-
-                    File imgFile = new File(destinationDir, entryName);
-
-                    //TODO: copying masks takes a long time (8 mins in debug mode for 150 images)
-                    //include in progress bar?
-                    ImageIO.write(SwingFXUtils.fromFXImage(image, null), extension, imgFile);
-                    imgFiles.add(imgFile);
-                }
-                zipInputStream.closeEntry();
-            }
-
-        } catch (IOException | ImageReadException e) {
-            log.error("Error unzipping images:", e);
+    //   Adapted from https://www.baeldung.com/java-compress-and-uncompress
+    public static void unzipToDirectory(File zippedDir, File destinationDir) throws IOException {
+        byte[] buffer = new byte[1024];
+        ZipInputStream zis = new ZipInputStream(new FileInputStream(zippedDir));
+        ZipEntry zipEntry = zis.getNextEntry();
+        while (zipEntry != null){
+            //ignore directories for now
+           if (!zipEntry.isDirectory()){
+               FileOutputStream fos = new FileOutputStream(new File(destinationDir, zipEntry.getName()));
+               int len;
+               while ((len = zis.read(buffer)) > 0){
+                   fos.write(buffer, 0, len);
+               }
+               fos.close();
+           }
+            zipEntry = zis.getNextEntry();
         }
-
-        log.info("Total images extracted: " + imgFiles.size());
-        return imgFiles;
+        zis.closeEntry();
+        zis.close();
     }
 }

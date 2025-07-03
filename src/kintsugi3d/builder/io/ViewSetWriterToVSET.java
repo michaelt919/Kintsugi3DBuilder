@@ -15,10 +15,12 @@ import kintsugi3d.builder.core.ReadonlyViewSet;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 
+import java.io.File;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
+import java.util.Map;
 
 public final class ViewSetWriterToVSET implements ViewSetWriter
 {
@@ -97,9 +99,10 @@ public final class ViewSetWriterToVSET implements ViewSetWriter
             out.println("M " + viewSet.getMasksDirectory().getAbsolutePath());
 
             out.println();
-            out.println("# " + viewSet.getCameraPoseCount() + " masks");
-            for (int i = 0; i < viewSet.getCameraPoseCount(); ++i){
-                out.println(MessageFormat.format("k\t{0}\t{1}", i, viewSet.getMask(i).getName()));
+            Map<Integer, File> masksMap = viewSet.getMasksMap();
+            out.println("# " + masksMap.size() + " masks");
+            for (var entry : masksMap.entrySet()) {
+                out.println(MessageFormat.format("k\t{0}\t{1}", entry.getKey(), entry.getValue().getName()));
             }
         }
 

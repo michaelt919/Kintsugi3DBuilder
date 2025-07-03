@@ -16,14 +16,21 @@ import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
-import kintsugi3d.builder.javafx.controllers.menubar.metashape.MetashapeChunk;
+import kintsugi3d.builder.io.metashape.MetashapeChunk;
 import kintsugi3d.gl.util.UnzipHelper;
 import kintsugi3d.gl.vecmath.Matrix3;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -31,7 +38,6 @@ import javax.xml.stream.XMLStreamReader;
 import java.io.*;
 import java.text.MessageFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -822,25 +828,40 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     private static void addMasks(ViewSet viewSet, MetashapeChunk metashapeChunk) {
         File masksSrcDir = metashapeChunk.getMasksDirectory();
 
-        List<File> masks = new ArrayList<>();
         if (masksSrcDir.toString().endsWith(".zip")){
-            //TODO: add a warning that this will take a long time and that users should use exported masks if they have them already
             //get masks folder, then subfolder is viewset uuid
             // (follow convention set by preview and fit image folders)
             File masksDestinationDir = new File(new File(ApplicationFolders.getMasksDirectory().toUri()), viewSet.getUUID().toString());
             masksDestinationDir.mkdirs();
-            masks = UnzipHelper.unzipImagesToDirectory(masksSrcDir, masksDestinationDir);
-            viewSet.setMasksDirectory(masksDestinationDir);
-        }
-        else{
-            //don't copy masks, just point to existing folder
-            File[] files = masksSrcDir.listFiles();
-            if (files != null && files.length > 0){
-                masks = Arrays.stream(files).collect(Collectors.toList());
+            log.info("Unzipping masks folder...");
+            try{
+                UnzipHelper.unzipToDirectory(masksSrcDir, masksDestinationDir);
+                File[] childFiles = masksDestinationDir.listFiles();
+                if (childFiles != null && childFiles.length > 0){
+                    File docFile = Arrays.stream(childFiles)
+                            .filter(file -> file.getName().equals("doc.xml"))
+                            .findFirst()
+                            .orElse(null);
+                    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                    try {
+                        DocumentBuilder builder = factory.newDocumentBuilder();
+                        Document docXml = builder.parse(docFile);
+                        NodeList maskList = docXml.getElementsByTagName("mask");
+                        for (int i = 0; i < maskList.getLength(); ++i){
+                            Element maskElem = (Element) maskList.item(i);
+                            int cameraId = Integer.parseInt(maskElem.getAttribute("camera_id"));
+                            String path = maskElem.getAttribute("path");
+                            viewSet.addMask(cameraId, new File(masksDestinationDir, path));
+                        }
+                    } catch (ParserConfigurationException | SAXException e) {
+                        log.error("Failed to unzip masks.", e);
+                    }
+                }
+                viewSet.setMasksDirectory(masksDestinationDir);
+            } catch (IOException e) {
+                log.error("Failed to unzip masks.", e);
             }
-            viewSet.setMasksDirectory(masksSrcDir);
         }
-
-        viewSet.addMasks(masks);
+//todo: need to handle user defined mask directories?
     }
 }

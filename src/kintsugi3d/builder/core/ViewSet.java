@@ -87,7 +87,7 @@ public final class ViewSet implements ReadonlyViewSet
      */
     private final List<File> imageFiles;
 
-    private final List<File> maskFiles;
+    private final Map<Integer, File> maskFiles;
 
     private final List<ViewRMSE> viewErrorMetrics;
 
@@ -311,8 +311,8 @@ public final class ViewSet implements ReadonlyViewSet
             return this;
         }
 
-        public void addMask(String imgFilename) {
-            result.addMask(new File(imgFilename));
+        public void addMask(int camId, String imgFilename) {
+            result.addMask(camId, new File(imgFilename));
         }
 
         public ViewSet finish()
@@ -399,7 +399,7 @@ public final class ViewSet implements ReadonlyViewSet
         this.cameraProjectionIndexList = new ArrayList<>(initialCapacity);
         this.lightIndexList = new ArrayList<>(initialCapacity);
         this.imageFiles = new ArrayList<>(initialCapacity);
-        this.maskFiles = new ArrayList<>(initialCapacity);
+        this.maskFiles = new HashMap<>(initialCapacity);
         this.viewErrorMetrics = new ArrayList<>(initialCapacity);
 
         // Often these lists will have just one element
@@ -1148,6 +1148,11 @@ public final class ViewSet implements ReadonlyViewSet
         return masksDirectory;
     }
 
+    @Override
+    public Map<Integer, File> getMasksMap() {
+       return Collections.unmodifiableMap(maskFiles);
+    }
+
     public void setUuid(UUID uuid)
     {
         this.uuid = uuid;
@@ -1162,11 +1167,7 @@ public final class ViewSet implements ReadonlyViewSet
         masksDirectory = dir;
     }
 
-    public void addMasks(List<File> masks) {
-        maskFiles.addAll(masks);
-    }
-
-    public void addMask(File mask){
-        maskFiles.add(mask);
+    public void addMask(int camId, File mask){
+        maskFiles.put(camId, mask);
     }
 }

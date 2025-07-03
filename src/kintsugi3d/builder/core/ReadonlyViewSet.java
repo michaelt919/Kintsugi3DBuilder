@@ -14,6 +14,7 @@ package kintsugi3d.builder.core;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 
 import kintsugi3d.builder.metrics.ViewRMSE;
@@ -262,4 +263,6 @@ public interface ReadonlyViewSet
     boolean hasMasks();
 
     File getMasksDirectory();
+
+    Map<Integer, File> getMasksMap();
 }
