@@ -140,4 +140,9 @@ public class LooseFilesInputSource extends InputSource{
     public boolean doEnableProjectMasksButton() {
         return false;
     }
+
+    @Override
+    public void setMasksDirectory(File file) {
+       masksDir = file;
+    }
 }

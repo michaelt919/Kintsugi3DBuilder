@@ -83,6 +83,11 @@ public class RealityCaptureInputSource extends InputSource{
         return false;
     }
 
+    @Override
+    public void setMasksDirectory(File file) {
+        masksDir = file;
+    }
+
     public RealityCaptureInputSource setCameraFile(File cameraFile) {
         this.cameraFile = cameraFile;
         return this;

@@ -81,6 +81,8 @@ public abstract class InputSource {
 
     public abstract boolean doEnableProjectMasksButton();
 
+    public abstract void setMasksDirectory(File file);
+
     protected void addTreeElems(PrimaryViewSelectionModel primaryViewSelectionModel){
         TreeItem<String> rootItem = new TreeItem<>(primaryViewSelectionModel.getName());
         searchableTreeView.getTreeView().setRoot(rootItem);

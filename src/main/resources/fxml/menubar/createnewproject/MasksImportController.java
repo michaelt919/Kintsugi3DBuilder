@@ -20,14 +20,14 @@ public class MasksImportController extends FXMLPageController implements ShareIn
     @FXML private AnchorPane anchorPane;
 
     @FXML private ToggleButton useProjectMasksButton;
-    @FXML private ToggleButton newMasksDirButton;
+    @FXML private ToggleButton customMasksDirButton;
     @FXML private ToggleButton noMasksButton;
     private ToggleGroup toggleGroup;
 
     private DirectoryChooser masksDirectoryChooser;
 
     private InputSource source;
-    private File masksDir; //represents the file chosen through file chooser, which may or may not be the final masks selection
+    private File fileChooserMasksDir; //represents the file chosen through file chooser, which may or may not be the final masks selection
 
     @Override
     public Region getHostRegion() {
@@ -39,11 +39,11 @@ public class MasksImportController extends FXMLPageController implements ShareIn
         masksDirectoryChooser = new DirectoryChooser();
         toggleGroup = new ToggleGroup();
         toggleGroup.getToggles().add(useProjectMasksButton);
-        toggleGroup.getToggles().add(newMasksDirButton);
+        toggleGroup.getToggles().add(customMasksDirButton);
         toggleGroup.getToggles().add(noMasksButton);
 
         useProjectMasksButton.setOnAction(e -> hostScrollerController.updatePrevAndNextButtons());
-        newMasksDirButton.setOnAction(e -> hostScrollerController.updatePrevAndNextButtons());
+        customMasksDirButton.setOnAction(e -> hostScrollerController.updatePrevAndNextButtons());
         noMasksButton.setOnAction(e -> hostScrollerController.updatePrevAndNextButtons());
 
         hostPage.setNextPage(hostScrollerController.getPage("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml"));
@@ -63,7 +63,15 @@ public class MasksImportController extends FXMLPageController implements ShareIn
 
     @Override
     public void shareInfo() {
-        //TODO
+        if (useProjectMasksButton.isSelected()){
+            //project should already have this masks directory initialized from earlier page
+        }
+        if (customMasksDirButton.isSelected()){
+           source.setMasksDirectory(fileChooserMasksDir);
+        }
+        if (noMasksButton.isSelected()){
+            source.setMasksDirectory(null);
+        }
     }
 
     @FXML
@@ -72,7 +80,7 @@ public class MasksImportController extends FXMLPageController implements ShareIn
         File file = masksDirectoryChooser.showDialog(stage);
         if (file!= null){
             masksDirectoryChooser.setInitialDirectory(file);
-            masksDir = file;
+            fileChooserMasksDir = file;
         }
     }
 }

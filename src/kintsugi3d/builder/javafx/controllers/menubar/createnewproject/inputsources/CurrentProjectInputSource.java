@@ -88,6 +88,12 @@ public class CurrentProjectInputSource extends InputSource
     }
 
     @Override
+    public void setMasksDirectory(File file) {
+        //implement this later if we need to
+       throw new UnsupportedOperationException("Cannot change masks directory of an existing project.");
+    }
+
+    @Override
     public void loadProject(String orientationViewName, double rotate)
     {
         ViewSet currentViewSet = MultithreadModels.getInstance().getIOModel().getLoadedViewSet();

@@ -100,6 +100,11 @@ public class MetashapeProjectInputSource extends InputSource{
     }
 
     @Override
+    public void setMasksDirectory(File file) {
+       model.getChunk().setMasksDirectory(file);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof MetashapeProjectInputSource)){
             return false;

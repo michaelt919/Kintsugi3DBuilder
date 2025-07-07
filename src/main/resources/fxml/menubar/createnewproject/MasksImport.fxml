@@ -10,7 +10,7 @@
            <children>
                <ToggleButton fx:id="useProjectMasksButton" mnemonicParsing="false" prefHeight="80.0" prefWidth="320.0" styleClass="wireframeSubtitle" text="Use Project Masks">
                </ToggleButton>
-               <ToggleButton fx:id="newMasksDirButton" mnemonicParsing="false" onAction="#chooseMasksDir" prefHeight="80.0" prefWidth="320.0" styleClass="wireframeSubtitle" text="Choose New Masks Directory">
+               <ToggleButton fx:id="customMasksDirButton" mnemonicParsing="false" onAction="#chooseMasksDir" prefHeight="80.0" prefWidth="320.0" styleClass="wireframeSubtitle" text="Choose New Masks Directory">
                </ToggleButton>
                <ToggleButton fx:id="noMasksButton" layoutX="150.0" layoutY="240.0" mnemonicParsing="false" prefHeight="80.0" prefWidth="320.0" styleClass="wireframeSubtitle" text="Do Not Use Masks">
                </ToggleButton>
