@@ -84,6 +84,22 @@ public class MetashapeProjectInputSource extends InputSource{
     }
 
     @Override
+    public File getMasksDirectory() {
+       return model.getChunk().getMasksDirectory();
+    }
+
+    @Override
+    public File getInitialMasksDirectory() {
+        File masksDir = model.getChunk().getMasksDirectory();
+        return masksDir != null ? masksDir : model.getChunk().getPsxFile().getParentFile();
+    }
+
+    @Override
+    public boolean doEnableProjectMasksButton() {
+       return model.getChunk().getMasksDirectory() != null;
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof MetashapeProjectInputSource)){
             return false;

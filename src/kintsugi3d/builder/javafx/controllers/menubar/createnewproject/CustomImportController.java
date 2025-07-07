@@ -82,7 +82,7 @@ public class CustomImportController extends FXMLPageController implements ShareI
 
         photoDirectoryChooser.setTitle("Select photo directory");
 
-        hostPage.setNextPage(hostScrollerController.getPage("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml"));
+        hostPage.setNextPage(hostScrollerController.getPage("/fxml/menubar/createnewproject/MasksImport.fxml"));
     }
 
     @Override

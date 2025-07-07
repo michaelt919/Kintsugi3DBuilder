@@ -21,7 +21,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
-import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources.InputSource;
@@ -46,10 +45,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     @FXML private AnchorPane anchorPane;
     @FXML private Text loadMetashapeObject;
 
-    @FXML private CheckBox useMasksCheckbox;
-    @FXML private Label masksDirLabel;
-    @FXML private Button chooseMasksDirButton;
-
     @FXML private ChoiceBox<String> chunkSelectionChoiceBox;
     @FXML private ChoiceBox<String> modelSelectionChoiceBox;
 
@@ -62,7 +57,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
     private volatile boolean alertShown = false;
 
     @FXML private FileChooser psxFileChooser;
-    @FXML private DirectoryChooser masksDirChooser;
 
     @Override
     public Region getHostRegion() {
@@ -76,14 +70,9 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         psxFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Metashape files (*.psx)", "*.psx"));
         psxFileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
-        masksDirChooser = new DirectoryChooser();
-        masksDirChooser.setTitle("Choose masks directory");
-        masksDirChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
-        hostPage.setNextPage(hostScrollerController.getPage("/fxml/menubar/createnewproject/PrimaryViewSelect.fxml"));
+        hostPage.setNextPage(hostScrollerController.getPage("/fxml/menubar/createnewproject/MasksImport.fxml"));
 
-        masksDirLabel.visibleProperty().bind(useMasksCheckbox.selectedProperty());
-        chooseMasksDirButton.visibleProperty().bind(useMasksCheckbox.selectedProperty());
     }
 
     @Override
@@ -92,10 +81,8 @@ public class MetashapeImportController extends FXMLPageController implements Sha
         //need to do Platform.runLater so updateModelSelectionChoiceBox can pull info from chunkSelectionChoiceBox
         chunkSelectionChoiceBox.setOnAction(event -> Platform.runLater(()->{
             metashapeDocument.selectChunk(chunkSelectionChoiceBox.getValue());
-            masksDirChooser.setInitialDirectory(metashapeDocument.getPsxFile().getParentFile());
             updateModelSelectionChoiceBox();
             updateLoadedIndicators();
-            updateMaskPath();
         }));
 
         modelSelectionChoiceBox.setOnAction(event -> {
@@ -111,17 +98,6 @@ public class MetashapeImportController extends FXMLPageController implements Sha
                    metashapeDocument.getSelectedChunk().selectModel(model);
                 }
             }
-        });
-
-        //set masks directory to null if the checkbox is not selected
-        useMasksCheckbox.setOnAction(event ->{
-           if (metashapeDocument == null){
-               return;
-           }
-
-           File dir = useMasksCheckbox.isSelected() ? new File(masksDirLabel.getText()) : null;
-
-           metashapeDocument.getSelectedChunk().setMasksDirectory(dir);
         });
 
         psxFileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
@@ -175,33 +151,9 @@ public class MetashapeImportController extends FXMLPageController implements Sha
             RecentProjects.setMostRecentDirectory(file.getParentFile());
             psxFileChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
 
-            masksDirChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
-
             fileNameTxtField.setText(file.getName());
             updateChoiceBoxes(file);
             updateLoadedIndicators();
-            updateMaskPath();
-        }
-    }
-
-    @FXML private void masksDirSelect(ActionEvent actionEvent) {
-        Stage stage = (Stage) ((Node)actionEvent.getSource()).getScene().getWindow();
-        File file = masksDirChooser.showDialog(stage);
-        if (file != null) {
-            RecentProjects.setMostRecentDirectory(file.getParentFile());
-            masksDirChooser.setInitialDirectory(RecentProjects.getMostRecentDirectory());
-            metashapeDocument.getSelectedChunk().setMasksDirectory(file);
-            updateMaskPath();
-        }
-    }
-
-    private void updateMaskPath() {
-        File dir = metashapeDocument.getSelectedChunk().getMasksDirectory();
-        if (dir == null || !dir.exists()){
-            masksDirLabel.setText("...");
-        }
-        else{
-            masksDirLabel.setText(dir.getPath());
         }
     }
 

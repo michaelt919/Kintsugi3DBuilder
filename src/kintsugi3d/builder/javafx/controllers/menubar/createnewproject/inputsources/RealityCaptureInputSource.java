@@ -12,7 +12,6 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources;
 
 import javafx.stage.FileChooser;
-import kintsugi3d.builder.io.ViewSetReader;
 import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
 import kintsugi3d.builder.io.primaryview.GenericPrimaryViewSelectionModel;
 import kintsugi3d.builder.javafx.MultithreadModels;
@@ -26,6 +25,7 @@ public class RealityCaptureInputSource extends InputSource{
     private File cameraFile;
     private File meshFile;
     private File photosDir;
+    private File masksDir;
     private boolean needsUndistort;
 
     @Override
@@ -64,7 +64,23 @@ public class RealityCaptureInputSource extends InputSource{
 
         return this.cameraFile.equals(other.cameraFile) &&
                 this.meshFile.equals(other.meshFile) &&
-                this.photosDir.equals(other.photosDir);
+                this.photosDir.equals(other.photosDir) &&
+                this.masksDir.equals(other.masksDir);
+    }
+
+    @Override
+    public File getMasksDirectory() {
+        return masksDir;
+    }
+
+    @Override
+    public File getInitialMasksDirectory() {
+       return masksDir!= null ? masksDir : cameraFile.getParentFile();
+    }
+
+    @Override
+    public boolean doEnableProjectMasksButton() {
+        return false;
     }
 
     public RealityCaptureInputSource setCameraFile(File cameraFile) {
@@ -80,6 +96,11 @@ public class RealityCaptureInputSource extends InputSource{
     public RealityCaptureInputSource setPhotosDir(File photosDir, boolean needsUndistort) {
         this.photosDir = photosDir;
         this.needsUndistort = needsUndistort;
+        return this;
+    }
+
+    public RealityCaptureInputSource setMasksDir(File masksDir) {
+        this.masksDir = masksDir;
         return this;
     }
 }

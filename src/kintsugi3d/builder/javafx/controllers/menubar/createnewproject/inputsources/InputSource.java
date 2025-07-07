@@ -12,11 +12,9 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources;
 
 import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
-import kintsugi3d.builder.io.ViewSetReader;
 import kintsugi3d.builder.io.primaryview.PrimaryViewSelectionModel;
 import kintsugi3d.builder.io.primaryview.View;
 import kintsugi3d.builder.javafx.controllers.menubar.SearchableTreeView;
@@ -68,6 +66,20 @@ public abstract class InputSource {
     {
         this.includeNoneItem = include;
     }
+
+    /**
+     * Return the known masks directory.
+     * @return the masks directory
+     */
+    public abstract File getMasksDirectory();
+
+    /**
+     * For setting the initial directory of the masks directory chooser. Not guaranteed to be the actual masks directory.
+     * @return a directory which will hopefully be close to the actual masks directory so the user will find it quickly
+     */
+    public abstract File getInitialMasksDirectory();
+
+    public abstract boolean doEnableProjectMasksButton();
 
     protected void addTreeElems(PrimaryViewSelectionModel primaryViewSelectionModel){
         TreeItem<String> rootItem = new TreeItem<>(primaryViewSelectionModel.getName());

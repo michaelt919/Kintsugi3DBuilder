@@ -12,7 +12,6 @@
 package kintsugi3d.builder.javafx.controllers.menubar.createnewproject.inputsources;
 
 import javafx.stage.FileChooser;
-import kintsugi3d.builder.io.ViewSetReader;
 import kintsugi3d.builder.io.ViewSetReaderFromRealityCaptureCSV;
 import kintsugi3d.builder.io.primaryview.AgisoftPrimaryViewSelectionModel;
 import kintsugi3d.builder.io.primaryview.GenericPrimaryViewSelectionModel;
@@ -23,12 +22,12 @@ import java.io.File;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class LooseFilesInputSource extends InputSource{
     private File cameraFile;
     private File meshFile;
     private File photosDir;
+    private File masksDir;
     private boolean needsUndistort;
     private boolean hotSwap;
 
@@ -53,6 +52,11 @@ public class LooseFilesInputSource extends InputSource{
     public LooseFilesInputSource setPhotosDir(File photosDir, boolean needsUndistort){
         this.photosDir = photosDir;
         this.needsUndistort = needsUndistort;
+        return this;
+    }
+
+    public LooseFilesInputSource setMasksDir(File masksDir){
+        this.masksDir = masksDir;
         return this;
     }
 
@@ -118,6 +122,22 @@ public class LooseFilesInputSource extends InputSource{
 
         return this.cameraFile.equals(other.cameraFile) &&
                 this.meshFile.equals(other.meshFile) &&
-                this.photosDir.equals(other.photosDir);
+                this.photosDir.equals(other.photosDir) &&
+                this.masksDir.equals(other.masksDir);
+    }
+
+    @Override
+    public File getMasksDirectory() {
+        return masksDir;
+    }
+
+    @Override
+    public File getInitialMasksDirectory() {
+       return masksDir != null ? masksDir : cameraFile.getParentFile();
+    }
+
+    @Override
+    public boolean doEnableProjectMasksButton() {
+        return false;
     }
 }
