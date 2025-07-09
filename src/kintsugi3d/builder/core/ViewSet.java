@@ -16,6 +16,8 @@ import java.io.FileNotFoundException;
 import java.util.*;
 
 import kintsugi3d.builder.metrics.ViewRMSE;
+import kintsugi3d.builder.state.SettingsModel;
+import kintsugi3d.builder.state.impl.SimpleSettingsModel;
 import kintsugi3d.gl.nativebuffer.NativeDataType;
 import kintsugi3d.gl.nativebuffer.NativeVectorBuffer;
 import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
@@ -163,6 +165,8 @@ public final class ViewSet implements ReadonlyViewSet
 
     private int previewWidth = 0;
     private int previewHeight = 0;
+
+    private final SettingsModel viewSetSettings = new SimpleSettingsModel();
 
     public static final class Builder
     {
@@ -1161,6 +1165,12 @@ public final class ViewSet implements ReadonlyViewSet
     public void setOrientationViewRotationDegrees(double rotation)
     {
         orientationViewRotationDegrees = rotation;
+    }
+
+    @Override
+    public SettingsModel getViewSetSettings()
+    {
+        return viewSetSettings;
     }
 
     public void setMasksDirectory(File dir){

@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import kintsugi3d.builder.metrics.ViewRMSE;
+import kintsugi3d.builder.state.ReadonlySettingsModel;
+import kintsugi3d.builder.state.SettingsModel;
 import kintsugi3d.gl.nativebuffer.ReadonlyNativeVectorBuffer;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
@@ -265,4 +267,10 @@ public interface ReadonlyViewSet
     File getMasksDirectory();
 
     Map<Integer, File> getMasksMap();
+
+    /**
+     * Gets additional settings associated with this view set
+     * @return A model containing the settings for this view set.
+     */
+    ReadonlySettingsModel getViewSetSettings();
 }

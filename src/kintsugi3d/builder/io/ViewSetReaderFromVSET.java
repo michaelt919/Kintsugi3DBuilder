@@ -20,6 +20,8 @@ import kintsugi3d.builder.core.DistortionProjection;
 import kintsugi3d.builder.core.SimpleProjection;
 import kintsugi3d.builder.core.ViewSet;
 import kintsugi3d.builder.core.ViewSet.Builder;
+import kintsugi3d.builder.state.SettingsModel;
+import kintsugi3d.builder.state.impl.SimpleSettingsModel;
 import kintsugi3d.gl.vecmath.Matrix4;
 import kintsugi3d.gl.vecmath.Vector3;
 import kintsugi3d.gl.vecmath.Vector4;
@@ -67,6 +69,8 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
 
         List<Double> linearLuminanceList = new ArrayList<>(8);
         List<Byte> encodedLuminanceList = new ArrayList<>(8);
+
+        SettingsModel settings = new SimpleSettingsModel();
 
         try(Scanner scanner = new Scanner(stream, StandardCharsets.UTF_8))
         {
@@ -256,7 +260,6 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         scanner.nextLine();
                         break;
                     }
-
                     case "v":
                     {
                         int poseId = scanner.nextInt();
@@ -281,6 +284,21 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
                         builder.addMask(cameraId, imgFilename);
                         break;
                     }
+                    case "zb":
+                        // boolean setting
+                        settings.createBooleanSetting(scanner.next(), Boolean.parseBoolean(scanner.next()));
+                        scanner.nextLine(); // Ignore rest of line
+                        break;
+                    case "zi":
+                        // integer setting
+                        settings.createNumericSetting(scanner.next(), Integer.parseInt(scanner.next()));
+                        scanner.nextLine(); // Ignore rest of line
+                        break;
+                    case "zf":
+                        // integer setting
+                        settings.createNumericSetting(scanner.next(), Float.parseFloat(scanner.next()));
+                        scanner.nextLine(); // Ignore rest of line
+                        break;
                     default:
                         // Skip unrecognized line
                         scanner.nextLine();
@@ -289,6 +307,7 @@ public final class ViewSetReaderFromVSET implements ViewSetReader
         }
 
         ViewSet result = builder.finish();
+        result.getViewSetSettings().copyFrom(settings);
 
         // Tonemapping
         double[] linearLuminanceValues = new double[linearLuminanceList.size()];
