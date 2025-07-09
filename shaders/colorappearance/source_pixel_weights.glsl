@@ -13,9 +13,7 @@
 #ifndef SOURCE_PIXEL_WEIGHTS_GLSL
 #define SOURCE_PIXEL_WEIGHTS_GLSL
 
-#include <colorappearance/colorappearance.glsl>
-
-#line 19 1030
+#line 17 1030
 
 #ifndef EDGE_PROXIMITY_WEIGHT_ENABLED
 #define EDGE_PROXIMITY_WEIGHT_ENABLED 0

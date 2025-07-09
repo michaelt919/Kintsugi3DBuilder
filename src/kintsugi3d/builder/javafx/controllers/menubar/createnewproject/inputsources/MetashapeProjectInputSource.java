@@ -91,7 +91,8 @@ public class MetashapeProjectInputSource extends InputSource{
     @Override
     public File getInitialMasksDirectory() {
         File masksDir = model.getChunk().getMasksDirectory();
-        return masksDir != null ? masksDir : model.getChunk().getPsxFile().getParentFile();
+        //TODO: might change this because it dumps the user deep into metashape project structure
+        return masksDir != null ? masksDir.getParentFile() : model.getChunk().getPsxFile().getParentFile();
     }
 
     @Override

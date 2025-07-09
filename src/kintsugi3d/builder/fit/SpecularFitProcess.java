@@ -40,7 +40,6 @@ import kintsugi3d.gl.builders.ProgramBuilder;
 import kintsugi3d.gl.core.*;
 import kintsugi3d.gl.material.ReadonlyMaterial;
 import kintsugi3d.gl.material.ReadonlyMaterialTextureMap;
-import kintsugi3d.optimization.ShaderBasedErrorCalculator;
 import kintsugi3d.util.BufferedImageColorList;
 import kintsugi3d.util.ImageFinder;
 import kintsugi3d.util.ImageUndistorter;
@@ -123,11 +122,14 @@ public class SpecularFitProcess
                     Projection projection = resources.getViewSet().getCameraProjection(resources.getViewSet().getCameraProjectionIndex(viewIndex));
                     BufferedImage image = read(viewSet.findFullResImageFile(viewIndex));
 
+                    File maskFile = viewSet.getMask(viewIndex);
+                    BufferedImage mask = maskFile == null ? null : read(maskFile);
+
                     if (projection instanceof DistortionProjection)
                     {
                         // undistort if we have a DistortionProjection.
                         return new BufferedImageColorList(new ImageUndistorter<>(resources.getContext())
-                            .undistort(image, false /* no mipmaps for error estimation */, (DistortionProjection)projection));
+                                .undistort(image, mask, false /* no mipmaps for error estimation */, (DistortionProjection) projection));
                     }
                     else
                     {

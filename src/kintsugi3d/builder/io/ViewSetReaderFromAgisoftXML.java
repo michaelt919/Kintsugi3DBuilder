@@ -36,8 +36,12 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -605,7 +609,7 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         case "dense_cloud":
                             if (intVersion < 110)
                             {
-                                log.debug("Unexpected tag \'{}\' for psz version {}\n",
+                                log.debug("Unexpected tag '{}' for psz version {}\n",
                                     reader.getLocalName(), version);
                             }
                             break;
@@ -828,11 +832,15 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
     private static void addMasks(ViewSet viewSet, MetashapeChunk metashapeChunk) {
         File masksSrcDir = metashapeChunk.getMasksDirectory();
 
+        //TODO: move masks directory to .files folder
+        File masksDestinationDir = new File(new File(ApplicationFolders.getMasksDirectory().toUri()), viewSet.getUUID().toString());
+        masksDestinationDir.mkdirs();
+
+        //TODO: use ImageFinder?
+
         if (masksSrcDir.toString().endsWith(".zip")){
             //get masks folder, then subfolder is viewset uuid
             // (follow convention set by preview and fit image folders)
-            File masksDestinationDir = new File(new File(ApplicationFolders.getMasksDirectory().toUri()), viewSet.getUUID().toString());
-            masksDestinationDir.mkdirs();
             log.info("Unzipping masks folder...");
             try{
                 UnzipHelper.unzipToDirectory(masksSrcDir, masksDestinationDir);
@@ -857,11 +865,50 @@ public final class ViewSetReaderFromAgisoftXML implements ViewSetReader
                         log.error("Failed to unzip masks.", e);
                     }
                 }
-                viewSet.setMasksDirectory(masksDestinationDir);
             } catch (IOException e) {
                 log.error("Failed to unzip masks.", e);
             }
         }
-//todo: need to handle user defined mask directories?
+        else{
+            Map<String, Integer> imgFileNames = IntStream.range(0, viewSet.getCameraPoseCount())
+                    .boxed()
+                    .collect(Collectors.toMap(
+                            i -> viewSet.getFullResImageFile(i).getName(),
+                            i -> i
+                    ));
+
+            File[] maskFiles = masksSrcDir.listFiles();
+            if (maskFiles == null || maskFiles.length == 0){
+                log.error("No masks found in mask directory {}", masksSrcDir);
+                return;
+            }
+
+            for (File srcFile : maskFiles){
+                String fileName = srcFile.getName();
+
+                Integer camId;
+                //try searching for {fileName}
+                camId = imgFileNames.get(fileName);
+
+                //search for {fileName}_mask if needed
+//                if (camId == null){
+                //TODO:
+//                }
+
+                //give up if not found
+                //we could do a .contains() search, but that might be too slow because N^2
+                if (camId == null){
+                    continue;
+                }
+                try{
+                    File maskFile = new File(masksDestinationDir, fileName);
+                    Files.copy(srcFile.toPath(), maskFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    viewSet.addMask(camId, maskFile);
+                } catch (IOException e) {
+                   log.error("Failed to copy mask {} to {}", srcFile.getName(), masksDestinationDir.getPath());
+                }
+            }
+        }
+        viewSet.setMasksDirectory(masksDestinationDir);
     }
 }

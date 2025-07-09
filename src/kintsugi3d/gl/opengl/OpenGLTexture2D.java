@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.imageio.ImageIO;
 
@@ -94,7 +93,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
             int height = colorImg.getHeight();
             ByteBuffer buffer = bufferedImageToNativeBuffer(
                 isICCTransformationRequested() ? new ImageHelper(colorImg).convertICCToSRGB() : new ImageHelper(colorImg).forceSRGB(),
-                /* masks shouldn't be using ICC */ new ImageHelper(maskImg).forceSRGB(), flipVertical);
+                /* masks shouldn't be using ICC */ maskImg, flipVertical);
 
             if (this.isInternalFormatCompressed())
             {

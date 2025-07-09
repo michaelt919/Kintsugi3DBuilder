@@ -99,6 +99,7 @@ public class LooseFilesInputSource extends InputSource{
         if (hotSwap)
         {
             new Thread(() ->
+                    //TODO: mask input here
                 MultithreadModels.getInstance().getIOModel().hotSwapLooseFiles(
                     cameraFile.getPath(), cameraFile, meshFile, photosDir, needsUndistort, primaryView, rotate))
                 .start();
@@ -106,6 +107,7 @@ public class LooseFilesInputSource extends InputSource{
         else
         {
             new Thread(() ->
+                    //TODO: mask input here
                 MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(
                     cameraFile.getPath(), cameraFile, meshFile, photosDir, needsUndistort, primaryView, rotate))
                 .start();

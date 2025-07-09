@@ -792,8 +792,18 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
         // TODO ICC transformation?
     }
 
+    private static BufferedImage getDecodedMaskImage(ViewSet viewSet, int i) throws IOException {
+        // Read the image (and do ICC processing, if applicable) on a worker thread
+        File maskFile = viewSet.getMask(i);
+        if (maskFile == null){
+            return null;
+        }
+        log.info("Decoding {}", maskFile);
+        return ImageIO.read(maskFile);
+    }
+
     private static <ContextType extends Context<ContextType>> BufferedImage undistortImage(
-        BufferedImage distortedImage, boolean mipmapsEnabled, ViewSet viewSet, int projectionIndex, ContextType context)
+        BufferedImage distortedImage,BufferedImage distortedMaskImage, boolean mipmapsEnabled, ViewSet viewSet, int projectionIndex, ContextType context)
         throws IOException
     {
         DistortionProjection distortion = (DistortionProjection) viewSet.getCameraProjection(projectionIndex);
@@ -801,7 +811,7 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
 
         try (ImageUndistorter<?> undistort = new ImageUndistorter<>(context))
         {
-            return undistort.undistort(distortedImage, mipmapsEnabled, distortion);
+            return undistort.undistort(distortedImage,distortedMaskImage, mipmapsEnabled, distortion);
         }
     }
 
@@ -942,8 +952,9 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                             if (viewSet.getCameraProjection(projectionIndex) instanceof DistortionProjection)
                             {
                                 BufferedImage decodedImage = getDecodedImage(viewSet, i);
+                                BufferedImage decodedMaskImage = getDecodedMaskImage(viewSet, i);
                                 log.info("Undistorting image {}", i);
-                                BufferedImage imageOut = undistortImage(decodedImage, true, viewSet, projectionIndex, context);
+                                BufferedImage imageOut = undistortImage(decodedImage,decodedMaskImage, true, viewSet, projectionIndex, context);
                                 log.info("Saving image {}", i);
                                 ImageIO.write(imageOut, "PNG", viewSet.getPreviewImageFile(i));
                                 logFinished(viewSet.getPreviewImageFile(i));
@@ -1010,7 +1021,8 @@ public final class IBRResourcesImageSpace<ContextType extends Context<ContextTyp
                                 {
                                     try
                                     {
-                                        BufferedImage imageOut = undistortImage(decodedImage, true, viewSet, projectionIndex, context);
+                                        BufferedImage decodedMaskImage = getDecodedMaskImage(viewSet, i);
+                                        BufferedImage imageOut = undistortImage(decodedImage, decodedMaskImage, true, viewSet, projectionIndex, context);
 
                                         // Write to a file on another thread so as not to block the rendering thread
                                         new Thread(() ->

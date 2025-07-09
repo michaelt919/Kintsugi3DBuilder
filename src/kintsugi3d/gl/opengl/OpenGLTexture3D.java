@@ -392,7 +392,7 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
         BufferedImage colorImg = validateAndScaleImage(layerIndex, ImageIO.read(imageStream));
         ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(
             iccTransformationRequested ? new ImageHelper(colorImg).convertICCToSRGB() : new ImageHelper(colorImg).forceSRGB(),
-            /* masks shouldn't be using ICC */ new ImageHelper(validateAndScaleImage(layerIndex, ImageIO.read(maskStream))).forceSRGB(),
+            /* masks shouldn't be using ICC */ validateAndScaleImage(layerIndex, ImageIO.read(maskStream)),
             flipVertical);
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);

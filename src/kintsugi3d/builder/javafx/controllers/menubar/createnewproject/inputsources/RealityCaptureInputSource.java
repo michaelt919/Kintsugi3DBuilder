@@ -49,6 +49,7 @@ public class RealityCaptureInputSource extends InputSource{
     @Override
     public void loadProject(String primaryView, double rotate) {
         new Thread(() ->
+                //TODO: mask input here
             MultithreadModels.getInstance().getIOModel().loadFromLooseFiles(
                 cameraFile.getPath(), cameraFile, meshFile, photosDir, needsUndistort, primaryView, rotate))
             .start();
